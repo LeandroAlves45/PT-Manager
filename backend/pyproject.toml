@@ -1,0 +1,53 @@
+[project]
+name = "pt-manager"
+version = "0.1.0"
+description = "Single-user Personal Trainer client management API (FastAPI + SQLModel + SQLite)"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "sqlmodel>=0.0.22",
+  "pydantic>=2.9",
+  "pydantic-settings>=2.2",
+  "psycopg2-binary>=2.9.10",
+  "apscheduler>=3.10.4",
+  "requests>=2.34",
+  "python-multipart>=0.0.28",
+  "python-dateutil>=2.9",
+  "pytz>=2025.1",
+  "email-validator>=2.1",
+  "PyJWT==2.12.1",
+  "passlib[bcrypt]>=1.7.4",
+  "bcrypt>=4.0.1",
+  "stripe>=7.0",
+  "resend>=2.0",
+  "cloudinary>=1.40",
+  "sentry-sdk[fastapi]>=2.59.0",
+  "slowapi>=0.1.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.3",
+    "pytest-cov>=4.1",
+    "httpx>=0.25",
+    "ruff>=0.1",
+]
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app"]
+
+[tool.uvicorn]
+factory = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+ignore = []
