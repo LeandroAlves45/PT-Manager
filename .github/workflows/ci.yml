@@ -1,0 +1,228 @@
+# .github/workflows/ci.yml — PT Manager Full-Stack CI
+# Testa Backend (FastAPI + pytest) e Frontend (React + ESLint + Vitest)
+#
+# QUANDO CORRE:
+#   - push para main/develop
+#   - pull request para main
+#
+# JOBS:
+#   1. backend-tests  — pytest com SQLite in-memory
+#   2. frontend-lint-build — ESLint + build de produção
+#   3. frontend-tests — Vitest
+#   4. create-issue — cria GitHub Issue se falhar em main
+#   5. deploy — trigger de deploys (separado em deploy.yml)
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ──────────────────────────────────────────────────────────
+  # BACKEND: Testes pytest
+  # ──────────────────────────────────────────────────────────
+  backend-tests:
+    name: Backend Tests (pytest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Create minimal .env for CI
+        working-directory: backend
+        run: |
+          cat > .env << ENVEOF
+          DATABASE_URL=sqlite:///./test.db
+          SECRET_KEY=ci-secret-key-not-for-production
+          ENVIRONMENT=test
+          SEED_DEMO_DATA=false
+          STRIPE_SECRET_KEY=sk_test_placeholder
+          STRIPE_PRICE_FREE=price_placeholder
+          STRIPE_PRICE_STARTER=price_placeholder
+          STRIPE_PRICE_PRO=price_placeholder
+          CLOUDINARY_CLOUD_NAME=placeholder
+          CLOUDINARY_API_KEY=placeholder
+          CLOUDINARY_API_SECRET=placeholder
+          RESEND_API_KEY=placeholder
+          SUPERUSER_EMAIL=admin@test.com
+          SUPERUSER_PASSWORD=TestPassword123!
+          ENVEOF
+
+      - name: Run backend tests
+        working-directory: backend
+        run: pytest tests/ -v --tb=short
+        env:
+          PYTHONPATH: .
+
+  # ──────────────────────────────────────────────────────────
+  # FRONTEND: ESLint + Build de produção
+  # ──────────────────────────────────────────────────────────
+  frontend-lint-build:
+    name: Frontend Lint & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: ESLint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Build production
+        working-directory: frontend
+        run: npm run build
+        env:
+          VITE_API_URL: https://pt-manager-api.onrender.com
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 3
+
+  # ──────────────────────────────────────────────────────────
+  # FRONTEND: Vitest
+  # ──────────────────────────────────────────────────────────
+  frontend-tests:
+    name: Frontend Tests (Vitest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test -- --run
+        env:
+          VITE_API_URL: http://localhost:8000
+
+  # ──────────────────────────────────────────────────────────
+  # ISSUE: Create GitHub Issue on CI failure in main
+  # ──────────────────────────────────────────────────────────
+  create-issue-on-failure:
+    name: Report CI Failure
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-lint-build, frontend-tests]
+    if: |
+      failure() &&
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'push'
+
+    steps:
+      - name: Determine which job failed
+        id: failed-job
+        run: |
+          if [ "${{ needs.backend-tests.result }}" == "failure" ]; then
+            echo "job=Backend Tests" >> $GITHUB_OUTPUT
+            echo "section=Backend" >> $GITHUB_OUTPUT
+          elif [ "${{ needs.frontend-lint-build.result }}" == "failure" ]; then
+            echo "job=Frontend Lint & Build" >> $GITHUB_OUTPUT
+            echo "section=Frontend" >> $GITHUB_OUTPUT
+          elif [ "${{ needs.frontend-tests.result }}" == "failure" ]; then
+            echo "job=Frontend Tests" >> $GITHUB_OUTPUT
+            echo "section=Frontend" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Issue
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const failedJob = "${{ steps.failed-job.outputs.job }}";
+            const section = "${{ steps.failed-job.outputs.section }}";
+            const shortSha = context.sha.substring(0, 7);
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha}`;
+
+            const title = `🔴 [${section}] ${failedJob} falhou — ${shortSha}`;
+
+            const body = [
+              `## Falha de CI: ${section}`,
+              "",
+              "| | |",
+              "|---|---|",
+              `| **Job** | ${failedJob} |`,
+              `| **Commit** | [\`${shortSha}\`](${commitUrl}) |`,
+              `| **Autor** | @${context.actor} |`,
+              `| **Run** | [Ver detalhes](${runUrl}) |`,
+              "",
+              "## Reproduzir localmente",
+              "```bash",
+              "# Backend",
+              "cd backend",
+              "python -m venv venv",
+              "source venv/bin/activate",
+              "pip install -r requirements.txt",
+              "pytest tests/ -v --tb=short",
+              "",
+              "# Frontend",
+              "cd frontend",
+              "npm ci",
+              "npm run lint",
+              "npm run build",
+              "npm test -- --run",
+              "```",
+              "",
+              "---",
+              "_Issue criado automaticamente pelo GitHub Actions_",
+            ].join("\n");
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              labels: "ci-failure",
+            });
+
+            if (!existing.data.some(i => i.title.includes(shortSha))) {
+              const issue = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ["bug", "ci-failure"],
+              });
+              console.log(`Issue criado: ${issue.data.html_url}`);
+            }

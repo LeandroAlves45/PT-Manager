@@ -90,6 +90,17 @@ class AuthenticationService:
                 detail="Conta inativa. Entra em contacto com o suporte.",
             )
 
+        # 3b. Trainer deve ter email verificado
+        if user.role == "trainer" and not user.email_verified:
+            logger.warning(
+                "[AUTH] Login falhou: email não verificado para user_id=%s",
+                user.id[:8],
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Email não verificado. Verifique a sua caixa de entrada.",
+            )
+
         # 4. Cria JWT (com iat claim)
         expire_delta = timedelta(minutes=settings.access_token_expire_minutes)
         jwt_token = create_access_token(
@@ -115,7 +126,9 @@ class AuthenticationService:
 
             # 7,8. Gera refresh token opaco
             refresh_token_string = secrets.token_urlsafe(32)
-            refresh_token_hash = hashlib.sha256(refresh_token_string.encode()).hexdigest()
+            refresh_token_hash = hashlib.sha256(
+                refresh_token_string.encode()
+            ).hexdigest()
 
             # 9. Persistir refresh token (com hash)
             refresh_expires = utc_now_datetime() + timedelta(days=30)
@@ -139,8 +152,8 @@ class AuthenticationService:
             ) from e
 
         logger.info(
-            "[AUTH] Login bem-sucedido: email=%s..., role=%s",
-            email[:3],
+            "[AUTH] Login bem-sucedido: user_id=%s, role=%s",
+            user.id[:8],
             user.role,
         )
 
@@ -243,7 +256,7 @@ class AuthenticationService:
                 detail="Sessão expirada. Por favor, faça login novamente.",
             )
 
-        # 5. Carregar user e validar que está ativo
+        # 5. Carregar user e validar que está ativo e email verificado
         user = UserRepository.get_by_id(refresh_token_db.user_id, session)
         if not user or not user.is_active:
             logger.warning(
@@ -253,6 +266,17 @@ class AuthenticationService:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Conta inativa ou removida. Entra em contacto com o suporte.",
+            )
+
+        if user.role == "trainer" and not user.email_verified:
+            RefreshTokenRepository.revoke_by_hash(refresh_hash, session)
+            logger.warning(
+                "[AUTH] Refresh rejeitado: Personal Trainer email não verificado user_id=%s",
+                user.id[:8],
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Email não verificado. Verifique a sua caixa de entrada.",
             )
 
         # 6. Emitir novo JWT access token

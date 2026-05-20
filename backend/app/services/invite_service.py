@@ -7,12 +7,13 @@ from datetime import timedelta, timezone
 from fastapi import HTTPException, status
 from sqlmodel import Session, select
 
-from app.db.models import User, Client, ActiveToken, TrainerSettings
+from app.db.models import User, Client, TrainerSettings
 from app.core.security import create_access_token, hash_password
 from app.core.config import settings
+from app.repositories.active_token_repository import ActiveTokenRepository
+from app.repositories.refresh_token_repository import RefreshTokenRepository
 from app.repositories.user_repository import UserRepository
 from app.services.email_service import EmailService
-from app.utils.db_errors import commit_or_rollback
 from app.utils.time import utc_now_datetime
 
 logger = logging.getLogger(__name__)
@@ -167,12 +168,13 @@ class InviteService:
         2. Hash da password
         3. Ativa conta (is_active=True)
         4. Invalida token (one-time use)
-        5. Cria JWT
-        6. Persiste ActiveToken
+        5. Cria JWT + refresh token
+        6. Persiste hashes em active_tokens e refresh_tokens
 
         Retorna:
             {
                 "access_token": str,
+                "refresh_token": str,
                 "role": str,
                 "user_id": str,
                 "full_name": str,
@@ -217,11 +219,48 @@ class InviteService:
             expires_delta=expire_delta,
         )
 
-        # Persistir ActiveToken
-        InviteService._save_active_token(user.id, jwt_token, expire_delta, session)
+        jwt_hash = hashlib.sha256(jwt_token.encode()).hexdigest()
+        expires_at = utc_now_datetime() + expire_delta
+
+        try:
+            ActiveTokenRepository.save_or_replace(
+                user_id=user.id,
+                token_hash=jwt_hash,
+                expires_at=expires_at,
+                session=session,
+            )
+
+            refresh_token_string = secrets.token_urlsafe(32)
+            refresh_token_hash = hashlib.sha256(
+                refresh_token_string.encode()
+            ).hexdigest()
+            refresh_expires = utc_now_datetime() + timedelta(days=30)
+            RefreshTokenRepository.save(
+                user_id=user.id,
+                token_hash=refresh_token_hash,
+                expires_at=refresh_expires,
+                device_hint=None,
+                session=session,
+            )
+        except Exception as e:
+            logger.error(
+                "[INVITE] Falha ao persistir tokens para user_id=%s: %s",
+                user.id[:8],
+                str(e),
+            )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Erro ao criar sessão. Por favor, tenta novamente.",
+            ) from e
+
+        logger.info(
+            "[INVITE] Password definida com sucesso: user_id=%s",
+            user.id[:8],
+        )
 
         return {
             "access_token": jwt_token,
+            "refresh_token": refresh_token_string,
             "role": user.role,
             "user_id": user.id,
             "full_name": user.full_name,
@@ -240,9 +279,7 @@ class InviteService:
         """
 
         if not client.email:
-            logger.warning(
-                "[INVITE] ❌ Cliente %s não tem email registado", client.id[:8]
-            )
+            logger.warning("[INVITE] Cliente %s não tem email registado", client.id[:8])
             return
 
         try:
@@ -257,45 +294,24 @@ class InviteService:
                 if trainer_settings
                 else "PT Manager"
             )
-            trainer_logo_url = current_user.logo_url or ""
 
-            EmailService.send_invite_email(
-                to_email=client.email,
+            email_service = EmailService()
+            email_service.send_invite_email(
+                client_email=client.email,
                 client_name=client.full_name,
-                invite_link=invite_link,
                 trainer_name=current_user.full_name,
-                app_name=app_name,
-                trainer_logo_url=trainer_logo_url,
+                invite_link=invite_link,
                 expires_in_days=settings.invite_expiry_days,
+                app_name=app_name,
             )
-            logger.info("[INVITE] Email de convite enviado para %s", client.email)
+            logger.info(
+                "[INVITE] Email de convite enviado: client_id=%s",
+                client.id[:8],
+            )
 
         except Exception as email_error:  # pylint: disable=broad-exception-caught
             logger.warning(
-                "[INVITE] Email não enviado para %s: %s. Token criado com sucesso.",
-                client.email,
+                "[INVITE] Email não enviado para client_id=%s: %s. Token criado com sucesso.",
+                client.id[:8],
                 email_error,
             )
-
-    @staticmethod
-    def _save_active_token(
-        user_id: str,
-        jwt_token: str,
-        expire_delta: timedelta,
-        session: Session,
-    ) -> None:
-        """Remove token anterior e insere novo ActiveToken."""
-
-        existing = session.exec(
-            select(ActiveToken).where(ActiveToken.user_id == user_id)
-        ).first()
-
-        if existing:
-            session.delete(existing)
-            session.flush()
-
-        expires_at = utc_now_datetime() + expire_delta
-        session.add(
-            ActiveToken(user_id=user_id, token=jwt_token, expires_at=expires_at)
-        )
-        commit_or_rollback(session)

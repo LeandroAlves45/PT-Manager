@@ -36,16 +36,18 @@ class RefreshTokenRepository:
             return None
 
         # Validar device fingerprint se fornecido
-        if device_hint and query.device_hint != device_hint:
+        if (
+            device_hint
+            and query.device_hint
+            and device_hint != device_hint
+        ):
             logger.warning(
-                "[DEVICE_HIJACKING] Token válido mas device mudou: user_id=%s, stored=%s, "
-                "current=%s",
-                query.user_id,
-                query.device_hint [:50],
-                device_hint[:50],
+                "[DEVICE_HIJACKING] Token válido mas device mudou: user_id=%s",
+                query.user_id[:8],
             )
             query.revoked_at = utc_now_datetime()
             session.add(query)
+            commit_or_rollback(session)
             return None
 
         return query

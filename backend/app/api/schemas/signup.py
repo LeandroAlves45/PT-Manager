@@ -1,5 +1,6 @@
 ﻿"""Schemas de validação para signup (Personal Trainer + Client)."""
 
+from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
 
 
@@ -26,7 +27,7 @@ class TrainerSignupIn(BaseModel):
 class TrainerSignupOut(BaseModel):
     """Response após signup de Personal Trainer."""
 
-    id: str = Field(description="User ID do trainer")
+    id: Optional[str] = Field(description="User ID (vazio se resposta genérica)")
     email: str
     full_name: str
     role: str = "trainer"
@@ -34,54 +35,6 @@ class TrainerSignupOut(BaseModel):
         description="Mensagem de sucesso (ex: 'Verification email sent')"
     )
 
-
-class ClientSignupIn(BaseModel):
-    """Request body para signup de novo Client (via convite de trainer).
-
-    Fluxo:
-    1. Trainer convida client (gera invite_token com 7 dias de validade)
-    2. Client regista-se com email + password + full_name + phone + invite_token
-    3. Sistema valida:
-       - invite_token é válido e não expirou
-       - trainer que convidou tem subscrição ATIVA
-    4. Cria User(role="client") + Client(perfil de aluno)
-    5. Client ganha acesso imediatamente (sem verificação de email)
-
-    Segurança:
-    - invite_token deve ser enviado por email, não em URL pública
-    - Valida trainer.subscription.status in [trialing, active, past_due]
-    - Rate limiting: 10/hora por IP + email
-    """
-
-    email: EmailStr = Field(description="Email do client")
-    password: str = Field(
-        min_length=8,
-        max_length=128,
-    )
-    full_name: str = Field(
-        min_length=2,
-        max_length=200,
-    )
-    phone: str = Field(
-        min_length=7,
-        max_length=15,
-    )
-    invite_token: str = Field(
-        description="Token de convite enviado pelo trainer (válido 7 dias)"
-    )
-
-
-class ClientSignupOut(BaseModel):
-    """Response após signup de Client."""
-
-    access_token: str
-    refresh_token: str
-    id: str = Field(description="User ID do client")
-    email: str
-    full_name: str
-    role: str = "client"
-    client_id: str = Field(description="Client profile ID")
-    message: str = Field(description="Mensagem de sucesso")
 
 
 class EmailVerificationIn(BaseModel):
@@ -106,7 +59,19 @@ class EmailVerificationOut(BaseModel):
     """Response após verificação bem-sucedida do email."""
 
     access_token: str
-    refresh_token: str
+    refresh_token: Optional[str] = None
     email: str = Field(description="Email verificado")
     is_verified: bool = True
     message: str = Field(description="Confirmação de sucesso")
+
+
+class ResendVerificationIn(BaseModel):
+    """Pedido para reenviar email de verificação."""
+
+    email: EmailStr = Field(description="Email do Personal Trainer")
+
+
+class ResendVerificationOut(BaseModel):
+    """Resposta genérica — igual para todos os pedidos (anti-enumeração)."""
+
+    message: str = Field(description="Confirmação genérica")

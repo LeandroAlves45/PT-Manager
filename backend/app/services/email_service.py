@@ -115,3 +115,33 @@ class EmailService:
             'display: block;" />'
         )
         return img_html.format(logo_url)
+
+
+    @staticmethod
+    def send_plain_email(
+        to_email: str,
+        subject: str,
+        body: str,
+    ) -> None:
+        """Envia email plain text sem template (para notificações simples).
+
+        Args:
+            to_email: Email do destinatário
+            subject: Assunto do email
+            body: Corpo do email em plain text
+
+        Raises:
+            Exception: Se Resend falhar
+        """
+        import resend
+        from resend import Emails
+        resend.api_key = settings.resend_api_key
+        emails = Emails()
+        emails.send(
+            {
+                "from": "noreply@ptmanageronline.pt",
+                "to": to_email,
+                "subject": subject,
+                "text": body,
+            }
+        )

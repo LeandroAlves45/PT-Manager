@@ -133,6 +133,13 @@ async def get_current_user(
         logger.warning("[AUTH] User não encontrado ou inactivo: user_id=%s", user_id)
         raise credentials_exception
 
+    if user.role == "trainer" and not user.email_verified:
+        logger.warning(
+            "[AUTH] Token rejeitado: Personal Trainer email não verificado user_id=%s",
+            user_id,
+        )
+        raise credentials_exception
+
     return user
 
 

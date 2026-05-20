@@ -26,6 +26,15 @@ class UserRepository:
         ).first()
 
     @staticmethod
+    def get_by_email_verification_token_hash(
+        token_hash: str, session: Session
+    ) -> Optional[User]:
+        """Busca User pelo hash do token de verificação de email."""
+        return session.exec(
+            select(User).where(User.email_verification_token_hash == token_hash)
+        ).first()
+
+    @staticmethod
     def get_by_email(email: str, session: Session) -> Optional[User]:
         """Busca User pelo seu email."""
         return session.exec(select(User).where(User.email == email)).first()
@@ -191,3 +200,17 @@ class UserRepository:
 
         session.add(user)
         commit_or_rollback(session)
+
+    @staticmethod
+    def get_all_trainers(session: Session) -> list[User]:
+        """Obtém todos os Personal Trainers da base de dados."""
+        return session.exec(select(User).where(User.role == "trainer")).all()
+
+    @staticmethod
+    def get_trainer_or_raise(trainer_id: str, session: Session) -> User:
+        """Obtém um Personal Trainer da base de dados ou lança uma exceção."""
+
+        trainer = session.get(User, trainer_id)
+        if not trainer or trainer.role != "trainer":
+            raise ValueError("Personal Trainer não encontrado.")
+        return trainer

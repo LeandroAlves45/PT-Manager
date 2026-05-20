@@ -67,6 +67,11 @@ class User(SQLModel, table=True):
     invite_token_hash: Optional[str] = Field(default=None, max_length=64)
     invite_token_expires_at: Optional[datetime] = Field(default=None)
 
+    # Campos para tokens de verificação de email
+    email_verification_token_hash: Optional[str] = Field(
+        default=None, max_length=64, index=True
+    )
+    email_verification_token_expires_at: Optional[datetime] = Field(default=None)
 
     # Campo para verificar se o email do Personal Trainer foi verificado
     email_verified: bool = Field(default=False)

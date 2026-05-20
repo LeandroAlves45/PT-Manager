@@ -21,7 +21,11 @@ from app.db.models.pack import ClientPack, PackType
 from app.db.models.session import PackConsumption, TrainingSession
 from app.db.models.supplement import Supplement
 from app.db.models.trainer_settings import TrainerSettings
-from app.db.models.trainer_subscription import TrainerSubscription
+from app.db.models.trainer_subscription import (
+    TrainerSubscription,
+    SubscriptionStatus,
+    SubscriptionTier,
+)
 from app.db.models.processed_stripe_event import ProcessedStripeEvent
 from app.db.models.training import (
     ClientActivePlan,
@@ -65,4 +69,6 @@ __all__ = [
     "User",
     "ProcessedStripeEvent",
     "RefreshToken",
+    "SubscriptionStatus",
+    "SubscriptionTier",
 ]

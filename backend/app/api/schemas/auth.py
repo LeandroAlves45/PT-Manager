@@ -9,7 +9,7 @@ Separação de responsabilidades:
 - LoginIn     : credenciais enviadas no login
 """
 
-from typing import Optional, Literal
+from typing import Optional
 from datetime import datetime
 
 from pydantic import BaseModel, EmailStr, Field, model_validator
@@ -35,7 +35,7 @@ class TokenOut(BaseModel):
 
     access_token: str
     token_type: str = "bearer"
-    refresh_token: str
+    refresh_token: Optional[str] = None
     role: str
     user_id: str
     full_name: str
@@ -52,22 +52,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
     full_name: str = Field(min_length=2)
-
-    role: Literal["trainer", "client"] = "client"
-    client_id: Optional[str] = None
-
-    @model_validator(mode="after")
-    def validate_client_id_for_client_role(self) -> "UserCreate":
-        """
-        Validação de negócio: se o role é "client", o client_id é obrigatório.
-        Desta forma garantimos que cada conta de cliente está sempre ligada a um registo.
-        """
-
-        if self.role == "client" and not self.client_id:
-            raise ValueError(
-                "O campo client_id é obrigatório para utilizadores com role 'client'"
-            )
-        return self
+    client_id: str = Field(description="ID do Client já criado (POST /clients)")
 
 
 class UserRead(BaseModel):

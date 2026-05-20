@@ -1,39 +1,32 @@
-﻿"""Endpoints públicos de signup."""
+"""Endpoints públicos de signup."""
 
 import logging
-import hashlib
-import secrets
-from datetime import timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Request, Response, status
 from sqlmodel import Session
 
-from app.core.config import settings
+from app.core.cookies import set_refresh_token_cookie
 from app.api.schemas.signup import (
     TrainerSignupIn,
     TrainerSignupOut,
-    ClientSignupIn,
-    ClientSignupOut,
     EmailVerificationIn,
     EmailVerificationOut,
+    ResendVerificationIn,
+    ResendVerificationOut,
 )
 from app.core.rate_limit import limiter, RateLimitConfig
 from app.db.database import get_session
 from app.services.signup_service import SignupService
-from app.repositories.user_repository import UserRepository
-from app.services.email_service import EmailService
-from app.utils.db_errors import commit_or_rollback
-from app.utils.time import utc_now_datetime
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["Auth - Signup"])
 signup_service = SignupService()
 
-
-@router.post("/signup/trainer",
-response_model=TrainerSignupOut,
-status_code=status.HTTP_201_CREATED
+@router.post(
+    "/signup/trainer",
+    response_model=TrainerSignupOut,
+    status_code=status.HTTP_201_CREATED,
 )
 @limiter.limit(RateLimitConfig.SIGNUP)
 async def trainer_signup(
@@ -65,9 +58,11 @@ async def trainer_signup(
         session=session,
     )
 
-
 @router.post("/verify-email", response_model=EmailVerificationOut)
+@limiter.limit(RateLimitConfig.VERIFY_EMAIL)
 async def verify_email(
+    request: Request,  # pylint: disable=unused-argument
+    response: Response,
     payload: EmailVerificationIn,
     session: Session = Depends(get_session),
 ):
@@ -84,98 +79,33 @@ async def verify_email(
     Segurança:
     - Token comparison com constant-time para evitar timing attacks
     - Mensagens genericas para erros (não disclose se token existe ou expirou)
+    - Rate limit: 10 tentativas/minuto por IP
     """
-    return signup_service.verify_email_token(token=payload.token, session=session)
+    result = signup_service.verify_email_token(token=payload.token, session=session)
+    set_refresh_token_cookie(response, result["refresh_token"])
+    return EmailVerificationOut(
+        access_token=result["access_token"],
+        email=result["email"],
+        is_verified=result["is_verified"],
+        message=result["message"],
+    )
 
-
-@router.post("/resend-verification-email")
-@limiter.limit("5/hour")
+@router.post("/resend-verification-email", response_model=ResendVerificationOut)
+@limiter.limit(RateLimitConfig.RESEND_VERIFICATION)
 async def resend_verification_email(
     request: Request,  # pylint: disable=unused-argument
-    email: str,
+    payload: ResendVerificationIn,
     session: Session = Depends(get_session),
 ):
-    """Reenvía email de verificacao para trainer (fallback).
+    """Reenvia email de verificação para trainer (fallback).
 
-    Fluxo:
-    1. Busca User com esse email (role="trainer", email_verified=False)
-    2. Valida que nao expirou demasiado tempo desde o signup (48h max)
-    3. Gera novo verification token
-    4. Envia email
-    5. Retorna {message: "Email sent"}
+    Sempre devolve a mesma mensagem genérica, independentemente de o email existir
+    ou já estar verificado, para evitar enumeração de contas.
 
-    Rate limit: 5 emails/hora por IP
+    Rate limit: 5 pedidos/hora por IP+email
     """
-
-
-    user = UserRepository.get_by_email(email, session)
-
-    if not user or user.role != "trainer" or user.email_verified:
-        raise HTTPException(
-            status_code=400,
-            detail="Verification email not needed for this account.",
-        )
-
-    # Validar que signup nao foi ha muito tempo
-    signup_age = utc_now_datetime() - user.created_at
-    if signup_age > timedelta(hours=48):
-        raise HTTPException(
-            status_code=400,
-            detail="Verification link expired. Please signup again.",
-        )
-
-    # Gerar novo token
-    token_raw = secrets.token_urlsafe(24)
-    token_hash = hashlib.sha256(token_raw.encode()).hexdigest()
-
-    user.invite_token_hash = token_hash
-    user.invite_token_expires_at = utc_now_datetime() + timedelta(minutes=15)
-    session.add(user)
-    commit_or_rollback(session)
-
-    # Enviar email
-    email_service = EmailService()
-    verification_link = f"{settings.frontend_url}/verify-email?token={token_raw}"
-    email_service.send_verification_email(
-        trainer_email=user.email,
-        trainer_name=user.full_name,
-        verification_link=verification_link,
-    )
-
-    logger.info("Verification email resent to %s***", email[:3])
-
-    return {"message": "Verification email sent. Check your inbox."}
-
-
-@router.post("/signup/client", response_model=ClientSignupOut, status_code=status.HTTP_201_CREATED)
-@limiter.limit(RateLimitConfig.SIGNUP_CLIENT)
-async def client_signup(
-    request: Request,  # pylint: disable=unused-argument
-    payload: ClientSignupIn,
-    session: Session = Depends(get_session),
-):
-    """
-    Signup de novo Client via invite token de trainer.
-
-    Fluxo:
-    1. Valida invite_token (SHA256, 7 dias TTL)
-    2. Busca trainer (owner) e valida subscrição ativa
-    3. Cria User(role="client", email_verified=True direto)
-    4. Cria Client(full_name, phone, owner_trainer_id)
-    5. Invalida invite_token
-    6. Retorna {id, email, full_name, client_id, message}
-
-    Segurança:
-    - Invite token gerado pelo trainer (prova de ownership)
-    - Trainer com subscrição ativa
-    - Rate limit: 10 signups/hora por IP (mais restrictivo que trainer para evitar spam)
-    - Email único na BD
-    """
-    return signup_service.client_signup(
+    return signup_service.resend_verification_email(
         email=payload.email,
-        password=payload.password,
-        full_name=payload.full_name,
-        phone=payload.phone,
-        invite_token=payload.invite_token,
         session=session,
     )
+

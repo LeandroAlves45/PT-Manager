@@ -20,8 +20,8 @@ from sqlalchemy import func
 
 from app.db.database import get_session
 from app.core.security import get_current_user, require_trainer
-from app.core.config import settings
-from app.core.rate_limit import limiter, limiter_email_ip, RateLimitConfig
+from app.core.cookies import clear_refresh_token_cookie, set_refresh_token_cookie
+from app.core.rate_limit import limiter, RateLimitConfig
 from app.api.schemas.auth import (
     ChangePassword,
     LoginIn,
@@ -45,7 +45,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @router.post("/login", response_model=TokenOut)
-@limiter_email_ip.limit(RateLimitConfig.LOGIN)
+@limiter.limit(RateLimitConfig.LOGIN)
 async def login(
     request: Request,
     response: Response,
@@ -55,7 +55,7 @@ async def login(
     """
     Autentica user e devolve JWT + refresh token (httpOnly cookie).
 
-    Rate limited: 5 tentativas por minuto (P1.2 — brute-force protection)
+    Rate limited: 5 tentativas por 15 minutos (IP + email — brute-force protection)
     """
 
     try:
@@ -66,15 +66,7 @@ async def login(
             device_hint=request.headers.get("User-Agent", "") if request else None,
         )
 
-        # Setar refresh token como httpOnly cookie
-        response.set_cookie(
-            key="refresh_token",
-            value=result["refresh_token"],
-            max_age=30 * 24 * 60 * 60,  # 30 dias
-            httponly=True,
-            secure=settings.environment == "production",
-            samesite="lax",
-        )
+        set_refresh_token_cookie(response, result["refresh_token"])
 
         return TokenOut(
             access_token=result["access_token"],
@@ -121,15 +113,7 @@ async def refresh_token(
             device_hint=device_hint,
         )
 
-        # Setar novo refresh token (rotation)
-        response.set_cookie(
-            key="refresh_token",
-            value=result["refresh_token"],
-            max_age=30 * 24 * 60 * 60,  # 30 dias
-            httponly=True,
-            secure=settings.environment == "production",
-            samesite="lax",
-        )
+        set_refresh_token_cookie(response, result["refresh_token"])
 
         return TokenOut(
             access_token=result["access_token"],
@@ -165,7 +149,7 @@ async def logout(
         AuthenticationService.logout(current_user.id, session)
 
         # Limpar cookie
-        response.delete_cookie(key="refresh_token", httponly=True)
+        clear_refresh_token_cookie(response)
 
         return {"detail": "Logout bem-sucedido"}
 
@@ -186,17 +170,17 @@ async def logout(
 async def create_user(
     payload: UserCreate,
     session: Session = Depends(get_session),
-    current_trainer=Depends(require_trainer),  # pylint: disable=unused-argument
+    current_trainer: User = Depends(require_trainer),
 ) -> UserRead:
-    """Cria novo user (apenas Personal Trainers)."""
+    """Trainer cria conta User para Client existente (tenant isolation)."""
 
     try:
-        user_data = UserManagementService.create_user(
+        user_data = UserManagementService.create_client_user_for_trainer(
             email=str(payload.email),
             password=payload.password,
             full_name=payload.full_name,
-            role=payload.role,
-            client_id=payload.client_id if payload.role == "client" else None,
+            client_id=payload.client_id,
+            current_trainer=current_trainer,
             session=session,
         )
         user = UserRepository.get_by_id(user_data["id"], session)
@@ -322,7 +306,7 @@ async def change_password(
         )
 
         # Limpar cookie
-        response.delete_cookie(key="refresh_token", httponly=True)
+        clear_refresh_token_cookie(response)
 
         return {
             "detail": "Password alterada com sucesso. Por favor, faça login novamente."

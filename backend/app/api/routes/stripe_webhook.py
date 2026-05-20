@@ -68,14 +68,10 @@ async def stripe_webhook(
         )
     except stripe.error.SignatureVerificationError as e:
         logger.warning("[BILLING] Assinatura do webhook é inválida: %s", str(e))
-        raise HTTPException(
-            status_code=400, detail="Sem autorização"
-        ) from e
+        raise HTTPException(status_code=400, detail="Sem autorização") from e
     except Exception as e:
         logger.error("[BILLING] Erro ao processar o webhook: %s", str(e))
-        raise HTTPException(
-            status_code=400, detail="Webhook inválido"
-        ) from e
+        raise HTTPException(status_code=400, detail="Webhook inválido") from e
 
     handlers = {
         "customer.subscription.updated": _handle_subscription_updated,
@@ -98,9 +94,7 @@ async def stripe_webhook(
         return {"received": True}
 
     # Claim: INSERT + flush com PK evita processar o mesmo event_id em paralelo.
-    session.add(
-        ProcessedStripeEvent(event_id=event_id, event_type=event["type"])
-    )
+    session.add(ProcessedStripeEvent(event_id=event_id, event_type=event["type"]))
     try:
         session.flush()
     except IntegrityError:
@@ -115,9 +109,7 @@ async def stripe_webhook(
     except Exception as e:  # pylint: disable=broad-except
         session.rollback()
         logger.error("[BILLING] Handler %s failed: %s", event["type"], str(e))
-        raise HTTPException(
-            status_code=500, detail="Falha ao processar evento"
-        ) from e
+        raise HTTPException(status_code=500, detail="Falha ao processar evento") from e
 
     return {"received": True}
 

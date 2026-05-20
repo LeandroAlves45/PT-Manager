@@ -1,4 +1,4 @@
-﻿"""Serviço de signup -> Personal Trainer + client com email verification."""
+﻿"""Serviço de signup de Personal Trainer com verificação de email."""
 
 import hashlib
 import logging
@@ -6,13 +6,12 @@ import secrets
 from datetime import timedelta
 
 from fastapi import HTTPException
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 from app.core.config import settings
 from app.core.security import create_access_token, hash_password
-from app.db.models import User, TrainerSubscription
+from app.db.models import TrainerSubscription
 from app.repositories.user_repository import UserRepository
-from app.repositories.client_repository import ClientRepository
 from app.repositories.active_token_repository import ActiveTokenRepository
 from app.repositories.refresh_token_repository import RefreshTokenRepository
 from app.services.email_service import EmailService
@@ -23,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class SignupService:
-    """Orquestra signup de novo Personal Trainer e cliente."""
+    """Orquestra signup de novo Personal Trainer."""
 
     def __init__(self):
         self.email_service = EmailService()
@@ -39,16 +38,10 @@ class SignupService:
         token_hash = hashlib.sha256(token_raw.encode()).hexdigest()
         return token_raw, token_hash
 
-    @staticmethod
-    def _generate_invite_token() -> tuple[str, str]:
-        """Gera token de convite + SHA256 hash.
-
-        Returns:
-            (token_raw, token_hash): Token aleatorio de 32 chars + SHA256 hash
-        """
-        token_raw = secrets.token_urlsafe(24)
-        token_hash = hashlib.sha256(token_raw.encode()).hexdigest()
-        return token_raw, token_hash
+    TRAINER_SIGNUP_GENERIC_MESSAGE = (
+        "Se o registo for válido, enviámos um email de verificação. "
+        "Verifique a sua caixa de entrada."
+    )
 
     def trainer_signup(
         self,
@@ -95,10 +88,9 @@ class SignupService:
             # 2. Criar TrainerSubscription (trial de 15 dias)
             trial_end = utc_now_datetime() + timedelta(days=15)
             subscription = TrainerSubscription(
-                trainer_id=user.id,
+                trainer_user_id=user.id,
                 status="trialing",
                 trial_end=trial_end,
-                subscription_start=utc_now_datetime(),
             )
             session.add(subscription)
             commit_or_rollback(session)
@@ -106,9 +98,11 @@ class SignupService:
             # 3. Gerar verification token
             token_raw, token_hash = self._generate_verification_token()
 
-            # 4. Guardar token hash em User (validade 15 min)
-            user.invite_token_hash = token_hash  # Reutilizar campo para verification
-            user.invite_token_expires_at = utc_now_datetime() + timedelta(minutes=15)
+            # 4. Guardar token hash em campo dedicado
+            user.email_verification_token_hash = token_hash
+            user.email_verification_token_expires_at = utc_now_datetime() + timedelta(
+                minutes=15
+            )
             session.add(user)
             commit_or_rollback(session)
 
@@ -123,8 +117,8 @@ class SignupService:
             )
 
             logger.info(
-                "Registo de novo Personal Trainer bem sucedido para %s*** - email enviado",
-                email[:3],
+                "Registo de Personal Trainer bem-sucedido: user_id=%s",
+                user.id[:8],
             )
 
             return {
@@ -132,14 +126,23 @@ class SignupService:
                 "email": user.email,
                 "full_name": user.full_name,
                 "role": "trainer",
-                "message": "Email de verificação enviado."
-                "Verifique a sua caixa de entrada para activar a sua conta.",
+                "message": self.TRAINER_SIGNUP_GENERIC_MESSAGE,
             }
 
         except ValueError as e:
             error_msg = str(e)
             if "já está registado" in error_msg:
-                raise HTTPException(status_code=409, detail="Email já está registado.") from e
+                logger.info(
+                    "Signup do Personal Trainer ignorado: email já registado",
+                )
+                return {
+                    "id": "",
+                    "email": email,
+                    "full_name": full_name,
+                    "role": "trainer",
+                    "message": self.TRAINER_SIGNUP_GENERIC_MESSAGE,
+                }
+            raise HTTPException(status_code=409, detail=error_msg) from e
         except Exception as e:
             logger.error("Iniciar sessão do Personal Trainer falhou: %s", str(e))
             raise HTTPException(
@@ -156,10 +159,10 @@ class SignupService:
 
         Fluxo:
         1. Calcula SHA256(token)
-        2. Busca User com invite_token_hash == SHA256(token)
+        2. Busca User com email_verification_token_hash == SHA256(token)
         3. Valida token nao expirou (15 min TTL)
         4. Marca email_verified=True + email_verified_at=now()
-        5. Invalida token (set invite_token_hash=None)
+        5. Invalida token (set email_verification_token_hash=None)
         6. Retorna access_token + refresh_token (httpOnly cookie)
 
         Args:
@@ -177,9 +180,9 @@ class SignupService:
             token_hash = hashlib.sha256(token.encode()).hexdigest()
 
             # 2. Buscar User
-            user = session.exec(
-                select(User).where(User.invite_token_hash == token_hash)
-            ).first()
+            user = UserRepository.get_by_email_verification_token_hash(
+                token_hash, session
+            )
 
             if not user:
                 raise HTTPException(
@@ -187,10 +190,16 @@ class SignupService:
                     detail="Token de verificação inválido ou expirado.",
                 )
 
+            if user.role != "trainer" or user.email_verified:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Token de verificação inválido ou expirado.",
+                )
+
             # 3. Validar token nao expirou
             if (
-                not user.invite_token_expires_at
-                or utc_now_datetime() > user.invite_token_expires_at
+                not user.email_verification_token_expires_at
+                or utc_now_datetime() > user.email_verification_token_expires_at
             ):
                 raise HTTPException(
                     status_code=400,
@@ -200,8 +209,8 @@ class SignupService:
             # 4. Marcar email_verified=True
             user.email_verified = True
             user.email_verified_at = utc_now_datetime()
-            user.invite_token_hash = None
-            user.invite_token_expires_at = None
+            user.email_verification_token_hash = None
+            user.email_verification_token_expires_at = None
 
             session.add(user)
             commit_or_rollback(session)
@@ -261,178 +270,45 @@ class SignupService:
                 detail="Erro ao verificar email. Por favor, tente novamente.",
             ) from e
 
-    def client_signup(
-        self,
-        email: str,
-        password: str,
-        full_name: str,
-        phone: str,
-        invite_token: str,
-        session: Session,
-    ) -> dict:
-        """Signup de novo Client com invite token (SEM email verification).
+    RESEND_VERIFICATION_MESSAGE = (
+        "Se esta conta precisar de verificação, foi enviado um email. "
+        "Verifique a sua caixa de entrada."
+    )
 
-        Fluxo:
-        1. Valida invite_token (SHA256, 7 dias TTL)
-        2. Busca trainer (owner) e valida subscrição ativa
-        3. Cria User(role="client", email_verified=True direto)
-        4. Cria Client(full_name, phone, owner_trainer_id)
-        5. Invalida invite_token
-        6. Retorna access_token + refresh_token + client_id
+    def resend_verification_email(self, email: str, session: Session) -> dict:
+        """Reenvia email de verificação para trainer (sem revelar estado da conta).
 
-        Args:
-            email: Email do client
-            password: Password (8-128 chars)
-            full_name: Nome completo
-            phone: Telefone (7-15 chars)
-            invite_token: Token de convite do trainer
-            session: Database session
-
-        Returns:
-            { "id": user_id, "email": email, "full_name": full_name, "role": "client",
-              "client_id": client_id, "message": "..." }
-
-        Raises:
-            HTTPException 400: Token invalido, expirado ou subscrição inativa
-            HTTPException 409: Email/client ja existe
+        Sempre devolve a mesma mensagem genérica para evitar enumeração de emails.
         """
-        try:
-            # 1. Calcular SHA256(token)
-            token_hash = hashlib.sha256(invite_token.encode()).hexdigest()
+        user = UserRepository.get_by_email(email, session)
 
-            # 2. Buscar User que criou o convite (trainer)
-            trainer = session.exec(
-                select(User).where(User.invite_token_hash == token_hash)
-            ).first()
+        should_send = (
+            user is not None
+            and user.role == "trainer"
+            and not user.email_verified
+            and (utc_now_datetime() - user.created_at) <= timedelta(hours=48)
+        )
 
-            if not trainer:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Invalid or expired invite token.",
-                )
-
-            # 3. Validar token nao expirou (7 dias)
-            if (
-                not trainer.invite_token_expires_at
-                or utc_now_datetime() > trainer.invite_token_expires_at
-            ):
-                raise HTTPException(
-                    status_code=400,
-                    detail="Invite token expired. Ask trainer to send a new one.",
-                )
-
-            # 4. Validar subscrição do trainer
-            subscription = session.exec(
-                select(TrainerSubscription).where(
-                    TrainerSubscription.trainer_id == trainer.id
-                )
-            ).first()
-
-            if not subscription or subscription.status not in [
-                "trialing",
-                "active",
-                "past_due",
-            ]:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Trainer subscription is not active.",
-                )
-
-            # 5. Criar User com email_verified=True (direto, sem verificacao)
-            hashed_password = hash_password(password)
-            client_user = UserRepository.create_user(
-                email=email,
-                hashed_password=hashed_password,
-                full_name=full_name,
-                role="client",
-                client_id=None,  # Sera linkado apos criar Client
-                session=session,
+        if should_send:
+            token_raw, token_hash = self._generate_verification_token()
+            user.email_verification_token_hash = token_hash
+            user.email_verification_token_expires_at = utc_now_datetime() + timedelta(
+                minutes=15
             )
-
-            # Marcar email_verified=True direto (sem verificacao necessaria)
-            client_user.email_verified = True
-            client_user.email_verified_at = utc_now_datetime()
-            session.add(client_user)
+            session.add(user)
             commit_or_rollback(session)
 
-            # 6. Criar Client
-            client = ClientRepository.create_client(
-                full_name=full_name,
-                phone=phone,
-                owner_trainer_id=trainer.id,
-                session=session,
+            verification_link = (
+                f"{settings.frontend_url}/verify-email?token={token_raw}"
             )
-
-            # 7. Linkar User a Client
-            client_user.client_id = client.id
-            session.add(client_user)
-            commit_or_rollback(session)
-
-            # 8. Invalidar invite token
-            trainer.invite_token_hash = None
-            trainer.invite_token_expires_at = None
-            session.add(trainer)
-            commit_or_rollback(session)
-
-            # 9. Gerar access token e refresh token
-            expires_delta = timedelta(minutes=settings.access_token_expire_minutes)
-            jwt_token = create_access_token(
-                subject=client_user.id,
-                role=client_user.role,
-                full_name=client_user.full_name,
-                client_id=client.id,
-                expires_delta=expires_delta,
+            self.email_service.send_verification_email(
+                trainer_email=user.email,
+                trainer_name=user.full_name,
+                verification_link=verification_link,
             )
-
-            # 10. Persistir access token em active_tokens
-            jwt_hash = hashlib.sha256(jwt_token.encode()).hexdigest()
-            expires_at = utc_now_datetime() + expires_delta
-            ActiveTokenRepository.save_or_replace(
-                user_id=client_user.id,
-                token_hash=jwt_hash,
-                expires_at=expires_at,
-                session=session,
-            )
-
-            # 11. Gerar refresh token opaco
-            refresh_token_string = secrets.token_urlsafe(32)
-            refresh_token_hash = hashlib.sha256(
-                refresh_token_string.encode()
-            ).hexdigest()
-
-            # 12. Persistir refresh token hash
-            refresh_expires = utc_now_datetime() + timedelta(days=30)
-            RefreshTokenRepository.save(
-                user_id=client_user.id,
-                token_hash=refresh_token_hash,
-                expires_at=refresh_expires,
-                device_hint=None,
-                session=session,
-            )
-
             logger.info(
-                "Client signup successful for %s*** - trainer %s", email[:3], trainer.id
+                "Email de verificação reenviado: user_id=%s",
+                user.id[:8],
             )
 
-            return {
-                "access_token": jwt_token,
-                "refresh_token": refresh_token_string,
-                "id": client_user.id,
-                "email": client_user.email,
-                "full_name": client_user.full_name,
-                "role": "client",
-                "client_id": client.id,
-                "message": "Conta criada com sucesso. Pode agora iniciar sessão.",
-            }
-
-        except HTTPException:
-            raise
-        except ValueError as e:
-            # Email ou cliente ja existe
-            raise HTTPException(status_code=409, detail=str(e)) from e
-        except Exception as e:
-            logger.error("Client signup failed: %s", str(e))
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to create account. Please try again.",
-            ) from e
+        return {"message": self.RESEND_VERIFICATION_MESSAGE}

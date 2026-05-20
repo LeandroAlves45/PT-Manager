@@ -36,16 +36,12 @@ def build_email_ip_key(request: Request) -> str:
 # Limiter Global
 # ============================================================
 
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(key_func=build_email_ip_key)
 """
-Instância única de rate limiter usada por todos os routers.
-Rastreia requisições por IP do cliente (get_remote_address).
-"""
+Instância única usada por todos os routers (app.state.limiter).
 
-limiter_email_ip = Limiter(key_func=build_email_ip_key)
-"""
-Rate limiter especializado que combina IP + email.
-Previne brute-force em múltiplas contas via múltiplos IPs.
+- Login: middleware define email no scope -> chave IP:email
+- Demais rotas: fallback para IP (get_remote_address)
 """
 
 
@@ -78,9 +74,9 @@ class RateLimitConfig:
     # Authentication (auth.py)
     # ============================================================
 
-    LOGIN = "5/minute"
+    LOGIN = "5/15minutes"
     """
-    POST /auth/login — 5 tentativas/minuto.
+    POST /auth/login — 5 tentativas por 15 minutos (por IP+email).
     Protege contra brute-force de email + password.
     Utilizador legítimo: 1-2 logins/dia (bem abaixo do limite).
     """
@@ -138,11 +134,19 @@ class RateLimitConfig:
     Utilizador legítimo: signup 1× na vida (bem abaixo do limite).
     """
 
-    SIGNUP_CLIENT = "10/minute"
+
+    VERIFY_EMAIL = "10/minute"
     """
-    POST /signup/client — 10 tentativas/minuto.
-    Endpoint público; protege contra spam de contas.
-    Utilizador legítimo: signup 1× na vida (bem abaixo do limite).
+    POST /auth/verify-email — 10 tentativas/minuto por IP.
+    Protege contra brute-force de tokens de verificação.
+    Utilizador legítimo: verifica 1× após signup.
+    """
+
+    RESEND_VERIFICATION = "5/hour"
+    """
+    POST /auth/resend-verification-email — 5 pedidos/hora por IP+email.
+    Protege contra spam de emails e enumeração.
+    Utilizador legítimo: reenvia 1-2× no máximo.
     """
 
     # ============================================================

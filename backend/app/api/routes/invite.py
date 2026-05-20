@@ -24,12 +24,13 @@ Segurança do token:
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlmodel import Session
 
 from app.db.database import get_session
 from app.core.security import require_active_subscription
 from app.core.config import settings
+from app.core.cookies import set_refresh_token_cookie
 from app.api.routes.auth import limiter, RateLimitConfig
 from app.db.models import User
 from app.services.invite_service import InviteService
@@ -123,6 +124,7 @@ async def validate_invite_token(
 @limiter.limit(RateLimitConfig.INVITE_SET_PASSWORD_LIMIT)
 async def set_password_via_invite(
     request: Request,  # pylint: disable=unused-argument
+    response: Response,
     token: str,
     payload: InviteSetPassword,
     session: Session = Depends(get_session),
@@ -140,6 +142,8 @@ async def set_password_via_invite(
             new_password=payload.new_password,
             session=session,
         )
+
+        set_refresh_token_cookie(response, result["refresh_token"])
 
         return InviteLoginResponse(
             access_token=result["access_token"],

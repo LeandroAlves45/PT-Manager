@@ -1,4 +1,4 @@
-﻿"""ConfiguraÃ§Ã£o central da aplicaÃ§Ã£o via variÃ¡veis de ambiente."""
+﻿"""Configuração central da aplicação via variáveis de ambiente."""
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -6,20 +6,20 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     """
-    ConfiguraÃ§Ãµes da aplicaÃ§Ã£o
+    Configurações da aplicação
 
     database_url:
     - SQlite local: "sqlite:///./pt_manager.db"
     - PostgreSQL: "postgresql+psycopg2://user:pass@host:5432/dbname"
 
-    Novas variÃ¡veis para Stripe:
+    Novas variáveis para Stripe:
         STRIPE_SECRET_KEY      : chave secreta da API Stripe (sk_test_... ou sk_live_...)
         STRIPE_WEBHOOK_SECRET  : chave para verificar assinaturas dos webhooks (whsec_...)
         STRIPE_PRICE_FREE      : ID do Price Stripe para o tier FREE (0â‚¬)
-        STRIPE_PRICE_STARTER   : ID do Price Stripe para o tier STARTER (20â‚¬/mÃªs)
-        STRIPE_PRICE_PRO       : ID do Price Stripe para o tier PRO (40â‚¬/mÃªs)
-        STRIPE_SUCCESS_URL     : URL de redirecionamento apÃ³s checkout bem sucedido
-        STRIPE_CANCEL_URL      : URL de redirecionamento apÃ³s cancelamento do checkout
+        STRIPE_PRICE_STARTER   : ID do Price Stripe para o tier STARTER (20â‚¬/mês)
+        STRIPE_PRICE_PRO       : ID do Price Stripe para o tier PRO (40â‚¬/mês)
+        STRIPE_SUCCESS_URL     : URL de redirecionamento após checkout bem sucedido
+        STRIPE_CANCEL_URL      : URL de redirecionamento após cancelamento do checkout
     """
 
     # pydantic Settings v2
@@ -37,16 +37,16 @@ class Settings(BaseSettings):
     secret_key: str
 
     access_token_expire_minutes: int = Field(
-        default=60, description="Minutos de expiraÃ§Ã£o do JWT"
+        default=60, description="Minutos de expiração do JWT"
     )
 
     refresh_grace_hours: int = Field(
         default=4,
-        description="Horas de grace period para refresh token apÃ³s expiraÃ§Ã£o",
+        description="Horas de grace period para refresh token após expiração",
     )
 
     # ============================================================
-    # CONFIGURAÃ‡ÃƒO DE INVITE & SUBSCRIPTION
+    # CONFIGURAÇÃO DE INVITE & SUBSCRIPTION
     # ============================================================
 
     invite_expiry_days: int = Field(
@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     )
 
     # ============================================================
-    # CONFIGURAÃ‡ÃƒO DE STRIPE
+    # CONFIGURAÇÃO DE STRIPE
     # ============================================================
 
     stripe_secret_key: str = Field(
@@ -77,11 +77,11 @@ class Settings(BaseSettings):
     )
     stripe_success_url: str = Field(
         default="http://localhost:5173/billing?success=true",
-        description="URL apÃ³s checkout bem-sucedido",
+        description="URL após checkout bem-sucedido",
     )
     stripe_cancel_url: str = Field(
         default="http://localhost:5173/billing?cancelled=true",
-        description="URL apÃ³s cancelamento do checkout",
+        description="URL após cancelamento do checkout",
     )
     stripe_portal_url: str = Field(
         default="http://localhost:5173/billing",
@@ -89,27 +89,27 @@ class Settings(BaseSettings):
     )
 
     # ============================================================
-    # CONFIGURAÃ‡ÃƒO DE NOTIFICAÃ‡Ã•ES
+    # CONFIGURAÇÃO DE NOTIFICAÇÕES
     # ============================================================
 
     timezone: str = Field(
-        default="Europe/Lisbon", description="Fuso horÃ¡rio para notificaÃ§Ãµes"
+        default="Europe/Lisbon", description="Fuso horário para notificações"
     )
     reminder_hour_local: int = Field(
-        default=9, description="Hora local para enviar notificaÃ§Ãµes"
+        default=9, description="Hora local para enviar notificações"
     )
     trainer_email: str | None = Field(
-        default=None, description="Email do trainer para notificaÃ§Ãµes"
+        default=None, description="Email do trainer para notificações"
     )
     notification_test_mode: bool = Field(
-        default=False, description="Modo teste para notificaÃ§Ãµes"
+        default=False, description="Modo teste para notificações"
     )
     notification_test_minutes: int = Field(
-        default=2, description="Minutos para teste de notificaÃ§Ãµes"
+        default=2, description="Minutos para teste de notificações"
     )
 
     # ============================================================
-    # CONFIGURAÃ‡ÃƒO DE EMAIL SERVICE
+    # CONFIGURAÇÃO DE EMAIL SERVICE
     # ============================================================
 
     resend_api_key: str = Field(default="", description="Chave da API do Resend")
@@ -118,7 +118,7 @@ class Settings(BaseSettings):
     )
 
     # ============================================================
-    # CONFIGURAÃ‡ÃƒO DE CLOUDINARY
+    # CONFIGURAÇÃO DE CLOUDINARY
     # ============================================================
 
     cloudinary_cloud_name: str = Field(
@@ -130,7 +130,7 @@ class Settings(BaseSettings):
     )
 
     # ============================================================
-    # CONFIGURAÃ‡ÃƒO DE CORS
+    # CONFIGURAÇÃO DE CORS
     # ============================================================
 
     cors_origins: str = Field(
@@ -155,14 +155,14 @@ class Settings(BaseSettings):
     # ============================================================
 
     sentry_dsn: str = Field(default="", description="DSN do Sentry para monitoramento")
-    environment: str = Field(default="development", description="Ambiente da aplicaÃ§Ã£o")
+    environment: str = Field(default="development", description="Ambiente da aplicação")
 
     # ============================================================
-    # SEED DE DADOS DE DEMONSTRAÃ‡ÃƒO
+    # SEED DE DADOS DE DEMONSTRAÇÃO
     # ============================================================
 
     seed_demo_data: bool = Field(
-        default=False, description="Seed dados de demo na inicializaÃ§Ã£o"
+        default=False, description="Seed dados de demo na inicialização"
     )
     default_trainer_email: str = Field(
         default="", description="Email do trainer de demo"
