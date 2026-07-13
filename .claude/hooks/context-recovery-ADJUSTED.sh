@@ -16,13 +16,24 @@ find_project_root() {
 
 ROOT=$(find_project_root)
 
+# Git commands only if in a git repository
 CONTEXT=""
-BRANCH=$(git branch --show-current 2>/dev/null)
-[ -n "$BRANCH" ] && CONTEXT="Branch: $BRANCH"
-LAST_COMMIT=$(git log --oneline -1 2>/dev/null)
-[ -n "$LAST_COMMIT" ] && CONTEXT="$CONTEXT | Last commit: $LAST_COMMIT"
-CHANGES=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
-[ "$CHANGES" -gt 0 ] 2>/dev/null && CONTEXT="$CONTEXT | Uncommitted changes: $CHANGES files"
+if [ -d "$ROOT/.git" ]; then
+  BRANCH=$(git -C "$ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null)
+  if [ -n "$BRANCH" ] && [ "$BRANCH" != "HEAD" ]; then
+    CONTEXT="Branch: $BRANCH"
+  fi
+
+  LAST_COMMIT=$(git -C "$ROOT" log --oneline -1 2>/dev/null)
+  if [ -n "$LAST_COMMIT" ]; then
+    CONTEXT="$CONTEXT | Last commit: $LAST_COMMIT"
+  fi
+
+  CHANGES=$(git -C "$ROOT" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$CHANGES" -gt 0 ] 2>/dev/null; then
+    CONTEXT="$CONTEXT | Uncommitted changes: $CHANGES files"
+  fi
+fi
 
 cat <<'RULES'
 === CONTEXT RECOVERED AFTER COMPACTION ===

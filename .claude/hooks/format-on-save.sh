@@ -17,8 +17,11 @@ case "$FILE_PATH" in
     command -v ruff >/dev/null 2>&1 && ruff format "$FILE_PATH" >/dev/null 2>&1
     ;;
   *.ts|*.tsx|*.js|*.jsx|*.json|*.css)
-    if [ -f "$CLAUDE_PROJECT_DIR/frontend/node_modules/.bin/prettier" ]; then
+    # Try multiple paths for prettier: local project, CLAUDE_PROJECT_DIR, or npx
+    if [ -n "${CLAUDE_PROJECT_DIR:-}" ] && [ -f "$CLAUDE_PROJECT_DIR/frontend/node_modules/.bin/prettier" ]; then
       "$CLAUDE_PROJECT_DIR/frontend/node_modules/.bin/prettier" --write "$FILE_PATH" >/dev/null 2>&1
+    elif [ -d "./frontend/node_modules/.bin" ] && [ -f "./frontend/node_modules/.bin/prettier" ]; then
+      "./frontend/node_modules/.bin/prettier" --write "$FILE_PATH" >/dev/null 2>&1
     elif command -v npx >/dev/null 2>&1; then
       npx --no-install prettier --write "$FILE_PATH" >/dev/null 2>&1
     fi
