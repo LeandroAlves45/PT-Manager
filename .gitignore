@@ -46,8 +46,5 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
-.claude
 .md/*
-.cursor
-**/.cursor/
 .coverage

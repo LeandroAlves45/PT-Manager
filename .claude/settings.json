@@ -69,19 +69,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/protect-files-ADJUSTED.sh",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-hook.ps1\" \"protect-files-ADJUSTED.sh\"",
             "timeout": 5000,
             "statusMessage": "Checking file protections..."
           },
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/warn-large-files-ADJUSTED.sh",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-hook.ps1\" \"warn-large-files-ADJUSTED.sh\"",
             "timeout": 5000,
             "statusMessage": "Checking for build artifacts..."
           },
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/scan-secrets-ADJUSTED.sh",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-hook.ps1\" \"scan-secrets-ADJUSTED.sh\"",
             "timeout": 5000,
             "statusMessage": "Scanning for secrets..."
           }
@@ -92,7 +92,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/block-dangerous-commands.sh",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-hook.ps1\" \"block-dangerous-commands.sh\"",
             "timeout": 5000,
             "statusMessage": "Checking command safety..."
           }
@@ -105,7 +105,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/format-on-save.sh",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-hook.ps1\" \"format-on-save.sh\"",
             "timeout": 15000,
             "statusMessage": "Formatting..."
           }
@@ -118,7 +118,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-hook.ps1\" \"session-start.sh\"",
             "timeout": 5000,
             "statusMessage": "Loading project context..."
           }
@@ -129,7 +129,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/context-recovery-ADJUSTED.sh",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-hook.ps1\" \"context-recovery-ADJUSTED.sh\"",
             "timeout": 5000,
             "statusMessage": "Recovering critical project rules..."
           }
