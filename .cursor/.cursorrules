@@ -1,0 +1,132 @@
+# PT Manager
+
+SaaS multi-tenant para personal trainers — gestão de clientes, sessões, planos de treino, nutrição, suplementos e billing.
+
+Backend: Python 3.12, FastAPI, SQLModel, PostgreSQL 16, JWT, Stripe, APScheduler.
+Frontend: React 19, Vite 7, Tailwind CSS 4, Chakra UI + shadcn/ui (páginas `.jsx`, UI em `.tsx`).
+Deploy: Render (backend) + Vercel (frontend) + Redis(Upstach Redis, TODO) + DB(Render ou Supabase).
+
+## GOLDEN RULES
+
+- Architecture: `backend/app/api/routes → services → repositories → db/models`. Ver `.claude/architecture.md`
+- Multi-tenant: todas as queries filtram por `trainer_id`. Roles: `superuser`, `trainer`, `client`
+- Security: secrets em env vars, queries via SQLModel. Ver `.claude/security-conventions.md`
+- Testing: `pytest` (backend), Vitest (frontend). Correr ficheiro específico após alterações
+- Git: feature branches, conventional commits, testes a passar
+- NO edits: migrations SQL existentes, `.env`, valores hardcoded
+- Comentários e docstrings em Português de Portugal; métodos/classes em inglês
+- Avaliar sempre as respostas e implementações antes de apresentar
+- No final de cada sessão cria um file md em '.cursor/memory/Sessions/' e coloca os pontos fundamentais da sessão
+- Compacta sempre que atingir 50% da sessão
+- Sugere mudar para os diferentes planos dependendo da task pedida.
+- Sempre que eu precisar de tomar uma decisão técnica, oferece-me a melhor sugestão tendo em conta
+  os trade-offs baseado em critérios técnicos, de DRY e Clean Code
+- Podes rodar comandos no terminal, exceto comandos destrutivos mencionados em hooks ou outro file relevante.
+- Sempre que um finalizamos um sprint ou te pedir para pedir files md coloca uma checklist e depois
+  de finaliza coloca "Finalizado"
+- Sempre que abrires hooks usando o claude-mem abre ou no VSCode ou em outra window do Cursor, nunca nesta.
+- Sempre aponta para o folder '.claude/' para saberes sobre arquitetura, etc...
+
+## COMMANDS
+
+```bash
+# Backend (a partir de backend/)
+uvicorn app.main:app --reload --port 8000
+python -m app.db.migrate_runner
+pytest
+pytest tests/integration/api/test_invites.py -v
+ruff check app/
+ruff format app/
+
+# Frontend (a partir de frontend/)
+npm run dev
+npm run test
+npm run lint
+npm run build
+```
+
+## PATTERNS
+
+1. Nova feature backend: Model → Repository → Service → Route + Schema → Test
+2. Error handling: `HTTPException` com códigos corretos; logging estruturado; Sentry em produção
+3. Multi-tenant: extrair `trainer_id` do JWT; nunca confiar em IDs do body sem validação de ownership
+4. Frontend: módulo em `api/` → hook ou page; layouts por role (`TrainerLayout`, `ClientLayout`, `AdminLayout`)
+
+## PROTECTED FILES — NEVER READ OR WRITE
+
+- `.env`, `.env.*`, `.env.local`, `.env.production`
+- `**/*.pem`, `**/*.key`, `**/secrets/**`
+- `**/backend/app/db/migrations/**` — never edit existing SQL migrations; create a new numbered file
+
+If a task requires touching any of the above, stop and ask the user to handle it manually.
+
+## AVOID
+
+- Lógica de negócio em routes (delegar para services)
+- Hardcoded secrets ou URLs de produção
+- Editar migrations SQL já aplicadas
+- `console.log` em produção (usar logger / Sentry)
+- Testar detalhes de implementação em vez de comportamento
+
+## WORKFLOW ORCHESTRATION
+
+### 1. Plan Mode Default
+
+- Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions)
+- If something goes sideways, STOP and re-plan immediately
+
+### 2. Subagent Strategy
+
+- Usar subagentes livremente para manter a context window principal limpa
+- Delegar pesquisa, exploração e análise paralela a subagentes
+- Para problemas complexos, atirar mais compute via subagentes
+- Uma tarefa por subagente para execução focada
+
+### 3. Self-improvement Loop
+
+- Ao final e cada sessão, captura todos os erros, desafios e pontos de fricção encontrados que encontraste
+  e coloca dentro de '.cursor/memory/Memory.md'
+- Depois de QUALQUER correção do utilizador: atualizar '.cursor/tasks/correction.md'
+  com o padrão do erro
+- Se o problema da SKILL, ajusta a skill para o projeto
+- Sempre usa o folder '.claude' ou '.cursor' no começo da sessão
+- Escrever regras próprias que previnam o mesmo erro
+- Iterar sem piedade nas lições até a taxa de erro baixar
+- Rever lessons no início da sessão para o projeto relevante
+
+### 4. Verification Before Done
+
+- Nunca marcar uma tarefa como concluída sem provar que funciona
+- Comparar comportamento entre main e as alterações quando relevante
+- Perguntar: "um staff engineer aprovaria isto?"
+- Correr testes, verificar logs, demonstrar correção
+
+### 5. Demand Elegance (Balanced)
+
+- Para alterações não triviais: parar e perguntar "há uma forma mais elegante?"
+- Se uma correção parecer um hack: "Sabendo tudo o que sei agora, implementa a solução elegante"
+- Saltar isto para correções simples e óbvias, não sobre-engenheirar
+- Desafiar o próprio trabalho antes de o apresentar
+
+### 6. Autonomous Bug Fixing
+
+-- Perante um bug report: corrigir diretamente, sem pedir ajuda passo a passo
+
+- Apontar para logs, erros, testes a falhar, depois resolver
+- Zero context switching exigido ao utilizador
+- Corrigir testes de CI a falhar sem instruções detalhadas
+
+## Task Management
+
+1. **Plan First**: Escrever o plano em '.cursor/tasks/todo.md' com items marcáveis
+2. **Verify Plan**: Confirmar com o utilizador antes de implementar
+3. **Track Progress**: Marcar items como concluídos à medida que avança
+4. **Explain Changes**: Resumo de alto nível a cada passo
+5. **Document Results**: Adicionar secção de review a 'tasks/todo.md'
+6. **Capture Lessons**: Atualizar '.cursor/tasks/lessons.md' depois de correções
+
+## Core Principles
+
+- **Simplicity First**: Cada alteração o mais simples possível. Impacto mínimo no código
+- **No Laziness**: Encontrar causas raiz. Sem soluções temporárias. Padrão de senior developer
+- **Minimal Impact**: Alterações tocam apenas no necessário. Evitar introduzir bugs
