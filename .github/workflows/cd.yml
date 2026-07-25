@@ -1,0 +1,11 @@
+name: CD placeholder
+
+on:
+  workflow_dispatch:
+
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain placeholder
+        run: echo "The real CD pipeline is implemented in the nexts sprints."

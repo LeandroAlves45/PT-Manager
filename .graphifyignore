@@ -1,0 +1,15 @@
+.claude/
+.codex/
+AGENTS.md
+.agents/
+.vscode/
+node_modules/
+bin/
+obj/
+backend-python/
+.ruff_cache/
+coverage/
+docs/
+Backlog.md
+README.md
+LICENSE

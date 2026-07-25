@@ -1,4 +1,7 @@
 ---
+name: code-quality
+description: >
+  Expert in code quality, naming conventions, and file organization. Ensures maintainable, readable, and consistent codebases.
 alwaysApply: true
 ---
 

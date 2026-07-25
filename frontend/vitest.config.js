@@ -1,19 +1,13 @@
 /**
  * vitest.config.js — configuração de testes para o PT Manager Frontend.
- *
- * Vitest partilha a configuração do Vite — importa o mesmo vite.config.js.
- * Não é necessário configurar Babel nem transformers de JSX separados.
- *
- * Ambiente jsdom: simula o browser (window, document, localStorage, etc.)
- * sem precisar de um browser real. É o ambiente correcto para React.
- *
- * globals: true — permite usar describe(), test(), expect() sem import,
- * exactamente como Jest. Mais conveniente e consistente com os exemplos online.
  */
 
+import path from 'path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
-import path from 'path';
+
+const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [react()],
@@ -47,7 +41,7 @@ export default defineConfig({
   // Path aliases para importações mais limpas
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      '@': path.resolve(currentDirectory, 'src'),
     },
   },
 });

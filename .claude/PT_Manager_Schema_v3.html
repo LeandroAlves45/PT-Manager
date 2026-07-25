@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PT Manager — Schema da Base de Dados v3.0</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #0d1117;
+            border-right: 1px solid #30363d;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        .sidebar-section {
+            margin-bottom: 20px;
+        }
+
+        .sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #8b949e;
+            padding: 0 16px 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            color: #e6edf3;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 14px;
+        }
+
+        .sidebar-item:hover {
+            background-color: #161b22;
+        }
+
+        .sidebar-item.active {
+            background-color: #1f6feb;
+            color: #fff;
+        }
+
+        .sidebar-item-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: currentColor;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #0d1117;
+            border-bottom: 1px solid #30363d;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+        }
+
+        .header-title {
+            font-size: 14px;
+            color: #8b949e;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-btn {
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid #30363d;
+            color: #e6edf3;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+
+        .header-btn:hover {
+            background-color: #161b22;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px 48px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.2s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #e6edf3;
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-top: 32px;
+            margin-bottom: 16px;
+            color: #e6edf3;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #7d1e6b;
+            color: #fff;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        p {
+            color: #8b949e;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .diagram-container {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .diagram-placeholder {
+            text-align: center;
+            color: #8b949e;
+            font-size: 14px;
+        }
+
+        .table-section {
+            margin-bottom: 32px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #0d1117;
+            padding: 16px;
+            border-bottom: 1px solid #30363d;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-content {
+            padding: 16px;
+        }
+
+        .table-description {
+            color: #8b949e;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .fields-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .field {
+            padding: 8px 0;
+            border-bottom: 1px solid #30363d;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .field:last-child {
+            border-bottom: none;
+        }
+
+        .field-name {
+            color: #79c0ff;
+            font-weight: 500;
+        }
+
+        .field-type {
+            color: #d2a8ff;
+        }
+
+        .field-desc {
+            color: #8b949e;
+            font-style: italic;
+            margin-left: 12px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+
+        .info-box {
+            background: #1f6feb;
+            border-left: 4px solid #1f6feb;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 16px 0;
+            font-size: 13px;
+            color: #e6edf3;
+        }
+
+        .table-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .entity-card {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 12px;
+        }
+
+        .entity-name {
+            font-weight: 600;
+            color: #79c0ff;
+            margin-bottom: 8px;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        .entity-fields {
+            font-size: 12px;
+            color: #8b949e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">VISÃO GERAL</div>
+                <div class="sidebar-item active" onclick="showTab('overview')">
+                    <div class="sidebar-item-dot"></div>
+                    Diagrama completo
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">DOMÍNIOS</div>
+                <div class="sidebar-item" onclick="showTab('identity')">
+                    <div class="sidebar-item-dot"></div>
+                    Identidade &amp; Auth
+                </div>
+                <div class="sidebar-item" onclick="showTab('core')">
+                    <div class="sidebar-item-dot"></div>
+                    Core (Trainer &amp; Clientes)
+                </div>
+                <div class="sidebar-item" onclick="showTab('nutrition')">
+                    <div class="sidebar-item-dot"></div>
+                    Nutrição
+                </div>
+                <div class="sidebar-item" onclick="showTab('supplements')">
+                    <div class="sidebar-item-dot"></div>
+                    Suplementos
+                </div>
+                <div class="sidebar-item" onclick="showTab('training')">
+                    <div class="sidebar-item-dot"></div>
+                    Treino
+                </div>
+                <div class="sidebar-item" onclick="showTab('assessments')">
+                    <div class="sidebar-item-dot"></div>
+                    Avaliações
+                </div>
+                <div class="sidebar-item" onclick="showTab('sessions')">
+                    <div class="sidebar-item-dot"></div>
+                    Sessões
+                </div>
+                <div class="sidebar-item" onclick="showTab('billing')">
+                    <div class="sidebar-item-dot"></div>
+                    Billing
+                </div>
+                <div class="sidebar-item" onclick="showTab('notifications')">
+                    <div class="sidebar-item-dot"></div>
+                    Notificações
+                </div>
+                <div class="sidebar-item" onclick="showTab('jobs')">
+                    <div class="sidebar-item-dot"></div>
+                    Jobs &amp; Outbox
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-title">.CLAUDE/PROJECT/01_DATABASE_SCHEMA.MD — v3.0 (sincronizado 2026-07-25)</div>
+                <div class="header-actions">
+                    <button class="header-btn">Share</button>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Overview Tab -->
+                <div id="overview" class="tab-content active">
+                    <h1>PT Manager — Schema da Base de Dados</h1>
+                    <p>27 tabelas de domínio + <code>__EFMigrationsHistory</code>, PostgreSQL 16 (Neon), modeladas para EF Core 10. IDs em <code>uuid</code> nativo gerados na aplicação (<code>Guid.NewGuid()</code>), multi-tenancy via <code>owner_trainer_id</code> e Global Query Filters, timestamps sempre <code>TIMESTAMPTZ</code>, migrations geradas com <code>dotnet ef migrations add</code> — nunca escritas à mão.</p>
+
+                    <div class="info-box">
+                        Todas as queries filtram automaticamente por <code>owner_trainer_id</code> via EF Core Global Query Filters ligados a <code>ITenantContext</code> (nunca a <code>HttpContext</code> — jobs e webhooks não têm contexto HTTP). Roles: <code>superuser</code>, <code>trainer</code>, <code>client</code>.
+                    </div>
+
+                    <h2>Domínios e tabelas</h2>
+                    <p>Fonte de verdade: <code>.claude/project/01_DATABASE_SCHEMA.md</code>. Este ficheiro é apenas a visualização.</p>
+
+                    <div class="table-grid" style="margin-top: 32px;">
+                        <div class="entity-card">
+                            <div class="entity-name">Identidade &amp; Auth</div>
+                            <div class="entity-fields">users · refresh_tokens · invite_tokens</div>
+                        </div>
+                        <div class="entity-card">
+                            <div class="entity-name">Core</div>
+                            <div class="entity-fields">trainer_subscriptions · clients · trainer_settings</div>
+                        </div>
+                        <div class="entity-card">
+                            <div class="entity-name">Nutrição</div>
+                            <div class="entity-fields">foods · meal_plans · meal_plan_meals · meal_plan_meal_items · meal_plan_meal_supplements</div>
+                        </div>
+                        <div class="entity-card">
+                            <div class="entity-name">Suplementos</div>
+                            <div class="entity-fields">supplements</div>
+                        </div>
+                        <div class="entity-card">
+                            <div class="entity-name">Treino</div>
+                            <div class="entity-fields">training_plans · training_plan_days · exercises · training_plan_day_exercises · exercise_sets · client_exercise_set_logs</div>
+                        </div>
+                        <div class="entity-card">
+                            <div class="entity-name">Avaliações</div>
+                            <div class="entity-fields">initial_assessments · checkins</div>
+                        </div>
+                        <div class="entity-card">
+                            <div class="entity-name">Sessões</div>
+                            <div class="entity-fields">sessions</div>
+                        </div>
+                        <div class="entity-card">
+                            <div class="entity-name">Billing</div>
+                            <div class="entity-fields">pack_types · client_session_packs · processed_stripe_events</div>
+                        </div>
+                        <div class="entity-card">
+                            <div class="entity-name">Notificações</div>
+                            <div class="entity-fields">notifications</div>
+                        </div>
+                        <div class="entity-card">
+                            <div class="entity-name">Jobs &amp; Outbox</div>
+                            <div class="entity-fields">durable_jobs · outbox_messages</div>
+                        </div>
+                        <div class="entity-card">
+                            <div class="entity-name">Infrastructure</div>
+                            <div class="entity-fields">__EFMigrationsHistory (gerida pelo EF Core)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Identity & Auth Tab -->
+                <div id="identity" class="tab-content">
+                    <h1>Identidade &amp; Auth</h1>
+                    <p>Tabela <code>users</code> própria com stores customizados do ASP.NET Core Identity (Decisão 2 — não o schema AspNet* padrão). Refresh tokens com rotação, deteção de reuso e revogação de família; convites de uso único. Só hashes de tokens são persistidos.</p>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> users</div>
+                        <div class="table-content">
+                            <div class="table-description">Utilizadores (trainer/client/superuser) com as colunas mínimas exigidas pelas interfaces do Identity efetivamente usadas (hashing, lockout, verificação de email).</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">email</span> <span class="field-type">varchar(255) not null</span></div>
+                                <div class="field"><span class="field-name">normalized_email</span> <span class="field-type">varchar(255) not null unique</span><div class="field-desc">Uppercase invariante, para lookups do Identity</div></div>
+                                <div class="field"><span class="field-name">password_hash</span> <span class="field-type">varchar(255) not null</span></div>
+                                <div class="field"><span class="field-name">security_stamp</span> <span class="field-type">varchar(255) not null</span></div>
+                                <div class="field"><span class="field-name">concurrency_stamp</span> <span class="field-type">varchar(255) not null</span></div>
+                                <div class="field"><span class="field-name">full_name</span> <span class="field-type">varchar(255) null</span></div>
+                                <div class="field"><span class="field-name">role</span> <span class="field-type">varchar(50) not null default 'trainer'</span><div class="field-desc">CHECK: 'trainer' | 'client' | 'superuser'</div></div>
+                                <div class="field"><span class="field-name">email_confirmed</span> <span class="field-type">boolean default false</span></div>
+                                <div class="field"><span class="field-name">lockout_end</span> <span class="field-type">timestamptz null</span></div>
+                                <div class="field"><span class="field-name">access_failed_count</span> <span class="field-type">integer default 0</span></div>
+                                <div class="field"><span class="field-name">is_active</span> <span class="field-type">boolean default true</span></div>
+                                <div class="field"><span class="field-name">is_deleted</span> <span class="field-type">boolean default false</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> refresh_tokens</div>
+                        <div class="table-content">
+                            <div class="table-description">Substitui o active_tokens do Python. Rotação com deteção de reuso: token com revoked_at preenchido reutilizado ⇒ revogar toda a family_id.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">user_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">family_id</span> <span class="field-type">uuid not null</span><div class="field-desc">Agrupa a cadeia de rotação de uma sessão de login</div></div>
+                                <div class="field"><span class="field-name">token_hash</span> <span class="field-type">varchar(255) not null unique</span><div class="field-desc">Nunca o valor em claro</div></div>
+                                <div class="field"><span class="field-name">rotated_from_id</span> <span class="field-type">uuid FK null → refresh_tokens ON DELETE SET NULL</span></div>
+                                <div class="field"><span class="field-name">expires_at</span> <span class="field-type">timestamptz not null</span></div>
+                                <div class="field"><span class="field-name">revoked_at</span> <span class="field-type">timestamptz null</span></div>
+                                <div class="field"><span class="field-name">created_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> invite_tokens</div>
+                        <div class="table-content">
+                            <div class="table-description">Convites de trainers a futuros clientes. Uso único, com expiração.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">trainer_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">email</span> <span class="field-type">varchar(255) not null</span></div>
+                                <div class="field"><span class="field-name">token_hash</span> <span class="field-type">varchar(255) not null unique</span></div>
+                                <div class="field"><span class="field-name">expires_at</span> <span class="field-type">timestamptz not null</span></div>
+                                <div class="field"><span class="field-name">is_used</span> <span class="field-type">boolean default false</span></div>
+                                <div class="field"><span class="field-name">created_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <strong>Roles:</strong> <code>superuser</code> (admin global), <code>trainer</code> (dono do tenant), <code>client</code> (cliente do trainer). Sem tabelas de roles — coluna única com CHECK.
+                    </div>
+                </div>
+
+                <!-- Core Tab -->
+                <div id="core" class="tab-content">
+                    <h1>Core — Trainer &amp; Clientes</h1>
+                    <p>Subscrição SaaS do trainer, clientes do tenant e branding/configurações por trainer.</p>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> trainer_subscriptions</div>
+                        <div class="table-content">
+                            <div class="table-description">Estado da subscrição por trainer, com limites de clientes e ligação ao Stripe.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">trainer_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">subscription_status</span> <span class="field-type">varchar(50) not null default 'FREE'</span><div class="field-desc">CHECK: ACTIVE | INACTIVE | SUSPENDED | CANCELLED</div></div>
+                                <div class="field"><span class="field-name">subscription_tier</span> <span class="field-type">varchar(50) not null default 'FREE'</span><div class="field-desc">CHECK: FREE | STARTER | PRO</div></div>
+                                <div class="field"><span class="field-name">client_limit</span> <span class="field-type">integer not null default 5</span></div>
+                                <div class="field"><span class="field-name">current_client_count</span> <span class="field-type">integer default 0</span></div>
+                                <div class="field"><span class="field-name">is_exempt_from_billing</span> <span class="field-type">boolean default false</span></div>
+                                <div class="field"><span class="field-name">trial_ends_at</span> <span class="field-type">timestamptz null</span></div>
+                                <div class="field"><span class="field-name">stripe_subscription_id / stripe_customer_id</span> <span class="field-type">varchar(255) null</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> clients</div>
+                        <div class="table-content">
+                            <div class="table-description">Clientes do trainer (multi-tenant). UNIQUE(owner_trainer_id, user_id).</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">owner_trainer_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span><div class="field-desc">Chave do tenant (Global Query Filter)</div></div>
+                                <div class="field"><span class="field-name">user_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">name</span> <span class="field-type">varchar(255) not null</span></div>
+                                <div class="field"><span class="field-name">objective</span> <span class="field-type">varchar(255) null</span><div class="field-desc">'weight_loss', 'muscle_gain', 'strength', 'endurance'</div></div>
+                                <div class="field"><span class="field-name">bio</span> <span class="field-type">text null</span></div>
+                                <div class="field"><span class="field-name">avatar_url</span> <span class="field-type">varchar(500) null</span></div>
+                                <div class="field"><span class="field-name">is_active</span> <span class="field-type">boolean default true</span></div>
+                                <div class="field"><span class="field-name">is_deleted</span> <span class="field-type">boolean default false</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> trainer_settings</div>
+                        <div class="table-content">
+                            <div class="table-description">Branding + configurações por trainer (uma linha por trainer, trainer_id UNIQUE).</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">trainer_id</span> <span class="field-type">uuid FK unique → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">app_name</span> <span class="field-type">varchar(255) default 'PT Manager'</span></div>
+                                <div class="field"><span class="field-name">logo_url</span> <span class="field-type">varchar(500) null</span></div>
+                                <div class="field"><span class="field-name">logo_public_id</span> <span class="field-type">varchar(500) null</span><div class="field-desc">Public ID Cloudinary — para apagar o asset antigo</div></div>
+                                <div class="field"><span class="field-name">primary_color</span> <span class="field-type">varchar(7) default '#000000'</span></div>
+                                <div class="field"><span class="field-name">body_color</span> <span class="field-type">varchar(7) default '#FFFFFF'</span></div>
+                                <div class="field"><span class="field-name">background_image_url</span> <span class="field-type">varchar(500) null</span></div>
+                                <div class="field"><span class="field-name">phone / address / city</span> <span class="field-type">varchar null</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nutrition Tab -->
+                <div id="nutrition" class="tab-content">
+                    <h1>Nutrição</h1>
+                    <p>Catálogo de alimentos (global ou por trainer) e planos alimentares com refeições, itens e suplementos por refeição.</p>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> foods</div>
+                        <div class="table-content">
+                            <div class="table-description">Catálogo de alimentos. owner_trainer_id NULL = catálogo global.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">owner_trainer_id</span> <span class="field-type">uuid FK null → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">name</span> <span class="field-type">varchar(255) not null</span><div class="field-desc">Índice GIN full-text (português)</div></div>
+                                <div class="field"><span class="field-name">description</span> <span class="field-type">text null</span></div>
+                                <div class="field"><span class="field-name">calories / protein / carbs / fats</span> <span class="field-type">decimal(10,2) not null</span></div>
+                                <div class="field"><span class="field-name">kcal</span> <span class="field-type">decimal(10,2) GENERATED ALWAYS AS (protein*4 + carbs*4 + fats*9) STORED</span></div>
+                                <div class="field"><span class="field-name">fiber</span> <span class="field-type">decimal(10,2) null</span></div>
+                                <div class="field"><span class="field-name">is_deleted</span> <span class="field-type">boolean default false</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> meal_plans</div>
+                        <div class="table-content">
+                            <div class="table-description">Plano alimentar por cliente, com alvos de macros. CHECK date_order: starts_date &lt;= ends_date.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">owner_trainer_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">client_id</span> <span class="field-type">uuid FK → clients ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">name</span> <span class="field-type">varchar(255) not null</span></div>
+                                <div class="field"><span class="field-name">description</span> <span class="field-type">text null</span></div>
+                                <div class="field"><span class="field-name">starts_date / ends_date</span> <span class="field-type">date not null</span></div>
+                                <div class="field"><span class="field-name">protein_target_g / carbs_target_g / fats_target</span> <span class="field-type">decimal(10,2) not null</span><div class="field-desc">Mapeados no VO MacroSummary do Domain</div></div>
+                                <div class="field"><span class="field-name">is_active / is_archived / is_deleted</span> <span class="field-type">boolean</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> meal_plan_meals</div>
+                        <div class="table-content">
+                            <div class="table-description">Refeições dentro de um plano. UNIQUE(meal_plan_id, order_number).</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">meal_plan_id</span> <span class="field-type">uuid FK → meal_plans ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">meal_type</span> <span class="field-type">varchar(50) not null</span><div class="field-desc">CHECK: breakfast | lunch | dinner | snack</div></div>
+                                <div class="field"><span class="field-name">order_number</span> <span class="field-type">integer not null</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> meal_plan_meal_items</div>
+                        <div class="table-content">
+                            <div class="table-description">Alimentos numa refeição. CHECK positive_quantity: quantity_grams &gt; 0.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">meal_plan_meal_id</span> <span class="field-type">uuid FK → meal_plan_meals ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">food_id</span> <span class="field-type">uuid FK → foods ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">quantity_grams</span> <span class="field-type">decimal(10,2) not null &gt; 0</span></div>
+                                <div class="field"><span class="field-name">order_number</span> <span class="field-type">integer not null</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> meal_plan_meal_supplements</div>
+                        <div class="table-content">
+                            <div class="table-description">Suplementos por refeição, com notas. UNIQUE(meal_plan_meal_id, supplement_id). Sem updated_at.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">meal_plan_meal_id</span> <span class="field-type">uuid FK → meal_plan_meals ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">supplement_id</span> <span class="field-type">uuid FK → supplements ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">notes</span> <span class="field-type">varchar(500) null</span><div class="field-desc">'dose: 2g', 'timing: with breakfast', etc.</div></div>
+                                <div class="field"><span class="field-name">order_number</span> <span class="field-type">integer not null</span></div>
+                                <div class="field"><span class="field-name">created_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Supplements Tab -->
+                <div id="supplements" class="tab-content">
+                    <h1>Suplementos</h1>
+                    <p>Catálogo de suplementos, global ou criado por um utilizador. Nota: o dono é <code>created_by_user_id</code> com <code>ON DELETE SET NULL</code> — apagar o autor torna o suplemento global, não o remove.</p>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> supplements</div>
+                        <div class="table-content">
+                            <div class="table-description">Suplementos globais (created_by_user_id NULL) ou de utilizador.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">created_by_user_id</span> <span class="field-type">uuid FK null → users ON DELETE SET NULL</span></div>
+                                <div class="field"><span class="field-name">name</span> <span class="field-type">varchar(255) not null</span></div>
+                                <div class="field"><span class="field-name">description</span> <span class="field-type">text null</span></div>
+                                <div class="field"><span class="field-name">unit_of_measure</span> <span class="field-type">varchar(50) null</span><div class="field-desc">'grams', 'capsules', 'ml', 'tablets' (orientativo, sem CHECK)</div></div>
+                                <div class="field"><span class="field-name">is_deleted</span> <span class="field-type">boolean default false</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Training Tab -->
+                <div id="training" class="tab-content">
+                    <h1>Treino</h1>
+                    <p>Planos de treino por cliente, dias (semana 1–52, dia 0=segunda…6=domingo), catálogo de exercícios, prescrições, séries planeadas e registos reais do cliente.</p>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> training_plans</div>
+                        <div class="table-content">
+                            <div class="table-description">Plano de treino atribuído a um cliente.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">owner_trainer_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">client_id</span> <span class="field-type">uuid FK → clients ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">name</span> <span class="field-type">varchar(255) not null</span></div>
+                                <div class="field"><span class="field-name">description</span> <span class="field-type">text null</span></div>
+                                <div class="field"><span class="field-name">training_modality</span> <span class="field-type">varchar(50) null</span><div class="field-desc">'strength', 'cardio', 'flexibility', 'mixed'</div></div>
+                                <div class="field"><span class="field-name">starts_date / ends_date</span> <span class="field-type">date not null</span></div>
+                                <div class="field"><span class="field-name">is_active / is_archived / is_deleted</span> <span class="field-type">boolean</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> training_plan_days</div>
+                        <div class="table-content">
+                            <div class="table-description">Dias de um plano. CHECK day_range (0–6, 0=segunda) e week_range (1–52).</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">training_plan_id</span> <span class="field-type">uuid FK → training_plans ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">day_of_week</span> <span class="field-type">integer not null (0–6)</span></div>
+                                <div class="field"><span class="field-name">week_number</span> <span class="field-type">integer not null (1–52)</span></div>
+                                <div class="field"><span class="field-name">notes</span> <span class="field-type">text null</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> exercises</div>
+                        <div class="table-content">
+                            <div class="table-description">Catálogo de exercícios. owner_trainer_id NULL = global. Índice GIN full-text.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">owner_trainer_id</span> <span class="field-type">uuid FK null → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">name</span> <span class="field-type">varchar(255) not null</span></div>
+                                <div class="field"><span class="field-name">description</span> <span class="field-type">text null</span></div>
+                                <div class="field"><span class="field-name">muscle_groups</span> <span class="field-type">varchar(500) null</span><div class="field-desc">CSV simples: 'chest,triceps'</div></div>
+                                <div class="field"><span class="field-name">equipment</span> <span class="field-type">varchar(255) null</span></div>
+                                <div class="field"><span class="field-name">difficulty_level</span> <span class="field-type">varchar(50) null</span><div class="field-desc">'beginner', 'intermediate', 'advanced'</div></div>
+                                <div class="field"><span class="field-name">video_url</span> <span class="field-type">varchar(500) null</span></div>
+                                <div class="field"><span class="field-name">is_deleted</span> <span class="field-type">boolean default false</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> training_plan_day_exercises</div>
+                        <div class="table-content">
+                            <div class="table-description">Exercício prescrito num dia de treino, com posição e notas.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">training_plan_day_id</span> <span class="field-type">uuid FK → training_plan_days ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">exercise_id</span> <span class="field-type">uuid FK → exercises ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">order_number</span> <span class="field-type">integer not null</span></div>
+                                <div class="field"><span class="field-name">notes</span> <span class="field-type">text null</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> exercise_sets</div>
+                        <div class="table-content">
+                            <div class="table-description">Séries planeadas. CHECK set_num_check (1–15) e reps_check (&gt; 0 quando definido).</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">training_plan_day_exercise_id</span> <span class="field-type">uuid FK → training_plan_day_exercises ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">set_number</span> <span class="field-type">integer not null (1–15)</span></div>
+                                <div class="field"><span class="field-name">planned_reps</span> <span class="field-type">integer null &gt; 0</span></div>
+                                <div class="field"><span class="field-name">planned_weight_kg</span> <span class="field-type">decimal(10,2) null</span></div>
+                                <div class="field"><span class="field-name">rest_seconds</span> <span class="field-type">integer null</span></div>
+                                <div class="field"><span class="field-name">is_completed</span> <span class="field-type">boolean default false</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> client_exercise_set_logs</div>
+                        <div class="table-content">
+                            <div class="table-description">Registo real do cliente. UNIQUE(client_id, training_plan_day_exercise_id, set_number). CHECKs: weight_kg ≥ 0, reps_done 0–100, set_number 1–15.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">client_id</span> <span class="field-type">uuid FK → clients ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">training_plan_day_exercise_id</span> <span class="field-type">uuid FK → training_plan_day_exercises ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">set_number</span> <span class="field-type">integer not null (1–15)</span></div>
+                                <div class="field"><span class="field-name">weight_kg</span> <span class="field-type">decimal(10,2) not null ≥ 0</span></div>
+                                <div class="field"><span class="field-name">reps_done</span> <span class="field-type">integer not null (0–100)</span></div>
+                                <div class="field"><span class="field-name">notes</span> <span class="field-type">varchar(500) null</span></div>
+                                <div class="field"><span class="field-name">logged_at</span> <span class="field-type">timestamptz not null</span><div class="field-desc">Timestamp oficial do treino (não created_at)</div></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assessments Tab -->
+                <div id="assessments" class="tab-content">
+                    <h1>Avaliações</h1>
+                    <p>Avaliação inicial (snapshot de partida) e check-ins periódicos (série temporal de progresso).</p>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> initial_assessments</div>
+                        <div class="table-content">
+                            <div class="table-description">Avaliação inicial do cliente. Campos de medida opcionais.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">owner_trainer_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">client_id</span> <span class="field-type">uuid FK → clients ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">age</span> <span class="field-type">integer null</span></div>
+                                <div class="field"><span class="field-name">gender</span> <span class="field-type">varchar(10) null</span><div class="field-desc">'male', 'female', 'other'</div></div>
+                                <div class="field"><span class="field-name">weight_kg</span> <span class="field-type">decimal(10,2) null</span></div>
+                                <div class="field"><span class="field-name">height_cm</span> <span class="field-type">integer null</span></div>
+                                <div class="field"><span class="field-name">body_fat_percentage</span> <span class="field-type">decimal(10,2) null</span></div>
+                                <div class="field"><span class="field-name">medical_conditions / goals</span> <span class="field-type">text null</span></div>
+                                <div class="field"><span class="field-name">fitness_level</span> <span class="field-type">varchar(50) null</span><div class="field-desc">'sedentary', 'lightly_active', 'moderately_active', 'very_active'</div></div>
+                                <div class="field"><span class="field-name">is_deleted</span> <span class="field-type">boolean default false</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> checkins</div>
+                        <div class="table-content">
+                            <div class="table-description">Check-ins periódicos (peso, % gordura), com data alvo do próximo.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">owner_trainer_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">client_id</span> <span class="field-type">uuid FK → clients ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">check_in_date</span> <span class="field-type">date not null</span></div>
+                                <div class="field"><span class="field-name">target_date</span> <span class="field-type">date null</span></div>
+                                <div class="field"><span class="field-name">weight_kg</span> <span class="field-type">decimal(10,2) null</span></div>
+                                <div class="field"><span class="field-name">body_fat_percentage</span> <span class="field-type">decimal(10,2) null</span></div>
+                                <div class="field"><span class="field-name">notes</span> <span class="field-type">text null</span></div>
+                                <div class="field"><span class="field-name">is_deleted</span> <span class="field-type">boolean default false</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sessions Tab -->
+                <div id="sessions" class="tab-content">
+                    <h1>Sessões</h1>
+                    <p>Sessões com o trainer: data (DATE) e hora (TIME opcional) separadas, tipo e conclusão.</p>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> sessions</div>
+                        <div class="table-content">
+                            <div class="table-description">Sessão agendada ou realizada.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">owner_trainer_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">client_id</span> <span class="field-type">uuid FK → clients ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">session_date</span> <span class="field-type">date not null</span></div>
+                                <div class="field"><span class="field-name">session_time</span> <span class="field-type">time null</span></div>
+                                <div class="field"><span class="field-name">duration_minutes</span> <span class="field-type">integer null</span></div>
+                                <div class="field"><span class="field-name">session_type</span> <span class="field-type">varchar(50) null</span><div class="field-desc">'strength', 'cardio', 'flexibility', 'assessment'</div></div>
+                                <div class="field"><span class="field-name">notes</span> <span class="field-type">text null</span></div>
+                                <div class="field"><span class="field-name">is_completed</span> <span class="field-type">boolean default false</span></div>
+                                <div class="field"><span class="field-name">is_deleted</span> <span class="field-type">boolean default false</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Billing Tab -->
+                <div id="billing" class="tab-content">
+                    <h1>Billing</h1>
+                    <p>Packs de sessões vendidos pelo trainer (preços em cêntimos, como o Stripe) e idempotência de webhooks Stripe. A subscrição SaaS do trainer está no separador Core.</p>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> pack_types</div>
+                        <div class="table-content">
+                            <div class="table-description">Tipos de packs de sessões. owner_trainer_id NULL = template global.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">owner_trainer_id</span> <span class="field-type">uuid FK null → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">name</span> <span class="field-type">varchar(255) not null</span></div>
+                                <div class="field"><span class="field-name">session_count</span> <span class="field-type">integer not null</span></div>
+                                <div class="field"><span class="field-name">price_cents</span> <span class="field-type">integer not null</span><div class="field-desc">Cêntimos (minor units, como o Stripe)</div></div>
+                                <div class="field"><span class="field-name">duration_days</span> <span class="field-type">integer null</span></div>
+                                <div class="field"><span class="field-name">is_deleted</span> <span class="field-type">boolean default false</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> client_session_packs</div>
+                        <div class="table-content">
+                            <div class="table-description">Packs comprados por cliente, com saldo de sessões e expiração.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">owner_trainer_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">client_id</span> <span class="field-type">uuid FK → clients ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">pack_type_id</span> <span class="field-type">uuid FK → pack_types ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">sessions_remaining</span> <span class="field-type">integer not null</span></div>
+                                <div class="field"><span class="field-name">purchase_date</span> <span class="field-type">date not null</span></div>
+                                <div class="field"><span class="field-name">expiry_date</span> <span class="field-type">date null</span></div>
+                                <div class="field"><span class="field-name">is_deleted</span> <span class="field-type">boolean default false</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> processed_stripe_events</div>
+                        <div class="table-content">
+                            <div class="table-description">Idempotência dos webhooks Stripe — deduplica por event.id. Escrito na mesma transação que o efeito + outbox message.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">stripe_event_id</span> <span class="field-type">varchar(255) not null unique</span></div>
+                                <div class="field"><span class="field-name">event_type</span> <span class="field-type">varchar(100) not null</span></div>
+                                <div class="field"><span class="field-name">processed_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications Tab -->
+                <div id="notifications" class="tab-content">
+                    <h1>Notificações</h1>
+                    <p>Histórico de notificações por email (Resend), com template, dados JSONB, estado de entrega e retries.</p>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> notifications</div>
+                        <div class="table-content">
+                            <div class="table-description">Notificação a um destinatário do tenant. CHECK status: pending | sent | failed | bounced.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">owner_trainer_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">client_id</span> <span class="field-type">uuid FK null → clients ON DELETE SET NULL</span></div>
+                                <div class="field"><span class="field-name">recipient_email</span> <span class="field-type">varchar(255) not null</span><div class="field-desc">Snapshot do email no momento do envio</div></div>
+                                <div class="field"><span class="field-name">notification_type</span> <span class="field-type">varchar(50) not null</span><div class="field-desc">'session_reminder', 'welcome', 'receipt', etc.</div></div>
+                                <div class="field"><span class="field-name">template_key</span> <span class="field-type">varchar(255) not null</span></div>
+                                <div class="field"><span class="field-name">template_data</span> <span class="field-type">jsonb null</span></div>
+                                <div class="field"><span class="field-name">status</span> <span class="field-type">varchar(50) default 'pending'</span></div>
+                                <div class="field"><span class="field-name">retry_count</span> <span class="field-type">integer default 0</span></div>
+                                <div class="field"><span class="field-name">last_retry_at / sent_at</span> <span class="field-type">timestamptz null</span></div>
+                                <div class="field"><span class="field-name">error_message</span> <span class="field-type">text null</span><div class="field-desc">Sanitizada — nunca stack trace</div></div>
+                                <div class="field"><span class="field-name">is_deleted</span> <span class="field-type">boolean default false</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Jobs & Outbox Tab -->
+                <div id="jobs" class="tab-content">
+                    <h1>Jobs &amp; Outbox</h1>
+                    <p>Substituem RabbitMQ/MassTransit no MVP: fila durável em Postgres processada por um dispatcher interno ativado pelo Upstash QStash (de 20 em 20 minutos), e Outbox pattern para efeitos transacionais (ex.: email pós-pagamento Stripe).</p>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> durable_jobs</div>
+                        <div class="table-content">
+                            <div class="table-description">Fila de jobs. Claim transacional com FOR UPDATE SKIP LOCKED + lease (lease_expires_at) para recuperar workers mortos. CHECK status: pending | processing | completed | failed | dead_letter.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">trainer_id</span> <span class="field-type">uuid FK null → users ON DELETE CASCADE</span><div class="field-desc">NULL quando o job não é tenant-owned</div></div>
+                                <div class="field"><span class="field-name">job_type</span> <span class="field-type">varchar(100) not null</span><div class="field-desc">'send_notification', 'process_billing', etc.</div></div>
+                                <div class="field"><span class="field-name">job_version</span> <span class="field-type">integer not null default 1</span></div>
+                                <div class="field"><span class="field-name">payload</span> <span class="field-type">jsonb not null</span></div>
+                                <div class="field"><span class="field-name">status</span> <span class="field-type">varchar(50) not null default 'pending'</span></div>
+                                <div class="field"><span class="field-name">scheduled_at</span> <span class="field-type">timestamptz not null</span></div>
+                                <div class="field"><span class="field-name">attempts</span> <span class="field-type">integer not null default 0</span></div>
+                                <div class="field"><span class="field-name">next_attempt_at / lease_expires_at</span> <span class="field-type">timestamptz null</span></div>
+                                <div class="field"><span class="field-name">idempotency_key</span> <span class="field-type">varchar(255) not null unique</span></div>
+                                <div class="field"><span class="field-name">correlation_id</span> <span class="field-type">uuid not null</span></div>
+                                <div class="field"><span class="field-name">last_error</span> <span class="field-type">text null</span><div class="field-desc">Sanitizada — nunca stack trace completo</div></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> outbox_messages</div>
+                        <div class="table-content">
+                            <div class="table-description">Outbox transacional: escrita na MESMA transação da alteração de domínio. CHECK status: pending | dispatched | completed | failed.</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">trainer_id</span> <span class="field-type">uuid FK null → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">message_type</span> <span class="field-type">varchar(100) not null</span><div class="field-desc">'payment_confirmed_email', 'payment_failed_alert', etc.</div></div>
+                                <div class="field"><span class="field-name">payload</span> <span class="field-type">jsonb not null</span></div>
+                                <div class="field"><span class="field-name">status</span> <span class="field-type">varchar(50) not null default 'pending'</span></div>
+                                <div class="field"><span class="field-name">correlation_id</span> <span class="field-type">uuid not null</span></div>
+                                <div class="field"><span class="field-name">created_at</span> <span class="field-type">timestamptz not null</span></div>
+                                <div class="field"><span class="field-name">dispatched_at / completed_at</span> <span class="field-type">timestamptz null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <strong>Fluxo:</strong> Alteração de domínio + OutboxMessage (mesma transação) → QStash acorda o dispatcher → claim com FOR UPDATE SKIP LOCKED → efeito executado → completed. Entrega at-least-once — handlers idempotentes via <code>idempotency_key</code>.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active class from all sidebar items
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            sidebarItems.forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Show the selected tab
+            const selectedTab = document.getElementById(tabName);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+
+            // Mark the clicked sidebar item as active
+            event.target.closest('.sidebar-item').classList.add('active');
+
+            // Scroll content area to top
+            document.querySelector('.content-area').scrollTop = 0;
+        }
+    </script>
+</body>
+</html>

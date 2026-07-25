@@ -1,5 +1,5 @@
-# Ambiente virtual
-venv/
+# Old backend
+backend-python/
 
 # Variáveis de ambiente
 .env
@@ -8,24 +8,23 @@ venv/
 .env.development
 .env*.local
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# SQLite
-*.db
-
 # Build / packaging
 *.egg-info/
 dist/
 dist-ssr
 build/
+bin/
+obj/
+publish/
+TestResults/
+coverage/
 
 # Node.js
 node_modules/
 *.local
+
+# Backend
+backend/artifacts/
 
 # Logs
 logs/
@@ -37,14 +36,26 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # IDEs and editors
-.vscode/*
+.vscode/
 !.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
 .idea/
+.vs/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
-*.sln
+*.user
+*.rsuser
 *.sw?
 .md/*
 .coverage
+
+# Memória local dos assistentes
+.codex/memory/
+.claude/memory/MEMORY.md
+
+# Documentation and Backlog
+docs/
+backlogs/
