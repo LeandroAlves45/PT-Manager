@@ -294,7 +294,7 @@ CREATE TABLE meal_plans (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     starts_date DATE NOT NULL,
-    ends_date DATE NOT NULL,
+    ends_date DATE, -- opcional: sem valor, o plano fica ativo até ser substituído
     protein_target_g DECIMAL(10, 2) NOT NULL,
     carbs_target_g DECIMAL(10, 2) NOT NULL,
     fats_target DECIMAL(10, 2) NOT NULL,
@@ -306,6 +306,9 @@ CREATE TABLE meal_plans (
 
     CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
+    -- ends_date pode ser NULL (plano sem data de fim); a comparação com NULL
+    -- avalia a UNKNOWN em Postgres, e uma CHECK só rejeita quando avalia a
+    -- FALSE — logo esta constraint continua correta sem tratamento especial.
     CONSTRAINT date_order CHECK (starts_date <= ends_date)
 );
 
@@ -322,13 +325,13 @@ Refeições dentro dum plano.
 CREATE TABLE meal_plan_meals (
     id UUID PRIMARY KEY,
     meal_plan_id UUID NOT NULL,
-    meal_type VARCHAR(50) NOT NULL, -- 'breakfast', 'lunch', 'dinner', 'snack'
+    meal_type VARCHAR(50) NOT NULL, -- texto livre definido pelo trainer (ex: 'breakfast', 'pre-treino', 'ceia')
     order_number INTEGER NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_meal_plan FOREIGN KEY (meal_plan_id) REFERENCES meal_plans(id) ON DELETE CASCADE,
-    CONSTRAINT meal_type_check CHECK (meal_type IN ('breakfast', 'lunch', 'dinner', 'snack')),
+    CONSTRAINT meal_type_not_blank CHECK (length(trim(meal_type)) > 0),
     CONSTRAINT unique_meal_order UNIQUE(meal_plan_id, order_number)
 );
 
@@ -367,12 +370,15 @@ CREATE TABLE meal_plan_meal_supplements (
     meal_plan_meal_id UUID NOT NULL,
     supplement_id UUID NOT NULL,
     notes VARCHAR(500), -- 'dose: 2g', 'timing: with breakfast', etc
+    quantity DECIMAL(10, 2) NOT NULL, -- unidade vem de supplements.unit_of_measure, não se duplica aqui
     order_number INTEGER NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_meal FOREIGN KEY (meal_plan_meal_id) REFERENCES meal_plan_meals(id) ON DELETE CASCADE,
     CONSTRAINT fk_supplement FOREIGN KEY (supplement_id) REFERENCES supplements(id) ON DELETE CASCADE,
-    CONSTRAINT unique_supplement_per_meal UNIQUE(meal_plan_meal_id, supplement_id)
+    CONSTRAINT unique_supplement_per_meal UNIQUE(meal_plan_meal_id, supplement_id),
+    CONSTRAINT positive_supplement_quantity CHECK (quantity > 0)
 );
 
 CREATE INDEX idx_supp_meal ON meal_plan_meal_supplements(meal_plan_meal_id);
@@ -394,8 +400,9 @@ CREATE TABLE training_plans (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     training_modality VARCHAR(50), -- 'strength', 'cardio', 'flexibility', 'mixed'
+    notes TEXT,
     starts_date DATE NOT NULL,
-    ends_date DATE NOT NULL,
+    ends_date DATE, -- opcional: sem valor, o plano fica ativo até ser substituído/arquivado
     is_active BOOLEAN DEFAULT true,
     is_archived BOOLEAN DEFAULT false,
     is_deleted BOOLEAN DEFAULT false,
@@ -489,14 +496,17 @@ CREATE TABLE exercise_sets (
     set_number INTEGER NOT NULL,
     planned_reps INTEGER,
     planned_weight_kg DECIMAL(10, 2),
-    rest_seconds INTEGER,
-    is_completed BOOLEAN DEFAULT false,
+    rest_seconds_min INTEGER,
+    rest_seconds_max INTEGER,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_day_exercise FOREIGN KEY (training_plan_day_exercise_id) REFERENCES training_plan_day_exercises(id) ON DELETE CASCADE,
     CONSTRAINT set_num_check CHECK (set_number >= 1 AND set_number <= 15),
-    CONSTRAINT reps_check CHECK (planned_reps IS NULL OR planned_reps > 0)
+    CONSTRAINT reps_check CHECK (planned_reps IS NULL OR planned_reps > 0),
+    CONSTRAINT rest_range_check CHECK (
+        rest_seconds_min IS NULL OR rest_seconds_max IS NULL OR rest_seconds_min <= rest_seconds_max
+    )
 );
 
 CREATE INDEX idx_sets_exercise ON exercise_sets(training_plan_day_exercise_id);
@@ -545,14 +555,14 @@ CREATE TABLE initial_assessments (
     id UUID PRIMARY KEY,
     owner_trainer_id UUID NOT NULL,
     client_id UUID NOT NULL,
-    age INTEGER,
-    gender VARCHAR(10), -- 'male', 'female', 'other'
-    weight_kg DECIMAL(10, 2),
-    height_cm INTEGER,
+    age INTEGER NOT NULL,
+    gender VARCHAR(10) NOT NULL, -- 'male', 'female', 'other'
+    weight_kg DECIMAL(10, 2) NOT NULL,
+    height_cm INTEGER NOT NULL,
     body_fat_percentage DECIMAL(10, 2),
     medical_conditions TEXT,
-    fitness_level VARCHAR(50), -- 'sedentary', 'lightly_active', 'moderately_active', 'very_active'
-    goals TEXT,
+    fitness_level VARCHAR(50) NOT NULL, -- 'sedentary', 'lightly_active', 'moderately_active', 'very_active'
+    goals TEXT NOT NULL,
     is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
