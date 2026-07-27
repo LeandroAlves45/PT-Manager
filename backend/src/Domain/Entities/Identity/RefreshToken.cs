@@ -1,3 +1,4 @@
+using Domain.Exceptions;
 namespace Domain.Entities.Identity;
 
 /// <summary>
@@ -34,6 +35,10 @@ public class RefreshToken
         DateTime now
     )
     {
+        if (string.IsNullOrWhiteSpace(tokenHash))
+            throw new DomainException("Refresh token hash is required");
+        if (tokenHash.Length > 255)
+            throw new DomainException("Refresh token hash cannot exceed 255 characters");
         if (expiresAt <= now)
             throw new DomainException("Refresh token expiration must be in the future");
 

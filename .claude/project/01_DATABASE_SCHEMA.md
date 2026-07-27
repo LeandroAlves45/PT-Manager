@@ -106,7 +106,7 @@ Subscription status por trainer.
 CREATE TABLE trainer_subscriptions (
     id UUID PRIMARY KEY,
     trainer_id UUID NOT NULL,
-    subscription_status VARCHAR(50) NOT NULL DEFAULT 'FREE',
+    subscription_status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE', -- ACTIVE, INACTIVE, SUSPENDED, CANCELLED
     subscription_tier VARCHAR(50) NOT NULL DEFAULT 'FREE', -- FREE, STARTER, PRO
     client_limit INTEGER NOT NULL DEFAULT 5,
     current_client_count INTEGER DEFAULT 0,
@@ -645,7 +645,7 @@ Tipos de packs (sessões).
 ```sql
 CREATE TABLE pack_types (
     id UUID PRIMARY KEY,
-    owner_trainer_id UUID, -- NULL = global
+    owner_trainer_id UUID NOT NULL, -- multi-tenant: cada trainer gere o próprio catálogo, sem packs globais partilhados
     name VARCHAR(255) NOT NULL,
     session_count INTEGER NOT NULL,
     price_cents INTEGER NOT NULL,

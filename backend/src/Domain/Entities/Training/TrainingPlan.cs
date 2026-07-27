@@ -1,3 +1,4 @@
+using Domain.Exceptions;
 namespace Domain.Entities.Training;
 
 /// <summary>
@@ -43,6 +44,10 @@ public class TrainingPlan
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainException("Training plan name cannot be empty.");
+        if (name.Length > 255)
+            throw new DomainException("Training plan name cannot exceed 255 characters.");
+        if (trainingModality != null && trainingModality.Length > 50)
+            throw new DomainException("Training modality cannot exceed 50 characters.");
         if (endDate.HasValue && endDate.Value < startDate)
             throw new DomainException("Training plan end date cannot be before start date.");
 

@@ -1,3 +1,5 @@
+using Domain.Exceptions;
+using Domain.ValueObjects;
 namespace Domain.Entities.Nutrition;
 
 /// <summary>
@@ -20,7 +22,7 @@ public class MealPlan
     /// </summary>
     public DateOnly? EndsDate { get; private set; }
     /// <summary>Alvo diário de macros (protein, carbs, fats) em gramas.</summary>
-    public MacroSummary Targets { get; private set; }
+    public MacroSummary Targets { get; private set; } = null!;
 
     public bool IsActive { get; private set; }
     public bool IsArchived { get; private set; }
@@ -49,14 +51,18 @@ public class MealPlan
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainException("Meal Plan name is required");
+
+        var normalizedName = name.Trim();
+        if (normalizedName.Length > 255)
+            throw new DomainException("Meal Plan name cannot exceed 255 characters");
         if (endsDate.HasValue && endsDate.Value < startsDate)
             throw new DomainException("Meal Plan ends date cannot be before starts date");
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
         ClientId = clientId;
-        Name = name.Trim();
-        Description = description?.Trim();
+        Name = normalizedName;
+        Description = description;
         StartsDate = startsDate;
         EndsDate = endsDate;
         Targets = targets;

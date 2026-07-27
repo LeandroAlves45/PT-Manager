@@ -1,3 +1,4 @@
+using Domain.Exceptions;
 namespace Domain.Entities.Nutrition;
 
 /// <summary>
@@ -40,15 +41,12 @@ public class Food
         DateTime now
     )
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new DomainException("Food name is required");
-        if (calories < 0 || protein < 0 || carbs < 0 || fats < 0 || (fiber.HasValue && fiber.Value < 0))
-            throw new DomainException("Food macros cannot be negative");
+        ValidateParametersFood(name, calories, protein, carbs, fats, fiber);
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
-        Name = name.Trim();
-        Description = description?.Trim();
+        Name = name;
+        Description = description;
         Calories = calories;
         Protein = protein;
         Carbs = carbs;
@@ -71,13 +69,10 @@ public class Food
         DateTime now
     )
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new DomainException("Food name is required");
-        if (calories < 0 || protein < 0 || carbs < 0 || fats < 0 || (fiber.HasValue && fiber.Value < 0))
-            throw new DomainException("Food macros cannot be negative");
+        ValidateParametersFood(name, calories, protein, carbs, fats, fiber);
 
-        Name = name.Trim();
-        Description = description?.Trim();
+        Name = name;
+        Description = description;
         Calories = calories;
         Protein = protein;
         Carbs = carbs;
@@ -91,5 +86,32 @@ public class Food
     {
         IsDeleted = true;
         UpdatedAt = now;
+    }
+
+    /// <summary>Valida os parâmetros do alimento.</summary>
+    private void ValidateParametersFood(
+        string name,
+        decimal calories,
+        decimal protein,
+        decimal carbs,
+        decimal fats,
+        decimal? fiber
+    )
+    {
+        var normalizedName = name?.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedName))
+            throw new DomainException("Food name is required");
+        if (normalizedName.Length > 255)
+            throw new DomainException("Food name cannot exceed 255 characters.");
+        if (calories < 0)
+            throw new DomainException("Calories cannot be negative.");
+        if (protein < 0)
+            throw new DomainException("Protein cannot be negative.");
+        if (carbs < 0)
+            throw new DomainException("Carbs cannot be negative.");
+        if (fats < 0)
+            throw new DomainException("Fats cannot be negative.");
+        if (fiber.HasValue && fiber.Value < 0)
+            throw new DomainException("Fiber cannot be negative.");
     }
 }

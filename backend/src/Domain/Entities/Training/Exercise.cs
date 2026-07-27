@@ -1,3 +1,4 @@
+using Domain.Exceptions;
 namespace Domain.Entities.Training;
 
 /// <summary>
@@ -37,16 +38,29 @@ public class Exercise
     )
     {
         if (string.IsNullOrWhiteSpace(name))
-            throw new DomainException("Exercise name cannot be empty.");
+            throw new DomainException("Exercise name is required");
+
+        var normalizedName = name.Trim();
+        var normalizedMuscleGroups = muscleGroups?.Trim();
+        var normalizedEquipment = equipment?.Trim();
+        var normalizedDifficultyLevel = difficultyLevel?.Trim();
+        var normalizedVideoUrl = videoUrl?.Trim();
+        ValidateParametersExercise(
+            normalizedName,
+            normalizedMuscleGroups,
+            normalizedEquipment,
+            normalizedDifficultyLevel,
+            normalizedVideoUrl
+        );
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
-        Name = name.Trim();
+        Name = normalizedName;
         Description = description;
-        MuscleGroups = muscleGroups;
-        Equipment = equipment;
-        DifficultyLevel = difficultyLevel;
-        VideoUrl = videoUrl;
+        MuscleGroups = normalizedMuscleGroups;
+        Equipment = normalizedEquipment;
+        DifficultyLevel = normalizedDifficultyLevel;
+        VideoUrl = normalizedVideoUrl;
         IsDeleted = false;
         CreatedAt = now;
         UpdatedAt = now;
@@ -64,14 +78,27 @@ public class Exercise
     )
     {
         if (string.IsNullOrWhiteSpace(name))
-            throw new DomainException("Exercise name cannot be empty.");
+            throw new DomainException("Exercise name is required");
 
-        Name = name.Trim();
+        var normalizedName = name.Trim();
+        var normalizedMuscleGroups = muscleGroups?.Trim();
+        var normalizedEquipment = equipment?.Trim();
+        var normalizedDifficultyLevel = difficultyLevel?.Trim();
+        var normalizedVideoUrl = videoUrl?.Trim();
+        ValidateParametersExercise(
+            normalizedName,
+            normalizedMuscleGroups,
+            normalizedEquipment,
+            normalizedDifficultyLevel,
+            normalizedVideoUrl
+        );
+
+        Name = normalizedName;
         Description = description;
-        MuscleGroups = muscleGroups;
-        Equipment = equipment;
-        DifficultyLevel = difficultyLevel;
-        VideoUrl = videoUrl;
+        MuscleGroups = normalizedMuscleGroups;
+        Equipment = normalizedEquipment;
+        DifficultyLevel = normalizedDifficultyLevel;
+        VideoUrl = normalizedVideoUrl;
         UpdatedAt = now;
     }
 
@@ -80,5 +107,26 @@ public class Exercise
     {
         IsDeleted = true;
         UpdatedAt = now;
+    }
+
+    /// <summary>Valida os parâmetros de criação/atualização do exercício.</summary>
+    private void ValidateParametersExercise(
+        string name,
+        string? muscleGroups,
+        string? equipment,
+        string? difficultyLevel,
+        string? videoUrl
+    )
+    {
+        if (name.Length > 255)
+            throw new DomainException("Exercise name cannot exceed 255 characters");
+        if (muscleGroups != null && muscleGroups.Length > 500)
+            throw new DomainException("Exercise muscle groups cannot exceed 500 characters");
+        if (equipment != null && equipment.Length > 255)
+            throw new DomainException("Exercise equipment cannot exceed 255 characters");
+        if (difficultyLevel != null && difficultyLevel.Length > 50)
+            throw new DomainException("Exercise difficulty level cannot exceed 50 characters");
+        if (videoUrl != null && videoUrl.Length > 500)
+            throw new DomainException("Exercise video URL cannot exceed 500 characters");
     }
 }

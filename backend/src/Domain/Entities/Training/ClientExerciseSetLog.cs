@@ -1,3 +1,4 @@
+using Domain.Exceptions;
 namespace Domain.Entities.Training;
 
 /// <summary>
@@ -38,7 +39,7 @@ public class ClientExerciseSetLog
     {
         if (setNumber < 1 || setNumber > 15)
             throw new DomainException("Set number must be between 1 and 15.");
-        ValidateWeightAndReps(weightKg, repsDone);
+        ValidateWeightAndReps(weightKg, repsDone, notes);
 
         Id = Guid.NewGuid();
         ClientId = clientId;
@@ -55,7 +56,7 @@ public class ClientExerciseSetLog
     /// <summary>Corrige um registo existente</summary>
     public void Correct(decimal weightKg, int repsDone, string? notes, DateTime now)
     {
-        ValidateWeightAndReps(weightKg, repsDone);
+        ValidateWeightAndReps(weightKg, repsDone, notes);
 
         WeightKg = weightKg;
         RepsDone = repsDone;
@@ -66,11 +67,13 @@ public class ClientExerciseSetLog
     /// <summary>
     /// Mêtodo privado para validação das cargas e repetições de uma série executada pelo cliente
     /// </summary>
-    private void ValidateWeightAndReps(decimal weightKg, int repsDone)
+    private void ValidateWeightAndReps(decimal weightKg, int repsDone, string? notes)
     {
         if (weightKg < 0)
             throw new DomainException("Weight cannot be negative.");
         if (repsDone < 0 || repsDone > 100)
             throw new DomainException("Reps done must be between 0 and 100.");
+        if (notes != null && notes.Length > 500)
+            throw new DomainException("Notes cannot exceed 500 characters.");
     }
 }

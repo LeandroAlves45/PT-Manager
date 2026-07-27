@@ -1,3 +1,4 @@
+using Domain.Exceptions;
 namespace Domain.Entities.Assessments;
 
 /// <summary>
@@ -110,8 +111,12 @@ public class InitialAssessment
             throw new DomainException("Body fat percentage must be between 0 and 100.");
         if (string.IsNullOrWhiteSpace(gender))
             throw new DomainException("Gender cannot be empty.");
+        if (gender.Length > 10)
+            throw new DomainException("Gender cannot exceed 10 characters.");
         if (string.IsNullOrWhiteSpace(fitnessLevel))
             throw new DomainException("Fitness level cannot be empty.");
+        if (fitnessLevel.Length > 50)
+            throw new DomainException("Fitness level cannot exceed 50 characters.");
         if (string.IsNullOrWhiteSpace(goals))
             throw new DomainException("Goals cannot be empty.");
     }

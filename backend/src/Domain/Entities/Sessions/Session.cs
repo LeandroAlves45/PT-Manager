@@ -1,3 +1,4 @@
+using Domain.Exceptions;
 namespace Domain.Entities.Sessions;
 
 /// <summary>
@@ -32,6 +33,8 @@ public class Session
         DateTime now
     )
     {
+        if (sessionType != null && sessionType.Length > 50)
+            throw new DomainException("Session type cannot exceed 50 characters.");
         if (durationMinutes.HasValue && durationMinutes.Value <= 0)
             throw new DomainException("Duration must be positive");
 

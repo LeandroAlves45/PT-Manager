@@ -1,3 +1,4 @@
+using Domain.Exceptions;
 namespace Domain.Entities.Nutrition;
 
 /// <summary>
@@ -36,6 +37,8 @@ public class MealPlanMealSupplement
         // GUARD de quantidade já feito no pai, repete-se aqui por defesa em profundidade
         if (quantity <= 0)
             throw new DomainException("Meal supplement quantity must be greater than 0");
+        if (notes != null && notes.Length > 500)
+            throw new DomainException("Meal supplement notes cannot exceed 500 characters");
 
         Id = Guid.NewGuid();
         MealPlanMealId = mealPlanMealId;

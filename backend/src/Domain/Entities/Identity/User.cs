@@ -1,3 +1,5 @@
+using Domain.Exceptions;
+using Domain.ValueObjects;
 namespace Domain.Entities.Identity;
 
 /// <summary>
@@ -48,21 +50,31 @@ public class User
     /// <summary>
     /// Cria um novo utilizador com email por confirmar e conta ativa.
     /// </summary>
-    public User(EmailAddress email, string role, string? fullName, DateTime now)
+    public User(
+        EmailAddress email,
+        string role,
+        string? fullName,
+        DateTime now
+    )
     {
         // GUARD: role tem que pertencer ao conjunto fechado
         string[] validRoles = { "superuser", "trainer", "client" };
         if (!validRoles.Contains(role))
             throw new DomainException("Invalid role");
 
+        var normalizedFullName = fullName?.Trim();
+
+        if (normalizedFullName != null && normalizedFullName.Length > 255)
+            throw new DomainException("Full name cannot exceed 255 characters.");
+
         Id = Guid.NewGuid();
         Email = email.Value;
         NormalizedEmail = email.Normalized;
-        PasswordHash = null; // password ainda não foi definida
+        PasswordHash = null;
         SecurityStamp = Guid.NewGuid().ToString();
         ConcurrencyStamp = Guid.NewGuid().ToString();
         Role = role;
-        FullName = fullName;
+        FullName = normalizedFullName;
         EmailConfirmed = false;
         AccessFailedCount = 0;
         IsActive = true;
@@ -104,6 +116,8 @@ public class User
     {
         if (string.IsNullOrWhiteSpace(passwordHash))
             throw new DomainException("Password hash is required");
+        if (passwordHash.Length > 255)
+            throw new DomainException("Password hash cannot exceed 255 characters.");
 
         PasswordHash = passwordHash;
         UpdatedAt = now;
@@ -114,6 +128,8 @@ public class User
     {
         if (string.IsNullOrWhiteSpace(securityStamp))
             throw new DomainException("Security stamp is required");
+        if (securityStamp.Length > 255)
+            throw new DomainException("Security stamp cannot exceed 255 characters.");
 
         SecurityStamp = securityStamp;
         UpdatedAt = now;

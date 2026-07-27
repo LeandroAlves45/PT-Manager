@@ -1,3 +1,4 @@
+using Domain.Exceptions;
 namespace Domain.Entities.Assessments;
 
 /// <summary>

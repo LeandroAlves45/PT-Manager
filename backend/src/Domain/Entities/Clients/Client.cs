@@ -1,3 +1,4 @@
+using Domain.Exceptions;
 namespace Domain.Entities.Clients;
 
 /// <summary>
@@ -33,16 +34,17 @@ public class Client
         Guid ownerTrainerId,
         Guid userId,
         string name,
+        string? objective,
         DateTime now
     )
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new DomainException("Client name is required");
+        ValidateParametersClient(name, objective);
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
         UserId = userId;
         Name = name.Trim();
+        Objective = objective?.Trim();
         IsActive = true;
         IsDeleted = false;
         CreatedAt = now;
@@ -52,12 +54,21 @@ public class Client
     /// <summary>Atualiza o perfil apresentado (nome, objetivo, bio).</summary>
     public void UpdateProfile(string name, string? objective, string? bio, DateTime now)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new DomainException("Client name is required");
+        ValidateParametersClient(name, objective);
 
         Name = name.Trim();
         Objective = objective?.Trim();
         Bio = bio?.Trim();
+        UpdatedAt = now;
+    }
+
+    /// <summary>Atualiza o avatar do cliente.</summary>
+    public void SetAvatar(string? avatarUrl, DateTime now)
+    {
+        var normalizedAvatarUrl = avatarUrl?.Trim();
+        if (normalizedAvatarUrl != null && normalizedAvatarUrl.Length > 500)
+            throw new DomainException("Avatar URL cannot exceed 500 characters.");
+        AvatarUrl = normalizedAvatarUrl;
         UpdatedAt = now;
     }
 
@@ -81,5 +92,18 @@ public class Client
         IsDeleted = true;
         IsActive = false;
         UpdatedAt = now;
+    }
+
+    /// <summary>Valida os parâmetros do cliente.</summary>
+    private void ValidateParametersClient(string name, string? objective)
+    {
+        var normalizedName = name?.Trim();
+        var normalizedObjective = objective?.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedName))
+            throw new DomainException("Client name cannot be empty.");
+        if (normalizedName.Length > 255)
+            throw new DomainException("Client name cannot exceed 255 characters.");
+        if (normalizedObjective != null && normalizedObjective.Length > 255)
+            throw new DomainException("Client objective cannot exceed 255 characters.");
     }
 }
