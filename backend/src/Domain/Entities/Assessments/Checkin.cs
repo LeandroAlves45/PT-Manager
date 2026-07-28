@@ -57,6 +57,7 @@ public class Checkin
         DateTime now
     )
     {
+        EnsureNotDeleted();
         ValidateValues(targetDate, CheckinDate, weightKg, bodyFatPercentage);
 
         TargetDate = targetDate;
@@ -87,5 +88,11 @@ public class Checkin
             throw new DomainException("Weight invalid");
         if (bodyFatPercentage.HasValue && (bodyFatPercentage < 0 || bodyFatPercentage > 100))
             throw new DomainException("Body fat percentage invalid");
+    }
+
+    private void EnsureNotDeleted()
+    {
+        if (IsDeleted)
+            throw new DomainException("Cannot correct a deleted check-in.");
     }
 }

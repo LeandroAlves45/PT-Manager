@@ -138,6 +138,45 @@ DbContext, migration inicial, repositórios específicos por caso de uso.
 
 ### Tarefas
 
+#### Gate obrigatório antes da `InitialCreate`
+
+Antes de criar as configurações EF Core ou gerar a migration, fechar e registar
+nas fontes canónicas as seguintes decisões:
+
+1. **Integridade cross-tenant nas escritas**
+   - Definir constraints e FKs compostas, ou uma proteção equivalente, para
+     impedir que `owner_trainer_id` do trainer A seja combinado com recursos do
+     trainer B.
+   - Cobrir pelo menos `meal_plans`, `training_plans`,
+     `initial_assessments`, `checkins`, `sessions`,
+     `client_session_packs` e `notifications`.
+   - Definir validação de entidades adicionadas ou modificadas antes de
+     `SaveChanges`. Global Query Filters protegem leituras, não escritas
+     (`00_ARCHITECTURE.md §6.3`).
+
+2. **Owner e renovação do lease de jobs**
+   - Persistir identidade do owner do lease, duração e expiração.
+   - Definir claim condicional, renovação antes da expiração e recuperação de
+     jobs presos em `Processing`.
+   - Alinhar `DurableJob`, schema e repository antes da migration
+     (`00_ARCHITECTURE.md §9.4`).
+
+3. **Recuperação da outbox após crash**
+   - Definir claim persistido, lease ou mecanismo equivalente para recuperar
+     mensagens que fiquem em `dispatched` quando o processo termina antes de
+     `completed`.
+   - Definir retry, idempotência, estado terminal e timestamps necessários.
+   - Alinhar `OutboxMessage`, schema e repository antes da migration
+     (`00_ARCHITECTURE.md §10.3`).
+
+4. **Revisão final do modelo**
+   - Confirmar nullability, defaults, limites, índices e delete behaviors do
+     schema contra o Domain.
+   - Atualizar `01_DATABASE_SCHEMA.md` e o código afetado antes de executar
+     `dotnet ef migrations add InitialCreate`.
+
+Não gerar `InitialCreate` enquanto algum destes quatro pontos estiver aberto.
+
 1. **Packages** (via `Directory.Packages.props`):
    - `Microsoft.EntityFrameworkCore` 10.0
    - `Npgsql.EntityFrameworkCore.PostgreSQL` 10.0
@@ -147,6 +186,8 @@ DbContext, migration inicial, repositórios específicos por caso de uso.
    - `DbSet<T>` para todas as entities de `01_DATABASE_SCHEMA.md`
    - Fluent API configuration por entidade (uma classe `IEntityTypeConfiguration<T>` por feature, não tudo em `OnModelCreating`)
    - Global Query Filters resolvidos a partir de `ITenantContext` injetado no `DbContext` (scoped), **nunca** via `HttpContext` direto — jobs e webhooks correm sem contexto HTTP (`00_ARCHITECTURE.md §6.2`)
+   - Validação de escrita tenant-owned antes de `SaveChanges`: atribuir o tenant
+     efetivo, impedir mudança de tenant e rejeitar relações cross-tenant
    - Lazy loading desativado
 
 3. **Migration inicial**
@@ -155,7 +196,10 @@ DbContext, migration inicial, repositórios específicos por caso de uso.
    dotnet tool run dotnet-ef database update --project src/Infrastructure/Infrastructure.csproj --startup-project src/Api/Api.csproj
    ```
    - Verificar todas as 28 tabelas de `01_DATABASE_SCHEMA.md`, incluindo `durable_jobs` e `outbox_messages`
-   - Verificar constraints, índices (incluindo os GIN de pesquisa)
+   - Verificar constraints, FKs compostas, nullability, defaults, delete
+     behaviors e índices, incluindo os GIN de pesquisa
+   - Inspecionar o código gerado da migration antes de a aplicar, sem editar
+     manualmente a migration
 
 4. **Repositórios específicos (`Infrastructure/Persistence/`)**
    - Um repositório por agregado, com métodos nomeados por intenção (`GetActivePlansForClientAsync`, não `GetAll`/`GetById` genéricos redundantes com o `DbSet`)
@@ -166,14 +210,22 @@ DbContext, migration inicial, repositórios específicos por caso de uso.
    - Testcontainers PostgreSQL (spin-up automático)
    - Cada repositório: create/read/update/delete + queries específicas
    - Teste dedicado ao Global Query Filter: trainer A não vê dados de trainer B mesmo sem filtro explícito na query
+   - Testes negativos de escrita: trainer A não cria nem associa registos a
+     clientes ou recursos do trainer B, mesmo com IDs manipulados
+   - Testes concorrentes de jobs: claim único, owner correto, renovação e
+     recuperação após expiração do lease
+   - Testes de outbox: recuperação após crash entre `dispatched` e `completed`,
+     retry e idempotência
    - ~30-40 testes
 
 ### Deliverables
 - ✓ `Infrastructure` compila
 - ✓ DbContext funciona contra PostgreSQL (local + Neon)
 - ✓ Migration `InitialCreate` aplicada com sucesso, 28 tabelas confirmadas
+- ✓ Gate pré-`InitialCreate` fechado e registado nas fontes canónicas
 - ✓ Repositórios específicos implementados
-- ✓ ~40 testes integração passam, incluindo isolamento multi-tenant
+- ✓ ~40 testes integração passam, incluindo isolamento multi-tenant em leituras
+  e escritas, leases de jobs e recuperação da outbox
 
 ### Commits
 - `feat: add EF Core DbContext with global query filters`

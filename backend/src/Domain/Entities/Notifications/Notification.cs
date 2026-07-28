@@ -79,6 +79,7 @@ public class Notification
     /// <summary>Marca a notificação como entregue com sucesso.</summary>
     public void MarkSent(DateTime now)
     {
+        EnsureNotDeleted();
         if (Status != "pending")
             throw new DomainException("Only one pending notification can be marked as sent.");
 
@@ -90,6 +91,7 @@ public class Notification
     /// <summary>Regista uma tentativa falhada com a mensagem de erro sanitizada.</summary>
     public void MarkFailed(string sanitizedError, DateTime now)
     {
+        EnsureNotDeleted();
         if (Status != "pending")
             throw new DomainException("Only one pending notification can be marked as failed.");
 
@@ -103,6 +105,7 @@ public class Notification
     /// <summary>Recoloca uma notificação falhada em fila para retry.</summary>
     public void RequeueForRetry(DateTime now)
     {
+        EnsureNotDeleted();
         if (Status != "failed")
             throw new DomainException("Only one failed notification can be requeued for retry.");
 
@@ -113,6 +116,7 @@ public class Notification
     /// <summary>Regista um bounce assíncrono reportado pelo provider.</summary>
     public void MarkBounced(DateTime now)
     {
+        EnsureNotDeleted();
         if (Status != "sent")
             throw new DomainException("Only one sent notification can be marked as bounced.");
 
@@ -128,5 +132,11 @@ public class Notification
 
         IsDeleted = true;
         UpdatedAt = now;
+    }
+
+    private void EnsureNotDeleted()
+    {
+        if (IsDeleted)
+            throw new DomainException("Cannot modify a deleted notification.");
     }
 }

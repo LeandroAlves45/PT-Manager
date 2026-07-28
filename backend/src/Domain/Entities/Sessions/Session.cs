@@ -55,6 +55,7 @@ public class Session
     /// <summary>Reagenda a sessão de treino (novo dia/hora), apenas se ainda não realizada.</summary>
     public void Reschedule(DateOnly newDate, TimeOnly? newTime, DateTime now)
     {
+        EnsureNotDeleted();
         if (IsCompleted)
             throw new DomainException("Cannot reschedule a completed session.");
 
@@ -66,6 +67,7 @@ public class Session
     /// <summary>Marca a sessão como concluída (idempotente).</summary>
     public void MarkAsCompleted(DateTime now)
     {
+        EnsureNotDeleted();
         if (!IsCompleted)
         {
             IsCompleted = true;
@@ -80,5 +82,11 @@ public class Session
             throw new DomainException("Cannot delete a completed session.");
         IsDeleted = true;
         UpdatedAt = now;
+    }
+
+    private void EnsureNotDeleted()
+    {
+        if (IsDeleted)
+            throw new DomainException("Cannot modify a deleted session.");
     }
 }

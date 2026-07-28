@@ -70,6 +70,7 @@ public class InitialAssessment
         DateTime now
     )
     {
+        EnsureNotDeleted();
         ValidateParameters(age, weightKg, heightCm, bodyFatPercentage, gender, fitnessLevel, goals);
 
         Age = age;
@@ -119,5 +120,11 @@ public class InitialAssessment
             throw new DomainException("Fitness level cannot exceed 50 characters.");
         if (string.IsNullOrWhiteSpace(goals))
             throw new DomainException("Goals cannot be empty.");
+    }
+
+    private void EnsureNotDeleted()
+    {
+        if (IsDeleted)
+            throw new DomainException("Cannot update a deleted initial assessment.");
     }
 }

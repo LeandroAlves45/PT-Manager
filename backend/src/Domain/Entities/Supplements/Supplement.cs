@@ -53,6 +53,7 @@ public class Supplement
         DateTime now
     )
     {
+        EnsureNotDeleted();
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainException("Supplement name cannot be empty.");
 
@@ -80,5 +81,11 @@ public class Supplement
             throw new DomainException("Supplement name cannot exceed 255 characters.");
         if (unitOfMeasure != null && unitOfMeasure.Length > 50)
             throw new DomainException("Unit of measure cannot exceed 50 characters.");
+    }
+
+    private void EnsureNotDeleted()
+    {
+        if (IsDeleted)
+            throw new DomainException("Cannot update a deleted supplement.");
     }
 }

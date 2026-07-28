@@ -54,11 +54,14 @@ public class ClientSessionPack
 
     /// <summary>True se o pack ainda tem saldo e não expirou.</summary>
     public bool IsUsable(DateOnly today)
-        => SessionsRemaining > 0 && (!ExpirationDate.HasValue || ExpirationDate.Value >= today);
+        => !IsDeleted &&
+            SessionsRemaining > 0 &&
+            (!ExpirationDate.HasValue || ExpirationDate.Value >= today);
 
     /// <summary>Debita uma sessão do pack, se ainda houver saldo.</summary>
     public void ConsumeSession(DateOnly today, DateTime now)
     {
+        EnsureNotDeleted();
         if (!IsUsable(today))
             throw new DomainException("Pack without remaining sessions or expired cannot be used.");
 
@@ -71,5 +74,11 @@ public class ClientSessionPack
     {
         IsDeleted = true;
         UpdatedAt = now;
+    }
+
+    private void EnsureNotDeleted()
+    {
+        if (IsDeleted)
+            throw new DomainException("Cannot consume sessions from a deleted pack.");
     }
 }

@@ -77,6 +77,7 @@ public class Exercise
         DateTime now
     )
     {
+        EnsureNotDeleted();
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainException("Exercise name is required");
 
@@ -128,5 +129,11 @@ public class Exercise
             throw new DomainException("Exercise difficulty level cannot exceed 50 characters");
         if (videoUrl != null && videoUrl.Length > 500)
             throw new DomainException("Exercise video URL cannot exceed 500 characters");
+    }
+
+    private void EnsureNotDeleted()
+    {
+        if (IsDeleted)
+            throw new DomainException("Cannot update a deleted exercise.");
     }
 }

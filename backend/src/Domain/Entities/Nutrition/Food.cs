@@ -41,11 +41,12 @@ public class Food
         DateTime now
     )
     {
-        ValidateParametersFood(name, calories, protein, carbs, fats, fiber);
+        var normalizedName = name?.Trim() ?? string.Empty;
+        ValidateParametersFood(normalizedName, calories, protein, carbs, fats, fiber);
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
-        Name = name;
+        Name = normalizedName;
         Description = description;
         Calories = calories;
         Protein = protein;
@@ -69,9 +70,11 @@ public class Food
         DateTime now
     )
     {
-        ValidateParametersFood(name, calories, protein, carbs, fats, fiber);
+        EnsureNotDeleted();
+        var normalizedName = name?.Trim() ?? string.Empty;
+        ValidateParametersFood(normalizedName, calories, protein, carbs, fats, fiber);
 
-        Name = name;
+        Name = normalizedName;
         Description = description;
         Calories = calories;
         Protein = protein;
@@ -98,10 +101,9 @@ public class Food
         decimal? fiber
     )
     {
-        var normalizedName = name?.Trim();
-        if (string.IsNullOrWhiteSpace(normalizedName))
+        if (string.IsNullOrWhiteSpace(name))
             throw new DomainException("Food name is required");
-        if (normalizedName.Length > 255)
+        if (name.Length > 255)
             throw new DomainException("Food name cannot exceed 255 characters.");
         if (calories < 0)
             throw new DomainException("Calories cannot be negative.");
@@ -113,5 +115,11 @@ public class Food
             throw new DomainException("Fats cannot be negative.");
         if (fiber.HasValue && fiber.Value < 0)
             throw new DomainException("Fiber cannot be negative.");
+    }
+
+    private void EnsureNotDeleted()
+    {
+        if (IsDeleted)
+            throw new DomainException("Cannot update a deleted food.");
     }
 }

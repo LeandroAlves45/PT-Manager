@@ -1,10 +1,12 @@
-param(
+﻿param(
   [Parameter(Mandatory = $true)]
   [ValidateSet("session-start", "context-recovery", "pre-file-policy", "pre-shell")]
   [string]$Mode
 )
 
 $ErrorActionPreference = "Stop"
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
 
 function Get-RepositoryRoot {
   $candidate = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\.."))
@@ -196,7 +198,7 @@ function Invoke-PreFilePolicy {
     }
 
     if ($file.Operation -ne "Add" -and
-        $relativePath -match '^backend/infrastructure/(database/)?migrations/') {
+        $relativePath -match '^backend/src/infrastructure/data/migrations/') {
       Deny-ToolUse "Alteração recusada: migrations existentes não devem ser editadas. Crie uma migration nova com dotnet ef migrations add."
     }
   }
@@ -261,7 +263,7 @@ function Write-RepositoryState {
   }
 
   Write-Output $Heading
-  Write-Output "Projeto: Chatbot | .NET 10, React, PostgreSQL | Clean Architecture"
+  Write-Output "Projeto: PT Manager | .NET 10, React, PostgreSQL | Clean Architecture"
   Write-Output "Branch: $branch | Alterações locais: $changeCount"
 }
 

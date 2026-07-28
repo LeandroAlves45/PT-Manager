@@ -504,6 +504,9 @@ CREATE TABLE exercise_sets (
     CONSTRAINT fk_day_exercise FOREIGN KEY (training_plan_day_exercise_id) REFERENCES training_plan_day_exercises(id) ON DELETE CASCADE,
     CONSTRAINT set_num_check CHECK (set_number >= 1 AND set_number <= 15),
     CONSTRAINT reps_check CHECK (planned_reps IS NULL OR planned_reps > 0),
+    CONSTRAINT planned_weight_check CHECK (planned_weight_kg IS NULL OR planned_weight_kg >= 0),
+    CONSTRAINT rest_min_check CHECK (rest_seconds_min IS NULL OR rest_seconds_min >= 0),
+    CONSTRAINT rest_max_check CHECK (rest_seconds_max IS NULL OR rest_seconds_max >= 0),
     CONSTRAINT rest_range_check CHECK (
         rest_seconds_min IS NULL OR rest_seconds_max IS NULL OR rest_seconds_min <= rest_seconds_max
     )

@@ -2,8 +2,8 @@ using Domain.Exceptions;
 namespace Domain.Entities.Nutrition;
 
 /// <summary>
-/// Refeição de um plano alimentar. O tipo pertence a um conjunto fechado
-/// ("Pequeno-almoço", "Almoço", "Lanche", "Jantar", "Ceia") com CHECK no postgreSQL.
+/// Refeição de um plano alimentar. O tipo é texto livre definido pelo trainer,
+/// limitado a 50 caracteres e protegido contra valores vazios.
 /// </summary>
 public class MealPlanMeal
 {

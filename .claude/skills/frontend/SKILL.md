@@ -1,17 +1,6 @@
 ---
-paths:
-  - "**/*.tsx"
-  - "**/*.jsx"
-  - "**/*.vue"
-  - "**/*.svelte"
-  - "**/*.css"
-  - "**/*.scss"
-  - "**/*.html"
-  - "**/components/**"
-  - "**/pages/**"
-  - "**/views/**"
-  - "**/layouts/**"
-  - "**/styles/**"
+name: frontend
+description: General frontend UI conventions — design tokens, layout, accessibility, and performance checklist. Use when writing or reviewing .tsx/.jsx/.css in the PT Manager frontend (React 19 + Vite + Tailwind + Chakra UI + shadcn/ui).
 ---
 
 # Frontend

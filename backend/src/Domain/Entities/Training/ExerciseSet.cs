@@ -36,6 +36,12 @@ public class ExerciseSet
             throw new DomainException("Set number must be between 1 and 15.");
         if (plannedReps.HasValue && plannedReps.Value <= 0)
             throw new DomainException("Planned reps must be greater than 0.");
+        if (plannedWeightKg.HasValue && plannedWeightKg.Value < 0)
+            throw new DomainException("Planned weight cannot be negative.");
+        if (restSecondsMin.HasValue && restSecondsMin.Value < 0)
+            throw new DomainException("Minimum rest seconds cannot be negative.");
+        if (restSecondsMax.HasValue && restSecondsMax.Value < 0)
+            throw new DomainException("Maximum rest seconds cannot be negative.");
         if (restSecondsMin.HasValue && restSecondsMax.HasValue && restSecondsMin.Value > restSecondsMax.Value)
             throw new DomainException("Rest seconds min cannot be greater than rest seconds max.");
 

@@ -22,7 +22,7 @@ Quando analisares o projeto, consulta o graph para:
 
 - Architecture: ver `.claude/project/00_ARCHITECTURE.md` (fonte de verdade). Camadas: `Api → Application → Domain ← Infrastructure`, organizadas por feature. Sem `IRepository<T>` genérico, sem MediatR/AutoMapper no MVP
 - Multi-tenant: **todas** as queries filtram por `owner_trainer_id`, via EF Core Global Query Filters ligados a `ITenantContext` (nunca a `HttpContext` direto). Roles: `superuser`, `trainer`, `client`
-- Memória: sistema persistente em `.claude/memory/` (índice `MEMORY.md` + notas `gotcha_*.md`). Cursor usa também claude-mem (ver `.cursor/hooks/README.md`)
+- Memória: sistema persistente em `.claude/memory/` (índice `MEMORY.md` + notas `gotcha_*.md`), complementado pelo plugin claude-mem
 - Base de dados: ver `.claude/project/01_DATABASE_SCHEMA.md`. Migrations **sempre geradas** via `dotnet ef migrations add` — nunca escritas à mão, nunca editar migration já aplicada num ambiente partilhado
 - Segurança: ver `.claude/project/00_ARCHITECTURE.md §5-§7` (auth, tokens, multi-tenancy) — `security-conventions.md` foi removido, era específico do backend Python. Secrets em environment variables. Queries via EF Core (parametrizadas)
 - Async/jobs: sem RabbitMQ/MassTransit no MVP — Upstash QStash ativa um dispatcher de `durable_jobs`/`outbox_messages` em Postgres (`00_ARCHITECTURE.md §9`)

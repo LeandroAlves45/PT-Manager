@@ -86,6 +86,7 @@ public class User
     /// <summary>Marca o email como confirmado.</summary>
     public void ConfirmEmail(DateTime now)
     {
+        EnsureNotDeleted();
         EmailConfirmed = true;
         UpdatedAt = now;
     }
@@ -96,6 +97,7 @@ public class User
     /// </summary>
     public void RegisterFailedAccess(DateTime now)
     {
+        EnsureNotDeleted();
         AccessFailedCount += 1;
         UpdatedAt = now;
     }
@@ -103,6 +105,7 @@ public class User
     /// <summary>Repõe o contador de tentativas falhadas (após login bem sucedido).</summary>
     public void ResetFailedAccess(DateTime now)
     {
+        EnsureNotDeleted();
         AccessFailedCount = 0;
         LockoutEnd = null;
         UpdatedAt = now;
@@ -114,6 +117,7 @@ public class User
     /// </summary>
     public void SetPasswordHash(string passwordHash, DateTime now)
     {
+        EnsureNotDeleted();
         if (string.IsNullOrWhiteSpace(passwordHash))
             throw new DomainException("Password hash is required");
         if (passwordHash.Length > 255)
@@ -126,6 +130,7 @@ public class User
     /// <summary>Define o stamp solicitado pelo IUserSecurityStampStore.</summary>
     public void SetSecurityStamp(string securityStamp, DateTime now)
     {
+        EnsureNotDeleted();
         if (string.IsNullOrWhiteSpace(securityStamp))
             throw new DomainException("Security stamp is required");
         if (securityStamp.Length > 255)
@@ -138,6 +143,7 @@ public class User
     /// <summary>Atualiza e normaliza o email através do IUserEmailStore.</summary>
     public void SetEmail(EmailAddress email, DateTime now)
     {
+        EnsureNotDeleted();
         Email = email.Value;
         NormalizedEmail = email.Normalized;
         EmailConfirmed = false; // email mudou, tem que ser reconfirmado
@@ -147,6 +153,7 @@ public class User
     /// <summary>Define o fim do lockout solicitado pelo UserManager.</summary>
     public void SetLockoutEnd(DateTime? lockoutEnd, DateTime now)
     {
+        EnsureNotDeleted();
         LockoutEnd = lockoutEnd;
         UpdatedAt = now;
     }
@@ -154,6 +161,7 @@ public class User
     /// <summary>Roda o stamp usado pelo custom store para concorrência otimista.</summary>
     public void RotateConcurrencyStamp(DateTime now)
     {
+        EnsureNotDeleted();
         ConcurrencyStamp = Guid.NewGuid().ToString();
         UpdatedAt = now;
     }
@@ -164,5 +172,11 @@ public class User
         IsDeleted = true;
         IsActive = false;
         UpdatedAt = now;
+    }
+
+    private void EnsureNotDeleted()
+    {
+        if (IsDeleted)
+            throw new DomainException("Cannot modify a deleted user.");
     }
 }

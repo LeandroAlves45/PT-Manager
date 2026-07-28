@@ -34,7 +34,7 @@ public class InviteToken
         if (tokenHash.Length > 255)
             throw new DomainException("Invite token hash cannot exceed 255 characters");
         if (expiresAt <= now)
-            throw new DomainException("Invite token expiration must be in the future");
+            throw new DomainException("Invite token expiration must be in the future.");
 
         Id = Guid.NewGuid();
         TrainerId = trainerId;

@@ -5,10 +5,13 @@ packs, avaliações, planos de treino, nutrição, suplementos e billing.
 
 Estado atual:
 
-- O novo backend será implementado em .NET 10 e C# 14 dentro de `backend/`.
+- O novo backend está em implementação em .NET 10 e C# 14 dentro de `backend/`
+  (`backend/PTManager.sln`, projetos `Domain`, `Application`, `Infrastructure`,
+  `Api` e respetivos projetos de teste já criados; Sprint 1 Domain
+  implementado). Confirmar sempre o estado atual em
+  `.codex/memory/MEMORY.md` antes de assumir o que já existe.
 - O frontend existente usa React 19, Vite 7 e Tailwind CSS 4.
 - `backend-python/` é apenas uma referência funcional local e está excluído do Git.
-- O backend C# ainda não existe. Não assumir que os comandos .NET funcionam antes do scaffold.
 
 ## Fontes de verdade
 

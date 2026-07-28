@@ -54,6 +54,7 @@ public class Client
     /// <summary>Atualiza o perfil apresentado (nome, objetivo, bio).</summary>
     public void UpdateProfile(string name, string? objective, string? bio, DateTime now)
     {
+        EnsureNotDeleted();
         ValidateParametersClient(name, objective);
 
         Name = name.Trim();
@@ -65,6 +66,7 @@ public class Client
     /// <summary>Atualiza o avatar do cliente.</summary>
     public void SetAvatar(string? avatarUrl, DateTime now)
     {
+        EnsureNotDeleted();
         var normalizedAvatarUrl = avatarUrl?.Trim();
         if (normalizedAvatarUrl != null && normalizedAvatarUrl.Length > 500)
             throw new DomainException("Avatar URL cannot exceed 500 characters.");
@@ -75,6 +77,7 @@ public class Client
     /// <summary>Desativa o cliente (arquivado) sem o apagar.</summary>
     public void Deactivate(DateTime now)
     {
+        EnsureNotDeleted();
         IsActive = false;
         UpdatedAt = now;
     }
@@ -82,6 +85,7 @@ public class Client
     /// <summary>Reativa o cliente arquivado.</summary>
     public void Reactivate(DateTime now)
     {
+        EnsureNotDeleted();
         IsActive = true;
         UpdatedAt = now;
     }
@@ -105,5 +109,11 @@ public class Client
             throw new DomainException("Client name cannot exceed 255 characters.");
         if (normalizedObjective != null && normalizedObjective.Length > 255)
             throw new DomainException("Client objective cannot exceed 255 characters.");
+    }
+
+    private void EnsureNotDeleted()
+    {
+        if (IsDeleted)
+            throw new DomainException("Cannot modify a deleted client.");
     }
 }

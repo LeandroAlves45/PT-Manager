@@ -29,11 +29,12 @@ public class PackType
         DateTime now
     )
     {
-        ValidateParameters(name, sessionCount, priceCents, durationDays);
+        var normalizedName = name?.Trim() ?? string.Empty;
+        ValidateParameters(normalizedName, sessionCount, priceCents, durationDays);
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
-        Name = name;
+        Name = normalizedName;
         SessionCount = sessionCount;
         PriceCents = priceCents;
         DurationDays = durationDays;
@@ -51,9 +52,11 @@ public class PackType
         DateTime now
     )
     {
-        ValidateParameters(name, sessionCount, priceCents, durationDays);
+        EnsureNotDeleted();
+        var normalizedName = name?.Trim() ?? string.Empty;
+        ValidateParameters(normalizedName, sessionCount, priceCents, durationDays);
 
-        Name = name;
+        Name = normalizedName;
         SessionCount = sessionCount;
         PriceCents = priceCents;
         DurationDays = durationDays;
@@ -75,10 +78,9 @@ public class PackType
         int? durationDays
     )
     {
-        var normalizedName = name?.Trim();
-        if (string.IsNullOrWhiteSpace(normalizedName))
+        if (string.IsNullOrWhiteSpace(name))
             throw new DomainException("Pack type name cannot be empty.");
-        if (normalizedName.Length > 255)
+        if (name.Length > 255)
             throw new DomainException("Pack type name cannot exceed 255 characters.");
 
         if (sessionCount <= 0)
@@ -89,5 +91,11 @@ public class PackType
 
         if (durationDays.HasValue && durationDays.Value <= 0)
             throw new DomainException("Duration in days must be greater than zero if specified.");
+    }
+
+    private void EnsureNotDeleted()
+    {
+        if (IsDeleted)
+            throw new DomainException("Cannot update a deleted pack type.");
     }
 }

@@ -79,6 +79,7 @@ public class MealPlan
     /// </summary>
     public MealPlanMeal AddMeal(string mealType, int orderNumber, DateTime now)
     {
+        EnsureNotDeleted();
         if (_meals.Any(meals => meals.OrderNumber == orderNumber))
             throw new DomainException("Already exists a meal with the same order number in this meal plan");
 
@@ -91,6 +92,7 @@ public class MealPlan
     /// <summary>Arquiva o plano alimentar, mantendo-o no histórico do cliente.</summary>
     public void Archive(DateTime now)
     {
+        EnsureNotDeleted();
         IsArchived = true;
         IsActive = false;
         UpdatedAt = now;
@@ -99,6 +101,7 @@ public class MealPlan
     /// <summary>Reativa o plano alimentar arquivado.</summary>
     public void Reactivate(DateTime now)
     {
+        EnsureNotDeleted();
         IsArchived = false;
         IsActive = true;
         UpdatedAt = now;
@@ -107,6 +110,7 @@ public class MealPlan
     /// <summary>Remove uma refeição do plano, alimentos e suplementos associados saem com ela.</summary>
     public void RemoveMeal(Guid mealId, DateTime now)
     {
+        EnsureNotDeleted();
         var meal = _meals.FirstOrDefault(m => m.Id == mealId)
             ?? throw new DomainException("Meal not found in this meal plan");
 
@@ -120,5 +124,11 @@ public class MealPlan
         IsDeleted = true;
         IsActive = false;
         UpdatedAt = now;
+    }
+
+    private void EnsureNotDeleted()
+    {
+        if (IsDeleted)
+            throw new DomainException("Cannot modify a deleted meal plan.");
     }
 }
