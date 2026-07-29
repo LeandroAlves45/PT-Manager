@@ -134,14 +134,15 @@ Portar entidades Python → C# Entities + Value Objects, sem abstrações genér
 ## SPRINT 2: Infrastructure + EF Core (Semanas 3-4)
 
 ### Objectivo
-DbContext, migration inicial, repositórios específicos por caso de uso.
+DbContext, migration inicial e persistência especializada de jobs e outbox.
 
 ### Tarefas
 
 #### Gate obrigatório antes da `InitialCreate`
 
-Antes de criar as configurações EF Core ou gerar a migration, fechar e registar
-nas fontes canónicas as seguintes decisões:
+As decisões seguintes estão aprovadas no planeamento. A `InitialCreate` continua
+bloqueada até o Domain, a Infrastructure e os testes correspondentes serem
+implementados:
 
 1. **Integridade cross-tenant nas escritas**
    - Definir constraints e FKs compostas, ou uma proteção equivalente, para
@@ -175,7 +176,8 @@ nas fontes canónicas as seguintes decisões:
    - Atualizar `01_DATABASE_SCHEMA.md` e o código afetado antes de executar
      `dotnet ef migrations add InitialCreate`.
 
-Não gerar `InitialCreate` enquanto algum destes quatro pontos estiver aberto.
+Não gerar `InitialCreate` enquanto a implementação e os testes destes quatro
+pontos não estiverem concluídos.
 
 1. **Packages** (via `Directory.Packages.props`):
    - `Microsoft.EntityFrameworkCore` 10.0
@@ -184,10 +186,9 @@ Não gerar `InitialCreate` enquanto algum destes quatro pontos estiver aberto.
 
 2. **DbContext (`Infrastructure/Data/PtManagerDbContext.cs`)**
    - `DbSet<T>` para todas as entities de `01_DATABASE_SCHEMA.md`
-   - Fluent API configuration por entidade (uma classe `IEntityTypeConfiguration<T>` por feature, não tudo em `OnModelCreating`)
-   - Global Query Filters resolvidos a partir de `ITenantContext` injetado no `DbContext` (scoped), **nunca** via `HttpContext` direto — jobs e webhooks correm sem contexto HTTP (`00_ARCHITECTURE.md §6.2`)
-   - Validação de escrita tenant-owned antes de `SaveChanges`: atribuir o tenant
-     efetivo, impedir mudança de tenant e rejeitar relações cross-tenant
+   - Fluent API configuration por entidade para mapping, constraints, índices e relações
+   - Global Query Filters centralizados no `PtManagerDbContext`, resolvidos a partir de `ITenantContext` scoped, com `CurrentTrainerId.HasValue` e filtros derivados nas filhas
+   - `TenantWriteValidationInterceptor`: validação com I/O em `SavingChangesAsync`; `SaveChanges()` síncrono falha explicitamente
    - Lazy loading desativado
 
 3. **Migration inicial**
@@ -195,25 +196,26 @@ Não gerar `InitialCreate` enquanto algum destes quatro pontos estiver aberto.
    dotnet tool run dotnet-ef migrations add InitialCreate --project src/Infrastructure/Infrastructure.csproj --startup-project src/Api/Api.csproj --output-dir Data/Migrations
    dotnet tool run dotnet-ef database update --project src/Infrastructure/Infrastructure.csproj --startup-project src/Api/Api.csproj
    ```
-   - Verificar todas as 28 tabelas de `01_DATABASE_SCHEMA.md`, incluindo `durable_jobs` e `outbox_messages`
+   - Verificar 27 tabelas da aplicação mais `__EFMigrationsHistory`, total 28
    - Verificar constraints, FKs compostas, nullability, defaults, delete
      behaviors e índices, incluindo os GIN de pesquisa
    - Inspecionar o código gerado da migration antes de a aplicar, sem editar
      manualmente a migration
 
-4. **Repositórios específicos (`Infrastructure/Persistence/`)**
-   - Um repositório por agregado, com métodos nomeados por intenção (`GetActivePlansForClientAsync`, não `GetAll`/`GetById` genéricos redundantes com o `DbSet`)
-   - `UserRepository`, `ClientRepository`, `MealPlanRepository`, `TrainingPlanRepository`, `NotificationRepository`, `FoodRepository`, `ExerciseRepository`, `SupplementRepository`, `SessionRepository`, `DurableJobRepository`, `OutboxRepository`
-   - Todos async, com projeção quando o caso de uso não precisa da entidade completa
+4. **Persistência especializada (`Infrastructure/Persistence/`)**
+   - Implementar apenas `DurableJobRepository` e `OutboxRepository`, necessários aos gates
+   - Claim em transação curta com `SELECT ... FOR UPDATE SKIP LOCKED`
+   - Renovação, conclusão e falha condicionadas por estado, token e lease ativo
+   - Diferir os outros nove repositórios para o Sprint 3, quando existirem consumidores concretos
 
 5. **Testes Integração (`Infrastructure.IntegrationTests/`)**
    - Testcontainers PostgreSQL (spin-up automático)
-   - Cada repositório: create/read/update/delete + queries específicas
+   - Persistência de jobs e outbox: claim, renovação, conclusão, falha e recuperação
    - Teste dedicado ao Global Query Filter: trainer A não vê dados de trainer B mesmo sem filtro explícito na query
    - Testes negativos de escrita: trainer A não cria nem associa registos a
      clientes ou recursos do trainer B, mesmo com IDs manipulados
-   - Testes concorrentes de jobs: claim único, owner correto, renovação e
-     recuperação após expiração do lease
+   - Testes concorrentes de jobs: claim único, token correto, recuperação e
+     rejeição de renovação/conclusão depois da expiração
    - Testes de outbox: recuperação após crash entre `dispatched` e `completed`,
      retry e idempotência
    - ~30-40 testes
@@ -584,7 +586,7 @@ Deploy no Render free tier, validação final, documentação de handoff.
 |--------|--------|------|---------|
 | 0 | Sprint 0 | Setup + Decisões | Repo ready, 4 projetos + 5 projetos de teste |
 | 1-2 | Sprint 1 | Domain Layer | Entities + Value Objects por feature |
-| 3-4 | Sprint 2 | Infrastructure | DbContext + migration `InitialCreate` + repositórios |
+| 3-4 | Sprint 2 | Infrastructure | DbContext + migration `InitialCreate` + stores de jobs/outbox |
 | 5-6 | Sprint 3 | Application | Handlers + DTOs + Validators por feature |
 | 7-8 | Sprint 4 | API | Controllers, Auth JWT+refresh, multi-tenancy |
 | 9 | Sprint 5 | Jobs + Outbox | Dispatcher QStash, outbox Stripe, serviços externos |
@@ -598,7 +600,7 @@ Deploy no Render free tier, validação final, documentação de handoff.
 
 | Milestone | Sprint | Data | Critério |
 |-----------|--------|------|----------|
-| Infrastructure Ready | 2 | Fim Semana 4 | DbContext + migration + repositórios funcionais |
+| Infrastructure Ready | 2 | Fim Semana 4 | DbContext + migration + persistência de jobs/outbox |
 | API funcional | 4 | Fim Semana 8 | Endpoints a responder, auth completo |
 | Jobs duráveis | 5 | Fim Semana 9 | Dispatcher + outbox + QStash a funcionar |
 | Observabilidade | 6 | Fim Semana 10 | Logs, Sentry, OpenTelemetry em produção |

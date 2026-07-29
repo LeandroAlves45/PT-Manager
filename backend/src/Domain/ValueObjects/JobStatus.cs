@@ -23,6 +23,7 @@ public record JobStatus
         (this == Pending && next == Processing) ||
         (this == Processing && next == Completed) ||
         (this == Processing && next == Failed) ||
+        (this == Processing && next == Pending) ||
         (this == Failed && next == Pending) ||
         (this == Failed && next == DeadLetter);
 

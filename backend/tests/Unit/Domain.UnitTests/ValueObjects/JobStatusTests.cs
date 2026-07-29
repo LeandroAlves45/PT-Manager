@@ -9,6 +9,7 @@ public sealed class JobStatusTests
     [InlineData("pending", "processing")]
     [InlineData("processing", "completed")]
     [InlineData("processing", "failed")]
+    [InlineData("processing", "pending")]
     [InlineData("failed", "pending")]
     [InlineData("failed", "dead_letter")]
     public void CanTransitionTo_ValidTransitions_ReturnsTrue(string current, string next)
@@ -28,7 +29,6 @@ public sealed class JobStatusTests
     [InlineData("pending", "completed")]
     [InlineData("pending", "failed")]
     [InlineData("pending", "dead_letter")]
-    [InlineData("processing", "pending")]
     [InlineData("processing", "dead_letter")]
     [InlineData("failed", "completed")]
     [InlineData("failed", "processing")]
@@ -86,6 +86,43 @@ public sealed class JobStatusTests
 
         // Assert
         Assert.Equal("Invalid job status: bogus", exception.Message);
+    }
+
+    [Fact]
+    public void CanTransitionTo_ProcessingToPending_ReturnsTrue()
+    {
+        // Arrange
+        var currentStatus = JobStatus.Processing;
+        var nextStatus = JobStatus.Pending;
+
+        // Act
+        var result = currentStatus.CanTransitionTo(nextStatus);
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Theory]
+    [InlineData("pending", "processing")]
+    [InlineData("processing", "completed")]
+    [InlineData("processing", "failed")]
+    [InlineData("processing", "pending")]
+    [InlineData("failed", "pending")]
+    [InlineData("failed", "dead_letter")]
+    public void CanTransitionTo_CompletedOrDeadLetterToAnyState_ReturnsFalse(string current, string next)
+    {
+        // Arrange
+        var currentStatus = JobStatus.FromString(current);
+        var nextStatus = JobStatus.FromString(next);
+
+        // Act
+        var result = currentStatus.CanTransitionTo(nextStatus);
+
+        // Assert
+        if (current == "completed" || current == "dead_letter")
+        {
+            Assert.False(result);
+        }
     }
 
     /// <summary>

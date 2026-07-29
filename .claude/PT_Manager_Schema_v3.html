@@ -378,10 +378,10 @@
                 <!-- Overview Tab -->
                 <div id="overview" class="tab-content active">
                     <h1>PT Manager — Schema da Base de Dados</h1>
-                    <p>27 tabelas de domínio + <code>__EFMigrationsHistory</code>, PostgreSQL 16 (Neon), modeladas para EF Core 10. IDs em <code>uuid</code> nativo gerados na aplicação (<code>Guid.NewGuid()</code>), multi-tenancy via <code>owner_trainer_id</code> e Global Query Filters, timestamps sempre <code>TIMESTAMPTZ</code>, migrations geradas com <code>dotnet ef migrations add</code> — nunca escritas à mão.</p>
+                    <p>27 tabelas da aplicação + <code>__EFMigrationsHistory</code>, total 28, PostgreSQL 16 (Neon), modeladas para EF Core 10. IDs em <code>uuid</code> nativo gerados na aplicação (<code>Guid.NewGuid()</code>), multi-tenancy via raízes com <code>owner_trainer_id</code> e filhas ligadas à raiz, timestamps sempre <code>TIMESTAMPTZ</code>, migrations geradas com <code>dotnet ef migrations add</code> — nunca escritas à mão.</p>
 
                     <div class="info-box">
-                        Todas as queries filtram automaticamente por <code>owner_trainer_id</code> via EF Core Global Query Filters ligados a <code>ITenantContext</code> (nunca a <code>HttpContext</code> — jobs e webhooks não têm contexto HTTP). Roles: <code>superuser</code>, <code>trainer</code>, <code>client</code>.
+                        Os Global Query Filters são centralizados no <code>PtManagerDbContext</code>, exigem tenant presente e usam navegações para proteger também queries diretas às entidades filhas. Estão ligados a <code>ITenantContext</code>, nunca a <code>HttpContext</code>. Roles: <code>superuser</code>, <code>trainer</code>, <code>client</code>.
                     </div>
 
                     <h2>Domínios e tabelas</h2>
@@ -509,11 +509,11 @@
                     <div class="table-section">
                         <div class="table-header"><span class="badge">ENTIDADE</span> trainer_subscriptions</div>
                         <div class="table-content">
-                            <div class="table-description">Estado da subscrição por trainer, com limites de clientes e ligação ao Stripe.</div>
+                            <div class="table-description">Uma subscrição por trainer, com limites de clientes e ligação ao Stripe.</div>
                             <div class="fields-list">
                                 <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
-                                <div class="field"><span class="field-name">trainer_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span></div>
-                                <div class="field"><span class="field-name">subscription_status</span> <span class="field-type">varchar(50) not null default 'FREE'</span><div class="field-desc">CHECK: ACTIVE | INACTIVE | SUSPENDED | CANCELLED</div></div>
+                                <div class="field"><span class="field-name">trainer_id</span> <span class="field-type">uuid FK unique → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">subscription_status</span> <span class="field-type">varchar(50) not null default 'ACTIVE'</span><div class="field-desc">CHECK: ACTIVE | INACTIVE | SUSPENDED | CANCELLED</div></div>
                                 <div class="field"><span class="field-name">subscription_tier</span> <span class="field-type">varchar(50) not null default 'FREE'</span><div class="field-desc">CHECK: FREE | STARTER | PRO</div></div>
                                 <div class="field"><span class="field-name">client_limit</span> <span class="field-type">integer not null default 5</span></div>
                                 <div class="field"><span class="field-name">current_client_count</span> <span class="field-type">integer default 0</span></div>
@@ -626,7 +626,7 @@
                             <div class="fields-list">
                                 <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
                                 <div class="field"><span class="field-name">meal_plan_meal_id</span> <span class="field-type">uuid FK → meal_plan_meals ON DELETE CASCADE</span></div>
-                                <div class="field"><span class="field-name">food_id</span> <span class="field-type">uuid FK → foods ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">food_id</span> <span class="field-type">uuid FK → foods ON DELETE RESTRICT</span></div>
                                 <div class="field"><span class="field-name">quantity_grams</span> <span class="field-type">decimal(10,2) not null &gt; 0</span></div>
                                 <div class="field"><span class="field-name">order_number</span> <span class="field-type">integer not null</span></div>
                                 <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
@@ -637,14 +637,15 @@
                     <div class="table-section">
                         <div class="table-header"><span class="badge">ENTIDADE</span> meal_plan_meal_supplements</div>
                         <div class="table-content">
-                            <div class="table-description">Suplementos por refeição, com notas. UNIQUE(meal_plan_meal_id, supplement_id). Sem updated_at.</div>
+                            <div class="table-description">Suplementos por refeição, com notas. UNIQUE(meal_plan_meal_id, supplement_id). O catálogo usa ON DELETE RESTRICT para preservar histórico.</div>
                             <div class="fields-list">
                                 <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
                                 <div class="field"><span class="field-name">meal_plan_meal_id</span> <span class="field-type">uuid FK → meal_plan_meals ON DELETE CASCADE</span></div>
-                                <div class="field"><span class="field-name">supplement_id</span> <span class="field-type">uuid FK → supplements ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">supplement_id</span> <span class="field-type">uuid FK → supplements ON DELETE RESTRICT</span></div>
                                 <div class="field"><span class="field-name">notes</span> <span class="field-type">varchar(500) null</span><div class="field-desc">'dose: 2g', 'timing: with breakfast', etc.</div></div>
+                                <div class="field"><span class="field-name">quantity</span> <span class="field-type">decimal(10,2) not null &gt; 0</span><div class="field-desc">A unidade vem do suplemento</div></div>
                                 <div class="field"><span class="field-name">order_number</span> <span class="field-type">integer not null</span></div>
-                                <div class="field"><span class="field-name">created_at</span> <span class="field-type">timestamptz not null</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
                             </div>
                         </div>
                     </div>
@@ -653,14 +654,15 @@
                 <!-- Supplements Tab -->
                 <div id="supplements" class="tab-content">
                     <h1>Suplementos</h1>
-                    <p>Catálogo de suplementos, global ou criado por um utilizador. Nota: o dono é <code>created_by_user_id</code> com <code>ON DELETE SET NULL</code> — apagar o autor torna o suplemento global, não o remove.</p>
+                    <p>Catálogo global ou privado. <code>owner_trainer_id</code> define propriedade; <code>created_by_user_id</code> conserva apenas autoria.</p>
 
                     <div class="table-section">
                         <div class="table-header"><span class="badge">ENTIDADE</span> supplements</div>
                         <div class="table-content">
-                            <div class="table-description">Suplementos globais (created_by_user_id NULL) ou de utilizador.</div>
+                            <div class="table-description">Owner null para seeds ou criação global autorizada; owner preenchido para catálogo privado.</div>
                             <div class="fields-list">
                                 <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">owner_trainer_id</span> <span class="field-type">uuid FK null → users ON DELETE CASCADE</span></div>
                                 <div class="field"><span class="field-name">created_by_user_id</span> <span class="field-type">uuid FK null → users ON DELETE SET NULL</span></div>
                                 <div class="field"><span class="field-name">name</span> <span class="field-type">varchar(255) not null</span></div>
                                 <div class="field"><span class="field-name">description</span> <span class="field-type">text null</span></div>
@@ -736,8 +738,10 @@
                             <div class="fields-list">
                                 <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
                                 <div class="field"><span class="field-name">training_plan_day_id</span> <span class="field-type">uuid FK → training_plan_days ON DELETE CASCADE</span></div>
-                                <div class="field"><span class="field-name">exercise_id</span> <span class="field-type">uuid FK → exercises ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">exercise_id</span> <span class="field-type">uuid FK → exercises ON DELETE RESTRICT</span></div>
                                 <div class="field"><span class="field-name">order_number</span> <span class="field-type">integer not null</span></div>
+                                <div class="field"><span class="field-name">exercise_group_id</span> <span class="field-type">uuid null</span><div class="field-desc">Grupo opaco para supersérie, tri-set ou circuito</div></div>
+                                <div class="field"><span class="field-name">group_position</span> <span class="field-type">integer null &gt; 0</span></div>
                                 <div class="field"><span class="field-name">notes</span> <span class="field-type">text null</span></div>
                                 <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
                             </div>
@@ -788,18 +792,19 @@
                     <div class="table-section">
                         <div class="table-header"><span class="badge">ENTIDADE</span> initial_assessments</div>
                         <div class="table-content">
-                            <div class="table-description">Avaliação inicial do cliente. Campos de medida opcionais.</div>
+                            <div class="table-description">Uma avaliação inicial por cliente. Campos base obrigatórios; medidas opcionais têm checks de intervalo.</div>
                             <div class="fields-list">
                                 <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
                                 <div class="field"><span class="field-name">owner_trainer_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span></div>
-                                <div class="field"><span class="field-name">client_id</span> <span class="field-type">uuid FK → clients ON DELETE CASCADE</span></div>
-                                <div class="field"><span class="field-name">age</span> <span class="field-type">integer null</span></div>
-                                <div class="field"><span class="field-name">gender</span> <span class="field-type">varchar(10) null</span><div class="field-desc">'male', 'female', 'other'</div></div>
-                                <div class="field"><span class="field-name">weight_kg</span> <span class="field-type">decimal(10,2) null</span></div>
-                                <div class="field"><span class="field-name">height_cm</span> <span class="field-type">integer null</span></div>
+                                <div class="field"><span class="field-name">client_id</span> <span class="field-type">uuid FK composta unique → clients ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">age</span> <span class="field-type">integer not null &gt; 0</span></div>
+                                <div class="field"><span class="field-name">gender</span> <span class="field-type">varchar(10) not null</span><div class="field-desc">'male', 'female', 'other'</div></div>
+                                <div class="field"><span class="field-name">weight_kg</span> <span class="field-type">decimal(10,2) not null &gt; 0</span></div>
+                                <div class="field"><span class="field-name">height_cm</span> <span class="field-type">integer not null &gt; 0</span></div>
                                 <div class="field"><span class="field-name">body_fat_percentage</span> <span class="field-type">decimal(10,2) null</span></div>
-                                <div class="field"><span class="field-name">medical_conditions / goals</span> <span class="field-type">text null</span></div>
-                                <div class="field"><span class="field-name">fitness_level</span> <span class="field-type">varchar(50) null</span><div class="field-desc">'sedentary', 'lightly_active', 'moderately_active', 'very_active'</div></div>
+                                <div class="field"><span class="field-name">medical_conditions</span> <span class="field-type">text null</span></div>
+                                <div class="field"><span class="field-name">goals</span> <span class="field-type">text not null</span></div>
+                                <div class="field"><span class="field-name">fitness_level</span> <span class="field-type">varchar(50) not null</span><div class="field-desc">'sedentary', 'lightly_active', 'moderately_active', 'very_active'</div></div>
                                 <div class="field"><span class="field-name">is_deleted</span> <span class="field-type">boolean default false</span></div>
                                 <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
                             </div>
@@ -841,7 +846,7 @@
                                 <div class="field"><span class="field-name">client_id</span> <span class="field-type">uuid FK → clients ON DELETE CASCADE</span></div>
                                 <div class="field"><span class="field-name">session_date</span> <span class="field-type">date not null</span></div>
                                 <div class="field"><span class="field-name">session_time</span> <span class="field-type">time null</span></div>
-                                <div class="field"><span class="field-name">duration_minutes</span> <span class="field-type">integer null</span></div>
+                                <div class="field"><span class="field-name">duration_minutes</span> <span class="field-type">integer null &gt; 0</span></div>
                                 <div class="field"><span class="field-name">session_type</span> <span class="field-type">varchar(50) null</span><div class="field-desc">'strength', 'cardio', 'flexibility', 'assessment'</div></div>
                                 <div class="field"><span class="field-name">notes</span> <span class="field-type">text null</span></div>
                                 <div class="field"><span class="field-name">is_completed</span> <span class="field-type">boolean default false</span></div>
@@ -867,7 +872,7 @@
                                 <div class="field"><span class="field-name">name</span> <span class="field-type">varchar(255) not null</span></div>
                                 <div class="field"><span class="field-name">session_count</span> <span class="field-type">integer not null</span></div>
                                 <div class="field"><span class="field-name">price_cents</span> <span class="field-type">integer not null</span><div class="field-desc">Cêntimos (minor units, como o Stripe)</div></div>
-                                <div class="field"><span class="field-name">duration_days</span> <span class="field-type">integer null</span></div>
+                                <div class="field"><span class="field-name">duration_days</span> <span class="field-type">integer null &gt; 0</span></div>
                                 <div class="field"><span class="field-name">is_deleted</span> <span class="field-type">boolean default false</span></div>
                                 <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
                             </div>
@@ -883,7 +888,7 @@
                                 <div class="field"><span class="field-name">owner_trainer_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span></div>
                                 <div class="field"><span class="field-name">client_id</span> <span class="field-type">uuid FK → clients ON DELETE CASCADE</span></div>
                                 <div class="field"><span class="field-name">pack_type_id</span> <span class="field-type">uuid FK → pack_types ON DELETE CASCADE</span></div>
-                                <div class="field"><span class="field-name">sessions_remaining</span> <span class="field-type">integer not null</span></div>
+                                <div class="field"><span class="field-name">sessions_remaining</span> <span class="field-type">integer not null &gt;= 0</span></div>
                                 <div class="field"><span class="field-name">purchase_date</span> <span class="field-type">date not null</span></div>
                                 <div class="field"><span class="field-name">expiry_date</span> <span class="field-type">date null</span></div>
                                 <div class="field"><span class="field-name">is_deleted</span> <span class="field-type">boolean default false</span></div>
@@ -918,7 +923,7 @@
                             <div class="fields-list">
                                 <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
                                 <div class="field"><span class="field-name">owner_trainer_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span></div>
-                                <div class="field"><span class="field-name">client_id</span> <span class="field-type">uuid FK null → clients ON DELETE SET NULL</span></div>
+                                <div class="field"><span class="field-name">client_id</span> <span class="field-type">uuid FK composta null → clients ON DELETE RESTRICT</span></div>
                                 <div class="field"><span class="field-name">recipient_email</span> <span class="field-type">varchar(255) not null</span><div class="field-desc">Snapshot do email no momento do envio</div></div>
                                 <div class="field"><span class="field-name">notification_type</span> <span class="field-type">varchar(50) not null</span><div class="field-desc">'session_reminder', 'welcome', 'receipt', etc.</div></div>
                                 <div class="field"><span class="field-name">template_key</span> <span class="field-type">varchar(255) not null</span></div>
@@ -942,7 +947,7 @@
                     <div class="table-section">
                         <div class="table-header"><span class="badge">ENTIDADE</span> durable_jobs</div>
                         <div class="table-content">
-                            <div class="table-description">Fila de jobs. Claim transacional com FOR UPDATE SKIP LOCKED + lease (lease_expires_at) para recuperar workers mortos. CHECK status: pending | processing | completed | failed | dead_letter.</div>
+                            <div class="table-description">Fila de jobs. Claim transacional com SELECT FOR UPDATE SKIP LOCKED e token opaco novo por claim. Renovação, conclusão e falha exigem lease ativo.</div>
                             <div class="fields-list">
                                 <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
                                 <div class="field"><span class="field-name">trainer_id</span> <span class="field-type">uuid FK null → users ON DELETE CASCADE</span><div class="field-desc">NULL quando o job não é tenant-owned</div></div>
@@ -953,6 +958,7 @@
                                 <div class="field"><span class="field-name">scheduled_at</span> <span class="field-type">timestamptz not null</span></div>
                                 <div class="field"><span class="field-name">attempts</span> <span class="field-type">integer not null default 0</span></div>
                                 <div class="field"><span class="field-name">next_attempt_at / lease_expires_at</span> <span class="field-type">timestamptz null</span></div>
+                                <div class="field"><span class="field-name">lease_owner_id</span> <span class="field-type">uuid null</span><div class="field-desc">Token opaco da execução de claim</div></div>
                                 <div class="field"><span class="field-name">idempotency_key</span> <span class="field-type">varchar(255) not null unique</span></div>
                                 <div class="field"><span class="field-name">correlation_id</span> <span class="field-type">uuid not null</span></div>
                                 <div class="field"><span class="field-name">last_error</span> <span class="field-type">text null</span><div class="field-desc">Sanitizada — nunca stack trace completo</div></div>
@@ -964,7 +970,7 @@
                     <div class="table-section">
                         <div class="table-header"><span class="badge">ENTIDADE</span> outbox_messages</div>
                         <div class="table-content">
-                            <div class="table-description">Outbox transacional: escrita na MESMA transação da alteração de domínio. CHECK status: pending | dispatched | completed | failed.</div>
+                            <div class="table-description">Outbox recuperável. CHECK status: pending | processing | completed | failed | dead_letter.</div>
                             <div class="fields-list">
                                 <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
                                 <div class="field"><span class="field-name">trainer_id</span> <span class="field-type">uuid FK null → users ON DELETE CASCADE</span></div>
@@ -972,14 +978,19 @@
                                 <div class="field"><span class="field-name">payload</span> <span class="field-type">jsonb not null</span></div>
                                 <div class="field"><span class="field-name">status</span> <span class="field-type">varchar(50) not null default 'pending'</span></div>
                                 <div class="field"><span class="field-name">correlation_id</span> <span class="field-type">uuid not null</span></div>
-                                <div class="field"><span class="field-name">created_at</span> <span class="field-type">timestamptz not null</span></div>
-                                <div class="field"><span class="field-name">dispatched_at / completed_at</span> <span class="field-type">timestamptz null</span></div>
+                                <div class="field"><span class="field-name">idempotency_key</span> <span class="field-type">varchar(255) not null unique</span></div>
+                                <div class="field"><span class="field-name">attempts</span> <span class="field-type">integer not null default 0</span></div>
+                                <div class="field"><span class="field-name">next_attempt_at / lease_expires_at</span> <span class="field-type">timestamptz null</span></div>
+                                <div class="field"><span class="field-name">lease_owner_id</span> <span class="field-type">uuid null</span></div>
+                                <div class="field"><span class="field-name">last_error</span> <span class="field-type">text null</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                                <div class="field"><span class="field-name">completed_at</span> <span class="field-type">timestamptz null</span></div>
                             </div>
                         </div>
                     </div>
 
                     <div class="info-box">
-                        <strong>Fluxo:</strong> Alteração de domínio + OutboxMessage (mesma transação) → QStash acorda o dispatcher → claim com FOR UPDATE SKIP LOCKED → efeito executado → completed. Entrega at-least-once — handlers idempotentes via <code>idempotency_key</code>.
+                        <strong>Fluxo:</strong> Alteração de domínio + OutboxMessage (mesma transação) → QStash acorda o dispatcher → claim curto com SELECT FOR UPDATE SKIP LOCKED → efeito executado → conclusão condicional. Entrega at-least-once — handlers idempotentes via <code>idempotency_key</code>.
                     </div>
                 </div>
             </div>

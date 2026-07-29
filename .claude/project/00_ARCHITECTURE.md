@@ -328,7 +328,7 @@ Um tenant em falta provoca falha fechada nas operações tenant-owned. `null` nu
 
 ### 6.2 Queries EF Core
 
-As entidades tenant-owned usam Global Query Filters. O trainer efectivo deve ser uma propriedade da instância do `DbContext`, obtida a partir de `ITenantContext`.
+As entidades tenant-owned usam Global Query Filters centralizados no `PtManagerDbContext`. O trainer efectivo deve ser uma propriedade da instância do `DbContext`, obtida a partir de `ITenantContext`. As `IEntityTypeConfiguration<T>` configuram mapping, constraints, índices e relações, mas não capturam o tenant.
 
 Não se deve resolver `trainer_id` dentro de `OnModelCreating` através de `HttpContext`. O modelo EF Core é reutilizado e jobs ou webhooks podem não ter contexto HTTP.
 
@@ -339,6 +339,13 @@ OwnerTrainerId é null
 ou
 OwnerTrainerId é igual ao TrainerId efectivo
 ```
+
+O filtro de catálogo também exige que o trainer efectivo exista. Sem tenant,
+nenhuma linha é devolvida, incluindo as globais.
+
+As entidades filhas de agregado têm navegações POCO dependente-para-raiz e
+filtros equivalentes através da raiz. Isto protege queries diretas às filhas sem
+duplicar `owner_trainer_id`.
 
 `IgnoreQueryFilters` é proibido no código funcional normal. Uma utilização administrativa exige:
 
@@ -353,7 +360,9 @@ Os query filters não protegem escritas. A Infrastructure deve:
 
 1. Atribuir o trainer efectivo na criação de entidades tenant-owned.
 2. Rejeitar alterações que tentem trocar o tenant.
-3. Validar entidades adicionadas ou modificadas antes do `SaveChanges`.
+3. Validar entidades adicionadas ou modificadas no
+   `TenantWriteValidationInterceptor`. Validações com I/O correm em
+   `SavingChangesAsync`; a variante síncrona falha explicitamente.
 4. Aplicar foreign keys e constraints que impeçam relações entre tenants quando o schema o permitir.
 
 A forma concreta das constraints será definida em `01_DATABASE_SCHEMA.md`.
@@ -361,6 +370,11 @@ A forma concreta das constraints será definida em `01_DATABASE_SCHEMA.md`.
 ### 6.4 Jobs, webhooks e cache
 
 Um job tenant-owned transporta o `TrainerId` persistido. O dispatcher cria um scope, valida o trainer e constrói `ITenantContext` antes de chamar o handler.
+
+O owner de um lease é um token opaco novo por execução de claim. Renovação,
+conclusão e falha exigem estado `Processing`, token correspondente e lease ainda
+ativo. O claim usa uma transação curta com `SELECT ... FOR UPDATE SKIP LOCKED`,
+transição no Domain, `SaveChangesAsync` e commit.
 
 Um webhook Stripe resolve o trainer a partir de identificadores persistidos e validados. Metadata recebida da Stripe não concede autorização por si só.
 

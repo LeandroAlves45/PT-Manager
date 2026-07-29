@@ -1,7 +1,7 @@
 ---
 name: graphify-pseudocode
 description: |
-  Generate extended pseudocode for features in PT Manager following Clean Architecture organized by feature (Api → Application → Domain ← Infrastructure). Generates detailed pseudocode with XML doc/JSDoc suggestions, WHY comments, and mentor notes for learning. Use when implementing features, handlers, repositories, entities, or API controllers.
+  Generate extended pseudocode for features in PT Manager following Clean Architecture organized by feature (Api → Application → Domain ← Infrastructure). Generates detailed pseudocode with XML doc/JSDoc suggestions, essential comments, and mentor notes for learning. Use when implementing features, handlers, repositories, entities, or API controllers.
 ---
 
 # Graphify Pseudocode Generator
@@ -80,7 +80,7 @@ The generated .md file follows this structure:
 ### Pseudocode
 [Extended pseudocode in your style]
 
-### Why Comments
+### Essential Comments
 [Explanations of technical decisions]
 
 ## [Component 2] — [If multiple components]

@@ -8,7 +8,13 @@ namespace Domain.Entities.Supplements;
 public class Supplement
 {
     public Guid Id { get; private set; }
+    /// <summary>Autor da criação; não concede visibilidade nem autorização</summary>
     public Guid? CreatedByUserId { get; private set; }
+    /// <summary>
+    /// Proprietário do suplemento: null identifica  uma linha global autorizada.
+    /// </summary>
+    public Guid? OwnerTrainerId { get; private set; }
+
     public string Name { get; private set; } = null!;
     public string? Description { get; private set; }
     /// <summary>Unidade de medida: "grams", "ml", "capsules", etc.</summary>
@@ -21,6 +27,7 @@ public class Supplement
 
     /// <summary>Cria um suplemento de catálogo.</summary>
     public Supplement(
+        Guid? ownerTrainerId,
         Guid? createdByUserId,
         string name,
         string? description,
@@ -36,6 +43,7 @@ public class Supplement
         ValidateParameters(normalizedName, normalizedUnitOfMeasure);
 
         Id = Guid.NewGuid();
+        OwnerTrainerId = ownerTrainerId;
         CreatedByUserId = createdByUserId;
         Name = normalizedName;
         Description = description;

@@ -11,7 +11,8 @@ Estado: alinhado com `00_ARCHITECTURE.md` v3.0. A implementação ainda não exi
 Este documento é a **especificação do modelo EF Core alvo**, não um script SQL a correr manualmente. A migration `InitialCreate` é gerada a partir deste modelo com `dotnet ef migrations add InitialCreate` (ver `01_DATABASE_SCHEMA.md §12` e `03_DEVELOPER_GUIDE.md`). O histórico de migrations SQL do Python não é convertido — não existem dados de produção a preservar (ver `00_ARCHITECTURE.md §1` e `§7.3`).
 
 **Características:**
-- Multi-tenancy: `owner_trainer_id` em todas as tabelas de negócio, aplicado via EF Core Global Query Filters ligados a `ITenantContext` (nunca a `HttpContext` diretamente — jobs e webhooks não têm contexto HTTP)
+- Contagem: 27 tabelas da aplicação mais `__EFMigrationsHistory`, total 28
+- Multi-tenancy: raízes com `owner_trainer_id`; filhas herdam o tenant por navegação para a raiz. Filtros centralizados no `DbContext`, ligados a `ITenantContext`, exigem tenant presente
 - IDs: `uuid` nativo (ver decisão §1 abaixo)
 - Soft delete: `is_deleted` flag
 - Timestamps: `created_at`, `updated_at` em UTC
@@ -89,7 +90,6 @@ CREATE TABLE users (
 
 CREATE INDEX idx_users_normalized_email ON users(normalized_email);
 CREATE INDEX idx_users_role ON users(role);
-CREATE INDEX idx_users_is_deleted ON users(is_deleted);
 ```
 
 Nota: todos os `TIMESTAMP` do schema anterior passam a `TIMESTAMPTZ` (com timezone) — evita ambiguidade de UTC vs. local em produção.
@@ -118,6 +118,7 @@ CREATE TABLE trainer_subscriptions (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_trainer FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uq_trainer_subscriptions_trainer UNIQUE (trainer_id),
     CONSTRAINT status_check CHECK (subscription_status IN ('ACTIVE', 'INACTIVE', 'SUSPENDED', 'CANCELLED')),
     CONSTRAINT tier_check CHECK (subscription_tier IN ('FREE', 'STARTER', 'PRO'))
 );
@@ -146,11 +147,11 @@ CREATE TABLE clients (
 
     CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT unique_client_per_trainer UNIQUE(owner_trainer_id, user_id)
+    CONSTRAINT unique_client_per_trainer UNIQUE(owner_trainer_id, user_id),
+    CONSTRAINT uq_clients_tenant_id UNIQUE(owner_trainer_id, id)
 );
 
 CREATE INDEX idx_clients_trainer ON clients(owner_trainer_id);
-CREATE INDEX idx_clients_is_deleted ON clients(is_deleted);
 ```
 
 ### 4. `trainer_settings`
@@ -257,17 +258,18 @@ CREATE TABLE foods (
 
 CREATE INDEX idx_foods_name ON foods(name);
 CREATE INDEX idx_foods_trainer ON foods(owner_trainer_id);
-CREATE INDEX idx_foods_is_deleted ON foods(is_deleted);
 ```
 
 ### 8. `supplements`
 
-Suplementos globais (created_by_user_id = NULL para global).
+Suplementos globais ou privados. `owner_trainer_id` define propriedade;
+`created_by_user_id` regista apenas autoria.
 
 ```sql
 CREATE TABLE supplements (
     id UUID PRIMARY KEY,
-    created_by_user_id UUID, -- NULL = global
+    owner_trainer_id UUID, -- NULL = seed global ou criação global autorizada
+    created_by_user_id UUID, -- autoria, não autorização
     name VARCHAR(255) NOT NULL,
     description TEXT,
     unit_of_measure VARCHAR(50), -- 'grams', 'capsules', 'ml', 'tablets'
@@ -275,11 +277,12 @@ CREATE TABLE supplements (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
+    CONSTRAINT fk_owner FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_creator FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE INDEX idx_supplements_name ON supplements(name);
-CREATE INDEX idx_supplements_is_deleted ON supplements(is_deleted);
+CREATE INDEX idx_supplements_trainer ON supplements(owner_trainer_id);
 ```
 
 ### 9. `meal_plans`
@@ -305,7 +308,8 @@ CREATE TABLE meal_plans (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
+    CONSTRAINT fk_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
+        REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE,
     -- ends_date pode ser NULL (plano sem data de fim); a comparação com NULL
     -- avalia a UNKNOWN em Postgres, e uma CHECK só rejeita quando avalia a
     -- FALSE — logo esta constraint continua correta sem tratamento especial.
@@ -314,7 +318,6 @@ CREATE TABLE meal_plans (
 
 CREATE INDEX idx_meal_plans_trainer ON meal_plans(owner_trainer_id);
 CREATE INDEX idx_meal_plans_client ON meal_plans(client_id);
-CREATE INDEX idx_meal_plans_is_active ON meal_plans(is_active);
 ```
 
 ### 10. `meal_plan_meals`
@@ -332,6 +335,7 @@ CREATE TABLE meal_plan_meals (
 
     CONSTRAINT fk_meal_plan FOREIGN KEY (meal_plan_id) REFERENCES meal_plans(id) ON DELETE CASCADE,
     CONSTRAINT meal_type_not_blank CHECK (length(trim(meal_type)) > 0),
+    CONSTRAINT meal_order_positive CHECK (order_number > 0),
     CONSTRAINT unique_meal_order UNIQUE(meal_plan_id, order_number)
 );
 
@@ -353,8 +357,9 @@ CREATE TABLE meal_plan_meal_items (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_meal FOREIGN KEY (meal_plan_meal_id) REFERENCES meal_plan_meals(id) ON DELETE CASCADE,
-    CONSTRAINT fk_food FOREIGN KEY (food_id) REFERENCES foods(id) ON DELETE CASCADE,
-    CONSTRAINT positive_quantity CHECK (quantity_grams > 0)
+    CONSTRAINT fk_food FOREIGN KEY (food_id) REFERENCES foods(id) ON DELETE RESTRICT,
+    CONSTRAINT positive_quantity CHECK (quantity_grams > 0),
+    CONSTRAINT meal_item_order_positive CHECK (order_number > 0)
 );
 
 CREATE INDEX idx_items_meal ON meal_plan_meal_items(meal_plan_meal_id);
@@ -376,9 +381,10 @@ CREATE TABLE meal_plan_meal_supplements (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_meal FOREIGN KEY (meal_plan_meal_id) REFERENCES meal_plan_meals(id) ON DELETE CASCADE,
-    CONSTRAINT fk_supplement FOREIGN KEY (supplement_id) REFERENCES supplements(id) ON DELETE CASCADE,
+    CONSTRAINT fk_supplement FOREIGN KEY (supplement_id) REFERENCES supplements(id) ON DELETE RESTRICT,
     CONSTRAINT unique_supplement_per_meal UNIQUE(meal_plan_meal_id, supplement_id),
-    CONSTRAINT positive_supplement_quantity CHECK (quantity > 0)
+    CONSTRAINT positive_supplement_quantity CHECK (quantity > 0),
+    CONSTRAINT meal_supplement_order_positive CHECK (order_number > 0)
 );
 
 CREATE INDEX idx_supp_meal ON meal_plan_meal_supplements(meal_plan_meal_id);
@@ -410,7 +416,9 @@ CREATE TABLE training_plans (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+    CONSTRAINT fk_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
+        REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE,
+    CONSTRAINT date_order CHECK (starts_date <= ends_date)
 );
 
 CREATE INDEX idx_training_plans_trainer ON training_plans(owner_trainer_id);
@@ -474,16 +482,34 @@ CREATE TABLE training_plan_day_exercises (
     training_plan_day_id UUID NOT NULL,
     exercise_id UUID NOT NULL,
     order_number INTEGER NOT NULL,
+    exercise_group_id UUID,
+    group_position INTEGER,
     notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_day FOREIGN KEY (training_plan_day_id) REFERENCES training_plan_days(id) ON DELETE CASCADE,
-    CONSTRAINT fk_exercise FOREIGN KEY (exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
+    CONSTRAINT fk_exercise FOREIGN KEY (exercise_id) REFERENCES exercises(id) ON DELETE RESTRICT,
+    CONSTRAINT day_exercise_order_positive CHECK (order_number > 0),
+    CONSTRAINT day_exercise_group_consistency CHECK (
+        (exercise_group_id IS NULL AND group_position IS NULL)
+        OR (exercise_group_id IS NOT NULL AND group_position > 0)
+    )
 );
 
 CREATE INDEX idx_day_exercises_day ON training_plan_day_exercises(training_plan_day_id);
+CREATE UNIQUE INDEX uq_day_exercise_isolated_order
+    ON training_plan_day_exercises(training_plan_day_id, order_number)
+    WHERE exercise_group_id IS NULL;
+CREATE UNIQUE INDEX uq_day_exercise_group_position
+    ON training_plan_day_exercises(training_plan_day_id, exercise_group_id, group_position)
+    WHERE exercise_group_id IS NOT NULL;
 ```
+
+O Domain e o interceptor garantem que todas as linhas do mesmo
+`exercise_group_id` partilham `order_number`. Sem tabela de grupo, esta regra
+cross-row não é exprimível por uma `CHECK` row-local; os índices acima garantem
+as restantes invariantes sem introduzir trigger.
 
 ### 17. `exercise_sets`
 
@@ -571,7 +597,14 @@ CREATE TABLE initial_assessments (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+    CONSTRAINT fk_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
+        REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE,
+    CONSTRAINT uq_initial_assessments_client UNIQUE (client_id),
+    CONSTRAINT assessment_age_positive CHECK (age > 0),
+    CONSTRAINT assessment_weight_positive CHECK (weight_kg > 0),
+    CONSTRAINT assessment_height_positive CHECK (height_cm > 0),
+    CONSTRAINT assessment_body_fat_range CHECK (
+        body_fat_percentage IS NULL OR body_fat_percentage BETWEEN 0 AND 100)
 );
 
 CREATE INDEX idx_assessments_trainer ON initial_assessments(owner_trainer_id);
@@ -597,7 +630,13 @@ CREATE TABLE checkins (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+    CONSTRAINT fk_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
+        REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE,
+    CONSTRAINT checkin_date_order CHECK (
+        target_date IS NULL OR target_date >= check_in_date),
+    CONSTRAINT checkin_weight_positive CHECK (weight_kg IS NULL OR weight_kg > 0),
+    CONSTRAINT checkin_body_fat_range CHECK (
+        body_fat_percentage IS NULL OR body_fat_percentage BETWEEN 0 AND 100)
 );
 
 CREATE INDEX idx_checkins_trainer ON checkins(owner_trainer_id);
@@ -629,7 +668,10 @@ CREATE TABLE sessions (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+    CONSTRAINT fk_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
+        REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE,
+    CONSTRAINT session_duration_positive CHECK (
+        duration_minutes IS NULL OR duration_minutes > 0)
 );
 
 CREATE INDEX idx_sessions_trainer ON sessions(owner_trainer_id);
@@ -657,7 +699,12 @@ CREATE TABLE pack_types (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uq_pack_types_tenant_id UNIQUE(owner_trainer_id, id),
+    CONSTRAINT pack_session_count_positive CHECK (session_count > 0),
+    CONSTRAINT pack_price_non_negative CHECK (price_cents >= 0),
+    CONSTRAINT pack_duration_positive CHECK (
+        duration_days IS NULL OR duration_days > 0)
 );
 
 CREATE INDEX idx_packs_trainer ON pack_types(owner_trainer_id);
@@ -681,8 +728,13 @@ CREATE TABLE client_session_packs (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
-    CONSTRAINT fk_pack_type FOREIGN KEY (pack_type_id) REFERENCES pack_types(id) ON DELETE CASCADE
+    CONSTRAINT fk_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
+        REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE,
+    CONSTRAINT fk_pack_type_tenant FOREIGN KEY (owner_trainer_id, pack_type_id)
+        REFERENCES pack_types(owner_trainer_id, id) ON DELETE CASCADE,
+    CONSTRAINT sessions_remaining_non_negative CHECK (sessions_remaining >= 0),
+    CONSTRAINT pack_expiry_order CHECK (
+        expiry_date IS NULL OR expiry_date >= purchase_date)
 );
 
 CREATE INDEX idx_client_packs_trainer ON client_session_packs(owner_trainer_id);
@@ -731,7 +783,8 @@ CREATE TABLE notifications (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
+    CONSTRAINT fk_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
+        REFERENCES clients(owner_trainer_id, id) ON DELETE RESTRICT,
     CONSTRAINT status_check CHECK (status IN ('pending', 'sent', 'failed', 'bounced'))
 );
 
@@ -762,6 +815,7 @@ CREATE TABLE durable_jobs (
     attempts INTEGER NOT NULL DEFAULT 0,
     next_attempt_at TIMESTAMPTZ,
     lease_expires_at TIMESTAMPTZ, -- evita processamento duplicado concorrente
+    lease_owner_id UUID, -- token opaco novo por execução de claim
     idempotency_key VARCHAR(255) NOT NULL,
     correlation_id UUID NOT NULL,
     last_error TEXT, -- mensagem sanitizada, nunca stack trace completo
@@ -770,29 +824,36 @@ CREATE TABLE durable_jobs (
 
     CONSTRAINT fk_trainer FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT status_check CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'dead_letter')),
+    CONSTRAINT durable_jobs_attempts_non_negative CHECK (attempts >= 0),
     CONSTRAINT unique_idempotency_key UNIQUE (idempotency_key)
 );
 
-CREATE INDEX idx_jobs_status_scheduled ON durable_jobs(status, scheduled_at) WHERE status IN ('pending', 'processing');
+CREATE INDEX idx_jobs_first_attempt ON durable_jobs(scheduled_at)
+    WHERE status = 'pending' AND next_attempt_at IS NULL;
+CREATE INDEX idx_jobs_retry ON durable_jobs(next_attempt_at)
+    WHERE status = 'pending' AND next_attempt_at IS NOT NULL;
 CREATE INDEX idx_jobs_trainer ON durable_jobs(trainer_id);
 CREATE INDEX idx_jobs_lease ON durable_jobs(lease_expires_at) WHERE status = 'processing';
 ```
 
-Reclamação transacional de jobs vencidos (dispatcher, `00_ARCHITECTURE.md §9.4`):
+Seleção transacional de jobs vencidos (dispatcher, `00_ARCHITECTURE.md §9.4`):
 
 ```sql
-UPDATE durable_jobs
-SET status = 'processing', lease_expires_at = now() + INTERVAL '2 minutes', attempts = attempts + 1
-WHERE id IN (
-    SELECT id FROM durable_jobs
-    WHERE status = 'pending' AND scheduled_at <= now()
-       OR (status = 'processing' AND lease_expires_at < now())
-    ORDER BY scheduled_at
-    LIMIT 20
-    FOR UPDATE SKIP LOCKED
-)
-RETURNING *;
+SELECT * FROM durable_jobs
+WHERE (status = 'pending' AND next_attempt_at IS NULL AND scheduled_at <= @now)
+   OR (status = 'pending' AND next_attempt_at IS NOT NULL
+       AND next_attempt_at <= @now)
+   OR (status = 'processing' AND lease_expires_at <= @now)
+ORDER BY CASE WHEN next_attempt_at IS NOT NULL
+              THEN next_attempt_at ELSE scheduled_at END
+LIMIT @batch_size
+FOR UPDATE SKIP LOCKED;
 ```
+
+O repository materializa as linhas, chama `Claim` com um token novo, executa
+`SaveChangesAsync` e faz commit na mesma transação curta. Renovação, conclusão e
+falha exigem `status = 'processing'`, token correspondente e
+`lease_expires_at > @now`.
 
 ### 27. `outbox_messages`
 
@@ -804,17 +865,31 @@ CREATE TABLE outbox_messages (
     trainer_id UUID,
     message_type VARCHAR(100) NOT NULL, -- 'payment_confirmed_email', 'payment_failed_alert', etc
     payload JSONB NOT NULL,
-    status VARCHAR(50) NOT NULL DEFAULT 'pending', -- 'pending', 'dispatched', 'completed', 'failed'
+    status VARCHAR(50) NOT NULL DEFAULT 'pending',
     correlation_id UUID NOT NULL,
+    idempotency_key VARCHAR(255) NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    next_attempt_at TIMESTAMPTZ,
+    lease_owner_id UUID,
+    lease_expires_at TIMESTAMPTZ,
+    last_error TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    dispatched_at TIMESTAMPTZ,
     completed_at TIMESTAMPTZ,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_trainer FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT status_check CHECK (status IN ('pending', 'dispatched', 'completed', 'failed'))
+    CONSTRAINT status_check CHECK (
+        status IN ('pending', 'processing', 'completed', 'failed', 'dead_letter')),
+    CONSTRAINT outbox_attempts_non_negative CHECK (attempts >= 0),
+    CONSTRAINT unique_outbox_idempotency_key UNIQUE (idempotency_key)
 );
 
-CREATE INDEX idx_outbox_status ON outbox_messages(status) WHERE status = 'pending';
+CREATE INDEX idx_outbox_first_attempt ON outbox_messages(created_at)
+    WHERE status = 'pending' AND next_attempt_at IS NULL;
+CREATE INDEX idx_outbox_retry ON outbox_messages(next_attempt_at)
+    WHERE status = 'pending' AND next_attempt_at IS NOT NULL;
+CREATE INDEX idx_outbox_lease ON outbox_messages(lease_expires_at)
+    WHERE status = 'processing';
 CREATE INDEX idx_outbox_trainer ON outbox_messages(trainer_id);
 ```
 
@@ -843,9 +918,6 @@ Todas as FKs com `ON DELETE CASCADE` ou `ON DELETE SET NULL` conforme necessári
 CREATE INDEX idx_clients_trainer_active ON clients(owner_trainer_id, is_deleted);
 CREATE INDEX idx_meal_plans_trainer_active ON meal_plans(owner_trainer_id, is_active);
 CREATE INDEX idx_training_plans_trainer_active ON training_plans(owner_trainer_id, is_active);
-
--- Timestamps (para limpeza de dados antigos)
-CREATE INDEX idx_notifications_old ON notifications(created_at) WHERE created_at < now() - INTERVAL '6 months';
 
 -- Search
 CREATE INDEX idx_foods_search ON foods USING GIN(to_tsvector('portuguese', name || ' ' || COALESCE(description, '')));
