@@ -13,7 +13,7 @@ public sealed class MacroSummaryTests
         var summary = new MacroSummary(
             proteinGrams: 100,
             carbsGrams: 200,
-            fatGrams: 50
+            fatsGrams: 50
         );
 
         // Act
@@ -38,8 +38,8 @@ public sealed class MacroSummaryTests
     public void Equality_SameValues_AreEqual()
     {
         // Arrange
-        var summary1 = new MacroSummary(30, 40, 10);
-        var summary2 = new MacroSummary(30, 40, 10);
+        var summary1 = new MacroSummary(proteinGrams: 30, carbsGrams: 40, fatsGrams: 10);
+        var summary2 = new MacroSummary(proteinGrams: 30, carbsGrams: 40, fatsGrams: 10);
 
         // Act & Assert
         Assert.Equal(summary1, summary2);

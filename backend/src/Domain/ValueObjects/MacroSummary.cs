@@ -10,17 +10,17 @@ public record MacroSummary
 {
     public decimal ProteinGrams { get; }
     public decimal CarbsGrams { get; }
-    public decimal FatGrams { get; }
-    public decimal Kcal => ProteinGrams * 4 + CarbsGrams * 4 + FatGrams * 9;
+    public decimal FatsGrams { get; }
+    public decimal Kcal => ProteinGrams * 4 + CarbsGrams * 4 + FatsGrams * 9;
 
     /// <summary>Cria um resumo de macros não negativos.</summary>
-    public MacroSummary(decimal proteinGrams, decimal carbsGrams, decimal fatGrams)
+    public MacroSummary(decimal proteinGrams, decimal carbsGrams, decimal fatsGrams)
     {
-        if (proteinGrams < 0 || carbsGrams < 0 || fatGrams < 0)
+        if (proteinGrams < 0 || carbsGrams < 0 || fatsGrams < 0)
             throw new DomainException("Macro grams cannot be negative.");
 
         ProteinGrams = proteinGrams;
         CarbsGrams = carbsGrams;
-        FatGrams = fatGrams;
+        FatsGrams = fatsGrams;
     }
 }

@@ -1,0 +1,80 @@
+using Domain.Entities.Identity;
+using Domain.Entities.Nutrition;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Infrastructure.Data.Configurations.Nutrition;
+
+/// <summary>
+/// Representa a configuração da entidade Food para o Entity Framework Core.
+/// </summary>
+internal sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
+{
+    public void Configure(EntityTypeBuilder<Food> builder)
+    {
+        builder.ToTable("foods");
+        builder.HasKey(food => food.Id);
+        builder.Property(food => food.Id)
+            .HasColumnName("id")
+            .ValueGeneratedOnAdd();
+
+        builder.Property(food => food.Kcal)
+            .HasColumnName("kcal")
+            .HasPrecision(10, 2)
+            .HasComputedColumnSql("protein * 4 + carbs * 4 + fat * 9", stored: true)
+            .ValueGeneratedOnAddOrUpdate();
+
+        builder.Property(food => food.Calories)
+            .HasColumnName("calories")
+            .HasPrecision(10, 2)
+            .IsRequired();
+
+        builder.Property(food => food.Protein)
+            .HasColumnName("protein")
+            .HasPrecision(10, 2)
+            .IsRequired();
+
+        builder.Property(food => food.Carbs)
+            .HasColumnName("carbs")
+            .HasPrecision(10, 2)
+            .IsRequired();
+
+        builder.Property(food => food.Fats)
+            .HasColumnName("fats")
+            .HasPrecision(10, 2)
+            .IsRequired();
+
+        builder.Property(food => food.Fiber)
+            .HasColumnName("fiber")
+            .HasPrecision(10, 2);
+
+        builder.Property(food => food.OwnerTrainerId)
+            .HasColumnName("owner_trainer_id");
+
+        builder.Property(food => food.Name)
+            .HasColumnName("name")
+            .HasMaxLength(255)
+            .IsRequired();
+
+        builder.Property(food => food.Description)
+            .HasColumnName("description");
+
+        builder.Property(food => food.IsDeleted)
+            .HasColumnName("is_deleted")
+            .HasDefaultValue(false);
+
+        builder.HasIndex(food => food.Name).HasDatabaseName("idx_foods_name");
+        builder.HasIndex(food => food.OwnerTrainerId).HasDatabaseName("idx_foods_trainer");
+
+        builder.HasIndex(food => new { food.Name, food.Description })
+            .HasMethod("GIN")
+            .IsTsVectorExpressionIndex("portuguese")
+            .HasDatabaseName("idx_foods_search");
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(food => food.OwnerTrainerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+    }
+}
