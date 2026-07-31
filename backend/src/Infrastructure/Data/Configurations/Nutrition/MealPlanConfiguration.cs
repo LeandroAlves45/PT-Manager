@@ -17,7 +17,7 @@ internal sealed class MealPlanConfiguration : IEntityTypeConfiguration<MealPlan>
         builder.HasKey(mp => mp.Id);
         builder.Property(mp => mp.Id)
             .HasColumnName("id")
-            .ValueGeneratedOnAdd();
+            .ValueGeneratedNever();
 
         builder.ComplexProperty(mp => mp.Targets, t =>
         {
@@ -30,7 +30,7 @@ internal sealed class MealPlanConfiguration : IEntityTypeConfiguration<MealPlan>
                 .HasPrecision(10, 2)
                 .IsRequired();
             t.Property(tp => tp.FatsGrams)
-                .HasColumnName("fats_target_g")
+                .HasColumnName("fats_target")
                 .HasPrecision(10, 2)
                 .IsRequired();
         });
@@ -71,6 +71,16 @@ internal sealed class MealPlanConfiguration : IEntityTypeConfiguration<MealPlan>
         builder.Property(mp => mp.IsDeleted)
             .HasColumnName("is_deleted")
             .HasDefaultValue(false);
+
+        builder.Property(mp => mp.CreatedAt)
+            .HasColumnName("created_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
+
+        builder.Property(mp => mp.UpdatedAt)
+            .HasColumnName("updated_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
 
         builder.ToTable(t => t.HasCheckConstraint("date_order", "starts_date <= ends_date"));
 

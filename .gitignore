@@ -55,6 +55,7 @@ lerna-debug.log*
 # Memória local dos assistentes
 .codex/memory/
 .claude/memory/MEMORY.md
+.claude/memory/
 
 # Documentation and Backlog
 docs/

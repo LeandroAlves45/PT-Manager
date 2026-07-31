@@ -453,6 +453,25 @@ public sealed class DurableJobTests
     }
 
     [Fact]
+    public void ScheduleRetry_ClearsLeaseOwnerAndExpiry()
+    {
+        // Arrange
+        var job = CreateFailedJob(
+            LeaseOwnerA,
+            LeaseDuration,
+            Now
+        );
+
+        // Act
+        job.ScheduleRetry(Now.AddMinutes(10), Now.AddMinutes(1));
+
+        // Assert
+        Assert.Null(job.LeaseOwnerId);
+        Assert.Null(job.LeaseExpiresAt);
+        Assert.Equal(JobStatus.Pending, job.Status);
+    }
+
+    [Fact]
     public void MoveToDeadLetter_ClearsLeaseOwner()
     {
         // Arrange

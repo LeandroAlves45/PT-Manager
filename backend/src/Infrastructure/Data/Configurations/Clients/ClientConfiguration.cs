@@ -16,7 +16,7 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
         builder.HasKey(client => client.Id);
         builder.Property(client => client.Id)
             .HasColumnName("id")
-            .ValueGeneratedOnAdd();
+            .ValueGeneratedNever();
 
         builder.Property(client => client.OwnerTrainerId)
             .HasColumnName("owner_trainer_id")
@@ -49,6 +49,16 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
         builder.Property(client => client.IsDeleted)
             .HasColumnName("is_deleted")
             .HasDefaultValue(false);
+
+        builder.Property(client => client.CreatedAt)
+            .HasColumnName("created_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
+
+        builder.Property(client => client.UpdatedAt)
+            .HasColumnName("updated_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
 
         // Duas Fk com user_id (conta do cliente) e owner_trainer_id (personal trainer do cliente)
         builder.HasOne<User>()

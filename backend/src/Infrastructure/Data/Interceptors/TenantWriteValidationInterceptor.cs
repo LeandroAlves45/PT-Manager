@@ -1,9 +1,14 @@
 using Application.Common.Abstractions;
+using Domain.Entities.Assessments;
+using Domain.Entities.Billing;
+using Domain.Entities.Clients;
+using Domain.Entities.Notifications;
 using Domain.Entities.Nutrition;
+using Domain.Entities.Sessions;
 using Domain.Entities.Supplements;
+using Domain.Entities.TrainerSettings;
 using Domain.Entities.Training;
 using Domain.Exceptions;
-using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
@@ -42,62 +47,280 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
         if (eventData.Context is not PtManagerDbContext context)
             throw new InvalidOperationException("DbContext is not of type PtManagerDbContext.");
 
-        if (_tenantContext.IsAdministrative)
-            return await base.SavingChangesAsync(eventData, result, cancellationToken);
-
-        var tenantId = context.RequireTenant();
-
         var entries = context.ChangeTracker.Entries()
-            .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+            .Where(entry => entry.State is EntityState.Added or EntityState.Modified)
+            .ToList();
+
+        Guid? tenantId = null;
 
         foreach (var entry in entries)
         {
-            // Procura pela propriedade de tenancy (OwnerTrainerId ou TrainerId)
-            var ownerProperty = entry.Properties.FirstOrDefault(p =>
-                p.Metadata.Name == "OwnerTrainerId" || p.Metadata.Name == "TrainerId");
-
-            if (ownerProperty == null)
-                continue; // Se não houver propriedade de tenancy, ignora a validação
-
-            if (entry.State == EntityState.Added)
+            switch (entry.Entity)
             {
-                var currentValue = ownerProperty.CurrentValue as Guid?;
+                // Política A: ownership obrigatório e soft delete
+                case Client:
+                case MealPlan:
+                case TrainingPlan:
+                case Session:
+                case CheckIn:
+                case InitialAssessment:
+                case ClientSessionPack:
+                case Notification:
+                case PackType:
+                    tenantId ??= context.RequireTenant();
+                    ValidateRequiredOwnership(entry, "OwnerTrainerId", tenantId.Value);
+                    break;
 
-                // Atribui automaticamente se estiver vazio ou valida se for o tenant correto
-                if (!currentValue.HasValue || currentValue.Value == Guid.Empty)
-                {
-                    ownerProperty.CurrentValue = tenantId;
-                }
-                else if (currentValue.Value != tenantId)
-                {
-                    throw new DomainException(
-                        "Cannot create a record for another tenant."
-                    );
-                }
-            }
-            else if (entry.State == EntityState.Modified)
-            {
-                var originalValue = ownerProperty.OriginalValue as Guid?;
-                var currentValue = ownerProperty.CurrentValue as Guid?;
+                // Política A': ownership obrigatório sem soft delete
+                case TrainerSettings:
+                case TrainerSubscription:
+                    tenantId ??= context.RequireTenant();
+                    ValidateRequiredOwnership(entry, "TrainerId", tenantId.Value);
+                    break;
 
-                // Valida se o valor original e o valor atual correspondem ao tenant
-                if (originalValue != tenantId || currentValue != tenantId)
-                {
-                    throw new DomainException(
-                        "Tenant ownership cannot be changed."
-                    );
-                }
+                // Política B: null representa código global e só pode ser escrito
+                // através de uma operação administrativa já autorizada.
+                case Food:
+                case Exercise:
+                case Supplement:
+                    ValidateCatalogOwnership(entry, context, ref tenantId);
+                    break;
             }
         }
 
-        await ValidateCatalogReferencesAsync(context, tenantId, cancellationToken);
+        // Referências de agregados tenant-owned exigem sempre um tenant efetivo
+        if (HasTenantScopedReferences(context))
+        {
+            tenantId ??= context.RequireTenant();
+            await ValidateDerivedAggregateOwnershipAsync(
+                context,
+                tenantId.Value,
+                cancellationToken);
+            await ValidateCatalogReferencesAsync(context, tenantId.Value, cancellationToken);
+        }
+
         return await base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
     /// <summary>
-    /// Verifica que itens, suplementos e exercícios referenciados são globais ou do
-    /// tenant efetivo, e que um log de série pertence ao mesmo cliente do plano.
+    /// Confirma que cada entidade filha pertence a uma raiz do tenant efetivo.
+    /// A validação considera também agregados novos ainda não persistidos.
     /// </summary>
+    private static async Task ValidateDerivedAggregateOwnershipAsync(
+        PtManagerDbContext context,
+        Guid tenantId,
+        CancellationToken cancellationToken)
+    {
+        await ValidateMealPlanOwnershipAsync(context, tenantId, cancellationToken);
+        await ValidateTrainingPlanOwnershipAsync(context, tenantId, cancellationToken);
+    }
+
+    private static async Task ValidateMealPlanOwnershipAsync(
+        PtManagerDbContext context,
+        Guid tenantId,
+        CancellationToken cancellationToken)
+    {
+        var changedMeals = context.ChangeTracker.Entries<MealPlanMeal>()
+            .Where(entry => entry.State is EntityState.Added or EntityState.Modified)
+            .Select(entry => entry.Entity)
+            .ToList();
+
+        var mealIds = changedMeals.Select(meal => meal.Id)
+            .Concat(context.ChangeTracker.Entries<MealPlanMealItem>()
+                .Where(entry => entry.State is EntityState.Added or EntityState.Modified)
+                .Select(entry => entry.Entity.MealPlanMealId))
+            .Concat(context.ChangeTracker.Entries<MealPlanMealSupplement>()
+                .Where(entry => entry.State is EntityState.Added or EntityState.Modified)
+                .Select(entry => entry.Entity.MealPlanMealId))
+            .Distinct()
+            .ToList();
+
+        if (mealIds.Count == 0)
+            return;
+
+        var meals = context.ChangeTracker.Entries<MealPlanMeal>()
+            .Select(entry => entry.Entity)
+            .Where(meal => mealIds.Contains(meal.Id))
+            .ToDictionary(meal => meal.Id);
+
+        var missingMealIds = mealIds.Where(id => !meals.ContainsKey(id)).ToList();
+        if (missingMealIds.Count > 0)
+        {
+            var persistedMeals = await context.MealPlanMeals
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(meal => missingMealIds.Contains(meal.Id))
+                .ToListAsync(cancellationToken);
+
+            foreach (var meal in persistedMeals)
+                meals.Add(meal.Id, meal);
+        }
+
+        foreach (var mealId in mealIds)
+        {
+            if (!meals.ContainsKey(mealId))
+                throw new DomainException("Referenced meal does not exist.");
+        }
+
+        var planIds = meals.Values
+            .Select(meal => meal.MealPlanId)
+            .Distinct()
+            .ToList();
+
+        var plans = context.ChangeTracker.Entries<MealPlan>()
+            .Select(entry => entry.Entity)
+            .Where(plan => planIds.Contains(plan.Id))
+            .ToDictionary(plan => plan.Id);
+
+        var missingPlanIds = planIds.Where(id => !plans.ContainsKey(id)).ToList();
+        if (missingPlanIds.Count > 0)
+        {
+            var persistedPlans = await context.MealPlans
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(plan => missingPlanIds.Contains(plan.Id))
+                .ToListAsync(cancellationToken);
+
+            foreach (var plan in persistedPlans)
+                plans.Add(plan.Id, plan);
+        }
+
+        foreach (var meal in meals.Values)
+        {
+            if (!plans.TryGetValue(meal.MealPlanId, out var plan))
+                throw new DomainException("Referenced meal plan does not exist.");
+
+            if (plan.OwnerTrainerId != tenantId || plan.IsDeleted)
+                throw new DomainException("Cannot write to another tenant's meal plan.");
+        }
+    }
+
+    private static async Task ValidateTrainingPlanOwnershipAsync(
+        PtManagerDbContext context,
+        Guid tenantId,
+        CancellationToken cancellationToken)
+    {
+        var changedDays = context.ChangeTracker.Entries<TrainingPlanDay>()
+            .Where(entry => entry.State is EntityState.Added or EntityState.Modified)
+            .Select(entry => entry.Entity)
+            .ToList();
+
+        var changedDayExercises = context.ChangeTracker.Entries<TrainingPlanDayExercise>()
+            .Where(entry => entry.State is EntityState.Added or EntityState.Modified)
+            .Select(entry => entry.Entity)
+            .ToList();
+
+        var changedLogs = context.ChangeTracker.Entries<ClientExerciseSetLog>()
+            .Where(entry => entry.State is EntityState.Added or EntityState.Modified)
+            .Select(entry => entry.Entity)
+            .ToList();
+
+        var dayExerciseIds = changedDayExercises.Select(dayExercise => dayExercise.Id)
+            .Concat(context.ChangeTracker.Entries<ExerciseSet>()
+                .Where(entry => entry.State is EntityState.Added or EntityState.Modified)
+                .Select(entry => entry.Entity.TrainingPlanDayExerciseId))
+            .Concat(changedLogs.Select(log => log.TrainingPlanDayExerciseId))
+            .Distinct()
+            .ToList();
+
+        var dayExercises = context.ChangeTracker.Entries<TrainingPlanDayExercise>()
+            .Select(entry => entry.Entity)
+            .Where(dayExercise => dayExerciseIds.Contains(dayExercise.Id))
+            .ToDictionary(dayExercise => dayExercise.Id);
+
+        var missingDayExerciseIds = dayExerciseIds
+            .Where(id => !dayExercises.ContainsKey(id))
+            .ToList();
+
+        if (missingDayExerciseIds.Count > 0)
+        {
+            var persistedDayExercises = await context.TrainingPlanDayExercises
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(dayExercise => missingDayExerciseIds.Contains(dayExercise.Id))
+                .ToListAsync(cancellationToken);
+
+            foreach (var dayExercise in persistedDayExercises)
+                dayExercises.Add(dayExercise.Id, dayExercise);
+        }
+
+        foreach (var dayExerciseId in dayExerciseIds)
+        {
+            if (!dayExercises.ContainsKey(dayExerciseId))
+                throw new DomainException("Referenced training plan day exercise does not exist.");
+        }
+
+        var dayIds = changedDays.Select(day => day.Id)
+            .Concat(dayExercises.Values.Select(dayExercise => dayExercise.TrainingPlanDayId))
+            .Distinct()
+            .ToList();
+
+        if (dayIds.Count == 0)
+            return;
+
+        var days = context.ChangeTracker.Entries<TrainingPlanDay>()
+            .Select(entry => entry.Entity)
+            .Where(day => dayIds.Contains(day.Id))
+            .ToDictionary(day => day.Id);
+
+        var missingDayIds = dayIds.Where(id => !days.ContainsKey(id)).ToList();
+        if (missingDayIds.Count > 0)
+        {
+            var persistedDays = await context.TrainingPlanDays
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(day => missingDayIds.Contains(day.Id))
+                .ToListAsync(cancellationToken);
+
+            foreach (var day in persistedDays)
+                days.Add(day.Id, day);
+        }
+
+        foreach (var dayId in dayIds)
+        {
+            if (!days.ContainsKey(dayId))
+                throw new DomainException("Referenced training plan day does not exist.");
+        }
+
+        var planIds = days.Values.Select(day => day.TrainingPlanId).Distinct().ToList();
+        var plans = context.ChangeTracker.Entries<TrainingPlan>()
+            .Select(entry => entry.Entity)
+            .Where(plan => planIds.Contains(plan.Id))
+            .ToDictionary(plan => plan.Id);
+
+        var missingPlanIds = planIds.Where(id => !plans.ContainsKey(id)).ToList();
+        if (missingPlanIds.Count > 0)
+        {
+            var persistedPlans = await context.TrainingPlans
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(plan => missingPlanIds.Contains(plan.Id))
+                .ToListAsync(cancellationToken);
+
+            foreach (var plan in persistedPlans)
+                plans.Add(plan.Id, plan);
+        }
+
+        foreach (var day in days.Values)
+        {
+            if (!plans.TryGetValue(day.TrainingPlanId, out var plan))
+                throw new DomainException("Referenced training plan does not exist.");
+
+            if (plan.OwnerTrainerId != tenantId || plan.IsDeleted)
+                throw new DomainException("Cannot write to another tenant's training plan.");
+        }
+
+        foreach (var log in changedLogs)
+        {
+            var dayExercise = dayExercises[log.TrainingPlanDayExerciseId];
+            var day = days[dayExercise.TrainingPlanDayId];
+            var plan = plans[day.TrainingPlanId];
+
+            if (plan.ClientId != log.ClientId)
+                throw new DomainException("Log client does not match the training plan client.");
+        }
+    }
+
     private async Task ValidateCatalogReferencesAsync(
         PtManagerDbContext context,
         Guid tenantId,
@@ -186,69 +409,73 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 }
             }
         }
-
-        // ClientExerciseSetLog: o cliente do log tem de bater certo
-        // com o cliente do TrainingPlan a que a série pertence.
-        var logEntries = context.ChangeTracker
-            .Entries<ClientExerciseSetLog>()
-            .Where(entry => entry.State == EntityState.Added || entry.State == EntityState.Modified)
-            .Select(entry => entry.Entity)
-            .ToList();
-
-        if (logEntries.Count > 0)
-        {
-            var dayExerciseIds = logEntries.Select(log => log.TrainingPlanDayExerciseId).Distinct().ToList();
-
-            // Uma única query materializa toda a cadeia até TrainingPlan.
-            var dayExercises = await context.TrainingPlanDayExercises
-                .IgnoreQueryFilters()
-                .Where(dx => dayExerciseIds.Contains(dx.Id))
-                .Select(dx => new { dx.Id, dx.TrainingPlanDayId })
-                .ToDictionaryAsync(x => x.Id, x => x.TrainingPlanDayId, cancellationToken);
-
-            var daysIds = dayExercises.Values.Distinct().ToList();
-
-            var days = await context.TrainingPlanDays
-                .IgnoreQueryFilters()
-                .Where(d => daysIds.Contains(d.Id))
-                .Select(d => new { d.Id, d.TrainingPlanId })
-                .ToDictionaryAsync(x => x.Id, x => x.TrainingPlanId, cancellationToken);
-
-            var planIds = days.Values.Distinct().ToList();
-
-            var plans = await context.TrainingPlans
-                .IgnoreQueryFilters()
-                .Where(tp => planIds.Contains(tp.Id))
-                .Select(tp => new { tp.Id, tp.ClientId, tp.OwnerTrainerId, tp.IsDeleted })
-                .ToDictionaryAsync(x => x.Id, cancellationToken);
-
-            foreach (var log in logEntries)
-            {
-                if (!dayExercises.TryGetValue(log.TrainingPlanDayExerciseId, out var trainingPlanDayId))
-                    throw new DomainException(
-                        "Referenced training plan day exercise does not exist."
-                    );
-
-                if (!days.TryGetValue(trainingPlanDayId, out var trainingPlanId))
-                    throw new DomainException(
-                        "Referenced training plan day does not exist."
-                    );
-
-                if (!plans.TryGetValue(trainingPlanId, out var plan))
-                    throw new DomainException(
-                        "Referenced training plan does not exist."
-                    );
-
-                if (plan.OwnerTrainerId != tenantId || plan.IsDeleted)
-                    throw new DomainException(
-                        "Cannot log against another tenant's plan."
-                    );
-
-                if (plan.ClientId != log.ClientId)
-                    throw new DomainException(
-                        "Log client does not match the training plan client."
-                    );
-            }
-        }
     }
+
+    private static void ValidateRequiredOwnership(
+        Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry,
+        string propertyName,
+        Guid tenantId)
+    {
+        var property = entry.Property(propertyName);
+        var currentValue = (Guid?)property.CurrentValue;
+
+        if (entry.State == EntityState.Added)
+        {
+            if (!currentValue.HasValue || currentValue.Value == Guid.Empty)
+            {
+                property.CurrentValue = tenantId;
+                return;
+            }
+
+            if (currentValue.Value != tenantId)
+                throw new DomainException("Cannot create a record for another tenant.");
+
+            return;
+        }
+
+        var originalValue = (Guid?)property.OriginalValue;
+        if (originalValue != tenantId || currentValue != tenantId)
+            throw new DomainException("Tenant ownership cannot be changed.");
+    }
+
+    private void ValidateCatalogOwnership(
+        Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry,
+        PtManagerDbContext context,
+        ref Guid? tenantId)
+    {
+        var property = entry.Property("OwnerTrainerId");
+        var currentValue = (Guid?)property.CurrentValue;
+        var originalValue = entry.State == EntityState.Modified
+            ? (Guid?)property.OriginalValue
+            : null;
+
+        if (entry.State == EntityState.Modified && originalValue != currentValue)
+            throw new DomainException("Catalog ownership cannot be changed.");
+
+        if (!currentValue.HasValue)
+        {
+            if (!_tenantContext.IsAdministrative)
+                throw new DomainException("Only an administrative operation can write global catalog items.");
+
+            return;
+        }
+
+        tenantId ??= context.RequireTenant();
+
+        if (currentValue != tenantId)
+            throw new DomainException("Cannot write a private catalog item for another tenant.");
+    }
+
+    private static bool HasTenantScopedReferences(PtManagerDbContext context) =>
+        context.ChangeTracker.Entries().Any(entry =>
+            entry.State is EntityState.Added or EntityState.Modified &&
+            entry.Entity is (
+                MealPlanMeal
+                or MealPlanMealItem
+                or MealPlanMealSupplement
+                or TrainingPlanDay
+                or TrainingPlanDayExercise
+                or ExerciseSet
+                or ClientExerciseSetLog
+            ));
 }

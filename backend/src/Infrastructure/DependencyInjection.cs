@@ -1,6 +1,8 @@
 using Application.Common.Abstractions;
+using Application.Features.Jobs.Abstractions;
 using Infrastructure.Data;
 using Infrastructure.Data.Interceptors;
+using Infrastructure.Persistence;
 using Infrastructure.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
@@ -38,14 +40,17 @@ public static class DependencyInjection
         // Scoped: o tenant é do pedido. Registado pelas duas interfaces para que o
         // middleware possa chamar Establish e o resto do código possa ler.
         services.AddScoped<TenantContext>();
-        services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
+        services.AddScoped<ITenantContext>(provider =>
+            provider.GetRequiredService<TenantContext>());
+        services.AddScoped<ITenantContextInitializer>(provider =>
+            provider.GetRequiredService<TenantContext>());
 
         services.AddScoped<TenantWriteValidationInterceptor>();
-        services.AddScoped<IClock, SystemClock>();
+        services.AddSingleton<IClock, SystemClock>();
 
         // Repositórios
-        //services.AddScoped<IDurableJobStore, DurableJobStoreRepository>();
-        //services.AddScoped<IOutboxStore, OutboxRepository>();
+        services.AddScoped<IDurableJobStore, DurableJobRepository>();
+        services.AddScoped<IOutboxStore, OutboxRepository>();
 
         return services;
     }

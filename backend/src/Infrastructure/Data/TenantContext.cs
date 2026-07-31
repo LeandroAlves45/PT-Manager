@@ -7,7 +7,7 @@ namespace Infrastructure.Data;
 /// Implementação scoped de ITenantContext. É composta pela origem do pedido
 /// (middleware HTTP, dispatcher de jobs, handlers de webhooks) e depois lida.
 /// </summary>
-internal sealed class TenantContext : ITenantContext
+internal sealed class TenantContext : ITenantContext, ITenantContextInitializer
 {
     public Guid? TrainerId { get; private set; }
     public Guid? UserId { get; private set; }
@@ -18,7 +18,7 @@ internal sealed class TenantContext : ITenantContext
     private bool _established;
 
     /// <summary>
-    /// Define o tenant efetivo a partir de claims já validadadas. Só pode ser chamado uma vez
+    /// Define o tenant efetivo a partir de claims já validadas. Só pode ser chamado uma vez
     /// por scope.
     /// </summary>
     public void Establish(

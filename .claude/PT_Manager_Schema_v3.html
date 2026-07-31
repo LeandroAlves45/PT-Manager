@@ -378,7 +378,7 @@
                 <!-- Overview Tab -->
                 <div id="overview" class="tab-content active">
                     <h1>PT Manager — Schema da Base de Dados</h1>
-                    <p>27 tabelas da aplicação + <code>__EFMigrationsHistory</code>, total 28, PostgreSQL 16 (Neon), modeladas para EF Core 10. IDs em <code>uuid</code> nativo gerados na aplicação (<code>Guid.NewGuid()</code>), multi-tenancy via raízes com <code>owner_trainer_id</code> e filhas ligadas à raiz, timestamps sempre <code>TIMESTAMPTZ</code>, migrations geradas com <code>dotnet ef migrations add</code> — nunca escritas à mão.</p>
+                    <p>28 tabelas da aplicação + <code>__EFMigrationsHistory</code>, total 29, PostgreSQL 16 (Neon), modeladas para EF Core 10. IDs em <code>uuid</code> nativo gerados na aplicação (<code>Guid.NewGuid()</code>), multi-tenancy via raízes com <code>owner_trainer_id</code> e filhas ligadas à raiz, timestamps sempre <code>TIMESTAMPTZ</code>, migrations geradas com <code>dotnet ef migrations add</code> — nunca escritas à mão.</p>
 
                     <div class="info-box">
                         Os Global Query Filters são centralizados no <code>PtManagerDbContext</code>, exigem tenant presente e usam navegações para proteger também queries diretas às entidades filhas. Estão ligados a <code>ITenantContext</code>, nunca a <code>HttpContext</code>. Roles: <code>superuser</code>, <code>trainer</code>, <code>client</code>.
@@ -410,7 +410,7 @@
                         </div>
                         <div class="entity-card">
                             <div class="entity-name">Avaliações</div>
-                            <div class="entity-fields">initial_assessments · checkins</div>
+                            <div class="entity-fields">initial_assessments · checkins · client_consents</div>
                         </div>
                         <div class="entity-card">
                             <div class="entity-name">Sessões</div>
@@ -805,6 +805,10 @@
                                 <div class="field"><span class="field-name">medical_conditions</span> <span class="field-type">text null</span></div>
                                 <div class="field"><span class="field-name">goals</span> <span class="field-type">text not null</span></div>
                                 <div class="field"><span class="field-name">fitness_level</span> <span class="field-type">varchar(50) not null</span><div class="field-desc">'sedentary', 'lightly_active', 'moderately_active', 'very_active'</div></div>
+                                <div class="field"><span class="field-name">profession</span> <span class="field-type">varchar(255) null</span><div class="field-desc">Coluna própria (não JSONB) — permite filtrar/reportar por profissão</div></div>
+                                <div class="field"><span class="field-name">measurements</span> <span class="field-type">jsonb null</span><div class="field-desc">Medidas de baseline: waist_cm, hip_cm, chest_cm, arm_cm, thigh_cm, calf_cm</div></div>
+                                <div class="field"><span class="field-name">photo_ids</span> <span class="field-type">uuid[] not null default '{}'</span><div class="field-desc">Fotos de baseline (Cloudinary) — nunca NULL, pode ficar vazio</div></div>
+                                <div class="field"><span class="field-name">nutrition_intake</span> <span class="field-type">jsonb null</span><div class="field-desc">food_preferences, daily_routine, disliked_or_intolerant_foods, sleep_quality (1-5), mood (1-5), avg_water_liters_per_day, hungriest_time_of_day, uses_supplements</div></div>
                                 <div class="field"><span class="field-name">is_deleted</span> <span class="field-type">boolean default false</span></div>
                                 <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
                             </div>
@@ -814,17 +818,39 @@
                     <div class="table-section">
                         <div class="table-header"><span class="badge">ENTIDADE</span> checkins</div>
                         <div class="table-content">
-                            <div class="table-description">Check-ins periódicos (peso, % gordura), com data alvo do próximo.</div>
+                            <div class="table-description">Check-ins periódicos (peso, % gordura, medidas, fotos, adesão e feedback qualitativo), com data alvo do próximo.</div>
                             <div class="fields-list">
                                 <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
                                 <div class="field"><span class="field-name">owner_trainer_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span></div>
                                 <div class="field"><span class="field-name">client_id</span> <span class="field-type">uuid FK → clients ON DELETE CASCADE</span></div>
                                 <div class="field"><span class="field-name">check_in_date</span> <span class="field-type">date not null</span></div>
                                 <div class="field"><span class="field-name">target_date</span> <span class="field-type">date null</span></div>
-                                <div class="field"><span class="field-name">weight_kg</span> <span class="field-type">decimal(10,2) null</span></div>
+                                <div class="field"><span class="field-name">weight_kg</span> <span class="field-type">decimal(10,2) null</span><div class="field-desc">Peso anterior obtém-se via LAG() sobre checkins anteriores — sem coluna própria</div></div>
                                 <div class="field"><span class="field-name">body_fat_percentage</span> <span class="field-type">decimal(10,2) null</span></div>
                                 <div class="field"><span class="field-name">notes</span> <span class="field-type">text null</span></div>
+                                <div class="field"><span class="field-name">measurements</span> <span class="field-type">jsonb null</span><div class="field-desc">Mesma estrutura de initial_assessments.measurements — permite comparar evolução</div></div>
+                                <div class="field"><span class="field-name">photo_ids</span> <span class="field-type">uuid[] not null default '{}'</span><div class="field-desc">Fotos de progresso deste checkin</div></div>
+                                <div class="field"><span class="field-name">adherence_score</span> <span class="field-type">integer null (0-100)</span><div class="field-desc">"Foi tudo cumprido a 100%?"</div></div>
+                                <div class="field"><span class="field-name">weeks_on_program</span> <span class="field-type">integer null ≥ 0</span><div class="field-desc">Semanas decorridas com o treino/plano atual</div></div>
+                                <div class="field"><span class="field-name">feedback</span> <span class="field-type">jsonb null</span><div class="field-desc">appetite, digestion, training_load, recovery_sleep, energy_level, body_response</div></div>
                                 <div class="field"><span class="field-name">is_deleted</span> <span class="field-type">boolean default false</span></div>
+                                <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-section">
+                        <div class="table-header"><span class="badge">ENTIDADE</span> client_consents</div>
+                        <div class="table-content">
+                            <div class="table-description">Consentimentos LGPD do cliente — necessário porque initial_assessments e checkins passam a guardar fotos e dados de saúde. Só 2 estados (accepted/revoked), sem versionamento de texto legal (YAGNI).</div>
+                            <div class="fields-list">
+                                <div class="field"><span class="field-name">id</span> <span class="field-type">uuid PK</span></div>
+                                <div class="field"><span class="field-name">owner_trainer_id</span> <span class="field-type">uuid FK → users ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">client_id</span> <span class="field-type">uuid FK composta → clients ON DELETE CASCADE</span></div>
+                                <div class="field"><span class="field-name">consent_type</span> <span class="field-type">varchar(50) not null</span><div class="field-desc">CHECK: photo_usage | data_processing | communication</div></div>
+                                <div class="field"><span class="field-name">status</span> <span class="field-type">varchar(20) not null</span><div class="field-desc">CHECK: accepted | revoked</div></div>
+                                <div class="field"><span class="field-name">accepted_at / revoked_at</span> <span class="field-type">timestamptz null</span></div>
+                                <div class="field"><span class="field-name">ip_address</span> <span class="field-type">inet null</span></div>
                                 <div class="field"><span class="field-name">created_at / updated_at</span> <span class="field-type">timestamptz not null</span></div>
                             </div>
                         </div>

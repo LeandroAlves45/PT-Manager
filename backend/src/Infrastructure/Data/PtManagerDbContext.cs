@@ -23,7 +23,6 @@ namespace Infrastructure.Data;
 public sealed class PtManagerDbContext : DbContext
 {
     private readonly ITenantContext _tenantContext;
-    private readonly IClock _clock;
 
     /// <summary>
     /// Personal Trainer efetivo deste instância. Propriedade de INSTÂNCIA, lida pelas
@@ -33,19 +32,17 @@ public sealed class PtManagerDbContext : DbContext
 
     public PtManagerDbContext(
         DbContextOptions<PtManagerDbContext> options,
-        ITenantContext tenantContext,
-        IClock clock
+        ITenantContext tenantContext
     ) : base(options)
     {
         _tenantContext = tenantContext;
-        _clock = clock;
     }
 
     // DbSet<T> para as 27 entidades.
     public DbSet<User> Users => Set<User>();
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<InitialAssessment> InitialAssessments => Set<InitialAssessment>();
-    public DbSet<Checkin> CheckIns => Set<Checkin>();
+    public DbSet<CheckIn> CheckIns => Set<CheckIn>();
     public DbSet<Exercise> Exercises => Set<Exercise>();
     public DbSet<ClientSessionPack> ClientSessionPacks => Set<ClientSessionPack>();
     public DbSet<PackType> PackTypes => Set<PackType>();
@@ -109,7 +106,7 @@ public sealed class PtManagerDbContext : DbContext
         modelBuilder.Entity<InitialAssessment>().HasQueryFilter(ia =>
             CurrentTrainerId.HasValue && !ia.IsDeleted && ia.OwnerTrainerId == CurrentTrainerId.Value);
 
-        modelBuilder.Entity<Checkin>().HasQueryFilter(ci =>
+        modelBuilder.Entity<CheckIn>().HasQueryFilter(ci =>
             CurrentTrainerId.HasValue && !ci.IsDeleted && ci.OwnerTrainerId == CurrentTrainerId.Value);
 
         modelBuilder.Entity<ClientSessionPack>().HasQueryFilter(csp =>

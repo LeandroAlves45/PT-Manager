@@ -1,37 +1,82 @@
-using Domain.ValueObjects;
 using Domain.Exceptions;
+using Domain.ValueObjects;
 using Xunit;
+
 namespace Unit.Domain.UnitTests.ValueObjects;
 
 public sealed class JobStatusTests
 {
+    public static TheoryData<string, string> ValidTransitions =>
+        new()
+        {
+            { "pending", "processing" },
+            { "processing", "completed" },
+            { "processing", "failed" },
+            { "processing", "pending" },
+            { "failed", "pending" },
+            { "failed", "dead_letter" }
+        };
+
+    public static TheoryData<string, string> InvalidNonTerminalTransitions =>
+        new()
+        {
+            { "pending", "completed" },
+            { "pending", "failed" },
+            { "pending", "dead_letter" },
+            { "processing", "dead_letter" },
+            { "failed", "completed" },
+            { "failed", "processing" }
+        };
+
+    public static TheoryData<string, string> TerminalTransitions
+    {
+        get
+        {
+            var data = new TheoryData<string, string>();
+            var terminalStates = new[] { "completed", "dead_letter" };
+            var allStates = new[]
+            {
+                "pending",
+                "processing",
+                "completed",
+                "failed",
+                "dead_letter"
+            };
+            foreach (var current in terminalStates)
+            {
+                foreach (var next in allStates)
+                {
+                    data.Add(current, next);
+                }
+            }
+            return data;
+        }
+    }
+
+    public static TheoryData<string, JobStatus> KnownStatusValuesData =>
+        new()
+        {
+            { "pending", JobStatus.Pending },
+            { "processing", JobStatus.Processing },
+            { "completed", JobStatus.Completed },
+            { "failed", JobStatus.Failed },
+            { "dead_letter", JobStatus.DeadLetter }
+        };
+
     [Theory]
-    [InlineData("pending", "processing")]
-    [InlineData("processing", "completed")]
-    [InlineData("processing", "failed")]
-    [InlineData("processing", "pending")]
-    [InlineData("failed", "pending")]
-    [InlineData("failed", "dead_letter")]
+    [MemberData(nameof(ValidTransitions))]
     public void CanTransitionTo_ValidTransitions_ReturnsTrue(string current, string next)
     {
         // Arrange
         var currentStatus = JobStatus.FromString(current);
         var nextStatus = JobStatus.FromString(next);
 
-        // Act
-        var result = currentStatus.CanTransitionTo(nextStatus);
-
         // Assert
-        Assert.True(result);
+        Assert.True(currentStatus.CanTransitionTo(nextStatus));
     }
 
     [Theory]
-    [InlineData("pending", "completed")]
-    [InlineData("pending", "failed")]
-    [InlineData("pending", "dead_letter")]
-    [InlineData("processing", "dead_letter")]
-    [InlineData("failed", "completed")]
-    [InlineData("failed", "processing")]
+    [MemberData(nameof(InvalidNonTerminalTransitions))]
     public void CanTransitionTo_IllegalNonTerminalTransitions_ReturnsFalse(string current, string next)
     {
         // Arrange
@@ -46,25 +91,15 @@ public sealed class JobStatusTests
     }
 
     [Theory]
-    [InlineData("completed", "pending")]
-    [InlineData("completed", "processing")]
-    [InlineData("completed", "failed")]
-    [InlineData("completed", "dead_letter")]
-    [InlineData("dead_letter", "pending")]
-    [InlineData("dead_letter", "processing")]
-    [InlineData("dead_letter", "completed")]
-    [InlineData("dead_letter", "failed")]
-    public void CanTransitionTo_FromTerminalState_AlwaysReturnsFalse(string current, string next)
+    [MemberData(nameof(TerminalTransitions))]
+    public void CanTransitionTo_FromTerminalState_ReturnsFalse(string current, string next)
     {
         // Arrange
         var currentStatus = JobStatus.FromString(current);
         var nextStatus = JobStatus.FromString(next);
 
-        // Act
-        var result = currentStatus.CanTransitionTo(nextStatus);
-
         // Assert
-        Assert.False(result);
+        Assert.False(currentStatus.CanTransitionTo(nextStatus));
     }
 
     [Theory]
@@ -82,59 +117,9 @@ public sealed class JobStatusTests
     public void FromString_UnknownValue_ThrowsDomainException()
     {
         // Arrange & Act
-        var exception = Assert.Throws<DomainException>(() => JobStatus.FromString("bogus"));
+        var exception = Assert.Throws<DomainException>(() => JobStatus.FromString("unknown"));
 
         // Assert
-        Assert.Equal("Invalid job status: bogus", exception.Message);
+        Assert.Equal("Invalid job status: unknown", exception.Message);
     }
-
-    [Fact]
-    public void CanTransitionTo_ProcessingToPending_ReturnsTrue()
-    {
-        // Arrange
-        var currentStatus = JobStatus.Processing;
-        var nextStatus = JobStatus.Pending;
-
-        // Act
-        var result = currentStatus.CanTransitionTo(nextStatus);
-
-        // Assert
-        Assert.True(result);
-    }
-
-    [Theory]
-    [InlineData("pending", "processing")]
-    [InlineData("processing", "completed")]
-    [InlineData("processing", "failed")]
-    [InlineData("processing", "pending")]
-    [InlineData("failed", "pending")]
-    [InlineData("failed", "dead_letter")]
-    public void CanTransitionTo_CompletedOrDeadLetterToAnyState_ReturnsFalse(string current, string next)
-    {
-        // Arrange
-        var currentStatus = JobStatus.FromString(current);
-        var nextStatus = JobStatus.FromString(next);
-
-        // Act
-        var result = currentStatus.CanTransitionTo(nextStatus);
-
-        // Assert
-        if (current == "completed" || current == "dead_letter")
-        {
-            Assert.False(result);
-        }
-    }
-
-    /// <summary>
-    /// Helper para fornecer os valores conhecidos do JobStatus para os testes.
-    /// </summary>
-    public static TheoryData<string, JobStatus> KnownStatusValuesData =>
-        new()
-        {
-            { "pending", JobStatus.Pending },
-            { "processing", JobStatus.Processing },
-            { "completed", JobStatus.Completed },
-            { "failed", JobStatus.Failed },
-            { "dead_letter", JobStatus.DeadLetter }
-        };
 }

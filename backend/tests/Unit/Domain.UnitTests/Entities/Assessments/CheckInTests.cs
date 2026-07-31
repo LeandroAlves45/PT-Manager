@@ -4,14 +4,14 @@ using Xunit;
 
 namespace Domain.UnitTests.Entities.Assessments;
 
-public sealed class CheckinTests
+public sealed class CheckInTests
 {
     [Fact]
-    public void Correct_DeletedCheckin_ThrowsDomainException()
+    public void Correct_DeletedCheckIn_ThrowsDomainException()
     {
         // Arrange
         var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
-        var checkin = new Checkin(
+        var checkin = new CheckIn(
             Guid.NewGuid(),
             Guid.NewGuid(),
             new DateOnly(2026, 7, 25),

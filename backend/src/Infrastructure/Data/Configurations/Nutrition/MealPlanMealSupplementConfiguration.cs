@@ -16,7 +16,7 @@ internal sealed class MealPlanMealSupplementConfiguration : IEntityTypeConfigura
         builder.HasKey(mpms => mpms.Id);
         builder.Property(mpms => mpms.Id)
             .HasColumnName("id")
-            .ValueGeneratedOnAdd();
+            .ValueGeneratedNever();
 
         builder.Property(mpms => mpms.MealPlanMealId)
             .HasColumnName("meal_plan_meal_id")
@@ -39,12 +39,21 @@ internal sealed class MealPlanMealSupplementConfiguration : IEntityTypeConfigura
             .HasColumnName("order_number")
             .IsRequired();
 
+        builder.Property(mpms => mpms.CreatedAt)
+            .HasColumnName("created_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
+
         builder.Property(mpms => mpms.UpdatedAt)
             .HasColumnName("updated_at")
             .HasDefaultValueSql("now()")
             .IsRequired();
 
-        builder.ToTable(t => t.HasCheckConstraint("positive_supplement_quantity", "quantity > 0"));
+        builder.ToTable(t =>
+        {
+            t.HasCheckConstraint("positive_supplement_quantity", "quantity > 0");
+            t.HasCheckConstraint("meal_supplement_order_positive", "order_number > 0");
+        });
 
         builder.HasIndex(mpms => new { mpms.MealPlanMealId, mpms.SupplementId })
             .HasDatabaseName("unique_supplement_per_meal")

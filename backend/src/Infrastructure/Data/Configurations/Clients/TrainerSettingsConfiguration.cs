@@ -16,7 +16,7 @@ internal sealed class TrainerSettingsConfiguration : IEntityTypeConfiguration<Tr
         builder.HasKey(settings => settings.Id);
         builder.Property(settings => settings.Id)
             .HasColumnName("id")
-            .ValueGeneratedOnAdd();
+            .ValueGeneratedNever();
 
         builder.Property(settings => settings.TrainerId)
             .HasColumnName("trainer_id")
@@ -64,6 +64,16 @@ internal sealed class TrainerSettingsConfiguration : IEntityTypeConfiguration<Tr
         builder.HasIndex(settings => settings.TrainerId)
             .HasDatabaseName("idx_settings_trainer")
             .IsUnique();
+
+        builder.Property(settings => settings.CreatedAt)
+            .HasColumnName("created_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
+
+        builder.Property(settings => settings.UpdatedAt)
+            .HasColumnName("updated_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
 
         builder.HasOne<User>()
             .WithMany()

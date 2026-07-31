@@ -18,7 +18,7 @@ internal sealed class SupplementConfiguration : IEntityTypeConfiguration<Supplem
 
         builder.Property(s => s.Id)
             .HasColumnName("id")
-            .ValueGeneratedOnAdd();
+            .ValueGeneratedNever();
 
         builder.Property(s => s.OwnerTrainerId)
             .HasColumnName("owner_trainer_id");
@@ -41,6 +41,16 @@ internal sealed class SupplementConfiguration : IEntityTypeConfiguration<Supplem
         builder.Property(s => s.IsDeleted)
             .HasColumnName("is_deleted")
             .HasDefaultValue(false);
+
+        builder.Property(s => s.CreatedAt)
+            .HasColumnName("created_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
+
+        builder.Property(s => s.UpdatedAt)
+            .HasColumnName("updated_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
 
         builder.HasIndex(s => s.Name)
             .HasDatabaseName("idx_supplements_name");

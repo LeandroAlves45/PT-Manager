@@ -6,7 +6,7 @@ namespace Domain.Entities.Nutrition;
 /// privado de um personal trainer (tenant).
 /// </summary>
 /// <remarks>
-/// A coluna "kcal" é GENERATED ALWAYS AS (protein * 4 + carbs * 4 + fat * 9) STORED
+/// A coluna "kcal" é GENERATED ALWAYS AS (protein * 4 + carbs * 4 + fats * 9) STORED
 /// no PostgreSQL -> no Domain, é só leitura e o EF Core configura-a como computed column.
 /// </remarks>
 public class Food
@@ -19,7 +19,7 @@ public class Food
     public decimal Protein { get; private set; }
     public decimal Carbs { get; private set; }
     public decimal Fats { get; private set; }
-    /// <summary>Kcal calculadas (protein * 4 + carbs * 4 + fat * 9). Coluna gerada -> só leitura.</summary>
+    /// <summary>Kcal calculadas (protein * 4 + carbs * 4 + fats * 9). Coluna gerada -> só leitura.</summary>
     public decimal Kcal { get; private set; }
     public decimal? Fiber { get; private set; }
     public bool IsDeleted { get; private set; }

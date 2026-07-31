@@ -15,7 +15,7 @@ internal sealed class MealPlanMealConfiguration : IEntityTypeConfiguration<MealP
         builder.HasKey(mpm => mpm.Id);
         builder.Property(mpm => mpm.Id)
             .HasColumnName("id")
-            .ValueGeneratedOnAdd();
+            .ValueGeneratedNever();
 
         builder.Property(mpm => mpm.MealPlanId)
             .HasColumnName("meal_plan_id")
@@ -30,7 +30,21 @@ internal sealed class MealPlanMealConfiguration : IEntityTypeConfiguration<MealP
             .HasColumnName("order_number")
             .IsRequired();
 
-        builder.ToTable(t => t.HasCheckConstraint("meal_type_not_blank", "length(trim(meal_type)) > 0"));
+        builder.Property(mpm => mpm.CreatedAt)
+            .HasColumnName("created_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
+
+        builder.Property(mpm => mpm.UpdatedAt)
+            .HasColumnName("updated_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
+
+        builder.ToTable(t =>
+        {
+            t.HasCheckConstraint("meal_type_not_blank", "length(trim(meal_type)) > 0");
+            t.HasCheckConstraint("meal_order_positive", "order_number > 0");
+        });
 
         builder.HasIndex(mpm => new { mpm.MealPlanId, mpm.OrderNumber })
             .HasDatabaseName("unique_meal_order")

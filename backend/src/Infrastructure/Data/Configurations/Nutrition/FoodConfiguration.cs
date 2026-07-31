@@ -16,12 +16,12 @@ internal sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
         builder.HasKey(food => food.Id);
         builder.Property(food => food.Id)
             .HasColumnName("id")
-            .ValueGeneratedOnAdd();
+            .ValueGeneratedNever();
 
         builder.Property(food => food.Kcal)
             .HasColumnName("kcal")
             .HasPrecision(10, 2)
-            .HasComputedColumnSql("protein * 4 + carbs * 4 + fat * 9", stored: true)
+            .HasComputedColumnSql("protein * 4 + carbs * 4 + fats * 9", stored: true)
             .ValueGeneratedOnAddOrUpdate();
 
         builder.Property(food => food.Calories)
@@ -62,6 +62,16 @@ internal sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
         builder.Property(food => food.IsDeleted)
             .HasColumnName("is_deleted")
             .HasDefaultValue(false);
+
+        builder.Property(food => food.CreatedAt)
+            .HasColumnName("created_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
+
+        builder.Property(food => food.UpdatedAt)
+            .HasColumnName("updated_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
 
         builder.HasIndex(food => food.Name).HasDatabaseName("idx_foods_name");
         builder.HasIndex(food => food.OwnerTrainerId).HasDatabaseName("idx_foods_trainer");

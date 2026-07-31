@@ -5,12 +5,12 @@ namespace Domain.Entities.Assessments;
 /// Check-in periódico de um cliente: peso e massa gorda numa data, com meta opcional
 /// para a próxima avaliação.
 /// </summary>
-public class Checkin
+public class CheckIn
 {
     public Guid Id { get; private set; }
     public Guid OwnerTrainerId { get; private set; }
     public Guid ClientId { get; private set; }
-    public DateOnly CheckinDate { get; private set; }
+    public DateOnly CheckInDate { get; private set; }
     public DateOnly? TargetDate { get; private set; }
     public decimal? WeightKg { get; private set; }
     public decimal? BodyFatPercentage { get; private set; }
@@ -19,13 +19,13 @@ public class Checkin
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
-    private Checkin() { }
+    private CheckIn() { }
 
     /// <summary>Cria um check-in validando apenas os valores presentes.</summary>
-    public Checkin(
+    public CheckIn(
         Guid ownerTrainerId,
         Guid clientId,
-        DateOnly checkinDate,
+        DateOnly checkInDate,
         DateOnly? targetDate,
         decimal? weightKg,
         decimal? bodyFatPercentage,
@@ -33,12 +33,12 @@ public class Checkin
         DateTime now
     )
     {
-        ValidateValues(targetDate, checkinDate, weightKg, bodyFatPercentage);
+        ValidateValues(targetDate, checkInDate, weightKg, bodyFatPercentage);
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
         ClientId = clientId;
-        CheckinDate = checkinDate;
+        CheckInDate = checkInDate;
         TargetDate = targetDate;
         WeightKg = weightKg;
         BodyFatPercentage = bodyFatPercentage;
@@ -58,7 +58,7 @@ public class Checkin
     )
     {
         EnsureNotDeleted();
-        ValidateValues(targetDate, CheckinDate, weightKg, bodyFatPercentage);
+        ValidateValues(targetDate, CheckInDate, weightKg, bodyFatPercentage);
 
         TargetDate = targetDate;
         WeightKg = weightKg;
@@ -77,12 +77,12 @@ public class Checkin
     /// <summary>Valida os valores do check-in.</summary>
     private void ValidateValues(
         DateOnly? targetDate,
-        DateOnly checkinDate,
+        DateOnly checkInDate,
         decimal? weightKg,
         decimal? bodyFatPercentage
     )
     {
-        if (targetDate.HasValue && targetDate < checkinDate)
+        if (targetDate.HasValue && targetDate < checkInDate)
             throw new DomainException("Target date cannot be before check-in date");
         if (weightKg.HasValue && weightKg <= 0)
             throw new DomainException("Weight invalid");

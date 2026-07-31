@@ -15,7 +15,7 @@ internal sealed class MealPlanMealItemConfiguration : IEntityTypeConfiguration<M
         builder.HasKey(mpmi => mpmi.Id);
         builder.Property(mpmi => mpmi.Id)
             .HasColumnName("id")
-            .ValueGeneratedOnAdd();
+            .ValueGeneratedNever();
 
         builder.Property(mpmi => mpmi.MealPlanMealId)
             .HasColumnName("meal_plan_meal_id")
@@ -26,7 +26,7 @@ internal sealed class MealPlanMealItemConfiguration : IEntityTypeConfiguration<M
             .IsRequired();
 
         builder.Property(mpmi => mpmi.QuantityInGrams)
-            .HasColumnName("quantity_in_grams")
+            .HasColumnName("quantity_grams")
             .HasPrecision(10, 2)
             .IsRequired();
 
@@ -34,7 +34,21 @@ internal sealed class MealPlanMealItemConfiguration : IEntityTypeConfiguration<M
             .HasColumnName("order_number")
             .IsRequired();
 
-        builder.ToTable(t => t.HasCheckConstraint("positive_quantity", "quantity_in_grams > 0"));
+        builder.Property(mpmi => mpmi.CreatedAt)
+            .HasColumnName("created_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
+
+        builder.Property(mpmi => mpmi.UpdatedAt)
+            .HasColumnName("updated_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
+
+        builder.ToTable(t =>
+        {
+            t.HasCheckConstraint("positive_quantity", "quantity_grams > 0");
+            t.HasCheckConstraint("meal_item_order_positive", "order_number > 0");
+        });
 
         builder.HasIndex(mpmi => mpmi.MealPlanMealId)
             .HasDatabaseName("idx_items_meal");

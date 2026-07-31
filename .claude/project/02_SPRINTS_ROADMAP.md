@@ -86,7 +86,7 @@ Portar entidades Python → C# Entities + Value Objects, sem abstrações genér
    Nutrition/MealPlan.cs, MealPlanMeal.cs, MealPlanMealItem.cs, MealPlanMealSupplement.cs, Food.cs
    Training/TrainingPlan.cs, TrainingPlanDay.cs, TrainingPlanDayExercise.cs, ExerciseSet.cs, ClientExerciseSetLog.cs, Exercise.cs
    Sessions/Session.cs
-   Assessments/InitialAssessment.cs, Checkin.cs
+   Assessments/InitialAssessment.cs, CheckIn.cs
    Supplements/Supplement.cs
    Billing/TrainerSubscription.cs, PackType.cs, ClientSessionPack.cs, ProcessedStripeEvent.cs
    Notifications/Notification.cs
@@ -149,7 +149,7 @@ implementados:
      impedir que `owner_trainer_id` do trainer A seja combinado com recursos do
      trainer B.
    - Cobrir pelo menos `meal_plans`, `training_plans`,
-     `initial_assessments`, `checkins`, `sessions`,
+     `initial_assessments`, `checkins`, `client_consents`, `sessions`,
      `client_session_packs` e `notifications`.
    - Definir validação de entidades adicionadas ou modificadas antes de
      `SaveChanges`. Global Query Filters protegem leituras, não escritas
@@ -196,7 +196,7 @@ pontos não estiverem concluídos.
    dotnet tool run dotnet-ef migrations add InitialCreate --project src/Infrastructure/Infrastructure.csproj --startup-project src/Api/Api.csproj --output-dir Data/Migrations
    dotnet tool run dotnet-ef database update --project src/Infrastructure/Infrastructure.csproj --startup-project src/Api/Api.csproj
    ```
-   - Verificar 27 tabelas da aplicação mais `__EFMigrationsHistory`, total 28
+   - Verificar 28 tabelas da aplicação mais `__EFMigrationsHistory`, total 29
    - Verificar constraints, FKs compostas, nullability, defaults, delete
      behaviors e índices, incluindo os GIN de pesquisa
    - Inspecionar o código gerado da migration antes de a aplicar, sem editar
@@ -223,7 +223,7 @@ pontos não estiverem concluídos.
 ### Deliverables
 - ✓ `Infrastructure` compila
 - ✓ DbContext funciona contra PostgreSQL (local + Neon)
-- ✓ Migration `InitialCreate` aplicada com sucesso, 28 tabelas confirmadas
+- ✓ Migration `InitialCreate` aplicada com sucesso, 29 tabelas confirmadas
 - ✓ Gate pré-`InitialCreate` fechado e registado nas fontes canónicas
 - ✓ Repositórios específicos implementados
 - ✓ ~40 testes integração passam, incluindo isolamento multi-tenant em leituras
@@ -323,7 +323,7 @@ Endpoints HTTP, ASP.NET Core Identity, middleware, compatibilidade de contrato.
    MealPlansController     /meal-plans CRUD
    TrainingPlansController /training-plans CRUD
    ClientPortalController  /portal/my-plan, /portal/my-nutrition, /portal/branding, /portal/my-profile
-   AssessmentsController   /assessments, /checkins
+   AssessmentsController   /assessments, /checkins, /consents
    SessionsController      /sessions
    AdminController         /admin/trainers, /admin/health (superuser only)
    InternalJobsController  /api/internal/jobs/dispatch (QStash, assinatura validada, sem auth de utilizador)

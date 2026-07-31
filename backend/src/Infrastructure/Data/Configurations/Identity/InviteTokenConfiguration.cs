@@ -15,7 +15,7 @@ internal sealed class InviteTokenConfiguration : IEntityTypeConfiguration<Invite
         builder.HasKey(token => token.Id);
         builder.Property(token => token.Id)
             .HasColumnName("id")
-            .ValueGeneratedOnAdd();
+            .ValueGeneratedNever();
 
         builder.Property(token => token.TrainerId)
             .HasColumnName("trainer_id")

@@ -889,6 +889,13 @@ Pertencem a fases posteriores:
 7. Actualização das skills do Claude Code e do Codex.
 8. Adopção futura de PostgreSQL RLS.
 9. Adopção futura de RabbitMQ.
+10. Métricas customizáveis por cliente (`client_tracked_metrics`/`client_metric_values`),
+    versionamento de planos de treino/nutrição e relatórios persistidos
+    (`client_reports`) — avaliados a partir de propostas externas e adiados em
+    31/07/2026 por falta de pedido concreto (YAGNI). O desenho aprovado para
+    `initial_assessments`, `checkins` e a nova `client_consents` fica em
+    `.claude/project/01_DATABASE_SCHEMA.md`; resumo da decisão em
+    `docs/backend-files/README.md`.
 
 ## 18. Referências oficiais
 

@@ -11,7 +11,7 @@ Estado: alinhado com `00_ARCHITECTURE.md` v3.0. A implementação ainda não exi
 Este documento é a **especificação do modelo EF Core alvo**, não um script SQL a correr manualmente. A migration `InitialCreate` é gerada a partir deste modelo com `dotnet ef migrations add InitialCreate` (ver `01_DATABASE_SCHEMA.md §12` e `03_DEVELOPER_GUIDE.md`). O histórico de migrations SQL do Python não é convertido — não existem dados de produção a preservar (ver `00_ARCHITECTURE.md §1` e `§7.3`).
 
 **Características:**
-- Contagem: 27 tabelas da aplicação mais `__EFMigrationsHistory`, total 28
+- Contagem: 28 tabelas da aplicação mais `__EFMigrationsHistory`, total 29
 - Multi-tenancy: raízes com `owner_trainer_id`; filhas herdam o tenant por navegação para a raiz. Filtros centralizados no `DbContext`, ligados a `ITenantContext`, exigem tenant presente
 - IDs: `uuid` nativo (ver decisão §1 abaixo)
 - Soft delete: `is_deleted` flag
@@ -592,6 +592,10 @@ CREATE TABLE initial_assessments (
     medical_conditions TEXT,
     fitness_level VARCHAR(50) NOT NULL, -- 'sedentary', 'lightly_active', 'moderately_active', 'very_active'
     goals TEXT NOT NULL,
+    profession VARCHAR(255), -- coluna própria (não JSONB) para permitir filtrar/reportar por profissão
+    measurements JSONB, -- {waist_cm, hip_cm, chest_cm, arm_cm, thigh_cm, calf_cm} — medidas de baseline, opcionais
+    photo_ids UUID[] NOT NULL DEFAULT ARRAY[]::UUID[], -- fotos de baseline (Cloudinary); nunca NULL, pode ficar vazio
+    nutrition_intake JSONB, -- dados de estilo de vida/nutrição da 1ª consulta (ver estrutura abaixo)
     is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -611,6 +615,21 @@ CREATE INDEX idx_assessments_trainer ON initial_assessments(owner_trainer_id);
 CREATE INDEX idx_assessments_client ON initial_assessments(client_id);
 ```
 
+**Estrutura de `nutrition_intake` (JSONB, todas as chaves opcionais):**
+
+```json
+{
+    "food_preferences": "...",              // alimentos que tem preferência
+    "daily_routine": "...",                 // rotina do cliente
+    "disliked_or_intolerant_foods": "...",  // alimentos que não gosta / é intolerante
+    "sleep_quality": 4,                     // escala 1 a 5
+    "mood": 4,                              // escala 1 a 5
+    "avg_water_liters_per_day": 2.5,
+    "hungriest_time_of_day": "...",
+    "uses_supplements": true
+}
+```
+
 ### 20. `checkins`
 
 Check-ins periódicos (peso, body fat %).
@@ -625,6 +644,11 @@ CREATE TABLE checkins (
     weight_kg DECIMAL(10, 2),
     body_fat_percentage DECIMAL(10, 2),
     notes TEXT,
+    measurements JSONB, -- mesma estrutura de initial_assessments.measurements — permite comparar evolução
+    photo_ids UUID[] NOT NULL DEFAULT ARRAY[]::UUID[], -- fotos de progresso deste checkin; nunca NULL, pode ficar vazio
+    adherence_score INTEGER, -- 0-100, resposta a "foi tudo cumprido a 100%?"
+    weeks_on_program INTEGER, -- semanas decorridas com o treino/plano atual
+    feedback JSONB, -- perguntas qualitativas do checkin (ver estrutura abaixo)
     is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -636,19 +660,73 @@ CREATE TABLE checkins (
         target_date IS NULL OR target_date >= check_in_date),
     CONSTRAINT checkin_weight_positive CHECK (weight_kg IS NULL OR weight_kg > 0),
     CONSTRAINT checkin_body_fat_range CHECK (
-        body_fat_percentage IS NULL OR body_fat_percentage BETWEEN 0 AND 100)
+        body_fat_percentage IS NULL OR body_fat_percentage BETWEEN 0 AND 100),
+    CONSTRAINT checkin_adherence_range CHECK (
+        adherence_score IS NULL OR adherence_score BETWEEN 0 AND 100),
+    CONSTRAINT checkin_weeks_non_negative CHECK (
+        weeks_on_program IS NULL OR weeks_on_program >= 0)
 );
 
 CREATE INDEX idx_checkins_trainer ON checkins(owner_trainer_id);
 CREATE INDEX idx_checkins_client ON checkins(client_id);
 CREATE INDEX idx_checkins_date ON checkins(check_in_date);
+CREATE INDEX idx_checkins_client_date ON checkins(client_id, check_in_date DESC) WHERE is_deleted = false;
 ```
+
+**Estrutura de `feedback` (JSONB, todas as chaves opcionais):**
+
+```json
+{
+    "appetite": "...",        // "Como está o apetite? Fome ou a empurrar comida?"
+    "digestion": "...",       // "Trânsito intestinal ok? Algum alimento a fazer mal?"
+    "training_load": "...",   // "Nível de rendimento/cargas no treino, a aumentar?"
+    "recovery_sleep": "...",  // "Recuperação muscular / qualidade do sono?"
+    "energy_level": "...",    // "Níveis de energia?"
+    "body_response": "..."    // "Como sentes que o corpo está a responder?"
+}
+```
+
+O "peso anterior" pedido no acompanhamento não gera coluna nova: obtém-se com
+`LAG(weight_kg) OVER (PARTITION BY client_id ORDER BY check_in_date)` na query
+de histórico, evitando duplicar um dado que já existe na linha do checkin
+anterior.
+
+### 21. `client_consents`
+
+Registo de consentimentos LGPD do cliente — necessário porque `initial_assessments` e `checkins` passam a guardar fotos e dados de saúde.
+
+```sql
+CREATE TABLE client_consents (
+    id UUID PRIMARY KEY,
+    owner_trainer_id UUID NOT NULL,
+    client_id UUID NOT NULL,
+    consent_type VARCHAR(50) NOT NULL, -- 'photo_usage', 'data_processing', 'communication'
+    status VARCHAR(20) NOT NULL, -- 'accepted', 'revoked'
+    accepted_at TIMESTAMPTZ,
+    revoked_at TIMESTAMPTZ,
+    ip_address INET,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
+        REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE,
+    CONSTRAINT consent_type_check CHECK (consent_type IN ('photo_usage', 'data_processing', 'communication')),
+    CONSTRAINT consent_status_check CHECK (status IN ('accepted', 'revoked'))
+);
+
+CREATE UNIQUE INDEX uq_consent_active_per_type
+    ON client_consents(client_id, consent_type) WHERE status = 'accepted';
+CREATE INDEX idx_consents_client ON client_consents(client_id, consent_type);
+```
+
+Desenho simplificado vs. o doc do Claude Chat (que tinha `rejected`/`accepted`/`revoked` + `consent_version`): 2 estados apenas, sem versionamento de texto legal — YAGNI; adiciona-se `consent_version` só se surgir necessidade legal real.
 
 ---
 
 ## Tabelas Sessões
 
-### 21. `sessions`
+### 22. `sessions`
 
 Sessões com trainer.
 
@@ -683,7 +761,7 @@ CREATE INDEX idx_sessions_date ON sessions(session_date);
 
 ## Tabelas Billing
 
-### 22. `pack_types`
+### 23. `pack_types`
 
 Tipos de packs (sessões).
 
@@ -710,7 +788,7 @@ CREATE TABLE pack_types (
 CREATE INDEX idx_packs_trainer ON pack_types(owner_trainer_id);
 ```
 
-### 23. `client_session_packs`
+### 24. `client_session_packs`
 
 Packs comprados por cliente.
 
@@ -741,7 +819,7 @@ CREATE INDEX idx_client_packs_trainer ON client_session_packs(owner_trainer_id);
 CREATE INDEX idx_client_packs_client ON client_session_packs(client_id);
 ```
 
-### 24. `processed_stripe_events`
+### 25. `processed_stripe_events`
 
 Idempotência dos webhooks Stripe (`00_ARCHITECTURE.md §10.2`) — deduplica por `event.id`.
 
@@ -760,7 +838,7 @@ CREATE INDEX idx_stripe_events_type ON processed_stripe_events(event_type);
 
 ## Tabelas Notificações
 
-### 25. `notifications`
+### 26. `notifications`
 
 Histórico de notificações.
 
@@ -799,7 +877,7 @@ CREATE INDEX idx_notifications_created ON notifications(created_at);
 
 Substituem RabbitMQ/MassTransit — cobrem `00_ARCHITECTURE.md §9` (jobs duráveis via QStash) e `§10.3` (outbox transacional do Stripe).
 
-### 26. `durable_jobs`
+### 27. `durable_jobs`
 
 Fila de jobs processada pelo dispatcher interno, ativado pelo QStash a cada vinte minutos (`00_ARCHITECTURE.md §9.1`).
 
@@ -855,7 +933,7 @@ O repository materializa as linhas, chama `Claim` com um token novo, executa
 falha exigem `status = 'processing'`, token correspondente e
 `lease_expires_at > @now`.
 
-### 27. `outbox_messages`
+### 28. `outbox_messages`
 
 Liga alterações PostgreSQL a efeitos secundários sem transação distribuída (email pós-pagamento, notificações internas).
 
@@ -899,7 +977,7 @@ Um item de outbox é escrito **na mesma transação** que a alteração de domí
 
 ## Tabelas Infrastructure
 
-### 28. `__EFMigrationsHistory`
+### 29. `__EFMigrationsHistory`
 
 Tracking de migrations, criada e gerida automaticamente pelo EF Core (substitui o `schema_migrations` manual do Python — não é criada à mão).
 

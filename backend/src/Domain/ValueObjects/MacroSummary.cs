@@ -4,7 +4,7 @@ namespace Domain.ValueObjects;
 
 /// <summary>
 /// Resumo de macros em gramas (proteína, hidratos, gordura) com as kcal
-/// derivadas pela fórmula de Atwater: protein * 4 + carbs * 4 + fat * 9.
+/// derivadas pela fórmula de Atwater: protein * 4 + carbs * 4 + fats * 9.
 /// </summary>
 public record MacroSummary
 {

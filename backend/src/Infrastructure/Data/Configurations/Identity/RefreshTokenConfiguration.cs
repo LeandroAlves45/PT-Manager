@@ -15,7 +15,7 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
         builder.HasKey(token => token.Id);
         builder.Property(token => token.Id)
             .HasColumnName("id")
-            .ValueGeneratedOnAdd();
+            .ValueGeneratedNever();
 
         builder.Property(token => token.UserId)
             .HasColumnName("user_id")

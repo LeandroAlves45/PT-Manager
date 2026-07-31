@@ -22,7 +22,7 @@ Este repositório contém a documentação completa:
 | Documento | Conteúdo |
 |-----------|----------|
 | **00_ARCHITECTURE.md** | Arquitectura sistema (v3.0), stack tecnológico, padrões, decisões de MVP |
-| **01_DATABASE_SCHEMA.md** | Schema PostgreSQL alvo (28 tabelas, spec para o modelo EF Core) |
+| **01_DATABASE_SCHEMA.md** | Schema PostgreSQL alvo (29 tabelas, spec para o modelo EF Core) |
 | **02_SPRINTS_ROADMAP.md** | Planeamento 12 semanas, 8 sprints, tarefas detalhadas |
 | **03_DEVELOPER_GUIDE.md** | Setup local, workflow diário, troubleshooting |
 | **README (1).md** | Este ficheiro (overview) |
