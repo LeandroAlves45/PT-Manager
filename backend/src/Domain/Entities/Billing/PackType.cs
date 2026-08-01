@@ -12,7 +12,9 @@ public class PackType
     public string Name { get; private set; } = null!;
     public int SessionCount { get; private set; }
     public int PriceCents { get; private set; }
+    public string Currency { get; private set; } = null!;
     public int? DurationDays { get; private set; }
+    public bool IsActive { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -25,11 +27,13 @@ public class PackType
         string name,
         int sessionCount,
         int priceCents,
+        string currency,
         int? durationDays,
         DateTime now
     )
     {
         var normalizedName = name?.Trim() ?? string.Empty;
+        var normalizedCurrency = NormalizeCurrency(currency);
         ValidateParameters(normalizedName, sessionCount, priceCents, durationDays);
 
         Id = Guid.NewGuid();
@@ -37,7 +41,9 @@ public class PackType
         Name = normalizedName;
         SessionCount = sessionCount;
         PriceCents = priceCents;
+        Currency = normalizedCurrency;
         DurationDays = durationDays;
+        IsActive = true;
         IsDeleted = false;
         CreatedAt = now;
         UpdatedAt = now;
@@ -48,25 +54,46 @@ public class PackType
         string name,
         int sessionCount,
         int priceCents,
+        string currency,
         int? durationDays,
         DateTime now
     )
     {
         EnsureNotDeleted();
         var normalizedName = name?.Trim() ?? string.Empty;
+        var normalizedCurrency = NormalizeCurrency(currency);
         ValidateParameters(normalizedName, sessionCount, priceCents, durationDays);
 
         Name = normalizedName;
         SessionCount = sessionCount;
         PriceCents = priceCents;
+        Currency = normalizedCurrency;
         DurationDays = durationDays;
+        UpdatedAt = now;
+    }
+
+    /// <summary>Impede novas atribuções sem apagar histórico.</summary>
+    public void Deactivate(DateTime now)
+    {
+        EnsureNotDeleted();
+        IsActive = false;
+        UpdatedAt = now;
+    }
+
+    /// <summary>Volta a disponibilizar o tipo de pack.</summary>
+    public void Reactivate(DateTime now)
+    {
+        EnsureNotDeleted();
+        IsActive = true;
         UpdatedAt = now;
     }
 
     /// <summary>Soft delete do tipo de pack de sessões.</summary>
     public void SoftDelete(DateTime now)
     {
+        EnsureNotDeleted();
         IsDeleted = true;
+        IsActive = false;
         UpdatedAt = now;
     }
 
@@ -93,9 +120,17 @@ public class PackType
             throw new DomainException("Duration in days must be greater than zero if specified.");
     }
 
+    private static string NormalizeCurrency(string currency)
+    {
+        var normalized = currency?.Trim().ToUpperInvariant() ?? string.Empty;
+        if (normalized.Length != 3 || !normalized.All(char.IsLetter))
+            throw new DomainException("Currency must be a three-letter ISO code.");
+        return normalized;
+    }
+
     private void EnsureNotDeleted()
     {
         if (IsDeleted)
-            throw new DomainException("Cannot update a deleted pack type.");
+            throw new DomainException("Cannot modify a deleted pack type.");
     }
 }

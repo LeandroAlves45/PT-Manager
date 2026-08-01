@@ -1,4 +1,5 @@
 using Domain.Exceptions;
+using Domain.ValueObjects;
 namespace Domain.Entities.Assessments;
 
 /// <summary>
@@ -18,6 +19,9 @@ public class InitialAssessment
     public string? MedicalConditions { get; private set; }
     public string FitnessLevel { get; private set; } = null!;
     public string Goals { get; private set; } = null!;
+    public string? Profession { get; private set; }
+    public BodyMeasurements BodyMeasurements { get; private set; } = BodyMeasurements.Empty;
+    public NutritionIntake NutritionIntake { get; private set; } = NutritionIntake.Empty;
     public bool IsDeleted { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -36,10 +40,16 @@ public class InitialAssessment
         string? medicalConditions,
         string fitnessLevel,
         string goals,
+        string? profession,
+        BodyMeasurements? bodyMeasurements,
+        NutritionIntake? nutritionIntake,
         DateTime now
     )
     {
-        ValidateParameters(age, weightKg, heightCm, bodyFatPercentage, gender, fitnessLevel, goals);
+        var normalizedProfession = string.IsNullOrWhiteSpace(profession) ? null : profession.Trim();
+        ValidateParameters(
+            age, weightKg, heightCm, bodyFatPercentage, gender, fitnessLevel, goals, normalizedProfession
+        );
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
@@ -52,6 +62,9 @@ public class InitialAssessment
         MedicalConditions = medicalConditions;
         FitnessLevel = fitnessLevel;
         Goals = goals;
+        Profession = normalizedProfession;
+        BodyMeasurements = bodyMeasurements ?? BodyMeasurements.Empty;
+        NutritionIntake = nutritionIntake ?? NutritionIntake.Empty;
         IsDeleted = false;
         CreatedAt = now;
         UpdatedAt = now;
@@ -67,11 +80,17 @@ public class InitialAssessment
         string? medicalConditions,
         string fitnessLevel,
         string goals,
+        string? profession,
+        BodyMeasurements? bodyMeasurements,
+        NutritionIntake? nutritionIntake,
         DateTime now
     )
     {
         EnsureNotDeleted();
-        ValidateParameters(age, weightKg, heightCm, bodyFatPercentage, gender, fitnessLevel, goals);
+        var normalizedProfession = string.IsNullOrWhiteSpace(profession) ? null : profession.Trim();
+        ValidateParameters(
+            age, weightKg, heightCm, bodyFatPercentage, gender, fitnessLevel, goals, normalizedProfession
+        );
 
         Age = age;
         Gender = gender;
@@ -81,6 +100,9 @@ public class InitialAssessment
         MedicalConditions = medicalConditions;
         FitnessLevel = fitnessLevel;
         Goals = goals;
+        Profession = normalizedProfession;
+        BodyMeasurements = bodyMeasurements ?? BodyMeasurements.Empty;
+        NutritionIntake = nutritionIntake ?? NutritionIntake.Empty;
         UpdatedAt = now;
     }
 
@@ -99,7 +121,8 @@ public class InitialAssessment
         decimal? bodyFatPercentage,
         string gender,
         string fitnessLevel,
-        string goals
+        string goals,
+        string? profession
     )
     {
         if (age <= 0)
@@ -120,6 +143,8 @@ public class InitialAssessment
             throw new DomainException("Fitness level cannot exceed 50 characters.");
         if (string.IsNullOrWhiteSpace(goals))
             throw new DomainException("Goals cannot be empty.");
+        if (profession is not null && profession.Length > 255)
+            throw new DomainException("Profession cannot exceed 255 characters.");
     }
 
     private void EnsureNotDeleted()

@@ -61,6 +61,43 @@ internal sealed class InitialAssessmentsConfiguration : IEntityTypeConfiguration
         builder.Property(ia => ia.MedicalConditions)
             .HasColumnName("medical_conditions");
 
+        builder.Property(ia => ia.Profession)
+            .HasColumnName("profession")
+            .HasMaxLength(255);
+
+        builder.ComplexProperty(ia => ia.BodyMeasurements, bm =>
+        {
+            bm.ToJson("body_measurements").HasColumnType("jsonb");
+            bm.Property(b => b.WaistCm).HasJsonPropertyName("waist_cm").HasPrecision(10, 2);
+            bm.Property(b => b.HipCm).HasJsonPropertyName("hip_cm").HasPrecision(10, 2);
+            bm.Property(b => b.ChestCm).HasJsonPropertyName("chest_cm").HasPrecision(10, 2);
+            bm.Property(b => b.RightArmCm).HasJsonPropertyName("right_arm_cm").HasPrecision(10, 2);
+            bm.Property(b => b.LeftArmCm).HasJsonPropertyName("left_arm_cm").HasPrecision(10, 2);
+            bm.Property(b => b.RightThighCm).HasJsonPropertyName("right_thigh_cm").HasPrecision(10, 2);
+            bm.Property(b => b.LeftThighCm).HasJsonPropertyName("left_thigh_cm").HasPrecision(10, 2);
+            bm.Property(b => b.RightCalfCm).HasJsonPropertyName("right_calf_cm").HasPrecision(10, 2);
+            bm.Property(b => b.LeftCalfCm).HasJsonPropertyName("left_calf_cm").HasPrecision(10, 2);
+        });
+
+        builder.ComplexProperty(ia => ia.NutritionIntake, ni =>
+        {
+            ni.ToJson("nutrition_intake").HasColumnType("jsonb");
+            ni.Property(n => n.FoodPreferences).HasJsonPropertyName("food_preferences");
+            ni.Property(n => n.DislikedFoods).HasJsonPropertyName("disliked_foods");
+            ni.Property(n => n.FoodIntolerances).HasJsonPropertyName("food_intolerances");
+            ni.Property(n => n.FoodAllergies).HasJsonPropertyName("food_allergies");
+            ni.Property(n => n.DietaryRestrictions).HasJsonPropertyName("dietary_restrictions");
+            ni.Property(n => n.DailyRoutine).HasJsonPropertyName("daily_routine");
+            ni.Property(n => n.SleepQuality).HasJsonPropertyName("sleep_quality");
+            ni.Property(n => n.Mood).HasJsonPropertyName("mood");
+            ni.Property(n => n.StressLevel).HasJsonPropertyName("stress_level");
+            ni.Property(n => n.AvgWaterLitersPerDay).HasJsonPropertyName("avg_water_liters_per_day").HasPrecision(10, 2);
+            ni.Property(n => n.HungriestTimeOfDay).HasJsonPropertyName("hungriest_time_of_day");
+            ni.Property(n => n.UsesSupplements).HasJsonPropertyName("uses_supplements");
+            ni.Property(n => n.CurrentSupplements).HasJsonPropertyName("current_supplements");
+            ni.Property(n => n.OtherNotes).HasJsonPropertyName("other_notes");
+        });
+
         builder.Property(ia => ia.IsDeleted)
             .HasColumnName("is_deleted")
             .HasDefaultValue(false);

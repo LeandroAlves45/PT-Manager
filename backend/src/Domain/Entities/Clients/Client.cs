@@ -1,24 +1,28 @@
 using Domain.Exceptions;
+using Domain.ValueObjects;
 namespace Domain.Entities.Clients;
 
 /// <summary>
-/// Cliente de um Personal Trainer. Liga a um User (conta de acesso) ao personal trainer
-/// dono do tenantm, com o perfil de treino (objetivo, bio, avatar).
+/// Ficha de um cliente pertencente a um personal trainer.
+/// A ficha existe independentemente de o cliente já ter uma conta de acesso.
 /// </summary>
-/// <remarks>
-/// Multi-tenant: é obrigatório e imutável após a criação.
-/// Um cliente não muda de Personal Trainer, se isso acontecer, é um novo cliente (novo registo).
-/// </remarks>
 public class Client
 {
     public Guid Id { get; private set; }
     /// <summary>Personal trainer dono do tenant (chave tenant, Global Query Filter).</summary>
     public Guid OwnerTrainerId { get; private set; }
     /// <summary>Conta de utilizador associada (role "client").</summary>
-    public Guid UserId { get; private set; }
+    public Guid? UserId { get; private set; }
     public string Name { get; private set; } = null!;
+    public string? ContactEmail { get; private set; }
+    public string? NormalizedContactEmail { get; private set; }
+    public string Phone { get; private set; } = null!;
+    public DateOnly? BirthDate { get; private set; }
+    public string? Sex { get; private set; }
     public string? Objective { get; private set; }
-    public string? Bio { get; private set; }
+    public string? Notes { get; private set; }
+    public string? EmergencyContactName { get; private set; }
+    public string? EmergencyContactPhone { get; private set; }
     public string? AvatarUrl { get; private set; }
     public bool IsActive { get; private set; }
     public bool IsDeleted { get; private set; }
@@ -32,45 +36,76 @@ public class Client
     /// </summary>
     public Client(
         Guid ownerTrainerId,
-        Guid userId,
         string name,
+        string? contactEmail,
+        string phone,
+        DateOnly? birthDate,
+        string? sex,
         string? objective,
+        string? notes,
+        string? emergencyContactName,
+        string? emergencyContactPhone,
         DateTime now
     )
     {
-        ValidateParametersClient(name, objective);
+        if (ownerTrainerId == Guid.Empty)
+            throw new DomainException("Owner trainer ID is required.");
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
-        UserId = userId;
-        Name = name.Trim();
-        Objective = objective?.Trim();
+        UserId = null;
+        SetProfile(name, contactEmail, phone, birthDate, sex, objective, notes,
+            emergencyContactName, emergencyContactPhone, DateOnly.FromDateTime(now));
         IsActive = true;
         IsDeleted = false;
         CreatedAt = now;
         UpdatedAt = now;
     }
 
-    /// <summary>Atualiza o perfil apresentado (nome, objetivo, bio).</summary>
-    public void UpdateProfile(string name, string? objective, string? bio, DateTime now)
+    /// <summary>Atualiza os dados permanentes da ficha, sem alterar o tenant ou a conta.</summary>
+    public void UpdateProfile(
+        string name,
+        string? contactEmail,
+        string phone,
+        DateOnly? birthDate,
+        string? sex,
+        string? objective,
+        string? notes,
+        string? emergencyContactName,
+        string? emergencyContactPhone,
+        DateTime now)
     {
         EnsureNotDeleted();
-        ValidateParametersClient(name, objective);
-
-        Name = name.Trim();
-        Objective = objective?.Trim();
-        Bio = bio?.Trim();
+        SetProfile(name, contactEmail, phone, birthDate, sex, objective, notes,
+            emergencyContactName, emergencyContactPhone, DateOnly.FromDateTime(now));
         UpdatedAt = now;
     }
 
-    /// <summary>Atualiza o avatar do cliente.</summary>
+    /// <summary>
+    /// Associa a conta criada durante a aceitação do convite.
+    /// A associação é de uso único para evitar trocar silencionsamente a identidade do cliente.
+    /// </summary>
+    public void AttachUser(Guid userId, DateTime now)
+    {
+        EnsureNotDeleted();
+        if (UserId == Guid.Empty)
+            throw new DomainException("User ID is required.");
+        if (UserId.HasValue)
+            throw new DomainException("Client already has an associated user.");
+
+        UserId = userId;
+        UpdatedAt = now;
+    }
+
+    /// <summary>Atualiza o avatar apresentado no portal do cliente.</summary>
     public void SetAvatar(string? avatarUrl, DateTime now)
     {
         EnsureNotDeleted();
-        var normalizedAvatarUrl = avatarUrl?.Trim();
-        if (normalizedAvatarUrl != null && normalizedAvatarUrl.Length > 500)
+        var normalized = NormalizeOptional(avatarUrl);
+        if (normalized is { Length: > 500 })
             throw new DomainException("Avatar URL cannot exceed 500 characters.");
-        AvatarUrl = normalizedAvatarUrl;
+
+        AvatarUrl = normalized;
         UpdatedAt = now;
     }
 
@@ -99,18 +134,64 @@ public class Client
     }
 
     /// <summary>Valida os parâmetros do cliente.</summary>
-    private void ValidateParametersClient(string name, string? objective)
+    private void SetProfile(
+        string name,
+        string? contactEmail,
+        string phone,
+        DateOnly? birthDate,
+        string? sex,
+        string? objective,
+        string? notes,
+        string? emergencyContactName,
+        string? emergencyContactPhone,
+        DateOnly today)
     {
-        var normalizedName = name?.Trim();
-        var normalizedObjective = objective?.Trim();
-        if (string.IsNullOrWhiteSpace(normalizedName))
-            throw new DomainException("Client name cannot be empty.");
-        if (normalizedName.Length > 255)
-            throw new DomainException("Client name cannot exceed 255 characters.");
-        if (normalizedObjective != null && normalizedObjective.Length > 255)
-            throw new DomainException("Client objective cannot exceed 255 characters.");
+        var normalizedName = name.Trim() ?? string.Empty;
+        var normalizedPhone = phone.Trim() ?? string.Empty;
+        var normalizedSex = NormalizeOptional(sex);
+        var normalizedObjective = NormalizeOptional(objective);
+        var normalizedEmergencyName = NormalizeOptional(emergencyContactName);
+        var normalizedEmergencyPhone = NormalizeOptional(emergencyContactPhone);
+
+        if (normalizedName.Length is 0 or > 255)
+            throw new DomainException("Client name must contain between 1 and 255 characters.");
+        if (normalizedPhone.Length is 0 or > 32)
+            throw new DomainException("Client phone must contain between 1 and 32 characters.");
+        if (birthDate.HasValue && birthDate.Value > today)
+            throw new DomainException("Birth date cannot be in the future.");
+        if (normalizedSex is not null && normalizedSex is not ("Male" or "Female" or "Other"))
+            throw new DomainException("Sex must be 'Male', 'Female' or 'Other'.");
+        if (normalizedObjective is { Length: > 255 })
+            throw new DomainException("Objective cannot exceed 255 characters.");
+        if (normalizedEmergencyName is { Length: > 255 })
+            throw new DomainException("Emergency contact name cannot exceed 255 characters.");
+        if (normalizedEmergencyPhone is { Length: > 32 })
+            throw new DomainException("Emergency contact phone cannot exceed 32 characters.");
+
+        if (string.IsNullOrWhiteSpace(contactEmail))
+        {
+            ContactEmail = null;
+            NormalizedContactEmail = null;
+        }
+        else
+        {
+            var email = new EmailAddress(contactEmail);
+            ContactEmail = email.Value;
+            NormalizedContactEmail = email.Normalized;
+        }
+
+        Name = normalizedName;
+        Phone = normalizedPhone;
+        BirthDate = birthDate;
+        Sex = normalizedSex;
+        Objective = normalizedObjective;
+        Notes = NormalizeOptional(notes);
+        EmergencyContactName = normalizedEmergencyName;
+        EmergencyContactPhone = normalizedEmergencyPhone;
     }
 
+    private static string? NormalizeOptional(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     private void EnsureNotDeleted()
     {
         if (IsDeleted)

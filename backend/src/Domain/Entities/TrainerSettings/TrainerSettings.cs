@@ -1,5 +1,4 @@
 using Domain.Exceptions;
-using System.Text.RegularExpressions;
 
 namespace Domain.Entities.TrainerSettings;
 
@@ -21,6 +20,7 @@ public class TrainerSettings
     public string? Phone { get; private set; }
     public string? Address { get; private set; }
     public string? City { get; private set; }
+    public string Timezone { get; private set; } = null!;
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -29,12 +29,27 @@ public class TrainerSettings
     /// <summary>Cria as settings default de um personal trainer novo.</summary>
     public TrainerSettings(Guid trainerId, DateTime now)
     {
+        if (trainerId == Guid.Empty)
+            throw new DomainException("Trainer ID is required.");
+
         Id = Guid.NewGuid();
         TrainerId = trainerId;
         AppName = "PT Manager";
         PrimaryColor = "#000000";
         BodyColor = "#FFFFFF";
+        Timezone = "Europe/Lisbon";
         CreatedAt = now;
+        UpdatedAt = now;
+    }
+
+    /// <summary>Atualiza o identificador IANA usado para aprensetação e regras locais.</summary>
+    public void ChangeTimezone(string timezone, DateTime now)
+    {
+        var normalized = timezone?.Trim() ?? string.Empty;
+        if (!IsValidIanaShape(normalized))
+            throw new DomainException("Timezone must be a valid IANA identifier");
+
+        Timezone = normalized;
         UpdatedAt = now;
     }
 
@@ -47,23 +62,18 @@ public class TrainerSettings
         DateTime now
     )
     {
-        if (string.IsNullOrWhiteSpace(appName))
-            throw new DomainException("App name cannot be empty.");
-
-        var normalizedAppName = appName.Trim();
-        if (normalizedAppName.Length > 255)
-            throw new DomainException("App name cannot exceed 255 characters.");
-        if (!System.Text.RegularExpressions.Regex.IsMatch(primaryColor, "^#[0-9A-Fa-f]{6}$"))
-            throw new DomainException("Primary color invalid -> use hex code like #RRGGBB.");
-        if (!System.Text.RegularExpressions.Regex.IsMatch(bodyColor, "^#[0-9A-Fa-f]{6}$"))
-            throw new DomainException("Body color invalid -> use hex code like #RRGGBB.");
-        if (backgroundImageUrl != null && backgroundImageUrl.Length > 500)
+        var normalizedAppName = appName.Trim() ?? string.Empty;
+        if (normalizedAppName.Length is 0 or > 255)
+            throw new DomainException("App name must contain between 1 and 255 characters.");
+        if (!IsHexColor(primaryColor) || !IsHexColor(bodyColor))
+            throw new DomainException("Colors must use the #RRGGBB format.");
+        if (backgroundImageUrl is { Length: > 500 })
             throw new DomainException("Background image URL cannot exceed 500 characters.");
 
         AppName = normalizedAppName;
         PrimaryColor = primaryColor;
         BodyColor = bodyColor;
-        BackgroundImageUrl = backgroundImageUrl;
+        BackgroundImageUrl = NormalizeOptional(backgroundImageUrl);
         UpdatedAt = now;
     }
 
@@ -73,18 +83,14 @@ public class TrainerSettings
     /// </summary>
     public string? ReplaceLogo(string logoUrl, string logoPublicId, DateTime now)
     {
-        if (string.IsNullOrWhiteSpace(logoUrl))
-            throw new DomainException("Logo URL cannot be empty.");
-        if (logoUrl.Length > 500)
-            throw new DomainException("Logo URL cannot exceed 500 characters.");
-        if (string.IsNullOrWhiteSpace(logoPublicId))
-            throw new DomainException("Logo public ID cannot be empty.");
-        if (logoPublicId.Length > 500)
-            throw new DomainException("Logo public ID cannot exceed 500 characters.");
+        var normalizedUrl = logoUrl?.Trim() ?? string.Empty;
+        var normalizedPublicId = logoPublicId?.Trim() ?? string.Empty;
+        if (normalizedUrl.Length is 0 or > 500 || normalizedPublicId.Length is 0 or > 500)
+            throw new DomainException("Logo references must contain between 1 and 500 characters.");
 
         var previousPublicId = LogoPublicId;
-        LogoUrl = logoUrl;
-        LogoPublicId = logoPublicId;
+        LogoUrl = normalizedUrl;
+        LogoPublicId = normalizedPublicId;
         UpdatedAt = now;
         return previousPublicId;
     }
@@ -92,16 +98,24 @@ public class TrainerSettings
     /// <summary>Atualiza os dados de contacto.</summary>
     public void UpdateContacts(string? phone, string? address, string? city, DateTime now)
     {
-        if (phone != null && phone.Length > 20)
-            throw new DomainException("Phone cannot exceed 20 characters.");
-        if (address != null && address.Length > 500)
-            throw new DomainException("Address cannot exceed 500 characters.");
-        if (city != null && city.Length > 255)
-            throw new DomainException("City cannot exceed 255 characters.");
+        if (phone is { Length: > 32 } || address is { Length: > 500 } || city is { Length: > 255 })
+            throw new DomainException("Personal Trainer contact fields exceed their maximum length.");
 
-        Phone = phone;
-        Address = address;
-        City = city;
+        Phone = NormalizeOptional(phone);
+        Address = NormalizeOptional(address);
+        City = NormalizeOptional(city);
         UpdatedAt = now;
     }
+
+    private static bool IsValidIanaShape(string value) =>
+        value == "UTC" ||
+        (value.Length is > 2 and <= 100 && value.Contains('/') &&
+            value.All(c => char.IsLetterOrDigit(c) || c is '/' or '_' or '-' or '+'));
+
+    private static bool IsHexColor(string value) =>
+        value is { Length: 7 } && value[0] == '#' &&
+        value[1..].All(Uri.IsHexDigit);
+
+    private static string? NormalizeOptional(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

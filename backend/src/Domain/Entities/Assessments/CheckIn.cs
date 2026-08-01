@@ -1,9 +1,10 @@
 using Domain.Exceptions;
+using Domain.ValueObjects;
 namespace Domain.Entities.Assessments;
 
 /// <summary>
-/// Check-in periódico de um cliente: peso e massa gorda numa data, com meta opcional
-/// para a próxima avaliação.
+/// Check-in periódico de um cliente: peso, massa gorda, medidas e feedback
+/// qualitativo numa data, com meta opcional para a próxima avaliação.
 /// </summary>
 public class CheckIn
 {
@@ -15,6 +16,10 @@ public class CheckIn
     public decimal? WeightKg { get; private set; }
     public decimal? BodyFatPercentage { get; private set; }
     public string? Notes { get; private set; }
+    public BodyMeasurements BodyMeasurements { get; private set; } = BodyMeasurements.Empty;
+    public CheckInFeedback Feedback { get; private set; } = CheckInFeedback.Empty;
+    public int? TrainingAdherenceScore { get; private set; }
+    public int? NutritionAdherenceScore { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -30,10 +35,16 @@ public class CheckIn
         decimal? weightKg,
         decimal? bodyFatPercentage,
         string? notes,
+        BodyMeasurements? bodyMeasurements,
+        CheckInFeedback? feedback,
+        int? trainingAdherenceScore,
+        int? nutritionAdherenceScore,
         DateTime now
     )
     {
-        ValidateValues(targetDate, checkInDate, weightKg, bodyFatPercentage);
+        ValidateValues(
+            targetDate, checkInDate, weightKg, bodyFatPercentage, trainingAdherenceScore, nutritionAdherenceScore
+        );
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
@@ -43,6 +54,10 @@ public class CheckIn
         WeightKg = weightKg;
         BodyFatPercentage = bodyFatPercentage;
         Notes = notes;
+        BodyMeasurements = bodyMeasurements ?? BodyMeasurements.Empty;
+        Feedback = feedback ?? CheckInFeedback.Empty;
+        TrainingAdherenceScore = trainingAdherenceScore;
+        NutritionAdherenceScore = nutritionAdherenceScore;
         IsDeleted = false;
         CreatedAt = now;
         UpdatedAt = now;
@@ -54,16 +69,26 @@ public class CheckIn
         decimal? weightKg,
         decimal? bodyFatPercentage,
         string? notes,
+        BodyMeasurements? bodyMeasurements,
+        CheckInFeedback? feedback,
+        int? trainingAdherenceScore,
+        int? nutritionAdherenceScore,
         DateTime now
     )
     {
         EnsureNotDeleted();
-        ValidateValues(targetDate, CheckInDate, weightKg, bodyFatPercentage);
+        ValidateValues(
+            targetDate, CheckInDate, weightKg, bodyFatPercentage, trainingAdherenceScore, nutritionAdherenceScore
+        );
 
         TargetDate = targetDate;
         WeightKg = weightKg;
         BodyFatPercentage = bodyFatPercentage;
         Notes = notes;
+        BodyMeasurements = bodyMeasurements ?? BodyMeasurements.Empty;
+        Feedback = feedback ?? CheckInFeedback.Empty;
+        TrainingAdherenceScore = trainingAdherenceScore;
+        NutritionAdherenceScore = nutritionAdherenceScore;
         UpdatedAt = now;
     }
 
@@ -79,7 +104,9 @@ public class CheckIn
         DateOnly? targetDate,
         DateOnly checkInDate,
         decimal? weightKg,
-        decimal? bodyFatPercentage
+        decimal? bodyFatPercentage,
+        int? trainingAdherenceScore,
+        int? nutritionAdherenceScore
     )
     {
         if (targetDate.HasValue && targetDate < checkInDate)
@@ -88,6 +115,10 @@ public class CheckIn
             throw new DomainException("Weight invalid");
         if (bodyFatPercentage.HasValue && (bodyFatPercentage < 0 || bodyFatPercentage > 100))
             throw new DomainException("Body fat percentage invalid");
+        if (trainingAdherenceScore.HasValue && (trainingAdherenceScore < 0 || trainingAdherenceScore > 100))
+            throw new DomainException("Training adherence score must be between 0 and 100");
+        if (nutritionAdherenceScore.HasValue && (nutritionAdherenceScore < 0 || nutritionAdherenceScore > 100))
+            throw new DomainException("Nutrition adherence score must be between 0 and 100");
     }
 
     private void EnsureNotDeleted()
