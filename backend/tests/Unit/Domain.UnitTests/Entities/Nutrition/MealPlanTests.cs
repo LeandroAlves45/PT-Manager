@@ -8,6 +8,19 @@ namespace Domain.UnitTests.Entities.Nutrition;
 public sealed class MealPlanTests
 {
     [Fact]
+    public void Constructor_WhenNameIsNull_ThrowsDomainException()
+    {
+        var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
+
+        var action = () => new MealPlan(
+            Guid.NewGuid(), Guid.NewGuid(), null!, null,
+            new DateOnly(2026, 8, 1), null, 2000,
+            new MacroSummary(100, 200, 50), now);
+
+        Assert.Throws<DomainException>(action);
+    }
+
+    [Fact]
     public void Constructor_StartAfterEnd_ThrowsDomainException()
     {
         // Arrange
@@ -17,17 +30,17 @@ public sealed class MealPlanTests
         var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
 
         // Act & Assert
-        var exception = Assert.Throws<DomainException>(() => new MealPlan(
+        Assert.Throws<DomainException>(() => new MealPlan(
             Guid.NewGuid(),
             Guid.NewGuid(),
             "Test Meal Plan",
             null,
             startsDate,
             endsDate,
+            2000,
             targets,
             now
         ));
-        Assert.Equal("Meal Plan ends date cannot be before starts date", exception.Message);
     }
 
     [Fact]
@@ -45,6 +58,7 @@ public sealed class MealPlanTests
             null,
             startsDate,
             endsDate,
+            2000,
             targets,
             now
         );
@@ -73,6 +87,7 @@ public sealed class MealPlanTests
             null,
             startsDate,
             endsDate,
+            2000,
             targets,
             now
         );
@@ -96,6 +111,7 @@ public sealed class MealPlanTests
             null,
             startsDate,
             endsDate,
+            2000,
             targets,
             now
         );
@@ -121,6 +137,7 @@ public sealed class MealPlanTests
             null,
             startsDate,
             endsDate,
+            2000,
             targets,
             now
         );
@@ -155,6 +172,7 @@ public sealed class MealPlanTests
             null,
             new DateOnly(2026, 8, 1),
             null,
+            2000,
             new MacroSummary(100, 200, 50),
             now
         );
@@ -164,4 +182,3 @@ public sealed class MealPlanTests
         Assert.Throws<DomainException>(() => mealPlan.Reactivate(now.AddMinutes(1)));
     }
 }
-

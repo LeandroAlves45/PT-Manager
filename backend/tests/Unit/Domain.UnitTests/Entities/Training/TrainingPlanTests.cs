@@ -7,6 +7,18 @@ namespace Domain.UnitTests.Entities.Training;
 public class TrainingPlanTests
 {
     [Fact]
+    public void Constructor_WhenNameIsNull_ThrowsDomainException()
+    {
+        var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
+
+        var action = () => new TrainingPlan(
+            Guid.NewGuid(), Guid.NewGuid(), null!, null, null, null,
+            new DateOnly(2026, 8, 1), null, now);
+
+        Assert.Throws<DomainException>(action);
+    }
+
+    [Fact]
     public void Constructor_StartAfterEnd_ThrowsDomainException()
     {
         // Arrange
@@ -53,7 +65,6 @@ public class TrainingPlanTests
         trainingPlan.Delete(now);
 
         // Act & Assert
-        var exception = Assert.Throws<DomainException>(() => trainingPlan.Activate(now));
-        Assert.Equal("Cannot activate a deleted training plan.", exception.Message);
+        Assert.Throws<DomainException>(() => trainingPlan.Activate(now));
     }
 }

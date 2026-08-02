@@ -13,7 +13,7 @@ public class ClientSessionPack
     public Guid ClientId { get; private set; }
     public Guid PackTypeId { get; private set; }
     public string PackName { get; private set; } = null!;
-    public int SessionTotal { get; private set; }
+    public int SessionsTotal { get; private set; }
     public int SessionsRemaining { get; private set; }
     public int PriceCents { get; private set; }
     public string Currency { get; private set; } = null!;
@@ -52,7 +52,7 @@ public class ClientSessionPack
         ClientId = clientId;
         PackTypeId = packType.Id;
         PackName = packType.Name;
-        SessionTotal = packType.SessionCount;
+        SessionsTotal = packType.SessionCount;
         SessionsRemaining = packType.SessionCount;
         PriceCents = packType.PriceCents;
         Currency = packType.Currency;
@@ -84,7 +84,7 @@ public class ClientSessionPack
     public void RestoreSession(DateTime now)
     {
         EnsureNotDeleted();
-        if (SessionsRemaining >= SessionTotal)
+        if (SessionsRemaining >= SessionsTotal)
             throw new DomainException("Pack already contains its full session balance.");
 
         SessionsRemaining += 1;

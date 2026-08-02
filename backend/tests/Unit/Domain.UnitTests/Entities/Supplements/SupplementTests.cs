@@ -16,7 +16,8 @@ public sealed class SupplementTests
     public void Constructor_PrivateSupplement_PreservesOwnerTrainerId()
     {
         // Arrange & Act
-        var supplement = new Supplement(TrainerId, AuthorId, "Creatine", null, "grams", Now);
+        var supplement = new Supplement(
+            TrainerId, AuthorId, "Creatine", null, "grams", null, null, null, Now);
 
         // Assert
         Assert.Equal(TrainerId, supplement.OwnerTrainerId);
@@ -26,7 +27,8 @@ public sealed class SupplementTests
     public void Constructor_GlobalSupplement_KeepsOwnerTrainerIdNull()
     {
         // Arrange & Act
-        var supplement = new Supplement(null, AuthorId, "Creatine", null, "grams", Now);
+        var supplement = new Supplement(
+            null, AuthorId, "Creatine", null, "grams", null, null, null, Now);
 
         // Assert
         Assert.Null(supplement.OwnerTrainerId);
@@ -36,7 +38,16 @@ public sealed class SupplementTests
     public void Constructor_OwnerAndAuthorDiffer_PreservesBothRoles()
     {
         // Arrange & Act
-        var supplement = new Supplement(TrainerId, AuthorId, "Creatine", null, "grams", Now);
+        var supplement = new Supplement(
+            TrainerId,
+            AuthorId,
+            "Creatine",
+            null,
+            "grams",
+            null,
+            null,
+            null,
+            Now);
 
         // Assert
         Assert.Equal(TrainerId, supplement.OwnerTrainerId);
@@ -47,11 +58,13 @@ public sealed class SupplementTests
     public void Update_DeletedSupplement_ThrowsDomainException()
     {
         // Arrange
-        var supplement = new Supplement(null, AuthorId, "Creatine", null, "grams", Now);
+        var supplement = new Supplement(
+            null, AuthorId, "Creatine", null, "grams", null, null, null, Now);
         supplement.SoftDelete(Now);
 
         // Act & Assert
         Assert.Throws<DomainException>(() =>
-            supplement.Update("Creatine monohydrate", null, "grams", Now.AddMinutes(1)));
+            supplement.Update(
+                "Creatine monohydrate", null, "grams", null, null, null, Now.AddMinutes(1)));
     }
 }

@@ -42,10 +42,9 @@ public class TrainingPlan
         DateTime now
     )
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new DomainException("Training plan name cannot be empty.");
-        if (name.Length > 255)
-            throw new DomainException("Training plan name cannot exceed 255 characters.");
+        var normalizedName = name?.Trim() ?? string.Empty;
+        if (normalizedName.Length is 0 or > 255)
+            throw new DomainException("Training plan name must be between 1 and 255 characters.");
         if (trainingModality != null && trainingModality.Length > 50)
             throw new DomainException("Training modality cannot exceed 50 characters.");
         if (endDate.HasValue && endDate.Value < startDate)
@@ -54,10 +53,10 @@ public class TrainingPlan
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
         ClientId = clientId;
-        Name = name;
-        Description = description;
-        TrainingModality = trainingModality;
-        Notes = notes;
+        Name = normalizedName;
+        Description = NormalizeOptional(description);
+        TrainingModality = NormalizeOptional(trainingModality);
+        Notes = NormalizeOptional(notes);
         StartDate = startDate;
         EndDate = endDate;
         IsActive = true;
@@ -70,20 +69,18 @@ public class TrainingPlan
     /// <summary>Arquiva um plano de treino, tornando-o inativo.</summary>
     public void Archive(DateTime now)
     {
-        if (IsDeleted)
-            throw new DomainException("Cannot archive a deleted training plan.");
-        IsArchived = true;
+        EnsureNotDeleted();
         IsActive = false;
+        IsArchived = true;
         UpdatedAt = now;
     }
 
     /// <summary>Ativa um plano de treino arquivado.</summary>
     public void Activate(DateTime now)
     {
-        if (IsDeleted)
-            throw new DomainException("Cannot activate a deleted training plan.");
-        IsArchived = false;
+        EnsureNotDeleted();
         IsActive = true;
+        IsArchived = false;
         UpdatedAt = now;
     }
 
@@ -92,6 +89,16 @@ public class TrainingPlan
     {
         IsDeleted = true;
         IsActive = false;
+        IsArchived = true;
         UpdatedAt = now;
+    }
+
+    private static string? NormalizeOptional(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private void EnsureNotDeleted()
+    {
+        if (IsDeleted)
+            throw new DomainException("Cannot modify a deleted training plan.");
     }
 }

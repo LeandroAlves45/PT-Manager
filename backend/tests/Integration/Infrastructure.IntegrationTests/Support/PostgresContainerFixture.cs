@@ -64,10 +64,17 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
             now);
         var client = new Client(
             trainer.Id,
-            clientUser.Id,
-            name: "Client Test",
-            objective: null,
+            "Client Test",
+            clientUser.Email,
+            "+351900000000",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
             now);
+        client.AttachUser(clientUser.Id, now);
 
         await using var context = CreateContext(trainer.Id);
         context.Users.AddRange(trainer, clientUser);

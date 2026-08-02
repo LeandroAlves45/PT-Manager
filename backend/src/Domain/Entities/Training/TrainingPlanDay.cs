@@ -30,6 +30,8 @@ public class TrainingPlanDay
         DateTime now
     )
     {
+        if (trainingPlanId == Guid.Empty)
+            throw new DomainException("Training plan ID is required.");
         if (dayOfWeek < 0 || dayOfWeek > 6)
             throw new DomainException("Day of week must be between 0 (Monday) and 6 (Sunday).");
         if (weekNumber < 1 || weekNumber > 52)
@@ -39,7 +41,7 @@ public class TrainingPlanDay
         TrainingPlanId = trainingPlanId;
         DayOfWeek = dayOfWeek;
         WeekNumber = weekNumber;
-        Notes = notes;
+        Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
         CreatedAt = now;
         UpdatedAt = now;
     }

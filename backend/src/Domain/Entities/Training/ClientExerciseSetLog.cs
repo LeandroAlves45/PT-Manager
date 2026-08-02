@@ -33,13 +33,10 @@ public class ClientExerciseSetLog
         decimal weightKg,
         int repsDone,
         string? notes,
-        DateTime loggedAt,
         DateTime now
     )
     {
-        if (setNumber < 1 || setNumber > 15)
-            throw new DomainException("Set number must be between 1 and 15.");
-        ValidateWeightAndReps(weightKg, repsDone, notes);
+        Validate(setNumber, weightKg, repsDone);
 
         Id = Guid.NewGuid();
         ClientId = clientId;
@@ -47,8 +44,8 @@ public class ClientExerciseSetLog
         SetNumber = setNumber;
         WeightKg = weightKg;
         RepsDone = repsDone;
-        Notes = notes;
-        LoggedAt = loggedAt;
+        Notes = NormalizeOptional(notes);
+        LoggedAt = now;
         CreatedAt = now;
         UpdatedAt = now;
     }
@@ -56,24 +53,23 @@ public class ClientExerciseSetLog
     /// <summary>Corrige um registo existente</summary>
     public void Correct(decimal weightKg, int repsDone, string? notes, DateTime now)
     {
-        ValidateWeightAndReps(weightKg, repsDone, notes);
-
+        Validate(SetNumber, weightKg, repsDone);
         WeightKg = weightKg;
         RepsDone = repsDone;
-        Notes = notes;
+        Notes = NormalizeOptional(notes);
+        LoggedAt = now;
         UpdatedAt = now;
     }
 
     /// <summary>
     /// Mêtodo privado para validação das cargas e repetições de uma série executada pelo cliente
     /// </summary>
-    private void ValidateWeightAndReps(decimal weightKg, int repsDone, string? notes)
+    private static void Validate(int setNumber, decimal weightKg, int repsDone)
     {
-        if (weightKg < 0)
-            throw new DomainException("Weight cannot be negative.");
-        if (repsDone < 0 || repsDone > 100)
-            throw new DomainException("Reps done must be between 0 and 100.");
-        if (notes != null && notes.Length > 500)
-            throw new DomainException("Notes cannot exceed 500 characters.");
+        if (setNumber is < 1 or > 15 || weightKg < 0 || repsDone is < 0 or > 100)
+            throw new DomainException("Set log values are outside their valid ranges.");
     }
+
+    private static string? NormalizeOptional(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

@@ -91,7 +91,6 @@ public class PackType
     /// <summary>Soft delete do tipo de pack de sessões.</summary>
     public void SoftDelete(DateTime now)
     {
-        EnsureNotDeleted();
         IsDeleted = true;
         IsActive = false;
         UpdatedAt = now;

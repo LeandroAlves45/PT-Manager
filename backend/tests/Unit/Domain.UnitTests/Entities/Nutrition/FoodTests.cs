@@ -14,7 +14,6 @@ public sealed class FoodTests
             null,
             "  Chicken breast  ",
             null,
-            165,
             31,
             0,
             3.6m,
@@ -31,10 +30,10 @@ public sealed class FoodTests
     {
         // Arrange
         var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
-        var food = new Food(null, "Rice", null, 130, 2.7m, 28, 0.3m, null, now);
+        var food = new Food(null, "Rice", null, 2.7m, 28, 0.3m, null, now);
 
         // Act
-        food.Update("  Brown rice  ", null, 123, 2.7m, 25.6m, 1m, null, now);
+        food.Update("  Brown rice  ", null, 2.7m, 25.6m, 1m, null, now);
 
         // Assert
         Assert.Equal("Brown rice", food.Name);
@@ -45,11 +44,11 @@ public sealed class FoodTests
     {
         // Arrange
         var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
-        var food = new Food(null, "Rice", null, 130, 2.7m, 28, 0.3m, null, now);
+        var food = new Food(null, "Rice", null, 2.7m, 28, 0.3m, null, now);
         food.SoftDelete(now);
 
         // Act & Assert
         Assert.Throws<DomainException>(() =>
-            food.Update("Brown rice", null, 123, 2.7m, 25.6m, 1m, null, now));
+            food.Update("Brown rice", null, 2.7m, 25.6m, 1m, null, now));
     }
 }

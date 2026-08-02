@@ -135,8 +135,15 @@ Clientes do trainer (multi-tenant).
 CREATE TABLE clients (
     id UUID PRIMARY KEY,
     owner_trainer_id UUID NOT NULL,
-    user_id UUID NOT NULL,
-    name VARCHAR(255) NOT NULL,
+    user_id UUID,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    display_name VARCHAR(200) NOT NULL,
+    email VARCHAR(255),
+    normalized_email VARCHAR(255),
+    phone VARCHAR(32),
+    normalized_phone VARCHAR(32),
+    date_of_birth DATE,
     objective VARCHAR(255), -- 'weight_loss', 'muscle_gain', 'strength', 'endurance'
     bio TEXT,
     avatar_url VARCHAR(500),
@@ -146,12 +153,16 @@ CREATE TABLE clients (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT unique_client_per_trainer UNIQUE(owner_trainer_id, user_id),
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
     CONSTRAINT uq_clients_tenant_id UNIQUE(owner_trainer_id, id)
 );
 
 CREATE INDEX idx_clients_trainer ON clients(owner_trainer_id);
+CREATE UNIQUE INDEX uq_clients_user_id ON clients(user_id) WHERE user_id IS NOT NULL;
+CREATE UNIQUE INDEX uq_clients_trainer_email ON clients(owner_trainer_id, normalized_email)
+    WHERE normalized_email IS NOT NULL AND is_deleted = false;
+CREATE INDEX idx_clients_trainer_phone ON clients(owner_trainer_id, normalized_phone)
+    WHERE normalized_phone IS NOT NULL AND is_deleted = false;
 ```
 
 ### 4. `trainer_settings`
@@ -171,6 +182,7 @@ CREATE TABLE trainer_settings (
     phone VARCHAR(20),
     address VARCHAR(500),
     city VARCHAR(255),
+    time_zone_id VARCHAR(100) NOT NULL DEFAULT 'Europe/Lisbon',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -214,17 +226,21 @@ Convites para clientes.
 CREATE TABLE invite_tokens (
     id UUID PRIMARY KEY,
     trainer_id UUID NOT NULL,
+    client_id UUID NOT NULL,
     email VARCHAR(255) NOT NULL,
     token_hash VARCHAR(255) NOT NULL UNIQUE,
     expires_at TIMESTAMPTZ NOT NULL,
-    is_used BOOLEAN DEFAULT false,
+    used_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_trainer FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_trainer FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_invite_client_tenant FOREIGN KEY (trainer_id, client_id)
+        REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_invites_trainer ON invite_tokens(trainer_id);
 CREATE INDEX idx_invites_email ON invite_tokens(email);
+CREATE INDEX idx_invites_client ON invite_tokens(client_id);
 ```
 
 ---
@@ -241,7 +257,6 @@ CREATE TABLE foods (
     owner_trainer_id UUID, -- NULL = global catalogue
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    calories DECIMAL(10, 2) NOT NULL,
     protein DECIMAL(10, 2) NOT NULL,
     carbs DECIMAL(10, 2) NOT NULL,
     fats DECIMAL(10, 2) NOT NULL,
@@ -249,11 +264,14 @@ CREATE TABLE foods (
         protein * 4 + carbs * 4 + fats * 9
     ) STORED,
     fiber DECIMAL(10, 2),
+    is_active BOOLEAN NOT NULL DEFAULT true,
     is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT food_macros_non_negative CHECK (
+        protein >= 0 AND carbs >= 0 AND fats >= 0 AND (fiber IS NULL OR fiber >= 0))
 );
 
 CREATE INDEX idx_foods_name ON foods(name);
@@ -272,7 +290,11 @@ CREATE TABLE supplements (
     created_by_user_id UUID, -- autoria, não autorização
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    unit_of_measure VARCHAR(50), -- 'grams', 'capsules', 'ml', 'tablets'
+    serving_size VARCHAR(100) NOT NULL,
+    timing VARCHAR(255) NOT NULL,
+    trainer_notes TEXT,
+    unit_of_measure VARCHAR(50) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT true,
     is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -300,7 +322,8 @@ CREATE TABLE meal_plans (
     ends_date DATE, -- opcional: sem valor, o plano fica ativo até ser substituído
     protein_target_g DECIMAL(10, 2) NOT NULL,
     carbs_target_g DECIMAL(10, 2) NOT NULL,
-    fats_target DECIMAL(10, 2) NOT NULL,
+    fats_target_g DECIMAL(10, 2) NOT NULL,
+    kcal_target DECIMAL(10, 2) NOT NULL,
     is_active BOOLEAN DEFAULT true,
     is_archived BOOLEAN DEFAULT false,
     is_deleted BOOLEAN DEFAULT false,
@@ -313,7 +336,9 @@ CREATE TABLE meal_plans (
     -- ends_date pode ser NULL (plano sem data de fim); a comparação com NULL
     -- avalia a UNKNOWN em Postgres, e uma CHECK só rejeita quando avalia a
     -- FALSE — logo esta constraint continua correta sem tratamento especial.
-    CONSTRAINT date_order CHECK (starts_date <= ends_date)
+    CONSTRAINT date_order CHECK (starts_date <= ends_date),
+    CONSTRAINT meal_plan_targets_positive CHECK (
+        protein_target_g >= 0 AND carbs_target_g >= 0 AND fats_target_g >= 0 AND kcal_target > 0)
 );
 
 CREATE INDEX idx_meal_plans_trainer ON meal_plans(owner_trainer_id);
@@ -423,6 +448,9 @@ CREATE TABLE training_plans (
 
 CREATE INDEX idx_training_plans_trainer ON training_plans(owner_trainer_id);
 CREATE INDEX idx_training_plans_client ON training_plans(client_id);
+CREATE UNIQUE INDEX uq_training_plan_active_per_client
+    ON training_plans(owner_trainer_id, client_id)
+    WHERE is_active = true AND is_deleted = false;
 ```
 
 ### 14. `training_plan_days`
@@ -445,6 +473,8 @@ CREATE TABLE training_plan_days (
 );
 
 CREATE INDEX idx_days_plan ON training_plan_days(training_plan_id);
+CREATE UNIQUE INDEX uq_training_plan_day_weekday
+    ON training_plan_days(training_plan_id, week_number, day_of_week);
 ```
 
 ### 15. `exercises`
@@ -461,6 +491,7 @@ CREATE TABLE exercises (
     equipment VARCHAR(255),
     difficulty_level VARCHAR(50), -- 'beginner', 'intermediate', 'advanced'
     video_url VARCHAR(500),
+    is_active BOOLEAN NOT NULL DEFAULT true,
     is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -539,6 +570,8 @@ CREATE TABLE exercise_sets (
 );
 
 CREATE INDEX idx_sets_exercise ON exercise_sets(training_plan_day_exercise_id);
+CREATE UNIQUE INDEX uq_exercise_set_number
+    ON exercise_sets(training_plan_day_exercise_id, set_number);
 ```
 
 ### 18. `client_exercise_set_logs`
@@ -594,7 +627,6 @@ CREATE TABLE initial_assessments (
     goals TEXT NOT NULL,
     profession VARCHAR(255), -- coluna própria (não JSONB) para permitir filtrar/reportar por profissão
     measurements JSONB, -- {waist_cm, hip_cm, chest_cm, arm_cm, thigh_cm, calf_cm} — medidas de baseline, opcionais
-    photo_ids UUID[] NOT NULL DEFAULT ARRAY[]::UUID[], -- fotos de baseline (Cloudinary); nunca NULL, pode ficar vazio
     nutrition_intake JSONB, -- dados de estilo de vida/nutrição da 1ª consulta (ver estrutura abaixo)
     is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -645,7 +677,6 @@ CREATE TABLE checkins (
     body_fat_percentage DECIMAL(10, 2),
     notes TEXT,
     measurements JSONB, -- mesma estrutura de initial_assessments.measurements — permite comparar evolução
-    photo_ids UUID[] NOT NULL DEFAULT ARRAY[]::UUID[], -- fotos de progresso deste checkin; nunca NULL, pode ficar vazio
     adherence_score INTEGER, -- 0-100, resposta a "foi tudo cumprido a 100%?"
     weeks_on_program INTEGER, -- semanas decorridas com o treino/plano atual
     feedback JSONB, -- perguntas qualitativas do checkin (ver estrutura abaixo)
@@ -691,36 +722,42 @@ O "peso anterior" pedido no acompanhamento não gera coluna nova: obtém-se com
 de histórico, evitando duplicar um dado que já existe na linha do checkin
 anterior.
 
-### 21. `client_consents`
+### 21. `client_supplement_assignments`
 
-Registo de consentimentos LGPD do cliente — necessário porque `initial_assessments` e `checkins` passam a guardar fotos e dados de saúde.
+Atribuição direta de um suplemento a um cliente, independente dos suplementos associados a refeições.
 
 ```sql
-CREATE TABLE client_consents (
+CREATE TABLE client_supplement_assignments (
     id UUID PRIMARY KEY,
     owner_trainer_id UUID NOT NULL,
     client_id UUID NOT NULL,
-    consent_type VARCHAR(50) NOT NULL, -- 'photo_usage', 'data_processing', 'communication'
-    status VARCHAR(20) NOT NULL, -- 'accepted', 'revoked'
-    accepted_at TIMESTAMPTZ,
-    revoked_at TIMESTAMPTZ,
-    ip_address INET,
+    supplement_id UUID NOT NULL,
+    serving_size VARCHAR(100) NOT NULL,
+    timing VARCHAR(255) NOT NULL,
+    trainer_notes TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    is_deleted BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
         REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE,
-    CONSTRAINT consent_type_check CHECK (consent_type IN ('photo_usage', 'data_processing', 'communication')),
-    CONSTRAINT consent_status_check CHECK (status IN ('accepted', 'revoked'))
+    CONSTRAINT fk_assignment_supplement FOREIGN KEY (supplement_id)
+        REFERENCES supplements(id) ON DELETE RESTRICT,
+    CONSTRAINT assignment_serving_size_not_blank CHECK (btrim(serving_size) <> ''),
+    CONSTRAINT assignment_timing_not_blank CHECK (btrim(timing) <> '')
 );
 
-CREATE UNIQUE INDEX uq_consent_active_per_type
-    ON client_consents(client_id, consent_type) WHERE status = 'accepted';
-CREATE INDEX idx_consents_client ON client_consents(client_id, consent_type);
+CREATE UNIQUE INDEX uq_client_supplement_active
+    ON client_supplement_assignments(client_id, supplement_id)
+    WHERE is_active = true AND is_deleted = false;
+CREATE INDEX idx_client_supplement_assignments_tenant_client
+    ON client_supplement_assignments(owner_trainer_id, client_id)
+    WHERE is_deleted = false;
+CREATE INDEX idx_client_supplement_assignments_supplement
+    ON client_supplement_assignments(supplement_id);
 ```
-
-Desenho simplificado vs. o doc do Claude Chat (que tinha `rejected`/`accepted`/`revoked` + `consent_version`): 2 estados apenas, sem versionamento de texto legal — YAGNI; adiciona-se `consent_version` só se surgir necessidade legal real.
 
 ---
 
@@ -735,12 +772,13 @@ CREATE TABLE sessions (
     id UUID PRIMARY KEY,
     owner_trainer_id UUID NOT NULL,
     client_id UUID NOT NULL,
-    session_date DATE NOT NULL,
-    session_time TIME,
-    duration_minutes INTEGER,
+    starts_at TIMESTAMPTZ NOT NULL,
+    duration_minutes INTEGER NOT NULL,
+    location VARCHAR(255),
+    client_session_pack_id UUID,
     session_type VARCHAR(50), -- 'strength', 'cardio', 'flexibility', 'assessment'
     notes TEXT,
-    is_completed BOOLEAN DEFAULT false,
+    status VARCHAR(40) NOT NULL DEFAULT 'scheduled',
     is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -749,12 +787,16 @@ CREATE TABLE sessions (
     CONSTRAINT fk_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
         REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE,
     CONSTRAINT session_duration_positive CHECK (
-        duration_minutes IS NULL OR duration_minutes > 0)
+        duration_minutes > 0),
+    CONSTRAINT session_status_check CHECK (status IN (
+        'scheduled', 'completed', 'cancelled_by_trainer', 'cancelled_by_client', 'no_show'))
 );
 
 CREATE INDEX idx_sessions_trainer ON sessions(owner_trainer_id);
 CREATE INDEX idx_sessions_client ON sessions(client_id);
-CREATE INDEX idx_sessions_date ON sessions(session_date);
+CREATE INDEX idx_sessions_starts_at ON sessions(starts_at);
+CREATE INDEX idx_sessions_upcoming ON sessions(owner_trainer_id, starts_at)
+    WHERE status = 'scheduled' AND is_deleted = false;
 ```
 
 ---
@@ -772,7 +814,9 @@ CREATE TABLE pack_types (
     name VARCHAR(255) NOT NULL,
     session_count INTEGER NOT NULL,
     price_cents INTEGER NOT NULL,
+    currency VARCHAR(3) NOT NULL DEFAULT 'EUR',
     duration_days INTEGER,
+    is_active BOOLEAN NOT NULL DEFAULT true,
     is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -786,6 +830,8 @@ CREATE TABLE pack_types (
 );
 
 CREATE INDEX idx_packs_trainer ON pack_types(owner_trainer_id);
+CREATE INDEX idx_pack_types_usable ON pack_types(owner_trainer_id, name)
+    WHERE is_active = true AND is_deleted = false;
 ```
 
 ### 24. `client_session_packs`
@@ -798,6 +844,10 @@ CREATE TABLE client_session_packs (
     owner_trainer_id UUID NOT NULL,
     client_id UUID NOT NULL,
     pack_type_id UUID NOT NULL,
+    pack_name VARCHAR(255) NOT NULL,
+    total_sessions INTEGER NOT NULL,
+    price_cents INTEGER NOT NULL,
+    currency VARCHAR(3) NOT NULL,
     sessions_remaining INTEGER NOT NULL,
     purchase_date DATE NOT NULL,
     expiry_date DATE,
@@ -809,14 +859,28 @@ CREATE TABLE client_session_packs (
     CONSTRAINT fk_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
         REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE,
     CONSTRAINT fk_pack_type_tenant FOREIGN KEY (owner_trainer_id, pack_type_id)
-        REFERENCES pack_types(owner_trainer_id, id) ON DELETE CASCADE,
+        REFERENCES pack_types(owner_trainer_id, id) ON DELETE RESTRICT,
+    CONSTRAINT uq_client_packs_tenant_client_id UNIQUE(owner_trainer_id, client_id, id),
     CONSTRAINT sessions_remaining_non_negative CHECK (sessions_remaining >= 0),
+    CONSTRAINT pack_sessions_consistent CHECK (
+        total_sessions > 0 AND sessions_remaining <= total_sessions),
+    CONSTRAINT pack_snapshot_price_non_negative CHECK (price_cents >= 0),
     CONSTRAINT pack_expiry_order CHECK (
         expiry_date IS NULL OR expiry_date >= purchase_date)
 );
 
 CREATE INDEX idx_client_packs_trainer ON client_session_packs(owner_trainer_id);
 CREATE INDEX idx_client_packs_client ON client_session_packs(client_id);
+CREATE INDEX idx_client_packs_usable ON client_session_packs(owner_trainer_id, client_id, expiry_date)
+    WHERE sessions_remaining > 0 AND is_deleted = false;
+
+-- A FK é adicionada depois de ambas as tabelas existirem. O EF Core ordenará
+-- esta operação de forma equivalente na migration gerada.
+ALTER TABLE sessions
+    ADD CONSTRAINT fk_session_pack_client_tenant
+    FOREIGN KEY (owner_trainer_id, client_id, client_session_pack_id)
+    REFERENCES client_session_packs(owner_trainer_id, client_id, id)
+    ON DELETE RESTRICT;
 ```
 
 ### 25. `processed_stripe_events`

@@ -21,6 +21,7 @@ public class MealPlan
     /// Se não for fornecida, o plano é considerado "ativo" até ser substituído.
     /// </summary>
     public DateOnly? EndsDate { get; private set; }
+    public decimal KcalTarget { get; private set; }
     /// <summary>Alvo diário de macros (protein, carbs, fats) em gramas.</summary>
     public MacroSummary Targets { get; private set; } = null!;
 
@@ -45,26 +46,22 @@ public class MealPlan
         string? description,
         DateOnly startsDate,
         DateOnly? endsDate,
+        decimal kcalTarget,
         MacroSummary targets,
         DateTime now
     )
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new DomainException("Meal Plan name is required");
-
-        var normalizedName = name.Trim();
-        if (normalizedName.Length > 255)
-            throw new DomainException("Meal Plan name cannot exceed 255 characters");
-        if (endsDate.HasValue && endsDate.Value < startsDate)
-            throw new DomainException("Meal Plan ends date cannot be before starts date");
+        var normalizedName = name?.Trim() ?? string.Empty;
+        Validate(normalizedName, startsDate, endsDate, kcalTarget);
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
         ClientId = clientId;
         Name = normalizedName;
-        Description = description;
+        Description = NormalizeOptional(description);
         StartsDate = startsDate;
         EndsDate = endsDate;
+        KcalTarget = kcalTarget;
         Targets = targets;
         IsActive = true;
         IsArchived = false;
@@ -73,28 +70,50 @@ public class MealPlan
         UpdatedAt = now;
     }
 
+    /// <summary>Atualiza as metas preescritas sem exigir igualdade entre kcal e macros.</summary>
+    public void ChangeTargets(decimal kcalTarget, MacroSummary targets, DateTime now)
+    {
+        EnsureNotDeleted();
+        if (kcalTarget < 0)
+            throw new DomainException("Kcal target cannot be negative");
+
+        KcalTarget = kcalTarget;
+        Targets = targets;
+        UpdatedAt = now;
+    }
+
     /// <summary>
     /// Adiciona uma refeição ao plano alimentar garantindo ordem única dentro do plano.
-    /// (constraint unique_meal_order replicada como invariante de domínio)
     /// </summary>
     public MealPlanMeal AddMeal(string mealType, int orderNumber, DateTime now)
     {
         EnsureNotDeleted();
         if (_meals.Any(meals => meals.OrderNumber == orderNumber))
-            throw new DomainException("Already exists a meal with the same order number in this meal plan");
+            throw new DomainException("Meal order number already exists in this plan");
 
-        var meal = new MealPlanMeal(this.Id, mealType, orderNumber, now);
+        var meal = new MealPlanMeal(Id, mealType, orderNumber, now);
         _meals.Add(meal);
         UpdatedAt = now;
         return meal;
+    }
+
+    /// <summary>Remove uma refeição do plano, alimentos e suplementos associados saem com ela.</summary>
+    public void RemoveMeal(Guid mealId, DateTime now)
+    {
+        EnsureNotDeleted();
+        var meal = _meals.FirstOrDefault(m => m.Id == mealId)
+            ?? throw new DomainException("Meal does not belong to this plan");
+
+        _meals.Remove(meal);
+        UpdatedAt = now;
     }
 
     /// <summary>Arquiva o plano alimentar, mantendo-o no histórico do cliente.</summary>
     public void Archive(DateTime now)
     {
         EnsureNotDeleted();
-        IsArchived = true;
         IsActive = false;
+        IsArchived = true;
         UpdatedAt = now;
     }
 
@@ -107,24 +126,34 @@ public class MealPlan
         UpdatedAt = now;
     }
 
-    /// <summary>Remove uma refeição do plano, alimentos e suplementos associados saem com ela.</summary>
-    public void RemoveMeal(Guid mealId, DateTime now)
-    {
-        EnsureNotDeleted();
-        var meal = _meals.FirstOrDefault(m => m.Id == mealId)
-            ?? throw new DomainException("Meal not found in this meal plan");
 
-        _meals.Remove(meal);
-        UpdatedAt = now;
-    }
 
     /// <summary>Soft delete -> plano e refeições continuam consultáveis por integridade.</summary>
     public void SoftDelete(DateTime now)
     {
         IsDeleted = true;
         IsActive = false;
+        IsArchived = true;
         UpdatedAt = now;
     }
+
+    private static void Validate(
+        string name,
+        DateOnly startsDate,
+        DateOnly? endsDate,
+        decimal kcalTarget
+    )
+    {
+        if (name.Length is 0 or > 255)
+            throw new DomainException("Meal plan name must contain between 1 and 255 characters");
+        if (endsDate.HasValue && endsDate.Value < startsDate)
+            throw new DomainException("End date cannot be before start date");
+        if (kcalTarget < 0)
+            throw new DomainException("Kcal target cannot be negative");
+    }
+
+    private static string? NormalizeOptional(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private void EnsureNotDeleted()
     {

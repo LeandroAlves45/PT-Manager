@@ -88,7 +88,7 @@ public class Client
     public void AttachUser(Guid userId, DateTime now)
     {
         EnsureNotDeleted();
-        if (UserId == Guid.Empty)
+        if (userId == Guid.Empty)
             throw new DomainException("User ID is required.");
         if (UserId.HasValue)
             throw new DomainException("Client already has an associated user.");
@@ -146,8 +146,8 @@ public class Client
         string? emergencyContactPhone,
         DateOnly today)
     {
-        var normalizedName = name.Trim() ?? string.Empty;
-        var normalizedPhone = phone.Trim() ?? string.Empty;
+        var normalizedName = name?.Trim() ?? string.Empty;
+        var normalizedPhone = phone?.Trim() ?? string.Empty;
         var normalizedSex = NormalizeOptional(sex);
         var normalizedObjective = NormalizeOptional(objective);
         var normalizedEmergencyName = NormalizeOptional(emergencyContactName);
@@ -159,8 +159,8 @@ public class Client
             throw new DomainException("Client phone must contain between 1 and 32 characters.");
         if (birthDate.HasValue && birthDate.Value > today)
             throw new DomainException("Birth date cannot be in the future.");
-        if (normalizedSex is not null && normalizedSex is not ("Male" or "Female" or "Other"))
-            throw new DomainException("Sex must be 'Male', 'Female' or 'Other'.");
+        if (normalizedSex is not null && normalizedSex is not ("M" or "F" or "Other"))
+            throw new DomainException("Sex must be M, F or Other.");
         if (normalizedObjective is { Length: > 255 })
             throw new DomainException("Objective cannot exceed 255 characters.");
         if (normalizedEmergencyName is { Length: > 255 })

@@ -87,7 +87,7 @@ Portar entidades Python → C# Entities + Value Objects, sem abstrações genér
    Training/TrainingPlan.cs, TrainingPlanDay.cs, TrainingPlanDayExercise.cs, ExerciseSet.cs, ClientExerciseSetLog.cs, Exercise.cs
    Sessions/Session.cs
    Assessments/InitialAssessment.cs, CheckIn.cs
-   Supplements/Supplement.cs
+   Supplements/Supplement.cs, ClientSupplementAssignment.cs
    Billing/TrainerSubscription.cs, PackType.cs, ClientSessionPack.cs, ProcessedStripeEvent.cs
    Notifications/Notification.cs
    Jobs/DurableJob.cs, OutboxMessage.cs
@@ -149,7 +149,7 @@ implementados:
      impedir que `owner_trainer_id` do trainer A seja combinado com recursos do
      trainer B.
    - Cobrir pelo menos `meal_plans`, `training_plans`,
-     `initial_assessments`, `checkins`, `client_consents`, `sessions`,
+     `initial_assessments`, `checkins`, `client_supplement_assignments`, `sessions`,
      `client_session_packs` e `notifications`.
    - Definir validação de entidades adicionadas ou modificadas antes de
      `SaveChanges`. Global Query Filters protegem leituras, não escritas
@@ -175,6 +175,16 @@ implementados:
      schema contra o Domain.
    - Atualizar `01_DATABASE_SCHEMA.md` e o código afetado antes de executar
      `dotnet ef migrations add InitialCreate`.
+   - Aplicar o pacote vinculativo
+     `docs/backend-files/sprint_2_every/sprint_2_newTables/`, incluindo Domain,
+     28 DbSets/configurações, interceptor, testes unitários e Testcontainers.
+   - Confirmar 28 tabelas da aplicação e `__EFMigrationsHistory`, total 29.
+
+5. **Limite do Sprint 2**
+   - Não implementar neste gate handlers, DTOs, Controllers ou frontend para os
+     contratos alterados.
+   - Tratar `starts_at`, estados de sessão, dados de Client, `kcal_target`,
+     snapshots de packs e atribuições de suplementos no Sprint 3.
 
 Não gerar `InitialCreate` enquanto a implementação e os testes destes quatro
 pontos não estiverem concluídos.
@@ -323,7 +333,8 @@ Endpoints HTTP, ASP.NET Core Identity, middleware, compatibilidade de contrato.
    MealPlansController     /meal-plans CRUD
    TrainingPlansController /training-plans CRUD
    ClientPortalController  /portal/my-plan, /portal/my-nutrition, /portal/branding, /portal/my-profile
-   AssessmentsController   /assessments, /checkins, /consents
+   AssessmentsController   /assessments, /checkins
+   SupplementsController   /supplements, /client-supplement-assignments
    SessionsController      /sessions
    AdminController         /admin/trainers, /admin/health (superuser only)
    InternalJobsController  /api/internal/jobs/dispatch (QStash, assinatura validada, sem auth de utilizador)

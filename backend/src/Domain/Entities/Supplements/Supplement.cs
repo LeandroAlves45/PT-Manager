@@ -8,17 +8,19 @@ namespace Domain.Entities.Supplements;
 public class Supplement
 {
     public Guid Id { get; private set; }
-    /// <summary>Autor da criação; não concede visibilidade nem autorização</summary>
-    public Guid? CreatedByUserId { get; private set; }
     /// <summary>
     /// Proprietário do suplemento: null identifica  uma linha global autorizada.
     /// </summary>
     public Guid? OwnerTrainerId { get; private set; }
-
+    /// <summary>Autor da criação; não concede visibilidade nem autorização</summary>
+    public Guid? CreatedByUserId { get; private set; }
     public string Name { get; private set; } = null!;
     public string? Description { get; private set; }
     /// <summary>Unidade de medida: "grams", "ml", "capsules", etc.</summary>
     public string? UnitOfMeasure { get; private set; }
+    public string? ServingSize { get; private set; }
+    public string? Timing { get; private set; }
+    public string? TrainerNotes { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -32,22 +34,17 @@ public class Supplement
         string name,
         string? description,
         string? unitOfMeasure,
+        string? servingSize,
+        string? timing,
+        string? trainerNotes,
         DateTime now
     )
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new DomainException("Supplement name cannot be empty.");
-
-        var normalizedName = name.Trim();
-        var normalizedUnitOfMeasure = unitOfMeasure?.Trim();
-        ValidateParameters(normalizedName, normalizedUnitOfMeasure);
+        SetFields(name, description, unitOfMeasure, servingSize, timing, trainerNotes);
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
         CreatedByUserId = createdByUserId;
-        Name = normalizedName;
-        Description = description;
-        UnitOfMeasure = normalizedUnitOfMeasure;
         IsDeleted = false;
         CreatedAt = now;
         UpdatedAt = now;
@@ -58,20 +55,14 @@ public class Supplement
         string name,
         string? description,
         string? unitOfMeasure,
+        string? servingSize,
+        string? timing,
+        string? trainerNotes,
         DateTime now
     )
     {
         EnsureNotDeleted();
-        if (string.IsNullOrWhiteSpace(name))
-            throw new DomainException("Supplement name cannot be empty.");
-
-        var normalizedName = name.Trim();
-        var normalizedUnitOfMeasure = unitOfMeasure?.Trim();
-        ValidateParameters(normalizedName, normalizedUnitOfMeasure);
-
-        Name = normalizedName;
-        Description = description;
-        UnitOfMeasure = normalizedUnitOfMeasure;
+        SetFields(name, description, unitOfMeasure, servingSize, timing, trainerNotes);
         UpdatedAt = now;
     }
 
@@ -83,17 +74,36 @@ public class Supplement
     }
 
     /// <summary>Valida os parâmetros do suplemento.</summary>
-    private void ValidateParameters(string name, string? unitOfMeasure)
+    private void SetFields(
+        string name,
+        string? description,
+        string? unitOfMeasure,
+        string? servingSize,
+        string? timing,
+        string? trainerNotes
+    )
     {
-        if (name.Length > 255)
-            throw new DomainException("Supplement name cannot exceed 255 characters.");
-        if (unitOfMeasure != null && unitOfMeasure.Length > 50)
-            throw new DomainException("Unit of measure cannot exceed 50 characters.");
+        var normalizedName = name?.Trim() ?? string.Empty;
+        if (normalizedName.Length is 0 or > 255)
+            throw new DomainException("Supplement name must be between 1 and 255 characters.");
+        if (unitOfMeasure is { Length: > 50 } || servingSize is { Length: > 100 } ||
+            timing is { Length: > 255 })
+            throw new DomainException("Supplement fields exceed their maximum length.");
+
+        Name = normalizedName;
+        Description = NormalizeOptional(description);
+        UnitOfMeasure = NormalizeOptional(unitOfMeasure);
+        ServingSize = NormalizeOptional(servingSize);
+        Timing = NormalizeOptional(timing);
+        TrainerNotes = NormalizeOptional(trainerNotes);
     }
+
+    private static string? NormalizeOptional(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private void EnsureNotDeleted()
     {
         if (IsDeleted)
-            throw new DomainException("Cannot update a deleted supplement.");
+            throw new DomainException("Cannot modify a deleted supplement.");
     }
 }

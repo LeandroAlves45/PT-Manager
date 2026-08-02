@@ -32,18 +32,7 @@ public class ExerciseSet
         DateTime now
     )
     {
-        if (setNumber < 1 || setNumber > 15)
-            throw new DomainException("Set number must be between 1 and 15.");
-        if (plannedReps.HasValue && plannedReps.Value <= 0)
-            throw new DomainException("Planned reps must be greater than 0.");
-        if (plannedWeightKg.HasValue && plannedWeightKg.Value < 0)
-            throw new DomainException("Planned weight cannot be negative.");
-        if (restSecondsMin.HasValue && restSecondsMin.Value < 0)
-            throw new DomainException("Minimum rest seconds cannot be negative.");
-        if (restSecondsMax.HasValue && restSecondsMax.Value < 0)
-            throw new DomainException("Maximum rest seconds cannot be negative.");
-        if (restSecondsMin.HasValue && restSecondsMax.HasValue && restSecondsMin.Value > restSecondsMax.Value)
-            throw new DomainException("Rest seconds min cannot be greater than rest seconds max.");
+        Validate(setNumber, plannedReps, plannedWeightKg, restSecondsMin, restSecondsMax);
 
         Id = Guid.NewGuid();
         TrainingPlanDayExerciseId = trainingPlanDayExerciseId;
@@ -54,5 +43,21 @@ public class ExerciseSet
         RestSecondsMax = restSecondsMax;
         CreatedAt = now;
         UpdatedAt = now;
+    }
+
+    private static void Validate(
+        int setNumber,
+        int? plannedReps,
+        decimal? plannedWeightKg,
+        int? restSecondsMin,
+        int? restSecondsMax
+    )
+    {
+        if (setNumber is < 1 || setNumber > 15)
+            throw new DomainException("Set number must be between 1 and 15.");
+        if (plannedReps <= 0 || plannedWeightKg < 0 || restSecondsMin < 0 || restSecondsMax < 0)
+            throw new DomainException("Set values cannot violate their non-negative ranges.");
+        if (restSecondsMin.HasValue && restSecondsMax.HasValue && restSecondsMin.Value > restSecondsMax.Value)
+            throw new DomainException("Minimum rest cannot exceed maximum rest.");
     }
 }

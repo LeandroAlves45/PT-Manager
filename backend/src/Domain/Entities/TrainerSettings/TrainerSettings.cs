@@ -62,7 +62,7 @@ public class TrainerSettings
         DateTime now
     )
     {
-        var normalizedAppName = appName.Trim() ?? string.Empty;
+        var normalizedAppName = appName?.Trim() ?? string.Empty;
         if (normalizedAppName.Length is 0 or > 255)
             throw new DomainException("App name must contain between 1 and 255 characters.");
         if (!IsHexColor(primaryColor) || !IsHexColor(bodyColor))

@@ -569,6 +569,11 @@ Se for adoptado, a decisão deve incluir broker gerido, worker separado, transac
 
 ## 10. Stripe
 
+Stripe gere exclusivamente a subscrição SaaS do trainer ao PT Manager. Os packs
+de sessões vendidos ou atribuídos aos clientes são domínio interno do trainer,
+mantêm snapshots comerciais locais e não possuem customer, price, payment intent
+ou subscription IDs da Stripe.
+
 ### 10.1 Operações iniciadas pela aplicação
 
 Checkout e Customer Portal são criados através de `IPaymentGateway`.
@@ -893,9 +898,28 @@ Pertencem a fases posteriores:
     versionamento de planos de treino/nutrição e relatórios persistidos
     (`client_reports`) — avaliados a partir de propostas externas e adiados em
     31/07/2026 por falta de pedido concreto (YAGNI). O desenho aprovado para
-    `initial_assessments`, `checkins` e a nova `client_consents` fica em
+    `initial_assessments` e `checkins` fica em
     `.claude/project/01_DATABASE_SCHEMA.md`; resumo da decisão em
     `docs/backend-files/README.md`.
+
+## 17.1 Decisões de schema anteriores à InitialCreate
+
+1. Um `Client` nasce sem `User`. O convite referencia inequivocamente o
+   `ClientId` e a conta só pode ser associada uma vez depois da aceitação.
+2. Uma `Session` é marcada por `StartsAt` em UTC, duração, localização opcional,
+   pack opcional e um estado explícito. As transições inválidas são rejeitadas
+   no Domain.
+3. `ClientSessionPack` guarda o snapshot de nome, quantidade de sessões, preço e
+   moeda. Alterar ou desativar o catálogo não reescreve uma venda anterior.
+4. Um cliente pode ter múltiplos planos alimentares. `KcalTarget` é uma meta
+   explícita e independente das calorias calculadas a partir das macros.
+5. Existe no máximo um plano de treino ativo por cliente. A troca de plano ativo
+   é transacional e protegida por índice único parcial.
+6. Suplementos podem ser associados a refeições ou atribuídos diretamente a um
+   cliente através de `ClientSupplementAssignment`.
+7. `client_consents` não integra a `InitialCreate`. Qualquer necessidade legal
+   futura exige análise própria e não deve ser inferida a partir de dados de
+   avaliação.
 
 ## 18. Referências oficiais
 

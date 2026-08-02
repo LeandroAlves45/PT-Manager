@@ -15,6 +15,7 @@ public sealed class PackTypeTests
             "  Ten sessions  ",
             10,
             30000,
+            "EUR",
             90,
             new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc)
         );
@@ -28,10 +29,10 @@ public sealed class PackTypeTests
     {
         // Arrange
         var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
-        var packType = new PackType(Guid.NewGuid(), "Ten sessions", 10, 30000, 90, now);
+        var packType = new PackType(Guid.NewGuid(), "Ten sessions", 10, 30000, "EUR", 90, now);
 
         // Act
-        packType.Update("  Twelve sessions  ", 12, 35000, 90, now);
+        packType.Update("  Twelve sessions  ", 12, 35000, "EUR", 90, now);
 
         // Assert
         Assert.Equal("Twelve sessions", packType.Name);
@@ -42,11 +43,11 @@ public sealed class PackTypeTests
     {
         // Arrange
         var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
-        var packType = new PackType(Guid.NewGuid(), "Ten sessions", 10, 30000, 90, now);
+        var packType = new PackType(Guid.NewGuid(), "Ten sessions", 10, 30000, "EUR", 90, now);
         packType.SoftDelete(now);
 
         // Act & Assert
         Assert.Throws<DomainException>(() =>
-            packType.Update("Twelve sessions", 12, 35000, 90, now));
+            packType.Update("Twelve sessions", 12, 35000, "EUR", 90, now));
     }
 }

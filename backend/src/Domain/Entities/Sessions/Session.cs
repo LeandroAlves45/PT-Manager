@@ -67,7 +67,7 @@ public class Session
         string? location,
         DateTime now)
     {
-        EnsureNotDeleted();
+        EnsureScheduled();
         ValidateSchedule(startsAt, durationMinutes, location, SessionType);
 
         StartsAt = EnsureUtc(startsAt);
@@ -99,14 +99,14 @@ public class Session
     /// <summary>Soft delete da sessão, marcando-a como excluída.</summary>
     public void SoftDelete(DateTime now)
     {
-        EnsureNotDeleted();
+        EnsureScheduled();
         IsDeleted = true;
         UpdatedAt = now;
     }
 
     private void SetTerminalStatus(SessionStatus status, DateTime now)
     {
-        EnsureNotDeleted();
+        EnsureScheduled();
         Status = status;
         StatusChangedAt = now;
         UpdatedAt = now;
@@ -131,7 +131,7 @@ public class Session
         string? location,
         string? sessionType)
     {
-        if (startsAt.Kind != DateTimeKind.Unspecified)
+        if (startsAt.Kind == DateTimeKind.Unspecified)
             throw new DomainException("Session start must include timezone information.");
         if (durationMinutes <= 0)
             throw new DomainException("Duration must be greater than zero.");

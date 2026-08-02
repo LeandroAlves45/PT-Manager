@@ -1,4 +1,5 @@
 using Domain.Exceptions;
+
 namespace Domain.Entities.Nutrition;
 
 /// <summary>
@@ -15,7 +16,6 @@ public class Food
     public Guid? OwnerTrainerId { get; private set; }
     public string Name { get; private set; } = null!;
     public string? Description { get; private set; }
-    public decimal Calories { get; private set; }
     public decimal Protein { get; private set; }
     public decimal Carbs { get; private set; }
     public decimal Fats { get; private set; }
@@ -33,7 +33,6 @@ public class Food
         Guid? ownerTrainerId,
         string name,
         string? description,
-        decimal calories,
         decimal protein,
         decimal carbs,
         decimal fats,
@@ -42,13 +41,12 @@ public class Food
     )
     {
         var normalizedName = name?.Trim() ?? string.Empty;
-        ValidateParametersFood(normalizedName, calories, protein, carbs, fats, fiber);
+        ValidateParametersFood(normalizedName, protein, carbs, fats, fiber);
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
         Name = normalizedName;
-        Description = description;
-        Calories = calories;
+        Description = NormalizeOptional(description);
         Protein = protein;
         Carbs = carbs;
         Fats = fats;
@@ -62,7 +60,6 @@ public class Food
     public void Update(
         string name,
         string? description,
-        decimal calories,
         decimal protein,
         decimal carbs,
         decimal fats,
@@ -72,11 +69,10 @@ public class Food
     {
         EnsureNotDeleted();
         var normalizedName = name?.Trim() ?? string.Empty;
-        ValidateParametersFood(normalizedName, calories, protein, carbs, fats, fiber);
+        ValidateParametersFood(normalizedName, protein, carbs, fats, fiber);
 
         Name = normalizedName;
-        Description = description;
-        Calories = calories;
+        Description = NormalizeOptional(description);
         Protein = protein;
         Carbs = carbs;
         Fats = fats;
@@ -94,32 +90,24 @@ public class Food
     /// <summary>Valida os parâmetros do alimento.</summary>
     private void ValidateParametersFood(
         string name,
-        decimal calories,
         decimal protein,
         decimal carbs,
         decimal fats,
         decimal? fiber
     )
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new DomainException("Food name is required");
-        if (name.Length > 255)
-            throw new DomainException("Food name cannot exceed 255 characters.");
-        if (calories < 0)
-            throw new DomainException("Calories cannot be negative.");
-        if (protein < 0)
-            throw new DomainException("Protein cannot be negative.");
-        if (carbs < 0)
-            throw new DomainException("Carbs cannot be negative.");
-        if (fats < 0)
-            throw new DomainException("Fats cannot be negative.");
-        if (fiber.HasValue && fiber.Value < 0)
-            throw new DomainException("Fiber cannot be negative.");
+        if (name.Length is 0 or > 255)
+            throw new DomainException("Food name must contain between 1 and 255 characters.");
+        if (protein < 0 || carbs < 0 || fats < 0 || (fiber.HasValue && fiber.Value < 0))
+            throw new DomainException("Nutritional values cannot be negative.");
     }
+
+    private static string? NormalizeOptional(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private void EnsureNotDeleted()
     {
         if (IsDeleted)
-            throw new DomainException("Cannot update a deleted food.");
+            throw new DomainException("Cannot modify a deleted food.");
     }
 }
