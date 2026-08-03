@@ -9,26 +9,21 @@ public sealed class InitialAssessmentTests
 {
     private static readonly DateTime TestNow = new(2026, 7, 31, 12, 0, 0, DateTimeKind.Utc);
 
-    private static InitialAssessment CreateValid(
-        string? profession = null,
-        BodyMeasurements? bodyMeasurements = null,
-        NutritionIntake? nutritionIntake = null
-    ) =>
+    private static InitialAssessment CreateValid(ActivityLevel? activityLevel = null) =>
         new(
-            ownerTrainerId: Guid.NewGuid(),
-            clientId: Guid.NewGuid(),
-            age: 30,
-            gender: "male",
-            weightKg: 80,
-            heightCm: 180,
-            bodyFatPercentage: 20,
-            medicalConditions: null,
-            fitnessLevel: "moderately_active",
-            goals: "lose weight",
-            profession: profession,
-            bodyMeasurements: bodyMeasurements,
-            nutritionIntake: nutritionIntake,
-            now: TestNow
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            80,
+            180,
+            20,
+            null,
+            "intermediate",
+            activityLevel ?? ActivityLevel.ModeratelyActive,
+            "lose weight",
+            null,
+            null,
+            null,
+            TestNow
         );
 
     private static NutritionIntake CreateNutritionIntake(
@@ -40,13 +35,27 @@ public sealed class InitialAssessmentTests
         );
 
     [Fact]
-    public void Constructor_ProfessionWithinLimit_Accepted()
+    public void Constructor_ProfessionAtMaxLength_Accepted()
     {
         // Arrange
         var profession = new string('a', 255);
 
         // Act
-        var assessment = CreateValid(profession: profession);
+        var assessment = new InitialAssessment(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            80,
+            180,
+            20,
+            null,
+            "intermediate",
+            ActivityLevel.ModeratelyActive,
+            "lose weight",
+            profession,
+            null,
+            null,
+            TestNow
+        );
 
         // Assert
         Assert.Equal(profession, assessment.Profession);
@@ -59,7 +68,23 @@ public sealed class InitialAssessmentTests
         var profession = new string('a', 256);
 
         // Act & Assert
-        Assert.Throws<DomainException>(() => CreateValid(profession: profession));
+        var action = () => new InitialAssessment(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            80,
+            180,
+            20,
+            null,
+            "intermediate",
+            ActivityLevel.ModeratelyActive,
+            "lose weight",
+            profession,
+            null,
+            null,
+            TestNow
+        );
+
+        Assert.Throws<DomainException>(action);
     }
 
     [Fact]
@@ -72,13 +97,12 @@ public sealed class InitialAssessmentTests
 
         // Act
         assessment.Update(
-            age: 30,
-            gender: "male",
             weightKg: 80,
             heightCm: 180,
             bodyFatPercentage: null,
             medicalConditions: null,
-            fitnessLevel: "moderately_active",
+            fitnessLevel: "intermediate",
+            activityLevel: ActivityLevel.ModeratelyActive,
             goals: "lose weight",
             profession: "Software Engineer",
             bodyMeasurements: measurements,
@@ -94,22 +118,13 @@ public sealed class InitialAssessmentTests
     }
 
     [Fact]
-    public void Constructor_MeasurementsNull_DefaultsToEmpty()
+    public void Constructor_WithoutComplexValues_UsesEmptyValueObjects()
     {
         // Act
-        var assessment = CreateValid(bodyMeasurements: null);
+        var assessment = CreateValid();
 
         // Assert
         Assert.Equal(BodyMeasurements.Empty, assessment.BodyMeasurements);
-    }
-
-    [Fact]
-    public void Constructor_NutritionIntakeNull_DefaultsToEmpty()
-    {
-        // Act
-        var assessment = CreateValid(nutritionIntake: null);
-
-        // Assert
         Assert.Equal(NutritionIntake.Empty, assessment.NutritionIntake);
     }
 
@@ -123,13 +138,12 @@ public sealed class InitialAssessmentTests
         // Act & Assert
         Assert.Throws<DomainException>(() =>
             assessment.Update(
-                age: 30,
-                gender: "male",
                 weightKg: 80,
                 heightCm: 180,
                 bodyFatPercentage: null,
                 medicalConditions: null,
-                fitnessLevel: "moderately_active",
+                fitnessLevel: "intermediate",
+                activityLevel: ActivityLevel.ModeratelyActive,
                 goals: "lose weight",
                 profession: null,
                 bodyMeasurements: null,
@@ -137,5 +151,112 @@ public sealed class InitialAssessmentTests
                 now: TestNow.AddMinutes(1)
             )
         );
+    }
+
+    [Fact]
+    public void Constructor_WithActivityLevel_StoresSuggestion()
+    {
+        // Arrange
+        var assessment = CreateValid();
+
+        // Assert
+        Assert.Equal(ActivityLevel.ModeratelyActive, assessment.ActivityLevel);
+    }
+
+    [Fact]
+    public void Constructor_WithoutActivityLevel_ThrowsException()
+    {
+        // Act & Assert
+        var action = () => new InitialAssessment(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            80,
+            180,
+            20,
+            null,
+            "intermediate",
+            null!,
+            "lose weight",
+            null,
+            null,
+            null,
+            TestNow
+        );
+
+        Assert.Throws<DomainException>(action);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(100)]
+    public void Constructor_WithClosedBodyFatBoundary_ThrowsDomainException(int bodyFatPercentage)
+    {
+        // Act & Assert
+        var action = () => new InitialAssessment(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            80,
+            180,
+            (decimal)bodyFatPercentage,
+            null,
+            "intermediate",
+            ActivityLevel.ModeratelyActive,
+            "lose weight",
+            null,
+            null,
+            null,
+            TestNow
+        );
+        Assert.Throws<DomainException>(action);
+    }
+
+    [Fact]
+    public void Update_WithDifferentActivityLevel_ReplacesSuggestion()
+    {
+        // Arrange
+        var assessment = CreateValid();
+
+        // Act
+        assessment.Update(
+            79,
+            180,
+            19,
+            null,
+            "intermediate",
+            ActivityLevel.VeryActive,
+            "lose weight",
+            null,
+            null,
+            null,
+            TestNow.AddMinutes(1)
+        );
+
+        // Assert
+        Assert.Equal(ActivityLevel.VeryActive, assessment.ActivityLevel);
+    }
+
+    [Fact]
+    public void Update_AfterSoftDelete_ThrowsDomainException()
+    {
+        // Arrange
+        var assessment = CreateValid();
+        assessment.SoftDelete(TestNow);
+
+        // Act & Assert
+        var action = () => assessment.Update(
+            79,
+            180,
+            19,
+            null,
+            "intermediate",
+            ActivityLevel.VeryActive,
+            "lose weight",
+            null,
+            null,
+            null,
+            TestNow.AddMinutes(1)
+        );
+
+        Assert.Throws<DomainException>(action);
     }
 }

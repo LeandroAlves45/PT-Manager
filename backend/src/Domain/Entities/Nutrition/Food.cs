@@ -98,8 +98,16 @@ public class Food
     {
         if (name.Length is 0 or > 255)
             throw new DomainException("Food name must contain between 1 and 255 characters.");
-        if (protein < 0 || carbs < 0 || fats < 0 || (fiber.HasValue && fiber.Value < 0))
-            throw new DomainException("Nutritional values cannot be negative.");
+        if (protein is < 0 or 100 || carbs is < 0 or > 100 || fats is < 0 or > 100)
+            throw new DomainException(
+                "Each macronutrient must be between 0 and 100 grams per 100 grams of food."
+            );
+        if (protein + carbs + fats > 100)
+            throw new DomainException(
+                "Protein, carbs and fats combined cannot exceed 100 grams per 100 grams of food."
+            );
+        if (fiber.HasValue && fiber.Value is < 0 or > 100)
+            throw new DomainException("Fiber must be between 0 and 100 grams per 100 grams of food.");
     }
 
     private static string? NormalizeOptional(string? value) =>

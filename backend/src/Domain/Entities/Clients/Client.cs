@@ -17,8 +17,8 @@ public class Client
     public string? ContactEmail { get; private set; }
     public string? NormalizedContactEmail { get; private set; }
     public string Phone { get; private set; } = null!;
-    public DateOnly? BirthDate { get; private set; }
-    public string? Sex { get; private set; }
+    public BirthDate BirthDate { get; private set; } = null!;
+    public BiologicalSex Sex { get; private set; } = null!;
     public string? Objective { get; private set; }
     public string? Notes { get; private set; }
     public string? EmergencyContactName { get; private set; }
@@ -39,8 +39,8 @@ public class Client
         string name,
         string? contactEmail,
         string phone,
-        DateOnly? birthDate,
-        string? sex,
+        BirthDate birthDate,
+        BiologicalSex sex,
         string? objective,
         string? notes,
         string? emergencyContactName,
@@ -55,7 +55,7 @@ public class Client
         OwnerTrainerId = ownerTrainerId;
         UserId = null;
         SetProfile(name, contactEmail, phone, birthDate, sex, objective, notes,
-            emergencyContactName, emergencyContactPhone, DateOnly.FromDateTime(now));
+            emergencyContactName, emergencyContactPhone);
         IsActive = true;
         IsDeleted = false;
         CreatedAt = now;
@@ -67,8 +67,8 @@ public class Client
         string name,
         string? contactEmail,
         string phone,
-        DateOnly? birthDate,
-        string? sex,
+        BirthDate birthDate,
+        BiologicalSex sex,
         string? objective,
         string? notes,
         string? emergencyContactName,
@@ -77,7 +77,7 @@ public class Client
     {
         EnsureNotDeleted();
         SetProfile(name, contactEmail, phone, birthDate, sex, objective, notes,
-            emergencyContactName, emergencyContactPhone, DateOnly.FromDateTime(now));
+            emergencyContactName, emergencyContactPhone);
         UpdatedAt = now;
     }
 
@@ -138,17 +138,16 @@ public class Client
         string name,
         string? contactEmail,
         string phone,
-        DateOnly? birthDate,
-        string? sex,
+        BirthDate birthDate,
+        BiologicalSex sex,
         string? objective,
         string? notes,
         string? emergencyContactName,
-        string? emergencyContactPhone,
-        DateOnly today)
+        string? emergencyContactPhone
+    )
     {
         var normalizedName = name?.Trim() ?? string.Empty;
         var normalizedPhone = phone?.Trim() ?? string.Empty;
-        var normalizedSex = NormalizeOptional(sex);
         var normalizedObjective = NormalizeOptional(objective);
         var normalizedEmergencyName = NormalizeOptional(emergencyContactName);
         var normalizedEmergencyPhone = NormalizeOptional(emergencyContactPhone);
@@ -157,10 +156,10 @@ public class Client
             throw new DomainException("Client name must contain between 1 and 255 characters.");
         if (normalizedPhone.Length is 0 or > 32)
             throw new DomainException("Client phone must contain between 1 and 32 characters.");
-        if (birthDate.HasValue && birthDate.Value > today)
-            throw new DomainException("Birth date cannot be in the future.");
-        if (normalizedSex is not null && normalizedSex is not ("M" or "F" or "Other"))
-            throw new DomainException("Sex must be M, F or Other.");
+        if (birthDate is null)
+            throw new DomainException("Birth date is required.");
+        if (sex is null)
+            throw new DomainException("Biological sex is required.");
         if (normalizedObjective is { Length: > 255 })
             throw new DomainException("Objective cannot exceed 255 characters.");
         if (normalizedEmergencyName is { Length: > 255 })
@@ -183,7 +182,7 @@ public class Client
         Name = normalizedName;
         Phone = normalizedPhone;
         BirthDate = birthDate;
-        Sex = normalizedSex;
+        Sex = sex;
         Objective = normalizedObjective;
         Notes = NormalizeOptional(notes);
         EmergencyContactName = normalizedEmergencyName;

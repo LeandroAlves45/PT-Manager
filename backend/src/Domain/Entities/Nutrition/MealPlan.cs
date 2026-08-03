@@ -24,7 +24,7 @@ public class MealPlan
     public decimal KcalTarget { get; private set; }
     /// <summary>Alvo diário de macros (protein, carbs, fats) em gramas.</summary>
     public MacroSummary Targets { get; private set; } = null!;
-
+    public NutritionCalculationSnapshot CalculationSnapshot { get; private set; } = null!;
     public bool IsActive { get; private set; }
     public bool IsArchived { get; private set; }
     public bool IsDeleted { get; private set; }
@@ -46,13 +46,12 @@ public class MealPlan
         string? description,
         DateOnly startsDate,
         DateOnly? endsDate,
-        decimal kcalTarget,
-        MacroSummary targets,
+        NutritionCalculationSnapshot calculationSnapshot,
         DateTime now
     )
     {
         var normalizedName = name?.Trim() ?? string.Empty;
-        Validate(normalizedName, startsDate, endsDate, kcalTarget);
+        Validate(ownerTrainerId, clientId, normalizedName, startsDate, endsDate, calculationSnapshot);
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
@@ -61,8 +60,7 @@ public class MealPlan
         Description = NormalizeOptional(description);
         StartsDate = startsDate;
         EndsDate = endsDate;
-        KcalTarget = kcalTarget;
-        Targets = targets;
+        ApplyCalculation(calculationSnapshot);
         IsActive = true;
         IsArchived = false;
         IsDeleted = false;
@@ -70,15 +68,18 @@ public class MealPlan
         UpdatedAt = now;
     }
 
-    /// <summary>Atualiza as metas preescritas sem exigir igualdade entre kcal e macros.</summary>
-    public void ChangeTargets(decimal kcalTarget, MacroSummary targets, DateTime now)
+    /// <summary>
+    /// Substitui a decisão nutricional inteira. Alterar apenas os targets é proibido
+    /// porque destruiria a correspondência com a evidência guardada.
+    /// </summary>
+    public void ReplaceCalculation(
+        NutritionCalculationSnapshot calculationSnapshot,
+        DateTime now
+    )
     {
         EnsureNotDeleted();
-        if (kcalTarget < 0)
-            throw new DomainException("Kcal target cannot be negative");
-
-        KcalTarget = kcalTarget;
-        Targets = targets;
+        ArgumentNullException.ThrowIfNull(calculationSnapshot);
+        ApplyCalculation(calculationSnapshot);
         UpdatedAt = now;
     }
 
@@ -126,8 +127,6 @@ public class MealPlan
         UpdatedAt = now;
     }
 
-
-
     /// <summary>Soft delete -> plano e refeições continuam consultáveis por integridade.</summary>
     public void SoftDelete(DateTime now)
     {
@@ -137,19 +136,36 @@ public class MealPlan
         UpdatedAt = now;
     }
 
+    private void ApplyCalculation(NutritionCalculationSnapshot snapshot)
+    {
+        CalculationSnapshot = snapshot;
+        KcalTarget = snapshot.TargetKcal;
+        Targets = new MacroSummary(
+            snapshot.ProteinTargetGrams,
+            snapshot.CarbsTargetGrams,
+            snapshot.FatsTargetGrams
+        );
+    }
+
     private static void Validate(
+        Guid ownerTrainerId,
+        Guid clientId,
         string name,
         DateOnly startsDate,
         DateOnly? endsDate,
-        decimal kcalTarget
+        NutritionCalculationSnapshot calculationSnapshot
     )
     {
+        if (ownerTrainerId == Guid.Empty)
+            throw new DomainException("Owner trainer ID is required");
+        if (clientId == Guid.Empty)
+            throw new DomainException("Client ID is required");
         if (name.Length is 0 or > 255)
             throw new DomainException("Meal plan name must contain between 1 and 255 characters");
         if (endsDate.HasValue && endsDate.Value < startsDate)
             throw new DomainException("End date cannot be before start date");
-        if (kcalTarget < 0)
-            throw new DomainException("Kcal target cannot be negative");
+
+        ArgumentNullException.ThrowIfNull(calculationSnapshot);
     }
 
     private static string? NormalizeOptional(string? value) =>

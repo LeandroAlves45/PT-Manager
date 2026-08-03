@@ -27,15 +27,6 @@ internal sealed class InitialAssessmentsConfiguration : IEntityTypeConfiguration
             .HasColumnName("client_id")
             .IsRequired();
 
-        builder.Property(ia => ia.Age)
-            .HasColumnName("age")
-            .IsRequired();
-
-        builder.Property(ia => ia.Gender)
-            .HasColumnName("gender")
-            .HasMaxLength(10)
-            .IsRequired();
-
         builder.Property(ia => ia.WeightKg)
             .HasColumnName("weight_kg")
             .HasPrecision(10, 2)
@@ -114,11 +105,10 @@ internal sealed class InitialAssessmentsConfiguration : IEntityTypeConfiguration
 
         builder.ToTable(t =>
         {
-            t.HasCheckConstraint("assessment_age_positive", "age > 0");
             t.HasCheckConstraint("assessment_weight_positive", "weight_kg > 0");
             t.HasCheckConstraint("assessment_height_positive", "height_cm > 0");
             t.HasCheckConstraint("assessment_body_fat_range",
-                "body_fat_percentage IS NULL OR body_fat_percentage BETWEEN 0 AND 100");
+                "body_fat_percentage IS NULL OR body_fat_percentage > 0 AND body_fat_percentage < 100");
         });
 
         builder.HasIndex(ia => ia.OwnerTrainerId).HasDatabaseName("idx_assessments_trainer");
