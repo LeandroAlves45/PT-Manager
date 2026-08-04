@@ -66,6 +66,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 case InitialAssessment:
                 case ClientSessionPack:
                 case Notification:
+                case ClientSupplementAssignment:
                 case PackType:
                     tenantId ??= context.RequireTenant();
                     ValidateRequiredOwnership(entry, "OwnerTrainerId", tenantId.Value);
@@ -338,6 +339,9 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
             .Entries<MealPlanMealSupplement>()
             .Where(entry => entry.State == EntityState.Added || entry.State == EntityState.Modified)
             .Select(entry => entry.Entity.SupplementId)
+            .Concat(context.ChangeTracker.Entries<ClientSupplementAssignment>()
+                .Where(entry => entry.State == EntityState.Added || entry.State == EntityState.Modified)
+                .Select(entry => entry.Entity.SupplementId))
             .Distinct()
             .ToList();
 
@@ -348,40 +352,105 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
             .Distinct()
             .ToList();
 
-        //uma query por catálogo (não uma por linha). IgnoreQueryFilters
+        // Uma query por catálogo (não uma por linha). IgnoreQueryFilters
         // é necessário aqui: o alvo pode ser uma linha global (OwnerTrainerId
         // null) ou de outro personal trainer, e o Global Query Filter escondia-a — mas
         // precisamos de A VER para decidir se é legítima ou não, não para a
         // devolver ao chamador.
         if (referenceFoodIds.Count > 0)
         {
-            var foods = await context.Foods
-                .IgnoreQueryFilters()
-                .Where(f => referenceFoodIds.Contains(f.Id))
-                .Select(f => new { f.Id, f.OwnerTrainerId })
-                .ToListAsync(cancellationToken);
-
-            foreach (var food in foods)
-            {
-                if (food.OwnerTrainerId is not null && food.OwnerTrainerId != tenantId)
+            var foods = context.ChangeTracker.Entries<Food>()
+                .Where(entry => referenceFoodIds.Contains(entry.Entity.Id))
+                .Select(entry => new
                 {
+                    entry.Entity.Id,
+                    entry.Entity.OwnerTrainerId,
+                    entry.Entity.IsDeleted,
+                })
+                .ToDictionary(food => food.Id);
+
+            var missingFoodIds = referenceFoodIds
+                .Where(id => !foods.ContainsKey(id))
+                .ToList();
+
+            if (missingFoodIds.Count > 0)
+            {
+                // Os filtros são ignorados apenas para classificar corretamente a referência.
+                var persistedFoods = await context.Foods
+                    .IgnoreQueryFilters()
+                    .AsNoTracking()
+                    .Where(food => missingFoodIds.Contains(food.Id))
+                    .Select(food => new
+                    {
+                        food.Id,
+                        food.OwnerTrainerId,
+                        food.IsDeleted,
+                    })
+                    .ToListAsync(cancellationToken);
+
+                foreach (var food in persistedFoods)
+                    foods.Add(food.Id, food);
+            }
+
+            foreach (var foodId in referenceFoodIds)
+            {
+                if (!foods.TryGetValue(foodId, out var food))
+                    throw new DomainException("Referenced catalog food does not exist.");
+
+                if (food.IsDeleted)
+                    throw new DomainException("Cannot reference a deleted catalog food.");
+
+                if (food.OwnerTrainerId is not null && food.OwnerTrainerId != tenantId)
                     throw new DomainException(
-                        "Cannot reference a private catalog item from another personal trainer."
+                        "Cannot reference a private catalog food from another personal trainer."
                     );
-                }
             }
         }
 
         if (referenceSupplementIds.Count > 0)
         {
-            var supplements = await context.Supplements
-                .IgnoreQueryFilters()
-                .Where(s => referenceSupplementIds.Contains(s.Id))
-                .Select(s => new { s.Id, s.OwnerTrainerId })
-                .ToListAsync(cancellationToken);
+            var supplements = context.ChangeTracker.Entries<Supplement>()
+                .Where(entry => referenceSupplementIds.Contains(entry.Entity.Id))
+                .Select(entry => new
+                {
+                    entry.Entity.Id,
+                    entry.Entity.OwnerTrainerId,
+                    entry.Entity.IsDeleted,
+                })
+                .ToDictionary(supplement => supplement.Id);
 
-            foreach (var supplement in supplements)
+            var missingSupplementIds = referenceSupplementIds
+                .Where(id => !supplements.ContainsKey(id))
+                .ToList();
+
+            if (missingSupplementIds.Count > 0)
             {
+                // IgnoreQueryFilters é necessário para distinguir uma referência
+                // apagada ou cross-tenant de uma referência que não existe.
+                var persistedSupplements = await context.Supplements
+                    .IgnoreQueryFilters()
+                    .AsNoTracking()
+                    .Where(supplement => missingSupplementIds.Contains(supplement.Id))
+                    .Select(supplement => new
+                    {
+                        supplement.Id,
+                        supplement.OwnerTrainerId,
+                        supplement.IsDeleted,
+                    })
+                    .ToListAsync(cancellationToken);
+
+                foreach (var supplement in persistedSupplements)
+                    supplements.Add(supplement.Id, supplement);
+            }
+
+            foreach (var supplementId in referenceSupplementIds)
+            {
+                if (!supplements.TryGetValue(supplementId, out var supplement))
+                    throw new DomainException("Referenced catalog supplement does not exist.");
+
+                if (supplement.IsDeleted)
+                    throw new DomainException("Cannot reference a deleted catalog supplement.");
+
                 if (supplement.OwnerTrainerId is not null && supplement.OwnerTrainerId != tenantId)
                 {
                     throw new DomainException(
@@ -393,20 +462,50 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
 
         if (referenceExerciseIds.Count > 0)
         {
-            var exercises = await context.Exercises
-                .IgnoreQueryFilters()
-                .Where(e => referenceExerciseIds.Contains(e.Id))
-                .Select(e => new { e.Id, e.OwnerTrainerId })
-                .ToListAsync(cancellationToken);
-
-            foreach (var exercise in exercises)
-            {
-                if (exercise.OwnerTrainerId is not null && exercise.OwnerTrainerId != tenantId)
+            var exercises = context.ChangeTracker.Entries<Exercise>()
+                .Where(entry => referenceExerciseIds.Contains(entry.Entity.Id))
+                .Select(entry => new
                 {
+                    entry.Entity.Id,
+                    entry.Entity.OwnerTrainerId,
+                    entry.Entity.IsDeleted,
+                })
+                .ToDictionary(exercise => exercise.Id);
+
+            var missingExerciseIds = referenceExerciseIds
+                .Where(id => !exercises.ContainsKey(id))
+                .ToList();
+
+            if (missingExerciseIds.Count > 0)
+            {
+                var persistedExercises = await context.Exercises
+                    .IgnoreQueryFilters()
+                    .AsNoTracking()
+                    .Where(exercise => missingExerciseIds.Contains(exercise.Id))
+                    .Select(exercise => new
+                    {
+                        exercise.Id,
+                        exercise.OwnerTrainerId,
+                        exercise.IsDeleted,
+                    })
+                    .ToListAsync(cancellationToken);
+
+                foreach (var exercise in persistedExercises)
+                    exercises.Add(exercise.Id, exercise);
+            }
+
+            foreach (var exerciseId in referenceExerciseIds)
+            {
+                if (!exercises.TryGetValue(exerciseId, out var exercise))
+                    throw new DomainException("Referenced catalog exercise does not exist.");
+
+                if (exercise.IsDeleted)
+                    throw new DomainException("Cannot reference a deleted catalog exercise.");
+
+                if (exercise.OwnerTrainerId is not null && exercise.OwnerTrainerId != tenantId)
                     throw new DomainException(
                         "Cannot reference a private catalog exercise from another personal trainer."
                     );
-                }
             }
         }
     }
@@ -477,5 +576,6 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 or TrainingPlanDayExercise
                 or ExerciseSet
                 or ClientExerciseSetLog
+                or ClientSupplementAssignment
             ));
 }

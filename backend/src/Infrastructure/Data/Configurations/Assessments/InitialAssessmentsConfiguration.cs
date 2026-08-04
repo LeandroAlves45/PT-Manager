@@ -1,6 +1,7 @@
 using Domain.Entities.Assessments;
 using Domain.Entities.Clients;
 using Domain.Entities.Identity;
+using Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -39,6 +40,14 @@ internal sealed class InitialAssessmentsConfiguration : IEntityTypeConfiguration
         builder.Property(ia => ia.FitnessLevel)
             .HasColumnName("fitness_level")
             .HasMaxLength(50)
+            .IsRequired();
+
+        builder.Property(ia => ia.ActivityLevel)
+            .HasColumnName("activity_level")
+            .HasMaxLength(32)
+            .HasConversion(
+                activityLevel => activityLevel.Value,
+                value => ActivityLevel.FromString(value))
             .IsRequired();
 
         builder.Property(ia => ia.Goals)
@@ -105,10 +114,20 @@ internal sealed class InitialAssessmentsConfiguration : IEntityTypeConfiguration
 
         builder.ToTable(t =>
         {
-            t.HasCheckConstraint("assessment_weight_positive", "weight_kg > 0");
-            t.HasCheckConstraint("assessment_height_positive", "height_cm > 0");
-            t.HasCheckConstraint("assessment_body_fat_range",
-                "body_fat_percentage IS NULL OR body_fat_percentage > 0 AND body_fat_percentage < 100");
+            t.HasCheckConstraint(
+                "ck_initial_assessments_activity_level",
+                "activity_level IN ('sedentary', 'lightly_active', " +
+                "'moderately_active', 'very_active', 'extremely_active')");
+            t.HasCheckConstraint(
+                "ck_initial_assessments_weight_positive",
+                "weight_kg > 0");
+            t.HasCheckConstraint(
+                "ck_initial_assessments_height_positive",
+                "height_cm > 0");
+            t.HasCheckConstraint(
+                "ck_initial_assessments_body_fat_range",
+                "body_fat_percentage IS NULL OR " +
+                "(body_fat_percentage > 0 AND body_fat_percentage < 100)");
         });
 
         builder.HasIndex(ia => ia.OwnerTrainerId).HasDatabaseName("idx_assessments_trainer");
@@ -117,7 +136,8 @@ internal sealed class InitialAssessmentsConfiguration : IEntityTypeConfiguration
         builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(ia => ia.OwnerTrainerId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade)
+            .HasConstraintName("fk_initial_assessments_owner_trainer");
 
         builder.HasOne<Client>()
             .WithMany()

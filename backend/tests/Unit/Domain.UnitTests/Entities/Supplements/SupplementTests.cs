@@ -17,7 +17,7 @@ public sealed class SupplementTests
     {
         // Arrange & Act
         var supplement = new Supplement(
-            TrainerId, AuthorId, "Creatine", null, "grams", null, null, null, Now);
+            TrainerId, AuthorId, "Creatine", null, "grams", "5 g", "Daily", null, Now);
 
         // Assert
         Assert.Equal(TrainerId, supplement.OwnerTrainerId);
@@ -28,7 +28,7 @@ public sealed class SupplementTests
     {
         // Arrange & Act
         var supplement = new Supplement(
-            null, AuthorId, "Creatine", null, "grams", null, null, null, Now);
+            null, AuthorId, "Creatine", null, "grams", "5 g", "Daily", null, Now);
 
         // Assert
         Assert.Null(supplement.OwnerTrainerId);
@@ -44,8 +44,8 @@ public sealed class SupplementTests
             "Creatine",
             null,
             "grams",
-            null,
-            null,
+            "5 g",
+            "Daily",
             null,
             Now);
 
@@ -59,12 +59,49 @@ public sealed class SupplementTests
     {
         // Arrange
         var supplement = new Supplement(
-            null, AuthorId, "Creatine", null, "grams", null, null, null, Now);
+            null, AuthorId, "Creatine", null, "grams", "5 g", "Daily", null, Now);
         supplement.SoftDelete(Now);
 
         // Act & Assert
         Assert.Throws<DomainException>(() =>
             supplement.Update(
-                "Creatine monohydrate", null, "grams", null, null, null, Now.AddMinutes(1)));
+                "Creatine monohydrate", null, "grams", "5 g", "Daily", null,
+                Now.AddMinutes(1)));
+    }
+
+    [Fact]
+    public void Constructor_ValidSupplement_StartsActive()
+    {
+        // Arrange & Act
+        var supplement = new Supplement(
+            TrainerId, AuthorId, "Creatine", null, "grams", "5 g", "Daily", null, Now);
+
+        // Assert
+        Assert.True(supplement.IsActive);
+    }
+
+    [Theory]
+    [InlineData("", "5 g", "Daily")]
+    [InlineData("grams", "", "Daily")]
+    [InlineData("grams", "5 g", "")]
+    public void Constructor_RequiredServingFieldsAreBlank_ThrowsDomainException(
+        string unitOfMeasure,
+        string servingSize,
+        string timing)
+    {
+        // Act
+        var action = () => new Supplement(
+            TrainerId,
+            AuthorId,
+            "Creatine",
+            null,
+            unitOfMeasure,
+            servingSize,
+            timing,
+            null,
+            Now);
+
+        // Assert
+        Assert.Throws<DomainException>(action);
     }
 }

@@ -38,7 +38,7 @@ public sealed class PtManagerDbContext : DbContext
         _tenantContext = tenantContext;
     }
 
-    // DbSet<T> para as 27 entidades.
+    // DbSet<T> para as 28 entidades.
     public DbSet<User> Users => Set<User>();
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<InitialAssessment> InitialAssessments => Set<InitialAssessment>();
@@ -60,6 +60,7 @@ public sealed class PtManagerDbContext : DbContext
     public DbSet<MealPlanMealSupplement> MealPlanMealSupplements => Set<MealPlanMealSupplement>();
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<Supplement> Supplements => Set<Supplement>();
+    public DbSet<ClientSupplementAssignment> ClientSupplementAssignments => Set<ClientSupplementAssignment>();
     public DbSet<TrainerSettings> TrainerSettings => Set<TrainerSettings>();
     public DbSet<ClientExerciseSetLog> ClientExerciseSetLogs => Set<ClientExerciseSetLog>();
     public DbSet<ExerciseSet> ExerciseSets => Set<ExerciseSet>();
@@ -139,6 +140,11 @@ public sealed class PtManagerDbContext : DbContext
         modelBuilder.Entity<Supplement>().HasQueryFilter(s =>
             CurrentTrainerId.HasValue && !s.IsDeleted &&
             (s.OwnerTrainerId == null || s.OwnerTrainerId == CurrentTrainerId.Value));
+
+        modelBuilder.Entity<ClientSupplementAssignment>().HasQueryFilter(assignment =>
+            CurrentTrainerId.HasValue &&
+            !assignment.IsDeleted &&
+            assignment.OwnerTrainerId == CurrentTrainerId.Value);
 
         // POLÍTICA A DERIVADA — filhas de agregado, SEM navegação POCO.
         modelBuilder.Entity<MealPlanMeal>().HasQueryFilter(mpm =>

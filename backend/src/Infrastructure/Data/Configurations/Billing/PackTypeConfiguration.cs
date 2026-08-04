@@ -35,8 +35,19 @@ internal sealed class PackTypeConfiguration : IEntityTypeConfiguration<PackType>
             .HasColumnName("price_cents")
             .IsRequired();
 
+        builder.Property(pt => pt.Currency)
+            .HasColumnName("currency")
+            .HasMaxLength(3)
+            .HasDefaultValue("EUR")
+            .IsRequired();
+
         builder.Property(pt => pt.DurationDays)
             .HasColumnName("duration_days");
+
+        builder.Property(pt => pt.IsActive)
+            .HasColumnName("is_active")
+            .HasDefaultValue(true)
+            .IsRequired();
 
         builder.Property(pt => pt.IsDeleted)
             .HasColumnName("is_deleted")
@@ -63,6 +74,9 @@ internal sealed class PackTypeConfiguration : IEntityTypeConfiguration<PackType>
         builder.HasIndex(pt => new { pt.OwnerTrainerId, pt.Id })
             .HasDatabaseName("uq_pack_types_tenant_id")
             .IsUnique();
+        builder.HasIndex(pt => new { pt.OwnerTrainerId, pt.Name })
+            .HasDatabaseName("idx_pack_types_usable")
+            .HasFilter("is_active = true AND is_deleted = false");
 
         builder.HasOne<User>()
             .WithMany()

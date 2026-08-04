@@ -1,4 +1,4 @@
-# PT Manager — Database Schema v3.0 (PostgreSQL 16 / EF Core 10)
+# PT Manager — Database Schema v3.0 (PostgreSQL 17 / EF Core 10)
 
 *Schema Definition — Julho 2026*
 
@@ -136,33 +136,38 @@ CREATE TABLE clients (
     id UUID PRIMARY KEY,
     owner_trainer_id UUID NOT NULL,
     user_id UUID,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    display_name VARCHAR(200) NOT NULL,
-    email VARCHAR(255),
-    normalized_email VARCHAR(255),
-    phone VARCHAR(32),
-    normalized_phone VARCHAR(32),
-    date_of_birth DATE,
-    objective VARCHAR(255), -- 'weight_loss', 'muscle_gain', 'strength', 'endurance'
-    bio TEXT,
+    name VARCHAR(255) NOT NULL,
+    contact_email VARCHAR(255),
+    normalized_contact_email VARCHAR(255),
+    phone VARCHAR(32) NOT NULL,
+    date_of_birth DATE NOT NULL,
+    sex VARCHAR(6) NOT NULL,
+    objective VARCHAR(255),
+    notes TEXT,
+    emergency_contact_name VARCHAR(255),
+    emergency_contact_phone VARCHAR(32),
     avatar_url VARCHAR(500),
-    is_active BOOLEAN DEFAULT true,
-    is_deleted BOOLEAN DEFAULT false,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    is_deleted BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-    CONSTRAINT uq_clients_tenant_id UNIQUE(owner_trainer_id, id)
+    CONSTRAINT ck_clients_sex CHECK (sex IN ('male', 'female')),
+    CONSTRAINT fk_clients_owner_trainer
+        FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_clients_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT uq_clients_tenant_id UNIQUE (owner_trainer_id, id)
 );
 
-CREATE INDEX idx_clients_trainer ON clients(owner_trainer_id);
-CREATE UNIQUE INDEX uq_clients_user_id ON clients(user_id) WHERE user_id IS NOT NULL;
-CREATE UNIQUE INDEX uq_clients_trainer_email ON clients(owner_trainer_id, normalized_email)
-    WHERE normalized_email IS NOT NULL AND is_deleted = false;
-CREATE INDEX idx_clients_trainer_phone ON clients(owner_trainer_id, normalized_phone)
-    WHERE normalized_phone IS NOT NULL AND is_deleted = false;
+CREATE INDEX idx_clients_owner_trainer ON clients(owner_trainer_id);
+CREATE UNIQUE INDEX uq_clients_user ON clients(user_id) WHERE user_id IS NOT NULL;
+CREATE UNIQUE INDEX uq_clients_tenant_contact_email_active
+    ON clients(owner_trainer_id, normalized_contact_email)
+    WHERE normalized_contact_email IS NOT NULL AND is_deleted = false;
+CREATE UNIQUE INDEX uq_clients_tenant_phone_active
+    ON clients(owner_trainer_id, phone)
+    WHERE is_deleted = false;
 ```
 
 ### 4. `trainer_settings`
@@ -270,8 +275,12 @@ CREATE TABLE foods (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT food_macros_non_negative CHECK (
-        protein >= 0 AND carbs >= 0 AND fats >= 0 AND (fiber IS NULL OR fiber >= 0))
+    CONSTRAINT ck_foods_nutrients_per_100g CHECK (
+        protein BETWEEN 0 AND 100
+        AND carbs BETWEEN 0 AND 100
+        AND fats BETWEEN 0 AND 100
+        AND protein + carbs + fats <= 100
+        AND (fiber IS NULL OR fiber >= 0))
 );
 
 CREATE INDEX idx_foods_name ON foods(name);
@@ -324,25 +333,53 @@ CREATE TABLE meal_plans (
     carbs_target_g DECIMAL(10, 2) NOT NULL,
     fats_target_g DECIMAL(10, 2) NOT NULL,
     kcal_target DECIMAL(10, 2) NOT NULL,
-    is_active BOOLEAN DEFAULT true,
-    is_archived BOOLEAN DEFAULT false,
-    is_deleted BOOLEAN DEFAULT false,
+    calculation_snapshot JSONB NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    is_archived BOOLEAN NOT NULL DEFAULT false,
+    is_deleted BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
+    CONSTRAINT fk_meal_plans_owner_trainer
+        FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_meal_plans_client_tenant
+        FOREIGN KEY (owner_trainer_id, client_id)
         REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE,
     -- ends_date pode ser NULL (plano sem data de fim); a comparação com NULL
     -- avalia a UNKNOWN em Postgres, e uma CHECK só rejeita quando avalia a
     -- FALSE — logo esta constraint continua correta sem tratamento especial.
-    CONSTRAINT date_order CHECK (starts_date <= ends_date),
-    CONSTRAINT meal_plan_targets_positive CHECK (
-        protein_target_g >= 0 AND carbs_target_g >= 0 AND fats_target_g >= 0 AND kcal_target > 0)
+    CONSTRAINT ck_meal_plans_date_order CHECK (starts_date <= ends_date),
+    CONSTRAINT ck_meal_plans_targets CHECK (
+        kcal_target > 0
+        AND protein_target_g >= 0
+        AND carbs_target_g >= 0
+        AND fats_target_g >= 0
+        AND abs((protein_target_g * 4 + carbs_target_g * 4
+                 + fats_target_g * 9) - kcal_target) <= 100)
 );
 
 CREATE INDEX idx_meal_plans_trainer ON meal_plans(owner_trainer_id);
 CREATE INDEX idx_meal_plans_client ON meal_plans(client_id);
+CREATE INDEX idx_meal_plans_trainer_active
+    ON meal_plans(owner_trainer_id, is_active);
+```
+
+`calculation_snapshot` guarda a entrada e o resultado imutáveis usados para
+calcular os alvos do plano. A versão inicial usa `schema_version = 1` e as
+seguintes chaves JSON em `snake_case`:
+
+```text
+schema_version, calculation_origin, calculated_at, energy_formula,
+weight_kg_used, height_cm_used, age_used, sex_used,
+body_fat_percentage_used, activity_level, activity_factor, goal_type,
+goal_adjustment_kcal, resting_energy_expenditure_kcal,
+total_daily_energy_expenditure_kcal, target_kcal,
+macro_distribution_mode, protein_percentage_input,
+carbs_percentage_input, fats_percentage_input,
+protein_grams_per_kg_input, fats_grams_per_kg_input,
+protein_target_grams, carbs_target_grams, fats_target_grams,
+protein_energy_percentage, carbs_energy_percentage,
+fats_energy_percentage, calculated_macro_kcal, kcal_difference
 ```
 
 ### 10. `meal_plan_meals`
@@ -617,30 +654,34 @@ CREATE TABLE initial_assessments (
     id UUID PRIMARY KEY,
     owner_trainer_id UUID NOT NULL,
     client_id UUID NOT NULL,
-    age INTEGER NOT NULL,
-    gender VARCHAR(10) NOT NULL, -- 'male', 'female', 'other'
     weight_kg DECIMAL(10, 2) NOT NULL,
     height_cm INTEGER NOT NULL,
     body_fat_percentage DECIMAL(10, 2),
     medical_conditions TEXT,
-    fitness_level VARCHAR(50) NOT NULL, -- 'sedentary', 'lightly_active', 'moderately_active', 'very_active'
+    fitness_level VARCHAR(50) NOT NULL,
+    activity_level VARCHAR(32) NOT NULL,
     goals TEXT NOT NULL,
-    profession VARCHAR(255), -- coluna própria (não JSONB) para permitir filtrar/reportar por profissão
-    measurements JSONB, -- {waist_cm, hip_cm, chest_cm, arm_cm, thigh_cm, calf_cm} — medidas de baseline, opcionais
-    nutrition_intake JSONB, -- dados de estilo de vida/nutrição da 1ª consulta (ver estrutura abaixo)
-    is_deleted BOOLEAN DEFAULT false,
+    profession VARCHAR(255),
+    body_measurements JSONB NOT NULL,
+    nutrition_intake JSONB NOT NULL,
+    is_deleted BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
+    CONSTRAINT fk_initial_assessments_owner_trainer
+        FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_initial_assessments_client_tenant
+        FOREIGN KEY (owner_trainer_id, client_id)
         REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE,
     CONSTRAINT uq_initial_assessments_client UNIQUE (client_id),
-    CONSTRAINT assessment_age_positive CHECK (age > 0),
-    CONSTRAINT assessment_weight_positive CHECK (weight_kg > 0),
-    CONSTRAINT assessment_height_positive CHECK (height_cm > 0),
-    CONSTRAINT assessment_body_fat_range CHECK (
-        body_fat_percentage IS NULL OR body_fat_percentage BETWEEN 0 AND 100)
+    CONSTRAINT ck_initial_assessments_weight_positive CHECK (weight_kg > 0),
+    CONSTRAINT ck_initial_assessments_height_positive CHECK (height_cm > 0),
+    CONSTRAINT ck_initial_assessments_body_fat_range CHECK (
+        body_fat_percentage IS NULL OR
+        (body_fat_percentage > 0 AND body_fat_percentage < 100)),
+    CONSTRAINT ck_initial_assessments_activity_level CHECK (
+        activity_level IN ('sedentary', 'lightly_active', 'moderately_active',
+                           'very_active', 'extremely_active'))
 );
 
 CREATE INDEX idx_assessments_trainer ON initial_assessments(owner_trainer_id);
@@ -740,13 +781,15 @@ CREATE TABLE client_supplement_assignments (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
+    CONSTRAINT fk_client_supplement_assignments_client_tenant
+        FOREIGN KEY (owner_trainer_id, client_id)
         REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE,
-    CONSTRAINT fk_assignment_supplement FOREIGN KEY (supplement_id)
+    CONSTRAINT fk_client_supplement_assignments_supplement FOREIGN KEY (supplement_id)
         REFERENCES supplements(id) ON DELETE RESTRICT,
-    CONSTRAINT assignment_serving_size_not_blank CHECK (btrim(serving_size) <> ''),
-    CONSTRAINT assignment_timing_not_blank CHECK (btrim(timing) <> '')
+    CONSTRAINT ck_client_supplement_assignments_serving_size
+        CHECK (btrim(serving_size) <> ''),
+    CONSTRAINT ck_client_supplement_assignments_timing
+        CHECK (btrim(timing) <> '')
 );
 
 CREATE UNIQUE INDEX uq_client_supplement_active

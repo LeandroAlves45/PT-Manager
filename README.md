@@ -49,7 +49,7 @@ Each trainer operates in an **isolated tenant environment**, seeing only their o
 |-------|-----------|
 | Framework | FastAPI 0.115 |
 | ORM | SQLModel 0.0.22 (SQLAlchemy + Pydantic) |
-| Database | PostgreSQL 16 (SQLite for local dev) |
+| Database | PostgreSQL 17 (SQLite for local dev) |
 | Authentication | JWT + passlib/bcrypt |
 | Payments | Stripe API |
 | Email | Resend API |
@@ -178,7 +178,7 @@ Projeto_pt_manager/
 
 **For Backend:**
 - Python 3.12+
-- PostgreSQL 16 (or use Docker Compose)
+- PostgreSQL 17 (or use Docker Compose)
 
 **For Frontend:**
 - Node.js 18+

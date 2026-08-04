@@ -9,7 +9,7 @@
 PT Manager backend está sendo reescrito de Python (FastAPI) para C# (.NET 10 LTS), modular monolith com Clean Architecture, com objetivo de alcançar um MVP em produção em 12 semanas.
 
 **Timeline:** Julho 2026 — Outubro 2026
-**Stack:** .NET 10 · C# 14 · PostgreSQL 16 (Neon) · Entity Framework Core 10 · Upstash Redis · Upstash QStash
+**Stack:** .NET 10 · C# 14 · PostgreSQL 17 (Neon) · Entity Framework Core 10 · Upstash Redis · Upstash QStash
 **Architecture:** Modular monolith, Clean Architecture (Domain → Application → Infrastructure → Api)
 **Team:** Solo developer (Alves)
 
@@ -96,7 +96,7 @@ Ver justificação completa e trade-offs em `00_ARCHITECTURE.md`.
 - **Solução:** QStash chama um endpoint interno assinado a cada vinte minutos (intervalo escolhido para preservar a suspensão gratuita do Render e do scale-to-zero do Neon, `00_ARCHITECTURE.md §9.1`), que ativa o dispatcher de `durable_jobs`/`outbox_messages` em Postgres (at-least-once, idempotente)
 - **RabbitMQ** fica documentado como reavaliação futura — só com sinais concretos de múltiplos consumers, throughput ou latência incompatíveis com polling (`00_ARCHITECTURE.md §9.5`)
 
-### PostgreSQL 16 (Neon)
+### PostgreSQL 17 (Neon)
 - **Database:** Sem mudanças de motor face ao Python
 - **Backups:** Neon automáticos, serverless scaling
 - **IDs:** `uuid` nativo (não `varchar(36)` como no Python) — ver `01_DATABASE_SCHEMA.md` Decisão 1
@@ -147,7 +147,7 @@ Ver justificação completa e trade-offs em `00_ARCHITECTURE.md`.
 
 ```
 .NET 10.0 SDK                    https://dotnet.microsoft.com
-PostgreSQL 16 ou Neon            https://neon.tech
+PostgreSQL 17 ou Neon            https://neon.tech
 Docker                           https://docker.com
 Visual Studio 2026 ou VS Code    https://visualstudio.microsoft.com
 Git                              https://git-scm.com

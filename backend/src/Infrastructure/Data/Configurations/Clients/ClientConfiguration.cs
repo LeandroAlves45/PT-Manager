@@ -1,5 +1,6 @@
 using Domain.Entities.Clients;
 using Domain.Entities.Identity;
+using Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,7 +14,7 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
         builder.ToTable("clients", table =>
         {
             table.HasCheckConstraint("ck_clients_sex",
-                "sex IS NULL OR sex IN ('M', 'F', 'Other')");
+                "sex IN ('male', 'female')");
         });
 
         builder.HasKey(client => client.Id);
@@ -24,8 +25,20 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
         builder.Property(client => client.ContactEmail).HasColumnName("contact_email").HasMaxLength(255);
         builder.Property(client => client.NormalizedContactEmail).HasColumnName("normalized_contact_email").HasMaxLength(255);
         builder.Property(client => client.Phone).HasColumnName("phone").HasMaxLength(32).IsRequired();
-        builder.Property(client => client.BirthDate).HasColumnName("birth_date").HasColumnType("date");
-        builder.Property(client => client.Sex).HasColumnName("sex").HasMaxLength(20);
+        builder.Property(client => client.BirthDate)
+            .HasColumnName("date_of_birth")
+            .HasColumnType("date")
+            .HasConversion(
+                birthDate => birthDate.Value,
+                value => BirthDate.FromPersisted(value))
+            .IsRequired();
+        builder.Property(client => client.Sex)
+            .HasColumnName("sex")
+            .HasMaxLength(6)
+            .HasConversion(
+                sex => sex.Value,
+                value => BiologicalSex.FromString(value))
+            .IsRequired();
         builder.Property(client => client.Objective).HasColumnName("objective").HasMaxLength(255);
         builder.Property(client => client.Notes).HasColumnName("notes");
         builder.Property(client => client.EmergencyContactName).HasColumnName("emergency_contact_name").HasMaxLength(255);
@@ -33,8 +46,14 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
         builder.Property(client => client.AvatarUrl).HasColumnName("avatar_url").HasMaxLength(500);
         builder.Property(client => client.IsActive).HasColumnName("is_active").HasDefaultValue(true).IsRequired();
         builder.Property(client => client.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false).IsRequired();
-        builder.Property(client => client.CreatedAt).HasColumnName("created_at").IsRequired();
-        builder.Property(client => client.UpdatedAt).HasColumnName("updated_at").IsRequired();
+        builder.Property(client => client.CreatedAt)
+            .HasColumnName("created_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
+        builder.Property(client => client.UpdatedAt)
+            .HasColumnName("updated_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
 
         builder.HasIndex(client => client.OwnerTrainerId)
             .HasDatabaseName("idx_clients_owner_trainer");

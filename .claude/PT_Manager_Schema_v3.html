@@ -378,7 +378,7 @@
                 <!-- Overview Tab -->
                 <div id="overview" class="tab-content active">
                     <h1>PT Manager — Schema da Base de Dados</h1>
-                    <p>28 tabelas da aplicação + <code>__EFMigrationsHistory</code>, total 29, PostgreSQL 16 (Neon), modeladas para EF Core 10. IDs em <code>uuid</code> nativo gerados na aplicação (<code>Guid.NewGuid()</code>), multi-tenancy via raízes com <code>owner_trainer_id</code> e filhas ligadas à raiz, timestamps sempre <code>TIMESTAMPTZ</code>, migrations geradas com <code>dotnet ef migrations add</code> — nunca escritas à mão.</p>
+                    <p>28 tabelas da aplicação + <code>__EFMigrationsHistory</code>, total 29, PostgreSQL 17 (Neon), modeladas para EF Core 10. IDs em <code>uuid</code> nativo gerados na aplicação (<code>Guid.NewGuid()</code>), multi-tenancy via raízes com <code>owner_trainer_id</code> e filhas ligadas à raiz, timestamps sempre <code>TIMESTAMPTZ</code>, migrations geradas com <code>dotnet ef migrations add</code> — nunca escritas à mão.</p>
 
                     <div class="info-box">
                         Os Global Query Filters são centralizados no <code>PtManagerDbContext</code>, exigem tenant presente e usam subqueries pelas FKs escalares para proteger também queries diretas às entidades filhas. Estão ligados a <code>ITenantContext</code>, nunca a <code>HttpContext</code>. Roles: <code>superuser</code>, <code>trainer</code>, <code>client</code>.

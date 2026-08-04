@@ -50,26 +50,26 @@ internal sealed class CheckInConfiguration : IEntityTypeConfiguration<CheckIn>
         builder.ComplexProperty(c => c.BodyMeasurements, bm =>
         {
             bm.ToJson("body_measurements").HasColumnType("jsonb");
-            bm.Property(b => b.WaistCm).HasColumnName("waist_cm").HasPrecision(10, 2);
-            bm.Property(b => b.HipCm).HasColumnName("hip_cm").HasPrecision(10, 2);
-            bm.Property(b => b.ChestCm).HasColumnName("chest_cm").HasPrecision(10, 2);
-            bm.Property(b => b.RightArmCm).HasColumnName("right_arm_cm").HasPrecision(10, 2);
-            bm.Property(b => b.LeftArmCm).HasColumnName("left_arm_cm").HasPrecision(10, 2);
-            bm.Property(b => b.RightThighCm).HasColumnName("right_thigh_cm").HasPrecision(10, 2);
-            bm.Property(b => b.LeftThighCm).HasColumnName("left_thigh_cm").HasPrecision(10, 2);
-            bm.Property(b => b.RightCalfCm).HasColumnName("right_calf_cm").HasPrecision(10, 2);
-            bm.Property(b => b.LeftCalfCm).HasColumnName("left_calf_cm").HasPrecision(10, 2);
+            bm.Property(b => b.WaistCm).HasJsonPropertyName("waist_cm").HasPrecision(10, 2);
+            bm.Property(b => b.HipCm).HasJsonPropertyName("hip_cm").HasPrecision(10, 2);
+            bm.Property(b => b.ChestCm).HasJsonPropertyName("chest_cm").HasPrecision(10, 2);
+            bm.Property(b => b.RightArmCm).HasJsonPropertyName("right_arm_cm").HasPrecision(10, 2);
+            bm.Property(b => b.LeftArmCm).HasJsonPropertyName("left_arm_cm").HasPrecision(10, 2);
+            bm.Property(b => b.RightThighCm).HasJsonPropertyName("right_thigh_cm").HasPrecision(10, 2);
+            bm.Property(b => b.LeftThighCm).HasJsonPropertyName("left_thigh_cm").HasPrecision(10, 2);
+            bm.Property(b => b.RightCalfCm).HasJsonPropertyName("right_calf_cm").HasPrecision(10, 2);
+            bm.Property(b => b.LeftCalfCm).HasJsonPropertyName("left_calf_cm").HasPrecision(10, 2);
         });
 
         builder.ComplexProperty(c => c.Feedback, fb =>
         {
             fb.ToJson("feedback").HasColumnType("jsonb");
-            fb.Property(f => f.Appetite).HasColumnName("appetite");
-            fb.Property(f => f.Digestion).HasColumnName("digestion");
-            fb.Property(f => f.TrainingLoad).HasColumnName("training_load");
-            fb.Property(f => f.RecoverySleep).HasColumnName("recovery_sleep");
-            fb.Property(f => f.EnergyLevels).HasColumnName("energy_levels");
-            fb.Property(f => f.BodyResponse).HasColumnName("body_response");
+            fb.Property(f => f.Appetite).HasJsonPropertyName("appetite");
+            fb.Property(f => f.Digestion).HasJsonPropertyName("digestion");
+            fb.Property(f => f.TrainingLoad).HasJsonPropertyName("training_load");
+            fb.Property(f => f.RecoverySleep).HasJsonPropertyName("recovery_sleep");
+            fb.Property(f => f.EnergyLevels).HasJsonPropertyName("energy_levels");
+            fb.Property(f => f.BodyResponse).HasJsonPropertyName("body_response");
         });
 
         builder.Property(c => c.TrainingAdherenceScore)

@@ -22,6 +22,7 @@ public class Food
     /// <summary>Kcal calculadas (protein * 4 + carbs * 4 + fats * 9). Coluna gerada -> só leitura.</summary>
     public decimal Kcal { get; private set; }
     public decimal? Fiber { get; private set; }
+    public bool IsActive { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -51,6 +52,7 @@ public class Food
         Carbs = carbs;
         Fats = fats;
         Fiber = fiber;
+        IsActive = true;
         IsDeleted = false;
         CreatedAt = now;
         UpdatedAt = now;
@@ -80,9 +82,18 @@ public class Food
         UpdatedAt = now;
     }
 
+    /// <summary>Controla a disponibilidade sem eliminar referências históricas.</summary>
+    public void SetActive(bool isActive, DateTime now)
+    {
+        EnsureNotDeleted();
+        IsActive = isActive;
+        UpdatedAt = now;
+    }
+
     /// <summary>Marca o alimento como apagado (soft delete).</summary>
     public void SoftDelete(DateTime now)
     {
+        IsActive = false;
         IsDeleted = true;
         UpdatedAt = now;
     }
@@ -98,7 +109,7 @@ public class Food
     {
         if (name.Length is 0 or > 255)
             throw new DomainException("Food name must contain between 1 and 255 characters.");
-        if (protein is < 0 or 100 || carbs is < 0 or > 100 || fats is < 0 or > 100)
+        if (protein is < 0 or > 100 || carbs is < 0 or > 100 || fats is < 0 or > 100)
             throw new DomainException(
                 "Each macronutrient must be between 0 and 100 grams per 100 grams of food."
             );

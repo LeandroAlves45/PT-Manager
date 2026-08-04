@@ -921,6 +921,36 @@ Pertencem a fases posteriores:
    futura exige análise própria e não deve ser inferida a partir de dados de
    avaliação.
 
+## 17.2 Decisões nutricionais anteriores à InitialCreate
+
+O cálculo nutricional é um serviço puro do Domain. `Client` e
+`InitialAssessment` fornecem apenas sugestões editáveis. `CheckIn` nunca
+recalcula um `MealPlan`.
+
+Cada `MealPlan` guarda alvos relacionais e um `calculation_snapshot` JSONB
+obrigatório. O agregado deriva os alvos relacionais do snapshot para impedir
+divergências.
+
+Fórmulas de energia suportadas:
+
+1. Harris-Benedict revista de 1984.
+2. Mifflin-St Jeor de 1990.
+3. Cunningham de 1980, com massa livre de gordura derivada do peso e da
+   percentagem de gordura.
+4. Tinsley por peso corporal de 2018.
+
+Modos de distribuição de macronutrientes:
+
+1. `percentage`, com total exato de 100,00%.
+2. `grams_per_kg`, com proteína e gordura explícitas e hidratos residuais.
+3. `manual_grams`, com diferença energética absoluta máxima de 100 kcal.
+
+`ClientSupplementAssignment` pertence ao tenant. As leituras usam Global Query
+Filter, as escritas validam `OwnerTrainerId` e a FK composta garante que o
+`Client` pertence ao mesmo tenant. A referência a `Supplement` aceita itens do
+catálogo global ou privados do trainer efetivo e rejeita itens apagados ou
+privados de outro tenant.
+
 ## 18. Referências oficiais
 
 1. [.NET releases and support](https://learn.microsoft.com/dotnet/core/releases-and-support)

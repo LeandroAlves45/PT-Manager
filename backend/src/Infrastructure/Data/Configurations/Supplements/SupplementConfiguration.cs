@@ -36,7 +36,26 @@ internal sealed class SupplementConfiguration : IEntityTypeConfiguration<Supplem
 
         builder.Property(s => s.UnitOfMeasure)
             .HasColumnName("unit_of_measure")
-            .HasMaxLength(50);
+            .HasMaxLength(50)
+            .IsRequired();
+
+        builder.Property(s => s.ServingSize)
+            .HasColumnName("serving_size")
+            .HasMaxLength(100)
+            .IsRequired();
+
+        builder.Property(s => s.Timing)
+            .HasColumnName("timing")
+            .HasMaxLength(255)
+            .IsRequired();
+
+        builder.Property(s => s.TrainerNotes)
+            .HasColumnName("trainer_notes");
+
+        builder.Property(s => s.IsActive)
+            .HasColumnName("is_active")
+            .HasDefaultValue(true)
+            .IsRequired();
 
         builder.Property(s => s.IsDeleted)
             .HasColumnName("is_deleted")

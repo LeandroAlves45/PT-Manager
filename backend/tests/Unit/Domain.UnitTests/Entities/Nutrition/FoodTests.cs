@@ -51,4 +51,18 @@ public sealed class FoodTests
         Assert.Throws<DomainException>(() =>
             food.Update("Brown rice", null, 2.7m, 25.6m, 1m, null, now));
     }
+
+    [Fact]
+    public void SoftDelete_ActiveFood_DeactivatesAndDeletesFood()
+    {
+        // Arrange
+        var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
+        var food = new Food(null, "Rice", null, 2.7m, 28, 0.3m, null, now);
+
+        // Act
+        food.SoftDelete(now.AddMinutes(1));
+
+        // Assert
+        Assert.Equal((false, true), (food.IsActive, food.IsDeleted));
+    }
 }

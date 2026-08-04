@@ -9,38 +9,76 @@ public sealed class ClientSupplementAssignmentTests
     private static readonly DateTime Now = new(2026, 8, 1, 10, 0, 0, DateTimeKind.Utc);
 
     [Fact]
-    public void Constructor_NormalizesPrescription()
+    public void Constructor_WithValidInstructions_CreatesActiveAssignment()
     {
         // Arrange
-        var assignment = new ClientSupplementAssignment(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            " 5g ",
-            " after workout ",
-            null,
-            Now
-        );
+        var assignment = CreateAssignment();
 
         // Assert
-        Assert.Equal(("5g", "after workout"), (assignment.Dose, assignment.TimingNotes));
+        Assert.Equal("5 g", assignment.ServingSize);
+        Assert.Equal("After training", assignment.Timing);
+        Assert.True(assignment.IsActive);
+        Assert.False(assignment.IsDeleted);
     }
 
-    [Fact]
-    public void Constructor_WhenDoseExceedsLimit_ThrowsDomainException()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Constructor_WithoutServingSize_ThrowsDomainException(string? value)
     {
-        // Arrange
+        // Act & Assert
         var action = () => new ClientSupplementAssignment(
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
-            new string('a', 101),
+            value!,
+            "After training",
             null,
-            null,
-            Now
-        );
+            Now);
 
-        // Act & Assert
+        // Assert
         Assert.Throws<DomainException>(action);
     }
+
+    [Fact]
+    public void SoftDelete_DeactivatesAssignment()
+    {
+        // Arrange
+        var assignment = CreateAssignment();
+
+        // Act
+        assignment.SoftDelete(Now.AddMinutes(1));
+
+        // Assert
+        Assert.True(assignment.IsDeleted);
+        Assert.False(assignment.IsActive);
+    }
+
+    [Fact]
+    public void UpdateInstructions_AfterSoftDelete_ThrowsDomainException()
+    {
+        // Arrange
+        var assignment = CreateAssignment();
+        assignment.SoftDelete(Now.AddMinutes(1));
+
+        // Act & Assert
+        var action = () => assignment.UpdateInstructions(
+            "10 g",
+            "With breakfast",
+            null,
+            Now.AddMinutes(2));
+
+        Assert.Throws<DomainException>(action);
+    }
+
+    private static ClientSupplementAssignment CreateAssignment() =>
+        new(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "5 g",
+            "After training",
+            "Drink with water",
+            Now);
 }

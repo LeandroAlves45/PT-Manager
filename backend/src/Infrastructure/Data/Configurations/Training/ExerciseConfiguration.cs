@@ -45,6 +45,11 @@ internal sealed class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
             .HasColumnName("video_url")
             .HasMaxLength(500);
 
+        builder.Property(e => e.IsActive)
+            .HasColumnName("is_active")
+            .HasDefaultValue(true)
+            .IsRequired();
+
         builder.Property(e => e.IsDeleted)
             .HasColumnName("is_deleted")
             .HasDefaultValue(false);

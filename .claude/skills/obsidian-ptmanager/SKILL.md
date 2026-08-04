@@ -56,7 +56,7 @@ Example MEMORY.md:
 **Project:** SaaS for personal trainers (clients, sessions, plans, nutrition, billing)
 **Language:** C# .NET 10 (backend rewrite from Python), React 19 (frontend)
 **Architecture:** Clean Architecture, modular monolith, organized by feature
-**Database:** PostgreSQL 16 (Neon), EF Core 10, multi-tenancy via `owner_trainer_id` + Global Query Filters
+**Database:** PostgreSQL 17 (Neon), EF Core 10, multi-tenancy via `owner_trainer_id` + Global Query Filters
 
 ## Current Status
 - **Sprint:** Sprint 1 (Domain Layer)

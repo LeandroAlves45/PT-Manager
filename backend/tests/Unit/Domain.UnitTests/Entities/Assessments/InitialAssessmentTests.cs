@@ -88,7 +88,7 @@ public sealed class InitialAssessmentTests
     }
 
     [Fact]
-    public void Update_ReplacesNewAssesmentFields()
+    public void Update_ReplacesNewAssessmentFields()
     {
         // Arrange
         var assessment = CreateValid();

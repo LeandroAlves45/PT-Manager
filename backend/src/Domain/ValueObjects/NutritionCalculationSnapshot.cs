@@ -31,7 +31,7 @@ public sealed class NutritionCalculationSnapshot
     public decimal? TotalDailyEnergyExpenditureKcal { get; private set; }
     public decimal TargetKcal { get; private set; }
 
-    public MacroDistributionMode MacroDistributionMode { get; private set; }
+    public string MacroDistributionMode { get; private set; } = null!;
     public decimal? ProteinPercentageInput { get; private set; }
     public decimal? CarbsPercentageInput { get; private set; }
     public decimal? FatsPercentageInput { get; private set; }
@@ -61,7 +61,7 @@ public sealed class NutritionCalculationSnapshot
 
         if (macros.TargetKcal != energy.TargetKcal)
             throw new DomainException("Macro and energy calculations must use the same target kcal.");
-        if (macros.Mode == MacroDistributionMode.GramsPerKg &&
+        if (macros.Mode == Domain.ValueObjects.MacroDistributionMode.GramsPerKg &&
             macros.WeightUsedForMacros != energy.Input.WeightKg)
             throw new DomainException("Energy and grams-per-kg calculations must use the same weight.");
 
@@ -98,7 +98,7 @@ public sealed class NutritionCalculationSnapshot
             throw new DomainException("Weight used must be greater than zero.");
 
         ArgumentNullException.ThrowIfNull(macros);
-        if (macros.Mode == MacroDistributionMode.GramsPerKg &&
+        if (macros.Mode == Domain.ValueObjects.MacroDistributionMode.GramsPerKg &&
             macros.WeightUsedForMacros != weightKgUsed)
             throw new DomainException("Snapshot and grams-per-kg calculation must use the same weight.");
 
@@ -169,7 +169,7 @@ public sealed class NutritionCalculationSnapshot
             RestingEnergyExpenditureKcal = RoundNullable(restingEnergy),
             TotalDailyEnergyExpenditureKcal = RoundNullable(totalDailyEnergy),
             TargetKcal = targetKcal,
-            MacroDistributionMode = macros.Mode,
+            MacroDistributionMode = macros.Mode.ToKey(),
             ProteinPercentageInput = RoundNullable(macros.ProteinPercentageInput),
             CarbsPercentageInput = RoundNullable(macros.CarbsPercentageInput),
             FatsPercentageInput = RoundNullable(macros.FatsPercentageInput),

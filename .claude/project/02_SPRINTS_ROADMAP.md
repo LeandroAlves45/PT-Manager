@@ -29,7 +29,7 @@ Preparação técnica. Zero código novo de domínio.
 2. **Ambiente Local**
    - .NET 10 SDK instalado
    - Visual Studio 2026 ou VS Code + C# Dev Kit
-   - PostgreSQL 16 local (ou Neon branch de teste)
+   - PostgreSQL 17 local (ou Neon branch de teste)
    - Docker (para Testcontainers)
    - Conta Upstash (Redis + QStash) em modo dev/free
 
@@ -179,6 +179,12 @@ implementados:
      `docs/backend-files/sprint_2_every/sprint_2_newTables/`, incluindo Domain,
      28 DbSets/configurações, interceptor, testes unitários e Testcontainers.
    - Confirmar 28 tabelas da aplicação e `__EFMigrationsHistory`, total 29.
+   - Corrigir `Client`, `InitialAssessment`, `Food` e `MealPlan` e implementar o
+     núcleo puro de cálculo nutricional com testes unitários e de metadata.
+   - Manter a migration bloqueada até existirem 28 entidades mapeadas, metadata
+     verde e testes PostgreSQL de isolamento, constraints, jobs e outbox.
+   - Diferir handlers, preview, persistência por casos de uso e endpoints para o
+     Sprint 3.
 
 5. **Limite do Sprint 2**
    - Não implementar neste gate handlers, DTOs, Controllers ou frontend para os

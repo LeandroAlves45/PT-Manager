@@ -1,0 +1,26 @@
+name: ptmanager-local
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: ptmanager-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PTMANAGER_DB}
+      POSTGRES_USER: ${PTMANAGER_DB_USER}
+      POSTGRES_PASSWORD: ${PTMANAGER_DB_PASSWORD}
+    ports:
+      - "127.0.0.1:5437:5432"
+    volumes:
+      - ptmanager_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${PTMANAGER_DB_USER} -d ${PTMANAGER_DB}
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  ptmanager_postgres_data:

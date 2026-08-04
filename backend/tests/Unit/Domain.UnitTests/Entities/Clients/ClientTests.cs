@@ -110,12 +110,11 @@ public sealed class ClientTests
     [Fact]
     public void Constructor_WhenPersistedBirthDateIsInTheFuture_ThrowsDomainException()
     {
-        var futureBirthDate = BirthDate.FromPersisted(new DateOnly(2026, 8, 2));
         // Arrange
-        var action = () => CreateClient(futureBirthDate, BiologicalSex.Male);
+        var futureBirthDate = BirthDate.FromPersisted(new DateOnly(2026, 8, 5));
 
         // Act & Assert
-        Assert.Throws<DomainException>(action);
+        Assert.Throws<DomainException>(() => CreateClient(futureBirthDate, BiologicalSex.Male));
     }
 
     [Fact]

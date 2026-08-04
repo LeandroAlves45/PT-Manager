@@ -9,9 +9,11 @@ public class ClientSupplementAssignment
     public Guid OwnerTrainerId { get; private set; }
     public Guid ClientId { get; private set; }
     public Guid SupplementId { get; private set; }
-    public string? Dose { get; private set; }
-    public string? TimingNotes { get; private set; }
-    public string? Notes { get; private set; }
+    public string ServingSize { get; private set; } = null!;
+    public string Timing { get; private set; } = null!;
+    public string? TrainerNotes { get; private set; }
+    public bool IsActive { get; private set; }
+    public bool IsDeleted { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -22,9 +24,9 @@ public class ClientSupplementAssignment
         Guid ownerTrainerId,
         Guid clientId,
         Guid supplementId,
-        string? dose,
-        string? timingNotes,
-        string? notes,
+        string servingSize,
+        string timing,
+        string? trainerNotes,
         DateTime now
     )
     {
@@ -35,33 +37,66 @@ public class ClientSupplementAssignment
         OwnerTrainerId = ownerTrainerId;
         ClientId = clientId;
         SupplementId = supplementId;
-        SetInstructions(dose, timingNotes, notes);
+        SetInstructions(servingSize, timing, trainerNotes);
+        IsActive = true;
+        IsDeleted = false;
         CreatedAt = now;
         UpdatedAt = now;
     }
 
     /// <summary>Atualiza apenas a prescrição específica do cliente.</summary>
     public void UpdateInstructions(
-        string? dose,
-        string? timingNotes,
-        string? notes,
+        string servingSize,
+        string timing,
+        string? trainerNotes,
         DateTime now
     )
     {
-        SetInstructions(dose, timingNotes, notes);
+        EnsureNotDeleted();
+        SetInstructions(servingSize, timing, trainerNotes);
         UpdatedAt = now;
     }
 
-    private void SetInstructions(string? dose, string? timingNotes, string? notes)
+    public void Deactivate(DateTime now)
     {
-        if (dose is { Length: > 100 } || timingNotes is { Length: > 500 })
-            throw new DomainException("Supplement assignment fields exceed their maximum length.");
+        EnsureNotDeleted();
+        IsActive = false;
+        UpdatedAt = now;
+    }
 
-        Dose = NormalizeOptional(dose);
-        TimingNotes = NormalizeOptional(timingNotes);
-        Notes = NormalizeOptional(notes);
+    public void Reactivate(DateTime now)
+    {
+        EnsureNotDeleted();
+        IsActive = true;
+        UpdatedAt = now;
+    }
+
+    public void SoftDelete(DateTime now)
+    {
+        IsDeleted = true;
+        IsActive = false;
+        UpdatedAt = now;
+    }
+
+    private void SetInstructions(string servingSize, string timing, string? trainerNotes)
+    {
+        var normalizedServingSize = servingSize?.Trim() ?? string.Empty;
+        var normalizedTiming = timing?.Trim() ?? string.Empty;
+        if (normalizedServingSize.Length is 0 or > 100)
+            throw new DomainException("Serving size must contain between 1 and 100 characters.");
+        if (normalizedTiming.Length is 0 or > 255)
+            throw new DomainException("Timing must contain between 1 and 255 characters.");
+
+        ServingSize = normalizedServingSize;
+        Timing = normalizedTiming;
+        TrainerNotes = NormalizeOptional(trainerNotes);
     }
 
     private static string? NormalizeOptional(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    private void EnsureNotDeleted()
+    {
+        if (IsDeleted)
+            throw new DomainException("Cannot modify a deleted supplement assignment.");
+    }
 }

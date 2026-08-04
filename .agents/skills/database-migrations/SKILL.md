@@ -35,7 +35,7 @@ Especialista em gestão de schema via migrations do Entity Framework Core, para 
 - Testar o rollback localmente antes de considerar a migration pronta (`dotnet ef database update NomeDaMigrationAnterior`)
 
 ### Schema Consistente Dev/Produção
-- PostgreSQL 16 em ambos os ambientes (local ou Neon branch de teste)
+- PostgreSQL 17 em ambos os ambientes (local ou Neon branch de teste)
 - Mesmas migrations correm em ambos, testadas num branch Neon antes de produção
 
 ### Índices Acompanham o Padrão de Acesso

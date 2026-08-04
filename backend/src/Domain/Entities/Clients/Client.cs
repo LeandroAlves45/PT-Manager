@@ -55,7 +55,7 @@ public class Client
         OwnerTrainerId = ownerTrainerId;
         UserId = null;
         SetProfile(name, contactEmail, phone, birthDate, sex, objective, notes,
-            emergencyContactName, emergencyContactPhone);
+            emergencyContactName, emergencyContactPhone, DateOnly.FromDateTime(now));
         IsActive = true;
         IsDeleted = false;
         CreatedAt = now;
@@ -77,7 +77,7 @@ public class Client
     {
         EnsureNotDeleted();
         SetProfile(name, contactEmail, phone, birthDate, sex, objective, notes,
-            emergencyContactName, emergencyContactPhone);
+            emergencyContactName, emergencyContactPhone, DateOnly.FromDateTime(now));
         UpdatedAt = now;
     }
 
@@ -143,7 +143,8 @@ public class Client
         string? objective,
         string? notes,
         string? emergencyContactName,
-        string? emergencyContactPhone
+        string? emergencyContactPhone,
+        DateOnly today
     )
     {
         var normalizedName = name?.Trim() ?? string.Empty;
@@ -158,6 +159,8 @@ public class Client
             throw new DomainException("Client phone must contain between 1 and 32 characters.");
         if (birthDate is null)
             throw new DomainException("Birth date is required.");
+        if (birthDate.Value > today)
+            throw new DomainException("Birth date cannot be in the future.");
         if (sex is null)
             throw new DomainException("Biological sex is required.");
         if (normalizedObjective is { Length: > 255 })

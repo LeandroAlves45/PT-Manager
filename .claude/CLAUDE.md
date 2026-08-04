@@ -8,7 +8,7 @@ Backend em reescrita completa: Python 3.12/FastAPI/SQLModel → **C# 14 / .NET 1
 
 Frontend: React 19, Vite 7, Tailwind CSS 4, Chakra UI + shadcn/ui (páginas `.jsx`, UI em `.tsx`) — inalterado pela migração do backend.
 
-Deploy (MVP, todos free tier): Render (backend) + Vercel (frontend) + Neon (PostgreSQL 16) + Upstash (Redis + QStash).
+Deploy (MVP, todos free tier): Render (backend) + Vercel (frontend) + Neon (PostgreSQL 17) + Upstash (Redis + QStash).
 
 Graph location: C:\Users\Leandro Alves\Desktop\Projeto pt_manager\Projeto_pt_manager\graphify-out
 

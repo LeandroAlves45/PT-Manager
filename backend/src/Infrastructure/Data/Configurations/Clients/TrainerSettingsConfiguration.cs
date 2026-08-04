@@ -61,6 +61,12 @@ internal sealed class TrainerSettingsConfiguration : IEntityTypeConfiguration<Tr
             .HasColumnName("city")
             .HasMaxLength(255);
 
+        builder.Property(settings => settings.Timezone)
+            .HasColumnName("time_zone_id")
+            .HasMaxLength(100)
+            .HasDefaultValue("Europe/Lisbon")
+            .IsRequired();
+
         builder.HasIndex(settings => settings.TrainerId)
             .HasDatabaseName("idx_settings_trainer")
             .IsUnique();

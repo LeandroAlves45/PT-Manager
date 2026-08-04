@@ -31,8 +31,26 @@ internal sealed class ClientSessionPackConfiguration : IEntityTypeConfiguration<
             .HasColumnName("pack_type_id")
             .IsRequired();
 
+        builder.Property(csp => csp.PackName)
+            .HasColumnName("pack_name")
+            .HasMaxLength(255)
+            .IsRequired();
+
+        builder.Property(csp => csp.SessionsTotal)
+            .HasColumnName("total_sessions")
+            .IsRequired();
+
         builder.Property(csp => csp.SessionsRemaining)
             .HasColumnName("sessions_remaining")
+            .IsRequired();
+
+        builder.Property(csp => csp.PriceCents)
+            .HasColumnName("price_cents")
+            .IsRequired();
+
+        builder.Property(csp => csp.Currency)
+            .HasColumnName("currency")
+            .HasMaxLength(3)
             .IsRequired();
 
         builder.Property(csp => csp.PurchaseDate)
@@ -61,11 +79,23 @@ internal sealed class ClientSessionPackConfiguration : IEntityTypeConfiguration<
         builder.ToTable(t =>
         {
             t.HasCheckConstraint("sessions_remaining_non_negative", "sessions_remaining >= 0");
+            t.HasCheckConstraint(
+                "pack_sessions_consistent",
+                "total_sessions > 0 AND sessions_remaining <= total_sessions");
+            t.HasCheckConstraint("pack_snapshot_price_non_negative", "price_cents >= 0");
             t.HasCheckConstraint("pack_expiry_order", "expiry_date IS NULL OR expiry_date >= purchase_date");
         });
 
         builder.HasIndex(csp => csp.OwnerTrainerId).HasDatabaseName("idx_client_packs_trainer");
         builder.HasIndex(csp => csp.ClientId).HasDatabaseName("idx_client_packs_client");
+        builder.HasIndex(csp => new
+        {
+            csp.OwnerTrainerId,
+            csp.ClientId,
+            csp.ExpirationDate,
+        })
+            .HasDatabaseName("idx_client_packs_usable")
+            .HasFilter("sessions_remaining > 0 AND is_deleted = false");
 
         builder.HasOne<User>()
             .WithMany()
@@ -83,7 +113,7 @@ internal sealed class ClientSessionPackConfiguration : IEntityTypeConfiguration<
             .WithMany()
             .HasForeignKey(csp => new { csp.OwnerTrainerId, csp.PackTypeId })
             .HasPrincipalKey(pt => new { pt.OwnerTrainerId, pt.Id })
-            .OnDelete(DeleteBehavior.Cascade)
+            .OnDelete(DeleteBehavior.Restrict)
             .HasConstraintName("fk_client_session_packs_pack_type_tenant");
     }
 }

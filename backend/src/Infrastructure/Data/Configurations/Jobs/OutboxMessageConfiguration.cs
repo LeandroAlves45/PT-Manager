@@ -49,8 +49,7 @@ internal sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outb
             .IsRequired();
 
         builder.Property(m => m.CompletedAt)
-            .HasColumnName("completed_at")
-            .IsRequired();
+            .HasColumnName("completed_at");
 
         builder.Property(m => m.IdempotencyKey)
             .HasColumnName("idempotency_key")

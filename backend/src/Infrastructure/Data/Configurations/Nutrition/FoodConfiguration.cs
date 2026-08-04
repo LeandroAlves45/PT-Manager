@@ -11,7 +11,12 @@ internal sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
     public void Configure(EntityTypeBuilder<Food> builder)
     {
         builder.ToTable("foods", table => table.HasCheckConstraint(
-            "ck_foods_nutrients", "protein >= 0 AND carbs >= 0 AND fats >= 0 AND (fiber IS NULL OR fiber >= 0)"));
+            "ck_foods_nutrients_per_100g",
+            "protein BETWEEN 0 AND 100 " +
+            "AND carbs BETWEEN 0 AND 100 " +
+            "AND fats BETWEEN 0 AND 100 " +
+            "AND protein + carbs + fats <= 100 " +
+            "AND (fiber IS NULL OR fiber >= 0)"));
         builder.HasKey(food => food.Id);
         builder.Property(food => food.Id).HasColumnName("id").ValueGeneratedNever();
         builder.Property(food => food.OwnerTrainerId).HasColumnName("owner_trainer_id");
@@ -25,9 +30,19 @@ internal sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
             .HasPrecision(10, 2)
             .HasComputedColumnSql("protein * 4 + carbs * 4 + fats * 9", stored: true);
         builder.Property(food => food.Fiber).HasColumnName("fiber").HasPrecision(10, 2);
+        builder.Property(food => food.IsActive)
+            .HasColumnName("is_active")
+            .HasDefaultValue(true)
+            .IsRequired();
         builder.Property(food => food.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false).IsRequired();
-        builder.Property(food => food.CreatedAt).HasColumnName("created_at").IsRequired();
-        builder.Property(food => food.UpdatedAt).HasColumnName("updated_at").IsRequired();
+        builder.Property(food => food.CreatedAt)
+            .HasColumnName("created_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
+        builder.Property(food => food.UpdatedAt)
+            .HasColumnName("updated_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
 
         builder.HasIndex(food => new { food.OwnerTrainerId, food.Name })
             .HasDatabaseName("idx_foods_owner_name");

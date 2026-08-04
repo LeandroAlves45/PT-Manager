@@ -9,7 +9,7 @@ metadata:
 
 # PostgreSQL + EF Core Best Practices — PT Manager
 
-Guia de performance PostgreSQL para o stack C# do PT Manager (ASP.NET Core + EF Core 10 + Npgsql + PostgreSQL 16/Neon).
+Guia de performance PostgreSQL para o stack C# do PT Manager (ASP.NET Core + EF Core 10 + Npgsql + PostgreSQL 17/Neon).
 
 ## Quando Aplicar
 

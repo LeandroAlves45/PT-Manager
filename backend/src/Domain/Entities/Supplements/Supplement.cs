@@ -17,10 +17,11 @@ public class Supplement
     public string Name { get; private set; } = null!;
     public string? Description { get; private set; }
     /// <summary>Unidade de medida: "grams", "ml", "capsules", etc.</summary>
-    public string? UnitOfMeasure { get; private set; }
-    public string? ServingSize { get; private set; }
-    public string? Timing { get; private set; }
+    public string UnitOfMeasure { get; private set; } = null!;
+    public string ServingSize { get; private set; } = null!;
+    public string Timing { get; private set; } = null!;
     public string? TrainerNotes { get; private set; }
+    public bool IsActive { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -33,9 +34,9 @@ public class Supplement
         Guid? createdByUserId,
         string name,
         string? description,
-        string? unitOfMeasure,
-        string? servingSize,
-        string? timing,
+        string unitOfMeasure,
+        string servingSize,
+        string timing,
         string? trainerNotes,
         DateTime now
     )
@@ -45,6 +46,7 @@ public class Supplement
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
         CreatedByUserId = createdByUserId;
+        IsActive = true;
         IsDeleted = false;
         CreatedAt = now;
         UpdatedAt = now;
@@ -54,9 +56,9 @@ public class Supplement
     public void Update(
         string name,
         string? description,
-        string? unitOfMeasure,
-        string? servingSize,
-        string? timing,
+        string unitOfMeasure,
+        string servingSize,
+        string timing,
         string? trainerNotes,
         DateTime now
     )
@@ -66,9 +68,18 @@ public class Supplement
         UpdatedAt = now;
     }
 
+    /// <summary>Controla a disponibilidade sem eliminar referências históricas.</summary>
+    public void SetActive(bool isActive, DateTime now)
+    {
+        EnsureNotDeleted();
+        IsActive = isActive;
+        UpdatedAt = now;
+    }
+
     /// <summary>Soft delete do suplemento.</summary>
     public void SoftDelete(DateTime now)
     {
+        IsActive = false;
         IsDeleted = true;
         UpdatedAt = now;
     }
@@ -77,24 +88,31 @@ public class Supplement
     private void SetFields(
         string name,
         string? description,
-        string? unitOfMeasure,
-        string? servingSize,
-        string? timing,
+        string unitOfMeasure,
+        string servingSize,
+        string timing,
         string? trainerNotes
     )
     {
         var normalizedName = name?.Trim() ?? string.Empty;
+        var normalizedUnit = unitOfMeasure?.Trim() ?? string.Empty;
+        var normalizedServingSize = servingSize?.Trim() ?? string.Empty;
+        var normalizedTiming = timing?.Trim() ?? string.Empty;
+
         if (normalizedName.Length is 0 or > 255)
             throw new DomainException("Supplement name must be between 1 and 255 characters.");
-        if (unitOfMeasure is { Length: > 50 } || servingSize is { Length: > 100 } ||
-            timing is { Length: > 255 })
-            throw new DomainException("Supplement fields exceed their maximum length.");
+        if (normalizedUnit.Length is 0 or > 50)
+            throw new DomainException("Unit of measure must contain between 1 and 50 characters.");
+        if (normalizedServingSize.Length is 0 or > 100)
+            throw new DomainException("Serving size must contain between 1 and 100 characters.");
+        if (normalizedTiming.Length is 0 or > 255)
+            throw new DomainException("Timing must contain between 1 and 255 characters.");
 
         Name = normalizedName;
         Description = NormalizeOptional(description);
-        UnitOfMeasure = NormalizeOptional(unitOfMeasure);
-        ServingSize = NormalizeOptional(servingSize);
-        Timing = NormalizeOptional(timing);
+        UnitOfMeasure = normalizedUnit;
+        ServingSize = normalizedServingSize;
+        Timing = normalizedTiming;
         TrainerNotes = NormalizeOptional(trainerNotes);
     }
 

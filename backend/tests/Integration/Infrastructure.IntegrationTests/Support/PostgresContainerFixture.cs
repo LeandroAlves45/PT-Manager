@@ -17,7 +17,7 @@ namespace Infrastructure.IntegrationTests.Support;
 public sealed class PostgresContainerFixture : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _container =
-        new PostgreSqlBuilder("postgres:16-alpine").Build();
+        new PostgreSqlBuilder("postgres:17-alpine").Build();
 
     public string ConnectionString => _container.GetConnectionString();
 
@@ -26,7 +26,15 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
         await _container.StartAsync();
 
         await using var context = CreateContext(trainerId: null);
-        await context.Database.MigrateAsync();
+        var migrations = context.Database.GetMigrations();
+
+        // Antes da InitialCreate, EnsureCreated permite validar o modelo real no
+        // PostgreSQL. Assim que existirem migrations, o mesmo fixture passa a
+        // validar exclusivamente o caminho que será usado nos ambientes reais.
+        if (migrations.Any())
+            await context.Database.MigrateAsync();
+        else
+            await context.Database.EnsureCreatedAsync();
     }
 
     public async ValueTask DisposeAsync()
@@ -62,13 +70,19 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
             role: "client",
             fullName: "Client Test",
             now);
+
+        // A persistência exige o resultado do PasswordHasher. Nos testes basta
+        // um valor opaco porque autenticação não integra este cenário.
+        trainer.SetPasswordHash("integration-test-password-hash", now);
+        clientUser.SetPasswordHash("integration-test-password-hash", now);
+
         var client = new Client(
             trainer.Id,
             "Client Test",
             clientUser.Email,
             "+351900000000",
-            null,
-            null,
+            BirthDate.Create(new DateOnly(1995, 1, 1), DateOnly.FromDateTime(now)),
+            BiologicalSex.Male,
             null,
             null,
             null,

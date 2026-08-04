@@ -10,7 +10,7 @@
 
 ```
 .NET 10.0 SDK (https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
-PostgreSQL 16 (local) OU Neon account
+PostgreSQL 17 (local) OU Neon account
 Docker (para Testcontainers)
 Visual Studio 2026 / VS Code + C# Dev Kit
 Git

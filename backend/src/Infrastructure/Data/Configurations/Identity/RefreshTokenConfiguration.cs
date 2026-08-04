@@ -52,6 +52,12 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
         builder.HasIndex(token => token.FamilyId).HasDatabaseName("idx_refresh_tokens_family");
         builder.HasIndex(token => token.ExpiresAt).HasDatabaseName("idx_refresh_tokens_expires");
 
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(token => token.UserId)
+            .OnDelete(DeleteBehavior.Cascade)
+            .HasConstraintName("fk_refresh_tokens_user");
+
         // Auto-referência: a cadeia de rotação.
         builder.HasOne<RefreshToken>()
             .WithMany()
