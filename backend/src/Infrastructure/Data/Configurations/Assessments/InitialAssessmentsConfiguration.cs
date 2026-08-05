@@ -67,7 +67,7 @@ internal sealed class InitialAssessmentsConfiguration : IEntityTypeConfiguration
 
         builder.ComplexProperty(ia => ia.BodyMeasurements, bm =>
         {
-            bm.ToJson("body_measurements").HasColumnType("jsonb");
+            bm.ToJson("body_measurements");
             bm.Property(b => b.WaistCm).HasJsonPropertyName("waist_cm").HasPrecision(10, 2);
             bm.Property(b => b.HipCm).HasJsonPropertyName("hip_cm").HasPrecision(10, 2);
             bm.Property(b => b.ChestCm).HasJsonPropertyName("chest_cm").HasPrecision(10, 2);
@@ -81,7 +81,7 @@ internal sealed class InitialAssessmentsConfiguration : IEntityTypeConfiguration
 
         builder.ComplexProperty(ia => ia.NutritionIntake, ni =>
         {
-            ni.ToJson("nutrition_intake").HasColumnType("jsonb");
+            ni.ToJson("nutrition_intake");
             ni.Property(n => n.FoodPreferences).HasJsonPropertyName("food_preferences");
             ni.Property(n => n.DislikedFoods).HasJsonPropertyName("disliked_foods");
             ni.Property(n => n.FoodIntolerances).HasJsonPropertyName("food_intolerances");

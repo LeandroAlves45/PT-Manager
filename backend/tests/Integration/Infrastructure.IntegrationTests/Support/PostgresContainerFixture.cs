@@ -16,8 +16,13 @@ namespace Infrastructure.IntegrationTests.Support;
 /// </summary>
 public sealed class PostgresContainerFixture : IAsyncLifetime
 {
+    public const string InitialCreateMigration = "20260804163659_InitialCreate";
     private readonly PostgreSqlContainer _container =
-        new PostgreSqlBuilder("postgres:17-alpine").Build();
+        new PostgreSqlBuilder("postgres:17-alpine")
+        .WithDatabase("ptmanager_tests")
+        .WithUsername("postgres")
+        .WithPassword("postgres")
+        .Build();
 
     public string ConnectionString => _container.GetConnectionString();
 
@@ -25,57 +30,35 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
     {
         await _container.StartAsync();
 
-        await using var context = CreateContext(trainerId: null);
-        var migrations = context.Database.GetMigrations();
+        await using var context = CreateContext(TestTenantContext.Administrator());
+        var migrations = context.Database.GetMigrations().ToArray();
 
-        // Antes da InitialCreate, EnsureCreated permite validar o modelo real no
-        // PostgreSQL. Assim que existirem migrations, o mesmo fixture passa a
-        // validar exclusivamente o caminho que será usado nos ambientes reais.
-        if (migrations.Any())
-            await context.Database.MigrateAsync();
-        else
-            await context.Database.EnsureCreatedAsync();
+        if (!migrations.Contains(InitialCreateMigration, StringComparer.Ordinal))
+            throw new InvalidOperationException(
+                $"Integration test requires migration {InitialCreateMigration}.");
+
+        // Aplicar todas as migrations mantém o fixture válido quando forem
+        // adicionadas novas migrations, corretivas depois da InitialCreate.
+        await context.Database.MigrateAsync();
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        await _container.DisposeAsync();
-    }
+    public async ValueTask DisposeAsync() => await _container.DisposeAsync();
 
-    public PtManagerDbContext CreateContext(Guid? trainerId)
-    {
-        var tenantContext = new TestTenantContext(trainerId);
-        var interceptor = new TenantWriteValidationInterceptor(tenantContext);
-        var options = new DbContextOptionsBuilder<PtManagerDbContext>()
-            .UseNpgsql(ConnectionString)
-            .AddInterceptors(interceptor)
-            .EnableDetailedErrors()
-            .Options;
+    public PtManagerDbContext CreateContext(Guid? trainerId) =>
+        CreateContext(trainerId.HasValue
+            ? TestTenantContext.ForTrainer(trainerId.Value)
+            : TestTenantContext.WithoutTenant());
 
-        return new PtManagerDbContext(options, tenantContext);
-    }
+    public PtManagerDbContext CreateAdministrativeContext() =>
+        CreateContext(TestTenantContext.Administrator());
 
     public async Task<TestTenantSeed> SeedTenantWithClientAsync(
         string discriminator,
         CancellationToken cancellationToken = default)
     {
         var now = new DateTime(2026, 7, 31, 12, 0, 0, DateTimeKind.Utc);
-        var trainer = new User(
-            new EmailAddress($"trainer-{discriminator}@example.test"),
-            role: "trainer",
-            fullName: "Trainer Test",
-            now);
-        var clientUser = new User(
-            new EmailAddress($"client-{discriminator}@example.test"),
-            role: "client",
-            fullName: "Client Test",
-            now);
-
-        // A persistência exige o resultado do PasswordHasher. Nos testes basta
-        // um valor opaco porque autenticação não integra este cenário.
-        trainer.SetPasswordHash("integration-test-password-hash", now);
-        clientUser.SetPasswordHash("integration-test-password-hash", now);
-
+        var trainer = CreateUser($"trainer-{discriminator}@example.test", "trainer", now);
+        var clientUser = CreateUser($"client-{discriminator}@example.test", "client", now);
         var client = new Client(
             trainer.Id,
             "Client Test",
@@ -95,31 +78,54 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
         context.Clients.Add(client);
         await context.SaveChangesAsync(cancellationToken);
 
-        return new TestTenantSeed(trainer.Id, client.Id);
+        return new TestTenantSeed(trainer.Id, client.Id, clientUser.Id);
     }
 
     public async Task<T?> QueryScalarAsync<T>(
         string sql,
+        CancellationToken cancellationToken = default,
         params NpgsqlParameter[] parameters)
     {
         await using var connection = new NpgsqlConnection(ConnectionString);
-        await connection.OpenAsync();
+        await connection.OpenAsync(cancellationToken);
         await using var command = new NpgsqlCommand(sql, connection);
         command.Parameters.AddRange(parameters);
-        var value = await command.ExecuteScalarAsync();
+        var value = await command.ExecuteScalarAsync(cancellationToken);
         return value is null or DBNull ? default : (T)value;
     }
 
     public async Task<int> ExecuteSqlAsync(
         string sql,
+        CancellationToken cancellationToken = default,
         params NpgsqlParameter[] parameters)
     {
         await using var connection = new NpgsqlConnection(ConnectionString);
-        await connection.OpenAsync();
+        await connection.OpenAsync(cancellationToken);
         await using var command = new NpgsqlCommand(sql, connection);
         command.Parameters.AddRange(parameters);
-        return await command.ExecuteNonQueryAsync();
+        return await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    public sealed record TestTenantSeed(Guid TrainerId, Guid ClientId);
+    private PtManagerDbContext CreateContext(TestTenantContext tenantContext)
+    {
+        var interceptors = new TenantWriteValidationInterceptor(tenantContext);
+        var options = new DbContextOptionsBuilder<PtManagerDbContext>()
+            .UseNpgsql(ConnectionString)
+            .AddInterceptors(interceptors)
+            .EnableDetailedErrors()
+            .Options;
+
+        return new PtManagerDbContext(options, tenantContext);
+    }
+
+    private static User CreateUser(string email, string role, DateTime now)
+    {
+        var user = new User(new EmailAddress(email), role, "Integration Test", now);
+
+        // O hash é opaco porque estes testes não exercitam autenticação.
+        user.SetPasswordHash("integration-test-password-hash", now);
+        return user;
+    }
+
+    public sealed record TestTenantSeed(Guid TrainerId, Guid ClientId, Guid ClientUserId);
 }

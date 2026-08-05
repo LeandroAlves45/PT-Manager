@@ -38,7 +38,7 @@ internal sealed class MealPlanConfiguration : IEntityTypeConfiguration<MealPlan>
 
         builder.ComplexProperty(mp => mp.CalculationSnapshot, snapshot =>
         {
-            snapshot.ToJson("calculation_snapshot").HasColumnType("jsonb");
+            snapshot.ToJson("calculation_snapshot");
             snapshot.Property(value => value.SchemaVersion).HasJsonPropertyName("schema_version");
             snapshot.Property(value => value.CalculationOrigin).HasJsonPropertyName("calculation_origin");
             snapshot.Property(value => value.CalculatedAt).HasJsonPropertyName("calculated_at");

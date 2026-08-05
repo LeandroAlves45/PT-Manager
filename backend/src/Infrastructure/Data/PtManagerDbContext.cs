@@ -93,58 +93,58 @@ public sealed class PtManagerDbContext : DbContext
         // POLÍTICA A — tenant-owned estrito.
         // OwnerTrainerId é Guid (não-nullable) + IsDeleted bool.
         modelBuilder.Entity<Client>().HasQueryFilter(c =>
-            CurrentTrainerId.HasValue && !c.IsDeleted && c.OwnerTrainerId == CurrentTrainerId.Value);
+            CurrentTrainerId.HasValue && !c.IsDeleted && c.OwnerTrainerId == CurrentTrainerId);
 
         modelBuilder.Entity<MealPlan>().HasQueryFilter(mp =>
-            CurrentTrainerId.HasValue && !mp.IsDeleted && mp.OwnerTrainerId == CurrentTrainerId.Value);
+            CurrentTrainerId.HasValue && !mp.IsDeleted && mp.OwnerTrainerId == CurrentTrainerId);
 
         modelBuilder.Entity<TrainingPlan>().HasQueryFilter(tp =>
-            CurrentTrainerId.HasValue && !tp.IsDeleted && tp.OwnerTrainerId == CurrentTrainerId.Value);
+            CurrentTrainerId.HasValue && !tp.IsDeleted && tp.OwnerTrainerId == CurrentTrainerId);
 
         modelBuilder.Entity<Session>().HasQueryFilter(s =>
-            CurrentTrainerId.HasValue && !s.IsDeleted && s.OwnerTrainerId == CurrentTrainerId.Value);
+            CurrentTrainerId.HasValue && !s.IsDeleted && s.OwnerTrainerId == CurrentTrainerId);
 
         modelBuilder.Entity<InitialAssessment>().HasQueryFilter(ia =>
-            CurrentTrainerId.HasValue && !ia.IsDeleted && ia.OwnerTrainerId == CurrentTrainerId.Value);
+            CurrentTrainerId.HasValue && !ia.IsDeleted && ia.OwnerTrainerId == CurrentTrainerId);
 
         modelBuilder.Entity<CheckIn>().HasQueryFilter(ci =>
-            CurrentTrainerId.HasValue && !ci.IsDeleted && ci.OwnerTrainerId == CurrentTrainerId.Value);
+            CurrentTrainerId.HasValue && !ci.IsDeleted && ci.OwnerTrainerId == CurrentTrainerId);
 
         modelBuilder.Entity<ClientSessionPack>().HasQueryFilter(csp =>
-            CurrentTrainerId.HasValue && !csp.IsDeleted && csp.OwnerTrainerId == CurrentTrainerId.Value);
+            CurrentTrainerId.HasValue && !csp.IsDeleted && csp.OwnerTrainerId == CurrentTrainerId);
 
         modelBuilder.Entity<Notification>().HasQueryFilter(n =>
-            CurrentTrainerId.HasValue && !n.IsDeleted && n.OwnerTrainerId == CurrentTrainerId.Value);
+            CurrentTrainerId.HasValue && !n.IsDeleted && n.OwnerTrainerId == CurrentTrainerId);
 
         modelBuilder.Entity<PackType>().HasQueryFilter(pt =>
-            CurrentTrainerId.HasValue && !pt.IsDeleted && pt.OwnerTrainerId == CurrentTrainerId.Value);
+            CurrentTrainerId.HasValue && !pt.IsDeleted && pt.OwnerTrainerId == CurrentTrainerId);
 
         // POLÍTICA A' — tenant-owned sem soft delete, propriedade chama-se
         // TrainerId (não OwnerTrainerId).
         modelBuilder.Entity<TrainerSettings>().HasQueryFilter(ts =>
-            CurrentTrainerId.HasValue && ts.TrainerId == CurrentTrainerId.Value);
+            CurrentTrainerId.HasValue && ts.TrainerId == CurrentTrainerId);
 
         modelBuilder.Entity<TrainerSubscription>().HasQueryFilter(ts =>
-            CurrentTrainerId.HasValue && ts.TrainerId == CurrentTrainerId.Value);
+            CurrentTrainerId.HasValue && ts.TrainerId == CurrentTrainerId);
 
         // POLÍTICA B — catálogo com linhas globais. OwnerTrainerId é
         // Guid? (nullable) + IsDeleted bool.
         modelBuilder.Entity<Food>().HasQueryFilter(f =>
             CurrentTrainerId.HasValue && !f.IsDeleted &&
-            (f.OwnerTrainerId == null || f.OwnerTrainerId == CurrentTrainerId.Value));
+            (f.OwnerTrainerId == null || f.OwnerTrainerId == CurrentTrainerId));
 
         modelBuilder.Entity<Exercise>().HasQueryFilter(e =>
             CurrentTrainerId.HasValue && !e.IsDeleted &&
-            (e.OwnerTrainerId == null || e.OwnerTrainerId == CurrentTrainerId.Value));
+            (e.OwnerTrainerId == null || e.OwnerTrainerId == CurrentTrainerId));
 
         modelBuilder.Entity<Supplement>().HasQueryFilter(s =>
             CurrentTrainerId.HasValue && !s.IsDeleted &&
-            (s.OwnerTrainerId == null || s.OwnerTrainerId == CurrentTrainerId.Value));
+            (s.OwnerTrainerId == null || s.OwnerTrainerId == CurrentTrainerId));
 
         modelBuilder.Entity<ClientSupplementAssignment>().HasQueryFilter(assignment =>
             CurrentTrainerId.HasValue &&
             !assignment.IsDeleted &&
-            assignment.OwnerTrainerId == CurrentTrainerId.Value);
+            assignment.OwnerTrainerId == CurrentTrainerId);
 
         // POLÍTICA A DERIVADA — filhas de agregado, SEM navegação POCO.
         modelBuilder.Entity<MealPlanMeal>().HasQueryFilter(mpm =>
@@ -152,7 +152,7 @@ public sealed class PtManagerDbContext : DbContext
             Set<MealPlan>().Any(mp =>
                 mp.Id == mpm.MealPlanId &&
                 !mp.IsDeleted &&
-                mp.OwnerTrainerId == CurrentTrainerId.Value));
+                mp.OwnerTrainerId == CurrentTrainerId));
 
         modelBuilder.Entity<MealPlanMealItem>().HasQueryFilter(mpmi =>
             CurrentTrainerId.HasValue &&
@@ -161,7 +161,7 @@ public sealed class PtManagerDbContext : DbContext
                 Set<MealPlan>().Any(mp =>
                     mp.Id == mpm.MealPlanId &&
                     !mp.IsDeleted &&
-                    mp.OwnerTrainerId == CurrentTrainerId.Value)));
+                    mp.OwnerTrainerId == CurrentTrainerId)));
 
         modelBuilder.Entity<MealPlanMealSupplement>().HasQueryFilter(mpms =>
             CurrentTrainerId.HasValue &&
@@ -170,14 +170,14 @@ public sealed class PtManagerDbContext : DbContext
                 Set<MealPlan>().Any(mp =>
                     mp.Id == mpm.MealPlanId &&
                     !mp.IsDeleted &&
-                    mp.OwnerTrainerId == CurrentTrainerId.Value)));
+                    mp.OwnerTrainerId == CurrentTrainerId)));
 
         modelBuilder.Entity<TrainingPlanDay>().HasQueryFilter(tpd =>
             CurrentTrainerId.HasValue &&
             Set<TrainingPlan>().Any(tp =>
                 tp.Id == tpd.TrainingPlanId &&
                 !tp.IsDeleted &&
-                tp.OwnerTrainerId == CurrentTrainerId.Value));
+                tp.OwnerTrainerId == CurrentTrainerId));
 
         modelBuilder.Entity<TrainingPlanDayExercise>().HasQueryFilter(tpde =>
             CurrentTrainerId.HasValue &&
@@ -186,7 +186,7 @@ public sealed class PtManagerDbContext : DbContext
                 Set<TrainingPlan>().Any(tp =>
                     tp.Id == tpd.TrainingPlanId &&
                     !tp.IsDeleted &&
-                    tp.OwnerTrainerId == CurrentTrainerId.Value)));
+                    tp.OwnerTrainerId == CurrentTrainerId)));
 
         modelBuilder.Entity<ExerciseSet>().HasQueryFilter(es =>
             CurrentTrainerId.HasValue &&
@@ -197,7 +197,7 @@ public sealed class PtManagerDbContext : DbContext
                     Set<TrainingPlan>().Any(tp =>
                         tp.Id == tpd.TrainingPlanId &&
                         !tp.IsDeleted &&
-                        tp.OwnerTrainerId == CurrentTrainerId.Value))));
+                        tp.OwnerTrainerId == CurrentTrainerId))));
 
         modelBuilder.Entity<ClientExerciseSetLog>().HasQueryFilter(cesl =>
             CurrentTrainerId.HasValue &&
@@ -208,7 +208,7 @@ public sealed class PtManagerDbContext : DbContext
                     Set<TrainingPlan>().Any(tp =>
                         tp.Id == tpd.TrainingPlanId &&
                         !tp.IsDeleted &&
-                        tp.OwnerTrainerId == CurrentTrainerId.Value))));
+                        tp.OwnerTrainerId == CurrentTrainerId))));
 
         // POLÍTICA C — sem filtro de tenant.
         // User, RefreshToken, InviteToken, ProcessedStripeEvent: raiz do

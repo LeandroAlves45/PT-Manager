@@ -49,7 +49,7 @@ internal sealed class CheckInConfiguration : IEntityTypeConfiguration<CheckIn>
 
         builder.ComplexProperty(c => c.BodyMeasurements, bm =>
         {
-            bm.ToJson("body_measurements").HasColumnType("jsonb");
+            bm.ToJson("body_measurements");
             bm.Property(b => b.WaistCm).HasJsonPropertyName("waist_cm").HasPrecision(10, 2);
             bm.Property(b => b.HipCm).HasJsonPropertyName("hip_cm").HasPrecision(10, 2);
             bm.Property(b => b.ChestCm).HasJsonPropertyName("chest_cm").HasPrecision(10, 2);
@@ -63,7 +63,7 @@ internal sealed class CheckInConfiguration : IEntityTypeConfiguration<CheckIn>
 
         builder.ComplexProperty(c => c.Feedback, fb =>
         {
-            fb.ToJson("feedback").HasColumnType("jsonb");
+            fb.ToJson("feedback");
             fb.Property(f => f.Appetite).HasJsonPropertyName("appetite");
             fb.Property(f => f.Digestion).HasJsonPropertyName("digestion");
             fb.Property(f => f.TrainingLoad).HasJsonPropertyName("training_load");

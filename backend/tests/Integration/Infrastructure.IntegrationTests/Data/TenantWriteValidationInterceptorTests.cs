@@ -1,12 +1,16 @@
+using Domain.Entities.Clients;
 using Domain.Entities.Supplements;
 using Domain.Exceptions;
+using Domain.ValueObjects;
 using Infrastructure.IntegrationTests.Support;
 
 namespace Infrastructure.IntegrationTests.Data;
 
+[Collection(PostgresCollection.Name)]
 public sealed class TenantWriteValidationInterceptorTests
-    : IClassFixture<PostgresContainerFixture>
 {
+    private static readonly DateTime Now = new(2026, 8, 5, 13, 0, 0, DateTimeKind.Utc);
+
     private readonly PostgresContainerFixture _fixture;
 
     public TenantWriteValidationInterceptorTests(PostgresContainerFixture fixture)
@@ -15,17 +19,40 @@ public sealed class TenantWriteValidationInterceptorTests
     }
 
     [Fact]
-    public async Task SaveChanges_WhenAssignmentReferencesDeletedSupplement_ThrowsDomainException()
+    public async Task SaveChanges_WhenTenantIsMissing_ThrowsInvalidOperationException()
     {
         // Arrange
         var cancellationToken = TestContext.Current.CancellationToken;
-        var discriminator = Guid.NewGuid().ToString("N");
-        var tenant = await _fixture.SeedTenantWithClientAsync(discriminator, cancellationToken);
-        var supplementId = await SeedDeletedSupplementAsync(tenant.TrainerId, cancellationToken);
-        var assignment = CreateAssignment(tenant, supplementId);
+        var tenant = await _fixture.SeedTenantWithClientAsync(
+            Guid.NewGuid().ToString("N"), cancellationToken);
+        var client = CreateClient(tenant.TrainerId);
 
-        await using var context = _fixture.CreateContext(tenant.TrainerId);
-        context.ClientSupplementAssignments.Add(assignment);
+        await using var context = _fixture.CreateContext(trainerId: null);
+        context.Clients.Add(client);
+
+        // Act
+        var action = () => context.SaveChangesAsync(cancellationToken);
+
+        // Assert
+        // RequireTenant() lança InvalidOperationException, não DomainException:
+        // ausência de tenant é um erro de configuração do chamador, não uma
+        // violação de regra de negócio (ver PtManagerDbContext.RequireTenant).
+        await Assert.ThrowsAsync<InvalidOperationException>(action);
+    }
+
+    [Fact]
+    public async Task SaveChanges_WhenOwnerDiffersFromTenant_ThrowsDomainException()
+    {
+        // Arrange
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var owner = await _fixture.SeedTenantWithClientAsync(
+            $"owner-{Guid.NewGuid():N}", cancellationToken);
+        var requester = await _fixture.SeedTenantWithClientAsync(
+            $"requester-{Guid.NewGuid():N}", cancellationToken);
+        var client = CreateClient(owner.TrainerId);
+
+        await using var context = _fixture.CreateContext(requester.TrainerId);
+        context.Clients.Add(client);
 
         // Act
         var action = () => context.SaveChangesAsync(cancellationToken);
@@ -35,59 +62,35 @@ public sealed class TenantWriteValidationInterceptorTests
     }
 
     [Fact]
-    public async Task SaveChanges_WhenAssignmentReferencesMissingSupplement_ThrowsDomainException()
+    public async Task SaveChanges_WhenSynchronousApiIsUsed_ThrowsInvalidOperationException()
     {
         // Arrange
         var cancellationToken = TestContext.Current.CancellationToken;
-        var discriminator = Guid.NewGuid().ToString("N");
-        var tenant = await _fixture.SeedTenantWithClientAsync(discriminator, cancellationToken);
-        var assignment = CreateAssignment(tenant, Guid.NewGuid());
+        var tenant = await _fixture.SeedTenantWithClientAsync(
+            Guid.NewGuid().ToString("N"), cancellationToken);
+        var supplement = IntegrationTestData.Supplement(tenant.TrainerId, Now);
 
         await using var context = _fixture.CreateContext(tenant.TrainerId);
-        context.ClientSupplementAssignments.Add(assignment);
+        context.Supplements.Add(supplement);
 
         // Act
-        var action = () => context.SaveChangesAsync(cancellationToken);
+        Action action = () => context.SaveChanges();
 
         // Assert
-        await Assert.ThrowsAsync<DomainException>(action);
+        Assert.Throws<InvalidOperationException>(action);
     }
 
-    private async Task<Guid> SeedDeletedSupplementAsync(
-        Guid trainerId,
-        CancellationToken cancellationToken)
-    {
-        var now = new DateTime(2026, 8, 4, 12, 0, 0, DateTimeKind.Utc);
-        var supplement = new Supplement(
-            trainerId,
-            trainerId,
-            "Deleted supplement",
-            null,
-            "capsules",
-            "1 capsule",
-            "Daily",
-            null,
-            now);
-
-        await using var context = _fixture.CreateContext(trainerId);
-        context.Supplements.Add(supplement);
-        await context.SaveChangesAsync(cancellationToken);
-
-        supplement.SoftDelete(now.AddMinutes(1));
-        await context.SaveChangesAsync(cancellationToken);
-
-        return supplement.Id;
-    }
-
-    private static ClientSupplementAssignment CreateAssignment(
-        PostgresContainerFixture.TestTenantSeed tenant,
-        Guid supplementId) =>
+    private static Client CreateClient(Guid ownerTrainerId) =>
         new(
-            tenant.TrainerId,
-            tenant.ClientId,
-            supplementId,
-            "1 capsule",
-            "With breakfast",
+            ownerTrainerId,
+            "Interceptor Test Client",
+            $"client-{Guid.NewGuid():N}@example.test",
+            "+351900000000",
+            BirthDate.Create(new DateOnly(1995, 1, 1), DateOnly.FromDateTime(Now)),
+            BiologicalSex.Male,
             null,
-            new DateTime(2026, 8, 4, 12, 5, 0, DateTimeKind.Utc));
+            null,
+            null,
+            null,
+            Now);
 }

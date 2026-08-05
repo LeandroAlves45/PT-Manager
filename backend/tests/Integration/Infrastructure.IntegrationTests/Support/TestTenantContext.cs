@@ -4,7 +4,7 @@ namespace Infrastructure.IntegrationTests.Support;
 
 /// <summary>
 /// Contexto imutável por instância. Cada DbContext recebe o tenant esperado,
-/// evitanto que um teste altere o tenant de outro em execução paralela.
+/// evitando que um teste altere o tenant de outro em execução paralela.
 /// </summary>
 internal sealed class TestTenantContext : ITenantContext
 {
@@ -27,4 +27,13 @@ internal sealed class TestTenantContext : ITenantContext
         Origin = origin;
         IsAdministrative = isAdministrative;
     }
+
+    public static TestTenantContext ForTrainer(Guid trainerId) =>
+        new(trainerId, role: "trainer", origin: TenantOrigin.Http);
+
+    public static TestTenantContext Administrator() =>
+        new(null, role: "superuser", origin: TenantOrigin.System, isAdministrative: true);
+
+    public static TestTenantContext WithoutTenant() =>
+        new(null, origin: TenantOrigin.System);
 }
