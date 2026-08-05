@@ -126,6 +126,12 @@ public sealed class DurableJobRepository : IDurableJobStore
         CancellationToken cancellationToken)
     {
         var now = _clock.UtcNow;
+
+        if (nextAttemptAt.HasValue && nextAttemptAt.Value <= now)
+            throw new ArgumentOutOfRangeException(
+                nameof(nextAttemptAt),
+                "Next attempt time must be in the future.");
+
         var affected = await _db.Set<DurableJob>()
             .Where(j => j.Id == jobId && j.LeaseOwnerId == leaseOwnerId
                 && j.Status == JobStatus.Processing

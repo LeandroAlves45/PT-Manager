@@ -105,6 +105,34 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ClaimDueJobsAsync_WhenLeaseExpired_ReclaimsAbandonedJob()
+    {
+        // Arrange
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var job = IntegrationTestData.Job(Now.AddMinutes(-1), Now);
+        await SeedAsync(cancellationToken, job);
+        var clock = new TestClock(Now);
+
+        await using var firstContext = _fixture.CreateAdministrativeContext();
+        var firstWorker = new DurableJobRepository(firstContext, clock);
+        var firstClaim = Assert.Single(await firstWorker.ClaimDueJobsAsync(
+            TimeSpan.FromMinutes(5), 1, cancellationToken));
+        clock.Advance(TimeSpan.FromMinutes(6));
+
+        await using var secondContext = _fixture.CreateAdministrativeContext();
+        var secondWorker = new DurableJobRepository(secondContext, clock);
+
+        // Act
+        var secondClaim = Assert.Single(await secondWorker.ClaimDueJobsAsync(
+            TimeSpan.FromMinutes(5), 1, cancellationToken));
+
+        // Assert
+        Assert.Equal(
+            (job.Id, 2, false),
+            (secondClaim.Id, secondClaim.Attempts, firstClaim.LeaseOwnerId == secondClaim.LeaseOwnerId));
+    }
+
+    [Fact]
     public async Task ClaimDueJobsAsync_WhenRetryAndFirstAttemptAreDue_OrdersByEffectiveDate()
     {
         // Arrange
@@ -223,6 +251,27 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TryCompleteAsync_WhenOwnerDiffers_ReturnsFalse()
+    {
+        // Arrange
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var job = IntegrationTestData.Job(Now.AddMinutes(-1), Now);
+        await SeedAsync(cancellationToken, job);
+
+        await using var context = _fixture.CreateAdministrativeContext();
+        var repository = new DurableJobRepository(context, new TestClock(Now));
+        var claimed = Assert.Single(await repository.ClaimDueJobsAsync(
+            TimeSpan.FromMinutes(5), 1, cancellationToken));
+
+        // Act
+        var completed = await repository.TryCompleteAsync(
+            claimed.Id, Guid.NewGuid(), cancellationToken);
+
+        // Assert
+        Assert.False(completed);
+    }
+
+    [Fact]
     public async Task TryRecordFailureAsync_WhenRetryIsProvided_ReturnsJobToPending()
     {
         // Arrange
@@ -287,6 +336,86 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         Assert.Equal(
             (true, JobStatus.DeadLetter),
             (recorded, stored.Status));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task TryRecordFailureAsync_WhenRetryIsNotFuture_ThrowsArgumentOutOfRangeException(
+        int offsetMinutes)
+    {
+        // Arrange
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var job = IntegrationTestData.Job(Now.AddMinutes(-1), Now);
+        await SeedAsync(cancellationToken, job);
+
+        await using var context = _fixture.CreateAdministrativeContext();
+        var repository = new DurableJobRepository(context, new TestClock(Now));
+        var claimed = Assert.Single(await repository.ClaimDueJobsAsync(
+            TimeSpan.FromMinutes(5), 1, cancellationToken));
+
+        // Act
+        var action = () => repository.TryRecordFailureAsync(
+            claimed.Id,
+            claimed.LeaseOwnerId!.Value,
+            "temporary",
+            Now.AddMinutes(offsetMinutes),
+            cancellationToken);
+
+        // Assert
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(action);
+    }
+
+    [Fact]
+    public async Task TryRecordFailureAsync_WhenLeaseExpired_ReturnsFalse()
+    {
+        // Arrange
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var job = IntegrationTestData.Job(Now.AddMinutes(-1), Now);
+        await SeedAsync(cancellationToken, job);
+        var clock = new TestClock(Now);
+
+        await using var context = _fixture.CreateAdministrativeContext();
+        var repository = new DurableJobRepository(context, clock);
+        var claimed = Assert.Single(await repository.ClaimDueJobsAsync(
+            TimeSpan.FromMinutes(5), 1, cancellationToken));
+        clock.Advance(TimeSpan.FromMinutes(6));
+
+        // Act
+        var recorded = await repository.TryRecordFailureAsync(
+            claimed.Id,
+            claimed.LeaseOwnerId!.Value,
+            "expired",
+            clock.UtcNow.AddMinutes(10),
+            cancellationToken);
+
+        // Assert
+        Assert.False(recorded);
+    }
+
+    [Fact]
+    public async Task TryRecordFailureAsync_WhenOwnerDiffers_ReturnsFalse()
+    {
+        // Arrange
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var job = IntegrationTestData.Job(Now.AddMinutes(-1), Now);
+        await SeedAsync(cancellationToken, job);
+
+        await using var context = _fixture.CreateAdministrativeContext();
+        var repository = new DurableJobRepository(context, new TestClock(Now));
+        var claimed = Assert.Single(await repository.ClaimDueJobsAsync(
+            TimeSpan.FromMinutes(5), 1, cancellationToken));
+
+        // Act
+        var recorded = await repository.TryRecordFailureAsync(
+            claimed.Id,
+            Guid.NewGuid(),
+            "wrong owner",
+            Now.AddMinutes(10),
+            cancellationToken);
+
+        // Assert
+        Assert.False(recorded);
     }
 
     [Fact]

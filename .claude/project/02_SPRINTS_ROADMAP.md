@@ -133,6 +133,14 @@ Portar entidades Python → C# Entities + Value Objects, sem abstrações genér
 
 ## SPRINT 2: Infrastructure + EF Core (Semanas 3-4)
 
+### Estado final
+
+Concluído em 5 de agosto de 2026. A entrega inclui 28 entidades mapeadas,
+`InitialCreate`, Global Query Filters, validação de escritas, FKs compostas,
+stores de jobs e outbox, Testcontainers PostgreSQL e testes de arquitetura.
+O gate final confirmou o conjunto exato das 28 tabelas, as oito relações
+cross-tenant exigidas e a ausência de alterações pendentes no modelo EF Core.
+
 ### Objectivo
 DbContext, migration inicial e persistência especializada de jobs e outbox.
 
@@ -176,7 +184,7 @@ implementados:
    - Atualizar `01_DATABASE_SCHEMA.md` e o código afetado antes de executar
      `dotnet ef migrations add InitialCreate`.
    - Aplicar o pacote vinculativo
-     `docs/backend-files/sprint_2_every/sprint_2_newTables/`, incluindo Domain,
+     `docs/backend-files/sprint_2/sprint_2_newTables/`, incluindo Domain,
      28 DbSets/configurações, interceptor, testes unitários e Testcontainers.
    - Confirmar 28 tabelas da aplicação e `__EFMigrationsHistory`, total 29.
    - Corrigir `Client`, `InitialAssessment`, `Food` e `MealPlan` e implementar o

@@ -2,9 +2,11 @@
 
 Documento de arquitectura para a reescrita do backend em C# e .NET 10.
 
-Estado: aprovado para orientar o Sprint 0. A implementação ainda não existe.
+Estado: arquitetura aprovada. Domain e Infrastructure implementados até ao
+fecho do Sprint 2 em 5 de agosto de 2026. Application e Api continuam a ser
+desenvolvidos nos sprints seguintes.
 
-Data de revisão: 24 de Julho de 2026.
+Data de revisão: 5 de agosto de 2026.
 
 ## 1. Objectivo e contexto
 

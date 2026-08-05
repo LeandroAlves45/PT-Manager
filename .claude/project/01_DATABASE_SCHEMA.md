@@ -2,7 +2,9 @@
 
 *Schema Definition — Julho 2026*
 
-Estado: alinhado com `00_ARCHITECTURE.md` v3.0. A implementação ainda não existe.
+Estado: implementado no Sprint 2 e materializado pela migration EF Core
+`20260804163659_InitialCreate`. O modelo, o snapshot e a migration estavam
+sincronizados no gate final de 5 de agosto de 2026.
 
 ---
 

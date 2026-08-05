@@ -8,6 +8,38 @@ namespace Infrastructure.IntegrationTests.Migrations;
 [Collection(MigrationLifecycleCollection.Name)]
 public sealed class InitialCreateMigrationTests : IAsyncLifetime
 {
+    private static readonly string[] ExpectedApplicationTables =
+    [
+        "checkins",
+        "client_exercise_set_logs",
+        "client_session_packs",
+        "client_supplement_assignments",
+        "clients",
+        "durable_jobs",
+        "exercise_sets",
+        "exercises",
+        "foods",
+        "initial_assessments",
+        "invite_tokens",
+        "meal_plan_meal_items",
+        "meal_plan_meal_supplements",
+        "meal_plan_meals",
+        "meal_plans",
+        "notifications",
+        "outbox_messages",
+        "pack_types",
+        "processed_stripe_events",
+        "refresh_tokens",
+        "sessions",
+        "supplements",
+        "trainer_settings",
+        "trainer_subscriptions",
+        "training_plan_day_exercises",
+        "training_plan_days",
+        "training_plans",
+        "users",
+    ];
+
     private readonly MigrationLifecycleFixture _fixture;
 
     public InitialCreateMigrationTests(MigrationLifecycleFixture fixture)
@@ -36,6 +68,24 @@ public sealed class InitialCreateMigrationTests : IAsyncLifetime
 
         // Assert
         Assert.Equal(28, tableCount);
+    }
+
+    [Fact]
+    public async Task Migrate_WhenDatabaseIsEmpty_CreatesExactApplicationTableSet()
+    {
+        // Arrange
+        var cancellationToken = TestContext.Current.CancellationToken;
+        await using var context = _fixture.CreateContext();
+        var migrator = context.GetService<IMigrator>();
+        await migrator.MigrateAsync(
+            PostgresContainerFixture.InitialCreateMigration,
+            cancellationToken);
+
+        // Act
+        var tableNames = await _fixture.GetApplicationTableNamesAsync(cancellationToken);
+
+        // Assert
+        Assert.Equal(ExpectedApplicationTables, tableNames);
     }
 
     [Fact]

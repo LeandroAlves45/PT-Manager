@@ -128,6 +128,12 @@ public sealed class OutboxRepository : IOutboxStore
         CancellationToken cancellationToken)
     {
         var now = _clock.UtcNow;
+
+        if (nextAttemptAt.HasValue && nextAttemptAt.Value <= now)
+            throw new ArgumentOutOfRangeException(
+                nameof(nextAttemptAt),
+                "Next attempt time must be in the future.");
+
         var affected = await _db.Set<OutboxMessage>()
             .Where(m => m.Id == messageId
                 && m.LeaseOwnerId == leaseOwnerId

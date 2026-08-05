@@ -54,6 +54,30 @@ public sealed class MigrationLifecycleFixture : IAsyncLifetime
         return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
     }
 
+    public async Task<IReadOnlyList<string>> GetApplicationTableNamesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        const string sql = """
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+                AND table_type = 'BASE TABLE'
+                AND table_name <> '__EFMigrationsHistory'
+            ORDER BY table_name;
+        """;
+
+        var tableNames = new List<string>();
+        await using var connection = new NpgsqlConnection(_container.GetConnectionString());
+        await connection.OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand(sql, connection);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        while (await reader.ReadAsync(cancellationToken))
+            tableNames.Add(reader.GetString(0));
+
+        return tableNames;
+    }
+
     public async Task<bool> TableExistsAsync(string tableName, CancellationToken cancellationToken = default)
     {
         const string sql = """

@@ -151,6 +151,27 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
         Assert.False(completed);
     }
 
+    [Fact]
+    public async Task TryCompleteAsync_WhenOwnerDiffers_ReturnsFalse()
+    {
+        // Arrange
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var message = IntegrationTestData.Message(Now);
+        await SeedAsync(cancellationToken, message);
+
+        await using var context = _fixture.CreateAdministrativeContext();
+        var repository = new OutboxRepository(context, new TestClock(Now));
+        var claimed = Assert.Single(await repository.ClaimPendingAsync(
+            TimeSpan.FromMinutes(5), 1, cancellationToken));
+
+        // Act
+        var completed = await repository.TryCompleteAsync(
+            claimed.Id, Guid.NewGuid(), cancellationToken);
+
+        // Assert
+        Assert.False(completed);
+    }
+
     [Theory]
     [InlineData(true, "pending")]
     [InlineData(false, "dead_letter")]
@@ -322,6 +343,59 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
             claimed.Id,
             claimed.LeaseOwnerId!.Value,
             "expired",
+            Now.AddMinutes(10),
+            cancellationToken);
+
+        // Assert
+        Assert.False(recorded);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task TryRecordFailureAsync_WhenRetryIsNotFuture_ThrowsArgumentOutOfRangeException(
+        int offsetMinutes)
+    {
+        // Arrange
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var message = IntegrationTestData.Message(Now);
+        await SeedAsync(cancellationToken, message);
+
+        await using var context = _fixture.CreateAdministrativeContext();
+        var repository = new OutboxRepository(context, new TestClock(Now));
+        var claimed = Assert.Single(await repository.ClaimPendingAsync(
+            TimeSpan.FromMinutes(5), 1, cancellationToken));
+
+        // Act
+        var action = () => repository.TryRecordFailureAsync(
+            claimed.Id,
+            claimed.LeaseOwnerId!.Value,
+            "temporary",
+            Now.AddMinutes(offsetMinutes),
+            cancellationToken);
+
+        // Assert
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(action);
+    }
+
+    [Fact]
+    public async Task TryRecordFailureAsync_WhenOwnerDiffers_ReturnsFalse()
+    {
+        // Arrange
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var message = IntegrationTestData.Message(Now);
+        await SeedAsync(cancellationToken, message);
+
+        await using var context = _fixture.CreateAdministrativeContext();
+        var repository = new OutboxRepository(context, new TestClock(Now));
+        var claimed = Assert.Single(await repository.ClaimPendingAsync(
+            TimeSpan.FromMinutes(5), 1, cancellationToken));
+
+        // Act
+        var recorded = await repository.TryRecordFailureAsync(
+            claimed.Id,
+            Guid.NewGuid(),
+            "wrong owner",
             Now.AddMinutes(10),
             cancellationToken);
 
