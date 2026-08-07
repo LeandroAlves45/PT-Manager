@@ -1,8 +1,11 @@
 using Application.Common.Abstractions;
+using Application.Features.Clients.Abstractions;
 using Application.Features.Jobs.Abstractions;
 using Infrastructure.Data;
 using Infrastructure.Data.Interceptors;
 using Infrastructure.Persistence;
+using Infrastructure.Persistence.Clients;
+using Infrastructure.Persistence.Errors;
 using Infrastructure.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
@@ -45,8 +48,13 @@ public static class DependencyInjection
         services.AddScoped<ITenantContextInitializer>(provider =>
             provider.GetRequiredService<TenantContext>());
 
+        // Clients
+        services.AddScoped<IClientStore, ClientStore>();
+        services.AddScoped<IClientQueries, ClientQueries>();
+
         services.AddScoped<TenantWriteValidationInterceptor>();
         services.AddSingleton<IClock, SystemClock>();
+        services.AddSingleton<PostgresConstraintTranslator>();
 
         // Repositórios
         services.AddScoped<IDurableJobStore, DurableJobRepository>();
