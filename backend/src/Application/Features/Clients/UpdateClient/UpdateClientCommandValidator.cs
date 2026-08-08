@@ -17,22 +17,26 @@ public sealed class UpdateClientCommandValidator : AbstractValidator<UpdateClien
 
         RuleFor(client => client.Name)
             .NotEmpty()
+            .WithErrorCode("client_name_invalid")
             .MaximumLength(255)
             .WithErrorCode("client_name_invalid");
 
         RuleFor(client => client.ContactEmail)
             .MaximumLength(255)
+            .WithErrorCode("client_email_invalid")
             .EmailAddress()
-            .When(client => !string.IsNullOrWhiteSpace(client.ContactEmail))
-            .WithErrorCode("client_email_invalid");
+            .WithErrorCode("client_email_invalid")
+            .When(client => !string.IsNullOrWhiteSpace(client.ContactEmail));
 
         RuleFor(client => client.Phone)
             .NotEmpty()
+            .WithErrorCode("client_phone_invalid")
             .MaximumLength(32)
             .WithErrorCode("client_phone_invalid");
 
         RuleFor(client => client.BirthDate)
             .NotEmpty()
+            .WithErrorCode("client_birth_date_invalid")
             .LessThanOrEqualTo(DateOnly.FromDateTime(clock.UtcNow))
             .WithErrorCode("client_birth_date_invalid");
 

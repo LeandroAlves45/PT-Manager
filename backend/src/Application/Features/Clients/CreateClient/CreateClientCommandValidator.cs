@@ -13,25 +13,33 @@ public sealed class CreateClientCommandValidator : AbstractValidator<CreateClien
 
         RuleFor(client => client.Name)
             .NotEmpty()
+            .WithErrorCode("client_name_invalid")
+            .WithMessage("Client name must contain between 1 and 255 characters.")
             .MaximumLength(255)
             .WithErrorCode("client_name_invalid")
             .WithMessage("Client name must contain between 1 and 255 characters.");
 
         RuleFor(client => client.ContactEmail)
             .MaximumLength(255)
-            .EmailAddress()
-            .When(client => !string.IsNullOrWhiteSpace(client.ContactEmail))
             .WithErrorCode("client_email_invalid")
-            .WithMessage("Client email is invalid.");
+            .WithMessage("Client email is invalid.")
+            .EmailAddress()
+            .WithErrorCode("client_email_invalid")
+            .WithMessage("Client email is invalid.")
+            .When(client => !string.IsNullOrWhiteSpace(client.ContactEmail));
 
         RuleFor(client => client.Phone)
             .NotEmpty()
+            .WithErrorCode("client_phone_invalid")
+            .WithMessage("Client phone must contain between 1 and 32 characters.")
             .MaximumLength(32)
             .WithErrorCode("client_phone_invalid")
             .WithMessage("Client phone must contain between 1 and 32 characters.");
 
         RuleFor(client => client.BirthDate)
             .NotEmpty()
+            .WithErrorCode("client_birth_date_invalid")
+            .WithMessage("Birth date is required and cannot be in the future.")
             .LessThanOrEqualTo(DateOnly.FromDateTime(clock.UtcNow))
             .WithErrorCode("client_birth_date_invalid")
             .WithMessage("Birth date is required and cannot be in the future.");
