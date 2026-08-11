@@ -145,6 +145,10 @@ Generated pseudocode includes:
 - Input validation references (FluentValidation)
 - Secure patterns for external service calls
 
+## Avoiding Read/Write Path Confusion
+
+When a feature has more than one method serving similar-looking data (e.g. a projected read query vs. a post-write reload to fetch a DB-calculated column), document explicitly which handler calls which method, and what each is for. Two similarly-named methods (`GetAsync` vs. `GetOwnedForReadAsync`) are easy to conflate in a later review — a doc comment claiming "sem tracking" on one method must not be assumed to also describe a differently-named method nearby. State the calling chain (handler → interface → implementation) in the pseudocode itself so future reviews don't have to reconstruct it.
+
 ## Testing Mindset
 
 Each pseudocode component includes notes on:

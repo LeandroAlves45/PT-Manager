@@ -1,20 +1,23 @@
 using Application.Common.Abstractions;
 using Application.Features.Clients.Abstractions;
 using Application.Features.Jobs.Abstractions;
+using Application.Features.Nutrition.Foods.Abstractions;
+using Application.Features.Nutrition.MealPlans.Abstractions;
 using Infrastructure.Data;
 using Infrastructure.Data.Interceptors;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Clients;
 using Infrastructure.Persistence.Errors;
+using Infrastructure.Persistence.Nutrition;
 using Infrastructure.Time;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
-using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure;
 
 /// <summary>
-/// Regista a camada de Infrastructure no container de DI
+/// Regista Infrastructure e adapters específicos por feature.
 /// </summary>
 public static class DependencyInjection
 {
@@ -29,7 +32,7 @@ public static class DependencyInjection
             );
 
         // Regista o DbContext com a connection string
-        services.AddDbContext<PtManagerDbContext>((sp, options) =>
+        services.AddDbContext<PtManagerDbContext>((provider, options) =>
         {
             options.UseNpgsql(connectionString, npgsql =>
             {
@@ -37,7 +40,7 @@ public static class DependencyInjection
                 npgsql.EnableRetryOnFailure(maxRetryCount: 3);
             });
 
-            options.AddInterceptors(sp.GetRequiredService<TenantWriteValidationInterceptor>());
+            options.AddInterceptors(provider.GetRequiredService<TenantWriteValidationInterceptor>());
         });
 
         // Scoped: o tenant é do pedido. Registado pelas duas interfaces para que o
@@ -52,11 +55,22 @@ public static class DependencyInjection
         services.AddScoped<IClientStore, ClientStore>();
         services.AddScoped<IClientQueries, ClientQueries>();
 
+        // Foods
+        services.AddScoped<IFoodStore, FoodStore>();
+        services.AddScoped<IFoodQueries, FoodQueries>();
+
+        // Meal Plans
+        services.AddScoped<IMealPlanStore, MealPlanStore>();
+        services.AddScoped<IMealPlanQueries, MealPlanQueries>();
+
+        // Interceptors
         services.AddScoped<TenantWriteValidationInterceptor>();
+
+        // Errors
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<PostgresConstraintTranslator>();
 
-        // Repositórios
+        // Jobs
         services.AddScoped<IDurableJobStore, DurableJobRepository>();
         services.AddScoped<IOutboxStore, OutboxRepository>();
 

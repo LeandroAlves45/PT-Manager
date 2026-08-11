@@ -21,21 +21,24 @@
 
 ## Fase 1 — Fundações + Clients (feature de referência)
 
-- [ ] 00_plano_fase_1.md — overview, ordem de leitura, checklist da fase
-- [ ] 01_packages_result_error.md — FluentValidation em `Directory.Packages.props`; `Application/Common/Results/` (Result, Result<T>, Error, ErrorCategory)
-- [ ] 02_exceptions.md — `Application/Common/Exceptions/` (ValidationException, ExternalServiceException; fronteira exceção vs Result)
-- [ ] 03_clients_dtos_validators.md — DTOs + validators de Clients (Create/Update/Archive/Get/List)
-- [ ] 04_clients_handlers_porta.md — handlers de Clients + porta `IClientsRepository` (Application)
-- [ ] 05_clients_repository_infra.md — `ClientsRepository` EF Core (Infrastructure)
-- [ ] 06_clients_mapping_tests.md — extensões de mapping + testes unitários (handlers com mocks, validators)
-- [ ] Gate Fase 1: revisão do utilizador; padrão de referência congelado
+- [x] Foundations: Result/Error, validação, paginação e tenant fail-closed
+- [x] Clients: contratos, validators, handlers e mapping manual
+- [x] Clients: portas Application, store composto e queries EF Core
+- [x] Tradução PostgreSQL por operação e constraint conhecida
+- [x] Testes unitários de Foundations e Clients
+- [x] Testes PostgreSQL de queries, atomicidade, concorrência e tenant
+- [x] Blueprints completos em `docs/backend-files/sprint_3/fase_1/`
+- [x] Gate Fase 1: commit `aee7f6d`, revisão concluída e padrão congelado
 
 ## Fase 2 — Nutrition + Training
 
-- [ ] 00_plano_fase_2.md
-- [ ] Nutrition: DTOs/validators/handlers (MealPlan CRUD + preview de cálculo sem persistência, snapshot imutável derivado no servidor, Food) + porta + repository + testes
-- [ ] Training: DTOs/validators/handlers (TrainingPlan, dias, exercícios, sets, logs de cliente) + porta + repository + testes
-- [ ] Gate Fase 2: revisão do utilizador
+- [x] Lote 2A Nutrition: índice, contratos, Domain, Application,
+  Infrastructure e testes em pseudocódigo alargado
+- [ ] Gate 2A: cálculo, snapshots, reconciliação, catálogos e tenant revistos
+- [ ] Lote 2B Training: Exercise, TrainingPlan, estrutura e logs históricos
+- [ ] Gate 2B: edição segura, replacement, locks, concorrência e tenant revistos
+- [ ] Lote 2C: configurações EF Core, migration gerada futura e gate transversal
+- [ ] Gate Fase 2: revisão final aprovada
 
 ## Fase 3 — Sessions + Assessments + Supplements + TrainerSettings
 

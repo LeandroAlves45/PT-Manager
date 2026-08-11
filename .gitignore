@@ -56,6 +56,7 @@ lerna-debug.log*
 .codex/memory/
 .claude/memory/MEMORY.md
 .claude/memory/
+.claude/project/backend-csharp-checklist.md
 
 # Documentation and Backlog
 docs/

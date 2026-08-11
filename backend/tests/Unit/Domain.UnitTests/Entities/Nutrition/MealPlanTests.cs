@@ -99,7 +99,7 @@ public sealed class MealPlanTests
         plan.SoftDelete(Now);
 
         // Act
-        var action = () => plan.Reactivate(Now.AddMinutes(1));
+        Action action = () => plan.Reactivate(Now.AddMinutes(1));
 
         // Assert
         Assert.Throws<DomainException>(action);

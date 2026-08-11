@@ -3,7 +3,7 @@ using Domain.ValueObjects;
 namespace Domain.Entities.Nutrition;
 
 /// <summary>
-/// Plano alimentar de um cliente num intervalo de datas, com alvos diários de macros.
+/// Plano alimentar com decisão nutricional imutável por snapshot.
 /// </summary>
 public class MealPlan
 {
@@ -50,8 +50,10 @@ public class MealPlan
         DateTime now
     )
     {
-        var normalizedName = name?.Trim() ?? string.Empty;
-        Validate(ownerTrainerId, clientId, normalizedName, startsDate, endsDate, calculationSnapshot);
+        var normalizedName = NormalizeRequiredName(name);
+        ValidateIdentifiers(ownerTrainerId, clientId);
+        ValidateDates(startsDate, endsDate);
+        ArgumentNullException.ThrowIfNull(calculationSnapshot);
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
@@ -65,6 +67,26 @@ public class MealPlan
         IsArchived = false;
         IsDeleted = false;
         CreatedAt = now;
+        UpdatedAt = now;
+    }
+
+    /// <summary>Atualiza metadados sem alterar cliente, estado ou cálculo.</summary>
+    public void UpdateDetails(
+        string name,
+        string? description,
+        DateOnly startsDate,
+        DateOnly? endsDate,
+        DateTime now
+    )
+    {
+        EnsureNotDeleted();
+        var normalizedName = NormalizeRequiredName(name);
+        ValidateDates(startsDate, endsDate);
+
+        Name = normalizedName;
+        Description = NormalizeOptional(description);
+        StartsDate = startsDate;
+        EndsDate = endsDate;
         UpdatedAt = now;
     }
 
@@ -98,38 +120,84 @@ public class MealPlan
         return meal;
     }
 
+    /// <summary>Atualiza o tipo e a ordem de uma refeição pertencente ao plano.</summary>
+    public void UpdateMeal(Guid mealId, string mealType, int orderNumber, DateTime now)
+    {
+        EnsureNotDeleted();
+        var meal = RequireMeal(mealId);
+        if (_meals.Any(other => other.Id != mealId && other.OrderNumber == orderNumber))
+            throw new DomainException("Meal order number already exists in this plan");
+
+        meal.Update(mealType, orderNumber, now);
+        UpdatedAt = now;
+    }
+
+    /// <summary>Aplica em lote a ordem final das refeições indicadas.</summary>
+    public void ReorderMeals(IReadOnlyDictionary<Guid, int> finalOrders, DateTime now)
+    {
+        EnsureNotDeleted();
+        ArgumentNullException.ThrowIfNull(finalOrders);
+        ValidateFinalOrders(
+            _meals.Select(meal => (meal.Id, meal.OrderNumber)),
+            finalOrders,
+            "Meal"
+        );
+
+        // A validação do estado final permite swaps sem rejeitar colisões transitórias.
+        foreach (var (mealId, orderNumber) in finalOrders)
+            RequireMeal(mealId).ChangeOrder(orderNumber, now);
+
+        UpdatedAt = now;
+    }
+
     /// <summary>Remove uma refeição do plano, alimentos e suplementos associados saem com ela.</summary>
     public void RemoveMeal(Guid mealId, DateTime now)
     {
         EnsureNotDeleted();
-        var meal = _meals.FirstOrDefault(m => m.Id == mealId)
-            ?? throw new DomainException("Meal does not belong to this plan");
 
-        _meals.Remove(meal);
+        _meals.Remove(RequireMeal(mealId));
         UpdatedAt = now;
     }
 
-    /// <summary>Arquiva o plano alimentar, mantendo-o no histórico do cliente.</summary>
-    public void Archive(DateTime now)
+    /// <summary>Obtém uma refeição pertencente ao agregado.</summary>
+    public MealPlanMeal GetMeal(Guid mealId)
     {
         EnsureNotDeleted();
+        return RequireMeal(mealId);
+    }
+
+    /// <summary>Arquiva de forma idempotente e informa se houve transição.</summary>
+    public bool Archive(DateTime now)
+    {
+        EnsureNotDeleted();
+        if (IsArchived)
+            return false;
+
         IsActive = false;
         IsArchived = true;
         UpdatedAt = now;
+        return true;
     }
 
     /// <summary>Reativa o plano alimentar arquivado.</summary>
-    public void Reactivate(DateTime now)
+    public bool Reactivate(DateTime now)
     {
         EnsureNotDeleted();
+        if (IsActive && !IsArchived)
+            return false;
+
         IsArchived = false;
         IsActive = true;
         UpdatedAt = now;
+        return true;
     }
 
-    /// <summary>Soft delete -> plano e refeições continuam consultáveis por integridade.</summary>
+    /// <summary>Marca o plano como eliminado sem apagar fisicamente a árvore persistida.</summary>
     public void SoftDelete(DateTime now)
     {
+        if (IsDeleted)
+            return;
+
         IsDeleted = true;
         IsActive = false;
         IsArchived = true;
@@ -147,25 +215,57 @@ public class MealPlan
         );
     }
 
-    private static void Validate(
+    private MealPlanMeal RequireMeal(Guid mealId)
+    {
+        if (mealId == Guid.Empty)
+            throw new DomainException("Meal ID is required");
+
+        return _meals.SingleOrDefault(meal => meal.Id == mealId)
+            ?? throw new DomainException("Meal does not belong to this plan");
+    }
+
+    private static void ValidateFinalOrders(
+        IEnumerable<(Guid Id, int Order)> currentOrders,
+        IReadOnlyDictionary<Guid, int> requestedOrders,
+        string nodeName
+    )
+    {
+        var current = currentOrders.ToDictionary(entry => entry.Id, entry => entry.Order);
+        if (requestedOrders.Keys.Any(id => !current.ContainsKey(id)))
+            throw new DomainException($"{nodeName} does not belong to this aggregate");
+        if (requestedOrders.Values.Any(order => order <= 0))
+            throw new DomainException($"{nodeName} order must be greater than zero");
+
+        var final = current
+            .Select(entry => requestedOrders.GetValueOrDefault(entry.Key, entry.Value))
+            .ToArray();
+        if (final.Distinct().Count() != final.Length)
+            throw new DomainException($"{nodeName} order numbers must be unique");
+    }
+
+    private static void ValidateIdentifiers(
         Guid ownerTrainerId,
-        Guid clientId,
-        string name,
-        DateOnly startsDate,
-        DateOnly? endsDate,
-        NutritionCalculationSnapshot calculationSnapshot
+        Guid clientId
     )
     {
         if (ownerTrainerId == Guid.Empty)
             throw new DomainException("Owner trainer ID is required");
         if (clientId == Guid.Empty)
             throw new DomainException("Client ID is required");
-        if (name.Length is 0 or > 255)
+    }
+
+    private static string NormalizeRequiredName(string? value)
+    {
+        var normalized = value?.Trim() ?? string.Empty;
+        if (normalized.Length is 0 or > 255)
             throw new DomainException("Meal plan name must contain between 1 and 255 characters");
+        return normalized;
+    }
+
+    private static void ValidateDates(DateOnly startsDate, DateOnly? endsDate)
+    {
         if (endsDate.HasValue && endsDate.Value < startsDate)
             throw new DomainException("End date cannot be before start date");
-
-        ArgumentNullException.ThrowIfNull(calculationSnapshot);
     }
 
     private static string? NormalizeOptional(string? value) =>

@@ -26,6 +26,11 @@ Revisão de performance para SaaS multi-tenant de personal trainers.
 - Índices em `owner_trainer_id` e foreign keys frequentes
 - Rever queries com `EXPLAIN ANALYZE` quando há lentidão reportada
 
+### Consistência Entre Camadas (Application ↔ Infrastructure)
+- Quando um doc comment/contrato da Application layer promete um comportamento de query (ex: "sem tracking", "projeção direta", "query batched"), confirmar no pseudocódigo/código da Infrastructure layer que a implementação **realmente invocada por esse handler** cumpre a promessa
+- Não presumir que dois métodos com nomes semelhantes (ex: `GetAsync` vs `GetOwnedForReadAsync`) são o mesmo path — seguir a cadeia de chamadas real (handler → interface → implementação) antes de reportar uma inconsistência
+- Reload-após-escrita (reler uma linha depois de `SaveChangesAsync` para obter uma coluna calculada) é um path diferente de leitura projetada para listagem/detalhe — tracking aí não é um problema de performance
+
 ## Critical Rules
 
 ### Não Otimizar para Escala Que Não Existe

@@ -1,160 +1,103 @@
 ---
 name: graphify-pseudocode
-description: |
-  Generate extended pseudocode for features in PT Manager following Clean Architecture organized by feature (Api → Application → Domain ← Infrastructure). Generates detailed pseudocode with XML doc/JSDoc suggestions, WHY comments, and mentor notes for learning. Use when implementing features, handlers, repositories, entities, or API controllers.
+description: Generate or review extended pseudocode blueprints for PT Manager files in Domain, Application, Infrastructure, Api, frontend and tests. Use when the user asks for files.md, pseudocode, implementation guides, feature blueprints, handlers, stores, queries, entities, controllers or tests. Enforces one continuous complete blueprint per real target file with exact path, XML Docs or JSDoc, inline WHY comments, mentor notes and validations.
 ---
 
-# Graphify Pseudocode Generator
+# Graphify Pseudocode for PT Manager
 
-Generate detailed, educational pseudocode for PT Manager (ASP.NET Core/.NET 10 + React SaaS multi-tenant) that follows the project's exact style and Clean Architecture patterns.
+Generate documentation that lets another developer implement a target file without
+searching for missing signatures, rules or method bodies.
 
-## What This Skill Does
+## Required preparation
 
-When you need to implement a feature, this skill:
-1. Analyzes your project graph to understand context and dependencies
-2. Reads your golden rules (Clean Architecture, DI, security, testing patterns)
-3. Generates pseudocode in your established style (structured like `05-use-cases.md`)
-4. Includes XML/JSDoc structure suggestions
-5. Adds WHY comments explaining technical decisions
-6. Includes mentor notes for learning
-7. Creates a .md file ready to guide implementation
+1. Read `AGENTS.md`, `.codex/memory/MEMORY.md` and the relevant canonical files
+   under `.claude/project/`.
+2. Inspect the real code, tests and `git status --short` before describing a file.
+3. Read `.claude/memory/Patterns/blueprints_pseudocodigo_por_ficheiro.md`.
+4. Treat `backend-python/` only as optional flow discovery. Never use it as the
+   target contract or architecture.
+5. Prefer the actual source graph and code. Use `graphify-out/` only when it is
+   current and useful; the skill must still work without it.
 
-## When to Use This Skill
+## Mandatory structure per target file
 
-**Triggers:**
-- "Generate pseudocode for [FeatureName]"
-- "Create a blueprint for [UseCase/Repository/Entity/Endpoint]"
-- "I need pseudocode for implementing [Component] in [Layer]"
-- "Design [Feature] following Clean Architecture"
-- "What should [Module] look like? (structured pseudocode)"
+For every production or test file, emit in this order:
 
-**Best for:**
-- New use cases (Application layer)
-- Repository implementations (Infrastructure layer)
-- Domain entities with business logic
-- API endpoints (Api layer)
-- Any component where you want to learn the pattern while building
+1. Exact repository-relative target path.
+2. Current state: `existing`, `incomplete` or `to create`.
+3. Layer fit and one clear responsibility.
+4. One continuous fenced block containing the complete extended pseudocode file.
+5. Mentor notes after the block.
+6. File-specific validations after the mentor notes.
 
-## How to Request Pseudocode
+The continuous block must include, when applicable:
 
-Provide these details (at minimum):
+1. All imports or `using` directives.
+2. Namespace.
+3. XML Docs for public C# types and members, or JSDoc for public frontend APIs.
+4. Type declaration, inheritance, fields, properties and constructor.
+5. Every public and private method required by the responsibility.
+6. Complete branches, mapping, failures and return values.
+7. Transaction, concurrency, idempotency and cancellation behavior.
+8. WHY comments immediately beside non-obvious decisions.
 
+Use English for identifiers. Use Portuguese from Portugal for XML Docs, JSDoc,
+WHY comments, mentor notes and explanations.
+
+## Prohibited output
+
+Do not:
+
+1. Separate XML Docs, signatures, business rules and method bodies into different
+   sections.
+2. List method names without complete behavior.
+3. Describe tests only by name. Include Arrange, Act and Assert in each test.
+4. Use generic paths or placeholders that leave the destination undecided.
+5. Invent types, packages or contracts without checking the repository.
+6. Use exceptions for expected Application flow when Result is the project pattern.
+7. Set a global line-coverage percentage. Cover the critical behavior and failure
+   scenarios required by the feature.
+8. Write real migration classes by hand. Document model configuration changes and
+   commands that generate the migration.
+
+## Large deliveries
+
+Create a short index and split blueprints by responsibility, such as contracts,
+validation, handlers, persistence and tests. Do not repeat full pseudocode in the
+index. Keep one public C# type per target file where that is the project convention.
+
+Mark dependencies and gates between document batches. Do not document a later batch
+as implemented before its prerequisite gate is approved.
+
+## Testing requirements
+
+1. Domain tests use no mocks and verify invariants.
+2. Application tests use small fakes or mocks for ports and verify orchestration.
+3. Infrastructure tests use PostgreSQL Testcontainers for EF Core, SQL,
+   constraints, rollback and concurrency.
+4. Include negative cross-tenant cases for tenant-owned features.
+5. Verify `CancellationToken` propagation on asynchronous I/O.
+6. Test behavior and failure outcomes, not private implementation details.
+
+## Bundled generator
+
+Use `scripts/pseudocode_generator.py` when a deterministic skeleton is useful. It
+accepts the real target path and can print to stdout or write to an explicit output.
+The generated skeleton is only a starting point: replace every placeholder after
+inspecting the repository.
+
+Example:
+
+```powershell
+python .agents/skills/graphify-pseudocode/scripts/pseudocode_generator.py `
+  --feature CreateMealPlanHandler `
+  --layer Application `
+  --file-path backend/src/Application/Features/Nutrition/CreateMealPlan/CreateMealPlanHandler.cs `
+  --state "to create"
 ```
-Feature/Component: [Name]
-Context/Layer: [Application.UseCases | Domain.Entities | Infrastructure.Repositories | Api.Endpoints]
-File location: docs/pseudocode/[NameFeature].md
-Learning focus: [List topics you want highlighted — e.g., "DI + Result pattern", "Repository pattern + EF Core", "Transaction atomicity"]
-Dependencies: [What this connects to — e.g., "IConversationRepository, IMessageRepository, IAnthropicService"]
-Additional context: [Optional — any specific patterns or gotchas to emphasize]
-```
 
-## Example Input
+## Final quality gate
 
-```
-Feature: CreateMealPlanHandler
-Context: Application.Features.Nutrition
-File location: docs/pseudocode/CreateMealPlanHandler.md
-Learning focus: Result pattern + multi-tenant ownership check + explicit mapping (no AutoMapper)
-Dependencies: IMealPlanRepository, IClientRepository, ITenantContext, MealPlan, Client
-Additional context: Should reject clients that don't belong to the current trainer, explain why SaveChangesAsync happens once at the end
-```
-
-## Output Structure
-
-The generated .md file follows this structure:
-
-```
-# [Feature Name] Implementation Guide
-
-## Objective
-[What this component does]
-
-## Why This Matters (mentor note)
-[Learning context and architectural importance]
-
-## [Component 1] — [Main Responsibility]
-
-### XML/JSDoc Structure
-[Exact structure to use with explanations]
-
-### Pseudocode
-[Extended pseudocode in your style]
-
-### Why Comments
-[Explanations of technical decisions]
-
-## [Component 2] — [If multiple components]
-[Same pattern]
-
-## Implementation Notes
-[XML doc patterns, comment guidelines, error handling, testing considerations]
-
-## Checklist
-[Step-by-step verification points]
-
-## Next Steps
-[Links to related documentation or follow-up tasks]
-```
-
-## What You'll Get
-
-1. **Extended pseudocode** — Not compressed, reads like a technical tutorial
-2. **XML doc suggestions** — Exact `<summary>` tags and structure for C# classes
-3. **WHY comments** — Explaining decisions (atomicity, dependency injection, error handling)
-4. **Mentor notes** — Teaching moments explaining patterns and gotchas
-5. **Dependency mapping** — Shows how this component connects via the graph
-6. **Checklist** — Verification points before considering implementation complete
-7. **Clean Architecture alignment** — Every component respects layer boundaries and DI
-
-## Style Reference
-
-The pseudocode follows your established patterns from `05-use-cases.md`:
-- Classes and methods in English
-- Comments in Portuguese (PT-PT)
-- `MÉTODO ASYNC`, `CAMPO PRIVADO SÓ-LEITURA`, `Result<T>.Success/Failure` patterns
-- Dependency Injection in constructors
-- No hardcoding, no direct exception handling in use cases (delegation to middleware)
-- Atomic database operations
-- Comprehensive, educational tone
-
-## Graph Integration
-
-This skill automatically:
-- Loads your `graph.json` to understand dependencies
-- Reads `GRAPH_REPORT.md` for architecture patterns
-- Identifies "God Nodes" (core abstractions)
-- Maps your component to its community in the graph
-- Suggests connections based on your actual codebase
-
-## Project Context
-
-Your project structure:
-- **Domain Layer**: Pure business logic (entities, interfaces)
-- **Application Layer**: Orchestration (use cases, DTOs, services)
-- **Infrastructure Layer**: Persistence & external services (repositories, DB, API clients)
-- **Api Layer**: HTTP contracts (endpoints, filters, middleware)
-
-The skill ensures pseudocode respects these boundaries.
-
-## Security & Best Practices
-
-Generated pseudocode includes:
-- No hardcoded credentials or secrets
-- Parameterized queries via EF Core
-- Proper error handling patterns
-- Input validation references (FluentValidation)
-- Secure patterns for external service calls
-
-## Testing Mindset
-
-Each pseudocode component includes notes on:
-- What should be unit tested (Domain logic)
-- What needs mocks (Application layer repositories)
-- Integration test scenarios
-- Coverage goals (80%+ target)
-
----
-
-## Next: Use This Skill
-
-Ready? Provide your feature details using the format above, and the skill will generate your pseudocode file. The output .md will live in `docs/pseudocode/` and will be ready to guide your implementation.
+Before delivery, verify that every referenced target path is exact, every file has
+one continuous complete block, all expected failures appear inside the responsible
+method, and the implementation order matches Clean Architecture dependencies.

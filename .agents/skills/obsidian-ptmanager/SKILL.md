@@ -1,291 +1,66 @@
 ---
 name: obsidian-ptmanager
-description: |
-  Persistent memory system for PT Manager using Obsidian vault in .claude/memory/. Use at the START of each session to load project context and at the END to capture lessons learned. Triggers on: new session, "load memory", "save session notes", project reviews, retrospectives, or when you need continuity across chats. Stores architectural decisions, gotchas, patterns, and session summaries in durable .md files with git history.
+description: Maintain persistent PT Manager project memory across Codex and Claude. Use at session start, milestones, material architectural decisions, reviews, retrospectives, or when the user asks to load or update memory. Reads `.codex/memory/MEMORY.md` and `.claude/memory/MEMORY.md`, keeps concise canonical milestone notes, and never replaces current code or project documentation as source of truth.
 ---
 
-# Obsidian: Persistent Memory for PT Manager
+# Persistent memory for PT Manager
 
-This skill manages the `.claude/memory/` vault in your PT Manager project folder. It provides **durable, versionable, searchable context** that persists across chat sessions.
+Use memory to preserve durable context, not as a second specification.
 
-The entire knowledge base is **diffable, branchable, and has full git history** — if something changes, you can see exactly what, when, and why.
-
-## Memory Structure: How It Works
+## Source precedence
 
-Your `.claude/memory/` directory is organized like this:
+When sources disagree, use this order:
 
-```
-.claude/memory/
-├── MEMORY.md                    # Index: starting point for every session
-├── Sessions/                    # Session summaries
-│   ├── 2026-07-25-backend-sprint.md
-│   ├── 2026-07-24-frontend-fixes.md
-│   └── ...
-├── Gotchas/                     # Common pitfalls (named gotcha_*.md)
-│   ├── gotcha_multi_tenancy.md
-│   ├── gotcha_migrations.md
-│   └── ...
-├── Architecture/                # Architecture decisions
-│   ├── clean_architecture.md
-│   ├── handlers_pattern.md
-│   └── ...
-├── Patterns/                    # Reusable code patterns
-│   ├── global_query_filters.md
-│   ├── entity_construction.md
-│   └── ...
-└── Corrections/                 # Patterns from mistakes corrected
-    ├── correction_over_abstraction.md
-    └── ...
-```
+1. Current code and schema.
+2. Canonical documents under `.claude/project/`.
+3. `AGENTS.md`.
+4. `.codex/memory/MEMORY.md` and `.claude/memory/MEMORY.md`.
+5. Historical session notes.
 
-## At the START of Every Session: Load Memory
+State the contradiction and correct stale memory instead of adapting code to it.
 
-**Step 1: Read MEMORY.md**
+## Start of work
 
-This is your entry point. It should contain:
-- Quick summary of the project (PT Manager: SaaS, C# backend rewrite, React frontend)
-- Current focus (Sprint number, feature being worked on)
-- Key architectural decisions (Clean Architecture, no MediatR, multi-tenancy via Global Query Filters)
-- Link to most recent session notes
+1. Read `.codex/memory/MEMORY.md` when it exists.
+2. Read `.claude/memory/MEMORY.md` when it exists.
+3. Read only recent session, pattern or gotcha notes relevant to the request.
+4. Run `git status --short` before planning edits.
 
-Example MEMORY.md:
+Never read protected secret files while loading context.
 
-```markdown
-# PT Manager — Working Memory
+## When to write memory
 
-**Project:** SaaS for personal trainers (clients, sessions, plans, nutrition, billing)
-**Language:** C# .NET 10 (backend rewrite from Python), React 19 (frontend)
-**Architecture:** Clean Architecture, modular monolith, organized by feature
-**Database:** PostgreSQL 17 (Neon), EF Core 10, multi-tenancy via `owner_trainer_id` + Global Query Filters
+Update memory only when at least one condition is true:
 
-## Current Status
-- **Sprint:** Sprint 1 (Domain Layer)
-- **Focus:** Building entites, value objects, domain logic
-- **Not doing:** RabbitMQ, MediatR, AutoMapper, `IRepository<T>` generic
-- **Key constraint:** No migrations written by hand; all via `dotnet ef migrations add`
+1. A sprint, phase or major milestone changed state.
+2. A material architecture, contract, security or data decision was approved.
+3. A reusable pattern or recurring gotcha was discovered.
+4. The user explicitly requested a memory update.
 
-## Last Session
-- Date: 2026-07-25
-- Work: Implemented Client entity, SessionRepository pattern
-- Link: `Sessions/2026-07-25-backend-sprint.md`
+Do not create a session file for routine conversations, status checks or changes
+already captured by an existing canonical note.
 
-## Quick Links
-- Architecture: `.claude/project/00_ARCHITECTURE.md` (source of truth)
-- Database: `.claude/project/01_DATABASE_SCHEMA.md`
-- Sprint plan: `.claude/project/02_SPRINTS_ROADMAP.md`
-- Key gotchas: `Gotchas/gotcha_multi_tenancy.md`, `Gotchas/gotcha_migrations.md`
-```
-
-**Step 2: Read Gotchas**
-
-Skim relevant `gotcha_*.md` files if you're working in a known problem area (e.g., multi-tenancy, migrations, testing).
-
-**Step 3: Skim Recent Sessions**
-
-Read the last 1-2 session summaries to understand what happened before and what's blocked.
+## Writing workflow
 
-## At the END of Every Session: Save Memory
-
-**Step 1: Create Session File**
+1. Verify the claim against code, tests, git history or canonical docs.
+2. Create one dated note under `.claude/memory/Sessions/` only for a milestone or
+   decision that needs its own history.
+3. Link both memory indexes to that note when both need the same context.
+4. Keep indexes concise: current state, durable decisions, limitation and next step.
+5. Link instead of copying a long narrative into multiple files.
+6. Record environmental test blockers separately from functional failures.
+7. Never claim a test passed without evidence from that execution or an explicitly
+   attributed prior review.
 
-Filename: `.claude/memory/Sessions/YYYY-MM-DD-topic.md` (e.g., `2026-07-25-backend-sprint.md`)
+## Patterns and gotchas
 
-Content:
+Create or update a file in `Patterns/` when the rule should guide future work.
+Create or update a file in `Gotchas/` when a verified failure is likely to recur.
+Do not duplicate a rule already enforced by `AGENTS.md` unless the memory adds
+project-specific evidence or a concrete example.
 
-```markdown
-# Session: Backend Sprint — 2026-07-25
+## Content rules
 
-**Duration:** ~2 hours
-**Focus:** Domain layer (Client entity, SessionRepository)
-**Status:** In progress / Completed / Blocked
-
-## What I Did
-- Implemented `Client` entity with proper multi-tenancy isolation
-- Created `IClientsRepository` and `ClientsRepository` (concrete, not generic)
-- Wrote unit tests for `CreateClientHandler`
-- Fixed `Global Query Filter` to include `Session` entity
-
-## Key Decisions Made
-- Decided against `Value Objects` for Email/Name (too early to abstract)
-- Confirmed handler pattern: one handler per operation (no MediatR)
-- Chose `Guid` generation in C# (`Guid.NewGuid()`), not Postgres (`gen_random_uuid()`)
-
-## Blockers / Issues
-- None this session
-
-## Learnings / Patterns Discovered
-- Multi-tenancy filter must be applied at DbContext level, not repository level
-  → Pattern documented in `Patterns/global_query_filters.md`
-- Test mocks should inject `ITenantContext` explicitly
-  → Example: `mockTenantContext.Setup(x => x.TrainerId).Returns(Guid.NewGuid())`
-
-## Next Steps
-1. Implement `Trainer` entity and `TrainerRepository`
-2. Build integration tests with real DbContext
-3. Test soft delete behavior with `IsDeleted` flag
-
-## Commits
-- `feat(domain): implement Client entity with multi-tenancy`
-- `feat(infrastructure): create ClientsRepository with Global Query Filters`
-- `test: add CreateClientHandler unit tests`
-```
-
-**Step 2: Update MEMORY.md**
-
-Update the "Last Session" section and "Key constraints" if anything changed.
-
-**Step 3: If a Pattern Emerged, Document It**
-
-If you discovered something reusable, add it to `Patterns/`:
-
-Example: `Patterns/global_query_filters.md`
-
-```markdown
-# Pattern: Global Query Filters for Multi-tenancy
-
-**When to use:** Any time you need to filter database queries by `owner_trainer_id`
-
-**Implementation:**
-```csharp
-// In ApplicationDbContext.OnModelCreating()
-modelBuilder.Entity<Client>()
-    .HasQueryFilter(c => c.OwnerTrainerId == _tenantContext.TrainerId);
-```
-
-**Why it works:**
-- Automatic on every query — no forgotten WHERE clauses
-- Injected `ITenantContext` from DI ensures you're always in the right tenant
-- Works with EF Core LINQ, testing (just mock the context), and complex queries
-
-**Gotchas:**
-- `.IgnoreQueryFilters()` bypasses the filter — only use in admin/logging scenarios
-- Must set `_tenantContext` in the constructor, not in `OnModelCreating()` (it runs after)
-
-**Example test:**
-```csharp
-[Fact]
-public async Task GetAllAsync_ReturnsOnlyTenantClients()
-{
-    var trainerId = Guid.NewGuid();
-    var mockContext = new Mock<ITenantContext>();
-    mockContext.Setup(x => x.TrainerId).Returns(trainerId);
-    
-    var clients = await repository.GetAllAsync();
-    
-    Assert.All(clients, c => Assert.Equal(trainerId, c.OwnerTrainerId));
-}
-```
-```
-
-**Step 4: If You Hit a Gotcha, Document It**
-
-If you hit a mistake or discovered a painful pattern, add to `Gotchas/gotcha_*.md`:
-
-Example: `Gotchas/gotcha_migrations.md`
-
-```markdown
-# Gotcha: EF Core Migrations
-
-## The Problem
-Never edit a migration `.cs` file after it's been applied to a shared database (e.g., dev/staging).
-
-## Why
-- The migration history in `__EfMigrationsHistory` table records that migration as "applied"
-- If you edit it, the database and code get out of sync
-- Running migrations again fails with "migration already exists" or constraint errors
-
-## The Right Way
-1. Created wrong migration? Run `dotnet ef migrations remove` to revert it (only if not yet applied)
-2. Already applied? Create a NEW migration with `dotnet ef migrations add FixPreviousMigration`
-3. Always generate migrations with `dotnet ef migrations add` — never write SQL by hand
-
-## Command Reference
-```bash
-# Generate migration from model changes
-dotnet ef migrations add AddClientTable --project src/Infrastructure
-
-# Apply all pending migrations
-dotnet ef database update --project src/Infrastructure
-
-# Revert to previous migration (only if not shared yet)
-dotnet ef migrations remove --project src/Infrastructure
-
-# See migration history
-dotnet ef migrations list --project src/Infrastructure
-```
-```
-
-## Querying Memory: How to Use It
-
-At any point in a session, you can ask:
-- "Load my memory" → Reads MEMORY.md and recent sessions
-- "Do we have a pattern for X?" → Searches `Patterns/`
-- "Have we hit this bug before?" → Checks `Gotchas/`
-- "What did we decide about Y?" → Looks in `Architecture/`
-
-The memory system helps you avoid:
-- Repeating the same mistake twice
-- Over-engineering the same solution twice
-- Forgetting why a decision was made
-- Getting stuck on a known blocker
-
-## Workflow: Load → Work → Save
-
-```
-1. START SESSION
-   ├─ Read .claude/memory/MEMORY.md
-   ├─ Skim relevant Gotchas/
-   └─ Skim last 1-2 session files
-
-2. WORK
-   ├─ Code, test, fix, iterate
-   ├─ Notice patterns, gotchas, decisions
-   └─ Jot notes inline (← I'll handle this at the end)
-
-3. END SESSION
-   ├─ Create Sessions/YYYY-MM-DD-topic.md
-   ├─ Document what you did, blockers, learnings
-   ├─ Add any new patterns to Patterns/
-   ├─ Add any new gotchas to Gotchas/
-   ├─ Update MEMORY.md with latest status
-   └─ Commit with message: "chore: update memory for session YYYY-MM-DD"
-```
-
-## Memory File Rules
-
-- **Markdown only.** Plain text, no HTML, no Word docs. Git-friendly.
-- **Dated session files.** Format: `YYYY-MM-DD-topic.md`
-- **UTF-8 encoding.** Always.
-- **Linked, not duplicated.** If something appears in two places, link to the canonical version.
-- **Concise but complete.** Assume future-you doesn't remember this project. Explain context.
-- **Committed to git.** Memory IS source-controlled. You can blame a decision, revert a note, see history.
-
-## Example: Complete Memory Workflow
-
-**Session 1:**
-1. Read MEMORY.md → "Current focus: Domain layer, Sprint 1"
-2. Work on entities and tests
-3. At end, create `Sessions/2026-07-25-domain.md`
-4. Document pattern: "Global Query Filters" in `Patterns/global_query_filters.md`
-5. Commit: `chore: update memory for domain session`
-
-**Session 2 (next day):**
-1. Read MEMORY.md → "Last session: 2026-07-25-domain.md, Next: Integration tests"
-2. Skim `Sessions/2026-07-25-domain.md` to see what was done
-3. Check `Patterns/global_query_filters.md` for the exact implementation
-4. Write integration tests, reuse the pattern directly
-5. At end, create `Sessions/2026-07-26-integration.md`
-6. Commit: `chore: update memory for integration session`
-
-Now **Session 3 (1 week later)** the entire context is there, searchable, diffable, and version-controlled.
-
-## Pro Tips
-
-- **Use wikilinks:** In Obsidian syntax, `[[gotcha_multi_tenancy]]` creates a clickable link to another note
-- **Tag for search:** Add `#pattern`, `#gotcha`, `#decision`, `#blocker` to make notes searchable
-- **Backlinks:** Notes linking to each other create a natural knowledge graph
-- **Vault in git:** The entire `.claude/memory/` directory is in your repo. Push to GitHub. It's your institutional memory.
-
----
-
-**Your memory is your superpower. Use it.**
+Use UTF-8 Markdown and Portuguese from Portugal. Include exact dates, paths and
+commit identifiers where verified. Never store credentials, tokens, connection
+strings or contents from protected files.

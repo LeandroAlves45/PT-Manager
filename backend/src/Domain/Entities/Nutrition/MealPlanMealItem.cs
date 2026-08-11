@@ -2,7 +2,7 @@ using Domain.Exceptions;
 namespace Domain.Entities.Nutrition;
 
 /// <summary>
-/// Alimento numa refeição, com quantidade em gramas e posição.
+/// Alimento prescrito numa refeição, em gramas e com posição.
 /// </summary>
 public class MealPlanMealItem
 {
@@ -25,9 +25,7 @@ public class MealPlanMealItem
         DateTime now
     )
     {
-        // GUARD de quantidade já feito no pai, repete-se aqui por defesa em profundidade
-        if (quantityInGrams <= 0)
-            throw new DomainException("Meal item quantity must be greater than 0");
+        Validate(mealPlanMealId, foodId, quantityInGrams, orderNumber);
 
         Id = Guid.NewGuid();
         MealPlanMealId = mealPlanMealId;
@@ -38,13 +36,54 @@ public class MealPlanMealItem
         UpdatedAt = now;
     }
 
-    /// <summary>Ajusta a quantidade em gramas do alimento na refeição.</summary>
-    public void ChangeQuantity(decimal quantityInGrams, DateTime now)
+    /// <summary>Atualiza alimento.</summary>
+    internal void Update(
+        Guid foodId,
+        decimal quantityInGrams,
+        int orderNumber,
+        DateTime now
+    )
     {
-        if (quantityInGrams <= 0)
-            throw new DomainException("Meal item quantity must be greater than 0");
-
+        ValidateReference(foodId, quantityInGrams, orderNumber);
+        FoodId = foodId;
         QuantityInGrams = quantityInGrams;
+        OrderNumber = orderNumber;
         UpdatedAt = now;
+    }
+
+    /// <summary>Muda apenas a ordem do alimento na refeição.</summary>
+    internal void ChangeOrder(int orderNumber, DateTime now)
+    {
+        if (orderNumber <= 0)
+            throw new DomainException("Meal item order number must be greater than zero.");
+
+        OrderNumber = orderNumber;
+        UpdatedAt = now;
+    }
+
+    private static void Validate(
+        Guid mealPlanMealId,
+        Guid foodId,
+        decimal quantityInGrams,
+        int orderNumber
+    )
+    {
+        if (mealPlanMealId == Guid.Empty)
+            throw new DomainException("Meal ID is required.");
+        ValidateReference(foodId, quantityInGrams, orderNumber);
+    }
+
+    private static void ValidateReference(
+        Guid foodId,
+        decimal quantityInGrams,
+        int orderNumber
+    )
+    {
+        if (foodId == Guid.Empty)
+            throw new DomainException("Food ID is required.");
+        if (quantityInGrams <= 0m)
+            throw new DomainException("Meal item quantity must be greater than zero.");
+        if (orderNumber <= 0)
+            throw new DomainException("Meal item order number must be greater than zero.");
     }
 }
