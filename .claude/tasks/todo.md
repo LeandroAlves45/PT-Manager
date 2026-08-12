@@ -32,9 +32,10 @@
 
 ## Fase 2 — Nutrition + Training
 
-- [x] Lote 2A Nutrition: índice, contratos, Domain, Application,
-  Infrastructure e testes em pseudocódigo alargado
-- [ ] Gate 2A: cálculo, snapshots, reconciliação, catálogos e tenant revistos
+- [x] Lote 2A Nutrition: documentação e implementação de Domain, Application,
+  Infrastructure e testes concluídas em 12/08/2026
+- [x] Gate 2A: cálculo, snapshots, reconciliação, catálogos, concorrência e
+  tenant revistos com 24 testes PostgreSQL específicos
 - [ ] Lote 2B Training: Exercise, TrainingPlan, estrutura e logs históricos
 - [ ] Gate 2B: edição segura, replacement, locks, concorrência e tenant revistos
 - [ ] Lote 2C: configurações EF Core, migration gerada futura e gate transversal

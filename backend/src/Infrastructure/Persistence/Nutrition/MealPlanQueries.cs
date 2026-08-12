@@ -61,22 +61,23 @@ internal sealed class MealPlanQueries : IMealPlanQueries
                 _dbContext.Foods.AsNoTracking(),
                 item => item.FoodId,
                 food => food.Id,
-                (item, food) => new MealItemRow(
-                    item.Id,
-                    item.MealPlanMealId,
-                    item.FoodId,
-                    food.Name,
-                    item.QuantityInGrams,
-                    item.OrderNumber,
-                    food.Protein,
-                    food.Carbs,
-                    food.Fats,
-                    food.Kcal,
-                    food.Fiber
-                )
+                (item, food) => new { Outer = item, Inner = food }
             )
-            .OrderBy(item => item.OrderNumber)
-            .ThenBy(item => item.Id)
+            .OrderBy(item => item.Outer.OrderNumber)
+            .ThenBy(item => item.Outer.Id)
+            .Select(item => new MealItemRow(
+                item.Outer.Id,
+                item.Outer.MealPlanMealId,
+                item.Outer.FoodId,
+                item.Inner.Name,
+                item.Outer.QuantityInGrams,
+                item.Outer.OrderNumber,
+                item.Inner.Protein,
+                item.Inner.Carbs,
+                item.Inner.Fats,
+                item.Inner.Kcal,
+                item.Inner.Fiber
+            ))
             .ToListAsync(cancellationToken);
 
         var supplements = await _dbContext.MealPlanMealSupplements
@@ -86,19 +87,24 @@ internal sealed class MealPlanQueries : IMealPlanQueries
                 _dbContext.Supplements.AsNoTracking(),
                 association => association.SupplementId,
                 supplement => supplement.Id,
-                (association, supplement) => new SupplementRow(
-                    association.Id,
-                    association.MealPlanMealId,
-                    association.SupplementId,
-                    supplement.Name,
-                    supplement.UnitOfMeasure,
-                    association.Notes,
-                    association.Quantity,
-                    association.OrderNumber
-                )
+                (association, supplement) => new
+                {
+                    Outer = association,
+                    Inner = supplement
+                }
             )
-            .OrderBy(item => item.OrderNumber)
-            .ThenBy(item => item.Id)
+            .OrderBy(item => item.Outer.OrderNumber)
+            .ThenBy(item => item.Outer.Id)
+            .Select(item => new SupplementRow(
+                item.Outer.Id,
+                item.Outer.MealPlanMealId,
+                item.Outer.SupplementId,
+                item.Inner.Name,
+                item.Inner.UnitOfMeasure,
+                item.Outer.Notes,
+                item.Outer.Quantity,
+                item.Outer.OrderNumber
+            ))
             .ToListAsync(cancellationToken);
 
         var itemsDtos = items.ToDictionary(

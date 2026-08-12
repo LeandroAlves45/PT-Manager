@@ -147,6 +147,7 @@ internal sealed class MealPlanStore : IMealPlanStore
                     return referenceFailure;
                 }
 
+                await StageExistingOrdersAsync(plan, now, cancellationToken);
                 Reconcile(plan, model, now);
                 await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
@@ -308,6 +309,61 @@ internal sealed class MealPlanStore : IMealPlanStore
             var meal = plan.AddMeal(input.MealType, input.OrderNumber, now);
             AddChildren(meal, input, now);
         }
+    }
+
+    private async Task StageExistingOrdersAsync(
+        MealPlan plan,
+        DateTime now,
+        CancellationToken cancellationToken
+    )
+    {
+        // PostgreSQL valida índices únicos por statement. Uma ordem temporária
+        // permite swaps dentro da mesma transação sem expor estado intermédio.
+        plan.ReorderMeals(
+            CreateTemporaryOrders(plan.Meals.Select(meal => (meal.Id, meal.OrderNumber))),
+            now
+        );
+
+        foreach (var meal in plan.Meals)
+        {
+            meal.ReorderItems(
+                CreateTemporaryOrders(meal.Items.Select(item => (item.Id, item.OrderNumber))),
+                now
+            );
+            meal.ReorderSupplements(
+                CreateTemporaryOrders(
+                    meal.Supplements.Select(item => (item.Id, item.OrderNumber))
+                ),
+                now
+            );
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static IReadOnlyDictionary<Guid, int> CreateTemporaryOrders(
+        IEnumerable<(Guid Id, int Order)> currentOrders
+    )
+    {
+        var materialized = currentOrders.OrderBy(item => item.Id).ToArray();
+        var usedOrders = materialized.Select(item => item.Order).ToHashSet();
+        var result = new Dictionary<Guid, int>(materialized.Length);
+        var candidate = int.MaxValue;
+
+        foreach (var item in materialized)
+        {
+            while (candidate > 0 && usedOrders.Contains(candidate))
+                candidate--;
+
+            if (candidate <= 0)
+                throw new InvalidOperationException("No temporary order value is available.");
+
+            result.Add(item.Id, candidate);
+            usedOrders.Add(candidate);
+            candidate--;
+        }
+
+        return result;
     }
 
     private static void ReconcileExistingMeal(
