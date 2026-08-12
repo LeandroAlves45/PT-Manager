@@ -14,10 +14,7 @@ public class ClientExerciseSetLog
     public decimal WeightKg { get; private set; }
     public int RepsDone { get; private set; }
     public string? Notes { get; private set; }
-    /// <summary>
-    /// Timestamp oficial do treino -> quando a série foi feita, não quando foi registada
-    /// </summary>
-    public DateTime LoggedAt { get; private set; }
+    public DateTimeOffset PerformedAt { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -33,41 +30,67 @@ public class ClientExerciseSetLog
         decimal weightKg,
         int repsDone,
         string? notes,
+        DateTimeOffset performedAt,
         DateTime now
     )
     {
-        Validate(setNumber, weightKg, repsDone);
+        ValidateIdentifiers(clientId, trainingPlanDayExerciseId);
+        ValidateValues(setNumber, weightKg, repsDone);
 
         Id = Guid.NewGuid();
         ClientId = clientId;
         TrainingPlanDayExerciseId = trainingPlanDayExerciseId;
         SetNumber = setNumber;
-        WeightKg = weightKg;
-        RepsDone = repsDone;
-        Notes = NormalizeOptional(notes);
-        LoggedAt = now;
+        ApplyValues(weightKg, repsDone, notes, performedAt);
         CreatedAt = now;
         UpdatedAt = now;
     }
 
-    /// <summary>Corrige um registo existente</summary>
-    public void Correct(decimal weightKg, int repsDone, string? notes, DateTime now)
+    /// <summary>Corrige valores executados e instante, preservando a identidade.</summary>
+    public void Correct(
+        decimal weightKg,
+        int repsDone,
+        string? notes,
+        DateTimeOffset performedAt,
+        DateTime now)
     {
-        Validate(SetNumber, weightKg, repsDone);
+        ValidateValues(SetNumber, weightKg, repsDone);
+        ApplyValues(weightKg, repsDone, notes, performedAt);
+        UpdatedAt = now;
+    }
+
+    private void ApplyValues(
+        decimal weightKg,
+        int repsDone,
+        string? notes,
+        DateTimeOffset performedAt
+    )
+    {
         WeightKg = weightKg;
         RepsDone = repsDone;
         Notes = NormalizeOptional(notes);
-        LoggedAt = now;
-        UpdatedAt = now;
+        PerformedAt = performedAt.ToUniversalTime();
+    }
+
+    private static void ValidateIdentifiers(Guid clientId, Guid trainingPlanDayExerciseId)
+    {
+        if (clientId == Guid.Empty)
+            throw new DomainException("Client ID is required.");
+        if (trainingPlanDayExerciseId == Guid.Empty)
+            throw new DomainException("Training plan day exercise ID is required.");
     }
 
     /// <summary>
     /// Mêtodo privado para validação das cargas e repetições de uma série executada pelo cliente
     /// </summary>
-    private static void Validate(int setNumber, decimal weightKg, int repsDone)
+    private static void ValidateValues(int setNumber, decimal weightKg, int repsDone)
     {
-        if (setNumber is < 1 or > 15 || weightKg < 0 || repsDone is < 0 or > 100)
-            throw new DomainException("Set log values are outside their valid ranges.");
+        if (setNumber is < 1 or > 15)
+            throw new DomainException("Set number must be between 1 and 15.");
+        if (weightKg < 0)
+            throw new DomainException("Weight cannot be negative.");
+        if (repsDone is < 0 or > 100)
+            throw new DomainException("Reps done must be between 0 and 100.");
     }
 
     private static string? NormalizeOptional(string? value) =>

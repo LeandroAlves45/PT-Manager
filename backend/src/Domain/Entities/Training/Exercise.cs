@@ -38,10 +38,9 @@ public class Exercise
         DateTime now
     )
     {
-        SetFields(name, description, muscleGroups, equipment, difficultyLevel, videoUrl);
-
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
+        SetFields(name, description, muscleGroups, equipment, difficultyLevel, videoUrl);
         IsActive = true;
         IsDeleted = false;
         CreatedAt = now;
@@ -68,6 +67,8 @@ public class Exercise
     public void SetActive(bool isActive, DateTime now)
     {
         EnsureNotDeleted();
+        if (IsActive == isActive)
+            return;
         IsActive = isActive;
         UpdatedAt = now;
     }
@@ -75,6 +76,8 @@ public class Exercise
     /// <summary>Soft delete do exercício, marcando-o como excluído.</summary>
     public void SoftDelete(DateTime now)
     {
+        if (IsDeleted)
+            return;
         IsDeleted = true;
         IsActive = false;
         UpdatedAt = now;
@@ -93,9 +96,13 @@ public class Exercise
         var normalizedName = name?.Trim() ?? string.Empty;
         if (normalizedName.Length is 0 or > 255)
             throw new DomainException("Exercise name must be between 1 and 255 characters.");
-        if (muscleGroups is { Length: > 500 } || equipment is { Length: > 255 } ||
-            difficultyLevel is { Length: > 50 } || videoUrl is { Length: > 500 })
+        if ((muscleGroups is not null && muscleGroups.Trim().Length > 500) ||
+            (equipment is not null && equipment.Trim().Length > 255) ||
+            (difficultyLevel is not null && difficultyLevel.Trim().Length > 50) ||
+            (videoUrl is not null && videoUrl.Trim().Length > 500))
+        {
             throw new DomainException("Exercise fields exceed their maximum length.");
+        }
 
         Name = normalizedName;
         Description = NormalizeOptional(description);
