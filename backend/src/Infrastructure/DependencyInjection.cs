@@ -3,12 +3,16 @@ using Application.Features.Clients.Abstractions;
 using Application.Features.Jobs.Abstractions;
 using Application.Features.Nutrition.Foods.Abstractions;
 using Application.Features.Nutrition.MealPlans.Abstractions;
+using Application.Features.Training.Exercises.Abstractions;
+//using Application.Features.Training.ExerciseSetLogs.Abstractions;
+using Application.Features.Training.TrainingPlans.Abstractions;
 using Infrastructure.Data;
 using Infrastructure.Data.Interceptors;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Clients;
 using Infrastructure.Persistence.Errors;
 using Infrastructure.Persistence.Nutrition;
+using Infrastructure.Persistence.Training;
 using Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -62,6 +66,21 @@ public static class DependencyInjection
         // Meal Plans
         services.AddScoped<IMealPlanStore, MealPlanStore>();
         services.AddScoped<IMealPlanQueries, MealPlanQueries>();
+
+        // Exercises
+        services.AddScoped<IExerciseStore, ExerciseStore>();
+        services.AddScoped<IExerciseQueries, ExerciseQueries>();
+
+        // Training Plans
+        services.AddScoped<ITrainingPlanStore, TrainingPlanStore>();
+        services.AddScoped<ITrainingPlanQueries, TrainingPlanQueries>();
+
+        // Exercise Set Logs
+        //services.AddScoped<IExerciseSetLogStore, ExerciseSetLogStore>();
+        //services.AddScoped<IExerciseSetLogQueries, ExerciseSetLogQueries>();
+
+        // Training Plan Structure Coordinator
+        services.AddScoped<TrainingPlanStructureCoordinator>();
 
         // Interceptors
         services.AddScoped<TenantWriteValidationInterceptor>();

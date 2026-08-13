@@ -43,8 +43,8 @@ internal sealed class ClientExerciseSetLogConfiguration : IEntityTypeConfigurati
             .HasColumnName("notes")
             .HasMaxLength(500);
 
-        builder.Property(cel => cel.LoggedAt)
-            .HasColumnName("logged_at")
+        builder.Property(cel => cel.PerformedAt)
+            .HasColumnName("performed_at")
             .HasDefaultValueSql("now()")
             .IsRequired();
 

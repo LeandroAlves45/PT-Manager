@@ -23,7 +23,7 @@ public interface IExerciseStore
     );
 
     /// <summary>Ativa ou arquiva um exercício existente.</summary>
-    Task<ExerciseStoreResult> SetActivityAsync(
+    Task<ExerciseStoreResult> SetActiveAsync(
         Guid exerciseId,
         Guid trainerId,
         bool isActive,

@@ -23,6 +23,11 @@ public sealed class ExerciseStoreResult
         Exercise = exercise;
     }
 
+    public static ExerciseStoreResult ForUpdated(Exercise exercise)
+    {
+        ArgumentNullException.ThrowIfNull(exercise);
+        return new ExerciseStoreResult(Status.Updated, exercise);
+    }
     public static ExerciseStoreResult ForChanged() => new(Status.Changed, null);
     public static ExerciseStoreResult ForAlreadyRequested() =>
         new(Status.AlreadyInRequestedState, null);

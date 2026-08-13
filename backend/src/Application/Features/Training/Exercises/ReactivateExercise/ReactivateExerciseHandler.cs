@@ -46,7 +46,7 @@ public sealed class ReactivateExerciseHandler
         if (!tenant.IsSuccess)
             return Result.Failure(tenant.Error!);
 
-        var outcome = await _exerciseStore.SetActivityAsync(
+        var outcome = await _exerciseStore.SetActiveAsync(
             command.ExerciseId,
             tenant.Value,
             true,
