@@ -7,7 +7,7 @@ namespace Domain.Entities.Billing;
 /// Subscrição da plataforma por um personal trainer: tier (FREE/STARTER/PRO), estado,
 /// limite de clientes e ligação ao Stripe.
 /// </summary>
-public class TrainerSubscription
+public sealed class TrainerSubscription
 {
     public Guid Id { get; private set; }
     public Guid TrainerId { get; private set; }

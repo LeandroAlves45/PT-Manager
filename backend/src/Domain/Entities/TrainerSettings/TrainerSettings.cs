@@ -6,7 +6,7 @@ namespace Domain.Entities.TrainerSettings;
 /// Configurações de branding e contato de um personal trainer: nome da app, logo (Cloudinary),
 /// cores e morada. Exatamente uma por personal trainer.
 /// </summary>
-public class TrainerSettings
+public sealed class TrainerSettings
 {
     public Guid Id { get; private set; }
     public Guid TrainerId { get; private set; }

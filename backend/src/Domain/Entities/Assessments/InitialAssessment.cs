@@ -6,7 +6,7 @@ namespace Domain.Entities.Assessments;
 /// Avaliação inicial de um cliente: dados antropométricos, condição médica,
 /// nível de atividade física e objetivos, registados no ínicio do acompanhamento.
 /// </summary>
-public class InitialAssessment
+public sealed class InitialAssessment
 {
     public Guid Id { get; private set; }
     public Guid OwnerTrainerId { get; private set; }

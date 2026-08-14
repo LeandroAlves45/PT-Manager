@@ -4,7 +4,7 @@ namespace Domain.Entities.Training;
 /// <summary>
 /// Exercício do catálogo, global ou privado do Personal Trainer.
 /// </summary>
-public class Exercise
+public sealed class Exercise
 {
     public Guid Id { get; private set; }
     public Guid? OwnerTrainerId { get; private set; }

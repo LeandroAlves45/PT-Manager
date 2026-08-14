@@ -6,7 +6,7 @@ namespace Domain.Entities.Identity;
 /// Utilizador da plataforma. Serve Personal Trainers, clientes e o superUser através
 /// de uma coluna única <see cref="Role"/>  -> 3 roles fixas sem modelo N:N.
 /// </summary>
-public class User
+public sealed class User
 {
     public Guid Id { get; private set; }
     public string Email { get; private set; } = null!;

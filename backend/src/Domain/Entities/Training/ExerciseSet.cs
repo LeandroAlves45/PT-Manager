@@ -5,7 +5,7 @@ namespace Domain.Entities.Training;
 /// Série planeada de um exercício prescrito: número da série (1-15),
 /// repetições e carga alvo (opcional) e descanso
 /// </summary>
-public class ExerciseSet
+public sealed class ExerciseSet
 {
     public Guid Id { get; private set; }
     public Guid TrainingPlanDayExerciseId { get; private set; }

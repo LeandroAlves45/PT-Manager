@@ -9,7 +9,7 @@ namespace Domain.Entities.Identity;
 /// Deteção de reuso: se chegar um token com <see cref="RevokedAt"/> preenchido,
 /// significa que um token já rodado está a ser reutilizado — provável roubo.
 /// </remarks>
-public class RefreshToken
+public sealed class RefreshToken
 {
     public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
@@ -69,4 +69,3 @@ public class RefreshToken
             RevokedAt = now;
     }
 }
-

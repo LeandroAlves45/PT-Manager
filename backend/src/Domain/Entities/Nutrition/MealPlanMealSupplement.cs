@@ -5,7 +5,7 @@ namespace Domain.Entities.Nutrition;
 /// Suplemento associado a uma refeição, com notas livres de dosagem/timing
 /// (ex: "dose: 2g", "tomar 30min antes do treino").
 /// </summary>
-public class MealPlanMealSupplement
+public sealed class MealPlanMealSupplement
 {
     public Guid Id { get; private set; }
     public Guid MealPlanMealId { get; private set; }

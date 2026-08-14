@@ -8,7 +8,7 @@ namespace Domain.Entities.Jobs;
 /// (ativado por QStash). Entrega at-least-once: o handler do job tem de ser
 /// idempotente, apoiado em IdempotencyKey.
 /// </summary>
-public class DurableJob
+public sealed class DurableJob
 {
     public Guid Id { get; private set; }
     public Guid? TrainerId { get; private set; }

@@ -10,7 +10,7 @@ namespace Domain.Entities.Nutrition;
 /// A coluna "kcal" é GENERATED ALWAYS AS (protein * 4 + carbs * 4 + fats * 9) STORED
 /// no PostgreSQL -> no Domain, é só leitura e o EF Core configura-a como computed column.
 /// </remarks>
-public class Food
+public sealed class Food
 {
     public Guid Id { get; private set; }
     public Guid? OwnerTrainerId { get; private set; }

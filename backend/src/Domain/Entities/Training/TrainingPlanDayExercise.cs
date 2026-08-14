@@ -4,7 +4,7 @@ namespace Domain.Entities.Training;
 /// <summary>
 /// Exercício prescrito num dia de treino, com posição e notas do Personal Trainer.
 /// </summary>
-public class TrainingPlanDayExercise
+public sealed class TrainingPlanDayExercise
 {
     private readonly List<ExerciseSet> _sets = [];
     public Guid Id { get; private set; }

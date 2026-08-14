@@ -5,7 +5,7 @@ namespace Domain.Entities.Training;
 /// Registo real de uma série executada pelo cliente: carga e repetições efetivas,
 /// com timestamp oficial.
 /// </summary>
-public class ClientExerciseSetLog
+public sealed class ClientExerciseSetLog
 {
     public Guid Id { get; private set; }
     public Guid ClientId { get; private set; }

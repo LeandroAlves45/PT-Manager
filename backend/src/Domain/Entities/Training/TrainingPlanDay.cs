@@ -4,7 +4,7 @@ namespace Domain.Entities.Training;
 /// <summary>
 /// Dia de treino de um plano de treino. Dia da semana (ex: segunda...domingo)
 /// </summary>
-public class TrainingPlanDay
+public sealed class TrainingPlanDay
 {
     private readonly List<TrainingPlanDayExercise> _exercises = [];
     public Guid Id { get; private set; }

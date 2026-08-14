@@ -5,7 +5,7 @@ namespace Domain.Entities.Sessions;
 /// <summary>
 /// Sessão de treino agendada ou realizada, entre o Personal Trainer e o Cliente.
 /// </summary>
-public class Session
+public sealed class Session
 {
     public Guid Id { get; private set; }
     public Guid OwnerTrainerId { get; private set; }

@@ -15,7 +15,7 @@ namespace Domain.Entities.Jobs;
 /// onde não suporta, a duplicação é aceite e documentada. Exactly-once não é
 /// oferecido, porque o commit local e o efeito remoto não partilham transação.
 /// </remarks>
-public class OutboxMessage
+public sealed class OutboxMessage
 {
     public Guid Id { get; private set; }
     public Guid? TrainerId { get; private set; }

@@ -5,7 +5,7 @@ namespace Domain.Entities.Billing;
 /// Registo de um evento Stripe já processado. A unicidade de StripeEventId
 /// garante que reentregas do mesmo evento (retries do Stripe) não produzem efeitos duplicados.
 /// </summary>
-public class ProcessedStripeEvent
+public sealed class ProcessedStripeEvent
 {
     public Guid Id { get; private set; }
     public string StripeEventId { get; private set; } = null!;

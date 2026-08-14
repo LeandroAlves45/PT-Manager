@@ -5,7 +5,7 @@ namespace Domain.Entities.Training;
 /// Plano de treino de um cliente. Período de datas tem que ter início mas não precisa ter fim.
 /// Modalidades de treino disponíveis mas não obrigatórias.
 /// </summary>
-public class TrainingPlan
+public sealed class TrainingPlan
 {
     private readonly List<TrainingPlanDay> _days = [];
 

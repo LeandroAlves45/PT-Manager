@@ -5,7 +5,7 @@ namespace Domain.Entities.Nutrition;
 /// <summary>
 /// Plano alimentar com decisão nutricional imutável por snapshot.
 /// </summary>
-public class MealPlan
+public sealed class MealPlan
 {
     public Guid Id { get; private set; }
     public Guid OwnerTrainerId { get; private set; }

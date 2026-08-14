@@ -36,18 +36,29 @@
   Infrastructure e testes concluídas em 12/08/2026
 - [x] Gate 2A: cálculo, snapshots, reconciliação, catálogos, concorrência e
   tenant revistos com 24 testes PostgreSQL específicos
-- [ ] Lote 2B Training: Exercise, TrainingPlan, estrutura e logs históricos
-- [ ] Gate 2B: edição segura, replacement, locks, concorrência e tenant revistos
-- [ ] Lote 2C: configurações EF Core, migration gerada futura e gate transversal
-- [ ] Gate Fase 2: revisão final aprovada
+- [x] Lote 2B Training: Exercise, TrainingPlan, estrutura e logs históricos
+- [x] Gate 2B: edição segura, replacement, locks, concorrência e tenant revistos
+- [x] Lote 2C: configurações EF Core e migration
+  `20260814121132_CompleteTrainingPhase2C` concluídas em 14/08/2026
+- [x] Gate Fase 2: revisão final aprovada no commit `3441421`, com 652 testes
+  distintos aprovados e modelo EF Core sem alterações pendentes
 
 ## Fase 3 — Sessions + Assessments + Supplements + TrainerSettings
 
-- [ ] 00_plano_fase_3.md
-- [ ] Sessions: estados de sessão, `starts_at`, interação com packs (deferido do Sprint 2) + porta + repository + testes
-- [ ] Assessments: InitialAssessment + CheckIn (CheckIn nunca altera dieta) + testes
-- [ ] Supplements: Supplement + ClientSupplementAssignment + testes
-- [ ] TrainerSettings: handlers mínimos + testes
+- [x] Desenho funcional da Fase 3 aprovado pelo utilizador em 14/08/2026
+- [x] `fase_3/00_plano_fase_3.md`: decisões, dependências, schema e gates
+- [x] Blueprints Lote 3A: PackType e ClientSessionPack concluídos e autoavaliados
+- [ ] Implementação real do Lote 3A
+- [ ] Gate 3A: snapshots, packs simultâneos, cancelamento seguro e data apenas informativa
+- [ ] Lote 3B: Sessions, agenda, estados, packs, locks e idempotência
+- [ ] Gate 3B: concorrência da última sessão, sobreposições, timezone e rollback
+- [ ] Lote 3C: InitialAssessment e CheckIn
+- [ ] Gate 3C: unicidade, correção e ausência de efeitos laterais em Nutrition
+- [ ] Lote 3D: Supplement e ClientSupplementAssignment
+- [ ] Gate 3D: catálogos globais/privados, atribuições e tenant
+- [ ] Lote 3E: TrainerSettings, media e administração de catálogos globais
+- [ ] Gate 3E: branding opcional, timezone, outbox de media e autorização administrativa
+- [ ] Lote 3F: configurações EF Core, migration gerada e gate transversal
 - [ ] Gate Fase 3: revisão do utilizador
 
 ## Fase 4 — Authentication + Billing + Notifications + gate final do sprint

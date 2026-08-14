@@ -5,7 +5,7 @@ namespace Domain.Entities.Supplements;
 /// <summary>
 /// Suplemento do catálogo, global ou criado pelo personal trainer.
 /// </summary>
-public class Supplement
+public sealed class Supplement
 {
     public Guid Id { get; private set; }
     /// <summary>

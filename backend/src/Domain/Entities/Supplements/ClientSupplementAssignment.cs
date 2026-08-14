@@ -3,7 +3,7 @@ using Domain.Exceptions;
 namespace Domain.Entities.Supplements;
 
 /// <summary>Prescrição direta de um suplemento a um cliente.</summary>
-public class ClientSupplementAssignment
+public sealed class ClientSupplementAssignment
 {
     public Guid Id { get; private set; }
     public Guid OwnerTrainerId { get; private set; }

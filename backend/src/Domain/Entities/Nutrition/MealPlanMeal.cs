@@ -4,7 +4,7 @@ namespace Domain.Entities.Nutrition;
 /// <summary>
 /// Refeição de um MealPlan com items e supplements ordenados.
 /// </summary>
-public class MealPlanMeal
+public sealed class MealPlanMeal
 {
     private readonly List<MealPlanMealItem> _items = [];
     private readonly List<MealPlanMealSupplement> _supplements = [];

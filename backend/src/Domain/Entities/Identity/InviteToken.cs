@@ -3,7 +3,7 @@ using Domain.ValueObjects;
 namespace Domain.Entities.Identity;
 
 /// <summary>Convite de uso único que liga uma futura conta a uma ficha de cliente concreta.</summary>
-public class InviteToken
+public sealed class InviteToken
 {
     public Guid Id { get; private set; }
     /// <summary>Personal trainer que enviou o convite.</summary>

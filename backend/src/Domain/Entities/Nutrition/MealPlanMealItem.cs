@@ -4,7 +4,7 @@ namespace Domain.Entities.Nutrition;
 /// <summary>
 /// Alimento prescrito numa refeição, em gramas e com posição.
 /// </summary>
-public class MealPlanMealItem
+public sealed class MealPlanMealItem
 {
     public Guid Id { get; private set; }
     public Guid MealPlanMealId { get; private set; }

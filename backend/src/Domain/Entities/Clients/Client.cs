@@ -6,7 +6,7 @@ namespace Domain.Entities.Clients;
 /// Ficha de um cliente pertencente a um personal trainer.
 /// A ficha existe independentemente de o cliente já ter uma conta de acesso.
 /// </summary>
-public class Client
+public sealed class Client
 {
     public Guid Id { get; private set; }
     /// <summary>Personal trainer dono do tenant (chave tenant, Global Query Filter).</summary>

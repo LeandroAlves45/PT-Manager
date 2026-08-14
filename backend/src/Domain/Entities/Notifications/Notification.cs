@@ -16,7 +16,7 @@ namespace Domain.Entities.Notifications;
 ///   sent    → bounced   (bounce assíncrono reportado pelo provider)
 /// A entidade rejeita qualquer outra transição.
 /// </remarks>
-public class Notification
+public sealed class Notification
 {
     public Guid Id { get; private set; }
     public Guid OwnerTrainerId { get; private set; }

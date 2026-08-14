@@ -6,7 +6,7 @@ namespace Domain.Entities.Assessments;
 /// Check-in periódico de um cliente: peso, massa gorda, medidas e feedback
 /// qualitativo numa data, com meta opcional para a próxima avaliação.
 /// </summary>
-public class CheckIn
+public sealed class CheckIn
 {
     public Guid Id { get; private set; }
     public Guid OwnerTrainerId { get; private set; }
