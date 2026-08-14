@@ -79,6 +79,10 @@ internal sealed class TrainingPlanConfiguration : IEntityTypeConfiguration<Train
         builder.HasIndex(tp => tp.ClientId).HasDatabaseName("idx_training_plans_client");
         builder.HasIndex(tp => new { tp.OwnerTrainerId, tp.IsActive })
             .HasDatabaseName("idx_training_plans_trainer_active");
+        builder.HasIndex(tp => new { tp.OwnerTrainerId, tp.ClientId })
+            .HasDatabaseName("uq_training_plan_active_per_client")
+            .HasFilter("is_active = true AND is_deleted = false")
+            .IsUnique();
 
         builder.HasOne<User>()
             .WithMany()

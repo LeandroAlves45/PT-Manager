@@ -42,7 +42,7 @@ public class TrainingPlanTests
     }
 
     [Fact]
-    public void Activate_DeletedPlan_ThrowsDomainException()
+    public void SoftDelete_ActivePlan_ClearsActiveAndSetsArchived()
     {
         // Arrange
         var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
@@ -61,10 +61,30 @@ public class TrainingPlanTests
             now
         );
 
-        // Mark the plan as deleted
-        trainingPlan.Delete(now);
+        // Act
+        trainingPlan.SoftDelete(now.AddMinutes(1));
 
-        // Act & Assert
-        Assert.Throws<DomainException>(() => trainingPlan.Activate(now));
+        // Assert
+        Assert.True(trainingPlan.IsDeleted);
+        Assert.False(trainingPlan.IsActive);
+        Assert.True(trainingPlan.IsArchived);
+    }
+
+    [Fact]
+    public void SoftDelete_RepeatedCall_IsIdempotent()
+    {
+        // Arrange
+        var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
+        var trainingPlan = new TrainingPlan(
+            Guid.NewGuid(), Guid.NewGuid(), "Test Training Plan", null, null,
+            null, new DateOnly(2026, 8, 1), null, now);
+        var deletedAt = now.AddMinutes(1);
+        trainingPlan.SoftDelete(deletedAt);
+
+        // Act
+        trainingPlan.SoftDelete(now.AddMinutes(2));
+
+        // Assert
+        Assert.Equal(deletedAt, trainingPlan.UpdatedAt);
     }
 }

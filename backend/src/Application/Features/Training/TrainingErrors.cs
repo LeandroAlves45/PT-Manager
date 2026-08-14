@@ -77,19 +77,19 @@ public static class TrainingErrors
         "The exercise set log was not found."
     );
 
-    public static Error PerfomedAtInFuture() => Error.Validation([
+    public static Error PerformedAtInFuture() => Error.Validation([
         new ValidationError(
             "PerformedAt",
             "training_performed_at_in_future",
-            "Perfomed at cannot be in the future."
+            "Performed at cannot be in the future."
         )
     ]);
 
-    public static Error PerfomedAtOutsidePlan() => Error.Validation([
+    public static Error PerformedAtOutsidePlan() => Error.Validation([
         new ValidationError(
             "PerformedAt",
             "training_performed_at_outside_plan",
-            "Perfomed at must be inside the training plan date range."
+            "Performed at must be inside the training plan date range."
         )
     ]);
 

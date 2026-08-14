@@ -626,20 +626,20 @@ CREATE TABLE client_exercise_set_logs (
     weight_kg DECIMAL(10, 2) NOT NULL,
     reps_done INTEGER NOT NULL,
     notes VARCHAR(500),
-    logged_at TIMESTAMPTZ NOT NULL, -- Official timestamp (not created_at)
+    performed_at TIMESTAMPTZ NOT NULL DEFAULT now(), -- Official timestamp (not created_at)
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT fk_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
     CONSTRAINT fk_day_exercise FOREIGN KEY (training_plan_day_exercise_id)
-        REFERENCES training_plan_day_exercises(id) ON DELETE CASCADE,
+        REFERENCES training_plan_day_exercises(id) ON DELETE RESTRICT,
     CONSTRAINT set_num_check CHECK (set_number >= 1 AND set_number <= 15),
     CONSTRAINT weight_check CHECK (weight_kg >= 0),
-    CONSTRAINT reps_check CHECK (reps_done >= 0 AND reps_done <= 100),
-    CONSTRAINT unique_set_log UNIQUE(client_id, training_plan_day_exercise_id, set_number)
+    CONSTRAINT reps_check CHECK (reps_done >= 0 AND reps_done <= 100)
 );
 
-CREATE INDEX idx_logs_client ON client_exercise_set_logs(client_id);
+CREATE INDEX idx_logs_client_performed_at
+    ON client_exercise_set_logs(client_id, performed_at DESC, id);
 CREATE INDEX idx_logs_exercise ON client_exercise_set_logs(training_plan_day_exercise_id);
 ```
 

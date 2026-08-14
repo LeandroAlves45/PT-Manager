@@ -65,11 +65,9 @@ internal sealed class ClientExerciseSetLogConfiguration : IEntityTypeConfigurati
             t.HasCheckConstraint("weight_check", "weight_kg >= 0");
         });
 
-        builder.HasIndex(cel => new { cel.ClientId, cel.TrainingPlanDayExerciseId, cel.SetNumber })
-            .HasDatabaseName("unique_set_log")
-            .IsUnique();
-        builder.HasIndex(cel => cel.ClientId)
-            .HasDatabaseName("idx_logs_client");
+        builder.HasIndex(cel => new { cel.ClientId, cel.PerformedAt, cel.Id })
+            .HasDatabaseName("idx_logs_client_performed_at")
+            .IsDescending(false, true, false);
         builder.HasIndex(cel => cel.TrainingPlanDayExerciseId)
             .HasDatabaseName("idx_logs_exercise");
 
@@ -80,6 +78,6 @@ internal sealed class ClientExerciseSetLogConfiguration : IEntityTypeConfigurati
         builder.HasOne<TrainingPlanDayExercise>()
             .WithMany()
             .HasForeignKey(cel => cel.TrainingPlanDayExerciseId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

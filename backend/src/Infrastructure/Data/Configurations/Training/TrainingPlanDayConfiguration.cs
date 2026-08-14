@@ -50,9 +50,17 @@ internal sealed class TrainingPlanDayConfiguration : IEntityTypeConfiguration<Tr
 
         builder.HasIndex(tpd => tpd.TrainingPlanId)
             .HasDatabaseName("idx_days_plan");
+        builder.HasIndex(tpd => new
+        {
+            tpd.TrainingPlanId,
+            tpd.WeekNumber,
+            tpd.DayOfWeek
+        })
+            .HasDatabaseName("uq_training_plan_day_weekday")
+            .IsUnique();
 
         builder.HasOne<TrainingPlan>()
-            .WithMany()
+            .WithMany(plan => plan.Days)
             .HasForeignKey(tpd => tpd.TrainingPlanId)
             .OnDelete(DeleteBehavior.Cascade);
     }

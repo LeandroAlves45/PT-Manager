@@ -143,7 +143,7 @@ internal sealed class TrainingPlanStructureCoordinator
     {
         // As remoções libertam primiero posições válidas. Depois, um único slot livre é suficiente
         // para resolver swaps e ciclos sem violar checks.
-        RemoveOmmittedNodes(plan, structure, now);
+        RemoveOmittedNodes(plan, structure, now);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         if (!await ReorderDaysAsync(plan, structure, now, cancellationToken))
@@ -296,7 +296,7 @@ internal sealed class TrainingPlanStructureCoordinator
         }
     }
 
-    private static void RemoveOmmittedNodes(
+    private static void RemoveOmittedNodes(
         TrainingPlan plan,
         TrainingPlanStructureInput structure,
         DateTime now

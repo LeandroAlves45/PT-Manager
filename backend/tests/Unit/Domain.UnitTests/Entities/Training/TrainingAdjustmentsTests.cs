@@ -33,6 +33,7 @@ public sealed class TrainingAdjustmentsTests
     public void ClientExerciseSetLog_Correct_ReplacesLastPerfomance()
     {
         // Arrange
+        var performedAt = new DateTimeOffset(Now);
         var log = new ClientExerciseSetLog(
             Guid.NewGuid(),
             Guid.NewGuid(),
@@ -40,11 +41,12 @@ public sealed class TrainingAdjustmentsTests
             50,
             8,
             null,
+            performedAt,
             Now
         );
 
         // Act
-        log.Correct(55, 9, null, Now.AddDays(7));
+        log.Correct(55, 9, null, performedAt.AddDays(7), Now.AddDays(7));
 
         // Assert
         Assert.Equal((55m, 9), (log.WeightKg, log.RepsDone));

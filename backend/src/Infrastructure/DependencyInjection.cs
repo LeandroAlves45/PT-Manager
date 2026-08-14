@@ -4,7 +4,7 @@ using Application.Features.Jobs.Abstractions;
 using Application.Features.Nutrition.Foods.Abstractions;
 using Application.Features.Nutrition.MealPlans.Abstractions;
 using Application.Features.Training.Exercises.Abstractions;
-//using Application.Features.Training.ExerciseSetLogs.Abstractions;
+using Application.Features.Training.ExerciseSetLogs.Abstractions;
 using Application.Features.Training.TrainingPlans.Abstractions;
 using Infrastructure.Data;
 using Infrastructure.Data.Interceptors;
@@ -76,8 +76,8 @@ public static class DependencyInjection
         services.AddScoped<ITrainingPlanQueries, TrainingPlanQueries>();
 
         // Exercise Set Logs
-        //services.AddScoped<IExerciseSetLogStore, ExerciseSetLogStore>();
-        //services.AddScoped<IExerciseSetLogQueries, ExerciseSetLogQueries>();
+        services.AddScoped<IExerciseSetLogStore, ExerciseSetLogStore>();
+        services.AddScoped<IExerciseSetLogQueries, ExerciseSetLogQueries>();
 
         // Training Plan Structure Coordinator
         services.AddScoped<TrainingPlanStructureCoordinator>();

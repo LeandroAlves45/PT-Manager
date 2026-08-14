@@ -75,7 +75,7 @@ internal sealed class TrainingPlanDayExerciseConfiguration : IEntityTypeConfigur
         });
 
         builder.HasOne<TrainingPlanDay>()
-            .WithMany()
+            .WithMany(day => day.Exercises)
             .HasForeignKey(tpde => tpde.TrainingPlanDayId)
             .OnDelete(DeleteBehavior.Cascade);
 

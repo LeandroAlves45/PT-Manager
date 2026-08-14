@@ -16,6 +16,7 @@ public class ClientExerciseSetLogTests
         int setNumber, int weightKg, int repsDone)
     {
         var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
+        var performedAt = new DateTimeOffset(now);
         // Act & Assert
         Assert.Throws<DomainException>(() => new ClientExerciseSetLog(
             Guid.NewGuid(),
@@ -24,6 +25,7 @@ public class ClientExerciseSetLogTests
             weightKg,
             repsDone,
             null,
+            performedAt,
             now
         ));
     }
@@ -38,6 +40,7 @@ public class ClientExerciseSetLogTests
     )
     {
         var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
+        var performedAt = new DateTimeOffset(now);
         // Act & Assert
         var clientExerciseSetLog = new ClientExerciseSetLog(
             Guid.NewGuid(),
@@ -46,12 +49,14 @@ public class ClientExerciseSetLogTests
             10,
             10,
             null,
+            performedAt,
             now
         );
         Assert.Throws<DomainException>(() => clientExerciseSetLog.Correct(
             weightKg,
             repsDone,
             null,
+            performedAt,
             now
         ));
     }

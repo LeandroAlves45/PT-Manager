@@ -13,12 +13,13 @@ public sealed class TrainingPlanStructureValidator : AbstractValidator<TrainingP
             .WithErrorCode("training_days_required");
 
         RuleFor(input => input.Days)
-            .Must(days => days.Select(day => (day.WeekNumber, day.DayOfWeek)).Distinct().Count()
+            .Must(days => days is not null &&
+                days.Select(day => (day.WeekNumber, day.DayOfWeek)).Distinct().Count()
                 == days.Count)
             .WithErrorCode("training_day_duplicate");
 
         RuleFor(input => input.Days)
-            .Must(days => UniqueNonNull(days.Select(day => day.Id)))
+            .Must(days => days is not null && UniqueNonNull(days.Select(day => day.Id)))
             .WithErrorCode("training_day_id_duplicate");
 
         RuleForEach(input => input.Days).ChildRules(day =>
@@ -36,19 +37,20 @@ public sealed class TrainingPlanStructureValidator : AbstractValidator<TrainingP
                 .InclusiveBetween(1, 52)
                 .WithErrorCode("training_week_number_invalid");
             day.RuleFor(value => value.Exercises)
+                .Cascade(CascadeMode.Stop)
                 .NotNull()
                 .WithErrorCode("training_day_exercises_required")
                 .Must(exercises => UniqueNonNull(exercises.Select(item => item.Id)))
                 .WithErrorCode("training_day_exercise_id_duplicate");
             day.RuleFor(value => value.Exercises)
-                .Must(exercises => exercises
+                .Must(exercises => exercises is not null && exercises
                     .Where(item => item.ExerciseGroupId is null)
                     .Select(item => item.OrderNumber)
                     .Distinct()
                     .Count() == exercises.Count(item => item.ExerciseGroupId is null))
                 .WithErrorCode("training_isolated_exercise_order_duplicate");
             day.RuleFor(value => value.Exercises)
-                .Must(exercises => exercises
+                .Must(exercises => exercises is not null && exercises
                     .Where(item => item.ExerciseGroupId.HasValue)
                     .GroupBy(item => item.ExerciseGroupId)
                     .All(group => group.Select(item => item.GroupPosition).Distinct().Count()
@@ -75,6 +77,7 @@ public sealed class TrainingPlanStructureValidator : AbstractValidator<TrainingP
                         : value.ExerciseGroupId != Guid.Empty && value.GroupPosition > 0)
                     .WithErrorCode("training_exercise_group_invalid");
                 exercise.RuleFor(value => value.Sets)
+                    .Cascade(CascadeMode.Stop)
                     .NotNull()
                     .WithErrorCode("training_exercise_sets_required")
                     .Must(sets => UniqueNonNull(sets.Select(item => item.Id)))

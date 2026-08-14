@@ -10,7 +10,7 @@ namespace Infrastructure.Persistence.Training;
 /// <summary>Persiste planos de treino como operações compostas de tenant-safe.</summary>
 internal sealed class TrainingPlanStore : ITrainingPlanStore
 {
-    private const string ActivePlanConstraint = "uq_training_plans_tenant_client_active";
+    private const string ActivePlanConstraint = "uq_training_plan_active_per_client";
     private readonly PtManagerDbContext _dbContext;
     private readonly TrainingPlanStructureCoordinator _structure;
 
@@ -317,7 +317,8 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
             }
             catch
             {
-                await transaction.RollbackAsync(cancellationToken);
+                // O cancelamento da operação não pode impedir a limpeza transacional.
+                await transaction.RollbackAsync(CancellationToken.None);
                 throw;
             }
         });
@@ -370,4 +371,3 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
         Inactive
     }
 }
-

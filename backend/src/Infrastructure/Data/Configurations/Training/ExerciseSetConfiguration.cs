@@ -61,9 +61,12 @@ internal sealed class ExerciseSetConfiguration : IEntityTypeConfiguration<Exerci
 
         builder.HasIndex(es => es.TrainingPlanDayExerciseId)
             .HasDatabaseName("idx_sets_exercise");
+        builder.HasIndex(es => new { es.TrainingPlanDayExerciseId, es.SetNumber })
+            .HasDatabaseName("uq_exercise_set_number")
+            .IsUnique();
 
         builder.HasOne<TrainingPlanDayExercise>()
-            .WithMany()
+            .WithMany(exercise => exercise.Sets)
             .HasForeignKey(es => es.TrainingPlanDayExerciseId)
             .OnDelete(DeleteBehavior.Cascade);
     }
