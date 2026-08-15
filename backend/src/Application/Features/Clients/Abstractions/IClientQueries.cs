@@ -13,19 +13,17 @@ public interface IClientQueries
     /// <summary>Obtém detalhe e packs utilizáveis ou null.</summary>
     Task<ClientDetailsDto?> GetDetailsAsync(
         Guid clientId,
-        DateOnly today,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 
     /// <summary>Lista clientes com filtro e ordem determinística.</summary>
     Task<PageResult<ClientSummaryDto>> ListAsync(
         string? search,
         ClientActivityFilter activity,
         PageRequest page,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 
     /// <summary>Obtém todos os packs utilizáveis já ordenados.</summary>
     Task<IReadOnlyList<UsableClientPackDto>> ListUsablePacksAsync(
         Guid clientId,
-        DateOnly today,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 }

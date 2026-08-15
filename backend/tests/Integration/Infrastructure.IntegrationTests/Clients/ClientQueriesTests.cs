@@ -177,7 +177,7 @@ public sealed class ClientQueriesTests
         var trainer = ClientPersistenceTestData.CreateTrainer(discriminator);
         var client = ClientPersistenceTestData.CreateClient(trainer.Id, discriminator);
         var packType = ClientPersistenceTestData.CreatePackType(trainer.Id, discriminator, 2);
-        var expired = ClientPersistenceTestData.CreatePack(
+        var pastExpected = ClientPersistenceTestData.CreatePack(
             trainer.Id,
             client.Id,
             packType,
@@ -210,12 +210,12 @@ public sealed class ClientQueriesTests
             today.AddDays(-10),
             today.AddDays(10),
             now: ClientPersistenceTestData.NowUtc.AddMinutes(2));
-        var withoutExpiration = ClientPersistenceTestData.CreatePack(
+        var withoutExpectedEnd = ClientPersistenceTestData.CreatePack(
             trainer.Id,
             client.Id,
             packType,
             today.AddDays(-10),
-            expirationDate: null,
+            expectedEndDate: null,
             now: ClientPersistenceTestData.NowUtc.AddMinutes(3));
         await ClientPersistenceTestData.PersistAsync(
             _fixture,
@@ -223,23 +223,29 @@ public sealed class ClientQueriesTests
             trainer,
             client,
             packType,
-            expired,
+            pastExpected,
             empty,
             expiresToday,
             futureEarly,
             futureLate,
-            withoutExpiration);
+            withoutExpectedEnd);
         await using var context = _fixture.CreateContext(trainer.Id);
         var queries = new ClientQueries(context);
 
-        var result = await queries.GetDetailsAsync(client.Id, today, CancellationToken.None);
+        var result = await queries.GetDetailsAsync(client.Id, CancellationToken.None);
 
         Assert.NotNull(result);
         Assert.Equal(client.Name, result.Name);
         Assert.Equal(
-            new[] { expiresToday.Id, futureEarly.Id, futureLate.Id, withoutExpiration.Id },
+            new[]
+            {
+                pastExpected.Id,
+                expiresToday.Id,
+                futureEarly.Id,
+                futureLate.Id,
+                withoutExpectedEnd.Id
+            },
             result.UsablePacks.Select(pack => pack.Id));
-        Assert.DoesNotContain(result.UsablePacks, pack => pack.Id == expired.Id);
         Assert.DoesNotContain(result.UsablePacks, pack => pack.Id == empty.Id);
     }
 
@@ -257,7 +263,6 @@ public sealed class ClientQueriesTests
 
         var result = await queries.GetDetailsAsync(
             clientB.Id,
-            DateOnly.FromDateTime(ClientPersistenceTestData.NowUtc),
             CancellationToken.None);
 
         Assert.Null(result);
@@ -294,7 +299,6 @@ public sealed class ClientQueriesTests
 
         var result = await queries.ListUsablePacksAsync(
             clientB.Id,
-            today,
             CancellationToken.None);
 
         Assert.Empty(result);

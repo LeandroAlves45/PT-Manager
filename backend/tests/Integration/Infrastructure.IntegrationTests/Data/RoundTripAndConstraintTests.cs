@@ -230,8 +230,8 @@ public sealed class RoundTripAndConstraintTests
     [InlineData("idx_outbox_first_attempt")]
     [InlineData("idx_outbox_retry")]
     [InlineData("idx_outbox_lease")]
-    [InlineData("idx_pack_types_usable")]
-    [InlineData("idx_client_packs_usable")]
+    [InlineData("idx_pack_types_tenant_name_active")]
+    [InlineData("idx_client_session_packs_usable_order")]
     [InlineData("idx_sessions_tenant_scheduled_at")]
     public async Task InitialCreate_WhenApplied_CreatesCriticalIndexes(string indexName)
     {
@@ -253,6 +253,37 @@ public sealed class RoundTripAndConstraintTests
             new NpgsqlParameter("index_name", indexName));
 
         // Assert
+        Assert.True(exists);
+    }
+
+    [Theory]
+    [InlineData("ck_client_session_packs_balance")]
+    [InlineData("ck_client_session_packs_price_non_negative")]
+    [InlineData("ck_client_session_packs_expected_end_order")]
+    [InlineData("ck_client_session_packs_completion_consistency")]
+    [InlineData("ck_pack_types_session_count_positive")]
+    [InlineData("ck_pack_types_price_non_negative")]
+    [InlineData("ck_pack_types_expected_duration_positive")]
+    public async Task Migrations_WhenApplied_CreatePackConstraints(
+        string constraintName
+    )
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        const string sql = """
+            SELECT EXISTS (
+                SELECT 1
+                FROM pg_constraint
+                WHERE conname = @constraint_name
+                    AND contype = 'c'
+            );
+        """;
+
+        var exists = await _fixture.QueryScalarAsync<bool>(
+            sql,
+            cancellationToken,
+            new NpgsqlParameter("constraint_name", constraintName)
+        );
+
         Assert.True(exists);
     }
 

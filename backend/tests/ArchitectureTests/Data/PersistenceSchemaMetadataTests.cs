@@ -139,15 +139,18 @@ public sealed class PersistenceSchemaMetadataTests : IDisposable
             .Select(value => value.Name)
             .ToHashSet(StringComparer.Ordinal);
         var usableIndex = entity.GetIndexes()
-            .Single(value => value.GetDatabaseName() == "idx_client_packs_usable");
+            .Single(value => value.GetDatabaseName() ==
+                "idx_client_session_packs_usable_order");
 
         // Assert
         Assert.Equal(
             new[] { "pack_name", "total_sessions", "price_cents", "currency" },
             snapshotColumns);
         Assert.Equal(DeleteBehavior.Restrict, packTypeForeignKey.DeleteBehavior);
-        Assert.Contains("pack_sessions_consistent", constraintNames);
-        Assert.Contains("pack_snapshot_price_non_negative", constraintNames);
+        Assert.Contains("ck_client_session_packs_balance", constraintNames);
+        Assert.Contains("ck_client_session_packs_price_non_negative", constraintNames);
+        Assert.Contains("ck_client_session_packs_expected_end_order", constraintNames);
+        Assert.Contains("ck_client_session_packs_completion_consistency", constraintNames);
         Assert.Equal(
             "sessions_remaining > 0 AND is_deleted = false",
             usableIndex.GetFilter());

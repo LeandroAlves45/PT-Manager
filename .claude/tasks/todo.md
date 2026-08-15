@@ -48,8 +48,9 @@
 - [x] Desenho funcional da Fase 3 aprovado pelo utilizador em 14/08/2026
 - [x] `fase_3/00_plano_fase_3.md`: decisões, dependências, schema e gates
 - [x] Blueprints Lote 3A: PackType e ClientSessionPack concluídos e autoavaliados
-- [ ] Implementação real do Lote 3A
-- [ ] Gate 3A: snapshots, packs simultâneos, cancelamento seguro e data apenas informativa
+- [x] Implementação real do Lote 3A concluída em 15/08/2026
+- [x] Gate 3A: snapshots, packs simultâneos, cancelamento seguro e data apenas
+  informativa. PostgreSQL diferido explicitamente para a migration consolidada 3F
 - [ ] Lote 3B: Sessions, agenda, estados, packs, locks e idempotência
 - [ ] Gate 3B: concorrência da última sessão, sobreposições, timezone e rollback
 - [ ] Lote 3C: InitialAssessment e CheckIn

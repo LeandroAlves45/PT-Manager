@@ -110,7 +110,7 @@ public sealed class ClientHandlersTests
     {
         using var cancellationSource = new CancellationTokenSource();
         var queries = new FakeClientQueries();
-        var handler = new GetClientHandler(CreateTenant(), _clock, queries);
+        var handler = new GetClientHandler(CreateTenant(), queries);
 
         var result = await handler.HandleAsync(
             new GetClientQuery(ClientId),
@@ -125,7 +125,7 @@ public sealed class ClientHandlersTests
     public async Task Get_EmptyId_ReturnsValidationWithoutCallingQueries()
     {
         var queries = new FakeClientQueries();
-        var handler = new GetClientHandler(CreateTenant(), _clock, queries);
+        var handler = new GetClientHandler(CreateTenant(), queries);
 
         var result = await handler.HandleAsync(
             new GetClientQuery(Guid.Empty),
@@ -144,7 +144,7 @@ public sealed class ClientHandlersTests
         using var cancellationSource = new CancellationTokenSource();
         var details = ClientTestData.CreateDetails(ClientId);
         var queries = new FakeClientQueries { DetailsResult = details };
-        var handler = new GetClientHandler(CreateTenant(), _clock, queries);
+        var handler = new GetClientHandler(CreateTenant(), queries);
 
         var result = await handler.HandleAsync(
             new GetClientQuery(ClientId),
@@ -152,7 +152,6 @@ public sealed class ClientHandlersTests
 
         Assert.True(result.IsSuccess);
         Assert.Same(details, result.Value);
-        Assert.Equal(DateOnly.FromDateTime(_clock.UtcNow), queries.LastToday);
         Assert.Equal(cancellationSource.Token, queries.LastCancellationToken);
     }
 
@@ -160,7 +159,7 @@ public sealed class ClientHandlersTests
     public async Task Get_MissingTenant_DoesNotCallQueries()
     {
         var queries = new FakeClientQueries();
-        var handler = new GetClientHandler(new StubTenantContext(), _clock, queries);
+        var handler = new GetClientHandler(new StubTenantContext(), queries);
 
         var result = await handler.HandleAsync(
             new GetClientQuery(ClientId),
@@ -321,7 +320,6 @@ public sealed class ClientHandlersTests
         Assert.Equal(1, store.SaveProfileCalls);
         Assert.Same(client, store.LastClient);
         Assert.Same(packs, result.Value.UsablePacks);
-        Assert.Equal(DateOnly.FromDateTime(_clock.UtcNow), queries.LastToday);
         Assert.Equal(cancellationSource.Token, queries.LastCancellationToken);
     }
 

@@ -3,6 +3,8 @@ using Application.Features.Clients.Abstractions;
 using Application.Features.Jobs.Abstractions;
 using Application.Features.Nutrition.Foods.Abstractions;
 using Application.Features.Nutrition.MealPlans.Abstractions;
+using Application.Features.Packs.ClientSessionPacks.Abstractions;
+using Application.Features.Packs.PackTypes.Abstractions;
 using Application.Features.Training.Exercises.Abstractions;
 using Application.Features.Training.ExerciseSetLogs.Abstractions;
 using Application.Features.Training.TrainingPlans.Abstractions;
@@ -12,6 +14,7 @@ using Infrastructure.Persistence;
 using Infrastructure.Persistence.Clients;
 using Infrastructure.Persistence.Errors;
 using Infrastructure.Persistence.Nutrition;
+using Infrastructure.Persistence.Packs;
 using Infrastructure.Persistence.Training;
 using Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
@@ -82,12 +85,23 @@ public static class DependencyInjection
         // Training Plan Structure Coordinator
         services.AddScoped<TrainingPlanStructureCoordinator>();
 
+        // Pack Types
+        services.AddScoped<IPackTypeStore, PackTypeStore>();
+        services.AddScoped<IPackTypeQueries, PackTypeQueries>();
+
+        // Client Session Packs
+        services.AddScoped<IClientSessionPackStore, ClientSessionPackStore>();
+        services.AddScoped<IClientSessionPackQueries, ClientSessionPackQueries>();
+
         // Interceptors
         services.AddScoped<TenantWriteValidationInterceptor>();
 
-        // Errors
+        // Errors and Clock
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<PostgresConstraintTranslator>();
+
+        // Timezone provider
+        services.AddScoped<ITrainerTimeZoneProvider, TrainerTimeZoneProvider>();
 
         // Jobs
         services.AddScoped<IDurableJobStore, DurableJobRepository>();

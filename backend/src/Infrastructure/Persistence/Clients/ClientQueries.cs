@@ -14,25 +14,21 @@ internal sealed class ClientQueries : IClientQueries
 
     private readonly PtManagerDbContext _dbContext;
 
-    /// <summary>Inicializa queries no DbContext scoped por tenant.</summary>
     public ClientQueries(PtManagerDbContext dbContext)
     {
         ArgumentNullException.ThrowIfNull(dbContext);
-
         _dbContext = dbContext;
     }
 
     /// <inheritdoc/>
     public async Task<ClientDetailsDto?> GetDetailsAsync(
         Guid clientId,
-        DateOnly today,
         CancellationToken cancellationToken = default)
     {
         var client = await _dbContext.Clients
             .AsNoTracking()
             .Where(client => client.Id == clientId)
-            .Select(client =>
-            new
+            .Select(client => new
             {
                 client.Id,
                 client.UserId,
@@ -55,29 +51,28 @@ internal sealed class ClientQueries : IClientQueries
         if (client is null)
             return null;
 
-        var packs = await BuildUsablePacksQuery(client.Id, today)
+        var packs = await BuildUsablePacksQuery(client.Id)
             .ToListAsync(cancellationToken);
 
         return new ClientDetailsDto(
-            Id: client.Id,
-            UserId: client.UserId,
-            Name: client.Name,
-            ContactEmail: client.ContactEmail,
-            Phone: client.Phone,
-            BirthDate: client.BirthDate,
-            Sex: client.Sex,
-            Objective: client.Objective,
-            Notes: client.Notes,
-            EmergencyContactName: client.EmergencyContactName,
-            EmergencyContactPhone: client.EmergencyContactPhone,
-            AvatarUrl: client.AvatarUrl,
-            IsActive: client.IsActive,
-            UsablePacks: packs,
-            CreatedAt: client.CreatedAt,
-            UpdatedAt: client.UpdatedAt);
+            client.Id,
+            client.UserId,
+            client.Name,
+            client.ContactEmail,
+            client.Phone,
+            client.BirthDate,
+            client.Sex,
+            client.Objective,
+            client.Notes,
+            client.EmergencyContactName,
+            client.EmergencyContactPhone,
+            client.AvatarUrl,
+            client.IsActive,
+            packs,
+            client.CreatedAt,
+            client.UpdatedAt);
     }
 
-    /// <inheritdoc/>
     public async Task<PageResult<ClientSummaryDto>> ListAsync(
         string? search,
         ClientActivityFilter activity,
@@ -85,7 +80,6 @@ internal sealed class ClientQueries : IClientQueries
         CancellationToken cancellationToken = default)
     {
         var query = _dbContext.Clients.AsNoTracking();
-
         query = activity switch
         {
             ClientActivityFilter.Active => query.Where(client => client.IsActive),
@@ -96,8 +90,7 @@ internal sealed class ClientQueries : IClientQueries
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var escapedSearch = EscapeLikePattern(search.Trim());
-            var pattern = $"%{escapedSearch}%";
+            var pattern = $"%{EscapeLikePattern(search.Trim())}%";
             query = query.Where(client =>
                 EF.Functions.ILike(
                     client.Name,
@@ -111,23 +104,22 @@ internal sealed class ClientQueries : IClientQueries
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
-
         var items = await query
             .OrderBy(client => client.Name)
             .ThenBy(client => client.Id)
             .Skip((page.PageNumber - 1) * page.PageSize)
             .Take(page.PageSize)
             .Select(client => new ClientSummaryDto(
-                Id: client.Id,
-                Name: client.Name,
-                ContactEmail: client.ContactEmail,
-                Phone: client.Phone,
-                BirthDate: client.BirthDate.Value,
-                Sex: client.Sex.Value,
-                Objective: client.Objective,
-                IsActive: client.IsActive,
-                CreatedAt: client.CreatedAt,
-                UpdatedAt: client.UpdatedAt))
+                client.Id,
+                client.Name,
+                client.ContactEmail,
+                client.Phone,
+                client.BirthDate.Value,
+                client.Sex.Value,
+                client.Objective,
+                client.IsActive,
+                client.CreatedAt,
+                client.UpdatedAt))
             .ToListAsync(cancellationToken);
 
         return new PageResult<ClientSummaryDto>(items, totalCount);
@@ -136,45 +128,35 @@ internal sealed class ClientQueries : IClientQueries
     /// <inheritdoc/>
     public async Task<IReadOnlyList<UsableClientPackDto>> ListUsablePacksAsync(
         Guid clientId,
-        DateOnly today,
-        CancellationToken cancellationToken = default)
-    {
-        return await BuildUsablePacksQuery(clientId, today)
-            .ToListAsync(cancellationToken);
-    }
+        CancellationToken cancellationToken = default
+    ) => await BuildUsablePacksQuery(clientId)
+        .ToListAsync(cancellationToken);
 
-    private IQueryable<UsableClientPackDto> BuildUsablePacksQuery(
-        Guid clientId,
-        DateOnly today)
-    {
-        return _dbContext.ClientSessionPacks
+    private IQueryable<UsableClientPackDto> BuildUsablePacksQuery(Guid clientId) =>
+        _dbContext.ClientSessionPacks
             .AsNoTracking()
             .Where(pack => pack.ClientId == clientId)
             .Where(pack => pack.SessionsRemaining > 0)
-            .Where(pack => pack.ExpirationDate == null || pack.ExpirationDate >= today)
-            .OrderByDescending(pack => pack.ExpirationDate.HasValue)
-            .ThenBy(pack => pack.ExpirationDate)
+            .OrderBy(pack => pack.ExpectedEndDate == null)
+            .ThenBy(pack => pack.ExpectedEndDate)
             .ThenBy(pack => pack.CreatedAt)
             .ThenBy(pack => pack.Id)
             .Select(pack => new UsableClientPackDto(
-                Id: pack.Id,
-                PackTypeId: pack.PackTypeId,
-                Name: pack.PackName,
-                SessionsTotal: pack.SessionsTotal,
-                SessionsRemaining: pack.SessionsRemaining,
-                PriceCents: pack.PriceCents,
-                Currency: pack.Currency,
-                PurchaseDate: pack.PurchaseDate,
-                ExpirationDate: pack.ExpirationDate));
-    }
+                pack.Id,
+                pack.PackTypeId,
+                pack.PackName,
+                pack.SessionsTotal,
+                pack.SessionsRemaining,
+                pack.PriceCents,
+                pack.Currency,
+                pack.PurchaseDate,
+                pack.ExpectedEndDate,
+                pack.CreatedAt));
 
-    private static string EscapeLikePattern(string value)
-    {
-        return value
-            .Replace("\\", "\\\\", StringComparison.Ordinal)
-            .Replace("%", "\\%", StringComparison.Ordinal)
-            .Replace("_", "\\_", StringComparison.Ordinal);
-    }
+    private static string EscapeLikePattern(string value) => value
+        .Replace("\\", "\\\\", StringComparison.Ordinal)
+        .Replace("%", "\\%", StringComparison.Ordinal)
+        .Replace("_", "\\_", StringComparison.Ordinal);
 }
 
 

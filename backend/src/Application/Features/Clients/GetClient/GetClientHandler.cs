@@ -10,21 +10,17 @@ namespace Application.Features.Clients.GetClient;
 public sealed class GetClientHandler
 {
     private readonly ITenantContext _tenantContext;
-    private readonly IClock _clock;
     private readonly IClientQueries _clientQueries;
 
     /// <summary>Inicializa a query de detalhe.</summary>
     public GetClientHandler(
         ITenantContext tenantContext,
-        IClock clock,
         IClientQueries clientQueries)
     {
         ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(clientQueries);
 
         _tenantContext = tenantContext;
-        _clock = clock;
         _clientQueries = clientQueries;
     }
 
@@ -37,30 +33,28 @@ public sealed class GetClientHandler
 
         if (query.ClientId == Guid.Empty)
         {
-            var error = Error.Validation(new List<ValidationError>
-            {
-                new ValidationError(
-                    Field: "ClientId",
-                    Code: "client_id_required",
-                    Message: "Client ID is required."
-                )
-            });
-            return Result<ClientDetailsDto>.Failure(error);
+            return Result<ClientDetailsDto>.Failure(
+                Error.Validation(
+                [
+                    new ValidationError(
+                        "ClientId",
+                        "client_id_required",
+                        "Client ID is required."
+                    )
+                ])
+            );
         }
 
         var tenant = _tenantContext.GetRequiredTrainerId();
-        if (tenant.IsFailure)
+        if (!tenant.IsSuccess)
             return Result<ClientDetailsDto>.Failure(tenant.Error!);
 
-        var today = DateOnly.FromDateTime(_clock.UtcNow);
         var dto = await _clientQueries.GetDetailsAsync(
             query.ClientId,
-            today,
             cancellationToken);
 
-        if (dto is null)
-            return Result<ClientDetailsDto>.Failure(ClientErrors.ClientNotFound);
-
-        return Result<ClientDetailsDto>.Success(dto);
+        return dto is null
+            ? Result<ClientDetailsDto>.Failure(ClientErrors.ClientNotFound)
+            : Result<ClientDetailsDto>.Success(dto);
     }
 }

@@ -82,7 +82,7 @@ public sealed class ClientSessionPack
     }
 
     /// <summary>Debita uma sessão do pack, se ainda houver saldo.</summary>
-    public void ConsumeSession(DateOnly today, DateTime now)
+    public void ConsumeSession(DateTime now)
     {
         EnsureNotDeleted();
         if (!IsUsable)

@@ -1,81 +1,188 @@
 using Domain.Entities.Billing;
 using Domain.Exceptions;
-using Xunit;
 
 namespace Domain.UnitTests.Entities.Billing;
 
 public sealed class ClientSessionPackTests
 {
-    private static readonly DateTime Now = new DateTime(2026, 8, 1, 10, 0, 0, DateTimeKind.Utc);
+    private static readonly Guid TrainerId = Guid.NewGuid();
+    private static readonly Guid ClientId = Guid.NewGuid();
+    private static readonly DateTime Now =
+        new(2026, 8, 14, 12, 0, 0, DateTimeKind.Utc);
 
     [Fact]
-    public void Constructor_CopiesCommercialSnapshots()
+    public void Constructor_PackTypeChanges_PreservesCommercialSnapshot()
     {
-        // Arrange
-        var trainerId = Guid.NewGuid();
-        var packType = CreatePackType(trainerId);
+        var type = CreateType();
+        var pack = CreatePack(type);
 
-        // Act
-        var pack = new ClientSessionPack(
-            trainerId,
-            Guid.NewGuid(),
-            packType,
-            new DateOnly(2026, 8, 1),
-            new DateOnly(2026, 10, 30),
-            Now
-        );
+        type.Update("Changed", 99, 99999, "USD", 90, Now.AddMinutes(1));
 
-        // Assert
-        Assert.Equal(("Pack 10", 10, 30000, "EUR"),
-            (pack.PackName, pack.SessionsTotal, pack.PriceCents, pack.Currency));
+        Assert.Equal("Ten sessions", pack.PackName);
+        Assert.Equal(10, pack.SessionsTotal);
+        Assert.Equal(10000, pack.PriceCents);
+        Assert.Equal("EUR", pack.Currency);
     }
 
     [Fact]
-    public void Constructor_WhenPackBelongsToAnotherTrainer_ThrowsDomainException()
+    public void ExpectedEndDate_InPastButAfterPurchase_RemainsUsable()
     {
-        // Arrange
-        var packType = CreatePackType(Guid.NewGuid());
+        var pack = new ClientSessionPack(
+            TrainerId,
+            ClientId,
+            CreateType(),
+            new DateOnly(2026, 1, 1),
+            new DateOnly(2026, 2, 1),
+            Now
+        );
 
-        // Act & Assert
-        var action = () => new ClientSessionPack(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            packType,
-            new DateOnly(2026, 8, 1),
+        Assert.True(pack.IsUsable);
+    }
+
+    [Fact]
+    public void Constructor_ExpectedEndDateBeforePurchase_Throws()
+    {
+        Assert.Throws<DomainException>(() => new ClientSessionPack(
+            TrainerId,
+            ClientId,
+            CreateType(),
+            new DateOnly(2026, 2, 1),
+            new DateOnly(2026, 1, 31),
+            Now
+        ));
+    }
+
+    [Fact]
+    public void ConsumeSession_LastBalance_SetsCompletionState()
+    {
+        var type = new PackType(
+            TrainerId, "One", 1, 1000, "EUR", null, Now
+        );
+        var pack = CreatePack(type);
+        var completedAt = Now.AddHours(1);
+
+        pack.ConsumeSession(completedAt);
+
+        Assert.Equal(0, pack.SessionsRemaining);
+        Assert.True(pack.IsCompleted);
+        Assert.False(pack.IsUsable);
+        Assert.Equal(completedAt, pack.CompletedAt);
+    }
+
+    [Fact]
+    public void ConsumeSession_EmptyPack_ThrowsWithoutNegativeBalance()
+    {
+        var type = new PackType(
+            TrainerId, "One", 1, 1000, "EUR", null, Now
+        );
+        var pack = CreatePack(type);
+        pack.ConsumeSession(Now.AddMinutes(1));
+
+        Assert.Throws<DomainException>(() => pack.ConsumeSession(Now.AddMinutes(2)));
+        Assert.Equal(0, pack.SessionsRemaining);
+    }
+
+    [Fact]
+    public void RestoreSession_CompletedPack_ClearsCompletionState()
+    {
+        var type = new PackType(
+            TrainerId, "One", 1, 1000, "EUR", null, Now
+        );
+        var pack = CreatePack(type);
+        pack.ConsumeSession(Now.AddMinutes(1));
+
+        pack.RestoreSession(Now.AddMinutes(2));
+
+        Assert.Equal(1, pack.SessionsRemaining);
+        Assert.False(pack.IsCompleted);
+        Assert.Null(pack.CompletedAt);
+    }
+
+    [Fact]
+    public void RestoreSession_FullPack_ThrowsWithoutExceedingTotal()
+    {
+        var pack = CreatePack(CreateType());
+
+        Assert.Throws<DomainException>(() => pack.RestoreSession(Now.AddMinutes(1)));
+        Assert.Equal(pack.SessionsTotal, pack.SessionsRemaining);
+    }
+
+    [Fact]
+    public void ChangeExpectedEndDate_ValidDate_PreservesBalanceAndCompletion()
+    {
+        var pack = CreatePack(CreateType());
+
+        pack.ChangeExpectedEndDate(new DateOnly(2027, 1, 1), Now.AddMinutes(1));
+
+        Assert.Equal(10, pack.SessionsRemaining);
+        Assert.Null(pack.CompletedAt);
+    }
+
+    [Fact]
+    public void Cancel_RepeatedOnUnusedPack_PreservesFirstTransitionTimestamp()
+    {
+        var pack = CreatePack(CreateType());
+        var cancelledAt = Now.AddMinutes(1);
+
+        pack.Cancel(cancelledAt);
+        pack.Cancel(Now.AddMinutes(2));
+
+        Assert.True(pack.IsDeleted);
+        Assert.Equal(cancelledAt, pack.UpdatedAt);
+    }
+
+    [Fact]
+    public void Cancel_UsedPack_Throws()
+    {
+        var pack = CreatePack(CreateType());
+        pack.ConsumeSession(Now.AddMinutes(1));
+
+        Assert.Throws<DomainException>(() => pack.Cancel(Now.AddMinutes(2)));
+    }
+
+    [Fact]
+    public void Constructor_OtherTenantPackType_Throws()
+    {
+        var otherType = new PackType(
+            Guid.NewGuid(), "Pack", 10, 10000, "EUR", null, Now
+        );
+
+        Assert.Throws<DomainException>(() => new ClientSessionPack(
+            TrainerId,
+            ClientId,
+            otherType,
+            new DateOnly(2026, 8, 14),
             null,
             Now
-        );
-
-        Assert.Throws<DomainException>(action);
+        ));
     }
 
     [Fact]
-    public void ConsumeSession_WhenPackIsUsable_DecrementsBalance()
+    public void Constructor_InactivePackType_Throws()
     {
-        // Arrange
-        var trainerId = Guid.NewGuid();
-        var pack = new ClientSessionPack(
-            trainerId,
-            Guid.NewGuid(),
-            CreatePackType(trainerId),
-            new DateOnly(2026, 8, 1),
+        var type = CreateType();
+        type.Archive(Now.AddMinutes(1));
+
+        Assert.Throws<DomainException>(() => new ClientSessionPack(
+            TrainerId,
+            ClientId,
+            type,
+            new DateOnly(2026, 8, 14),
             null,
             Now
-        );
-
-        pack.ConsumeSession(new DateOnly(2026, 8, 1), Now.AddMinutes(1));
-
-        // Assert
-        Assert.Equal(9, pack.SessionsRemaining);
+        ));
     }
 
-    private static PackType CreatePackType(Guid trainerId) => new(
-        trainerId,
-        "Pack 10",
-        10,
-        30000,
-        "eur",
-        90,
+    private static PackType CreateType() => new(
+        TrainerId, "Ten sessions", 10, 10000, "EUR", 30, Now
+    );
+
+    private static ClientSessionPack CreatePack(PackType type) => new(
+        TrainerId,
+        ClientId,
+        type,
+        new DateOnly(2026, 8, 14),
+        new DateOnly(2026, 9, 13),
         Now
     );
 }

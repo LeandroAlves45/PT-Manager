@@ -29,6 +29,12 @@ public static class PackErrors
         "A client session pack referenced by a session cannot be cancelled."
     );
 
+    public static readonly Error ClientSessionPackUsed = Error.Create(
+        "client_session_pack_used",
+        ErrorCategory.Conflict,
+        "A used client session pack cannot be cancelled."
+    );
+
     public static readonly Error ExpectedEndDateBeforePurchase = Error.Validation(
     [
         new ValidationError(

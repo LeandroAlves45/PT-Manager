@@ -127,7 +127,6 @@ internal sealed class FakeClientQueries : IClientQueries
     public int ListCalls { get; private set; }
     public int UsablePacksCalls { get; private set; }
     public Guid LastClientId { get; private set; }
-    public DateOnly LastToday { get; private set; }
     public string? LastSearch { get; private set; }
     public ClientActivityFilter LastActivity { get; private set; }
     public PageRequest? LastPage { get; private set; }
@@ -135,13 +134,11 @@ internal sealed class FakeClientQueries : IClientQueries
 
     public Task<ClientDetailsDto?> GetDetailsAsync(
         Guid clientId,
-        DateOnly today,
         CancellationToken cancellationToken
     )
     {
         DetailsCalls++;
         LastClientId = clientId;
-        LastToday = today;
         LastCancellationToken = cancellationToken;
         return Task.FromResult(DetailsResult);
     }
@@ -163,13 +160,11 @@ internal sealed class FakeClientQueries : IClientQueries
 
     public Task<IReadOnlyList<UsableClientPackDto>> ListUsablePacksAsync(
         Guid clientId,
-        DateOnly today,
         CancellationToken cancellationToken
     )
     {
         UsablePacksCalls++;
         LastClientId = clientId;
-        LastToday = today;
         LastCancellationToken = cancellationToken;
         return Task.FromResult(UsablePacksResult);
     }
@@ -243,7 +238,8 @@ internal static class ClientTestData
             PriceCents: 10000,
             Currency: "EUR",
             PurchaseDate: new DateOnly(2026, 7, 1),
-            ExpirationDate: new DateOnly(2026, 9, 1));
+            ExpectedEndDate: new DateOnly(2026, 9, 1),
+            CreatedAt: NowUtc);
     }
 
     internal static ClientDetailsDto CreateDetails(Guid clientId)

@@ -57,4 +57,10 @@ public static class ClientErrors
             { "upgrade", true }
         }
     );
+
+    public static readonly Error ClientInactive = Error.Create(
+        code: "client_inactive",
+        category: ErrorCategory.Conflict,
+        description: "An archived client cannot receive a new session pack."
+    );
 }

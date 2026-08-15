@@ -1,53 +1,95 @@
 using Domain.Entities.Billing;
 using Domain.Exceptions;
-using Xunit;
 
 namespace Domain.UnitTests.Entities.Billing;
 
 public sealed class PackTypeTests
 {
+    private static readonly DateTime Now =
+        new(2026, 8, 14, 12, 0, 0, DateTimeKind.Utc);
+
     [Fact]
-    public void Constructor_NameWithOuterWhitespace_StoresNormalizedName()
+    public void Constructor_ValidInput_NormalizesCommercialFields()
     {
-        // Arrange & Act
-        var packType = new PackType(
+        var pack = new PackType(
             Guid.NewGuid(),
             "  Ten sessions  ",
             10,
             30000,
-            "EUR",
-            90,
-            new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc)
+            " eur ",
+            30,
+            Now
         );
 
-        // Assert
-        Assert.Equal("Ten sessions", packType.Name);
+        Assert.Equal("Ten sessions", pack.Name);
+        Assert.Equal("EUR", pack.Currency);
+        Assert.Equal(30, pack.ExpectedDurationDays);
+        Assert.True(pack.IsActive);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Constructor_InvalidExpectedDuration_Throws(int duration)
+    {
+        Assert.Throws<DomainException>(() => new PackType(
+            Guid.NewGuid(), "Pack", 10, 1000, "EUR", duration, Now
+        ));
     }
 
     [Fact]
-    public void Update_NameWithOuterWhitespace_StoresNormalizedName()
+    public void Update_ValidInput_PreservesIdentityAndCreation()
     {
-        // Arrange
-        var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
-        var packType = new PackType(Guid.NewGuid(), "Ten sessions", 10, 30000, "EUR", 90, now);
+        var pack = CreatePack();
+        var id = pack.Id;
 
-        // Act
-        packType.Update("  Twelve sessions  ", 12, 35000, "EUR", 90, now);
+        pack.Update("New", 12, 12000, "usd", null, Now.AddMinutes(1));
 
-        // Assert
-        Assert.Equal("Twelve sessions", packType.Name);
+        Assert.Equal(id, pack.Id);
+        Assert.Equal(Now, pack.CreatedAt);
+        Assert.Equal("USD", pack.Currency);
+        Assert.Null(pack.ExpectedDurationDays);
     }
 
     [Fact]
-    public void Update_DeletedPackType_ThrowsDomainException()
+    public void Archive_Repeated_PreservesFirstTransitionTimestamp()
     {
-        // Arrange
-        var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
-        var packType = new PackType(Guid.NewGuid(), "Ten sessions", 10, 30000, "EUR", 90, now);
-        packType.SoftDelete(now);
+        var pack = CreatePack();
+        var changedAt = Now.AddMinutes(1);
 
-        // Act & Assert
-        Assert.Throws<DomainException>(() =>
-            packType.Update("Twelve sessions", 12, 35000, "EUR", 90, now));
+        pack.Archive(changedAt);
+        pack.Archive(Now.AddMinutes(2));
+
+        Assert.False(pack.IsActive);
+        Assert.Equal(changedAt, pack.UpdatedAt);
     }
+
+    [Fact]
+    public void Reactivate_Repeated_PreservesFirstTransitionTimestamp()
+    {
+        var pack = CreatePack();
+        pack.Archive(Now.AddMinutes(1));
+        var changedAt = Now.AddMinutes(2);
+
+        pack.Reactivate(changedAt);
+        pack.Reactivate(Now.AddMinutes(3));
+
+        Assert.True(pack.IsActive);
+        Assert.Equal(changedAt, pack.UpdatedAt);
+    }
+
+    [Fact]
+    public void Update_SoftDeletedPack_Throws()
+    {
+        var pack = CreatePack();
+        pack.SoftDelete(Now.AddMinutes(1));
+
+        Assert.Throws<DomainException>(() => pack.Update(
+            "New", 12, 1000, "EUR", 20, Now.AddMinutes(2)
+        ));
+    }
+
+    private static PackType CreatePack() => new(
+        Guid.NewGuid(), "Pack", 10, 10000, "EUR", 30, Now
+    );
 }

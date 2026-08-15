@@ -12,7 +12,22 @@ internal sealed class PackTypeConfiguration : IEntityTypeConfiguration<PackType>
 {
     public void Configure(EntityTypeBuilder<PackType> builder)
     {
-        builder.ToTable("pack_types");
+        builder.ToTable("pack_types", table =>
+        {
+            table.HasCheckConstraint(
+                "ck_pack_types_session_count_positive",
+                "session_count > 0"
+            );
+            table.HasCheckConstraint(
+                "ck_pack_types_price_non_negative",
+                "price_cents >= 0"
+            );
+            table.HasCheckConstraint(
+                "ck_pack_types_expected_duration_positive",
+                "expected_duration_days IS NULL OR expected_duration_days > 0"
+            );
+        });
+
         builder.HasKey(pt => pt.Id);
         builder.Property(pt => pt.Id)
             .HasColumnName("id")
@@ -41,8 +56,8 @@ internal sealed class PackTypeConfiguration : IEntityTypeConfiguration<PackType>
             .HasDefaultValue("EUR")
             .IsRequired();
 
-        builder.Property(pt => pt.DurationDays)
-            .HasColumnName("duration_days");
+        builder.Property(pt => pt.ExpectedDurationDays)
+            .HasColumnName("expected_duration_days");
 
         builder.Property(pt => pt.IsActive)
             .HasColumnName("is_active")
@@ -63,24 +78,17 @@ internal sealed class PackTypeConfiguration : IEntityTypeConfiguration<PackType>
             .HasDefaultValueSql("now()")
             .IsRequired();
 
-        builder.ToTable(t =>
-        {
-            t.HasCheckConstraint("pack_session_count_positive", "session_count > 0");
-            t.HasCheckConstraint("pack_price_non_negative", "price_cents >= 0");
-            t.HasCheckConstraint("pack_duration_positive", "duration_days IS NULL OR duration_days > 0");
-        });
-
-        builder.HasIndex(pt => pt.OwnerTrainerId).HasDatabaseName("idx_packs_trainer");
         builder.HasIndex(pt => new { pt.OwnerTrainerId, pt.Id })
             .HasDatabaseName("uq_pack_types_tenant_id")
             .IsUnique();
         builder.HasIndex(pt => new { pt.OwnerTrainerId, pt.Name })
-            .HasDatabaseName("idx_pack_types_usable")
+            .HasDatabaseName("idx_pack_types_tenant_name_active")
             .HasFilter("is_active = true AND is_deleted = false");
 
         builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(pt => pt.OwnerTrainerId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade)
+            .HasConstraintName("fk_pack_types_owner_trainer");
     }
 }

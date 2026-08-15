@@ -100,7 +100,7 @@ internal static class ClientPersistenceTestData
             sessionCount,
             10000,
             "EUR",
-            durationDays: null,
+            expectedDurationDays: null,
             NowUtc);
     }
 
@@ -109,7 +109,7 @@ internal static class ClientPersistenceTestData
         Guid clientId,
         PackType packType,
         DateOnly purchaseDate,
-        DateOnly? expirationDate,
+        DateOnly? expectedEndDate,
         int sessionsToConsume = 0,
         DateTime? now = null)
     {
@@ -119,11 +119,11 @@ internal static class ClientPersistenceTestData
             clientId,
             packType,
             purchaseDate,
-            expirationDate,
+            expectedEndDate,
             effectiveNow);
 
         for (var count = 0; count < sessionsToConsume; count++)
-            pack.ConsumeSession(purchaseDate, effectiveNow);
+            pack.ConsumeSession(effectiveNow.AddMinutes(count + 1));
 
         return pack;
     }

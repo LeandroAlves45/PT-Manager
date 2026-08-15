@@ -13,7 +13,28 @@ internal sealed class ClientSessionPackConfiguration : IEntityTypeConfiguration<
 {
     public void Configure(EntityTypeBuilder<ClientSessionPack> builder)
     {
-        builder.ToTable("client_session_packs");
+        builder.ToTable("client_session_packs", table =>
+        {
+            table.HasCheckConstraint(
+                "ck_client_session_packs_balance",
+                "total_sessions > 0 AND sessions_remaining >= 0" +
+                " AND sessions_remaining <= total_sessions"
+            );
+            table.HasCheckConstraint(
+                "ck_client_session_packs_price_non_negative",
+                "price_cents >= 0"
+            );
+            table.HasCheckConstraint(
+                "ck_client_session_packs_expected_end_order",
+                "expected_end_date IS NULL OR expected_end_date >= purchase_date"
+            );
+            table.HasCheckConstraint(
+                "ck_client_session_packs_completion_consistency",
+                "(sessions_remaining = 0 AND completed_at IS NOT NULL) OR" +
+                " (sessions_remaining > 0 AND completed_at IS NULL)"
+            );
+        });
+
         builder.HasKey(csp => csp.Id);
         builder.Property(csp => csp.Id)
             .HasColumnName("id")
@@ -58,9 +79,16 @@ internal sealed class ClientSessionPackConfiguration : IEntityTypeConfiguration<
             .HasColumnType("date")
             .IsRequired();
 
-        builder.Property(csp => csp.ExpirationDate)
-            .HasColumnName("expiry_date")
+        builder.Property(csp => csp.ExpectedEndDate)
+            .HasColumnName("expected_end_date")
             .HasColumnType("date");
+
+        builder.Property(csp => csp.CompletedAt)
+            .HasColumnName("completed_at")
+            .HasColumnType("timestamptz");
+
+        builder.Ignore(csp => csp.IsCompleted);
+        builder.Ignore(csp => csp.IsUsable);
 
         builder.Property(csp => csp.IsDeleted)
             .HasColumnName("is_deleted")
@@ -76,31 +104,22 @@ internal sealed class ClientSessionPackConfiguration : IEntityTypeConfiguration<
             .HasDefaultValueSql("now()")
             .IsRequired();
 
-        builder.ToTable(t =>
-        {
-            t.HasCheckConstraint("sessions_remaining_non_negative", "sessions_remaining >= 0");
-            t.HasCheckConstraint(
-                "pack_sessions_consistent",
-                "total_sessions > 0 AND sessions_remaining <= total_sessions");
-            t.HasCheckConstraint("pack_snapshot_price_non_negative", "price_cents >= 0");
-            t.HasCheckConstraint("pack_expiry_order", "expiry_date IS NULL OR expiry_date >= purchase_date");
-        });
-
-        builder.HasIndex(csp => csp.OwnerTrainerId).HasDatabaseName("idx_client_packs_trainer");
-        builder.HasIndex(csp => csp.ClientId).HasDatabaseName("idx_client_packs_client");
         builder.HasIndex(csp => new
         {
             csp.OwnerTrainerId,
             csp.ClientId,
-            csp.ExpirationDate,
+            csp.ExpectedEndDate,
+            csp.CreatedAt,
+            csp.Id
         })
-            .HasDatabaseName("idx_client_packs_usable")
-            .HasFilter("sessions_remaining > 0 AND is_deleted = false");
+        .HasDatabaseName("idx_client_session_packs_usable_order")
+        .HasFilter("sessions_remaining > 0 AND is_deleted = false");
 
         builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(csp => csp.OwnerTrainerId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade)
+            .HasConstraintName("fk_client_session_packs_owner_trainer");
 
         builder.HasOne<Client>()
             .WithMany()

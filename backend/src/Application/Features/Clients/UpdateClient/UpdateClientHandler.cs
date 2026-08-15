@@ -3,7 +3,6 @@ using Application.Features.Clients.Abstractions;
 using Application.Features.Clients.Dtos;
 using Application.Results;
 using Application.Validation;
-using Domain.Entities.Clients;
 using Domain.ValueObjects;
 using FluentValidation;
 
@@ -45,12 +44,11 @@ public sealed class UpdateClientHandler
         CancellationToken cancellationToken)
     {
         var validation = await _validator.ValidateAsync(command, cancellationToken);
-
         if (!validation.IsValid)
             return Result<ClientDetailsDto>.Failure(validation.ToApplicationError());
 
         var tenant = _tenantContext.GetRequiredTrainerId();
-        if (tenant.IsFailure)
+        if (!tenant.IsSuccess)
             return Result<ClientDetailsDto>.Failure(tenant.Error!);
 
         var client = await _clientStore.GetForUpdateAsync(command.ClientId, cancellationToken);
@@ -63,7 +61,7 @@ public sealed class UpdateClientHandler
             command.Name,
             command.ContactEmail,
             command.Phone,
-            BirthDate.Create(command.BirthDate, today),
+            BirthDate.Create(command.BirthDate, DateOnly.FromDateTime(now)),
             BiologicalSex.FromString(command.Sex),
             command.Objective,
             command.Notes,
@@ -80,7 +78,9 @@ public sealed class UpdateClientHandler
         if (outcome != SaveClientProfileOutcome.Updated)
             throw new ArgumentOutOfRangeException(nameof(outcome));
 
-        var packs = await _clientQueries.ListUsablePacksAsync(client.Id, today, cancellationToken);
+        var packs = await _clientQueries.ListUsablePacksAsync(
+            client.Id,
+            cancellationToken);
         return Result<ClientDetailsDto>.Success(client.ToDetailsDto(packs));
     }
 }

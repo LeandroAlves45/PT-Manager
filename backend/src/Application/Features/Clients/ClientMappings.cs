@@ -40,7 +40,7 @@ public static class ClientMappings
     }
 
     /// <summary>Converte um pack utilizável para o snapshot público.</summary>
-    /// <param name="pack">Entidade previamente filtrada por IUsable(today).</param>
+    /// <param name="pack">Entidade previamente filtrada pelo saldo utilizável.</param>
     /// <returns>Snapshot comercial da compra.</returns>
     public static UsableClientPackDto ToDto(
         this ClientSessionPack pack)
@@ -56,6 +56,7 @@ public static class ClientMappings
             PriceCents: pack.PriceCents,
             Currency: pack.Currency,
             PurchaseDate: pack.PurchaseDate,
-            ExpirationDate: pack.ExpirationDate);
+            ExpectedEndDate: pack.ExpectedEndDate,
+            CreatedAt: pack.CreatedAt);
     }
 }
