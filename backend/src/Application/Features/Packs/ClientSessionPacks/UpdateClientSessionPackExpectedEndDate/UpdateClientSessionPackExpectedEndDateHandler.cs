@@ -54,20 +54,6 @@ public sealed class UpdateClientSessionPackExpectedEndDateHandler
             cancellationToken
         );
 
-        return outcome.Kind switch
-        {
-            ClientSessionPackStoreResult.Status.Updated or
-            ClientSessionPackStoreResult.Status.AlreadyInRequestedState =>
-                Result<ClientSessionPackDto>.Success(outcome.Pack!.ToDto()),
-            ClientSessionPackStoreResult.Status.PackNotFound =>
-                Result<ClientSessionPackDto>.Failure(
-                    PackErrors.ClientSessionPackNotFound
-                ),
-            ClientSessionPackStoreResult.Status.ExpectedEndDateBeforePurchase =>
-                Result<ClientSessionPackDto>.Failure(
-                    PackErrors.ExpectedEndDateBeforePurchase
-                ),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
+        return outcome.ToUpdateResult();
     }
 }

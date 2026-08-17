@@ -71,15 +71,6 @@ public sealed class UpdateTrainingPlanMetadataHandler
                     "A committed TrainingPlan must be readable by its owner."));
         }
 
-        return outcome.Kind switch
-        {
-            TrainingPlanStoreResult.Status.NotFound =>
-                Result<TrainingPlanDetailsDto>.Failure(TrainingErrors.TrainingPlanNotFound),
-            TrainingPlanStoreResult.Status.Inactive =>
-                Result<TrainingPlanDetailsDto>.Failure(TrainingErrors.TrainingPlanInactive),
-            TrainingPlanStoreResult.Status.StructureHasHistory =>
-                Result<TrainingPlanDetailsDto>.Failure(TrainingErrors.StructureHasHistory),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
+        return outcome.ToDetailsFailure();
     }
 }

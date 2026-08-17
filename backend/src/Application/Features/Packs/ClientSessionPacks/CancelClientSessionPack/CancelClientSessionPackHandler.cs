@@ -41,18 +41,6 @@ public sealed class CancelClientSessionPackHandler
             cancellationToken
         );
 
-        return outcome.Kind switch
-        {
-            ClientSessionPackStoreResult.Status.Cancelled or
-            ClientSessionPackStoreResult.Status.AlreadyInRequestedState =>
-                Result.Success(),
-            ClientSessionPackStoreResult.Status.PackNotFound =>
-                Result.Failure(PackErrors.ClientSessionPackNotFound),
-            ClientSessionPackStoreResult.Status.PackUsed =>
-                Result.Failure(PackErrors.ClientSessionPackUsed),
-            ClientSessionPackStoreResult.Status.PackReferenced =>
-                Result.Failure(PackErrors.ClientSessionPackReferenced),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
+        return outcome.ToCancelResult();
     }
 }

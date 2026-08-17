@@ -74,9 +74,9 @@ Do not skip ahead to guessing:
 
 **PT Manager constraints** (when touching this repo):
 
-- Multi-tenant: queries must filter by `trainer_id` where applicable.
-- Backend migrations: use `python app/db/migrate.py`; never edit existing migration files.
-- Architecture: routes → services → repositories; do not bypass layers.
+- Multi-tenant: queries must filter by `owner_trainer_id` where applicable, via EF Core Global Query Filters.
+- Backend migrations: generate with `dotnet ef migrations add`; never edit an already-applied migration file.
+- Architecture: Api → Application → Domain ← Infrastructure (Clean Architecture, organized by feature); do not bypass layers.
 
 In `--fast` mode specifically:
 
@@ -94,7 +94,7 @@ In `--fast` mode specifically:
 
 **PT Manager commands**:
 
-- Backend: `cd backend` then `pytest <relevant-test-path> -v` (or targeted file from project root per README).
+- Backend: `cd backend` then `dotnet test --filter FullyQualifiedName~<TestClass>` (or the specific test project) as appropriate.
 - Frontend: `cd frontend` then `npm run lint` / `npm test` as appropriate.
 
 **--fast**:

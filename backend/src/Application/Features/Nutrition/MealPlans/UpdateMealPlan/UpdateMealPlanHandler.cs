@@ -89,17 +89,6 @@ public sealed class UpdateMealPlanHandler
                 ));
         }
 
-        return outcome.Kind switch
-        {
-            MealPlanStoreResult.Status.NotFound =>
-            Result<MealPlanDetailsDto>.Failure(NutritionErrors.MealPlanNotFound),
-            MealPlanStoreResult.Status.StructureReferenceNotFound =>
-                Result<MealPlanDetailsDto>.Failure(NutritionErrors.MealPlanStructureReferenceNotFound),
-            MealPlanStoreResult.Status.CatalogReferenceNotFound =>
-                Result<MealPlanDetailsDto>.Failure(NutritionErrors.CatalogReferenceNotFound),
-            MealPlanStoreResult.Status.CatalogReferenceInactive =>
-                Result<MealPlanDetailsDto>.Failure(NutritionErrors.CatalogReferenceInactive),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
+        return outcome.ToDetailsFailure();
     }
 }

@@ -80,15 +80,6 @@ public sealed class CreateMealPlanHandler
                 ));
         }
 
-        return outcome.Kind switch
-        {
-            MealPlanStoreResult.Status.ClientNotFound =>
-                Result<MealPlanDetailsDto>.Failure(NutritionErrors.ClientNotFound),
-            MealPlanStoreResult.Status.CatalogReferenceNotFound =>
-                Result<MealPlanDetailsDto>.Failure(NutritionErrors.CatalogReferenceNotFound),
-            MealPlanStoreResult.Status.CatalogReferenceInactive =>
-                Result<MealPlanDetailsDto>.Failure(NutritionErrors.CatalogReferenceInactive),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
+        return outcome.ToDetailsFailure();
     }
 }

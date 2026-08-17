@@ -10,7 +10,7 @@ searching for missing signatures, rules or method bodies.
 
 ## Required preparation
 
-1. Read `AGENTS.md`, `.codex/memory/MEMORY.md` and the relevant canonical files
+1. Read `AGENTS.md`, `.claude/memory/MEMORY.md` and the relevant canonical files
    under `.claude/project/`.
 2. Inspect the real code, tests and `git status --short` before describing a file.
 3. Read `.claude/memory/Patterns/blueprints_pseudocodigo_por_ficheiro.md`.

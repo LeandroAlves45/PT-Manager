@@ -45,13 +45,7 @@ public sealed class ReactivateMealPlanHandler
             _clock.UtcNow,
             cancellationToken
         );
-        return outcome.Kind switch
-        {
-            MealPlanStoreResult.Status.Changed => Result.Success(),
-            MealPlanStoreResult.Status.AlreadyInRequestedState => Result.Success(),
-            MealPlanStoreResult.Status.NotFound => Result.Failure(NutritionErrors.MealPlanNotFound),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
+        return outcome.ToTransitionResult();
     }
 
     private static Error CreateMealPlanIdRequiredError() => Error.Validation([

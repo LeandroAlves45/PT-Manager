@@ -68,17 +68,6 @@ public sealed class CorrectExerciseSetLogHandler
                     "A corrected exercise set log must be readable."));
         }
 
-        return outcome.Kind switch
-        {
-            ExerciseSetLogStoreResult.Status.NotFound =>
-                Result<ClientExerciseSetLogDto>.Failure(TrainingErrors.ExerciseSetLogNotFound),
-            ExerciseSetLogStoreResult.Status.SetNotFound =>
-                Result<ClientExerciseSetLogDto>.Failure(TrainingErrors.SetNotFound),
-            ExerciseSetLogStoreResult.Status.PerformedAtInFuture =>
-                Result<ClientExerciseSetLogDto>.Failure(TrainingErrors.PerformedAtInFuture()),
-            ExerciseSetLogStoreResult.Status.PerformedAtOutsidePlan =>
-                Result<ClientExerciseSetLogDto>.Failure(TrainingErrors.PerformedAtOutsidePlan()),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
+        return outcome.ToCorrectionFailure();
     }
 }

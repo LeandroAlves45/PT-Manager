@@ -11,5 +11,11 @@ internal enum PersistenceOperation
     /// <summary>Atualização do perfil de cliente.</summary>
     UpdateClient,
     /// <summary>Remoção estrutural de um plano de treino.</summary>
-    RemoveTrainingPlanStructure
+    RemoveTrainingPlanStructure,
+    /// <summary>Criação de sessão.</summary>
+    CreateSession,
+    /// <summary>Restaura uma sessão.</summary>
+    RestoreSession,
+    /// <summary>Reagendamento de uma sessão Scheduled.</summary>
+    RescheduleSession
 }

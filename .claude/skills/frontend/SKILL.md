@@ -1,6 +1,6 @@
 ---
 name: frontend
-description: General frontend UI conventions — design tokens, layout, accessibility, and performance checklist. Use when writing or reviewing .tsx/.jsx/.css in the PT Manager frontend (React 19 + Vite + Tailwind + Chakra UI + shadcn/ui).
+description: Convenções de design, acessibilidade e performance para o frontend React do PT Manager (React 19, Vite, Tailwind CSS, Chakra UI, shadcn/ui). Usar ao escrever ou rever .tsx/.jsx/.css.
 ---
 
 # Frontend

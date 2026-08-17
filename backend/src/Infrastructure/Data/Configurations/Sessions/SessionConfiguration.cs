@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Data.Configurations.Sessions;
 
-/// <summary>Configura sessões e a referência segura ao pack do cliente.</summary>
+/// <summary>Configura Sessions e a referência tenant-safe ao pack do cliente.</summary>
 internal sealed class SessionConfiguration : IEntityTypeConfiguration<Session>
 {
     public void Configure(EntityTypeBuilder<Session> builder)
@@ -16,7 +16,8 @@ internal sealed class SessionConfiguration : IEntityTypeConfiguration<Session>
         builder.ToTable("sessions", table =>
         {
             table.HasCheckConstraint("ck_sessions_duration", "duration_minutes > 0");
-            table.HasCheckConstraint("ck_sessions_status",
+            table.HasCheckConstraint(
+                "ck_sessions_status",
                 "status IN ('scheduled', 'completed', 'cancelled_by_client', 'cancelled_by_trainer', 'no_show')");
         });
 
@@ -40,10 +41,13 @@ internal sealed class SessionConfiguration : IEntityTypeConfiguration<Session>
         builder.Property(session => session.CreatedAt).HasColumnName("created_at").IsRequired();
         builder.Property(session => session.UpdatedAt).HasColumnName("updated_at").IsRequired();
 
+        // Defesa adicional para inícios exatamente iguais; sobreposição continua no store.
         builder.HasIndex(session => new { session.OwnerTrainerId, session.StartsAt })
-            .HasDatabaseName("idx_sessions_tenant_scheduled_at")
-            .HasFilter("status = 'scheduled' AND is_deleted = false");
-        builder.HasIndex(session => new { session.OwnerTrainerId, session.ClientId, session.StartsAt })
+            .HasDatabaseName("uq_sessions_tenant_scheduled_start")
+            .HasFilter("status = 'scheduled' AND is_deleted = false")
+            .IsUnique();
+        builder.HasIndex(session => new
+        { session.OwnerTrainerId, session.ClientId, session.StartsAt })
             .HasDatabaseName("idx_sessions_tenant_client_starts_at");
         builder.HasIndex(session => session.ClientSessionPackId)
             .HasDatabaseName("idx_sessions_client_session_pack")

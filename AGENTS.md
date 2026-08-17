@@ -20,7 +20,7 @@ Quando houver conflito de informação, aplicar esta ordem:
    `.claude/project/01_DATABASE_SCHEMA.md`, `.claude/project/02_SPRINTS_ROADMAP.md`,
    `.claude/project/03_DEVELOPER_GUIDE.md`.
 4. Código atual do repositório.
-5. `.codex/memory/MEMORY.md` e memória local.
+5. `.claude/memory/MEMORY.md` e notas de sessão em `.claude/memory/Sessions/`.
 
 A memória é auxiliar; não substitui arquitetura, contrato nem código verificado.
 
@@ -38,7 +38,7 @@ O código Python e as migrations antigas não definem a arquitetura de destino.
 ## Início de sessão e investigação
 
 1. Ler este `AGENTS.md`.
-2. Ler `.codex/memory/MEMORY.md` se existir.
+2. Ler `.claude/memory/MEMORY.md` (memória operacional principal, partilhada por qualquer agente).
 3. Verificar `git status --short` antes de alterar ficheiros.
 4. Ler apenas a documentação e o código estritamente necessários.
 5. Se a memória contradisser o código atual ou os documentos canónicos, prevalecem

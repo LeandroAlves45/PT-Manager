@@ -1,525 +1,329 @@
-# PT Manager – Personal Training Management Platform 💪
+# PT Manager Backend — C# / .NET 10 Migration
 
-A **production-ready, full-stack SaaS application** for personal trainers to manage clients, training sessions, workouts, nutrition, and billing. Built with **FastAPI** (backend), **React** (frontend), and **PostgreSQL**.
-
----
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Features](#features)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Quick Start with Docker](#quick-start-with-docker)
-  - [Local Development Setup](#local-development-setup)
-- [Backend Setup](#backend-setup)
-- [Frontend Setup](#frontend-setup)
-- [Environment Variables](#environment-variables)
-- [Running the Application](#running-the-application)
-- [API Reference](#api-reference)
-- [Testing](#testing)
-- [Deployment](#deployment)
-- [License](#license)
+*Reescrita completa do backend de Python para C# com Clean Architecture*
 
 ---
 
-## Overview
+## Executive Summary
 
-**PT Manager** is a comprehensive SaaS platform that enables personal trainers to:
+PT Manager backend está sendo reescrito de Python (FastAPI) para C# (.NET 10 LTS), modular monolith com Clean Architecture, com objetivo de alcançar um MVP em produção em 12 semanas.
 
-- **Manage clients** with detailed profiles and progress tracking
-- **Schedule and track training sessions** with automated pack consumption
-- **Create personalized workout programs** with exercises and progression schemes
-- **Design meal plans** with macro calculations and nutrition tracking
-- **Manage supplements** and supplement recommendations
-- **Track progress** through assessments and periodic check-ins
-- **Handle billing** with Stripe integration and automatic tier management
-- **Engage clients** via a dedicated client portal and in-app notifications
-
-Each trainer operates in an **isolated tenant environment**, seeing only their own clients and data.
+**Timeline:** Julho 2026 — Outubro 2026
+**Stack:** .NET 10 · C# 14 · PostgreSQL 17 (Neon) · Entity Framework Core 10 · Upstash Redis · Upstash QStash
+**Architecture:** Modular monolith, Clean Architecture (Domain → Application → Infrastructure → Api)
+**Team:** Solo developer (Alves)
 
 ---
 
-## Tech Stack
+## Documentos de Referência
 
-### Backend
-| Layer | Technology |
-|-------|-----------|
-| Framework | FastAPI 0.115 |
-| ORM | SQLModel 0.0.22 (SQLAlchemy + Pydantic) |
-| Database | PostgreSQL 17 (SQLite for local dev) |
-| Authentication | JWT + passlib/bcrypt |
-| Payments | Stripe API |
-| Email | Resend API |
-| Image Storage | Cloudinary |
-| Background Jobs | APScheduler 3.10 |
-| Server | Uvicorn + Gunicorn |
-| Testing | pytest + httpx + pytest-cov |
-| Python | 3.12 |
+Este repositório contém a documentação completa:
 
-### Frontend
-| Layer | Technology |
-|-------|-----------|
-| Framework | React 19 |
-| Language | TypeScript 5.9 |
-| Build Tool | Vite 7.3 |
-| Styling | Tailwind CSS 4 + PostCSS |
-| UI Components | Chakra UI + Radix UI |
-| Form Handling | React Hook Form |
-| Routing | React Router 7 |
-| HTTP Client | Axios |
-| Charts | Recharts 3.7 |
-| Testing | Vitest + Testing Library |
-| Linting | ESLint 9 |
-| Formatting | Prettier 3.8 |
+| Documento | Conteúdo |
+|-----------|----------|
+| **00_ARCHITECTURE.md** | Arquitectura sistema (v3.0), stack tecnológico, padrões, decisões de MVP |
+| **01_DATABASE_SCHEMA.md** | Schema PostgreSQL alvo (29 tabelas, spec para o modelo EF Core) |
+| **02_SPRINTS_ROADMAP.md** | Planeamento 12 semanas, 8 sprints, tarefas detalhadas |
+| **03_DEVELOPER_GUIDE.md** | Setup local, workflow diário, troubleshooting |
+| **README (1).md** | Este ficheiro (overview) |
 
-### Deployment
-| Service | Purpose |
-|---------|---------|
-| Docker | Containerization |
-| Render.com | Backend hosting |
-| Vercel | Frontend hosting (optional) |
+`04_PRODUCTION_CHECKLIST.md` ainda não existe — a criar antes do Sprint 8 (Produção), com o runbook e o procedimento de rollback referidos em `02_SPRINTS_ROADMAP.md`.
 
 ---
 
-## Project Structure
+## Timeline Sumário
 
-```text
-Projeto_pt_manager/
-├── backend/                           # FastAPI backend
-│   ├── app/
-│   │   ├── main.py                   # App factory & lifecycle hooks
-│   │   ├── scheduler.py              # APScheduler setup
-│   │   ├── api/
-│   │   │   ├── deps.py               # FastAPI dependencies (auth, DB)
-│   │   │   └── v1/                   # All API routes
-│   │   ├── core/
-│   │   │   ├── config.py             # Settings from .env
-│   │   │   ├── security.py           # JWT, password hashing, RBAC
-│   │   │   └── logging.py            # Logging config
-│   │   ├── crud/                     # Data access layer
-│   │   ├── db/
-│   │   │   ├── models/               # SQLModel ORM models
-│   │   │   ├── migrations/           # SQL migration files
-│   │   │   └── seeds/                # Seed data scripts
-│   │   ├── schemas/                  # Pydantic request/response schemas
-│   │   ├── services/                 # Business logic
-│   │   └── utils/                    # Helper utilities
-│   ├── tests/                        # Test suite
-│   ├── .env.example                  # Environment template
-│   ├── Dockerfile                    # Container image
-│   ├── docker-compose.yml            # Local dev environment
-│   ├── requirements.txt               # Python dependencies
-│   ├── pytest.ini                    # Test config
-│   └── render.yaml                   # Render.com deployment
-│
-├── frontend/                          # React frontend
-│   ├── src/
-│   │   ├── components/               # Reusable React components
-│   │   ├── pages/                    # Page components
-│   │   ├── hooks/                    # Custom React hooks
-│   │   ├── services/                 # API client & business logic
-│   │   ├── styles/                   # Global styles & Tailwind config
-│   │   ├── utils/                    # Helper functions
-│   │   └── App.tsx                   # Main app component
-│   ├── tests/                        # Test suite
-│   ├── .env                          # Frontend env (client-side)
-│   ├── .env.example                  # Environment template
-│   ├── vite.config.ts                # Vite bundler config
-│   ├── tsconfig.json                 # TypeScript config
-│   ├── tailwind.config.ts            # Tailwind CSS config
-│   ├── package.json                  # NPM dependencies
-│   ├── eslint.config.js              # Linting rules
-│   ├── vercel.json                   # Vercel deployment (optional)
-│   └── vitest.config.js              # Vitest test runner config
-│
-├── .gitignore                        # Git ignore rules
-├── README.md                         # This file
-├── LICENSE                           # Project license
-└── docker-compose.yml                # Multi-service orchestration (optional)
+```
+SPRINT 0   (Semana 0 — 3 dias)  Setup + Decisões
+SPRINT 1   (Semanas 1-2)        Domain Layer (Entities + Value Objects por feature)
+SPRINT 2   (Semanas 3-4)        Infrastructure + EF Core (DbContext, migration, Repos)
+SPRINT 3   (Semanas 5-6)        Application (Handlers por feature, DTOs, Validators)
+SPRINT 4   (Semanas 7-8)        API Controllers + Auth (40 Endpoints)
+SPRINT 5   (Semana 9)           Jobs Duráveis + Outbox (QStash, Resend, Stripe, Cloudinary)
+SPRINT 6   (Semana 10)          Observabilidade (ILogger, OpenTelemetry, Sentry)
+SPRINT 7   (Semana 11)          Testing + CI/CD (~170 tests + Architecture Tests, GitHub Actions)
+SPRINT 8   (Semana 12)          Production Setup (Deploy Render free tier, QStash produção)
+```
+
+**Data estimada de go-live:** Outubro 2026
+
+---
+
+## Estructura Directórios
+
+```
+backend/
+├── src/
+│   ├── Api/              ← HTTP Controllers, Middlewares
+│   ├── Domain/           ← Entities, Value Objects, Interfaces
+│   ├── Application/      ← Handlers (por feature), DTOs, Validators
+│   └── Infrastructure/   ← Repositórios, EF Core, External Services
+├── tests/
+│   ├── Domain.UnitTests/
+│   ├── Application.UnitTests/
+│   ├── Infrastructure.IntegrationTests/
+│   ├── Api.FunctionalTests/
+│   └── ArchitectureTests/   ← ~200 testes no total
+├── .github/workflows/       (na raiz do monorepo)
+│   ├── ci.yml           ← GitHub Actions (backend + frontend)
+│   └── deploy.yml       ← Deploy (backend + frontend)
+├── Dockerfile
+├── Directory.Build.props
+├── Directory.Packages.props
+└── PTManager.sln
 ```
 
 ---
 
-## Features
+## Decisões Técnicas Confirmadas
 
-### Core Features
-- ✅ **Multi-tenancy** – Trainers are fully isolated; each sees only their own data
-- ✅ **Role-Based Access Control** – Three roles: `superuser`, `trainer`, `client`
-- ✅ **JWT Authentication** with logout support via database token tracking
-- ✅ **Subscription Billing** via Stripe with automatic tier management
-- ✅ **Training Session Management** – Schedule, complete, cancel, or mark sessions missed
-- ✅ **Session Pack System** – Clients purchase packs; sessions auto-consume on completion
-- ✅ **Workout Program Builder** – Multi-day plans with exercises and set/rep schemes
-- ✅ **Nutrition Module** – Food database, meal plans, and macro calculator
-- ✅ **Supplement Tracking** – Catalog and per-client supplement assignments
-- ✅ **Progress Tracking** – Initial assessments & periodic check-ins
-- ✅ **In-App Notifications** – Session reminders via background jobs
-- ✅ **Email Notifications** – Transactional email via Resend
-- ✅ **Image Uploads** – Cloudinary integration for logos and photos
-- ✅ **Admin Dashboard** – Platform metrics, trainer management, billing exemptions
-- ✅ **Client Portal** – Dedicated dashboard for clients to view plans and log progress
+Ver justificação completa e trade-offs em `00_ARCHITECTURE.md`.
 
-### Technical Features
-- ✅ **Idempotent SQL Migrations** – Safe to run on every deploy
-- ✅ **Soft Deletes** – Archive data instead of permanently deleting
-- ✅ **Docker Compose** for local development
-- ✅ **Comprehensive API Documentation** – Swagger UI at `/docs`
-- ✅ **Automated Testing** – Unit, integration, and E2E tests
-- ✅ **Type Safety** – Full TypeScript frontend & Pydantic schemas backend
+### .NET 10 LTS
+- **Razão:** Longo suporte (até Nov 2028), true multi-threading (sem GIL) vs Python
+- **C# 14:** Obrigatório em .NET 10, type-safety completo
 
----
+### ASP.NET Core 10 — Controllers
+- **Controllers vs Minimal APIs:** Controllers (mais familiar para transição vinda do Python)
+- **Framework:** Async/await nativo, built-in DI, middleware pipeline
 
-## Getting Started
+### Entity Framework Core 10
+- **ORM:** Global Query Filters ligados a `ITenantContext` (nunca a `HttpContext` direto)
+- **Multi-tenancy:** Enforçado em database level (impossível esquecer o filtro numa query)
 
-### Prerequisites
+### Upstash QStash — sem RabbitMQ/MassTransit no MVP
+- **Razão:** o plano gratuito do Render suspende a API sem tráfego e não tem background workers — um broker dedicado (RabbitMQ) ou um worker in-process (Hangfire/Quartz) não seria fiável nesse ambiente
+- **Solução:** QStash chama um endpoint interno assinado a cada vinte minutos (intervalo escolhido para preservar a suspensão gratuita do Render e do scale-to-zero do Neon, `00_ARCHITECTURE.md §9.1`), que ativa o dispatcher de `durable_jobs`/`outbox_messages` em Postgres (at-least-once, idempotente)
+- **RabbitMQ** fica documentado como reavaliação futura — só com sinais concretos de múltiplos consumers, throughput ou latência incompatíveis com polling (`00_ARCHITECTURE.md §9.5`)
 
-**For Backend:**
-- Python 3.12+
-- PostgreSQL 17 (or use Docker Compose)
+### PostgreSQL 17 (Neon)
+- **Database:** Sem mudanças de motor face ao Python
+- **Backups:** Neon automáticos, serverless scaling
+- **IDs:** `uuid` nativo (não `varchar(36)` como no Python) — ver `01_DATABASE_SCHEMA.md` Decisão 1
 
-**For Frontend:**
-- Node.js 18+
-- npm or yarn
+### FluentValidation (core)
+- **Validação:** Chamada explicitamente pelos handlers (sem `.AspNetCore` nem pipeline automático), async validators, mais expressivo que Pydantic
 
-**For Both:**
-- Docker & Docker Compose (recommended)
-- Git
-
-**Third-party Services (for full functionality):**
-- Stripe account (billing)
-- Resend account (email)
-- Cloudinary account (image uploads)
+### ILogger + OpenTelemetry + Sentry
+- **Logging:** Structured JSON, correlation IDs — sem Serilog file sink (filesystem efémero no Render)
+- **Monitoring:** OpenTelemetry (traces/métricas) + Sentry (erros) em produção
 
 ---
 
-### Quick Start with Docker
+## Dependências Python → C# Mapeamento
 
-```bash
-# Clone the repository
-git clone https://github.com/LeandroAlves45/Project_pt_manager.git
-cd Projeto_pt_manager
+| Python | C# | Notas |
+|--------|----|----|
+| FastAPI | ASP.NET Core 10 Controllers | |
+| SQLModel | EF Core 10 (Npgsql provider) | |
+| Pydantic v2 | FluentValidation (core) | Chamado explicitamente pelos handlers |
+| Python logging | `ILogger` + OpenTelemetry | Sem Serilog file sink |
+| Resend SDK | Resend.NET ou `HttpClient` tipado | |
+| Stripe SDK | Stripe.net | |
+| Cloudinary SDK | CloudinaryDotNet | |
+| APScheduler + Celery (planeado) | Upstash QStash + dispatcher `durable_jobs` | Sem RabbitMQ/MassTransit no MVP |
+| pytest | xUnit | + WebApplicationFactory, Testcontainers |
+| Redis-py | Provider Redis compatível com HybridCache | Upstash Redis |
 
-# Start all services (PostgreSQL + Backend API + Frontend)
-docker-compose up --build
+---
 
-# Backend will be available at http://localhost:8000
-# Frontend will be available at http://localhost:5173
-# API docs at http://localhost:8000/docs
+## Entregáveis por Sprint
+
+| Sprint | Semanas | Entrega Principal | Validação |
+|--------|---------|------------------|-----------|
+| 0 | 0 | Repo setup, decisões doc | Compila |
+| 1 | 1-2 | Entities + Value Objects por feature | Testes unitários passam |
+| 2 | 3-4 | DbContext, migration `InitialCreate`, Repositórios | Testes integração contra PostgreSQL |
+| 3 | 5-6 | Handlers por feature, DTOs, Validators | Testes unitários passam |
+| 4 | 7-8 | 40 Endpoints, Auth JWT+refresh, Multi-tenancy | Testes integração dos endpoints |
+| 5 | 9 | Dispatcher QStash, Outbox, Resend, Stripe, Cloudinary | Reclamação de jobs, retry, idempotência testados |
+| 6 | 10 | ILogger, OpenTelemetry, Sentry, Correlation IDs | Logs estruturados em produção |
+| 7 | 11 | ~170 testes + Architecture Tests, GitHub Actions CI/CD | Todos testes passam, pipeline verde |
+| 8 | 12 | Deploy Render (free), QStash produção, Docs | Go-live validado, rollback testado |
+
+---
+
+## Requisitos Locais
+
+```
+.NET 10.0 SDK                    https://dotnet.microsoft.com
+PostgreSQL 17 ou Neon            https://neon.tech
+Docker                           https://docker.com
+Visual Studio 2026 ou VS Code    https://visualstudio.microsoft.com
+Git                              https://git-scm.com
 ```
 
 ---
 
-### Local Development Setup
-
-#### Backend Setup
+## Quick Start Local
 
 ```bash
-# Navigate to backend directory
+# 1. Clone
+git clone https://github.com/seu-repo/ptmanager.git
 cd backend
 
-# Create virtual environment
-python -m venv venv
+# 2. Restore
+dotnet restore
 
-# Activate virtual environment
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
+# 3. Setup Database
+createdb ptmanager_dev
+dotnet ef database update --project src/Infrastructure
 
-# Install dependencies
-pip install -r requirements.txt
+# 4. Run
+dotnet run --project src/Api
+# http://localhost:5000/swagger
 
-# Copy environment file and configure
-cp .env.example .env
-# Edit .env with your values (database, Stripe, Resend, etc.)
-
-# Run the application
-uvicorn app.main:app --reload --port 8000
-```
-
-**Note:** Database tables are created automatically on startup. Migrations run idempotently, so no manual migration step is needed.
-
-#### Frontend Setup
-
-```bash
-# Navigate to frontend directory
-cd frontend
-
-# Install dependencies
-npm install
-
-# Copy environment file
-cp .env.example .env
-# Edit .env with backend API URL (e.g., http://localhost:8000)
-
-# Start development server
-npm run dev
-
-# The frontend will be available at http://localhost:5173
+# 5. Tests
+dotnet test
 ```
 
 ---
 
-## Backend Setup
+## Git Workflow (Global)
 
-### Environment Variables
+Workflow compartilhado entre backend e frontend:
 
-Copy `.env.example` to `.env` and configure:
-
-```bash
-cd backend
-cp .env.example .env
+```
+.github/workflows/
+├── ci.yml          ← Test backend + frontend em paralelo
+└── deploy.yml      ← Deploy backend + frontend em paralelo
 ```
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `SECRET_KEY` | JWT signing key | Yes |
-| `API_KEY` | API middleware key | Yes |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | JWT lifetime in minutes | No (default: 60) |
-| `TRIAL_DAYS` | Free trial period | No (default: 15) |
-| `CORS_ORIGINS` | Comma-separated allowed origins | Yes |
-| `STRIPE_SECRET_KEY` | Stripe API secret key | Yes |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret | Yes |
-| `STRIPE_PRICE_STARTER` | Stripe Starter tier price ID | Yes |
-| `STRIPE_PRICE_PRO` | Stripe Pro tier price ID | Yes |
-| `RESEND_API_KEY` | Resend API key for email | Yes |
-| `EMAIL_FROM` | Sender email address | Yes |
-| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name | No |
-| `CLOUDINARY_API_KEY` | Cloudinary API key | No |
-| `CLOUDINARY_API_SECRET` | Cloudinary API secret | No |
-| `SUPERUSER_EMAIL` | Seed superuser email | No |
-| `SUPERUSER_PASSWORD` | Seed superuser password | No |
-| `SEED_DEMO_DATA` | Enable demo data seeding | No (default: false) |
-| `TIMEZONE` | Scheduler timezone | No (default: UTC) |
+**Branch naming:**
+- `feature/auth-jwt-refresh`
+- `bugfix/meal-plan-calculation`
+- `test/add-repository-tests`
+
+**Commit messages:**
+- `feat: add JWT token refresh endpoint`
+- `fix: correct macro calculation`
+- `test: add validation tests`
 
 ---
 
-## Frontend Setup
+## Segurança
 
-### Environment Variables
-
-Copy `.env.example` to `.env` and configure:
-
-```bash
-cd frontend
-cp .env.example .env
-```
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `VITE_API_URL` | Backend API base URL | `http://localhost:8000` |
-| `VITE_APP_NAME` | Application name | `PT Manager` |
-
----
-
-## Running the Application
-
-### Development Mode
-
-**Start both services in parallel:**
-
-```bash
-# Terminal 1: Backend
-cd backend
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-uvicorn app.main:app --reload --port 8000
-
-# Terminal 2: Frontend
-cd frontend
-npm run dev
-```
-
-Access:
-- **Frontend:** http://localhost:5173
-- **Backend API:** http://localhost:8000
-- **API Docs:** http://localhost:8000/docs
-
-### Using Docker Compose
-
-```bash
-docker-compose up --build
-```
-
-### Production Build
-
-**Frontend:**
-```bash
-cd frontend
-npm run build
-npm run preview
-```
-
-**Backend with Gunicorn:**
-```bash
-cd backend
-gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000
-```
-
----
-
-## API Reference
-
-Base URL: `/api/v1`
+### Multi-tenancy
+- Global Query Filters: impossível cross-tenant access
+- `owner_trainer_id` em todas business entities
+- JWT sempre valida identidade
 
 ### Authentication
+- Access token JWT de curta duração (15 min), refresh token opaco (30 dias) com rotação e deteção de reuso
+- Apenas o hash do refresh token é persistido (`refresh_tokens.token_hash`)
+- Role-based access (superuser, trainer, client)
+- Um eventual header de API key legado nunca é tratado como autenticação (`00_ARCHITECTURE.md §5.3`)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/auth/login` | Login & receive JWT |
-| POST | `/auth/logout` | Invalidate token |
-| POST | `/signup/trainer` | Register new trainer |
-| GET | `/auth/users/me` | Get current user profile |
-
-### Core Resources
-
-| Resource | Methods | Description |
-|----------|---------|-------------|
-| `/clients` | GET, POST, PATCH, DELETE | Client management |
-| `/sessions` | GET, POST, PUT | Training session scheduling |
-| `/packs` | POST, GET | Session pack purchases |
-| `/training-plans` | GET, POST, PUT, DELETE | Workout program templates |
-| `/exercises` | GET, POST, PUT, DELETE | Exercise library |
-| `/nutrition` | GET, POST, PATCH | Meal plans & macro calculations |
-| `/supplements` | GET, POST, PATCH | Supplement catalog |
-| `/assessments` | POST, GET | Client assessments |
-| `/checkins` | POST, GET | Progress check-ins |
-| `/billing` | GET, POST | Subscription & Stripe integration |
-
-**Full API documentation available at http://localhost:8000/docs**
+### Secrets
+- Nenhum API key em source
+- Environment variables em Render
+- Senha hashing: bcrypt
+- CORS origins locked down
 
 ---
 
-## Testing
+## Performance Targets
 
-### Backend Tests
-
-```bash
-cd backend
-
-# Run all tests
-pytest
-
-# Run with coverage report
-pytest --cov=app --cov-report=term-missing
-
-# Run specific test file
-pytest tests/unit/test_macro_calculator.py -v
-```
-
-### Frontend Tests
-
-```bash
-cd frontend
-
-# Run tests
-npm run test
-
-# Run with coverage
-npm run test:coverage
-```
+| Métrica | Target | Método |
+|---------|--------|--------|
+| API response p95 | < 500ms | Apache Bench |
+| Database queries | < 100ms (p95) | EF Core profiler |
+| Startup time | < 2s | dotnet run timing |
+| Memory footprint | < 500MB | Profiler check |
+| Throughput | > 1000 req/s | Load test |
 
 ---
 
-## Deployment
+## Observabilidade
 
-### Backend (Render.com)
+### Logging
+- `ILogger` structured JSON (sem file sink — filesystem efémero no Render)
+- Correlation ID per request
+- Prefixos de domínio: [AUTH], [NUTRITION], [BILLING], [JOBS]
 
-1. Connect your GitHub repo to Render
-2. Create a new Web Service
-3. Set environment variables in Render dashboard
-4. Render detects `render.yaml` and deploys automatically
+### Monitoring
+- Sentry error tracking + OpenTelemetry traces/métricas
+- Health endpoints: `GET /health/live`, `GET /health/ready`
+- Database connectivity check (readiness apenas)
 
-The API will be available at your Render URL (e.g., `https://pt-manager-api.onrender.com`).
-
-### Frontend (Vercel / Netlify)
-
-**Vercel:**
-```bash
-npm i -g vercel
-vercel
-```
-
-**Netlify:**
-```bash
-npm i -g netlify-cli
-netlify deploy
-```
+### Metrics (Pós-Launch)
+- Request count, latency percentiles
+- Jobs pendentes, tentativas e dead-letter (`durable_jobs`)
+- Database connection pool utilization
+- Cache hit ratio e falhas Redis
 
 ---
 
-## Git Workflow
+## Roadmap Futuro (Pós-Sprint 8)
 
-```bash
-# Create feature branch
-git checkout -b feature/my-feature
+Após produção:
 
-# Make changes
-git add .
-git commit -m "feat: add my feature"
-
-# Push and create pull request
-git push origin feature/my-feature
-```
+- **Phase 9:** Reavaliar RabbitMQ apenas se surgirem sinais concretos (múltiplos consumers, throughput incompatível com polling — `00_ARCHITECTURE.md §9.5`)
+- **Phase 10:** Machine learning (recomendações nutrição)
+- **Phase 11:** GraphQL API (alternativa REST)
+- **Phase 12:** Mobile app (React Native)
 
 ---
 
-## Troubleshooting
+## Recursos
 
-### Backend Issues
+### Documentação Oficial
+- [.NET 10 Docs](https://learn.microsoft.com/en-us/dotnet/)
+- [ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/)
+- [EF Core](https://learn.microsoft.com/en-us/ef/core/)
+- [C# 14](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-14)
 
-- **Database connection error:** Verify `DATABASE_URL` in `.env`
-- **Port 8000 already in use:** Change port or kill existing process
-- **Module not found:** Ensure virtual environment is activated and dependencies are installed
+### Livros Recomendados
+- "Clean Architecture" — Robert C. Martin
+- "Domain-Driven Design" — Eric Evans
+- "The Pragmatic Programmer" — Hunt & Thomas
 
-### Frontend Issues
-
-- **API connection error:** Verify `VITE_API_URL` points to running backend
-- **Port 5173 already in use:** Vite will automatically use next available port
-- **Build errors:** Run `npm ci` to install exact dependency versions
-
-### Docker Issues
-
-```bash
-# Rebuild images
-docker-compose down
-docker-compose up --build
-
-# View logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
-
-# Remove all containers & volumes
-docker-compose down -v
-```
+### Ferramentas
+- Visual Studio 2026
+- VS Code + C# Dev Kit
+- Docker Desktop
+- Postman / Insomnia (API testing)
 
 ---
 
-## Contributing
+## FAQ
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+**Q: Por que não ficar em Python?**
+A: Python + FastAPI não escala bem com GIL para concorrência real. C# + .NET 10 resolve isto nativamente com true multi-threading. Performance +2-4x, startup 10x mais rápido.
+
+**Q: E se algo quebra em produção?**
+A: Rollback procedure a documentar em `04_PRODUCTION_CHECKLIST.md` antes do Sprint 8. Database backup automático via Neon, código revert via Git, Render permite reverter para o deploy anterior.
+
+**Q: Quanto tempo demora?**
+A: 12 semanas (3 meses) seguindo roadmap. Pode ser mais rápido com mais developers, mas atualmente é solo.
+
+**Q: Qual o custo?**
+A: MVP assenta inteiramente em free tiers — Render Free, Neon Free, Upstash Free (Redis + QStash), Sentry Free. Custo total: $0/mês, com as limitações aceites documentadas em `00_ARCHITECTURE.md §13.2` (cold start, sem múltiplas instâncias, sem workers dedicados).
+
+**Q: Database vai perder dados?**
+A: Não. Migrations feitas incrementalmente, backup antes de cada deploy. Zero data loss garantido.
+
+**Q: Como se trata a multi-tenancy?**
+A: Global Query Filters em EF Core — todos queries filtram automaticamente por `owner_trainer_id`. Impossível esquecer filtro.
 
 ---
 
-## Support
+## Contacto & Suporte
 
-For issues, questions, or suggestions, please open an issue on GitHub.
-
----
-
-## License
-
-This project is proprietary software. All rights reserved. See [LICENSE](./LICENSE) for details.
+**Project Lead:** Alves (solo developer)
+**Documentation:** Este repositório
+**Issues:** GitHub Issues (backend repo)
+**CI/CD Status:** GitHub Actions
 
 ---
 
-**Built with ❤️ by Leandro Alves**
+## Versão
 
-[GitHub](https://github.com/LeandroAlves45) | [Email](mailto:ptleoalves@gmail.com)
+- **Versão:** 2.0 (alinhado com `00_ARCHITECTURE.md` v3.0)
+- **Data:** Julho 2026
+- **Status:** Em Desenvolvimento (Sprint 0)
+- **Próxima Revisão:** Agosto 2026 (após Sprint 1)
+
+---
+
+*PT Manager Backend Migration — .NET 10 LTS Edition*

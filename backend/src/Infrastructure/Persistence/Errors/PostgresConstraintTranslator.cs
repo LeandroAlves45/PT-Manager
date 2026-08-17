@@ -60,15 +60,28 @@ internal sealed class PostgresConstraintTranslator
             operation is PersistenceOperation.RemoveTrainingPlanStructure &&
             postgresException.ConstraintName == "fk_client_exercise_set_logs_training_plan_day_exercise")
         {
-            {
-                error = Error.Create(
-                    code: "training_structure_has_history",
-                    category: ErrorCategory.Conflict,
-                    description: "Training structure with execution history cannot be removed."
-                );
-                return true;
-            }
+            error = Error.Create(
+                code: "training_structure_has_history",
+                category: ErrorCategory.Conflict,
+                description: "Training structure with execution history cannot be removed."
+            );
+            return true;
         }
+
+        if (postgresException.SqlState == UniqueViolation &&
+            operation is PersistenceOperation.CreateSession or
+                PersistenceOperation.RescheduleSession or
+                PersistenceOperation.RestoreSession &&
+            postgresException.ConstraintName == "uq_sessions_tenant_scheduled_start")
+        {
+            error = Error.Create(
+                code: "session_schedule_conflict",
+                category: ErrorCategory.Conflict,
+                description: "The personal trainer already has a session at this start time."
+            );
+            return true;
+        }
+
         error = null;
         return false;
     }

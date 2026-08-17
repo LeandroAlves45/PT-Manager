@@ -48,13 +48,6 @@ public sealed class ArchiveTrainingPlanHandler
             _clock.UtcNow,
             cancellationToken);
 
-        return outcome.Kind switch
-        {
-            TrainingPlanStoreResult.Status.Changed or
-                TrainingPlanStoreResult.Status.AlreadyArchived => Result.Success(),
-            TrainingPlanStoreResult.Status.NotFound =>
-                Result.Failure(TrainingErrors.TrainingPlanNotFound),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
+        return outcome.ToArchiveResult();
     }
 }

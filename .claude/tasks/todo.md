@@ -52,6 +52,9 @@
 - [x] Gate 3A: snapshots, packs simultâneos, cancelamento seguro e data apenas
   informativa. PostgreSQL diferido explicitamente para a migration consolidada 3F
 - [ ] Lote 3B: Sessions, agenda, estados, packs, locks e idempotência
+  - [x] Contrato revisto e aprovado em 16/08/2026
+  - [x] 43 blueprints C# por ficheiro real e autoavaliação documental concluídos
+  - [ ] Código real materializado e gate compilado
 - [ ] Gate 3B: concorrência da última sessão, sobreposições, timezone e rollback
 - [ ] Lote 3C: InitialAssessment e CheckIn
 - [ ] Gate 3C: unicidade, correção e ausência de efeitos laterais em Nutrition

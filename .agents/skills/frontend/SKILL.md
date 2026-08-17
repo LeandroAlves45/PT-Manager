@@ -1,6 +1,6 @@
 ---
 name: frontend
-description: Convenções de design, acessibilidade e performance para o frontend React do projeto PT Manager.
+description: Convenções de design, acessibilidade e performance para o frontend React do PT Manager (React 19, Vite, Tailwind CSS, Chakra UI, shadcn/ui). Usar ao escrever ou rever .tsx/.jsx/.css.
 ---
 
 # Frontend

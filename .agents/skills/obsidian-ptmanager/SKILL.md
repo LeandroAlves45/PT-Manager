@@ -1,66 +1,62 @@
 ---
 name: obsidian-ptmanager
-description: Maintain persistent PT Manager project memory across Codex and Claude. Use at session start, milestones, material architectural decisions, reviews, retrospectives, or when the user asks to load or update memory. Reads `.codex/memory/MEMORY.md` and `.claude/memory/MEMORY.md`, keeps concise canonical milestone notes, and never replaces current code or project documentation as source of truth.
+description: Memória persistente do PT Manager em `.claude/memory/`. Usar no início de cada sessão para carregar contexto, e no fim para registar decisões e sessões. Ativa em início de sessão, "carregar memória", "guardar notas da sessão", revisões e retrospetivas. `.codex/memory/MEMORY.md` é só um ponteiro de compatibilidade, sem histórico próprio.
 ---
 
-# Persistent memory for PT Manager
+# Memória persistente do PT Manager
 
-Use memory to preserve durable context, not as a second specification.
+Gere o diretório `.claude/memory/` deste projeto. É o único índice de memória operacional, partilhado por qualquer agente (Claude Code ou Codex CLI, via `AGENTS.md`). Usar como contexto auxiliar, nunca como segunda especificação.
 
-## Source precedence
+## Precedência de fontes
 
-When sources disagree, use this order:
+Quando houver conflito, aplicar esta ordem, igual à definida em `AGENTS.md`:
 
-1. Current code and schema.
-2. Canonical documents under `.claude/project/`.
-3. `AGENTS.md`.
-4. `.codex/memory/MEMORY.md` and `.claude/memory/MEMORY.md`.
-5. Historical session notes.
+1. Pedido explícito do utilizador.
+2. `AGENTS.md`.
+3. Documentos canónicos em `.claude/project/`.
+4. Código atual do repositório.
+5. `.claude/memory/MEMORY.md` e notas de sessão em `Sessions/`.
 
-State the contradiction and correct stale memory instead of adapting code to it.
+Registar a contradição e corrigir a memória desatualizada em vez de adaptar código a ela.
 
-## Start of work
+## Estrutura real
 
-1. Read `.codex/memory/MEMORY.md` when it exists.
-2. Read `.claude/memory/MEMORY.md` when it exists.
-3. Read only recent session, pattern or gotcha notes relevant to the request.
-4. Run `git status --short` before planning edits.
+```
+.claude/memory/
+├── MEMORY.md    # índice, ponto de partida de cada sessão
+├── Sessions/    # uma nota datada por sessão relevante (YYYY-MM-DD-topico.md)
+└── Patterns/    # padrões reutilizáveis documentados (blueprints, convenções)
+```
 
-Never read protected secret files while loading context.
+Não inventar pastas que não existem no projeto (ex.: Gotchas/, Architecture/, Corrections/). Se um desses tipos de nota passar a fazer falta, criar a pasta só quando houver o primeiro conteúdo real para lá colocar.
 
-## When to write memory
+## Início de sessão
 
-Update memory only when at least one condition is true:
+1. Ler `.claude/memory/MEMORY.md`.
+2. Ler apenas as notas de sessão e padrões relevantes para o pedido atual.
+3. Correr `git status --short` antes de planear alterações.
 
-1. A sprint, phase or major milestone changed state.
-2. A material architecture, contract, security or data decision was approved.
-3. A reusable pattern or recurring gotcha was discovered.
-4. The user explicitly requested a memory update.
+Nunca ler ficheiros protegidos ao carregar contexto.
 
-Do not create a session file for routine conversations, status checks or changes
-already captured by an existing canonical note.
+## Quando escrever memória
 
-## Writing workflow
+Atualizar apenas quando pelo menos uma condição for verdadeira:
 
-1. Verify the claim against code, tests, git history or canonical docs.
-2. Create one dated note under `.claude/memory/Sessions/` only for a milestone or
-   decision that needs its own history.
-3. Link both memory indexes to that note when both need the same context.
-4. Keep indexes concise: current state, durable decisions, limitation and next step.
-5. Link instead of copying a long narrative into multiple files.
-6. Record environmental test blockers separately from functional failures.
-7. Never claim a test passed without evidence from that execution or an explicitly
-   attributed prior review.
+1. Um sprint, fase ou marco importante mudou de estado.
+2. Uma decisão material de arquitetura, contrato, segurança ou dados foi aprovada.
+3. Um padrão reutilizável ou um erro recorrente foi identificado.
+4. O utilizador pediu explicitamente uma atualização de memória.
 
-## Patterns and gotchas
+Não criar ficheiro de sessão para conversas de rotina ou verificações de estado já cobertas por uma nota existente.
 
-Create or update a file in `Patterns/` when the rule should guide future work.
-Create or update a file in `Gotchas/` when a verified failure is likely to recur.
-Do not duplicate a rule already enforced by `AGENTS.md` unless the memory adds
-project-specific evidence or a concrete example.
+## Fluxo de escrita
 
-## Content rules
+1. Verificar a afirmação contra código, testes, histórico git ou documentos canónicos antes de a registar.
+2. Criar uma nota datada em `.claude/memory/Sessions/` só para um marco ou decisão que precise de história própria.
+3. Manter o `MEMORY.md` conciso: estado atual, decisões duráveis, limitações e próximo passo.
+4. Ligar em vez de copiar — se o mesmo contexto aparecer em duas notas, referenciar a canónica.
+5. Nunca declarar um teste como aprovado sem evidência dessa execução ou de uma revisão anterior explicitamente atribuída.
 
-Use UTF-8 Markdown and Portuguese from Portugal. Include exact dates, paths and
-commit identifiers where verified. Never store credentials, tokens, connection
-strings or contents from protected files.
+## Regras de conteúdo
+
+Markdown UTF-8, Português de Portugal. Datas, caminhos e commits exatos sempre que confirmados. Nunca guardar credenciais, tokens, connection strings ou conteúdo de ficheiros protegidos. Desde que `.claude/memory/` deixou de estar no `.gitignore`, esta pasta tem histórico git real, usa `git log`/`git blame` sobre as notas quando for útil.

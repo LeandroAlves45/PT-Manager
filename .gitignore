@@ -1,7 +1,7 @@
 # Old backend
 backend-python/
 
-# Variáveis de ambiente
+# Environment variables
 .env
 .env.local
 .env.production
@@ -22,9 +22,6 @@ coverage/
 # Node.js
 node_modules/
 *.local
-
-# Backend
-backend/artifacts/
 
 # Logs
 logs/
@@ -52,11 +49,11 @@ lerna-debug.log*
 .md/*
 .coverage
 
-# Memória local dos assistentes
-.codex/memory/
-.claude/memory/MEMORY.md
-.claude/memory/
-.claude/project/backend-csharp-checklist.md
+# Local files for assistants (not shared historic)
+.claude/scheduled_tasks.lock
+.claude/settings.local.json
+.claude/memory/Sessions
+.claude/memory/Patterns
 
 # Documentation and Backlog
 docs/

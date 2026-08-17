@@ -113,6 +113,27 @@ public sealed class PostgresConstraintTranslatorTests
         Assert.Null(createError);
     }
 
+    [Theory]
+    [InlineData(nameof(PersistenceOperation.CreateSession))]
+    [InlineData(nameof(PersistenceOperation.RescheduleSession))]
+    [InlineData(nameof(PersistenceOperation.RestoreSession))]
+    public void SessionScheduleConstraint_MapsExpectedCode(string operationName)
+    {
+        var exception = CreatePostgresException(
+            "23505",
+            "uq_sessions_tenant_scheduled_start");
+        var operation = Enum.Parse<PersistenceOperation>(operationName);
+
+        var translated = _translator.TryTranslate(
+            exception,
+            operation,
+            out var error);
+
+        Assert.True(translated);
+        Assert.Equal("session_schedule_conflict", error!.Code);
+        Assert.Equal(ErrorCategory.Conflict, error.Category);
+    }
+
     [Fact]
     public void NullException_Throws()
     {

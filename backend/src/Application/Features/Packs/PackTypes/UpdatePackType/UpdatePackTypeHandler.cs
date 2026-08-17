@@ -57,13 +57,6 @@ public sealed class UpdatePackTypeHandler
             cancellationToken
         );
 
-        return outcome.Kind switch
-        {
-            PackTypeStoreResult.Status.Updated =>
-                Result<PackTypeDto>.Success(outcome.PackType!.ToDto()),
-            PackTypeStoreResult.Status.NotFound =>
-                Result<PackTypeDto>.Failure(PackErrors.PackTypeNotFound),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
+        return outcome.ToUpdateResult();
     }
 }

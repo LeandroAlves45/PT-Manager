@@ -74,17 +74,6 @@ public sealed class CreateTrainingPlanHandler
                     "A committed TrainingPlan must be readable by its owner."));
         }
 
-        return outcome.Kind switch
-        {
-            TrainingPlanStoreResult.Status.ClientNotFound =>
-                Result<TrainingPlanDetailsDto>.Failure(TrainingErrors.ClientNotFound),
-            TrainingPlanStoreResult.Status.ExerciseReferenceNotFound =>
-                Result<TrainingPlanDetailsDto>.Failure(TrainingErrors.ExerciseReferenceNotFound),
-            TrainingPlanStoreResult.Status.ExerciseReferenceInactive =>
-                Result<TrainingPlanDetailsDto>.Failure(TrainingErrors.ExerciseReferenceInactive),
-            TrainingPlanStoreResult.Status.ActivePlanConflict =>
-                Result<TrainingPlanDetailsDto>.Failure(TrainingErrors.ActiveTrainingPlanConflict),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
+        return outcome.ToDetailsFailure();
     }
 }

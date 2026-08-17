@@ -5,6 +5,7 @@ using Application.Features.Nutrition.Foods.Abstractions;
 using Application.Features.Nutrition.MealPlans.Abstractions;
 using Application.Features.Packs.ClientSessionPacks.Abstractions;
 using Application.Features.Packs.PackTypes.Abstractions;
+using Application.Features.Sessions.Abstractions;
 using Application.Features.Training.Exercises.Abstractions;
 using Application.Features.Training.ExerciseSetLogs.Abstractions;
 using Application.Features.Training.TrainingPlans.Abstractions;
@@ -15,6 +16,7 @@ using Infrastructure.Persistence.Clients;
 using Infrastructure.Persistence.Errors;
 using Infrastructure.Persistence.Nutrition;
 using Infrastructure.Persistence.Packs;
+using Infrastructure.Persistence.Sessions;
 using Infrastructure.Persistence.Training;
 using Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
@@ -92,6 +94,10 @@ public static class DependencyInjection
         // Client Session Packs
         services.AddScoped<IClientSessionPackStore, ClientSessionPackStore>();
         services.AddScoped<IClientSessionPackQueries, ClientSessionPackQueries>();
+
+        // Sessions
+        services.AddScoped<ISessionStore, SessionStore>();
+        services.AddScoped<ISessionQueries, SessionQueries>();
 
         // Interceptors
         services.AddScoped<TenantWriteValidationInterceptor>();

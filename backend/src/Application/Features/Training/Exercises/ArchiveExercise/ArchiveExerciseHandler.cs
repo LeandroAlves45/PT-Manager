@@ -54,13 +54,6 @@ public sealed class ArchiveExerciseHandler
             cancellationToken
         );
 
-        return outcome.Kind switch
-        {
-            ExerciseStoreResult.Status.Changed or
-                ExerciseStoreResult.Status.AlreadyInRequestedState => Result.Success(),
-            ExerciseStoreResult.Status.NotFound => Result.Failure(TrainingErrors.ExerciseNotFound),
-            ExerciseStoreResult.Status.GlobalReadOnly => Result.Failure(TrainingErrors.GlobalExerciseReadOnly),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
+        return outcome.ToTransitionResult();
     }
 }

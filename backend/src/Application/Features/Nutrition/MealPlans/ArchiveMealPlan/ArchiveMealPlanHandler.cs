@@ -45,17 +45,8 @@ public sealed class ArchiveMealPlanHandler
             _clock.UtcNow,
             cancellationToken
         );
-        return MapTransition(outcome);
+        return outcome.ToTransitionResult();
     }
-
-    private static Result MapTransition(MealPlanStoreResult outcome) =>
-        outcome.Kind switch
-        {
-            MealPlanStoreResult.Status.Changed => Result.Success(),
-            MealPlanStoreResult.Status.AlreadyInRequestedState => Result.Success(),
-            MealPlanStoreResult.Status.NotFound => Result.Failure(NutritionErrors.MealPlanNotFound),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
 
     private static Error CreateMealPlanIdRequiredError() => Error.Validation([
         new ValidationError(

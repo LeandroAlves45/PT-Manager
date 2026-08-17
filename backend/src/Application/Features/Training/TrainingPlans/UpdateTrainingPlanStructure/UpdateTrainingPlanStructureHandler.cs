@@ -66,23 +66,6 @@ public sealed class UpdateTrainingPlanStructureHandler
                     "A committed TrainingPlan must be readable by its owner."));
         }
 
-        return outcome.Kind switch
-        {
-            TrainingPlanStoreResult.Status.NotFound =>
-                Result<TrainingPlanDetailsDto>.Failure(TrainingErrors.TrainingPlanNotFound),
-            TrainingPlanStoreResult.Status.Inactive =>
-                Result<TrainingPlanDetailsDto>.Failure(TrainingErrors.TrainingPlanInactive),
-            TrainingPlanStoreResult.Status.StructureReferenceNotFound =>
-                Result<TrainingPlanDetailsDto>.Failure(TrainingErrors.StructureReferenceNotFound),
-            TrainingPlanStoreResult.Status.ExerciseReferenceNotFound =>
-                Result<TrainingPlanDetailsDto>.Failure(TrainingErrors.ExerciseReferenceNotFound),
-            TrainingPlanStoreResult.Status.ExerciseReferenceInactive =>
-                Result<TrainingPlanDetailsDto>.Failure(TrainingErrors.ExerciseReferenceInactive),
-            TrainingPlanStoreResult.Status.StructureHasHistory =>
-                Result<TrainingPlanDetailsDto>.Failure(TrainingErrors.StructureHasHistory),
-            TrainingPlanStoreResult.Status.StructureReorderRequiresFreeSlot =>
-                Result<TrainingPlanDetailsDto>.Failure(TrainingErrors.StructureReorderRequiresFreeSlot),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
+        return outcome.ToDetailsFailure();
     }
 }

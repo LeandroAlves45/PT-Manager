@@ -1,106 +1,152 @@
 using Domain.Entities.Sessions;
 using Domain.Exceptions;
 using Domain.ValueObjects;
-using Xunit;
 
 namespace Domain.UnitTests.Entities.Sessions;
 
 public sealed class SessionTests
 {
-    private static readonly DateTime Now = new DateTime(2026, 8, 1, 10, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime Now =
+        new(2026, 8, 16, 10, 0, 0, DateTimeKind.Utc);
 
     [Fact]
-    public void Constructor_StoresStartAsUtc()
+    public void Constructor_NormalizesStartAndFields()
     {
-        // Arrange
-        var session = CreateSession();
+        var session = CreateSession(
+            new DateTimeOffset(2026, 8, 17, 12, 0, 0, TimeSpan.FromHours(2)));
 
-        // Assert
-        Assert.Equal(DateTimeKind.Utc, session.StartsAt.Kind);
+        Assert.Equal(TimeSpan.Zero, session.StartsAt.Offset);
+        Assert.Equal("Gym", session.Location);
+        Assert.Equal(SessionStatus.Scheduled, session.Status);
     }
 
     [Fact]
-    public void Complete_WhenScheduled_ChangesStatus()
+    public void Reschedule_Equivalent_DoesNotChangeUpdatedAt()
     {
-        // Arrange
         var session = CreateSession();
 
-        // Act
-        session.Complete(Now.AddHours(2));
+        session.Reschedule(session.StartsAt, 60, " Gym ", Now.AddMinutes(1));
 
-        // Assert
-        Assert.Equal(SessionStatus.Completed, session.Status);
+        Assert.Equal(Now, session.UpdatedAt);
     }
 
     [Fact]
-    public void CancelByTrainer_WhenScheduled_RecordsDetailedStatus()
+    public void ChangePack_Null_RemovesPackWithoutChangingStatus()
     {
-        // Arrange
         var session = CreateSession();
 
-        // Act
-        session.CancelByTrainer(Now.AddMinutes(10));
+        session.ChangePack(null, Now.AddMinutes(1));
 
-        // Assert
+        Assert.Null(session.ClientSessionPackId);
+        Assert.Equal(SessionStatus.Scheduled, session.Status);
+    }
+
+    [Fact]
+    public void Complete_Repeated_IsIdempotent()
+    {
+        var session = CreateSession();
+        session.Complete(Now.AddDays(2));
+        var changedAt = session.StatusChangedAt;
+
+        session.Complete(Now.AddDays(3));
+
+        Assert.Equal(changedAt, session.StatusChangedAt);
+    }
+
+    [Fact]
+    public void CancelByClient_PersistsDetailedStatus()
+    {
+        var session = CreateSession();
+
+        session.CancelByClient(Now.AddMinutes(1));
+
+        Assert.Equal(SessionStatus.CancelledByClient, session.Status);
+    }
+
+    [Fact]
+    public void CancelByTrainer_PersistsDetailedStatus()
+    {
+        var session = CreateSession();
+
+        session.CancelByTrainer(Now.AddMinutes(1));
+
         Assert.Equal(SessionStatus.CancelledByTrainer, session.Status);
     }
 
     [Fact]
-    public void MarkNoShow_WhenAlreadyCompleted_ThrowsDomainException()
+    public void DifferentTerminalTransition_Throws()
     {
-        // Arrange
         var session = CreateSession();
-        session.Complete(Now.AddHours(2));
+        session.Complete(Now.AddDays(2));
 
-        // Act & Assert
-        var action = () => session.MarkNoShow(Now.AddHours(3));
+        var action = () => session.MarkNoShow(Now.AddDays(2).AddMinutes(1));
+
+        Assert.Throws<DomainException>(action);
+    }
+
+    [Theory]
+    [InlineData("completed")]
+    [InlineData("cancelled_by_client")]
+    [InlineData("cancelled_by_trainer")]
+    [InlineData("no_show")]
+    public void Restore_TerminalState_ReturnsScheduled(string state)
+    {
+        var session = CreateSession();
+        ApplyState(session, state);
+
+        session.Restore(Now.AddDays(3));
+
+        Assert.Equal(SessionStatus.Scheduled, session.Status);
+    }
+
+    [Fact]
+    public void Restore_Scheduled_DoesNotChangeTimestamps()
+    {
+        var session = CreateSession();
+
+        session.Restore(Now.AddDays(3));
+
+        Assert.Equal(Now, session.UpdatedAt);
+        Assert.Equal(Now, session.StatusChangedAt);
+    }
+
+    [Fact]
+    public void Constructor_InvalidDuration_Throws()
+    {
+        var action = () => new Session(
+            Guid.NewGuid(), Guid.NewGuid(), null, DateTimeOffset.UtcNow,
+            0, null, null, null, Now);
+
         Assert.Throws<DomainException>(action);
     }
 
     [Fact]
-    public void Reschedule_WhenStartHasNoTimezone_ThrowsDomainException()
+    public void Constructor_EmptyPackId_Throws()
     {
-        // Arrange
-        var session = CreateSession();
-        var unspecified = DateTime.SpecifyKind(Now.AddDays(2), DateTimeKind.Unspecified);
-
-        // Act & Assert
-        var action = () => session.Reschedule(unspecified, 60, null, Now.AddMinutes(1));
-        Assert.Throws<DomainException>(action);
-    }
-
-    [Fact]
-    public void Reschedule_WhenSessionIsCompleted_ThrowsDomainException()
-    {
-        var session = CreateSession();
-        session.Complete(Now.AddHours(2));
-
-        var action = () => session.Reschedule(
-            Now.AddDays(2), 60, null, Now.AddHours(3));
+        var action = () => new Session(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.Empty, DateTimeOffset.UtcNow,
+            60, null, null, null, Now);
 
         Assert.Throws<DomainException>(action);
     }
 
-    [Fact]
-    public void SoftDelete_WhenSessionIsCompleted_ThrowsDomainException()
+    private static Session CreateSession(DateTimeOffset? start = null) => new(
+        Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
+        start ?? new DateTimeOffset(Now.AddDays(1)),
+        60, " Gym ", " strength ", null, Now);
+
+    private static void ApplyState(Session session, string state)
     {
-        var session = CreateSession();
-        session.Complete(Now.AddHours(2));
-
-        var action = () => session.SoftDelete(Now.AddHours(3));
-
-        Assert.Throws<DomainException>(action);
+        var at = Now.AddDays(2);
+        if (state == "completed")
+            session.Complete(at);
+        else if (state == "cancelled_by_client")
+            session.CancelByClient(at);
+        else if (state == "cancelled_by_trainer")
+            session.CancelByTrainer(at);
+        else if (state == "no_show")
+            session.MarkNoShow(at);
+        else
+            throw new ArgumentOutOfRangeException(nameof(state));
     }
-
-    private static Session CreateSession() => new(
-        Guid.NewGuid(),
-        Guid.NewGuid(),
-        Guid.NewGuid(),
-        Now.AddDays(1),
-        60,
-        "Gym A",
-        "strength",
-        null,
-        Now
-    );
 }

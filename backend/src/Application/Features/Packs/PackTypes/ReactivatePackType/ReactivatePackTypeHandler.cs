@@ -42,12 +42,6 @@ public sealed class ReactivatePackTypeHandler
             cancellationToken
         );
 
-        return outcome.Kind switch
-        {
-            PackTypeStoreResult.Status.Changed or
-            PackTypeStoreResult.Status.AlreadyInRequestedState => Result.Success(),
-            PackTypeStoreResult.Status.NotFound => Result.Failure(PackErrors.PackTypeNotFound),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
+        return outcome.ToTransitionResult();
     }
 }

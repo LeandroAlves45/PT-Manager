@@ -69,19 +69,6 @@ public sealed class RecordExerciseSetLogHandler
                     "A committed exercise set log must be readable."));
         }
 
-        return outcome.Kind switch
-        {
-            ExerciseSetLogStoreResult.Status.NotFound =>
-                Result<ClientExerciseSetLogDto>.Failure(TrainingErrors.StructureReferenceNotFound),
-            ExerciseSetLogStoreResult.Status.TrainingPlanInactive =>
-                Result<ClientExerciseSetLogDto>.Failure(TrainingErrors.TrainingPlanInactive),
-            ExerciseSetLogStoreResult.Status.SetNotFound =>
-                Result<ClientExerciseSetLogDto>.Failure(TrainingErrors.SetNotFound),
-            ExerciseSetLogStoreResult.Status.PerformedAtInFuture =>
-                Result<ClientExerciseSetLogDto>.Failure(TrainingErrors.PerformedAtInFuture()),
-            ExerciseSetLogStoreResult.Status.PerformedAtOutsidePlan =>
-                Result<ClientExerciseSetLogDto>.Failure(TrainingErrors.PerformedAtOutsidePlan()),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
+        return outcome.ToRecordFailure();
     }
 }

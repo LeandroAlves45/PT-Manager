@@ -46,14 +46,7 @@ public sealed class ReactivateFoodHandler
             cancellationToken
         );
 
-        return outcome.Kind switch
-        {
-            FoodStoreResult.Status.Changed => Result.Success(),
-            FoodStoreResult.Status.AlreadyInRequestedState => Result.Success(),
-            FoodStoreResult.Status.NotFound => Result.Failure(NutritionErrors.FoodNotFound),
-            FoodStoreResult.Status.GlobalReadOnly => Result.Failure(NutritionErrors.GlobalFoodReadOnly),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
+        return outcome.ToTransitionResult();
     }
 
     private static Error CreateFoodIdRequiredError() => Error.Validation([

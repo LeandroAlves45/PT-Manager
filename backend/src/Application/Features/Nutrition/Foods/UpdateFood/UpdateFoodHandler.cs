@@ -58,12 +58,6 @@ public sealed class UpdateFoodHandler
             cancellationToken
         );
 
-        return outcome.Kind switch
-        {
-            FoodStoreResult.Status.Updated => Result<FoodDto>.Success(outcome.Food!.ToDto()),
-            FoodStoreResult.Status.NotFound => Result<FoodDto>.Failure(NutritionErrors.FoodNotFound),
-            FoodStoreResult.Status.GlobalReadOnly => Result<FoodDto>.Failure(NutritionErrors.GlobalFoodReadOnly),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
+        return outcome.ToUpdateResult();
     }
 }

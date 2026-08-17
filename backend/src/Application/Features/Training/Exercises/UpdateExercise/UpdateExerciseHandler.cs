@@ -59,14 +59,6 @@ public sealed class UpdateExerciseHandler
             cancellationToken
         );
 
-        return outcome.Kind switch
-        {
-            ExerciseStoreResult.Status.Updated => Result<ExerciseDto>.Success(outcome.Exercise!.ToDto()),
-            ExerciseStoreResult.Status.NotFound =>
-                Result<ExerciseDto>.Failure(TrainingErrors.ExerciseNotFound),
-            ExerciseStoreResult.Status.GlobalReadOnly =>
-                Result<ExerciseDto>.Failure(TrainingErrors.GlobalExerciseReadOnly),
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
-        };
+        return outcome.ToUpdateResult();
     }
 }
