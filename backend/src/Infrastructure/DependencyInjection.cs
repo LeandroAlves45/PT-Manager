@@ -1,4 +1,6 @@
 using Application.Common.Abstractions;
+using Application.Features.Assessments.CheckIns.Abstractions;
+using Application.Features.Assessments.InitialAssessments.Abstractions;
 using Application.Features.Clients.Abstractions;
 using Application.Features.Jobs.Abstractions;
 using Application.Features.Nutrition.Foods.Abstractions;
@@ -12,6 +14,7 @@ using Application.Features.Training.TrainingPlans.Abstractions;
 using Infrastructure.Data;
 using Infrastructure.Data.Interceptors;
 using Infrastructure.Persistence;
+using Infrastructure.Persistence.Assessments;
 using Infrastructure.Persistence.Clients;
 using Infrastructure.Persistence.Errors;
 using Infrastructure.Persistence.Nutrition;
@@ -59,6 +62,12 @@ public static class DependencyInjection
             provider.GetRequiredService<TenantContext>());
         services.AddScoped<ITenantContextInitializer>(provider =>
             provider.GetRequiredService<TenantContext>());
+
+        // Assessments
+        services.AddScoped<IInitialAssessmentStore, InitialAssessmentStore>();
+        services.AddScoped<IInitialAssessmentQueries, InitialAssessmentQueries>();
+        services.AddScoped<ICheckInStore, CheckInStore>();
+        services.AddScoped<ICheckInQueries, CheckInQueries>();
 
         // Clients
         services.AddScoped<IClientStore, ClientStore>();

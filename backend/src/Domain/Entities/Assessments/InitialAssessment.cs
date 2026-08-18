@@ -44,30 +44,21 @@ public sealed class InitialAssessment
         DateTime now
     )
     {
-        var normalizedProfession = string.IsNullOrWhiteSpace(profession) ? null : profession.Trim();
-        ValidateParameters(
-            weightKg, heightCm, bodyFatPercentage, fitnessLevel, activityLevel, goals, normalizedProfession
-        );
+        if (ownerTrainerId == Guid.Empty || clientId == Guid.Empty)
+            throw new DomainException("Owner trainer ID and client ID are required.");
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
         ClientId = clientId;
-        WeightKg = weightKg;
-        HeightCm = heightCm;
-        BodyFatPercentage = bodyFatPercentage;
-        MedicalConditions = NormalizeOptional(medicalConditions);
-        FitnessLevel = fitnessLevel.Trim();
-        ActivityLevel = activityLevel;
-        Goals = goals.Trim();
-        Profession = normalizedProfession;
-        BodyMeasurements = bodyMeasurements ?? BodyMeasurements.Empty;
-        NutritionIntake = nutritionIntake ?? NutritionIntake.Empty;
+        ApplyValues(
+            weightKg, heightCm, bodyFatPercentage, medicalConditions, fitnessLevel,
+            activityLevel, goals, profession, bodyMeasurements, nutritionIntake);
         IsDeleted = false;
         CreatedAt = now;
         UpdatedAt = now;
     }
 
-    /// <summary>Atualiza a avaliação.</summary>
+    /// <summary>Corrige os dados sem alterar identidade, tenant ou criação.</summary>
     public void Update(
         decimal weightKg,
         int heightCm,
@@ -83,30 +74,100 @@ public sealed class InitialAssessment
     )
     {
         EnsureNotDeleted();
-        var normalizedProfession = string.IsNullOrWhiteSpace(profession) ? null : profession.Trim();
+        var normalizedMeasurements = bodyMeasurements ?? BodyMeasurements.Empty;
+        var normalizedNutrition = nutritionIntake ?? NutritionIntake.Empty;
+        var normalizedMedical = NormalizeOptional(medicalConditions);
+        var normalizedFitness = NormalizeRequired(fitnessLevel);
+        var normalizedGoals = NormalizeRequired(goals);
+        var normalizedProfession = NormalizeOptional(profession);
         ValidateParameters(
-            weightKg, heightCm, bodyFatPercentage, fitnessLevel, activityLevel, goals, normalizedProfession
+            weightKg, heightCm, bodyFatPercentage, normalizedFitness,
+            activityLevel, normalizedGoals, normalizedProfession
         );
 
-        WeightKg = weightKg;
-        HeightCm = heightCm;
-        BodyFatPercentage = bodyFatPercentage;
-        MedicalConditions = NormalizeOptional(medicalConditions);
-        FitnessLevel = fitnessLevel.Trim();
-        ActivityLevel = activityLevel;
-        Goals = goals.Trim();
-        Profession = normalizedProfession;
-        BodyMeasurements = bodyMeasurements ?? BodyMeasurements.Empty;
-        NutritionIntake = nutritionIntake ?? NutritionIntake.Empty;
+        if (WeightKg == weightKg &&
+            HeightCm == heightCm &&
+            BodyFatPercentage == bodyFatPercentage &&
+            MedicalConditions == normalizedMedical &&
+            FitnessLevel == normalizedFitness &&
+            ActivityLevel == activityLevel &&
+            Goals == normalizedGoals &&
+            Profession == normalizedProfession &&
+            BodyMeasurements == normalizedMeasurements &&
+            NutritionIntake == normalizedNutrition)
+            return;
+
+        SetValues(
+            weightKg, heightCm, bodyFatPercentage, normalizedMedical,
+            normalizedFitness, activityLevel, normalizedGoals,
+            normalizedProfession, normalizedMeasurements, normalizedNutrition
+        );
         UpdatedAt = now;
     }
 
     /// <summary>Marca a avaliação como excluída.</summary>
     public void SoftDelete(DateTime now)
     {
+        if (IsDeleted)
+            return;
         IsDeleted = true;
         UpdatedAt = now;
     }
+
+    private void ApplyValues(
+        decimal weightKg,
+        int heightCm,
+        decimal? bodyFatPercentage,
+        string? medicalConditions,
+        string fitnessLevel,
+        ActivityLevel activityLevel,
+        string goals,
+        string? profession,
+        BodyMeasurements? bodyMeasurements,
+        NutritionIntake? nutritionIntake
+    )
+    {
+        var normalizedFitness = NormalizeRequired(fitnessLevel);
+        var normalizedGoals = NormalizeRequired(goals);
+        var normalizedProfession = NormalizeOptional(profession);
+        ValidateParameters(
+            weightKg, heightCm, bodyFatPercentage, normalizedFitness,
+            activityLevel, normalizedGoals, normalizedProfession
+        );
+
+        SetValues(
+            weightKg, heightCm, bodyFatPercentage, NormalizeOptional(medicalConditions),
+            normalizedFitness, activityLevel, normalizedGoals,
+            normalizedProfession, bodyMeasurements ?? BodyMeasurements.Empty,
+            nutritionIntake ?? NutritionIntake.Empty
+        );
+    }
+
+    private void SetValues(
+        decimal weightKg,
+        int heightCm,
+        decimal? bodyFatPercentage,
+        string? medicalConditions,
+        string fitnessLevel,
+        ActivityLevel activityLevel,
+        string goals,
+        string? profession,
+        BodyMeasurements bodyMeasurements,
+        NutritionIntake nutritionIntake
+    )
+    {
+        WeightKg = weightKg;
+        HeightCm = heightCm;
+        BodyFatPercentage = bodyFatPercentage;
+        MedicalConditions = medicalConditions;
+        FitnessLevel = fitnessLevel;
+        ActivityLevel = activityLevel;
+        Goals = goals;
+        Profession = profession;
+        BodyMeasurements = bodyMeasurements;
+        NutritionIntake = nutritionIntake;
+    }
+
 
     /// <summary>Valida os parâmetros da avaliação inicial.</summary>
     private void ValidateParameters(
@@ -120,26 +181,25 @@ public sealed class InitialAssessment
     )
     {
         if (weightKg <= 0)
-            throw new DomainException("Weight invalid.");
+            throw new DomainException("Weight must be greater than zero.");
         if (heightCm <= 0)
-            throw new DomainException("Height must be positive.");
-        if (bodyFatPercentage.HasValue &&
-            (bodyFatPercentage.Value <= 0 || bodyFatPercentage.Value >= 100))
-            throw new DomainException("Body fat percentage must be between 0 and 100.");
-        if (string.IsNullOrWhiteSpace(fitnessLevel) || fitnessLevel.Trim().Length > 50)
+            throw new DomainException("Height must be greater than zero.");
+        if (bodyFatPercentage is <= 0 or >= 100)
+            throw new DomainException("Body fat percentage must be greater than zero and less than one hundred.");
+        if (fitnessLevel.Length is 0 or > 50)
             throw new DomainException("Fitness level must contain between 1 and 50 characters.");
         if (activityLevel is null)
             throw new DomainException("Activity level is required.");
-        if (fitnessLevel.Length > 50)
-            throw new DomainException("Fitness level cannot exceed 50 characters.");
-        if (string.IsNullOrWhiteSpace(goals))
-            throw new DomainException("Goals cannot be empty.");
-        if (profession is not null && profession.Length > 255)
+        if (goals.Length == 0)
+            throw new DomainException("Goals are required.");
+        if (profession is { Length: > 255 })
             throw new DomainException("Profession cannot exceed 255 characters.");
     }
 
     private static string? NormalizeOptional(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static string NormalizeRequired(string? value) => value?.Trim() ?? string.Empty;
 
     private void EnsureNotDeleted()
     {

@@ -8,6 +8,10 @@
     <PackageReference Include="FluentValidation" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Application.UnitTests" />
+  </ItemGroup>
+
   <PropertyGroup>
   </PropertyGroup>
 

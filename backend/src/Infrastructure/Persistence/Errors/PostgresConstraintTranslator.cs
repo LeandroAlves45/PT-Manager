@@ -3,10 +3,7 @@ using Npgsql;
 
 namespace Infrastructure.Persistence.Errors;
 
-/// <summary>
-/// Traduz violações PostgreSQL conhecidas para erros funcionais seguros.
-/// Constraints desconhecidas permanecem falhas técnicas.
-/// </summary>
+/// <summary>Traduz violações PostgreSQL conhecidas em erros funcionais seguros.</summary>
 internal sealed class PostgresConstraintTranslator
 {
     public const string UniqueViolation = "23505";
@@ -69,15 +66,40 @@ internal sealed class PostgresConstraintTranslator
         }
 
         if (postgresException.SqlState == UniqueViolation &&
-            operation is PersistenceOperation.CreateSession or
+            (operation is PersistenceOperation.CreateSession or
                 PersistenceOperation.RescheduleSession or
-                PersistenceOperation.RestoreSession &&
+                PersistenceOperation.RestoreSession) &&
             postgresException.ConstraintName == "uq_sessions_tenant_scheduled_start")
         {
             error = Error.Create(
                 code: "session_schedule_conflict",
                 category: ErrorCategory.Conflict,
                 description: "The personal trainer already has a session at this start time."
+            );
+            return true;
+        }
+
+        if (postgresException.SqlState == UniqueViolation &&
+            operation is PersistenceOperation.CreateInitialAssessment &&
+            postgresException.ConstraintName == "uq_initial_assessments_tenant_client_active")
+        {
+            error = Error.Create(
+                code: "initial_assessment_already_exists",
+                category: ErrorCategory.Conflict,
+                description: "The client already has an initial assessment."
+            );
+            return true;
+        }
+
+        if (postgresException.SqlState == UniqueViolation &&
+            (operation is PersistenceOperation.CreateCheckIn or
+                PersistenceOperation.RescheduleCheckIn) &&
+            postgresException.ConstraintName == "uq_checkins_tenant_client_date_active")
+        {
+            error = Error.Create(
+                code: "check_in_date_conflict",
+                category: ErrorCategory.Conflict,
+                description: "The client already has a check-in on that date."
             );
             return true;
         }

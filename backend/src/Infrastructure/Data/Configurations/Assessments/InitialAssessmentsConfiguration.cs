@@ -37,6 +37,13 @@ internal sealed class InitialAssessmentsConfiguration : IEntityTypeConfiguration
             .HasColumnName("height_cm")
             .IsRequired();
 
+        builder.Property(ia => ia.BodyFatPercentage)
+            .HasColumnName("body_fat_percentage")
+            .HasPrecision(10, 2);
+
+        builder.Property(ia => ia.MedicalConditions)
+            .HasColumnName("medical_conditions");
+
         builder.Property(ia => ia.FitnessLevel)
             .HasColumnName("fitness_level")
             .HasMaxLength(50)
@@ -53,13 +60,6 @@ internal sealed class InitialAssessmentsConfiguration : IEntityTypeConfiguration
         builder.Property(ia => ia.Goals)
             .HasColumnName("goals")
             .IsRequired();
-
-        builder.Property(ia => ia.BodyFatPercentage)
-            .HasColumnName("body_fat_percentage")
-            .HasPrecision(10, 2);
-
-        builder.Property(ia => ia.MedicalConditions)
-            .HasColumnName("medical_conditions");
 
         builder.Property(ia => ia.Profession)
             .HasColumnName("profession")
@@ -130,9 +130,12 @@ internal sealed class InitialAssessmentsConfiguration : IEntityTypeConfiguration
                 "(body_fat_percentage > 0 AND body_fat_percentage < 100)");
         });
 
-        builder.HasIndex(ia => ia.OwnerTrainerId).HasDatabaseName("idx_assessments_trainer");
-        builder.HasIndex(ia => ia.ClientId).HasDatabaseName("idx_assessments_client");
-        builder.HasIndex(ia => ia.ClientId).HasDatabaseName("uq_initial_assessments_client").IsUnique();
+        builder.HasIndex(ia => ia.OwnerTrainerId).HasDatabaseName("idx_initial_assessments_trainer");
+        builder.HasIndex(ia => new { ia.OwnerTrainerId, ia.ClientId })
+            .HasDatabaseName("uq_initial_assessments_tenant_client_active")
+            .IsUnique()
+            .HasFilter("is_deleted = false");
+
         builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(ia => ia.OwnerTrainerId)

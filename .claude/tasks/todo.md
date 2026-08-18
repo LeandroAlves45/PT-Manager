@@ -51,12 +51,17 @@
 - [x] Implementação real do Lote 3A concluída em 15/08/2026
 - [x] Gate 3A: snapshots, packs simultâneos, cancelamento seguro e data apenas
   informativa. PostgreSQL diferido explicitamente para a migration consolidada 3F
-- [ ] Lote 3B: Sessions, agenda, estados, packs, locks e idempotência
+- [x] Lote 3B: Sessions, agenda, estados, packs, locks e idempotência
   - [x] Contrato revisto e aprovado em 16/08/2026
   - [x] 43 blueprints C# por ficheiro real e autoavaliação documental concluídos
-  - [ ] Código real materializado e gate compilado
-- [ ] Gate 3B: concorrência da última sessão, sobreposições, timezone e rollback
+  - [x] Código real materializado no commit `519bd0c`
+- [x] Gate 3B: build Release, 317 Domain, 181 Application, 24 Architecture,
+  11 testes do tradutor e format aprovados. PostgreSQL permanece diferido para 3F
 - [ ] Lote 3C: InitialAssessment e CheckIn
+  - [x] Contratos funcionais aprovados em 17/08/2026
+  - [x] 61 blueprints de ficheiros reais, schema diferido, testes críticos e
+    autoavaliação documental concluídos em `fase_3/lote_3C/`
+  - [ ] Código real materializado
 - [ ] Gate 3C: unicidade, correção e ausência de efeitos laterais em Nutrition
 - [ ] Lote 3D: Supplement e ClientSupplementAssignment
 - [ ] Gate 3D: catálogos globais/privados, atribuições e tenant

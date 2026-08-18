@@ -135,6 +135,58 @@ public sealed class PostgresConstraintTranslatorTests
     }
 
     [Fact]
+    public void InitialAssessmentUniqueConstraint_MapsExpectedCode()
+    {
+        var exception = CreatePostgresException(
+            "23505",
+            "uq_initial_assessments_tenant_client_active");
+
+        var translated = _translator.TryTranslate(
+            exception,
+            PersistenceOperation.CreateInitialAssessment,
+            out var error);
+
+        Assert.Equal(
+            (true, "initial_assessment_already_exists", ErrorCategory.Conflict),
+            (translated, error!.Code, error.Category));
+    }
+
+    [Theory]
+    [InlineData(nameof(PersistenceOperation.CreateCheckIn))]
+    [InlineData(nameof(PersistenceOperation.RescheduleCheckIn))]
+    public void CheckInDateConstraint_MapsExpectedCode(string operationName)
+    {
+        var exception = CreatePostgresException(
+            "23505",
+            "uq_checkins_tenant_client_date_active");
+        var operation = Enum.Parse<PersistenceOperation>(operationName);
+
+        var translated = _translator.TryTranslate(
+            exception,
+            operation,
+            out var error);
+
+        Assert.Equal(
+            (true, "check_in_date_conflict", ErrorCategory.Conflict),
+            (translated, error!.Code, error.Category));
+    }
+
+    [Fact]
+    public void AssessmentConstraint_WrongOperation_ReturnsFalse()
+    {
+        var exception = CreatePostgresException(
+            "23505",
+            "uq_checkins_tenant_client_date_active");
+
+        var translated = _translator.TryTranslate(
+            exception,
+            PersistenceOperation.CreateInitialAssessment,
+            out var error);
+
+        Assert.Equal((false, null), (translated, error));
+    }
+
+    [Fact]
     public void NullException_Throws()
     {
         Assert.Throws<ArgumentNullException>(() => _translator.TryTranslate(

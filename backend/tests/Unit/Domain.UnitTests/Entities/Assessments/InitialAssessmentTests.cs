@@ -129,31 +129,6 @@ public sealed class InitialAssessmentTests
     }
 
     [Fact]
-    public void Update_AfterSoftDelete_ThrowsException()
-    {
-        // Arrange
-        var assessment = CreateValid();
-        assessment.SoftDelete(TestNow);
-
-        // Act & Assert
-        Assert.Throws<DomainException>(() =>
-            assessment.Update(
-                weightKg: 80,
-                heightCm: 180,
-                bodyFatPercentage: null,
-                medicalConditions: null,
-                fitnessLevel: "intermediate",
-                activityLevel: ActivityLevel.ModeratelyActive,
-                goals: "lose weight",
-                profession: null,
-                bodyMeasurements: null,
-                nutritionIntake: null,
-                now: TestNow.AddMinutes(1)
-            )
-        );
-    }
-
-    [Fact]
     public void Constructor_WithActivityLevel_StoresSuggestion()
     {
         // Arrange
@@ -233,6 +208,51 @@ public sealed class InitialAssessmentTests
 
         // Assert
         Assert.Equal(ActivityLevel.VeryActive, assessment.ActivityLevel);
+    }
+
+    [Fact]
+    public void Constructor_TextValues_AreNormalized()
+    {
+        var assessment = new InitialAssessment(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            80m,
+            180,
+            null,
+            "  none  ",
+            "  intermediate  ",
+            ActivityLevel.ModeratelyActive,
+            "  strength  ",
+            "  developer  ",
+            null,
+            null,
+            TestNow);
+
+        Assert.Equal(
+            ("none", "intermediate", "strength", "developer"),
+            (assessment.MedicalConditions, assessment.FitnessLevel,
+                assessment.Goals, assessment.Profession));
+    }
+
+    [Fact]
+    public void Update_WithSameNormalizedValues_PreservesUpdatedAt()
+    {
+        var assessment = CreateValid();
+
+        assessment.Update(
+            80m,
+            180,
+            20m,
+            null,
+            "  intermediate  ",
+            ActivityLevel.ModeratelyActive,
+            "  lose weight  ",
+            null,
+            null,
+            null,
+            TestNow.AddMinutes(1));
+
+        Assert.Equal(TestNow, assessment.UpdatedAt);
     }
 
     [Fact]

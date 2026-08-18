@@ -144,10 +144,58 @@ O código e `.claude/project/` são fontes de verdade. Esta memória regista ape
 
 ## Próxima execução
 
-1. Implementar o Lote 3C Assessments.
+1. Implementar o Lote 3D Supplements.
 2. Não gerar migration intermédia; consolidar as alterações no Lote 3F.
-3. Aplicar o padrão reforçado de validação executável aos blueprints futuros.
+3. No Lote 3F, materializar e executar os testes PostgreSQL de Assessments.
 4. Manter a migration CompleteTrainingPhase2C imutável.
+
+## Lote 3C Assessments documentado (2026-08-17)
+
+- Contratos e 61 blueprints de ficheiros reais concluídos em
+  `docs/backend-files/sprint_3/fase_3/lote_3C/`.
+- InitialAssessment é criada e corrigida apenas pelo trainer. Cliente arquivado
+  mantém histórico legível, mas não recebe nova avaliação.
+- CheckIn é agendado pelo trainer e respondido pelo cliente apenas no dia local.
+  O cliente não cria, reage, cancela ou corrige CheckIns.
+- WeightKg é obrigatório na resposta. Restantes medidas, body fat, feedback,
+  notas e adherence scores são opcionais.
+- Resposta exatamente repetida é idempotente. Uma segunda resposta diferente é
+  Conflict. CheckIn falhado permanece histórico e exige novo agendamento.
+- Estado não é persistido: deriva de RespondedAt, CancelledAt, CheckInDate e dia
+  local. Correct preserva CheckInDate, RespondedAt e CreatedAt.
+- CheckIn não produz efeitos laterais em Nutrition, MealPlan ou Training.
+- Stores usam locks Client seguido de CheckIn. Não existe lock global do trainer,
+  evitando serialização desnecessária entre clientes independentes.
+- Existem mappers específicos para InitialAssessment e CheckIn; não foi criado
+  mapper genérico nem alterada a autorização estável de Sessions.
+- Alterações de schema e testes PostgreSQL ficam diferidos para a migration
+  consolidada do Lote 3F. Nenhuma migration foi criada ou editada.
+- Comentários explicativos nos blueprints não usam etiquetas introdutórias.
+- Próximo passo autorizado: materializar o código do Lote 3C pela ordem do índice
+  e validar Domain, Application, Architecture e format.
+- Revisão sénior (17/08/2026): corrigido bug de compilação real no doc 04
+  (`ToResultAsync` inexistente → `ValidateAsync`+`ToApplicationError()`) e
+  corrigido `GetMyDueAsync` (doc 06) para um único `Join`. Nomes de
+  constraints/índices divergentes do código real são intencionais (full
+  replace documentado). `InitialAssessment.cs` real tem edição manual do
+  utilizador em curso, não commitada, fora deste fluxo.
+- Nota canónica:
+  `Sessions/2026-08-17-sprint3-phase3-lot3c-blueprints.md`.
+
+## Lote 3C Assessments concluído no âmbito pré-migration (2026-08-18)
+
+- Os 58 caminhos de produção dos documentos 01 a 08 estão materializados.
+- Aprovados 322 testes Domain, 264 Application, 24 Architecture e 15 testes do
+  tradutor PostgreSQL. Build Release e format passaram sem warnings ou erros.
+- A revisão corrigiu cinco erros de compilação em testes antigos, removeu uma
+  query redundante de timezone, corrigiu o código de erro de FitnessLevel vazio
+  e completou a matriz unitária de Assessments.
+- O EF Core confirmou alterações pendentes no modelo. A migration, os testes
+  PostgreSQL de concorrência e o gate completo continuam reservados ao Lote 3F.
+- Validação detalhada:
+  `docs/backend-files/sprint_3/fase_3/lote_3C/11_lote_3c_avaliacao_final.md`.
+- Nota canónica:
+  `Sessions/2026-08-18-sprint3-phase3-lot3c-completion.md`.
 
 ## Fase 3 desenhada e Lote 3A documentado (2026-08-14)
 

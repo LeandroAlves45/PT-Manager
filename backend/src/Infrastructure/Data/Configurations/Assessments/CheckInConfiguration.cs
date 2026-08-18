@@ -78,6 +78,12 @@ internal sealed class CheckInConfiguration : IEntityTypeConfiguration<CheckIn>
         builder.Property(c => c.NutritionAdherenceScore)
             .HasColumnName("nutrition_adherence_score");
 
+        builder.Property(c => c.RespondedAt)
+            .HasColumnName("responded_at");
+
+        builder.Property(c => c.CancelledAt)
+            .HasColumnName("cancelled_at");
+
         builder.Property(c => c.IsDeleted)
             .HasColumnName("is_deleted")
             .HasDefaultValue(false);
@@ -92,25 +98,41 @@ internal sealed class CheckInConfiguration : IEntityTypeConfiguration<CheckIn>
             .HasDefaultValueSql("now()")
             .IsRequired();
 
-        builder.ToTable(t =>
+        builder.ToTable(table =>
         {
-            t.HasCheckConstraint("checkin_date_order", "target_date IS NULL OR target_date >= check_in_date");
-            t.HasCheckConstraint("checkin_weight_positive", "weight_kg IS NULL OR weight_kg > 0");
-            t.HasCheckConstraint("checkin_body_fat_range",
-                "body_fat_percentage IS NULL OR body_fat_percentage BETWEEN 0 AND 100");
-            t.HasCheckConstraint("checkin_training_adherence_range",
-                "training_adherence_score IS NULL OR training_adherence_score BETWEEN 0 AND 100");
-            t.HasCheckConstraint("checkin_nutrition_adherence_range",
-                "nutrition_adherence_score IS NULL OR nutrition_adherence_score BETWEEN 0 AND 100");
+            table.HasCheckConstraint(
+                "ck_checkins_date_order",
+                "target_date IS NULL OR target_date >= check_in_date");
+            table.HasCheckConstraint(
+                "ck_checkins_weight_positive",
+                "weight_kg IS NULL OR weight_kg > 0");
+            table.HasCheckConstraint(
+                "ck_checkins_body_fat_range",
+                "body_fat_percentage IS NULL OR " +
+                "(body_fat_percentage > 0 AND body_fat_percentage < 100)");
+            table.HasCheckConstraint(
+                "ck_checkins_training_adherence_range",
+                "training_adherence_score IS NULL OR " +
+                "training_adherence_score BETWEEN 0 AND 100");
+            table.HasCheckConstraint(
+                "ck_checkins_nutrition_adherence_range",
+                "nutrition_adherence_score IS NULL OR " +
+                "nutrition_adherence_score BETWEEN 0 AND 100");
+            table.HasCheckConstraint(
+                "ck_checkins_single_terminal_event",
+                "NOT (responded_at IS NOT NULL AND cancelled_at IS NOT NULL)");
+            table.HasCheckConstraint(
+                "ck_checkins_response_requires_weight",
+                "responded_at IS NULL OR weight_kg IS NOT NULL");
         });
 
         builder.HasIndex(c => c.OwnerTrainerId).HasDatabaseName("idx_checkins_trainer");
-        builder.HasIndex(c => c.ClientId).HasDatabaseName("idx_checkins_client");
-        builder.HasIndex(c => c.CheckInDate).HasDatabaseName("idx_checkins_date");
-        builder.HasIndex(c => new { c.ClientId, c.CheckInDate })
-            .HasDatabaseName("uq_checkins_client_date_active")
+        builder.HasIndex(c => new { c.OwnerTrainerId, c.ClientId, c.CheckInDate })
+            .HasDatabaseName("uq_checkins_tenant_client_date_active")
             .IsUnique()
             .HasFilter("is_deleted = false");
+        builder.HasIndex(c => new { c.OwnerTrainerId, c.CheckInDate, c.Id })
+            .HasDatabaseName("idx_checkins_tenant_date_id");
 
         builder.HasOne<User>()
             .WithMany()

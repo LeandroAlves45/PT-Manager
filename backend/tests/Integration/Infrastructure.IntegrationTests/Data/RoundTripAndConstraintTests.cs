@@ -113,6 +113,8 @@ public sealed class RoundTripAndConstraintTests
             tenant.ClientId,
             new DateOnly(2026, 8, 5),
             null,
+            Now);
+        checkIn.SubmitResponse(
             79.4m,
             14.5m,
             null,
@@ -127,6 +129,7 @@ public sealed class RoundTripAndConstraintTests
                 "Positive"),
             90,
             85,
+            new DateOnly(2026, 8, 5),
             Now);
 
         await using var context = _fixture.CreateContext(tenant.TrainerId);

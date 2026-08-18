@@ -17,5 +17,11 @@ internal enum PersistenceOperation
     /// <summary>Restaura uma sessão.</summary>
     RestoreSession,
     /// <summary>Reagendamento de uma sessão Scheduled.</summary>
-    RescheduleSession
+    RescheduleSession,
+    /// <summary>Criação de avaliação inicial.</summary>
+    CreateInitialAssessment,
+    /// <summary>Cria um check-in para o cliente do tenant.</summary>
+    CreateCheckIn,
+    /// <summary>Reagenda um check-in futuro sem respostas.</summary>
+    RescheduleCheckIn
 }
