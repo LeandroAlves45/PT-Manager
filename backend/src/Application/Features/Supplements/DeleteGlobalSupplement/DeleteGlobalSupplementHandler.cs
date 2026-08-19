@@ -1,0 +1,41 @@
+using Application.Common.Abstractions;
+using Application.Features.Supplements.Abstractions;
+using Application.Results;
+
+namespace Application.Features.Supplements.DeleteGlobalSupplement;
+
+/// <summary>Elimina um global nunca referenciado e preserva o snapshot na auditoria.</summary>
+public sealed class DeleteGlobalSupplementHandler
+{
+    private readonly ITenantContext _tenantContext;
+    private readonly IClock _clock;
+    private readonly IGlobalSupplementStore _store;
+
+    public DeleteGlobalSupplementHandler(
+        ITenantContext tenantContext, IClock clock, IGlobalSupplementStore store)
+    {
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _store = store ?? throw new ArgumentNullException(nameof(store));
+    }
+
+    public async Task<Result> HandleAsync(
+        DeleteGlobalSupplementCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (command.SupplementId == Guid.Empty)
+            return Result.Failure(SupplementErrors.SupplementIdRequired);
+
+        var actor = SupplementActorAuthorization.RequireAdministrator(_tenantContext);
+        if (!actor.IsSuccess)
+            return Result.Failure(actor.Error!);
+
+        var outcome = await _store.DeleteAsync(
+            actor.Value.UserId,
+            command.SupplementId,
+            _clock.UtcNow,
+            cancellationToken);
+
+        return outcome.ToTransitionResult();
+    }
+}

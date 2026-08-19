@@ -70,7 +70,8 @@ internal sealed class MealPlanMealSupplementConfiguration : IEntityTypeConfigura
         builder.HasOne<Supplement>()
             .WithMany()
             .HasForeignKey(mpms => mpms.SupplementId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("fk_meal_plan_meal_supplements_supplement");
     }
 }
 

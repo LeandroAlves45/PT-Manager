@@ -18,10 +18,8 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
         PtManagerDbContext dbContext,
         TrainingPlanStructureCoordinator structure)
     {
-        ArgumentNullException.ThrowIfNull(dbContext);
-        ArgumentNullException.ThrowIfNull(structure);
-        _dbContext = dbContext;
-        _structure = structure;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _structure = structure ?? throw new ArgumentNullException(nameof(structure));
     }
 
     public Task<TrainingPlanStoreResult> CreateAsync(

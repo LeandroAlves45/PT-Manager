@@ -10,10 +10,6 @@ internal sealed class PostgresConstraintTranslator
     public const string ForeignKeyViolation = "23503";
 
     /// <summary>Tenta traduzir uma exceção no contexto da operação.</summary>
-    /// <param name="exception">Exceção de persistência.</param>
-    /// <param name="operation">Operação funcional em execução.</param>
-    /// <param name="error">Erro seguro quando a tradução é conhecida.</param>
-    /// <returns>True apenas quando SQLSTATE, constraint e operação são conhecidos.</returns>
     public bool TryTranslate(
         Exception exception,
         PersistenceOperation operation,
@@ -100,6 +96,33 @@ internal sealed class PostgresConstraintTranslator
                 code: "check_in_date_conflict",
                 category: ErrorCategory.Conflict,
                 description: "The client already has a check-in on that date."
+            );
+            return true;
+        }
+
+        if (postgresException.SqlState == UniqueViolation &&
+            (operation is PersistenceOperation.AssignSupplement or
+                PersistenceOperation.ReactivateSupplementAssignment) &&
+            postgresException.ConstraintName == "uq_client_supplement_active")
+        {
+            error = Error.Create(
+                code: "supplement_assignment_already_exists",
+                category: ErrorCategory.Conflict,
+                description: "The client already has an active assignment for this supplement."
+            );
+            return true;
+        }
+
+        if (postgresException.SqlState == ForeignKeyViolation &&
+            operation is PersistenceOperation.DeleteGlobalSupplement &&
+            postgresException.ConstraintName is
+                "fk_client_supplement_assignments_supplement" or
+                "fk_meal_plan_meal_supplements_supplement")
+        {
+            error = Error.Create(
+                code: "global_supplement_has_references",
+                category: ErrorCategory.Conflict,
+                description: "A referenced global supplement cannot be deleted."
             );
             return true;
         }

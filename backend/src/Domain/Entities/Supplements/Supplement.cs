@@ -2,36 +2,28 @@ using Domain.Exceptions;
 
 namespace Domain.Entities.Supplements;
 
-/// <summary>
-/// Suplemento do catálogo, global ou criado pelo personal trainer.
-/// </summary>
+/// <summary>Suplemento global ou privado disponível no catálogo.</summary>
 public sealed class Supplement
 {
     public Guid Id { get; private set; }
-    /// <summary>
-    /// Proprietário do suplemento: null identifica  uma linha global autorizada.
-    /// </summary>
     public Guid? OwnerTrainerId { get; private set; }
-    /// <summary>Autor da criação; não concede visibilidade nem autorização</summary>
-    public Guid? CreatedByUserId { get; private set; }
+    public Guid CreatedByUserId { get; private set; }
     public string Name { get; private set; } = null!;
     public string? Description { get; private set; }
-    /// <summary>Unidade de medida: "grams", "ml", "capsules", etc.</summary>
     public string UnitOfMeasure { get; private set; } = null!;
     public string ServingSize { get; private set; } = null!;
     public string Timing { get; private set; } = null!;
     public string? TrainerNotes { get; private set; }
     public bool IsActive { get; private set; }
-    public bool IsDeleted { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
     private Supplement() { }
 
-    /// <summary>Cria um suplemento de catálogo.</summary>
+    /// <summary>Cria um suplemento ativo e preserva autoria separada da propriedade.</summary>
     public Supplement(
         Guid? ownerTrainerId,
-        Guid? createdByUserId,
+        Guid createdByUserId,
         string name,
         string? description,
         string unitOfMeasure,
@@ -41,18 +33,23 @@ public sealed class Supplement
         DateTime now
     )
     {
-        SetFields(name, description, unitOfMeasure, servingSize, timing, trainerNotes);
+        if (ownerTrainerId.HasValue && ownerTrainerId.Value == Guid.Empty)
+            throw new DomainException("Owner trainer ID cannot be empty.");
+        if (createdByUserId == Guid.Empty)
+            throw new DomainException("Creator user ID is required.");
+
+
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
         CreatedByUserId = createdByUserId;
+        SetFields(name, description, unitOfMeasure, servingSize, timing, trainerNotes);
         IsActive = true;
-        IsDeleted = false;
         CreatedAt = now;
         UpdatedAt = now;
     }
 
-    /// <summary>Atualiza um suplemento de catálogo.</summary>
+    /// <summary>Atualiza os dados do catálogo sem alterar propriedade ou autoria.</summary>
     public void Update(
         string name,
         string? description,
@@ -63,24 +60,23 @@ public sealed class Supplement
         DateTime now
     )
     {
-        EnsureNotDeleted();
         SetFields(name, description, unitOfMeasure, servingSize, timing, trainerNotes);
         UpdatedAt = now;
     }
 
-    /// <summary>Controla a disponibilidade sem eliminar referências históricas.</summary>
-    public void SetActive(bool isActive, DateTime now)
+    /// <summary>Arquiva o suplemento sem invalidar referências existentes.</summary>
+    public void Archive(DateTime now)
     {
-        EnsureNotDeleted();
-        IsActive = isActive;
+        IsActive = false;
         UpdatedAt = now;
     }
 
-    /// <summary>Soft delete do suplemento.</summary>
-    public void SoftDelete(DateTime now)
+    /// <summary>Volta a disponibilizar o suplemento para novas referências.</summary>
+
+    /// <summary>Controla a disponibilidade sem eliminar referências históricas.</summary>
+    public void Reactivate(DateTime now)
     {
-        IsActive = false;
-        IsDeleted = true;
+        IsActive = true;
         UpdatedAt = now;
     }
 
@@ -118,10 +114,4 @@ public sealed class Supplement
 
     private static string? NormalizeOptional(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-
-    private void EnsureNotDeleted()
-    {
-        if (IsDeleted)
-            throw new DomainException("Cannot modify a deleted supplement.");
-    }
 }

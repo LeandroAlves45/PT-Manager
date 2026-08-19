@@ -3,6 +3,7 @@ using Application.Features.Training.TrainingPlans.Dtos;
 using Application.Features.Training.TrainingPlans.ListTrainingPlans;
 using Application.Pagination;
 using Infrastructure.Data;
+using Infrastructure.Persistence.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Training;
@@ -10,13 +11,11 @@ namespace Infrastructure.Persistence.Training;
 /// <summary>Executa projeções read-only de planos de treino.</summary>
 internal sealed class TrainingPlanQueries : ITrainingPlanQueries
 {
-    private const string EscapeCharacter = "\\";
     private readonly PtManagerDbContext _dbContext;
 
     public TrainingPlanQueries(PtManagerDbContext dbContext)
     {
-        ArgumentNullException.ThrowIfNull(dbContext);
-        _dbContext = dbContext;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
     public async Task<TrainingPlanDetailsDto?> GetDetailsAsync(
@@ -162,11 +161,13 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var pattern = $"%{EscapeLike(search)}%";
+            var pattern = LikeSearchPattern.Build(search);
             query = query.Where(plan =>
-                EF.Functions.ILike(plan.Name, pattern, EscapeCharacter) ||
+                EF.Functions.ILike(
+                    plan.Name, pattern, LikeSearchPattern.LikeEscapeCharacter) ||
                 plan.Description != null &&
-                    EF.Functions.ILike(plan.Description, pattern, EscapeCharacter));
+                    EF.Functions.ILike(
+                        plan.Description, pattern, LikeSearchPattern.LikeEscapeCharacter));
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
@@ -192,9 +193,4 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
 
         return new PageResult<TrainingPlanSummaryDto>(items, totalCount);
     }
-
-    private static string EscapeLike(string value) => value.Trim()
-        .Replace("\\", "\\\\", StringComparison.Ordinal)
-        .Replace("%", "\\%", StringComparison.Ordinal)
-        .Replace("_", "\\_", StringComparison.Ordinal);
 }

@@ -3,6 +3,7 @@ using Application.Features.Clients.Dtos;
 using Application.Features.Clients.ListClients;
 using Application.Pagination;
 using Infrastructure.Data;
+using Infrastructure.Persistence.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Clients;
@@ -10,14 +11,11 @@ namespace Infrastructure.Persistence.Clients;
 /// <summary>Executa queries projetadas de Clients sob os Global Query Filters.</summary>
 internal sealed class ClientQueries : IClientQueries
 {
-    private const string LikeEscapeCharacter = "\\";
-
     private readonly PtManagerDbContext _dbContext;
 
     public ClientQueries(PtManagerDbContext dbContext)
     {
-        ArgumentNullException.ThrowIfNull(dbContext);
-        _dbContext = dbContext;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
     /// <inheritdoc/>
@@ -90,17 +88,18 @@ internal sealed class ClientQueries : IClientQueries
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var pattern = $"%{EscapeLikePattern(search.Trim())}%";
+            var pattern = LikeSearchPattern.Build(search);
             query = query.Where(client =>
                 EF.Functions.ILike(
                     client.Name,
                     pattern,
-                    LikeEscapeCharacter) ||
+                    LikeSearchPattern.LikeEscapeCharacter) ||
                 client.NormalizedContactEmail != null &&
                 EF.Functions.ILike(
                     client.NormalizedContactEmail,
-                    pattern, LikeEscapeCharacter) ||
-                EF.Functions.ILike(client.Phone, pattern, LikeEscapeCharacter));
+                    pattern, LikeSearchPattern.LikeEscapeCharacter) ||
+                EF.Functions.ILike(
+                    client.Phone, pattern, LikeSearchPattern.LikeEscapeCharacter));
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
@@ -152,11 +151,6 @@ internal sealed class ClientQueries : IClientQueries
                 pack.PurchaseDate,
                 pack.ExpectedEndDate,
                 pack.CreatedAt));
-
-    private static string EscapeLikePattern(string value) => value
-        .Replace("\\", "\\\\", StringComparison.Ordinal)
-        .Replace("%", "\\%", StringComparison.Ordinal)
-        .Replace("_", "\\_", StringComparison.Ordinal);
 }
 
 

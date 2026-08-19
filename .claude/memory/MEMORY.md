@@ -21,18 +21,10 @@ O código e `.claude/project/` são fontes de verdade. Esta memória regista ape
 - Os 38 testes de jobs e outbox passaram dez execuções consecutivas.
 - Format passou e o modelo EF Core não tem alterações pendentes.
 
-## Entrega do Sprint 2
+## Entrega do Sprint 2 (concluído)
 
-- Diretório consolidado: `docs/backend-files/sprint_2/`.
-- Os pacotes adjust_db, final_adjustments, newTables e sprint_2_tests foram
-  aplicados e mantidos como histórico técnico.
-- A suite usa PostgreSQL 17 real com Testcontainers e `MigrateAsync`, sem
-  `EnsureCreatedAsync`.
-- As oito relações cross-tenant críticas são protegidas por FKs compostas e
-  testadas diretamente na base de dados.
-- DurableJob e Outbox possuem claim concorrente, owner de lease, recuperação,
-  retry, dead letter e idempotência.
-- Retries com data presente ou passada são rejeitados pelos stores.
+DurableJob/Outbox com claim concorrente, lease, retry e dead letter; suite usa
+PostgreSQL real com `MigrateAsync`. Detalhe: `Sessions/2026-08-05-sprint2-completion.md`.
 
 ## Nutrição aprovada
 
@@ -81,72 +73,50 @@ O código e `.claude/project/` são fontes de verdade. Esta memória regista ape
 - Docs de pseudocódigo em `docs/backend-files/sprint_3/fase_N/`.
 - Todo o diretório `docs/` é documentação local deliberadamente ignorada pelo
   Git. Nunca usar `git add -f` para o versionar.
-- Formato obrigatório para docs que orientam código: cada ficheiro real recebe
-  caminho exato, adequação à camada e um único bloco contínuo com o ficheiro
-  completo em pseudocódigo alargado (`using`, namespace, XML Docs, campos,
-  constructor, métodos e lógica). Não separar assinaturas, regras e corpos em
-  blocos ou secções diferentes. Notas de mentor e validações ficam depois.
+- Existem dois formatos válidos para docs que orientam código: pseudocódigo
+  alargado e código C# real. O pedido explícito do utilizador escolhe o formato.
+  Em ambos, cada ficheiro real recebe caminho exato, estado, adequação à camada e
+  um único bloco contínuo com o conteúdo integral. Código real pode ser gerado
+  diretamente de um desenho funcional aprovado, sem pseudocódigo intermédio, e
+  deve ser materializado numa cópia temporária para build e testes.
 - Entregas com muitos ficheiros usam um índice curto e blueprints divididos
   por responsabilidade. Cada blueprint marca o destino como existente,
   incompleto ou a criar e preserva alterações feitas por outro agente.
-- Padrão detalhado: `Patterns/blueprints_pseudocodigo_por_ficheiro.md`.
+- Padrões detalhados: `Patterns/blueprints_pseudocodigo_por_ficheiro.md` e
+  `Patterns/blueprints_codigo_real_por_ficheiro.md`.
 - 11/08/2026: fase 2 entrou na consolidação documental da persistência da
   nutrição; notas de sessão em `Sessions/2026-08-11-sprint3-phase2-persistence.md`.
+- 18/08/2026: revisão dos blueprints do lote_3D (Supplements) corrigiu DRY,
+  ORDER BY/índice e sequenciamento entre ficheiros "full replace"; pattern
+  `blueprints_codigo_real_por_ficheiro.md` ganhou 3 regras novas (11-13); notas
+  em `Sessions/2026-08-18-lote3D-blueprint-review.md`.
 
 ## Fase 1 concluída (2026-08-08)
 
-- Foundations e Clients foram concluídos no commit `aee7f6d` e revistos.
-- A Fase 1 passou a ser a referência para handlers explícitos, validators,
-  Result/Error, tenant fail-closed, stores compostos, queries projetadas e
-  testes Application/PostgreSQL.
-- Build Release: zero warnings e zero erros.
-- Testes confirmados nesta transição: 282 Domain, 83 Application e 21
-  Architecture.
-- Format passou e o modelo EF Core não tinha alterações pendentes.
-- A repetição dos testes PostgreSQL nesta sessão ficou bloqueada por Docker
-  indisponível. A conclusão integral anterior foi confirmada pelo utilizador;
-  não registar esta limitação ambiental como falha funcional.
-- Nota canónica:
-  `Sessions/2026-08-08-sprint3-phase1-completion.md`.
+Foundations e Clients (commit `aee7f6d`) — referência para handlers explícitos,
+Result/Error, tenant fail-closed, stores compostos. Detalhe:
+`Sessions/2026-08-08-sprint3-phase1-completion.md`.
 
 ## Lote 2A Nutrition concluído (2026-08-12)
 
-- Os 72 ficheiros alvo de Nutrition estão implementados em Domain,
-  Application, Infrastructure e testes.
-- Evidência focalizada: 59 testes Domain Nutrition, 26 Application Nutrition e
-  24 PostgreSQL Nutrition aprovados.
-- Gate completo: 603 testes aprovados, distribuídos por 288 Domain, 109
-  Application, 185 Integration e 21 Architecture. `Api.FunctionalTests` ainda
-  não possui testes descobertos.
-- Build Release passou com zero warnings, format passou e o modelo EF Core não
-  tem alterações pendentes.
-- Swaps de ordem usam staging dentro da mesma transação porque os índices únicos
-  PostgreSQL são imediatos. Queries de detalhe ordenam antes da projeção para
-  garantir tradução pelo EF Core 10.
-- Training, Gate 2B, Lote 2C e o gate final da Fase 2 foram concluídos em
-  14 de agosto de 2026.
-- Nota canónica:
-  `Sessions/2026-08-12-sprint3-phase2-lot2a-completion.md`.
+72 ficheiros implementados. Swaps de ordem usam staging na mesma transação
+(índices únicos PostgreSQL são imediatos); queries de detalhe ordenam antes da
+projeção para garantir tradução pelo EF Core 10. Detalhe:
+`Sessions/2026-08-12-sprint3-phase2-lot2a-completion.md`.
 
 ## Fase 2C Training concluída (2026-08-14)
 
-- A implementação Training, a migration e o gate transversal estão concluídos.
-- Aprovados 297 testes Domain, 126 Application, 204 Integration e 24
-  Architecture, mais o teste específico de migrate, rollback e migrate.
-- `ExerciseSetLogQueries` usa projeção traduzível pelo EF Core 10 e mantém a
-  execução no PostgreSQL.
-- O modelo EF Core não tem alterações pendentes e as duas migrations constam da
-  base de dados de desenvolvimento.
-- A migration aplicada usa CRLF. O utilizador aceitou esta exceção não semântica
-  e o ficheiro permaneceu imutável.
-- Nota canónica:
-  `Sessions/2026-08-14-sprint3-phase2c-completion.md`.
+Training, migration e gate transversal concluídos. `ExerciseSetLogQueries` usa
+projeção traduzível pelo EF Core 10. Migration aplicada usa CRLF (exceção não
+semântica aceite pelo utilizador, ficheiro imutável). Detalhe:
+`Sessions/2026-08-14-sprint3-phase2c-completion.md`.
 
 ## Próxima execução
 
-1. Implementar o Lote 3D Supplements.
+1. Implementar o Lote 3E TrainerSettings e administração global remanescente.
 2. Não gerar migration intermédia; consolidar as alterações no Lote 3F.
-3. No Lote 3F, materializar e executar os testes PostgreSQL de Assessments.
+3. No Lote 3F, executar as suites PostgreSQL diferidas dos Lotes 3A a 3D e o
+   ciclo migrate, rollback e migrate.
 4. Manter a migration CompleteTrainingPhase2C imutável.
 
 ## Lote 3C Assessments documentado (2026-08-17)
@@ -197,6 +167,29 @@ O código e `.claude/project/` são fontes de verdade. Esta memória regista ape
 - Nota canónica:
   `Sessions/2026-08-18-sprint3-phase3-lot3c-completion.md`.
 
+## Lote 3D Supplements concluído no âmbito pré-migration (2026-08-19)
+
+- Produção e testes dos documentos 00 a 13 materializados; documento 14 regista
+  o gate final. Nenhuma migration foi criada ou editada.
+- A revisão corrigiu um commit transacional em falta em UpdateInstructions,
+  rollbacks com token cancelado e normalização tardia dos snapshots de auditoria.
+- `LikeSearchPattern` é agora a implementação única usada por oito queries. Os
+  seis consumidores anteriores foram migrados; já não existe a dívida técnica
+  registada na nota de follow-up.
+- EF Core 10.0.10 e Npgsql 10.0.3 confirmaram por `ToQueryString()` exatamente um
+  `EXISTS` sobre `UNION ALL` na verificação das duas fontes de referências.
+- Build Release e format passaram sem warnings ou erros. Foram aprovados 325 testes
+  Domain, 306 Application, 24 Architecture e 6 testes sem PostgreSQL de
+  `Persistence/Common`.
+- O restore passou em modo locked. SSH.NET foi fixado em 2026.0.0 para remover a
+  vulnerabilidade alta transitiva de Testcontainers; a auditoria terminou limpa.
+- Os testes PostgreSQL do lote estão compilados, mas a execução, o plano SQL real
+  e a migration consolidada permanecem reservados ao Lote 3F.
+- Validação detalhada:
+  `docs/backend-files/sprint_3/fase_3/lote_3D/14_lote_3d_avaliacao_final.md`.
+- Nota canónica:
+  `Sessions/2026-08-19-sprint3-phase3-lot3d-completion.md`.
+
 ## Fase 3 desenhada e Lote 3A documentado (2026-08-14)
 
 - Lotes aprovados: 3A Packs, 3B Sessions, 3C Assessments, 3D Supplements, 3E
@@ -211,7 +204,9 @@ O código e `.claude/project/` são fontes de verdade. Esta memória regista ape
 - Agenda: uma Session Scheduled por cliente/dia local e nenhum intervalo
   sobreposto do trainer.
 - Superuser não gere operações funcionais de clientes. Catálogos globais usam
-  casos administrativos explícitos; delete é soft delete apenas sem referências.
+  casos administrativos explícitos. Supplement global usa hard delete apenas
+  sem referências e auditoria append-only na mesma transação; Food e Exercise
+  ficam para decisão própria no Lote 3E.
 - TrainerSettings remove BackgroundImageUrl. Cores null usam o tema default e
   media é gerida por porta + outbox, com Cloudinary concreto no sprint previsto.
 - Blueprints e Gate 3A: `docs/backend-files/sprint_3/fase_3/`. Código real
@@ -219,43 +214,18 @@ O código e `.claude/project/` são fontes de verdade. Esta memória regista ape
 
 ## Lote 3A Packs concluído (2026-08-15)
 
-- PackType e ClientSessionPack estão implementados em Domain, Application,
-  Infrastructure e testes, incluindo regressões de Clients.
-- Build Release aprovado sem warnings. Aprovados 310 testes Domain, 155
-  Application e 24 Architecture. Format aprovado.
-- Os 12 testes PostgreSQL de Packs estão implementados, mas não executaram:
-  `MigrateAsync` é bloqueado pelo EF Core 10 enquanto existem pending model
-  changes. A migration mantém-se no Lote 3F por decisão explícita.
-- Não apresentar esta limitação como aprovação PostgreSQL. No Lote 3F são
-  obrigatórios suite completa, migrate, rollback e migrate.
-- A revisão corrigiu outcomes, idempotência, mapping de Clients e separou as
-  constraints de ordem de datas e coerência de CompletedAt.
-- Os blueprints tinham inconsistências materiais apesar da validação estrutural.
-  O padrão persistente passou a exigir compilação, testes materializados e gates
-  executáveis antes de declarar um pacote pronto.
-- Nota canónica:
-  `Sessions/2026-08-15-sprint3-phase3-lot3a-completion.md`.
+PackType e ClientSessionPack implementados. Testes PostgreSQL de Packs escritos
+mas não executados (`MigrateAsync` bloqueado por pending model changes até ao
+Lote 3F) — **não apresentar isto como aprovação PostgreSQL**; no Lote 3F são
+obrigatórios suite completa, migrate, rollback e migrate. Detalhe:
+`Sessions/2026-08-15-sprint3-phase3-lot3a-completion.md`.
 
 ## Lote 3B Sessions concluído (2026-08-17)
 
-- Os 43 caminhos planeados estão materializados em Domain, Application,
-  Infrastructure e testes.
-- Mutações são exclusivas do trainer; leitura e escrita preservam isolamento
-  cross-tenant e cliente arquivado não recebe novas Sessions.
-- Agenda usa dia local, intervalos semiabertos e serialização pelo lock do
-  trainer. Complete e NoShow debitam; Restore repõe quando aplicável.
-- Corrigidas idempotência terminal, fronteira temporal estritamente futura,
-  nomes de CompleteSession e tradução da constraint de agenda.
-- Build Release aprovado sem warnings. Aprovados 317 testes Domain, 181
-  Application, 24 Architecture e 11 testes do tradutor PostgreSQL. Format
-  aprovado.
-- Os 19 métodos de `SessionPersistenceTests` estão implementados e compilados,
-  mas a execução permanece diferida até à migration consolidada do Lote 3F.
-- `has-pending-model-changes` confirmou a alteração de modelo esperada; nenhuma
-  migration foi criada ou editada no Lote 3B.
-- O padrão de mapper de resultados foi aplicado a Nutrition, Packs e Training
-  com sete mappers específicos. Clients permaneceu explícito por usar outcomes
-  distintos sem repetição do mesmo contrato.
-- Notas canónicas:
-  `Sessions/2026-08-16-sprint3-phase3-lot3b-blueprints.md` e
-  `Sessions/2026-08-17-sprint3-phase3-lot3b-completion.md`.
+43 caminhos materializados. Agenda usa dia local, intervalos semiabertos e
+serialização pelo lock do trainer; Complete/NoShow debitam, Restore repõe.
+`SessionPersistenceTests` compilados, execução diferida ao Lote 3F. Padrão de
+mapper de resultados aplicado a Nutrition/Packs/Training (sete mappers
+específicos); Clients ficou explícito por outcomes distintos. Detalhe:
+`Sessions/2026-08-16-sprint3-phase3-lot3b-blueprints.md` e
+`Sessions/2026-08-17-sprint3-phase3-lot3b-completion.md`.

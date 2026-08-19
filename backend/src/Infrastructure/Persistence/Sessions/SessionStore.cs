@@ -22,13 +22,9 @@ internal sealed class SessionStore : ISessionStore
         ITrainerTimeZoneProvider timeZoneProvider,
         PostgresConstraintTranslator constraintTranslator)
     {
-        ArgumentNullException.ThrowIfNull(dbContext);
-        ArgumentNullException.ThrowIfNull(timeZoneProvider);
-        ArgumentNullException.ThrowIfNull(constraintTranslator);
-
-        _dbContext = dbContext;
-        _timeZoneProvider = timeZoneProvider;
-        _constraintTranslator = constraintTranslator;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _timeZoneProvider = timeZoneProvider ?? throw new ArgumentNullException(nameof(timeZoneProvider));
+        _constraintTranslator = constraintTranslator ?? throw new ArgumentNullException(nameof(constraintTranslator));
     }
 
     public Task<SessionStoreResult> CreateAsync(

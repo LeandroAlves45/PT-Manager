@@ -5,6 +5,7 @@ using Application.Features.Nutrition.Foods.ListFoods;
 using Application.Pagination;
 using Domain.Entities.Nutrition;
 using Infrastructure.Data;
+using Infrastructure.Persistence.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Nutrition;
@@ -12,13 +13,11 @@ namespace Infrastructure.Persistence.Nutrition;
 /// <summary>Executa queries paginadas de Food sem tracking.</summary>
 internal sealed class FoodQueries : IFoodQueries
 {
-    private const string LikeEscapeCharacter = "\\";
     private readonly PtManagerDbContext _dbContext;
 
     public FoodQueries(PtManagerDbContext dbContext)
     {
-        ArgumentNullException.ThrowIfNull(dbContext);
-        _dbContext = dbContext;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
     public Task<FoodDto?> GetAsync(Guid foodId, CancellationToken cancellationToken) =>
@@ -46,11 +45,13 @@ internal sealed class FoodQueries : IFoodQueries
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var pattern = $"%{EscapeLikePattern(search.Trim())}%";
+            var pattern = LikeSearchPattern.Build(search);
             query = query.Where(food =>
-                EF.Functions.ILike(food.Name, pattern, LikeEscapeCharacter)
+                EF.Functions.ILike(
+                    food.Name, pattern, LikeSearchPattern.LikeEscapeCharacter)
                 || food.Description != null
-                    && EF.Functions.ILike(food.Description, pattern, LikeEscapeCharacter)
+                    && EF.Functions.ILike(
+                        food.Description, pattern, LikeSearchPattern.LikeEscapeCharacter)
             );
         }
 
@@ -87,9 +88,4 @@ internal sealed class FoodQueries : IFoodQueries
         food.CreatedAt,
         food.UpdatedAt
     );
-
-    private static string EscapeLikePattern(string value) => value
-        .Replace("\\", "\\\\", StringComparison.Ordinal)
-        .Replace("%", "\\%", StringComparison.Ordinal)
-        .Replace("_", "\\_", StringComparison.Ordinal);
 }

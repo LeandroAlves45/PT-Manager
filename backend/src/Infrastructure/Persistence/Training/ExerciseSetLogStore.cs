@@ -14,8 +14,7 @@ internal sealed class ExerciseSetLogStore : IExerciseSetLogStore
 
     public ExerciseSetLogStore(PtManagerDbContext dbContext)
     {
-        ArgumentNullException.ThrowIfNull(dbContext);
-        _dbContext = dbContext;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
     public Task<ExerciseSetLogStoreResult> RecordAsync(

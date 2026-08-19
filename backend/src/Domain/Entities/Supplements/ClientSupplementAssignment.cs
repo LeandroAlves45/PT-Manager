@@ -1,5 +1,4 @@
 using Domain.Exceptions;
-
 namespace Domain.Entities.Supplements;
 
 /// <summary>Prescrição direta de um suplemento a um cliente.</summary>
@@ -13,13 +12,12 @@ public sealed class ClientSupplementAssignment
     public string Timing { get; private set; } = null!;
     public string? TrainerNotes { get; private set; }
     public bool IsActive { get; private set; }
-    public bool IsDeleted { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
     private ClientSupplementAssignment() { }
 
-    /// <summary>Cria uma prescrição direta de suplemento a um cliente.</summary>
+    /// <summary>Cria uma atribuição ativa com instruções independentes do catálogo.</summary>
     public ClientSupplementAssignment(
         Guid ownerTrainerId,
         Guid clientId,
@@ -39,12 +37,11 @@ public sealed class ClientSupplementAssignment
         SupplementId = supplementId;
         SetInstructions(servingSize, timing, trainerNotes);
         IsActive = true;
-        IsDeleted = false;
         CreatedAt = now;
         UpdatedAt = now;
     }
 
-    /// <summary>Atualiza apenas a prescrição específica do cliente.</summary>
+    /// <summary>Altera apenas as instruções personalizadas da atribuição.</summary>
     public void UpdateInstructions(
         string servingSize,
         string timing,
@@ -52,29 +49,21 @@ public sealed class ClientSupplementAssignment
         DateTime now
     )
     {
-        EnsureNotDeleted();
         SetInstructions(servingSize, timing, trainerNotes);
         UpdatedAt = now;
     }
 
+    /// <summary>Interrompe a prescrição sem eliminar o histórico.</summary>
     public void Deactivate(DateTime now)
     {
-        EnsureNotDeleted();
         IsActive = false;
         UpdatedAt = now;
     }
 
+    /// <summary>Retoma uma prescrição existente.</summary>
     public void Reactivate(DateTime now)
     {
-        EnsureNotDeleted();
         IsActive = true;
-        UpdatedAt = now;
-    }
-
-    public void SoftDelete(DateTime now)
-    {
-        IsDeleted = true;
-        IsActive = false;
         UpdatedAt = now;
     }
 
@@ -82,6 +71,7 @@ public sealed class ClientSupplementAssignment
     {
         var normalizedServingSize = servingSize?.Trim() ?? string.Empty;
         var normalizedTiming = timing?.Trim() ?? string.Empty;
+
         if (normalizedServingSize.Length is 0 or > 100)
             throw new DomainException("Serving size must contain between 1 and 100 characters.");
         if (normalizedTiming.Length is 0 or > 255)
@@ -94,9 +84,4 @@ public sealed class ClientSupplementAssignment
 
     private static string? NormalizeOptional(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-    private void EnsureNotDeleted()
-    {
-        if (IsDeleted)
-            throw new DomainException("Cannot modify a deleted supplement assignment.");
-    }
 }

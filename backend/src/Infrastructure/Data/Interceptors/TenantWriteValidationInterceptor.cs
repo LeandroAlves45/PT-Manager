@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Domain.Entities.Administration;
 using Domain.Entities.Assessments;
 using Domain.Entities.Billing;
 using Domain.Entities.Clients;
@@ -24,7 +25,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
 
     public TenantWriteValidationInterceptor(ITenantContext tenantContext)
     {
-        _tenantContext = tenantContext;
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
     }
 
     /// <summary>
@@ -46,6 +47,8 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
     {
         if (eventData.Context is not PtManagerDbContext context)
             throw new InvalidOperationException("DbContext is not of type PtManagerDbContext.");
+
+        ValidateAdministrativeAuditEntries(context);
 
         var entries = context.ChangeTracker.Entries()
             .Where(entry => entry.State is EntityState.Added or EntityState.Modified)
@@ -415,7 +418,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 {
                     entry.Entity.Id,
                     entry.Entity.OwnerTrainerId,
-                    entry.Entity.IsDeleted,
+                    entry.Entity.IsActive,
                 })
                 .ToDictionary(supplement => supplement.Id);
 
@@ -435,7 +438,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                     {
                         supplement.Id,
                         supplement.OwnerTrainerId,
-                        supplement.IsDeleted,
+                        supplement.IsActive,
                     })
                     .ToListAsync(cancellationToken);
 
@@ -448,10 +451,12 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 if (!supplements.TryGetValue(supplementId, out var supplement))
                     throw new DomainException("Referenced catalog supplement does not exist.");
 
-                if (supplement.IsDeleted)
-                    throw new DomainException("Cannot reference a deleted catalog supplement.");
+                if (!supplement.IsActive)
+                    throw new DomainException(
+                        "Cannot create a reference to an archived catalog supplement.");
 
-                if (supplement.OwnerTrainerId is not null && supplement.OwnerTrainerId != tenantId)
+                if (supplement.OwnerTrainerId is not null &&
+                    supplement.OwnerTrainerId != tenantId)
                 {
                     throw new DomainException(
                         "Cannot reference a private catalog supplement from another personal trainer."
@@ -563,6 +568,46 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
 
         if (currentValue != tenantId)
             throw new DomainException("Cannot write a private catalog item for another tenant.");
+    }
+
+    private void ValidateAdministrativeAuditEntries(PtManagerDbContext context)
+    {
+        var auditEntries = context.ChangeTracker.Entries<AdministrativeAuditEntry>()
+            .Where(entry => entry.State != EntityState.Unchanged)
+            .ToList();
+
+        foreach (var entry in auditEntries)
+        {
+            if (entry.State != EntityState.Added)
+                throw new DomainException("Administrative audit entries are append-only.");
+
+            if (!_tenantContext.IsAdministrative ||
+                !string.Equals(_tenantContext.Role, "superuser", StringComparison.Ordinal) ||
+                !_tenantContext.UserId.HasValue ||
+                _tenantContext.UserId.Value != entry.Entity.ActorUserId)
+                throw new DomainException(
+                    "Administrative audit actor does not match the authorized context.");
+        }
+
+        var globalSupplementWrites = context.ChangeTracker.Entries<Supplement>()
+            .Where(entry =>
+                entry.State is EntityState.Added or
+                EntityState.Modified or EntityState.Deleted)
+            .Where(entry => entry.Entity.OwnerTrainerId is null)
+            .Select(entry => entry.Entity.Id)
+            .ToList();
+
+        foreach (var supplementId in globalSupplementWrites)
+        {
+            var hasAudit = auditEntries.Any(entry =>
+                entry.State == EntityState.Added &&
+                entry.Entity.ResourceType == "supplement" &&
+                entry.Entity.ResourceId == supplementId);
+
+            if (!hasAudit)
+                throw new DomainException(
+                    "A global supplement mutation requires an audit entry.");
+        }
     }
 
     private static bool HasTenantScopedReferences(PtManagerDbContext context) =>

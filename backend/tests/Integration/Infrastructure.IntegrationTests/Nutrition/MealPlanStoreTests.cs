@@ -1,3 +1,4 @@
+
 using Application.Features.Nutrition.MealPlans;
 using Application.Features.Nutrition.MealPlans.Abstractions;
 using Domain.Exceptions;
@@ -309,7 +310,7 @@ public sealed class MealPlanStoreTests
             (await setup.Foods.SingleAsync(food => food.Id == seed.FoodId, token))
                 .SetActive(false, Now);
             (await setup.Supplements.SingleAsync(item => item.Id == seed.SupplementId, token))
-                .SetActive(false, Now);
+                .Archive(Now);
             await setup.SaveChangesAsync(token);
         }
 

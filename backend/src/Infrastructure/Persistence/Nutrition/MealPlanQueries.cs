@@ -4,6 +4,7 @@ using Application.Features.Nutrition.MealPlans.Dtos;
 using Application.Features.Nutrition.MealPlans.ListMealPlans;
 using Application.Pagination;
 using Infrastructure.Data;
+using Infrastructure.Persistence.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Nutrition;
@@ -11,13 +12,11 @@ namespace Infrastructure.Persistence.Nutrition;
 /// <summary>Executa leituras projetadas e cálculos efetivos de planos alimentares.</summary>
 internal sealed class MealPlanQueries : IMealPlanQueries
 {
-    private const string LikeEscapeCharacter = "\\";
     private readonly PtManagerDbContext _dbContext;
 
     public MealPlanQueries(PtManagerDbContext dbContext)
     {
-        ArgumentNullException.ThrowIfNull(dbContext);
-        _dbContext = dbContext;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
     public async Task<MealPlanDetailsDto?> GetDetailsAsync(
@@ -187,11 +186,13 @@ internal sealed class MealPlanQueries : IMealPlanQueries
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var pattern = $"%{EscapeLikePattern(search.Trim())}%";
+            var pattern = LikeSearchPattern.Build(search);
             query = query.Where(plan =>
-                EF.Functions.ILike(plan.Name, pattern, LikeEscapeCharacter)
+                EF.Functions.ILike(
+                    plan.Name, pattern, LikeSearchPattern.LikeEscapeCharacter)
                 || plan.Description != null
-                    && EF.Functions.ILike(plan.Description, pattern, LikeEscapeCharacter)
+                    && EF.Functions.ILike(
+                        plan.Description, pattern, LikeSearchPattern.LikeEscapeCharacter)
             );
         }
 
@@ -274,11 +275,6 @@ internal sealed class MealPlanQueries : IMealPlanQueries
     );
 
     private static decimal Round(decimal value) => decimal.Round(value, 2, MidpointRounding.AwayFromZero);
-
-    private static string EscapeLikePattern(string value) => value
-        .Replace("\\", "\\\\", StringComparison.Ordinal)
-        .Replace("%", "\\%", StringComparison.Ordinal)
-        .Replace("_", "\\_", StringComparison.Ordinal);
 
     private sealed record PlanRow(
         Guid Id,

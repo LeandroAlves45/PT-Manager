@@ -18,11 +18,8 @@ internal sealed class ClientStore : IClientStore
         PtManagerDbContext dbContext,
         PostgresConstraintTranslator constraintTranslator)
     {
-        ArgumentNullException.ThrowIfNull(dbContext);
-        ArgumentNullException.ThrowIfNull(constraintTranslator);
-
-        _dbContext = dbContext;
-        _constraintTranslator = constraintTranslator;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _constraintTranslator = constraintTranslator ?? throw new ArgumentNullException(nameof(constraintTranslator));
     }
 
     /// <inheritdoc/>

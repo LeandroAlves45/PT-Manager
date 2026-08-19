@@ -12,8 +12,7 @@ internal sealed class FoodStore : IFoodStore
 
     public FoodStore(PtManagerDbContext dbContext)
     {
-        ArgumentNullException.ThrowIfNull(dbContext);
-        _dbContext = dbContext;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
     public async Task AddAsync(Food food, CancellationToken cancellationToken)

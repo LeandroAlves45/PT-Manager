@@ -8,6 +8,7 @@ using Application.Features.Nutrition.MealPlans.Abstractions;
 using Application.Features.Packs.ClientSessionPacks.Abstractions;
 using Application.Features.Packs.PackTypes.Abstractions;
 using Application.Features.Sessions.Abstractions;
+using Application.Features.Supplements.Abstractions;
 using Application.Features.Training.Exercises.Abstractions;
 using Application.Features.Training.ExerciseSetLogs.Abstractions;
 using Application.Features.Training.TrainingPlans.Abstractions;
@@ -20,6 +21,7 @@ using Infrastructure.Persistence.Errors;
 using Infrastructure.Persistence.Nutrition;
 using Infrastructure.Persistence.Packs;
 using Infrastructure.Persistence.Sessions;
+using Infrastructure.Persistence.Supplements;
 using Infrastructure.Persistence.Training;
 using Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
@@ -95,6 +97,14 @@ public static class DependencyInjection
 
         // Training Plan Structure Coordinator
         services.AddScoped<TrainingPlanStructureCoordinator>();
+
+        // Supplements
+        services.AddScoped<ISupplementStore, SupplementStore>();
+        services.AddScoped<ISupplementQueries, SupplementQueries>();
+        services.AddScoped<IClientSupplementAssignmentStore, ClientSupplementAssignmentStore>();
+        services.AddScoped<IClientSupplementAssignmentQueries, ClientSupplementAssignmentQueries>();
+        services.AddScoped<IGlobalSupplementStore, GlobalSupplementStore>();
+        services.AddScoped<IGlobalSupplementQueries, GlobalSupplementQueries>();
 
         // Pack Types
         services.AddScoped<IPackTypeStore, PackTypeStore>();

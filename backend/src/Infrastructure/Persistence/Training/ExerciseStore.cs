@@ -12,8 +12,7 @@ internal sealed class ExerciseStore : IExerciseStore
 
     public ExerciseStore(PtManagerDbContext dbContext)
     {
-        ArgumentNullException.ThrowIfNull(dbContext);
-        _dbContext = dbContext;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
     public async Task AddAsync(

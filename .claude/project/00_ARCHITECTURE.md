@@ -950,8 +950,28 @@ Modos de distribuição de macronutrientes:
 `ClientSupplementAssignment` pertence ao tenant. As leituras usam Global Query
 Filter, as escritas validam `OwnerTrainerId` e a FK composta garante que o
 `Client` pertence ao mesmo tenant. A referência a `Supplement` aceita itens do
-catálogo global ou privados do trainer efetivo e rejeita itens apagados ou
-privados de outro tenant.
+catálogo global ou privados do trainer efetivo e rejeita itens arquivados para
+novas referências ou privados de outro tenant.
+
+`Supplement` e `ClientSupplementAssignment` não usam soft delete. `IsActive`
+representa disponibilidade e preservação histórica. Arquivar um suplemento não
+altera meal plans nem atribuições existentes; uma atribuição ativa continua
+legível pelo cliente, incluindo quando o cliente foi arquivado. Um trainer gere
+apenas suplementos privados próprios e nunca vê os suplementos privados de outro
+trainer.
+
+A administração global de suplementos usa casos de uso dedicados e autorização
+fail-closed: role `superuser`, `UserId` autenticado e `IsAdministrative`. Create,
+Update, Archive, Reactivate e Delete gravam uma `AdministrativeAuditEntry`
+append-only na mesma transação PostgreSQL. A auditoria guarda ator, ação, tipo e
+ID do recurso, instante e snapshots JSONB mínimos. Não existe FK da auditoria
+para `Supplement`, para que o histórico sobreviva ao hard delete.
+
+O hard delete de um suplemento global só é permitido sem referências em
+`MealPlanMealSupplement` e `ClientSupplementAssignment`. A verificação usa um
+único `EXISTS` sobre a união das dependências e as FKs `RESTRICT` fecham a corrida
+com novas associações. Leituras de cliente juntam `Client`, atribuição e
+`Supplement` no mesmo SQL e nunca projetam `Supplement.TrainerNotes`.
 
 ## 18. Referências oficiais
 

@@ -13,8 +13,7 @@ internal sealed class ExerciseSetLogQueries : IExerciseSetLogQueries
 
     public ExerciseSetLogQueries(PtManagerDbContext dbContext)
     {
-        ArgumentNullException.ThrowIfNull(dbContext);
-        _dbContext = dbContext;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
     public async Task<ClientExerciseSetLogDto?> GetAsync(

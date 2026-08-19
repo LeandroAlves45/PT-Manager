@@ -248,19 +248,19 @@ public sealed class CatalogReferenceValidationTests
 
     // ---------- Supplement ----------
     // Movidos de TenantWriteValidationInterceptorTests para fechar a matriz
-    // simétrica de catálogos neste ficheiro (ver doc 05, secção "Cobertura
-    // simétrica obrigatória dos catálogos"). Os cenários de FK composta,
-    // índice único de assignment ativo e persistência global/privada
+    // simÃ©trica de catÃ¡logos neste ficheiro (ver doc 05, secÃ§Ã£o "Cobertura
+    // simÃ©trica obrigatÃ³ria dos catÃ¡logos"). Os cenÃ¡rios de FK composta,
+    // Ã­ndice Ãºnico de assignment ativo e persistÃªncia global/privada
     // continuam em Catalogs/ClientSupplementAssignmentTests.cs.
 
     [Fact]
-    public async Task SaveChanges_WhenAssignmentReferencesDeletedSupplement_ThrowsDomainException()
+    public async Task SaveChanges_WhenAssignmentReferencesArchivedSupplement_ThrowsDomainException()
     {
         // Arrange
         var cancellationToken = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(
             Guid.NewGuid().ToString("N"), cancellationToken);
-        var supplementId = await SeedSupplementAsync(tenant.TrainerId, cancellationToken, deleted: true);
+        var supplementId = await SeedSupplementAsync(tenant.TrainerId, cancellationToken, archived: true);
         var assignment = CreateAssignment(tenant, supplementId);
 
         await using var context = _fixture.CreateContext(tenant.TrainerId);
@@ -333,11 +333,11 @@ public sealed class CatalogReferenceValidationTests
     private async Task<Guid> SeedSupplementAsync(
         Guid? ownerTrainerId,
         CancellationToken cancellationToken,
-        bool deleted = false)
+        bool archived = false)
     {
         var supplement = IntegrationTestData.Supplement(ownerTrainerId, Now);
-        if (deleted)
-            supplement.SoftDelete(Now.AddMinutes(1));
+        if (archived)
+            supplement.Archive(Now.AddMinutes(1));
 
         await using var context = ownerTrainerId is null
             ? _fixture.CreateAdministrativeContext()

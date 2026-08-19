@@ -5,6 +5,7 @@ using Application.Features.Packs.PackTypes.ListPackTypes;
 using Application.Pagination;
 using Domain.Entities.Billing;
 using Infrastructure.Data;
+using Infrastructure.Persistence.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Packs;
@@ -12,13 +13,11 @@ namespace Infrastructure.Persistence.Packs;
 /// <summary>Consulta tipos de pack privados sem tracking.</summary>
 public sealed class PackTypeQueries : IPackTypeQueries
 {
-    private const string LikeEscapeChar = "\\";
     private readonly PtManagerDbContext _dbContext;
 
     public PackTypeQueries(PtManagerDbContext dbContext)
     {
-        ArgumentNullException.ThrowIfNull(dbContext);
-        _dbContext = dbContext;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
     public Task<PackTypeDto?> GetAsync(
@@ -50,11 +49,11 @@ public sealed class PackTypeQueries : IPackTypeQueries
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var pattern = $"%{EscapeLikePattern(search)}%";
+            var pattern = LikeSearchPattern.Build(search);
             query = query.Where(pack => EF.Functions.ILike(
                 pack.Name,
                 pattern,
-                LikeEscapeChar
+                LikeSearchPattern.LikeEscapeCharacter
             ));
         }
 
@@ -88,10 +87,4 @@ public sealed class PackTypeQueries : IPackTypeQueries
             pack.CreatedAt,
             pack.UpdatedAt
         );
-
-    private static string EscapeLikePattern(string value) => value
-        .Trim()
-        .Replace("\\", "\\\\", StringComparison.Ordinal)
-        .Replace("%", "\\%", StringComparison.Ordinal)
-        .Replace("_", "\\_", StringComparison.Ordinal);
 }

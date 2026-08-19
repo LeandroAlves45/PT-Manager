@@ -26,51 +26,63 @@ internal sealed class ClientSupplementAssignmentConfiguration : IEntityTypeConfi
         builder.Property(assignment => assignment.Id)
             .HasColumnName("id")
             .ValueGeneratedNever();
+
         builder.Property(assignment => assignment.OwnerTrainerId)
             .HasColumnName("owner_trainer_id")
             .IsRequired();
+
         builder.Property(assignment => assignment.ClientId)
             .HasColumnName("client_id")
             .IsRequired();
+
         builder.Property(assignment => assignment.SupplementId)
             .HasColumnName("supplement_id")
             .IsRequired();
+
         builder.Property(assignment => assignment.ServingSize)
             .HasColumnName("serving_size")
             .HasMaxLength(100)
             .IsRequired();
+
         builder.Property(assignment => assignment.Timing)
             .HasColumnName("timing")
             .HasMaxLength(255)
             .IsRequired();
+
         builder.Property(assignment => assignment.TrainerNotes)
             .HasColumnName("trainer_notes");
+
         builder.Property(assignment => assignment.IsActive)
             .HasColumnName("is_active")
             .HasDefaultValue(true)
             .IsRequired();
-        builder.Property(assignment => assignment.IsDeleted)
-            .HasColumnName("is_deleted")
-            .HasDefaultValue(false)
-            .IsRequired();
+
         builder.Property(assignment => assignment.CreatedAt)
             .HasColumnName("created_at")
             .HasDefaultValueSql("now()")
             .IsRequired();
+
         builder.Property(assignment => assignment.UpdatedAt)
             .HasColumnName("updated_at")
             .HasDefaultValueSql("now()")
             .IsRequired();
 
-        builder.HasIndex(assignment =>
-            new { assignment.ClientId, assignment.SupplementId })
+        builder.HasIndex(assignment => new
+        { assignment.OwnerTrainerId, assignment.ClientId, assignment.SupplementId })
             .HasDatabaseName("uq_client_supplement_active")
-            .HasFilter("is_active = true AND is_deleted = false")
+            .HasFilter("is_active = true")
             .IsUnique();
-        builder.HasIndex(assignment =>
-            new { assignment.OwnerTrainerId, assignment.ClientId })
-            .HasDatabaseName("idx_client_supplement_assignments_tenant_client")
-            .HasFilter("is_deleted = false");
+
+        builder.HasIndex(assignment => new
+        {
+            assignment.OwnerTrainerId,
+            assignment.ClientId,
+            assignment.IsActive,
+            assignment.UpdatedAt,
+            assignment.Id
+        })
+            .HasDatabaseName("idx_client_supplement_assignments_list");
+
         builder.HasIndex(assignment => assignment.SupplementId)
             .HasDatabaseName("idx_client_supplement_assignments_supplement");
 

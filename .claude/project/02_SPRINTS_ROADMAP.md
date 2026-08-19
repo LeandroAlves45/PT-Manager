@@ -95,7 +95,7 @@ Portar entidades Python → C# Entities + Value Objects, sem abstrações genér
    ```
    - IDs: `Guid`, gerado no construtor da entidade (`Guid.NewGuid()`), nunca pelo Postgres — ver `01_DATABASE_SCHEMA.md` Decisão 1
    - Timestamps: sempre `DateTime.UtcNow`, propriedade `IClock` injetada onde a testabilidade importa (evita `DateTime.UtcNow` espalhado e não mockável)
-   - Soft delete: `IsDeleted` em todas as entidades tenant-owned
+   - Ciclo de vida: `IsDeleted` apenas quando eliminação e arquivo são estados distintos; `Supplement` e `ClientSupplementAssignment` usam `IsActive` e preservam referências históricas
    - Multi-tenancy: `OwnerTrainerId` como propriedade de instância, nunca resolvida via `HttpContext` dentro da entidade
 
 2. **ValueObjects (`Domain/ValueObjects/`)**

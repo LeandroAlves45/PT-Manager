@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Domain.Entities.Administration;
 using Domain.Entities.Assessments;
 using Domain.Entities.Billing;
 using Domain.Entities.Clients;
@@ -11,8 +12,6 @@ using Domain.Entities.Supplements;
 using Domain.Entities.TrainerSettings;
 using Domain.Entities.Training;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
 
 namespace Infrastructure.Data;
 
@@ -38,8 +37,10 @@ public sealed class PtManagerDbContext : DbContext
         _tenantContext = tenantContext;
     }
 
-    // DbSet<T> para as 28 entidades.
+    // DbSet<T> para as 29 entidades.
     public DbSet<User> Users => Set<User>();
+    public DbSet<AdministrativeAuditEntry> AdministrativeAuditEntries =>
+        Set<AdministrativeAuditEntry>();
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<InitialAssessment> InitialAssessments => Set<InitialAssessment>();
     public DbSet<CheckIn> CheckIns => Set<CheckIn>();
@@ -138,12 +139,11 @@ public sealed class PtManagerDbContext : DbContext
             (e.OwnerTrainerId == null || e.OwnerTrainerId == CurrentTrainerId));
 
         modelBuilder.Entity<Supplement>().HasQueryFilter(s =>
-            CurrentTrainerId.HasValue && !s.IsDeleted &&
+            CurrentTrainerId.HasValue &&
             (s.OwnerTrainerId == null || s.OwnerTrainerId == CurrentTrainerId));
 
         modelBuilder.Entity<ClientSupplementAssignment>().HasQueryFilter(assignment =>
             CurrentTrainerId.HasValue &&
-            !assignment.IsDeleted &&
             assignment.OwnerTrainerId == CurrentTrainerId);
 
         // POLÍTICA A DERIVADA — filhas de agregado, SEM navegação POCO.

@@ -23,5 +23,11 @@ internal enum PersistenceOperation
     /// <summary>Cria um check-in para o cliente do tenant.</summary>
     CreateCheckIn,
     /// <summary>Reagenda um check-in futuro sem respostas.</summary>
-    RescheduleCheckIn
+    RescheduleCheckIn,
+    /// <summary>Cria uma atribuição direta de suplemento para o cliente do tenant.</summary>
+    AssignSupplement,
+    /// <summary>Reativa uma atribuição direta de suplemento.</summary>
+    ReactivateSupplementAssignment,
+    /// <summary>Elimina fisicamente um suplemento global do catálogo.</summary>
+    DeleteGlobalSupplement
 }

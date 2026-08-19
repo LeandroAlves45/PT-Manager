@@ -12,7 +12,13 @@ internal sealed class SupplementConfiguration : IEntityTypeConfiguration<Supplem
 {
     public void Configure(EntityTypeBuilder<Supplement> builder)
     {
-        builder.ToTable("supplements");
+        builder.ToTable("supplements", table =>
+        {
+            table.HasCheckConstraint("ck_supplements_name", "btrim(name) <> ''");
+            table.HasCheckConstraint("ck_supplements_unit", "btrim(unit_of_measure) <> ''");
+            table.HasCheckConstraint("ck_supplements_serving_size", "btrim(serving_size) <> ''");
+            table.HasCheckConstraint("ck_supplements_timing", "btrim(timing) <> ''");
+        });
 
         builder.HasKey(s => s.Id);
 
@@ -24,7 +30,8 @@ internal sealed class SupplementConfiguration : IEntityTypeConfiguration<Supplem
             .HasColumnName("owner_trainer_id");
 
         builder.Property(s => s.CreatedByUserId)
-            .HasColumnName("created_by_user_id");
+            .HasColumnName("created_by_user_id")
+            .IsRequired();
 
         builder.Property(s => s.Name)
             .HasColumnName("name")
@@ -57,10 +64,6 @@ internal sealed class SupplementConfiguration : IEntityTypeConfiguration<Supplem
             .HasDefaultValue(true)
             .IsRequired();
 
-        builder.Property(s => s.IsDeleted)
-            .HasColumnName("is_deleted")
-            .HasDefaultValue(false);
-
         builder.Property(s => s.CreatedAt)
             .HasColumnName("created_at")
             .HasDefaultValueSql("now()")
@@ -71,21 +74,20 @@ internal sealed class SupplementConfiguration : IEntityTypeConfiguration<Supplem
             .HasDefaultValueSql("now()")
             .IsRequired();
 
-        builder.HasIndex(s => s.Name)
-            .HasDatabaseName("idx_supplements_name");
-
-        builder.HasIndex(s => s.OwnerTrainerId)
-            .HasDatabaseName("idx_supplements_trainer");
+        builder.HasIndex(s => new
+        { s.OwnerTrainerId, s.IsActive, s.Name, s.Id })
+            .HasDatabaseName("idx_supplements_scope_active_name_id");
 
         builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(s => s.OwnerTrainerId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade)
+            .HasConstraintName("fk_supplements_owner_trainer");
 
         builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(s => s.CreatedByUserId)
-            .OnDelete(DeleteBehavior.SetNull);
-
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("fk_supplements_created_by_user");
     }
 }

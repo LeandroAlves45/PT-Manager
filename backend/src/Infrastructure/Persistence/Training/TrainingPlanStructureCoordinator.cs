@@ -11,8 +11,7 @@ internal sealed class TrainingPlanStructureCoordinator
 
     public TrainingPlanStructureCoordinator(PtManagerDbContext dbContext)
     {
-        ArgumentNullException.ThrowIfNull(dbContext);
-        _dbContext = dbContext;
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
     public bool ReferenceBelongToAggregate(

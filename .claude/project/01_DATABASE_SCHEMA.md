@@ -13,10 +13,10 @@ sincronizados no gate final de 5 de agosto de 2026.
 Este documento é a **especificação do modelo EF Core alvo**, não um script SQL a correr manualmente. A migration `InitialCreate` é gerada a partir deste modelo com `dotnet ef migrations add InitialCreate` (ver `01_DATABASE_SCHEMA.md §12` e `03_DEVELOPER_GUIDE.md`). O histórico de migrations SQL do Python não é convertido — não existem dados de produção a preservar (ver `00_ARCHITECTURE.md §1` e `§7.3`).
 
 **Características:**
-- Contagem: 28 tabelas da aplicação mais `__EFMigrationsHistory`, total 29
+- Contagem: 29 tabelas da aplicação mais `__EFMigrationsHistory`, total 30
 - Multi-tenancy: raízes com `owner_trainer_id`; filhas herdam o tenant por navegação para a raiz. Filtros centralizados no `DbContext`, ligados a `ITenantContext`, exigem tenant presente
 - IDs: `uuid` nativo (ver decisão §1 abaixo)
-- Soft delete: `is_deleted` flag
+- Soft delete: `is_deleted` apenas nas entidades que ainda distinguem arquivo de eliminação; `supplements` e `client_supplement_assignments` usam apenas `is_active`
 - Timestamps: `created_at`, `updated_at` em UTC
 - Constraints: FK cascades, unique indexes
 - Generated columns: `kcal` calculado automaticamente
@@ -298,7 +298,7 @@ Suplementos globais ou privados. `owner_trainer_id` define propriedade;
 CREATE TABLE supplements (
     id UUID PRIMARY KEY,
     owner_trainer_id UUID, -- NULL = seed global ou criação global autorizada
-    created_by_user_id UUID, -- autoria, não autorização
+    created_by_user_id UUID NOT NULL, -- autoria, não autorização
     name VARCHAR(255) NOT NULL,
     description TEXT,
     serving_size VARCHAR(100) NOT NULL,
@@ -306,16 +306,21 @@ CREATE TABLE supplements (
     trainer_notes TEXT,
     unit_of_measure VARCHAR(50) NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT true,
-    is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_owner FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_creator FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+    CONSTRAINT fk_supplements_owner_trainer FOREIGN KEY (owner_trainer_id)
+        REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_supplements_created_by_user FOREIGN KEY (created_by_user_id)
+        REFERENCES users(id) ON DELETE RESTRICT,
+    CONSTRAINT ck_supplements_name CHECK (btrim(name) <> ''),
+    CONSTRAINT ck_supplements_unit CHECK (btrim(unit_of_measure) <> ''),
+    CONSTRAINT ck_supplements_serving_size CHECK (btrim(serving_size) <> ''),
+    CONSTRAINT ck_supplements_timing CHECK (btrim(timing) <> '')
 );
 
-CREATE INDEX idx_supplements_name ON supplements(name);
-CREATE INDEX idx_supplements_trainer ON supplements(owner_trainer_id);
+CREATE INDEX idx_supplements_scope_active_name_id
+    ON supplements(owner_trainer_id, is_active, name, id);
 ```
 
 ### 9. `meal_plans`
@@ -338,7 +343,6 @@ CREATE TABLE meal_plans (
     calculation_snapshot JSONB NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT true,
     is_archived BOOLEAN NOT NULL DEFAULT false,
-    is_deleted BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -795,11 +799,11 @@ CREATE TABLE client_supplement_assignments (
 );
 
 CREATE UNIQUE INDEX uq_client_supplement_active
-    ON client_supplement_assignments(client_id, supplement_id)
-    WHERE is_active = true AND is_deleted = false;
-CREATE INDEX idx_client_supplement_assignments_tenant_client
-    ON client_supplement_assignments(owner_trainer_id, client_id)
-    WHERE is_deleted = false;
+    ON client_supplement_assignments(owner_trainer_id, client_id, supplement_id)
+    WHERE is_active = true;
+CREATE INDEX idx_client_supplement_assignments_list
+    ON client_supplement_assignments(
+        owner_trainer_id, client_id, is_active, updated_at, id);
 CREATE INDEX idx_client_supplement_assignments_supplement
     ON client_supplement_assignments(supplement_id);
 ```
@@ -1084,9 +1088,41 @@ Um item de outbox é escrito **na mesma transação** que a alteração de domí
 
 ---
 
+### 29. `administrative_audit_entries`
+
+Auditoria append-only de mutações administrativas. Não existe FK para o recurso
+auditado, permitindo que o registo sobreviva ao hard delete de um suplemento.
+Os snapshots contêm apenas os campos necessários para explicar a mutação.
+
+```sql
+CREATE TABLE administrative_audit_entries (
+    id UUID PRIMARY KEY,
+    actor_user_id UUID NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    resource_type VARCHAR(100) NOT NULL,
+    resource_id UUID NOT NULL,
+    before_state JSONB,
+    after_state JSONB,
+    occurred_at TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT ck_administrative_audit_entries_state
+        CHECK (before_state IS NOT NULL OR after_state IS NOT NULL)
+);
+
+CREATE INDEX idx_administrative_audit_resource_time
+    ON administrative_audit_entries(resource_type, resource_id, occurred_at);
+CREATE INDEX idx_administrative_audit_actor_time
+    ON administrative_audit_entries(actor_user_id, occurred_at);
+```
+
+Entradas só podem ser adicionadas num contexto `superuser` com `UserId`
+autenticado e `IsAdministrative`. Update e Delete são rejeitados pelo interceptor.
+
+---
+
 ## Tabelas Infrastructure
 
-### 29. `__EFMigrationsHistory`
+### 30. `__EFMigrationsHistory`
 
 Tracking de migrations, criada e gerida automaticamente pelo EF Core (substitui o `schema_migrations` manual do Python — não é criada à mão).
 

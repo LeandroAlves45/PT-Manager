@@ -1,3 +1,4 @@
+
 using Application.Features.Nutrition.MealPlans.ListMealPlans;
 using Application.Pagination;
 using Domain.Entities.Nutrition;
@@ -88,7 +89,7 @@ public sealed class MealPlanQueriesTests
             (await setup.Foods.SingleAsync(food => food.Id == seed.FoodId, token))
                 .SetActive(false, Now);
             (await setup.Supplements.SingleAsync(item => item.Id == seed.SupplementId, token))
-                .SetActive(false, Now);
+                .Archive(Now);
             await setup.SaveChangesAsync(token);
         }
 
