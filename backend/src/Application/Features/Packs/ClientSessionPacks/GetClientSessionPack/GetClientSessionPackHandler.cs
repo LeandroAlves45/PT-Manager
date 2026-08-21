@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Features.Packs.ClientSessionPacks.Abstractions;
 using Application.Features.Packs.ClientSessionPacks.Dtos;
 using Application.Results;
@@ -16,11 +17,8 @@ public sealed class GetClientSessionPackHandler
         IClientSessionPackQueries queries
     )
     {
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(queries);
-
-        _tenantContext = tenantContext;
-        _queries = queries;
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _queries = queries ?? throw new ArgumentNullException(nameof(queries));
     }
 
     public async Task<Result<ClientSessionPackDto>> HandleAsync(
@@ -28,12 +26,12 @@ public sealed class GetClientSessionPackHandler
         CancellationToken cancellationToken
     )
     {
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<ClientSessionPackDto>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, PackErrors.TrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<ClientSessionPackDto>.Failure(actor.Error!);
 
         var pack = await _queries.GetAsync(
-            tenant.Value,
+            actor.Value.TrainerId,
             query.ClientSessionPackId,
             cancellationToken
         );

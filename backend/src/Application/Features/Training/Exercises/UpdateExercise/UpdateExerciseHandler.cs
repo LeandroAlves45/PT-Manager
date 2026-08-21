@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Features.Training.Exercises.Abstractions;
 using Application.Features.Training.Exercises.Dtos;
 using Application.Results;
@@ -22,14 +23,10 @@ public sealed class UpdateExerciseHandler
         IExerciseStore exerciseStore
     )
     {
-        ArgumentNullException.ThrowIfNull(validator);
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(exerciseStore);
-        _validator = validator;
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _exerciseStore = exerciseStore;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _exerciseStore = exerciseStore ?? throw new ArgumentNullException(nameof(exerciseStore));
     }
 
     /// <summary>Valida, atualiza e persiste um exercício privado.</summary>
@@ -42,13 +39,13 @@ public sealed class UpdateExerciseHandler
         if (!validation.IsValid)
             return Result<ExerciseDto>.Failure(validation.ToApplicationError());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<ExerciseDto>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, TrainingErrors.TrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<ExerciseDto>.Failure(actor.Error!);
 
         var outcome = await _exerciseStore.UpdateAsync(
             command.ExerciseId,
-            tenant.Value,
+            actor.Value.TrainerId,
             command.Name,
             command.Description,
             command.MuscleGroups,

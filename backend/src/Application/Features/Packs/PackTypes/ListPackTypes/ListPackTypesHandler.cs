@@ -1,4 +1,6 @@
+using Application.Common;
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Features.Packs.PackTypes.Abstractions;
 using Application.Features.Packs.PackTypes.Dtos;
 using Application.Pagination;
@@ -21,12 +23,9 @@ public sealed class ListPackTypesHandler
         IPackTypeQueries queries
     )
     {
-        ArgumentNullException.ThrowIfNull(validator);
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(queries);
-        _validator = validator;
-        _tenantContext = tenantContext;
-        _queries = queries;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _queries = queries ?? throw new ArgumentNullException(nameof(queries));
     }
 
     public async Task<Result<PageResult<PackTypeDto>>> HandleAsync(
@@ -38,13 +37,13 @@ public sealed class ListPackTypesHandler
         if (!validation.IsValid)
             return Result<PageResult<PackTypeDto>>.Failure(validation.ToApplicationError());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<PageResult<PackTypeDto>>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, PackErrors.TrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<PageResult<PackTypeDto>>.Failure(actor.Error!);
 
         var page = await _queries.ListAsync(
-            tenant.Value,
-            string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(),
+            actor.Value.TrainerId,
+            SearchTerm.Normalize(query.Search),
             query.Activity,
             new PageRequest(query.PageNumber, query.PageSize),
             cancellationToken

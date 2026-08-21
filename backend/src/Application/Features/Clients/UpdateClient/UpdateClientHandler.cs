@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Features.Clients.Abstractions;
 using Application.Features.Clients.Dtos;
 using Application.Results;
@@ -25,17 +26,11 @@ public sealed class UpdateClientHandler
         IClientStore clientStore,
         IClientQueries clientQueries)
     {
-        ArgumentNullException.ThrowIfNull(validator);
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(clientStore);
-        ArgumentNullException.ThrowIfNull(clientQueries);
-
-        _validator = validator;
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _clientStore = clientStore;
-        _clientQueries = clientQueries;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _clientStore = clientStore ?? throw new ArgumentNullException(nameof(clientStore));
+        _clientQueries = clientQueries ?? throw new ArgumentNullException(nameof(clientQueries));
     }
 
     /// <summary>Aplica o perfil completo através do Domain e devolve o detalhe atual.</summary>
@@ -47,16 +42,15 @@ public sealed class UpdateClientHandler
         if (!validation.IsValid)
             return Result<ClientDetailsDto>.Failure(validation.ToApplicationError());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<ClientDetailsDto>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, ClientErrors.TrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<ClientDetailsDto>.Failure(actor.Error!);
 
         var client = await _clientStore.GetForUpdateAsync(command.ClientId, cancellationToken);
         if (client is null)
             return Result<ClientDetailsDto>.Failure(ClientErrors.ClientNotFound);
 
         var now = _clock.UtcNow;
-        var today = DateOnly.FromDateTime(now);
         client.UpdateProfile(
             command.Name,
             command.ContactEmail,

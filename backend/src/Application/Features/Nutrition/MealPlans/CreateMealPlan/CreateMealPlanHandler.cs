@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Features.Nutrition.Calculations;
 using Application.Features.Nutrition.MealPlans.Abstractions;
 using Application.Features.Nutrition.MealPlans.Dtos;
@@ -25,16 +26,11 @@ public sealed class CreateMealPlanHandler
         IMealPlanQueries mealPlanQueries
     )
     {
-        ArgumentNullException.ThrowIfNull(validator);
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(mealPlanStore);
-        ArgumentNullException.ThrowIfNull(mealPlanQueries);
-        _validator = validator;
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _mealPlanStore = mealPlanStore;
-        _mealPlanQueries = mealPlanQueries;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _mealPlanStore = mealPlanStore ?? throw new ArgumentNullException(nameof(mealPlanStore));
+        _mealPlanQueries = mealPlanQueries ?? throw new ArgumentNullException(nameof(mealPlanQueries));
     }
 
     public async Task<Result<MealPlanDetailsDto>> HandleAsync(
@@ -46,9 +42,9 @@ public sealed class CreateMealPlanHandler
         if (!validation.IsValid)
             return Result<MealPlanDetailsDto>.Failure(validation.ToApplicationError());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<MealPlanDetailsDto>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, NutritionErrors.MealPlanTrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<MealPlanDetailsDto>.Failure(actor.Error!);
 
         var now = _clock.UtcNow;
         var model = new CreateMealPlanWriteModel(
@@ -62,7 +58,7 @@ public sealed class CreateMealPlanHandler
         );
 
         var outcome = await _mealPlanStore.CreateAsync(
-            tenant.Value,
+            actor.Value.TrainerId,
             model,
             now,
             cancellationToken

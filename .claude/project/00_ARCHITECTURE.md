@@ -390,6 +390,20 @@ As cache keys tenant-owned seguem o formato conceptual:
 
 O superuser não obtém acesso global através de um tenant vazio. Operações globais usam handlers, políticas e contexto administrativo explícitos.
 
+A moderação excecional de conteúdo privado segue a mesma fronteira. O
+superuser não entra no tenant, não usa handlers funcionais do trainer e não
+recebe CRUD geral sobre dados privados. Casos administrativos dedicados podem
+bloquear ou desbloquear um `Food` ou `Exercise` privado quando existir conteúdo
+malicioso, perigoso, ofensivo ou deliberadamente fraudulento. Cada operação
+exige role `superuser`, `UserId` autenticado, `IsAdministrative`, motivo
+estruturado e auditoria append-only na mesma transação.
+
+O acesso administrativo ignora filtros de tenant apenas dentro do store
+dedicado e apenas para o recurso identificado. Não existe listagem transversal
+de conteúdo privado como efeito implícito da role. As operações de moderação
+voltam a validar no PostgreSQL o estado atual do superuser, conforme a secção
+5.3, e têm testes negativos sem contexto administrativo.
+
 PostgreSQL Row-Level Security não faz parte do MVP. Deve ser reavaliado quando:
 
 1. Existirem requisitos de compliance.
@@ -972,6 +986,119 @@ O hard delete de um suplemento global só é permitido sem referências em
 único `EXISTS` sobre a união das dependências e as FKs `RESTRICT` fecham a corrida
 com novas associações. Leituras de cliente juntam `Client`, atribuição e
 `Supplement` no mesmo SQL e nunca projetam `Supplement.TrainerNotes`.
+
+### 17.3 Branding e logótipo padrão
+
+`TrainerSettings.LogoUrl` e `LogoPublicId` representam exclusivamente media
+personalizado do trainer. Ambos são nullable. Null significa que não existe
+logótipo personalizado e que o frontend deve apresentar o asset padrão do PT
+Manager incluído na própria aplicação.
+
+O backend não conhece a localização desse asset, não devolve uma URL global e
+não cria um registo Cloudinary para ele. ReplaceLogo guarda a URL e o public ID
+personalizados. RemoveLogo limpa ambos e agenda apenas a eliminação do media
+anterior. As leituras de settings do trainer e branding do cliente projetam
+`LogoUrl` sem `COALESCE`; uma DTO válida com `LogoUrl = null` é sucesso.
+
+### 17.4 Vídeos de exercícios e moderação futura
+
+Até ao fim do Lote 3E, `Exercise.VideoUrl` continua a representar apenas uma
+URL HTTPS externa. O backend valida formato absoluto e comprimento, mas não
+descarrega o recurso, não o classifica como tecnicamente verificado e não
+garante disponibilidade, integridade ou adequação do conteúdo. Uma URL externa
+nunca é equivalente a um upload gerido pela aplicação.
+
+O upload gerido de vídeo fica planeado como vertical slice do Sprint 5B, depois
+da migration consolidada do Lote 3F, da autenticação e dos contratos HTTP do
+Sprint 4 e da integração base do Cloudinary no Sprint 5A. Os limites concretos
+de tamanho, duração, resolução, codecs e quotas são decisões de produto a
+fechar antes desse slice; não são antecipados no schema nem no código atual.
+
+O desenho futuro deve:
+
+1. Autorizar o trainer e confirmar o ownership do exercício sem aceitar
+   `trainer_id` do cliente.
+2. Usar storage privado, identificadores gerados pelo servidor e acesso por URL
+   assinada de curta duração.
+3. Preferir upload direto do browser para o storage através de autorização
+   limitada emitida pelo backend; a finalização confirma no fornecedor o asset,
+   o tamanho real e a integridade antes de o considerar processável.
+4. Validar extensão permitida, MIME declarado e estrutura real do container,
+   incluindo codec, duração e resolução. Nenhum destes sinais é suficiente
+   isoladamente.
+5. Processar o vídeo de forma assíncrona através dos jobs duráveis existentes,
+   com timeouts, limites de recursos, retry apenas para falhas transitórias e
+   limpeza de uploads abandonados.
+6. Aplicar rate limiting por ator e quotas de negócio persistidas em PostgreSQL;
+   Redis nunca é a fonte de verdade de limites associados ao plano comercial.
+7. Representar o lifecycle técnico com `Pending`, `Processing`, `Ready`,
+   `Rejected` e `Failed`. `Ready` significa apenas validação técnica concluída.
+8. Manter o nome original fora do identificador e do path do storage. Se for
+   conservado como metadata, é tratado como input não confiável.
+9. Manter assets em quarentena privada até à validação. Antivírus e scanning
+   adicional são avaliados quando a infraestrutura e o risco o justificarem.
+
+A moderação automática de nudez, conteúdo sexual, violência, armas ou
+relevância para fitness não pertence ao Sprint 5B nem ao MVP atual. Quando
+existir política de conteúdo, processo de revisão humana, orçamento e fornecedor
+escolhido, a Application define uma porta específica de moderação e a
+Infrastructure fornece o adaptador concreto. O Domain e a lógica de negócio não
+dependem de Google, AWS, Azure ou outro fornecedor.
+
+O resultado de moderação é uma dimensão separada do estado técnico e deve poder
+representar `Approved`, `Rejected` e `ReviewRequired`. A interface, semelhante a
+`IVideoModerationService`, só é criada com o primeiro consumidor real, porque os
+fornecedores podem exigir contratos síncronos, jobs assíncronos ou callbacks
+diferentes. Não são criados agora serviços fictícios, SDKs de AI ou chamadas
+externas apenas para antecipar essa integração.
+
+### 17.5 Moderação administrativa de catálogos privados
+
+`IsActive` representa exclusivamente a decisão do proprietário sobre a
+disponibilidade do seu `Food` ou `Exercise`. Uma decisão da plataforma usa um
+estado independente, `PlatformEnforcementStatus`, com `Allowed` e `Blocked`.
+O trainer não pode escrever esse estado nem remover um bloqueio administrativo.
+
+O superuser pode bloquear e desbloquear, mas não editar os campos funcionais,
+trocar o owner ou executar hard delete de conteúdo privado por este fluxo. Um
+erro plausivelmente acidental deve originar pedido de correção; o bloqueio fica
+reservado a casos restritos de maldade, perigo, fraude deliberada ou violação
+material da política da plataforma. Suspender o utilizador por reincidência é
+uma decisão de segurança separada do estado de cada recurso.
+
+O motivo usa uma allowlist inicial de códigos estáveis:
+`malicious_content`, `dangerous_information`,
+`deliberately_false_information` e `prohibited_content`. Texto livre interno
+não substitui o código e não é exposto nos DTOs funcionais.
+
+O bloqueio tem efeito imediato:
+
+1. Novas referências ao recurso são rejeitadas.
+2. O conteúdo bloqueado deixa de ser apresentado no portal do cliente.
+3. As referências existentes permanecem persistidas para integridade e
+   investigação, sem expor ao cliente o conteúdo proibido.
+4. Um `MealPlan` ou `TrainingPlan` que referencie o recurso é identificado
+   como necessitando de revisão. Esta condição deriva das referências atuais e
+   do estado do recurso; não é persistida como booleano duplicado no plano.
+5. O trainer recebe apenas o motivo adequado para corrigir o plano; notas
+   internas de investigação não são expostas.
+
+O contrato HTTP exato para representar conteúdo indisponível no portal é
+fechado no desenho do Sprint 4B e classificado pela matriz Preserve, Alias ou
+Remove antes de implementar o controller. O contrato nunca pode devolver os
+campos bloqueados ao cliente apenas para preservar a forma antiga do payload.
+
+Block e Unblock são idempotentes para o mesmo estado pedido. Unblock não altera
+`IsActive`; se o trainer tiver arquivado o recurso, este continua arquivado. A
+escrita do estado e da `AdministrativeAuditEntry` é atómica. Uma falha de
+auditoria impede a mudança de estado.
+
+A primeira implementação pertence a um vertical slice Sprint 4B, depois da
+autenticação e das políticas administrativas do Sprint 4A. Inclui uma migration
+EF Core nova gerada a partir do modelo desse slice; não altera migrations
+aplicadas nem aumenta o âmbito da migration consolidada do Lote 3F. Um sistema
+genérico de denúncias, evidência e filas de revisão fica adiado até existir um
+caso real que o justifique.
 
 ## 18. Referências oficiais
 

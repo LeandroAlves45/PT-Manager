@@ -1,4 +1,6 @@
+using Application.Common;
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Features.Training.Exercises.Abstractions;
 using Application.Features.Training.Exercises.Dtos;
 using Application.Pagination;
@@ -21,12 +23,9 @@ public sealed class ListExercisesHandler
         IExerciseQueries exerciseQueries
     )
     {
-        ArgumentNullException.ThrowIfNull(validator);
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(exerciseQueries);
-        _validator = validator;
-        _tenantContext = tenantContext;
-        _exerciseQueries = exerciseQueries;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _exerciseQueries = exerciseQueries ?? throw new ArgumentNullException(nameof(exerciseQueries));
     }
 
     /// <summary>Devolve uma página determinística sem materializar entidades.</summary>
@@ -39,12 +38,12 @@ public sealed class ListExercisesHandler
         if (!validation.IsValid)
             return Result<PageResult<ExerciseDto>>.Failure(validation.ToApplicationError());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<PageResult<ExerciseDto>>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, TrainingErrors.TrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<PageResult<ExerciseDto>>.Failure(actor.Error!);
 
         var page = await _exerciseQueries.ListAsync(
-            string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(),
+            SearchTerm.Normalize(query.Search),
             query.Activity,
             new PageRequest(query.PageNumber, query.PageSize),
             cancellationToken

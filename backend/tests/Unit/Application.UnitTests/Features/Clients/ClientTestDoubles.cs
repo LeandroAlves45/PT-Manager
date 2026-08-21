@@ -20,7 +20,11 @@ internal sealed class StubClock : IClock
 internal sealed class StubTenantContext : ITenantContext
 {
     public Guid? TrainerId { get; init; }
-    public Guid? UserId { get; init; }
+
+    // UserId tem de ser um Guid válido por default: ActorAuthorization.RequireTrainer
+    // passou a exigi-lo (UnauthenticatedUser se ausente). Testes que queiram simular
+    // ausência de identidade continuam a poder fazê-lo com "UserId = null".
+    public Guid? UserId { get; init; } = Guid.NewGuid();
     public string? Role { get; init; } = "trainer";
     public TenantOrigin Origin { get; init; } = TenantOrigin.Http;
     public bool IsAdministrative { get; init; }

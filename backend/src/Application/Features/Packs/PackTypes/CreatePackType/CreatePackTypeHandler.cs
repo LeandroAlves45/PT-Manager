@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Features.Packs.PackTypes.Abstractions;
 using Application.Features.Packs.PackTypes.Dtos;
 using Application.Results;
@@ -23,14 +24,10 @@ public sealed class CreatePackTypeHandler
         IPackTypeStore store
     )
     {
-        ArgumentNullException.ThrowIfNull(validator);
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(store);
-        _validator = validator;
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _store = store;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _store = store ?? throw new ArgumentNullException(nameof(store));
     }
 
     public async Task<Result<PackTypeDto>> HandleAsync(
@@ -42,12 +39,12 @@ public sealed class CreatePackTypeHandler
         if (!validation.IsValid)
             return Result<PackTypeDto>.Failure(validation.ToApplicationError());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<PackTypeDto>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, PackErrors.TrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<PackTypeDto>.Failure(actor.Error!);
 
         var packType = new PackType(
-            tenant.Value,
+            actor.Value.TrainerId,
             command.Name,
             command.SessionCount,
             command.PriceCents,

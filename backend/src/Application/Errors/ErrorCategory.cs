@@ -26,5 +26,7 @@ public enum ErrorCategory
     PaymentRequired,
 
     /// <summary>Uma dependência externa está temporariamente indisponível.</summary>
-    ExternalDependency
+    ExternalDependency,
+    /// <summary>Ocorreu um erro inesperado no servidor.</summary>
+    Internal
 }

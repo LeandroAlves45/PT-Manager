@@ -1,4 +1,6 @@
+using Application.Common;
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Features.Training.TrainingPlans.Abstractions;
 using Application.Features.Training.TrainingPlans.Dtos;
 using Application.Pagination;
@@ -20,13 +22,9 @@ public sealed class ListTrainingPlansHandler
         ITenantContext tenantContext,
         ITrainingPlanQueries queries)
     {
-        ArgumentNullException.ThrowIfNull(validator);
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(queries);
-
-        _validator = validator;
-        _tenantContext = tenantContext;
-        _queries = queries;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _queries = queries ?? throw new ArgumentNullException(nameof(queries));
     }
 
     public async Task<Result<PageResult<TrainingPlanSummaryDto>>> HandleAsync(
@@ -37,13 +35,13 @@ public sealed class ListTrainingPlansHandler
         if (!validation.IsValid)
             return Result<PageResult<TrainingPlanSummaryDto>>.Failure(validation.ToApplicationError());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<PageResult<TrainingPlanSummaryDto>>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, TrainingErrors.TrainingPlanTrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<PageResult<TrainingPlanSummaryDto>>.Failure(actor.Error!);
 
         var result = await _queries.ListAsync(
             query.ClientId,
-            string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(),
+            SearchTerm.Normalize(query.Search),
             query.Activity,
             new PageRequest(query.PageNumber, query.PageSize),
             cancellationToken);

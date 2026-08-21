@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Features.Packs.PackTypes.Abstractions;
 using Application.Features.Packs.PackTypes.Dtos;
 using Application.Results;
@@ -16,10 +17,8 @@ public sealed class GetPackTypeHandler
         IPackTypeQueries queries
     )
     {
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(queries);
-        _tenantContext = tenantContext;
-        _queries = queries;
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _queries = queries ?? throw new ArgumentNullException(nameof(queries));
     }
 
     public async Task<Result<PackTypeDto>> HandleAsync(
@@ -27,12 +26,12 @@ public sealed class GetPackTypeHandler
         CancellationToken cancellationToken
     )
     {
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<PackTypeDto>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, PackErrors.TrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<PackTypeDto>.Failure(actor.Error!);
 
         var packType = await _queries.GetAsync(
-            tenant.Value,
+            actor.Value.TrainerId,
             query.PackTypeId,
             cancellationToken
         );

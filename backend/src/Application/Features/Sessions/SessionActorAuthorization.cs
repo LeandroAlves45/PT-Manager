@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Results;
 
 namespace Application.Features.Sessions;
@@ -8,16 +9,10 @@ internal static class SessionActorAuthorization
 {
     internal static Result<Guid> RequireTrainer(ITenantContext tenantContext)
     {
-        ArgumentNullException.ThrowIfNull(tenantContext);
+        var actor = ActorAuthorization.RequireTrainer(tenantContext, SessionErrors.TrainerOnly);
 
-        var tenant = tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return tenant;
-
-        // O TrainerId identifica o tenant mas não prova que o ator é o personal trainer.
-        if (!string.Equals(tenantContext.Role, "trainer", StringComparison.Ordinal))
-            return Result<Guid>.Failure(SessionErrors.TrainerOnly);
-
-        return tenant;
+        return actor.IsSuccess
+            ? Result<Guid>.Success(actor.Value.TrainerId)
+            : Result<Guid>.Failure(actor.Error!);
     }
 }

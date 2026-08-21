@@ -1,5 +1,5 @@
 using Application.Common.Abstractions;
-using Application.Errors;
+using Application.Common.Authorization;
 using Application.Features.Nutrition.MealPlans.Abstractions;
 using Application.Results;
 
@@ -18,12 +18,9 @@ public sealed class ReactivateMealPlanHandler
         IMealPlanStore mealPlanStore
     )
     {
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(mealPlanStore);
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _mealPlanStore = mealPlanStore;
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _mealPlanStore = mealPlanStore ?? throw new ArgumentNullException(nameof(mealPlanStore));
     }
 
     public async Task<Result> HandleAsync(
@@ -32,27 +29,19 @@ public sealed class ReactivateMealPlanHandler
     )
     {
         if (command.MealPlanId == Guid.Empty)
-            return Result.Failure(CreateMealPlanIdRequiredError());
+            return Result.Failure(NutritionErrors.MealPlanIdRequired());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, NutritionErrors.MealPlanTrainerOnly);
+        if (!actor.IsSuccess)
+            return Result.Failure(actor.Error!);
 
         var outcome = await _mealPlanStore.SetArchivedAsync(
             command.MealPlanId,
-            tenant.Value,
+            actor.Value.TrainerId,
             false,
             _clock.UtcNow,
             cancellationToken
         );
         return outcome.ToTransitionResult();
     }
-
-    private static Error CreateMealPlanIdRequiredError() => Error.Validation([
-        new ValidationError(
-            "MealPlanId",
-            "meal_plan_id_required",
-            "Meal plan ID is required."
-        )
-    ]);
 }

@@ -1,5 +1,5 @@
 using Application.Common.Abstractions;
-using Application.Errors;
+using Application.Common.Authorization;
 using Application.Features.Clients.Abstractions;
 using Application.Features.Clients.Dtos;
 using Application.Results;
@@ -32,22 +32,11 @@ public sealed class GetClientHandler
         ArgumentNullException.ThrowIfNull(query);
 
         if (query.ClientId == Guid.Empty)
-        {
-            return Result<ClientDetailsDto>.Failure(
-                Error.Validation(
-                [
-                    new ValidationError(
-                        "ClientId",
-                        "client_id_required",
-                        "Client ID is required."
-                    )
-                ])
-            );
-        }
+            return Result<ClientDetailsDto>.Failure(ClientErrors.ClientIdRequired());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<ClientDetailsDto>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, ClientErrors.TrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<ClientDetailsDto>.Failure(actor.Error!);
 
         var dto = await _clientQueries.GetDetailsAsync(
             query.ClientId,

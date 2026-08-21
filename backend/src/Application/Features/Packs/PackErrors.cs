@@ -43,4 +43,26 @@ public static class PackErrors
             "Expected end date cannot be before purchase date."
         )
     ]);
+
+    public static readonly Error TrainerOnly = Error.Create(
+        "packs_trainer_only",
+        ErrorCategory.Forbidden,
+        "Only a personal trainer can manage their packs."
+    );
+
+    public static Error PackIdRequired() => Error.Validation([
+        new ValidationError(
+            "PackId",
+            "pack_id_required",
+            "Pack ID is required."
+        )
+    ]);
+
+    public static Error PurchaseDateInFuture() => Error.Validation([
+        new ValidationError(
+            "PurchaseDate",
+            "purchase_date_future",
+            "Purchase date cannot be in the future."
+        )
+    ]);
 }

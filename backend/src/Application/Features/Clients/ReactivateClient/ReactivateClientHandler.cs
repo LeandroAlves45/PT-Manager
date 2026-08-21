@@ -1,5 +1,5 @@
 using Application.Common.Abstractions;
-using Application.Errors;
+using Application.Common.Authorization;
 using Application.Features.Clients.Abstractions;
 using Application.Results;
 
@@ -18,13 +18,9 @@ public sealed class ReactivateClientHandler
         IClock clock,
         IClientStore clientStore)
     {
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(clientStore);
-
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _clientStore = clientStore;
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _clientStore = clientStore ?? throw new ArgumentNullException(nameof(clientStore));
     }
 
     /// <summary>É idempotente quando o cliente já está ativo.</summary>
@@ -35,22 +31,15 @@ public sealed class ReactivateClientHandler
         ArgumentNullException.ThrowIfNull(command);
 
         if (command.ClientId == Guid.Empty)
-            return Result.Failure(Error.Validation(new List<ValidationError>
-            {
-                new ValidationError(
-                    Field: "ClientId",
-                    Code: "client_id_required",
-                    Message: "Client ID is required."
-                )
-            }));
+            return Result.Failure(ClientErrors.ClientIdRequired());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (tenant.IsFailure)
-            return Result.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, ClientErrors.TrainerOnly);
+        if (!actor.IsSuccess)
+            return Result.Failure(actor.Error!);
 
         var outcome = await _clientStore.ReactivateAsync(
             command.ClientId,
-            tenant.Value,
+            actor.Value.TrainerId,
             _clock.UtcNow,
             cancellationToken);
 

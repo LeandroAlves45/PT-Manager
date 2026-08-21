@@ -55,6 +55,38 @@ public sealed class TrainingHandlersTests
         Assert.Equal(0, queries.DetailsCalls);
     }
 
+    [Fact]
+    public async Task CreateTrainingPlan_WrongRole_ReturnsForbiddenWithoutWriting()
+    {
+        // Arrange: ator autenticado do tenant certo, mas role "client".
+        var store = new FakeTrainingPlanStore();
+        var queries = new FakeTrainingPlanQueries();
+        var handler = new CreateTrainingPlanHandler(
+            new CreateTrainingPlanCommandValidator(),
+            new TenantStub(TrainerId, role: "client"),
+            new ClockStub(Now),
+            store,
+            queries);
+
+        // Act
+        var result = await handler.HandleAsync(
+            new CreateTrainingPlanCommand(
+                Guid.NewGuid(),
+                "Plan",
+                null,
+                null,
+                null,
+                new DateOnly(2026, 8, 1),
+                null,
+                EmptyNewStructure()),
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal("training_trainer_only", result.Error!.Code);
+        Assert.Equal(Application.Errors.ErrorCategory.Forbidden, result.Error.Category);
+        Assert.Equal(0, queries.DetailsCalls);
+    }
+
     [Theory]
     [InlineData(TrainingPlanStoreResult.Status.StructureHasHistory,
         "training_structure_has_history")]
@@ -176,11 +208,15 @@ public sealed class TrainingHandlersTests
         public DateTime UtcNow { get; } = utcNow;
     }
 
-    private sealed class TenantStub(Guid trainerId) : ITenantContext
+    private sealed class TenantStub(
+        Guid trainerId,
+        Guid? userId = null,
+        string? role = "trainer"
+    ) : ITenantContext
     {
         public Guid? TrainerId { get; } = trainerId;
-        public Guid? UserId => null;
-        public string? Role => "trainer";
+        public Guid? UserId { get; } = userId ?? Guid.NewGuid();
+        public string? Role { get; } = role;
         public TenantOrigin Origin => TenantOrigin.Http;
         public bool IsAdministrative => false;
     }

@@ -24,16 +24,11 @@ public sealed class SubmitCheckInResponseHandler
         ICheckInStore store
     )
     {
-        ArgumentNullException.ThrowIfNull(validator);
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(timeZoneProvider);
-        ArgumentNullException.ThrowIfNull(store);
-        _validator = validator;
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _timeZoneProvider = timeZoneProvider;
-        _store = store;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _timeZoneProvider = timeZoneProvider ?? throw new ArgumentNullException(nameof(timeZoneProvider));
+        _store = store ?? throw new ArgumentNullException(nameof(store));
     }
 
     public async Task<Result<CheckInDto>> HandleAsync(

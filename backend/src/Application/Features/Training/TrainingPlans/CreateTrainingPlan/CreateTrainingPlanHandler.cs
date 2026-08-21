@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Features.Training.TrainingPlans.Abstractions;
 using Application.Features.Training.TrainingPlans.Dtos;
 using Application.Results;
@@ -23,17 +24,11 @@ public sealed class CreateTrainingPlanHandler
         ITrainingPlanStore store,
         ITrainingPlanQueries queries)
     {
-        ArgumentNullException.ThrowIfNull(validator);
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(store);
-        ArgumentNullException.ThrowIfNull(queries);
-
-        _validator = validator;
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _store = store;
-        _queries = queries;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _store = store ?? throw new ArgumentNullException(nameof(store));
+        _queries = queries ?? throw new ArgumentNullException(nameof(queries));
     }
 
     public async Task<Result<TrainingPlanDetailsDto>> HandleAsync(
@@ -44,9 +39,9 @@ public sealed class CreateTrainingPlanHandler
         if (!validation.IsValid)
             return Result<TrainingPlanDetailsDto>.Failure(validation.ToApplicationError());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<TrainingPlanDetailsDto>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, TrainingErrors.TrainingPlanTrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<TrainingPlanDetailsDto>.Failure(actor.Error!);
 
         var model = new CreateTrainingPlanWriteModel(
             command.ClientId,
@@ -59,7 +54,7 @@ public sealed class CreateTrainingPlanHandler
             command.Structure);
 
         var outcome = await _store.CreateAsync(
-            tenant.Value,
+            actor.Value.TrainerId,
             model,
             _clock.UtcNow,
             cancellationToken);

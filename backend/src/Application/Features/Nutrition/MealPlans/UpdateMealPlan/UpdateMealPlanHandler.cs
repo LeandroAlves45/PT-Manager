@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Features.Nutrition.Calculations;
 using Application.Features.Nutrition.MealPlans.Abstractions;
 using Application.Features.Nutrition.MealPlans.Dtos;
@@ -26,16 +27,11 @@ public sealed class UpdateMealPlanHandler
         IMealPlanQueries mealPlanQueries
     )
     {
-        ArgumentNullException.ThrowIfNull(validator);
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(mealPlanStore);
-        ArgumentNullException.ThrowIfNull(mealPlanQueries);
-        _validator = validator;
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _mealPlanStore = mealPlanStore;
-        _mealPlanQueries = mealPlanQueries;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _mealPlanStore = mealPlanStore ?? throw new ArgumentNullException(nameof(mealPlanStore));
+        _mealPlanQueries = mealPlanQueries ?? throw new ArgumentNullException(nameof(mealPlanQueries));
     }
 
     /// <summary>Valida e reconcilia atomicamente a representação final do plano.</summary>
@@ -51,9 +47,9 @@ public sealed class UpdateMealPlanHandler
         if (!validation.IsValid)
             return Result<MealPlanDetailsDto>.Failure(validation.ToApplicationError());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<MealPlanDetailsDto>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, NutritionErrors.MealPlanTrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<MealPlanDetailsDto>.Failure(actor.Error!);
 
         var now = _clock.UtcNow;
         var replacement = command.Calculation is null
@@ -71,7 +67,7 @@ public sealed class UpdateMealPlanHandler
         );
 
         var outcome = await _mealPlanStore.UpdateAsync(
-            tenant.Value,
+            actor.Value.TrainerId,
             model,
             now,
             cancellationToken

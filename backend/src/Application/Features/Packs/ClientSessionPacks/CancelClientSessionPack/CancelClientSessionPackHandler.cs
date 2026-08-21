@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Features.Packs.ClientSessionPacks.Abstractions;
 using Application.Results;
 
@@ -17,12 +18,9 @@ public sealed class CancelClientSessionPackHandler
         IClientSessionPackStore store
     )
     {
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(store);
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _store = store;
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _store = store ?? throw new ArgumentNullException(nameof(store));
     }
 
     public async Task<Result> HandleAsync(
@@ -30,12 +28,12 @@ public sealed class CancelClientSessionPackHandler
         CancellationToken cancellationToken
     )
     {
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, PackErrors.TrainerOnly);
+        if (!actor.IsSuccess)
+            return Result.Failure(actor.Error!);
 
         var outcome = await _store.CancelAsync(
-            tenant.Value,
+            actor.Value.TrainerId,
             command.ClientSessionPackId,
             _clock.UtcNow,
             cancellationToken

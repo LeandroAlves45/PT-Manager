@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Features.Nutrition.Foods.Abstractions;
 using Application.Features.Nutrition.Foods.Dtos;
 using Application.Results;
@@ -22,14 +23,10 @@ public sealed class UpdateFoodHandler
         IFoodStore foodStore
     )
     {
-        ArgumentNullException.ThrowIfNull(validator);
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(foodStore);
-        _validator = validator;
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _foodStore = foodStore;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _foodStore = foodStore ?? throw new ArgumentNullException(nameof(foodStore));
     }
 
     public async Task<Result<FoodDto>> HandleAsync(
@@ -41,13 +38,13 @@ public sealed class UpdateFoodHandler
         if (!validation.IsValid)
             return Result<FoodDto>.Failure(validation.ToApplicationError());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<FoodDto>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, NutritionErrors.TrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<FoodDto>.Failure(actor.Error!);
 
         var outcome = await _foodStore.UpdateAsync(
             command.FoodId,
-            tenant.Value,
+            actor.Value.TrainerId,
             command.Name,
             command.Description,
             command.Protein,

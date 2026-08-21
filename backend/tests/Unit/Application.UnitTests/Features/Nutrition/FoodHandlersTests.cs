@@ -124,6 +124,28 @@ public sealed class FoodHandlersTests
         Assert.Equal(0, store.AddCalls);
     }
 
+    [Fact]
+    public async Task Create_WrongRole_ReturnsForbiddenWithoutCallingStore()
+    {
+        // Arrange: ator autenticado do tenant certo, mas role "client".
+        var store = new FakeFoodStore();
+        var handler = new CreateFoodHandler(
+            new CreateFoodCommandValidator(),
+            new TenantContextStub(TrainerId, role: "client"),
+            new ClockStub(Now),
+            store);
+
+        // Act
+        var result = await handler.HandleAsync(
+            ValidCreate(),
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal("food_trainer_only", result.Error!.Code);
+        Assert.Equal(Application.Errors.ErrorCategory.Forbidden, result.Error.Category);
+        Assert.Equal(0, store.AddCalls);
+    }
+
     private static CreateFoodHandler CreateHandler(FakeFoodStore store, Guid? trainerId) => new(
         new CreateFoodCommandValidator(),
         new TenantContextStub(trainerId),
@@ -184,11 +206,15 @@ public sealed class FoodHandlersTests
         public DateTime UtcNow { get; } = utcNow;
     }
 
-    private sealed class TenantContextStub(Guid? trainerId) : ITenantContext
+    private sealed class TenantContextStub(
+        Guid? trainerId,
+        Guid? userId = null,
+        string? role = "trainer"
+    ) : ITenantContext
     {
         public Guid? TrainerId { get; } = trainerId;
-        public Guid? UserId => null;
-        public string? Role => "trainer";
+        public Guid? UserId { get; } = userId ?? Guid.NewGuid();
+        public string? Role { get; } = role;
         public TenantOrigin Origin => TenantOrigin.Http;
         public bool IsAdministrative => false;
     }

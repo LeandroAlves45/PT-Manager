@@ -98,4 +98,60 @@ public static class TrainingErrors
         ErrorCategory.Conflict,
         "The client already has an active training plan."
     );
+
+    public static readonly Error TrainerOnly = Error.Create(
+        "exercise_trainer_only",
+        ErrorCategory.Forbidden,
+        "Only a personal trainer can manage private exercises."
+    );
+
+    public static readonly Error AdministratorOnly = Error.Create(
+        "exercise_administrator_only",
+        ErrorCategory.Forbidden,
+        "Only an authorized superuser can manage global exercises."
+    );
+
+    public static readonly Error ExerciseInactive = Error.Create(
+        "exercise_inactive",
+        ErrorCategory.Conflict,
+        "An archived exercise cannot be modified. Reactivate it first."
+    );
+
+    public static readonly Error GlobalExerciseHasReferences = Error.Create(
+        "global_exercise_has_references",
+        ErrorCategory.Conflict,
+        "A referenced global exercise cannot be deleted. Archive it instead."
+    );
+
+    public static readonly Error GlobalExerciseReferenced = Error.Create(
+        "global_exercise_referenced",
+        ErrorCategory.Conflict,
+        "A referenced global exercise cannot be updated. Historical plans must not change."
+    );
+
+    public static readonly Error TrainingPlanTrainerOnly = Error.Create(
+        "training_trainer_only",
+        ErrorCategory.Forbidden,
+        "Only a personal trainer can manage their training plans.");
+
+    public static readonly Error ExerciseSetLogTrainerOnly = Error.Create(
+        "exercise_set_log_trainer_only",
+        ErrorCategory.Forbidden,
+        "Only a personal trainer can manage exercise set logs.");
+
+    public static Error ExerciseIdRequired() => Error.Validation([
+        new ValidationError(
+            "ExerciseId",
+            "exercise_id_required",
+            "Exercise ID is required."
+        )
+    ]);
+
+    public static Error TrainingPlanIdRequired() => Error.Validation([
+        new ValidationError(
+            "TrainingPlanId",
+            "training_plan_id_required",
+            "Training plan ID is required."
+        )
+    ]);
 }

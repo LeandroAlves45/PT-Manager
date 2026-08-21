@@ -23,7 +23,6 @@ public sealed class Food
     public decimal Kcal { get; private set; }
     public decimal? Fiber { get; private set; }
     public bool IsActive { get; private set; }
-    public bool IsDeleted { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -53,7 +52,6 @@ public sealed class Food
         Fats = fats;
         Fiber = fiber;
         IsActive = true;
-        IsDeleted = false;
         CreatedAt = now;
         UpdatedAt = now;
     }
@@ -69,7 +67,6 @@ public sealed class Food
         DateTime now
     )
     {
-        EnsureNotDeleted();
         var normalizedName = name?.Trim() ?? string.Empty;
         ValidateParametersFood(normalizedName, protein, carbs, fats, fiber);
 
@@ -85,21 +82,14 @@ public sealed class Food
     /// <summary>Controla a disponibilidade sem eliminar referências históricas.</summary>
     public void SetActive(bool isActive, DateTime now)
     {
-        EnsureNotDeleted();
+        if (IsActive == isActive)
+            return;
         IsActive = isActive;
         UpdatedAt = now;
     }
 
-    /// <summary>Marca o alimento como apagado (soft delete).</summary>
-    public void SoftDelete(DateTime now)
-    {
-        IsActive = false;
-        IsDeleted = true;
-        UpdatedAt = now;
-    }
-
     /// <summary>Valida os parâmetros do alimento.</summary>
-    private void ValidateParametersFood(
+    private static void ValidateParametersFood(
         string name,
         decimal protein,
         decimal carbs,
@@ -123,10 +113,4 @@ public sealed class Food
 
     private static string? NormalizeOptional(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-
-    private void EnsureNotDeleted()
-    {
-        if (IsDeleted)
-            throw new DomainException("Cannot modify a deleted food.");
-    }
 }

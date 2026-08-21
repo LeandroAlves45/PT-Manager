@@ -1,3 +1,4 @@
+using Application.Common;
 using Application.Common.Abstractions;
 using Application.Features.Supplements.Abstractions;
 using Application.Features.Supplements.Dtos;
@@ -39,7 +40,7 @@ public sealed class ListGlobalSupplementsHandler
             return Result<PageResult<GlobalSupplementDto>>.Failure(actor.Error!);
 
         var page = await _queries.ListAsync(
-            string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(),
+            SearchTerm.Normalize(query.Search),
             query.Activity,
             new PageRequest(query.PageNumber, query.PageSize),
             cancellationToken);

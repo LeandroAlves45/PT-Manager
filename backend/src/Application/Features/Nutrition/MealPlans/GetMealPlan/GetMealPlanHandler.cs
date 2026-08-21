@@ -1,5 +1,5 @@
 using Application.Common.Abstractions;
-using Application.Errors;
+using Application.Common.Authorization;
 using Application.Features.Nutrition.MealPlans.Abstractions;
 using Application.Features.Nutrition.MealPlans.Dtos;
 using Application.Results;
@@ -17,10 +17,8 @@ public sealed class GetMealPlanHandler
         IMealPlanQueries mealPlanQueries
     )
     {
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(mealPlanQueries);
-        _tenantContext = tenantContext;
-        _mealPlanQueries = mealPlanQueries;
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _mealPlanQueries = mealPlanQueries ?? throw new ArgumentNullException(nameof(mealPlanQueries));
     }
 
     public async Task<Result<MealPlanDetailsDto>> HandleAsync(
@@ -29,19 +27,11 @@ public sealed class GetMealPlanHandler
     )
     {
         if (query.MealPlanId == Guid.Empty)
-        {
-            return Result<MealPlanDetailsDto>.Failure(Error.Validation([
-                new ValidationError(
-                    "MealPlanId",
-                    "meal_plan_id_required",
-                    "Meal plan ID is required."
-                )
-            ]));
-        }
+            return Result<MealPlanDetailsDto>.Failure(NutritionErrors.MealPlanIdRequired());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<MealPlanDetailsDto>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, NutritionErrors.MealPlanTrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<MealPlanDetailsDto>.Failure(actor.Error!);
 
         var details = await _mealPlanQueries.GetDetailsAsync(query.MealPlanId, cancellationToken);
 

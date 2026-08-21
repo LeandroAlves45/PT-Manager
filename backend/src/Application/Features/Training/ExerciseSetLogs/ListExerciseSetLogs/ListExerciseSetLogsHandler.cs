@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Features.Training.ExerciseSetLogs.Abstractions;
 using Application.Features.Training.ExerciseSetLogs.Dtos;
 using Application.Pagination;
@@ -20,12 +21,9 @@ public sealed class ListExerciseSetLogsHandler
         ITenantContext tenantContext,
         IExerciseSetLogQueries queries)
     {
-        ArgumentNullException.ThrowIfNull(validator);
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(queries);
-        _validator = validator;
-        _tenantContext = tenantContext;
-        _queries = queries;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _queries = queries ?? throw new ArgumentNullException(nameof(queries));
     }
 
     public async Task<Result<PageResult<ClientExerciseSetLogDto>>> HandleAsync(
@@ -36,9 +34,9 @@ public sealed class ListExerciseSetLogsHandler
         if (!validation.IsValid)
             return Result<PageResult<ClientExerciseSetLogDto>>.Failure(validation.ToApplicationError());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<PageResult<ClientExerciseSetLogDto>>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, TrainingErrors.ExerciseSetLogTrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<PageResult<ClientExerciseSetLogDto>>.Failure(actor.Error!);
 
         var page = await _queries.ListAsync(
             query.ClientId,

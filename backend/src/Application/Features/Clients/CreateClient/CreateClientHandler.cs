@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Features.Clients.Abstractions;
 using Application.Features.Clients.Dtos;
 using Application.Results;
@@ -26,15 +27,10 @@ public sealed class CreateClientHandler
         IClock clock,
         IClientStore clientStore)
     {
-        ArgumentNullException.ThrowIfNull(validator);
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(clientStore);
-
-        _validator = validator;
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _clientStore = clientStore;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _clientStore = clientStore ?? throw new ArgumentNullException(nameof(clientStore));
     }
 
     /// <summary>Valida, constrói e persiste cliente e contador numa transação.</summary>
@@ -46,13 +42,12 @@ public sealed class CreateClientHandler
         CancellationToken cancellationToken)
     {
         var validation = await _validator.ValidateAsync(command, cancellationToken);
-
         if (!validation.IsValid)
             return Result<ClientDetailsDto>.Failure(validation.ToApplicationError());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (tenant.IsFailure)
-            return Result<ClientDetailsDto>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, ClientErrors.TrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<ClientDetailsDto>.Failure(actor.Error!);
 
         var now = _clock.UtcNow;
         var today = DateOnly.FromDateTime(now);
@@ -60,7 +55,7 @@ public sealed class CreateClientHandler
         var sex = BiologicalSex.FromString(command.Sex);
 
         var client = new Client(
-            tenant.Value,
+            actor.Value.TrainerId,
             command.Name,
             command.ContactEmail,
             command.Phone,
@@ -74,7 +69,7 @@ public sealed class CreateClientHandler
 
         var outcome = await _clientStore.CreateWithSubscriptionSlotAsync(
             client,
-            tenant.Value,
+            actor.Value.TrainerId,
             now,
             cancellationToken);
 

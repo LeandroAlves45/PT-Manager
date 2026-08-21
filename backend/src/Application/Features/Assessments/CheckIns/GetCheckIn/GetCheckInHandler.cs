@@ -20,14 +20,10 @@ public sealed class GetCheckInHandler
         ICheckInQueries queries
     )
     {
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(timeZoneProvider);
-        ArgumentNullException.ThrowIfNull(queries);
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _timeZoneProvider = timeZoneProvider;
-        _queries = queries;
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _timeZoneProvider = timeZoneProvider ?? throw new ArgumentNullException(nameof(timeZoneProvider));
+        _queries = queries ?? throw new ArgumentNullException(nameof(queries));
     }
 
     public async Task<Result<CheckInDto>> HandleAsync(

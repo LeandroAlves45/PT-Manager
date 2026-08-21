@@ -47,6 +47,27 @@ public sealed class ClientHandlersTests
         Assert.Equal(0, store.CreateCalls);
     }
 
+    [Fact]
+    public async Task Create_WrongRole_ReturnsForbiddenWithoutCallingStore()
+    {
+        // Arrange: ator autenticado (UserId válido) e com tenant resolvido,
+        // mas com role "client" em vez de "trainer" — cenário nunca antes
+        // coberto por nenhum teste desta feature.
+        var store = new FakeClientStore();
+        var tenant = new StubTenantContext { TrainerId = TrainerId, Role = "client" };
+        var handler = CreateCreateHandler(store, tenant);
+
+        // Act
+        var result = await handler.HandleAsync(
+            ClientTestData.CreateValidCommand(),
+            CancellationToken.None);
+
+        // Assert
+        Assert.Equal("clients_trainer_only", result.Error!.Code);
+        Assert.Equal(ErrorCategory.Forbidden, result.Error.Category);
+        Assert.Equal(0, store.CreateCalls);
+    }
+
     [Theory]
     [InlineData(CreateClientStoreOutcome.DuplicateEmail, "client_email_already_exists", ErrorCategory.Conflict)]
     [InlineData(CreateClientStoreOutcome.DuplicatePhone, "client_phone_already_exists", ErrorCategory.Conflict)]

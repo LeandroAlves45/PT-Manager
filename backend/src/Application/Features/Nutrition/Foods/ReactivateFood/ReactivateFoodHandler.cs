@@ -1,5 +1,5 @@
 using Application.Common.Abstractions;
-using Application.Errors;
+using Application.Common.Authorization;
 using Application.Features.Nutrition.Foods.Abstractions;
 using Application.Results;
 
@@ -18,12 +18,9 @@ public sealed class ReactivateFoodHandler
         IFoodStore foodStore
     )
     {
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(foodStore);
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _foodStore = foodStore;
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _foodStore = foodStore ?? throw new ArgumentNullException(nameof(foodStore));
     }
 
     public async Task<Result> HandleAsync(
@@ -32,15 +29,15 @@ public sealed class ReactivateFoodHandler
     )
     {
         if (command.FoodId == Guid.Empty)
-            return Result.Failure(CreateFoodIdRequiredError());
+            return Result.Failure(NutritionErrors.FoodIdRequired());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, NutritionErrors.TrainerOnly);
+        if (!actor.IsSuccess)
+            return Result.Failure(actor.Error!);
 
         var outcome = await _foodStore.SetActiveAsync(
             command.FoodId,
-            tenant.Value,
+            actor.Value.TrainerId,
             true,
             _clock.UtcNow,
             cancellationToken
@@ -48,8 +45,4 @@ public sealed class ReactivateFoodHandler
 
         return outcome.ToTransitionResult();
     }
-
-    private static Error CreateFoodIdRequiredError() => Error.Validation([
-        new ValidationError("FoodId", "food_id_required", "Food ID is required.")
-    ]);
 }

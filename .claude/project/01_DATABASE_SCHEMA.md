@@ -180,12 +180,11 @@ Branding + configurações por trainer.
 CREATE TABLE trainer_settings (
     id UUID PRIMARY KEY,
     trainer_id UUID NOT NULL UNIQUE,
-    app_name VARCHAR(255) DEFAULT 'PT Manager',
-    logo_url VARCHAR(500),
-    logo_public_id VARCHAR(500), -- Cloudinary public_id para deletar depois
-    primary_color VARCHAR(7) DEFAULT '#000000',
-    body_color VARCHAR(7) DEFAULT '#FFFFFF',
-    background_image_url VARCHAR(500),
+    app_name VARCHAR(50) NOT NULL DEFAULT 'PT Manager',
+    logo_url VARCHAR(500), -- NULL: frontend usa o asset padrão do PT Manager
+    logo_public_id VARCHAR(500), -- NULL sem media personalizado do trainer
+    primary_color VARCHAR(7), -- NULL: frontend usa a cor padrão
+    body_color VARCHAR(7), -- NULL: frontend usa a cor padrão
     phone VARCHAR(20),
     address VARCHAR(500),
     city VARCHAR(255),
@@ -198,6 +197,10 @@ CREATE TABLE trainer_settings (
 
 CREATE INDEX idx_settings_trainer ON trainer_settings(trainer_id);
 ```
+
+`logo_url` nunca recebe a localização do asset padrão da aplicação. Apenas
+media personalizado do trainer ocupa `logo_url` e `logo_public_id`. Isto mantém
+o asset global fora do ciclo Cloudinary, RemoveLogo e outbox.
 
 ### 5. `refresh_tokens`
 
@@ -271,6 +274,9 @@ CREATE TABLE foods (
         protein * 4 + carbs * 4 + fats * 9
     ) STORED,
     fiber DECIMAL(10, 2),
+    platform_enforcement_status VARCHAR(20) NOT NULL DEFAULT 'allowed',
+    platform_enforcement_reason_code VARCHAR(50),
+    platform_enforced_at TIMESTAMPTZ,
     is_active BOOLEAN NOT NULL DEFAULT true,
     is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -282,12 +288,39 @@ CREATE TABLE foods (
         AND carbs BETWEEN 0 AND 100
         AND fats BETWEEN 0 AND 100
         AND protein + carbs + fats <= 100
-        AND (fiber IS NULL OR fiber >= 0))
+        AND (fiber IS NULL OR fiber >= 0)),
+    CONSTRAINT ck_foods_platform_enforcement_status CHECK (
+        platform_enforcement_status IN ('allowed', 'blocked')),
+    CONSTRAINT ck_foods_platform_enforcement_reason CHECK (
+        platform_enforcement_reason_code IS NULL OR
+        platform_enforcement_reason_code IN (
+            'malicious_content',
+            'dangerous_information',
+            'deliberately_false_information',
+            'prohibited_content')),
+    CONSTRAINT ck_foods_platform_enforcement_state CHECK (
+        (platform_enforcement_status = 'allowed'
+            AND platform_enforcement_reason_code IS NULL
+            AND platform_enforced_at IS NULL)
+        OR
+        (platform_enforcement_status = 'blocked'
+            AND platform_enforcement_reason_code IS NOT NULL
+            AND btrim(platform_enforcement_reason_code) <> ''
+            AND platform_enforced_at IS NOT NULL)),
+    CONSTRAINT ck_foods_global_not_platform_blocked CHECK (
+        owner_trainer_id IS NOT NULL OR platform_enforcement_status = 'allowed')
 );
 
 CREATE INDEX idx_foods_name ON foods(name);
 CREATE INDEX idx_foods_trainer ON foods(owner_trainer_id);
 ```
+
+`platform_enforcement_status` é independente de `is_active`: o primeiro é
+controlado apenas por moderação administrativa e o segundo pelo owner. Os
+valores PostgreSQL `allowed` e `blocked` correspondem a `Allowed` e `Blocked` no
+Domain. O ator fica na `administrative_audit_entries`, escrita atomicamente com
+a mudança, evitando duplicá-lo na linha do alimento. Catálogo global continua a
+usar os casos administrativos próprios de Archive, Reactivate e Delete.
 
 ### 8. `supplements`
 
@@ -534,17 +567,45 @@ CREATE TABLE exercises (
     equipment VARCHAR(255),
     difficulty_level VARCHAR(50), -- 'beginner', 'intermediate', 'advanced'
     video_url VARCHAR(500),
+    platform_enforcement_status VARCHAR(20) NOT NULL DEFAULT 'allowed',
+    platform_enforcement_reason_code VARCHAR(50),
+    platform_enforced_at TIMESTAMPTZ,
     is_active BOOLEAN NOT NULL DEFAULT true,
     is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT ck_exercises_platform_enforcement_status CHECK (
+        platform_enforcement_status IN ('allowed', 'blocked')),
+    CONSTRAINT ck_exercises_platform_enforcement_reason CHECK (
+        platform_enforcement_reason_code IS NULL OR
+        platform_enforcement_reason_code IN (
+            'malicious_content',
+            'dangerous_information',
+            'deliberately_false_information',
+            'prohibited_content')),
+    CONSTRAINT ck_exercises_platform_enforcement_state CHECK (
+        (platform_enforcement_status = 'allowed'
+            AND platform_enforcement_reason_code IS NULL
+            AND platform_enforced_at IS NULL)
+        OR
+        (platform_enforcement_status = 'blocked'
+            AND platform_enforcement_reason_code IS NOT NULL
+            AND btrim(platform_enforcement_reason_code) <> ''
+            AND platform_enforced_at IS NOT NULL)),
+    CONSTRAINT ck_exercises_global_not_platform_blocked CHECK (
+        owner_trainer_id IS NOT NULL OR platform_enforcement_status = 'allowed')
 );
 
 CREATE INDEX idx_exercises_name ON exercises(name);
 CREATE INDEX idx_exercises_trainer ON exercises(owner_trainer_id);
 ```
+
+As regras de enforcement são iguais às de `foods`. Um exercício privado
+bloqueado preserva as referências existentes, mas não pode entrar em novos
+planos e o seu conteúdo deixa de ser projetado no portal do cliente. Não é
+criado um índice específico antes de existir uma query medida que o justifique.
 
 ### 16. `training_plan_day_exercises`
 
@@ -1117,6 +1178,13 @@ CREATE INDEX idx_administrative_audit_actor_time
 
 Entradas só podem ser adicionadas num contexto `superuser` com `UserId`
 autenticado e `IsAdministrative`. Update e Delete são rejeitados pelo interceptor.
+
+A moderação privada usa as ações `food_platform_blocked`,
+`food_platform_unblocked`, `exercise_platform_blocked` e
+`exercise_platform_unblocked`. O snapshot da decisão inclui o estado anterior,
+o novo estado e o `platform_enforcement_reason_code`; notas internas ou
+evidência sensível não são copiadas para DTOs funcionais. A auditoria e a
+mudança de estado pertencem à mesma transação PostgreSQL.
 
 ---
 

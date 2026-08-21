@@ -1,5 +1,5 @@
 using Application.Common.Abstractions;
-using Application.Errors;
+using Application.Common.Authorization;
 using Application.Features.Clients;
 using Application.Features.Packs.ClientSessionPacks.Abstractions;
 using Application.Features.Packs.ClientSessionPacks.Dtos;
@@ -26,17 +26,11 @@ public sealed class AssignClientSessionPackHandler
         IClientSessionPackStore store
     )
     {
-        ArgumentNullException.ThrowIfNull(validator);
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(timeZoneProvider);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(store);
-
-        _validator = validator;
-        _tenantContext = tenantContext;
-        _timeZoneProvider = timeZoneProvider;
-        _clock = clock;
-        _store = store;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _timeZoneProvider = timeZoneProvider ?? throw new ArgumentNullException(nameof(timeZoneProvider));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _store = store ?? throw new ArgumentNullException(nameof(store));
     }
 
     public async Task<Result<ClientSessionPackDto>> HandleAsync(
@@ -48,13 +42,13 @@ public sealed class AssignClientSessionPackHandler
         if (!validation.IsValid)
             return Result<ClientSessionPackDto>.Failure(validation.ToApplicationError());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<ClientSessionPackDto>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, PackErrors.TrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<ClientSessionPackDto>.Failure(actor.Error!);
 
         var now = _clock.UtcNow;
         var timezone = await _timeZoneProvider.GetRequiredAsync(
-            tenant.Value,
+            actor.Value.TrainerId,
             cancellationToken
         );
         var localToday = DateOnly.FromDateTime(
@@ -62,19 +56,10 @@ public sealed class AssignClientSessionPackHandler
         );
 
         if (command.PurchaseDate > localToday)
-            return Result<ClientSessionPackDto>.Failure(
-                Error.Validation(
-                [
-                    new ValidationError(
-                        "PurchaseDate",
-                        "purchase_date_future",
-                        "Purchase date cannot be in the future."
-                    )
-                ])
-            );
+            return Result<ClientSessionPackDto>.Failure(PackErrors.PurchaseDateInFuture());
 
         var outcome = await _store.AssignAsync(
-            tenant.Value,
+            actor.Value.TrainerId,
             command.ClientId,
             command.PackTypeId,
             command.PurchaseDate,

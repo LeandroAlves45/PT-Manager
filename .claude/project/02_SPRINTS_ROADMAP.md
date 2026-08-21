@@ -316,10 +316,13 @@ Handlers explícitos por caso de uso, DTOs, validação, mapping manual.
 
 ---
 
-## SPRINT 4: API Controllers + Auth (Semanas 7-8)
+## SPRINT 4: API Controllers, Auth e Moderação Administrativa (Semanas 7-8)
 
 ### Objectivo
-Endpoints HTTP, ASP.NET Core Identity, middleware, compatibilidade de contrato.
+O Sprint 4A entrega endpoints HTTP, ASP.NET Core Identity, middleware e
+compatibilidade de contrato. Depois de autenticação e políticas administrativas
+estarem materializadas, o Sprint 4B adiciona o vertical slice restrito de
+moderação de alimentos e exercícios privados.
 
 ### Tarefas
 
@@ -351,6 +354,7 @@ Endpoints HTTP, ASP.NET Core Identity, middleware, compatibilidade de contrato.
    SupplementsController   /supplements, /client-supplement-assignments
    SessionsController      /sessions
    AdminController         /admin/trainers, /admin/health (superuser only)
+   AdminContentModerationController /admin/content-moderation (superuser + contexto administrativo)
    InternalJobsController  /api/internal/jobs/dispatch (QStash, assinatura validada, sem auth de utilizador)
    ```
 
@@ -358,9 +362,29 @@ Endpoints HTTP, ASP.NET Core Identity, middleware, compatibilidade de contrato.
    - Antes de implementar cada controller, classificar os endpoints Python correspondentes como Preserve / Alias / Remove (`00_ARCHITECTURE.md §4.2`)
    - Contract tests cobrindo os casos duvidosos (trailing slash, PUT vs PATCH, prefixos de signup)
 
-6. **Testes Integração (`Api.FunctionalTests/`)**
+6. **Moderação administrativa, Sprint 4B**
+   - Casos de uso dedicados para Block e Unblock de `Food` e `Exercise`
+     privados; sem edição funcional, mudança de owner ou hard delete
+   - `PlatformEnforcementStatus` independente de `IsActive`, com motivo
+     estruturado obrigatório em Block e validado por allowlist
+   - Bypass de query filters apenas no store administrativo e apenas por ID
+   - Estado e `AdministrativeAuditEntry` persistidos na mesma transação
+   - Novas associações rejeitam recursos bloqueados; planos existentes derivam
+     a condição de revisão sem booleano duplicado
+   - Portal do cliente nunca projeta o conteúdo bloqueado; o contrato exato é
+     classificado antes do controller conforme `00_ARCHITECTURE.md §4.2`
+   - Migration EF Core nova, gerada a partir do modelo deste slice e validada
+     com migrate, rollback e migrate. Não integrar no Lote 3F nem editar
+     migrations aplicadas
+   - Sistema genérico de denúncias e fila de revisão permanece fora deste slice
+
+7. **Testes Integração (`Api.FunctionalTests/`)**
    - `WebApplicationFactory`: auth (login/signup/refresh/reuso de refresh token), CRUD multi-tenant, Problem Details, contract tests
-   - ~40-50 testes
+   - Moderação: role e contexto administrativo, Block/Unblock idempotentes,
+     auditoria atómica, escrita proibida ao trainer, recurso privado de outro
+     tenant, novas referências e planos existentes afetados
+   - Suite base de API e auth, acrescida das suites de persistência e contrato
+     do Sprint 4B
 
 ### Deliverables
 - ✓ `Api` compila e corre localmente
@@ -368,21 +392,26 @@ Endpoints HTTP, ASP.NET Core Identity, middleware, compatibilidade de contrato.
 - ✓ Auth completo (login/signup/logout/refresh com rotação)
 - ✓ Rate limiting e CORS configurados
 - ✓ Matriz de migração de contrato preenchida
-- ✓ ~50 testes integração passam
+- ✓ Moderação privada restrita a casos administrativos auditados
+- ✓ Testes de API, auth, persistência e moderação passam
 - ✓ Swagger/OpenAPI gerado
 
 ### Commits
 - `feat: add API controllers and endpoints`
 - `feat: add JWT authentication with refresh token rotation`
 - `feat: add middleware stack and rate limiting`
+- `feat: add audited private catalog moderation`
 - `test: add endpoint integration and contract tests`
 
 ---
 
-## SPRINT 5: Jobs Duráveis, Outbox e Serviços Externos (Semana 9)
+## SPRINT 5: Jobs Duráveis, Outbox, Serviços Externos e Media (Semana 9)
 
 ### Objectivo
-Dispatcher de jobs ativado por QStash, outbox transacional, integrações externas. **Sem RabbitMQ/MassTransit** (ver `00_ARCHITECTURE.md §9`).
+O Sprint 5 divide-se em dois slices. O Sprint 5A entrega o dispatcher de jobs,
+a outbox e as integrações externas base. O Sprint 5B entrega o upload técnico
+de vídeos de exercícios depois de concluídos o Lote 3F, o Sprint 4 e a integração
+base do Cloudinary. **Sem RabbitMQ/MassTransit** (ver `00_ARCHITECTURE.md §9`).
 
 ### Tarefas
 
@@ -411,10 +440,27 @@ Dispatcher de jobs ativado por QStash, outbox transacional, integrações extern
    - Todas com timeout e tratamento de erro transitório
    - Se um SDK não estiver ativamente mantido, preferir `HttpClient` tipado (`00_ARCHITECTURE.md §11`)
 
-4. **Webhook Stripe**
+4. **Exercise Video Upload, Sprint 5B**
+   - Vertical slice próprio, separado da integração base do Cloudinary
+   - Upload direto do browser para storage privado através de autorização
+     limitada emitida pelo backend
+   - Finalização autenticada confirma ownership do exercício, asset, tamanho
+     real e integridade no storage
+   - Processamento assíncrono valida container, MIME, codec, duração e resolução
+   - Estados técnicos: `Pending`, `Processing`, `Ready`, `Rejected` e `Failed`
+   - Acesso através de URL assinada de curta duração; nunca por path controlado
+     pelo utilizador
+   - Rate limiting por ator, quotas de negócio em PostgreSQL e testes negativos
+     cross-tenant
+   - Limites concretos de tamanho, duração, resolução, formatos, codecs e
+     quotas aprovados antes da implementação
+   - Moderação de conteúdo por AI e `IVideoModerationService` ficam fora deste
+     slice e do MVP atual, conforme `00_ARCHITECTURE.md §17.4`
+
+5. **Webhook Stripe**
    - Lê raw body, valida `Stripe-Signature`, deduplica via `processed_stripe_events`, escreve o outbox message na mesma transação (`00_ARCHITECTURE.md §10.2`)
 
-5. **Configuration (`Program.cs`)**
+6. **Configuration (`Program.cs`)**
    ```
    builder.Configuration["Stripe:SecretKey"]
    builder.Configuration["Resend:ApiKey"]
@@ -423,25 +469,30 @@ Dispatcher de jobs ativado por QStash, outbox transacional, integrações extern
    builder.Configuration["Upstash:QStashSigningKey"]
    ```
 
-6. **Testes**
+7. **Testes**
    - Reclamação concorrente de jobs (dois dispatchers não processam o mesmo job)
    - Retry transitório, falha permanente → `dead_letter`
    - Assinatura QStash inválida rejeitada
    - Webhook Stripe: evento duplicado, fora de ordem, falha antes/depois do commit
    - Cache: falha de Redis não impede a operação principal (fallback documentado em `00_ARCHITECTURE.md §8.2`)
-   - ~30 testes
+   - Vídeo: upload incompleto, metadata incompatível, ownership incorreto,
+     acesso cross-tenant, transições de estado e limpeza de assets abandonados
+   - Suite base de jobs e integrações, acrescida da suite específica de vídeo
 
 ### Deliverables
 - ✓ Dispatcher de jobs e outbox funcionando contra Postgres real (Testcontainers)
 - ✓ Endpoint interno validado por assinatura QStash
 - ✓ 4 serviços externos integrados (Resend, Stripe, Cloudinary, Upstash Redis)
 - ✓ Webhook Stripe idempotente e transacional
-- ✓ ~30 testes passam
+- ✓ Upload técnico de vídeo privado concluído no Sprint 5B, sem moderação
+  automática
+- ✓ Testes de jobs, integrações e vídeo passam
 
 ### Commits
 - `feat: add durable job dispatcher and outbox pattern`
 - `feat: add QStash-triggered internal dispatch endpoint`
 - `feat: add external service integrations (Resend, Stripe, Cloudinary, Upstash Redis)`
+- `feat: add private exercise video upload and technical processing`
 - `test: add job dispatcher and webhook idempotency tests`
 
 ---
@@ -613,8 +664,8 @@ Deploy no Render free tier, validação final, documentação de handoff.
 | 1-2 | Sprint 1 | Domain Layer | Entities + Value Objects por feature |
 | 3-4 | Sprint 2 | Infrastructure | DbContext + migration `InitialCreate` + stores de jobs/outbox |
 | 5-6 | Sprint 3 | Application | Handlers + DTOs + Validators por feature |
-| 7-8 | Sprint 4 | API | Controllers, Auth JWT+refresh, multi-tenancy |
-| 9 | Sprint 5 | Jobs + Outbox | Dispatcher QStash, outbox Stripe, serviços externos |
+| 7-8 | Sprint 4 | API + Moderação | 4A Auth e controllers; 4B enforcement auditado de catálogos privados |
+| 9 | Sprint 5 | Jobs + Outbox + Media | Integrações base no 5A e upload técnico de vídeo no 5B |
 | 10 | Sprint 6 | Observabilidade | Logs estruturados, Sentry, OpenTelemetry, health checks |
 | 11 | Sprint 7 | Testing + CI/CD | ~170 testes + architecture tests + CI |
 | 12 | Sprint 8 | Produção | Deploy Render free, QStash produção, docs |

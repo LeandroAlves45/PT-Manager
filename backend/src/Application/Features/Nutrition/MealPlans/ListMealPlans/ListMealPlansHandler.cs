@@ -1,4 +1,6 @@
+using Application.Common;
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Features.Nutrition.MealPlans.Abstractions;
 using Application.Features.Nutrition.MealPlans.Dtos;
 using Application.Pagination;
@@ -21,12 +23,9 @@ public sealed class ListMealPlansHandler
         IMealPlanQueries mealPlanQueries
     )
     {
-        ArgumentNullException.ThrowIfNull(validator);
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(mealPlanQueries);
-        _validator = validator;
-        _tenantContext = tenantContext;
-        _mealPlanQueries = mealPlanQueries;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _mealPlanQueries = mealPlanQueries ?? throw new ArgumentNullException(nameof(mealPlanQueries));
     }
 
     public async Task<Result<PageResult<MealPlanSummaryDto>>> HandleAsync(
@@ -38,13 +37,13 @@ public sealed class ListMealPlansHandler
         if (!validation.IsValid)
             return Result<PageResult<MealPlanSummaryDto>>.Failure(validation.ToApplicationError());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<PageResult<MealPlanSummaryDto>>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, NutritionErrors.MealPlanTrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<PageResult<MealPlanSummaryDto>>.Failure(actor.Error!);
 
         var result = await _mealPlanQueries.ListAsync(
             query.ClientId,
-            string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(),
+            SearchTerm.Normalize(query.Search),
             query.Activity,
             new PageRequest(query.PageNumber, query.PageSize),
             cancellationToken

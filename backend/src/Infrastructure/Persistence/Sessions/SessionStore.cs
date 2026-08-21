@@ -5,6 +5,7 @@ using Domain.Entities.Clients;
 using Domain.Entities.Sessions;
 using Domain.ValueObjects;
 using Infrastructure.Data;
+using Infrastructure.Persistence.Common;
 using Infrastructure.Persistence.Errors;
 using Microsoft.EntityFrameworkCore;
 
@@ -121,7 +122,7 @@ internal sealed class SessionStore : ISessionStore
         DateTime now,
         CancellationToken cancellationToken)
     {
-        await LockTrainerAsync(trainerId, cancellationToken);
+        await _dbContext.LockTrainerAsync(trainerId, cancellationToken);
         if (startsAt <= AsOffset(now))
             return SessionStoreResult.For(SessionStoreResult.Status.StartsAtNotFuture);
 
@@ -184,7 +185,7 @@ internal sealed class SessionStore : ISessionStore
         CancellationToken cancellationToken)
     {
         // Personal trainer primeiro: esta é a mesma ordem usada por Create e Restore futuro.
-        await LockTrainerAsync(trainerId, cancellationToken);
+        await _dbContext.LockTrainerAsync(trainerId, cancellationToken);
         if (startsAt <= AsOffset(now))
             return SessionStoreResult.For(SessionStoreResult.Status.StartsAtNotFuture);
 
@@ -262,7 +263,7 @@ internal sealed class SessionStore : ISessionStore
     {
         // Restore pode voltar a ocupar agenda futura, por isso participa no lock do personal trainer.
         if (transition == SessionTransition.Restore)
-            await LockTrainerAsync(trainerId, cancellationToken);
+            await _dbContext.LockTrainerAsync(trainerId, cancellationToken);
 
         var session = await LockSessionAsync(trainerId, sessionId, cancellationToken);
         if (session is null)
@@ -405,17 +406,6 @@ internal sealed class SessionStore : ISessionStore
             cancellationToken))
             return SessionStoreResult.For(SessionStoreResult.Status.TrainerScheduleConflict);
         return null;
-    }
-
-    private async Task LockTrainerAsync(Guid trainerId, CancellationToken cancellationToken)
-    {
-        var lockedId = await _dbContext.Database.SqlQuery<Guid>(
-            $"SELECT id AS \"Value\" FROM users WHERE id = {trainerId} AND role = 'trainer' AND is_deleted = false FOR UPDATE")
-            .SingleOrDefaultAsync(cancellationToken);
-        if (lockedId == Guid.Empty)
-            throw new InvalidOperationException(
-                "The effective personal trainer must exist before writing sessions."
-            );
     }
 
     private Task<Client?> LockClientAsync(

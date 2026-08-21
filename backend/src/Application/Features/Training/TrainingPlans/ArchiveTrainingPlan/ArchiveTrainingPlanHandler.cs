@@ -1,5 +1,5 @@
 using Application.Common.Abstractions;
-using Application.Errors;
+using Application.Common.Authorization;
 using Application.Features.Training.TrainingPlans.Abstractions;
 using Application.Results;
 
@@ -17,13 +17,9 @@ public sealed class ArchiveTrainingPlanHandler
         IClock clock,
         ITrainingPlanStore store)
     {
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(store);
-
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _store = store;
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _store = store ?? throw new ArgumentNullException(nameof(store));
     }
 
     public async Task<Result> HandleAsync(
@@ -31,20 +27,15 @@ public sealed class ArchiveTrainingPlanHandler
         CancellationToken cancellationToken = default)
     {
         if (command.TrainingPlanId == Guid.Empty)
-            return Result.Failure(Error.Validation([
-                new ValidationError(
-                    "TrainingPlanId",
-                    "training_plan_id_required",
-                    "Training plan ID is required.")
-            ]));
+            return Result.Failure(TrainingErrors.TrainingPlanIdRequired());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, TrainingErrors.TrainingPlanTrainerOnly);
+        if (!actor.IsSuccess)
+            return Result.Failure(actor.Error!);
 
         var outcome = await _store.ArchiveAsync(
             command.TrainingPlanId,
-            tenant.Value,
+            actor.Value.TrainerId,
             _clock.UtcNow,
             cancellationToken);
 

@@ -1,5 +1,5 @@
 using Application.Common.Abstractions;
-using Application.Errors;
+using Application.Common.Authorization;
 using Application.Features.Training.Exercises.Abstractions;
 using Application.Results;
 
@@ -18,12 +18,9 @@ public sealed class ArchiveExerciseHandler
         IExerciseStore exerciseStore
     )
     {
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(exerciseStore);
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _exerciseStore = exerciseStore;
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _exerciseStore = exerciseStore ?? throw new ArgumentNullException(nameof(exerciseStore));
     }
 
     public async Task<Result> HandleAsync(
@@ -32,23 +29,15 @@ public sealed class ArchiveExerciseHandler
     )
     {
         if (command.ExerciseId == Guid.Empty)
-        {
-            return Result.Failure(Error.Validation([
-                new ValidationError(
-                    "ExerciseId",
-                    "exercise_id_required",
-                    "Exercise ID is required."
-                )
-            ]));
-        }
+            return Result.Failure(TrainingErrors.ExerciseIdRequired());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, TrainingErrors.TrainerOnly);
+        if (!actor.IsSuccess)
+            return Result.Failure(actor.Error!);
 
         var outcome = await _exerciseStore.SetActiveAsync(
             command.ExerciseId,
-            tenant.Value,
+            actor.Value.TrainerId,
             false,
             _clock.UtcNow,
             cancellationToken

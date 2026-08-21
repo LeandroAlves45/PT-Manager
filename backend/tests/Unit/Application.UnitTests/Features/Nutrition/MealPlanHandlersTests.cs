@@ -234,11 +234,15 @@ public sealed class MealPlanHandlersTests
     private sealed class ClockStub(DateTime utcNow) : IClock
     { public DateTime UtcNow { get; } = utcNow; }
 
-    private sealed class TenantStub(Guid? trainerId) : ITenantContext
+    private sealed class TenantStub(
+        Guid? trainerId,
+        Guid? userId = null,
+        string? role = "trainer"
+    ) : ITenantContext
     {
         public Guid? TrainerId { get; } = trainerId;
-        public Guid? UserId => null;
-        public string? Role => "trainer";
+        public Guid? UserId { get; } = userId ?? Guid.NewGuid();
+        public string? Role { get; } = role;
         public TenantOrigin Origin => TenantOrigin.Http;
         public bool IsAdministrative => false;
     }

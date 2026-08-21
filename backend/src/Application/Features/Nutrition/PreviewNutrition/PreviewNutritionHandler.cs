@@ -18,8 +18,8 @@ public sealed class PreviewNutritionHandler
         IClock clock
     )
     {
-        _validator = validator;
-        _clock = clock;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     }
 
     /// <summary>Valida, calcula e devolve o resultado sem I/O.</summary>

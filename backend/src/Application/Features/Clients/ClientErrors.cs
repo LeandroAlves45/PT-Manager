@@ -7,51 +7,51 @@ public static class ClientErrors
 {
     /// <summary>Cliente inexistente ou invisível no tenant.</summary>
     public static readonly Error ClientNotFound = Error.Create(
-        code: "client_not_found",
-        category: ErrorCategory.NotFound,
-        description: "Client was not found."
+        "client_not_found",
+        ErrorCategory.NotFound,
+        "Client was not found."
     );
 
     /// <summary>Email já usado por um cliente não eliminado no tenant.</summary>
     public static readonly Error ClientDuplicateEmail = Error.Create(
-        code: "client_email_already_exists",
-        category: ErrorCategory.Conflict,
-        description: "A client with this email already exists."
+        "client_email_already_exists",
+        ErrorCategory.Conflict,
+        "A client with this email already exists."
     );
 
     /// <summary>Telefone já usado por um cliente não eliminado no tenant.</summary>
     public static readonly Error ClientDuplicatePhone = Error.Create(
-        code: "client_phone_already_exists",
-        category: ErrorCategory.Conflict,
-        description: "A client with this phone already exists."
+        "client_phone_already_exists",
+        ErrorCategory.Conflict,
+        "A client with this phone already exists."
     );
 
     /// <summary>Subscrição inativa bloqueia novos clientes ativos.</summary>
     public static readonly Error SubscriptionInactive = Error.Create(
-        code: "subscription_inactive",
-        category: ErrorCategory.PaymentRequired,
-        description: "The subscription is inactive."
+        "subscription_inactive",
+        ErrorCategory.PaymentRequired,
+        "The subscription is inactive."
     );
 
     /// <summary>Subscrição suspensa bloqueia novos clientes ativos.</summary>
     public static readonly Error SubscriptionSuspended = Error.Create(
-        code: "subscription_suspended",
-        category: ErrorCategory.PaymentRequired,
-        description: "The subscription is suspended."
+        "subscription_suspended",
+        ErrorCategory.PaymentRequired,
+        "The subscription is suspended."
     );
 
     /// <summary>Subscrição cancelada bloqueia novos clientes ativos.</summary>
     public static readonly Error SubscriptionCancelled = Error.Create(
-        code: "subscription_cancelled",
-        category: ErrorCategory.PaymentRequired,
-        description: "The subscription is cancelled."
+        "subscription_cancelled",
+        ErrorCategory.PaymentRequired,
+        "The subscription is cancelled."
     );
 
     /// <summary>O tier atual atingiu o limite de clientes ativos.</summary>
     public static readonly Error ClientLimitReached = Error.Create(
-        code: "client_limit_reached",
-        category: ErrorCategory.PaymentRequired,
-        description: "The client limit for the current subscription was reached.",
+        "client_limit_reached",
+        ErrorCategory.PaymentRequired,
+        "The client limit for the current subscription was reached.",
         metadata: new Dictionary<string, object?>
         {
             { "upgrade", true }
@@ -59,8 +59,22 @@ public static class ClientErrors
     );
 
     public static readonly Error ClientInactive = Error.Create(
-        code: "client_inactive",
-        category: ErrorCategory.Conflict,
-        description: "An archived client cannot receive a new session pack."
+        "client_inactive",
+        ErrorCategory.Conflict,
+        "An archived client cannot receive a new session pack."
     );
+
+    public static readonly Error TrainerOnly = Error.Create(
+        "clients_trainer_only",
+        ErrorCategory.Forbidden,
+        "Only a personal trainer can manage their clients."
+    );
+
+    public static Error ClientIdRequired() => Error.Validation([
+        new ValidationError(
+            "ClientId",
+            "client_id_required",
+            "Client ID is required."
+        )
+    ]);
 }

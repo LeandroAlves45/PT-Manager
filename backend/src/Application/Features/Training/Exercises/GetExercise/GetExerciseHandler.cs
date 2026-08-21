@@ -1,5 +1,5 @@
 using Application.Common.Abstractions;
-using Application.Errors;
+using Application.Common.Authorization;
 using Application.Features.Training.Exercises.Abstractions;
 using Application.Features.Training.Exercises.Dtos;
 using Application.Results;
@@ -17,10 +17,8 @@ public sealed class GetExerciseHandler
         IExerciseQueries exerciseQueries
     )
     {
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(exerciseQueries);
-        _tenantContext = tenantContext;
-        _exerciseQueries = exerciseQueries;
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _exerciseQueries = exerciseQueries ?? throw new ArgumentNullException(nameof(exerciseQueries));
     }
 
     /// <summary>Devolve detalhe ou NotFound seguro.</summary>
@@ -30,19 +28,11 @@ public sealed class GetExerciseHandler
     )
     {
         if (query.ExerciseId == Guid.Empty)
-        {
-            return Result<ExerciseDto>.Failure(Error.Validation([
-                new ValidationError(
-                    "ExerciseId",
-                    "exercise_id_required",
-                    "Exercise ID is required."
-                )
-            ]));
-        }
+            return Result<ExerciseDto>.Failure(TrainingErrors.ExerciseIdRequired());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<ExerciseDto>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, TrainingErrors.TrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<ExerciseDto>.Failure(actor.Error!);
 
         var exercise = await _exerciseQueries.GetAsync(
             query.ExerciseId,

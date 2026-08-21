@@ -1,5 +1,5 @@
 using Application.Common.Abstractions;
-using Application.Errors;
+using Application.Common.Authorization;
 using Application.Features.Nutrition.Foods.Abstractions;
 using Application.Features.Nutrition.Foods.Dtos;
 using Application.Results;
@@ -17,8 +17,8 @@ public sealed class GetFoodHandler
         IFoodQueries foodQueries
     )
     {
-        _tenantContext = tenantContext;
-        _foodQueries = foodQueries;
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _foodQueries = foodQueries ?? throw new ArgumentNullException(nameof(foodQueries));
     }
 
     public async Task<Result<FoodDto>> HandleAsync(
@@ -27,15 +27,11 @@ public sealed class GetFoodHandler
     )
     {
         if (query.FoodId == Guid.Empty)
-        {
-            return Result<FoodDto>.Failure(Error.Validation([
-                new ValidationError("FoodId", "food_id_required", "Food ID is required.")
-            ]));
-        }
+            return Result<FoodDto>.Failure(NutritionErrors.FoodIdRequired());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<FoodDto>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, NutritionErrors.TrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<FoodDto>.Failure(actor.Error!);
 
         var food = await _foodQueries.GetAsync(query.FoodId, cancellationToken);
         return food is null

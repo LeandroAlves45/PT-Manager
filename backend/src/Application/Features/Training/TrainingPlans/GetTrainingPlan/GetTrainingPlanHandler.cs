@@ -1,5 +1,5 @@
 using Application.Common.Abstractions;
-using Application.Errors;
+using Application.Common.Authorization;
 using Application.Features.Training.TrainingPlans.Abstractions;
 using Application.Features.Training.TrainingPlans.Dtos;
 using Application.Results;
@@ -16,11 +16,8 @@ public sealed class GetTrainingPlanHandler
         ITenantContext tenantContext,
         ITrainingPlanQueries queries)
     {
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(queries);
-
-        _tenantContext = tenantContext;
-        _queries = queries;
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _queries = queries ?? throw new ArgumentNullException(nameof(queries));
     }
 
     public async Task<Result<TrainingPlanDetailsDto>> HandleAsync(
@@ -28,18 +25,11 @@ public sealed class GetTrainingPlanHandler
         CancellationToken cancellationToken = default)
     {
         if (query.TrainingPlanId == Guid.Empty)
-        {
-            return Result<TrainingPlanDetailsDto>.Failure(Error.Validation([
-                new ValidationError(
-                    "TrainingPlanId",
-                    "training_plan_id_required",
-                    "Training plan ID is required.")
-            ]));
-        }
+            return Result<TrainingPlanDetailsDto>.Failure(TrainingErrors.TrainingPlanIdRequired());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<TrainingPlanDetailsDto>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, TrainingErrors.TrainingPlanTrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<TrainingPlanDetailsDto>.Failure(actor.Error!);
 
         var details = await _queries.GetDetailsAsync(
             query.TrainingPlanId,

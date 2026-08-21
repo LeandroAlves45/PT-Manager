@@ -16,10 +16,8 @@ public sealed class GetInitialAssessmentHandler
         IInitialAssessmentQueries queries
     )
     {
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(queries);
-        _tenantContext = tenantContext;
-        _queries = queries;
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _queries = queries ?? throw new ArgumentNullException(nameof(queries));
     }
 
     public async Task<Result<InitialAssessmentDto?>> HandleAsync(

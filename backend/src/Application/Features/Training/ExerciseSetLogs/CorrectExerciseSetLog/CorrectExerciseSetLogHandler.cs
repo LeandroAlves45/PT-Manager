@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Authorization;
 using Application.Features.Training.ExerciseSetLogs.Abstractions;
 using Application.Features.Training.ExerciseSetLogs.Dtos;
 using Application.Results;
@@ -23,16 +24,11 @@ public sealed class CorrectExerciseSetLogHandler
         IExerciseSetLogStore store,
         IExerciseSetLogQueries queries)
     {
-        ArgumentNullException.ThrowIfNull(validator);
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(store);
-        ArgumentNullException.ThrowIfNull(queries);
-        _validator = validator;
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _store = store;
-        _queries = queries;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _store = store ?? throw new ArgumentNullException(nameof(store));
+        _queries = queries ?? throw new ArgumentNullException(nameof(queries));
     }
 
     public async Task<Result<ClientExerciseSetLogDto>> HandleAsync(
@@ -43,13 +39,13 @@ public sealed class CorrectExerciseSetLogHandler
         if (!validation.IsValid)
             return Result<ClientExerciseSetLogDto>.Failure(validation.ToApplicationError());
 
-        var tenant = _tenantContext.GetRequiredTrainerId();
-        if (!tenant.IsSuccess)
-            return Result<ClientExerciseSetLogDto>.Failure(tenant.Error!);
+        var actor = ActorAuthorization.RequireTrainer(_tenantContext, TrainingErrors.ExerciseSetLogTrainerOnly);
+        if (!actor.IsSuccess)
+            return Result<ClientExerciseSetLogDto>.Failure(actor.Error!);
 
         var now = DateTime.SpecifyKind(_clock.UtcNow, DateTimeKind.Utc);
         var outcome = await _store.CorrectAsync(
-            tenant.Value,
+            actor.Value.TrainerId,
             new CorrectExerciseSetLogWriteModel(
                 command.ExerciseSetLogId,
                 command.WeightKg,

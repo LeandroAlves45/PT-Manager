@@ -23,14 +23,10 @@ public sealed class CreateInitialAssessmentHandler
         IInitialAssessmentStore store
     )
     {
-        ArgumentNullException.ThrowIfNull(validator);
-        ArgumentNullException.ThrowIfNull(tenantContext);
-        ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(store);
-        _validator = validator;
-        _tenantContext = tenantContext;
-        _clock = clock;
-        _store = store;
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _store = store ?? throw new ArgumentNullException(nameof(store));
     }
 
     public async Task<Result<InitialAssessmentDto>> HandleAsync(

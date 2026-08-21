@@ -10,15 +10,11 @@ public sealed class Exercise
     public Guid? OwnerTrainerId { get; private set; }
     public string Name { get; private set; } = null!;
     public string? Description { get; private set; }
-    /// <summary>
-    /// Grupos musculares em CSV simples (ex: "peito,ombro,tríceps")
-    /// </summary>
     public string? MuscleGroups { get; private set; }
     public string? Equipment { get; private set; }
     public string? DifficultyLevel { get; private set; }
     public string? VideoUrl { get; private set; }
     public bool IsActive { get; private set; }
-    public bool IsDeleted { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -42,7 +38,6 @@ public sealed class Exercise
         OwnerTrainerId = ownerTrainerId;
         SetFields(name, description, muscleGroups, equipment, difficultyLevel, videoUrl);
         IsActive = true;
-        IsDeleted = false;
         CreatedAt = now;
         UpdatedAt = now;
     }
@@ -58,7 +53,6 @@ public sealed class Exercise
         DateTime now
     )
     {
-        EnsureNotDeleted();
         SetFields(name, description, muscleGroups, equipment, difficultyLevel, videoUrl);
         UpdatedAt = now;
     }
@@ -66,20 +60,9 @@ public sealed class Exercise
     /// <summary>Controla a disponibilidade sem perder referências históricas.</summary>
     public void SetActive(bool isActive, DateTime now)
     {
-        EnsureNotDeleted();
         if (IsActive == isActive)
             return;
         IsActive = isActive;
-        UpdatedAt = now;
-    }
-
-    /// <summary>Soft delete do exercício, marcando-o como excluído.</summary>
-    public void SoftDelete(DateTime now)
-    {
-        if (IsDeleted)
-            return;
-        IsDeleted = true;
-        IsActive = false;
         UpdatedAt = now;
     }
 
@@ -114,10 +97,4 @@ public sealed class Exercise
 
     private static string? NormalizeOptional(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-
-    private void EnsureNotDeleted()
-    {
-        if (IsDeleted)
-            throw new DomainException("Cannot modify a deleted exercise.");
-    }
 }

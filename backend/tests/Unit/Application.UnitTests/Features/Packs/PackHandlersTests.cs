@@ -57,6 +57,30 @@ public sealed class PackHandlersTests
         Assert.Null(store.Added);
     }
 
+    [Fact]
+    public async Task CreatePackType_WrongRole_ReturnsForbiddenWithoutWriting()
+    {
+        // Arrange: ator autenticado do tenant certo, mas role "client".
+        var store = new FakePackTypeStore();
+        var handler = new CreatePackTypeHandler(
+            new CreatePackTypeCommandValidator(),
+            new TenantStub(TrainerId, role: "client"),
+            new ClockStub(Now),
+            store
+        );
+
+        // Act
+        var result = await handler.HandleAsync(
+            new CreatePackTypeCommand("Pack", 10, 10000, "EUR", 30),
+            TestContext.Current.CancellationToken
+        );
+
+        // Assert
+        Assert.Equal("packs_trainer_only", result.Error!.Code);
+        Assert.Equal(Application.Errors.ErrorCategory.Forbidden, result.Error.Category);
+        Assert.Null(store.Added);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
@@ -268,11 +292,18 @@ public sealed class PackHandlersTests
         ) => Task.FromResult(CancelOutcome);
     }
 
-    private sealed class TenantStub(Guid? trainerId) : ITenantContext
+    // "role" tem default "trainer" para não alterar nenhuma chamada existente.
+    // "userId" tem default nulo => gera um Guid novo, para nunca cair em
+    // UnauthenticatedUser sem que o teste o peça explicitamente.
+    private sealed class TenantStub(
+        Guid? trainerId,
+        Guid? userId = null,
+        string? role = "trainer"
+    ) : ITenantContext
     {
         public Guid? TrainerId { get; } = trainerId;
-        public Guid? UserId => null;
-        public string? Role => "trainer";
+        public Guid? UserId { get; } = userId ?? Guid.NewGuid();
+        public string? Role { get; } = role;
         public TenantOrigin Origin => TenantOrigin.Http;
         public bool IsAdministrative => false;
     }
