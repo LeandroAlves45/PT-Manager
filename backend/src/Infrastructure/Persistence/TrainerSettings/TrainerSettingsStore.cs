@@ -149,7 +149,7 @@ internal sealed class TrainerSettingsStore : ITrainerSettingsStore
             trainerId,
             "trainer-logo.delete",
             payload,
-            $"trainer-logo.delete.{correlationId:N}",
+            $"trainer-logo.delete:{correlationId:N}",
             correlationId,
             now);
         _dbContext.OutboxMessages.Add(message);
@@ -217,5 +217,4 @@ internal sealed class TrainerSettingsStore : ITrainerSettingsStore
         });
     }
 }
-
 

@@ -1,7 +1,7 @@
-using Application.Features.Training.TrainingPlans;
 using Application.Features.Training.TrainingPlans.Abstractions;
 using Domain.Entities.Training;
 using Infrastructure.Data;
+using Infrastructure.Persistence.Common;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -33,6 +33,7 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
                 return TrainingPlanStoreResult.ForClientNotFound();
 
             var referenceStatus = await ValidateExerciseReferencesAsync(
+                trainerId,
                 model.Structure.Days.SelectMany(day => day.Exercises)
                     .Select(item => item.ExerciseId)
                     .Distinct()
@@ -117,7 +118,10 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
 
             var references = _structure.GetChangedExerciseIds(plan, model.Structure);
             var referenceFailure = MapReferenceFailure(
-                await ValidateExerciseReferencesAsync(references, cancellationToken));
+                await ValidateExerciseReferencesAsync(
+                    trainerId,
+                    references,
+                    cancellationToken));
             if (referenceFailure is not null)
                 return referenceFailure;
 
@@ -189,6 +193,7 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
 
             var referenceFailure = MapReferenceFailure(
                 await ValidateExerciseReferencesAsync(
+                    trainerId,
                     model.Structure.Days.SelectMany(day => day.Exercises)
                         .Select(item => item.ExerciseId)
                         .Distinct()
@@ -269,14 +274,14 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
             .AnyAsync(client => client.Id == clientId && client.IsActive, cancellationToken);
 
     private async Task<ExerciseReferenceStatus> ValidateExerciseReferencesAsync(
+        Guid trainerId,
         IReadOnlyCollection<Guid> exerciseIds,
         CancellationToken cancellationToken)
     {
-        var rows = await _dbContext.Exercises
-            .AsNoTracking()
-            .Where(exercise => exerciseIds.Contains(exercise.Id))
-            .Select(exercise => new { exercise.Id, exercise.IsActive })
-            .ToListAsync(cancellationToken);
+        var rows = await _dbContext.LockExercisesForShareAsync(
+            trainerId,
+            exerciseIds,
+            cancellationToken);
 
         if (!rows.Select(row => row.Id).ToHashSet().SetEquals(exerciseIds))
             return ExerciseReferenceStatus.NotFound;

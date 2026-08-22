@@ -53,6 +53,9 @@ internal sealed class MealPlanMealItemConfiguration : IEntityTypeConfiguration<M
         builder.HasIndex(mpmi => mpmi.MealPlanMealId)
             .HasDatabaseName("idx_items_meal");
 
+        builder.HasIndex(mpmi => mpmi.FoodId)
+            .HasDatabaseName("idx_meal_plan_meal_items_food");
+
         builder.HasOne<MealPlanMeal>()
             .WithMany(mpm => mpm.Items)
             .HasForeignKey(mpmi => mpmi.MealPlanMealId)
@@ -61,6 +64,7 @@ internal sealed class MealPlanMealItemConfiguration : IEntityTypeConfiguration<M
         builder.HasOne<Food>()
             .WithMany()
             .HasForeignKey(mpmi => mpmi.FoodId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("fk_meal_plan_meal_items_food");
     }
 }

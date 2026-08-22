@@ -1,5 +1,6 @@
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
 using Testcontainers.PostgreSql;
 
@@ -27,6 +28,10 @@ public sealed class MigrationLifecycleFixture : IAsyncLifetime
         var tenantContext = Support.TestTenantContext.Administrator();
         var options = new DbContextOptionsBuilder<PtManagerDbContext>()
             .UseNpgsql(_container.GetConnectionString())
+            // Estes testes validam migrations já aplicadas. O modelo pendente
+            // pertence ao Lote 3E e só terá migration consolidada no Lote 3F.
+            .ConfigureWarnings(warnings => warnings.Ignore(
+                RelationalEventId.PendingModelChangesWarning))
             .Options;
 
         return new PtManagerDbContext(options, tenantContext);

@@ -2,6 +2,7 @@ using Application.Features.Nutrition.MealPlans;
 using Application.Features.Nutrition.MealPlans.Abstractions;
 using Domain.Entities.Nutrition;
 using Infrastructure.Data;
+using Infrastructure.Persistence.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Nutrition;
@@ -48,6 +49,7 @@ internal sealed class MealPlanStore : IMealPlanStore
                 }
 
                 var referenceStatus = await ValidateCatalogReferencesAsync(
+                    trainerId,
                     model.Structure.Meals.SelectMany(meal => meal.Items)
                         .Select(item => item.FoodId).Distinct().ToArray(),
                     model.Structure.Meals.SelectMany(meal => meal.Supplements)
@@ -135,6 +137,7 @@ internal sealed class MealPlanStore : IMealPlanStore
                 }
 
                 var referenceStatus = await ValidateChangedReferencesAsync(
+                    trainerId,
                     plan,
                     model.Structure,
                     cancellationToken
@@ -199,6 +202,7 @@ internal sealed class MealPlanStore : IMealPlanStore
     }
 
     private async Task<CatalogReferenceStatus> ValidateChangedReferencesAsync(
+        Guid trainerId,
         MealPlan plan,
         MealPlanStructureInput structure,
         CancellationToken cancellationToken
@@ -222,6 +226,7 @@ internal sealed class MealPlanStore : IMealPlanStore
             .ToArray();
 
         return await ValidateCatalogReferencesAsync(
+            trainerId,
             changedFoodIds,
             changedSupplementIds,
             cancellationToken
@@ -229,19 +234,25 @@ internal sealed class MealPlanStore : IMealPlanStore
     }
 
     private async Task<CatalogReferenceStatus> ValidateCatalogReferencesAsync(
+        Guid trainerId,
         IReadOnlyCollection<Guid> foodIds,
         IReadOnlyCollection<Guid> supplementIds,
         CancellationToken cancellationToken
     )
     {
-        var foods = await _dbContext.Foods.AsNoTracking()
-            .Where(food => foodIds.Contains(food.Id))
-            .Select(food => new { food.Id, food.IsActive })
-            .ToListAsync(cancellationToken);
-        var supplements = await _dbContext.Supplements.AsNoTracking()
-            .Where(item => supplementIds.Contains(item.Id))
-            .Select(item => new { item.Id, item.IsActive })
-            .ToListAsync(cancellationToken);
+        // FOR SHARE por IDs ordenados: fecha a corrida entre este plano e uma
+        // administração global que arquive/apague o mesmo Food ou Supplement
+        // entre a validação e o commit deste plano.
+        var foods = await _dbContext.LockFoodsForShareAsync(
+            trainerId,
+            foodIds,
+            cancellationToken
+        );
+        var supplements = await _dbContext.LockSupplementsForShareAsync(
+            trainerId,
+            supplementIds,
+            cancellationToken
+        );
 
         if (foods.Select(food => food.Id).ToHashSet().SetEquals(foodIds)
             && supplements.Select(item => item.Id).ToHashSet().SetEquals(supplementIds))

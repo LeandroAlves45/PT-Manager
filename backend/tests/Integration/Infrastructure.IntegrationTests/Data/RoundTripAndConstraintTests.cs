@@ -205,10 +205,10 @@ public sealed class RoundTripAndConstraintTests
         const string sql = """
             INSERT INTO foods (
                 id, owner_trainer_id, name, description,
-                protein, carbs, fats, fiber, is_deleted, created_at, updated_at)
+                protein, carbs, fats, fiber, created_at, updated_at)
             VALUES (
                 @id, NULL, 'Invalid food', NULL,
-                50, 40, 20, NULL, false, @now, @now);
+                50, 40, 20, NULL, @now, @now);
         """;
 
         // Act
@@ -235,8 +235,8 @@ public sealed class RoundTripAndConstraintTests
     [InlineData("idx_outbox_lease")]
     [InlineData("idx_pack_types_tenant_name_active")]
     [InlineData("idx_client_session_packs_usable_order")]
-    [InlineData("idx_sessions_tenant_scheduled_at")]
-    public async Task InitialCreate_WhenApplied_CreatesCriticalIndexes(string indexName)
+    [InlineData("uq_sessions_tenant_scheduled_start")]
+    public async Task CurrentModel_WhenCreated_CreatesCriticalIndexes(string indexName)
     {
         // Arrange
         var cancellationToken = TestContext.Current.CancellationToken;

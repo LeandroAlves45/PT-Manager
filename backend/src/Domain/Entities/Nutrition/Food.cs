@@ -40,6 +40,9 @@ public sealed class Food
         DateTime now
     )
     {
+        if (ownerTrainerId.HasValue && ownerTrainerId.Value == Guid.Empty)
+            throw new DomainException("Owner trainer ID cannot be empty.");
+
         var normalizedName = name?.Trim() ?? string.Empty;
         ValidateParametersFood(normalizedName, protein, carbs, fats, fiber);
 

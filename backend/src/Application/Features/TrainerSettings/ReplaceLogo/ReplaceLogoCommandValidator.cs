@@ -15,12 +15,18 @@ public sealed class ReplaceLogoCommandValidator : AbstractValidator<ReplaceLogoC
 
     public ReplaceLogoCommandValidator()
     {
-        RuleFor(command => command.Logo.ContentType)
-            .Must(contentType => AllowedContentTypes.Contains(contentType))
-            .WithErrorCode("trainer_settings_unsupported_media_type");
+        RuleFor(command => command.Logo)
+            .NotNull()
+            .WithErrorCode("trainer_settings_logo_required");
 
-        RuleFor(command => command.Logo.LengthInBytes)
+        RuleFor(command => command.Logo!.ContentType)
+            .Must(contentType => AllowedContentTypes.Contains(contentType))
+            .WithErrorCode("trainer_settings_unsupported_media_type")
+            .When(command => command.Logo is not null);
+
+        RuleFor(command => command.Logo!.LengthInBytes)
             .InclusiveBetween(1, MaxLogoBytes)
-            .WithErrorCode("trainer_settings_media_too_large");
+            .WithErrorCode("trainer_settings_media_too_large")
+            .When(command => command.Logo is not null);
     }
 }

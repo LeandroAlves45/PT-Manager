@@ -24,7 +24,7 @@ internal sealed class TrainerSettingsConfiguration : IEntityTypeConfiguration<Tr
 
         builder.Property(settings => settings.AppName)
             .HasColumnName("app_name")
-            .HasMaxLength(255)
+            .HasMaxLength(50)
             .HasDefaultValue("PT Manager");
 
         builder.Property(settings => settings.LogoUrl)
@@ -37,17 +37,11 @@ internal sealed class TrainerSettingsConfiguration : IEntityTypeConfiguration<Tr
 
         builder.Property(settings => settings.PrimaryColor)
             .HasColumnName("primary_color")
-            .HasMaxLength(7)
-            .HasDefaultValue("#000000");
+            .HasMaxLength(7);
 
         builder.Property(settings => settings.BodyColor)
             .HasColumnName("body_color")
-            .HasMaxLength(7)
-            .HasDefaultValue("#FFFFFF");
-
-        builder.Property(settings => settings.BackgroundImageUrl)
-            .HasColumnName("background_image_url")
-            .HasMaxLength(500);
+            .HasMaxLength(7);
 
         builder.Property(settings => settings.Phone)
             .HasColumnName("phone")

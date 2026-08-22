@@ -1,4 +1,5 @@
 using Domain.Entities.Clients;
+using TrainerSettingsEntity = Domain.Entities.TrainerSettings.TrainerSettings;
 using Domain.Entities.Identity;
 using Domain.ValueObjects;
 using Infrastructure.Data;
@@ -31,15 +32,10 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
         await _container.StartAsync();
 
         await using var context = CreateContext(TestTenantContext.Administrator());
-        var migrations = context.Database.GetMigrations().ToArray();
-
-        if (!migrations.Contains(InitialCreateMigration, StringComparer.Ordinal))
-            throw new InvalidOperationException(
-                $"Integration test requires migration {InitialCreateMigration}.");
-
-        // Aplicar todas as migrations mantém o fixture válido quando forem
-        // adicionadas novas migrations, corretivas depois da InitialCreate.
-        await context.Database.MigrateAsync();
+        // O schema funcional representa o modelo atual do Sprint 3. O lifecycle
+        // das migrations existentes usa um fixture separado, porque a migration
+        // consolidada deste modelo só será criada no Lote 3F.
+        await context.Database.EnsureCreatedAsync();
     }
 
     public async ValueTask DisposeAsync() => await _container.DisposeAsync();
@@ -51,6 +47,9 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
 
     public PtManagerDbContext CreateAdministrativeContext() =>
         CreateContext(TestTenantContext.Administrator());
+
+    public PtManagerDbContext CreateAdministrativeContext(Guid actorUserId) =>
+        CreateContext(TestTenantContext.Administrator(actorUserId));
 
     public async Task<TestTenantSeed> SeedTenantWithClientAsync(
         string discriminator,
@@ -76,6 +75,7 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
         await using var context = CreateContext(trainer.Id);
         context.Users.AddRange(trainer, clientUser);
         context.Clients.Add(client);
+        context.TrainerSettings.Add(new TrainerSettingsEntity(trainer.Id, now));
         await context.SaveChangesAsync(cancellationToken);
 
         return new TestTenantSeed(trainer.Id, client.Id, clientUser.Id);

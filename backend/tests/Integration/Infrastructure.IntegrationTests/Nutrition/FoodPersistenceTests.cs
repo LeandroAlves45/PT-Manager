@@ -1,6 +1,7 @@
 using Application.Features.Nutrition.Foods.Abstractions;
 using Application.Features.Nutrition.Foods.ListFoods;
 using Application.Pagination;
+using Domain.Entities.Administration;
 using Domain.Entities.Nutrition;
 using Infrastructure.IntegrationTests.Support;
 using Infrastructure.Persistence.Nutrition;
@@ -42,10 +43,14 @@ public sealed class FoodPersistenceTests
         var globalActive = CreateFood(null, $"global-active-{marker}");
         var globalInactive = CreateFood(null, $"global-inactive-{marker}");
         globalInactive.SetActive(false, Now.AddMinutes(1));
+        var actorUserId = owner.TrainerId;
 
-        await using (var admin = _fixture.CreateAdministrativeContext())
+        await using (var admin = _fixture.CreateAdministrativeContext(actorUserId))
         {
             admin.Foods.AddRange(globalActive, globalInactive);
+            admin.AdministrativeAuditEntries.AddRange(
+                CreateAudit(actorUserId, globalActive),
+                CreateAudit(actorUserId, globalInactive));
             await admin.SaveChangesAsync(token);
         }
 
@@ -111,9 +116,10 @@ public sealed class FoodPersistenceTests
         var token = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), token);
         var global = CreateFood(null, $"global-{Guid.NewGuid():N}");
-        await using (var admin = _fixture.CreateAdministrativeContext())
+        await using (var admin = _fixture.CreateAdministrativeContext(tenant.TrainerId))
         {
             admin.Foods.Add(global);
+            admin.AdministrativeAuditEntries.Add(CreateAudit(tenant.TrainerId, global));
             await admin.SaveChangesAsync(token);
         }
 
@@ -179,6 +185,9 @@ public sealed class FoodPersistenceTests
         await using var verify = _fixture.CreateContext(tenant.TrainerId);
         Assert.False((await verify.Foods.SingleAsync(value => value.Id == food.Id, token)).IsActive);
     }
+
+    private static AdministrativeAuditEntry CreateAudit(Guid actorUserId, Food food) =>
+        new(actorUserId, "create", "food", food.Id, null, "{}", Now);
 
     private static Food CreateFood(Guid? trainerId, string name) =>
         new(trainerId, name, null, 2m, 20m, 1m, null, Now);

@@ -46,7 +46,7 @@ public sealed class ChangeTimezoneHandler
 
         var outcome = await _store.ChangeTimezoneAsync(
             actor.Value.TrainerId,
-            command.Timezone,
+            command.Timezone.Trim(),
             _clock.UtcNow,
             cancellationToken);
 

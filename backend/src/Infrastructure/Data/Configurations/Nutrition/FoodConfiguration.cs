@@ -19,26 +19,39 @@ internal sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
             "AND (fiber IS NULL OR fiber >= 0)"));
         builder.HasKey(food => food.Id);
         builder.Property(food => food.Id).HasColumnName("id").ValueGeneratedNever();
+
         builder.Property(food => food.OwnerTrainerId).HasColumnName("owner_trainer_id");
+
         builder.Property(food => food.Name).HasColumnName("name").HasMaxLength(255).IsRequired();
+
         builder.Property(food => food.Description).HasColumnName("description");
-        builder.Property(food => food.Protein).HasColumnName("protein").HasPrecision(10, 2).IsRequired();
-        builder.Property(food => food.Carbs).HasColumnName("carbs").HasPrecision(10, 2).IsRequired();
-        builder.Property(food => food.Fats).HasColumnName("fats").HasPrecision(10, 2).IsRequired();
+
+        builder.Property(food => food.Protein)
+            .HasColumnName("protein").HasPrecision(10, 2).IsRequired();
+
+        builder.Property(food => food.Carbs)
+            .HasColumnName("carbs").HasPrecision(10, 2).IsRequired();
+
+        builder.Property(food => food.Fats)
+            .HasColumnName("fats").HasPrecision(10, 2).IsRequired();
+
         builder.Property(food => food.Kcal)
             .HasColumnName("kcal")
             .HasPrecision(10, 2)
             .HasComputedColumnSql("protein * 4 + carbs * 4 + fats * 9", stored: true);
+
         builder.Property(food => food.Fiber).HasColumnName("fiber").HasPrecision(10, 2);
+
         builder.Property(food => food.IsActive)
             .HasColumnName("is_active")
             .HasDefaultValue(true)
             .IsRequired();
-        builder.Property(food => food.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false).IsRequired();
+
         builder.Property(food => food.CreatedAt)
             .HasColumnName("created_at")
             .HasDefaultValueSql("now()")
             .IsRequired();
+
         builder.Property(food => food.UpdatedAt)
             .HasColumnName("updated_at")
             .HasDefaultValueSql("now()")

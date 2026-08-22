@@ -12,7 +12,7 @@ public sealed partial class UpdateBrandingCommandValidator
         RuleFor(command => command.AppName)
             .NotEmpty()
             .WithErrorCode("trainer_settings_app_name_required")
-            .Length(2, 50)
+            .Must(appName => appName?.Trim().Length is >= 2 and <= 50)
             .WithErrorCode("trainer_settings_app_name_length");
 
         RuleFor(command => command.PrimaryColor)
@@ -32,4 +32,3 @@ public sealed partial class UpdateBrandingCommandValidator
     [GeneratedRegex("^#[0-9A-Fa-f]{6}$")]
     private static partial Regex HexColorPattern();
 }
-

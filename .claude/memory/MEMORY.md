@@ -18,24 +18,20 @@ notas de `.claude/memory/Sessions/`.
 - `backend-python/` é apenas referência funcional e não define a arquitetura
   de destino.
 - Sprint 2 está concluído. Sprint 3 está em execução; Clients, Nutrition,
-  Training, Packs, Sessions, Assessments e Supplements foram materializados nos
-  respetivos lotes. TrainerSettings e administração global estão documentados
-  no Lote 3E.
+  Training, Packs, Sessions, Assessments, Supplements, TrainerSettings,
+  branding e administração global foram materializados até ao Lote 3E.
 
 ## Execução em curso
 
-1. Aplicar os blueprints corrigidos do Lote 3E pela ordem do índice.
+1. Lote 3E concluído e validado no backend real.
 2. Não gerar migration intermédia.
-3. No Lote 3F, consolidar a migration, executar as suites PostgreSQL diferidas,
-   medir os planos SQL relevantes com `EXPLAIN` e validar migrate, rollback e
-   migrate.
+3. No Lote 3F, consolidar a migration, medir os planos SQL relevantes com
+   `EXPLAIN` e validar migrate, rollback e migrate.
 4. Manter `CompleteTrainingPhase2C` imutável.
 
-A materialização integral mais recente dos blueprints do Lote 3E numa cópia
-temporária compilou os projetos relevantes e aprovou Domain, Application e
-Architecture. Infrastructure.IntegrationTests compilou; a execução PostgreSQL
-continua corretamente diferida para o Lote 3F. Evidência em
-`Sessions/2026-08-21-correcao-final-blueprints-lote-3e.md`.
+O gate final do Lote 3E aprovou build Release sem warnings, formatação e 1065
+testes: 365 Domain, 365 Application, 311 integração PostgreSQL e 24 arquitetura.
+Evidência em `Sessions/2026-08-22-sprint3-phase3-lot3e-completion.md`.
 
 A autorização de `ExerciseSetLogs` ainda exige decisão explícita de ator e
 ownership. `PreviewNutrition` é cálculo puro sem I/O. A revisão que substitui
@@ -94,6 +90,9 @@ alegações anteriores desatualizadas está em
   rejeitam itens inativos ou invisíveis ao tenant.
 - `CatalogReferenceLocking` usa `FOR SHARE` para fechar a corrida entre validar
   referências e arquivar administrativamente o mesmo item.
+- Mutações globais de Food e Exercise usam `ExecuteInTransactionAsync` e
+  confirmam commits ambíguos pelo ID único da auditoria atómica. Create preserva
+  a identidade do aggregate entre retries.
 - `uq_clients_user` continua único global. Permitir a mesma conta cliente com
   vários trainers requer decisão de produto e auth no Sprint 4.
 
@@ -113,8 +112,7 @@ alegações anteriores desatualizadas está em
 - Supplements e catálogo global:
   `Sessions/2026-08-19-sprint3-phase3-lot3d-completion.md`.
 - TrainerSettings, branding e administração global:
-  `Sessions/2026-08-20-lote-3e-blueprints-e-correcao-copilot.md` e
-  `Sessions/2026-08-21-correcao-final-blueprints-lote-3e.md`.
+  `Sessions/2026-08-22-sprint3-phase3-lot3e-completion.md`.
 
 ## Padrões documentais
 

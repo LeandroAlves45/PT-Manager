@@ -59,9 +59,28 @@ internal sealed class ClientSupplementAssignmentQueries : IClientSupplementAssig
         Guid trainerId,
         Guid userId,
         Guid assignmentId,
-        CancellationToken cancellationToken) => ClientQuery(trainerId, userId)
-        .Where(item => item.Id == assignmentId)
-        .SingleOrDefaultAsync(cancellationToken);
+        CancellationToken cancellationToken) => (
+            from client in _dbContext.Clients.AsNoTracking()
+            where client.OwnerTrainerId == trainerId && client.UserId == userId
+            join assignment in _dbContext.ClientSupplementAssignments.AsNoTracking()
+                on client.Id equals assignment.ClientId
+            where assignment.OwnerTrainerId == trainerId &&
+                assignment.IsActive &&
+                assignment.Id == assignmentId
+            join supplement in _dbContext.Supplements.AsNoTracking()
+                on assignment.SupplementId equals supplement.Id
+            select new MySupplementAssignmentDto(
+                assignment.Id,
+                supplement.Id,
+                supplement.Name,
+                supplement.Description,
+                supplement.UnitOfMeasure,
+                assignment.ServingSize,
+                assignment.Timing,
+                assignment.TrainerNotes,
+                !supplement.IsActive,
+                assignment.UpdatedAt))
+            .SingleOrDefaultAsync(cancellationToken);
 
     public async Task<PageResult<MySupplementAssignmentDto>> ListMyActiveAsync(
         Guid trainerId,
@@ -69,13 +88,33 @@ internal sealed class ClientSupplementAssignmentQueries : IClientSupplementAssig
         PageRequest page,
         CancellationToken cancellationToken)
     {
-        var query = ClientQuery(trainerId, userId);
+        var query =
+            from client in _dbContext.Clients.AsNoTracking()
+            where client.OwnerTrainerId == trainerId && client.UserId == userId
+            join assignment in _dbContext.ClientSupplementAssignments.AsNoTracking()
+                on client.Id equals assignment.ClientId
+            where assignment.OwnerTrainerId == trainerId && assignment.IsActive
+            join supplement in _dbContext.Supplements.AsNoTracking()
+                on assignment.SupplementId equals supplement.Id
+            select new { Assignment = assignment, Supplement = supplement };
+
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query
-            .OrderBy(item => item.SupplementName)
-            .ThenBy(item => item.Id)
+            .OrderBy(item => item.Supplement.Name)
+            .ThenBy(item => item.Assignment.Id)
             .Skip((page.PageNumber - 1) * page.PageSize)
             .Take(page.PageSize)
+            .Select(item => new MySupplementAssignmentDto(
+                item.Assignment.Id,
+                item.Supplement.Id,
+                item.Supplement.Name,
+                item.Supplement.Description,
+                item.Supplement.UnitOfMeasure,
+                item.Assignment.ServingSize,
+                item.Assignment.Timing,
+                item.Assignment.TrainerNotes,
+                !item.Supplement.IsActive,
+                item.Assignment.UpdatedAt))
             .ToListAsync(cancellationToken);
 
         return new PageResult<MySupplementAssignmentDto>(items, totalCount);
@@ -101,25 +140,4 @@ internal sealed class ClientSupplementAssignmentQueries : IClientSupplementAssig
             assignment.CreatedAt,
             assignment.UpdatedAt);
 
-    private IQueryable<MySupplementAssignmentDto> ClientQuery(
-        Guid trainerId,
-        Guid userId) =>
-        from client in _dbContext.Clients.AsNoTracking()
-        where client.OwnerTrainerId == trainerId && client.UserId == userId
-        join assignment in _dbContext.ClientSupplementAssignments.AsNoTracking()
-            on client.Id equals assignment.ClientId
-        where assignment.OwnerTrainerId == trainerId && assignment.IsActive
-        join supplement in _dbContext.Supplements.AsNoTracking()
-            on assignment.SupplementId equals supplement.Id
-        select new MySupplementAssignmentDto(
-            assignment.Id,
-            supplement.Id,
-            supplement.Name,
-            supplement.Description,
-            supplement.UnitOfMeasure,
-            assignment.ServingSize,
-            assignment.Timing,
-            assignment.TrainerNotes,
-            !supplement.IsActive,
-            assignment.UpdatedAt);
 }

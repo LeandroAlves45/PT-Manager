@@ -1,3 +1,4 @@
+using System.Data;
 using System.Text.Json;
 using Application.Features.Nutrition.Foods.Abstractions;
 using Domain.Entities.Administration;
@@ -5,6 +6,7 @@ using Domain.Entities.Nutrition;
 using Infrastructure.Data;
 using Infrastructure.Persistence.Errors;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Infrastructure.Persistence.Nutrition;
 
@@ -32,17 +34,16 @@ internal sealed class GlobalFoodStore : IGlobalFoodStore
         decimal fats,
         decimal? fiber,
         DateTime now,
-        CancellationToken cancellationToken) => ExecuteAsync(
-            () => CreateOnceAsync(
-                actorUserId,
-                name,
-                description,
-                protein,
-                carbs,
-                fats,
-                fiber,
-                now,
-                cancellationToken));
+        CancellationToken cancellationToken)
+    {
+        // A mesma identidade tem de sobreviver a uma tentativa repetida após falha transitória.
+        var food = new Food(null, name, description, protein, carbs, fats, fiber, now);
+        var attempt = new MutationAttempt();
+        return ExecuteAsync(
+            token => CreateOnceAsync(actorUserId, food, now, attempt, token),
+            attempt,
+            cancellationToken);
+    }
 
     public Task<GlobalFoodStoreResult> UpdateAsync(
         Guid actorUserId,
@@ -54,8 +55,11 @@ internal sealed class GlobalFoodStore : IGlobalFoodStore
         decimal fats,
         decimal? fiber,
         DateTime now,
-        CancellationToken cancellationToken) => ExecuteAsync(
-            () => UpdateOnceAsync(
+        CancellationToken cancellationToken)
+    {
+        var attempt = new MutationAttempt();
+        return ExecuteAsync(
+            token => UpdateOnceAsync(
                 actorUserId,
                 foodId,
                 name,
@@ -65,72 +69,64 @@ internal sealed class GlobalFoodStore : IGlobalFoodStore
                 fats,
                 fiber,
                 now,
-                cancellationToken));
+                attempt,
+                token),
+            attempt,
+            cancellationToken);
+    }
 
     public Task<GlobalFoodStoreResult> SetActiveAsync(
         Guid actorUserId,
         Guid foodId,
         bool isActive,
         DateTime now,
-        CancellationToken cancellationToken) => ExecuteAsync(
-            () => SetActiveOnceAsync(
-                actorUserId,
-                foodId,
-                isActive,
-                now,
-                cancellationToken));
+        CancellationToken cancellationToken)
+    {
+        var attempt = new MutationAttempt();
+        return ExecuteAsync(
+            token => SetActiveOnceAsync(
+                actorUserId, foodId, isActive, now, attempt, token),
+            attempt,
+            cancellationToken);
+    }
 
-    public Task<GlobalFoodStoreResult> DeleteAsync(
+    public async Task<GlobalFoodStoreResult> DeleteAsync(
         Guid actorUserId,
         Guid foodId,
         DateTime now,
-        CancellationToken cancellationToken) => ExecuteAsync(
-            () => DeleteOnceAsync(
-                actorUserId,
-                foodId,
-                now,
-                cancellationToken));
+        CancellationToken cancellationToken)
+    {
+        var attempt = new MutationAttempt();
+        try
+        {
+            return await ExecuteAsync(
+                token => DeleteOnceAsync(actorUserId, foodId, now, attempt, token),
+                attempt,
+                cancellationToken);
+        }
+        catch (DbUpdateException ex)
+        {
+            if (_translator.TryTranslate(
+                ex,
+                PersistenceOperation.DeleteGlobalFood,
+                out var error) && error?.Code == "global_food_has_references")
+                return GlobalFoodStoreResult.For(GlobalFoodStoreResult.Status.HasReferences);
+            throw;
+        }
+    }
 
     private async Task<GlobalFoodStoreResult> CreateOnceAsync(
         Guid actorUserId,
-        string name,
-        string? description,
-        decimal protein,
-        decimal carbs,
-        decimal fats,
-        decimal? fiber,
+        Food food,
         DateTime now,
+        MutationAttempt attempt,
         CancellationToken cancellationToken)
     {
-        await using var transaction = await _dbContext.Database
-            .BeginTransactionAsync(cancellationToken);
-
-        try
-        {
-            var food = new Food(
-                null,
-                name,
-                description,
-                protein,
-                carbs,
-                fats,
-                fiber,
-                now);
-            _dbContext.Foods.Add(food);
-            AddAudit(actorUserId, "create", food, null, Snapshot(food), now);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-
-            // O reload fica dentro da transação: uma falha transitória antes do commit
-            // pode ser repetida sem duplicar Food nem auditoria.
-            await _dbContext.Entry(food).ReloadAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-            return GlobalFoodStoreResult.WithFood(GlobalFoodStoreResult.Status.Created, food);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(CancellationToken.None);
-            throw;
-        }
+        _dbContext.Foods.Add(food);
+        attempt.AuditEntry = AddAudit(
+            actorUserId, "create", food, null, Snapshot(food), now);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return GlobalFoodStoreResult.WithFood(GlobalFoodStoreResult.Status.Created, food);
     }
 
     private async Task<GlobalFoodStoreResult> UpdateOnceAsync(
@@ -143,35 +139,25 @@ internal sealed class GlobalFoodStore : IGlobalFoodStore
         decimal fats,
         decimal? fiber,
         DateTime now,
+        MutationAttempt attempt,
         CancellationToken cancellationToken)
     {
-        await using var transaction = await _dbContext.Database
-            .BeginTransactionAsync(cancellationToken);
+        var food = await _dbContext.LockGlobalFoodAsync(foodId, cancellationToken);
+        if (food is null)
+            return GlobalFoodStoreResult.For(GlobalFoodStoreResult.Status.NotFound);
+        if (!food.IsActive)
+            return GlobalFoodStoreResult.For(GlobalFoodStoreResult.Status.Inactive);
 
-        try
-        {
-            var food = await _dbContext.LockGlobalFoodAsync(foodId, cancellationToken);
-            if (food is null)
-                return await RollbackAsync(transaction, GlobalFoodStoreResult.Status.NotFound);
-            if (!food.IsActive)
-                return await RollbackAsync(transaction, GlobalFoodStoreResult.Status.Inactive);
+        if (await _dbContext.MealPlanMealItems.IgnoreQueryFilters()
+            .AnyAsync(item => item.FoodId == foodId, cancellationToken))
+            return GlobalFoodStoreResult.For(GlobalFoodStoreResult.Status.Referenced);
 
-            if (await _dbContext.MealPlanMealItems.IgnoreQueryFilters()
-                .AnyAsync(item => item.FoodId == foodId, cancellationToken))
-                return await RollbackAsync(transaction, GlobalFoodStoreResult.Status.Referenced);
-
-            var before = Snapshot(food);
-            food.Update(name, description, protein, carbs, fats, fiber, now);
-            AddAudit(actorUserId, "update", food, before, Snapshot(food), now);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-            return GlobalFoodStoreResult.WithFood(GlobalFoodStoreResult.Status.Updated, food);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(CancellationToken.None);
-            throw;
-        }
+        var before = Snapshot(food);
+        food.Update(name, description, protein, carbs, fats, fiber, now);
+        attempt.AuditEntry = AddAudit(
+            actorUserId, "update", food, before, Snapshot(food), now);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return GlobalFoodStoreResult.WithFood(GlobalFoodStoreResult.Status.Updated, food);
     }
 
     private async Task<GlobalFoodStoreResult> SetActiveOnceAsync(
@@ -179,97 +165,64 @@ internal sealed class GlobalFoodStore : IGlobalFoodStore
         Guid foodId,
         bool isActive,
         DateTime now,
+        MutationAttempt attempt,
         CancellationToken cancellationToken)
     {
-        await using var transaction = await _dbContext.Database
-            .BeginTransactionAsync(cancellationToken);
+        var food = await _dbContext.LockGlobalFoodAsync(foodId, cancellationToken);
+        if (food is null)
+            return GlobalFoodStoreResult.For(GlobalFoodStoreResult.Status.NotFound);
+        if (food.IsActive == isActive)
+            return GlobalFoodStoreResult.For(
+                GlobalFoodStoreResult.Status.AlreadyInRequestedState);
 
-        try
-        {
-            var food = await _dbContext.LockGlobalFoodAsync(foodId, cancellationToken);
-            if (food is null)
-                return await RollbackAsync(transaction, GlobalFoodStoreResult.Status.NotFound);
-            if (food.IsActive == isActive)
-                return await RollbackAsync(
-                    transaction, GlobalFoodStoreResult.Status.AlreadyInRequestedState);
-
-            var before = Snapshot(food);
-            food.SetActive(isActive, now);
-            AddAudit(
-                actorUserId,
-                isActive ? "reactivate" : "archive",
-                food,
-                before,
-                Snapshot(food),
-                now);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-            return GlobalFoodStoreResult.For(GlobalFoodStoreResult.Status.Changed);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(CancellationToken.None);
-            throw;
-        }
+        var before = Snapshot(food);
+        food.SetActive(isActive, now);
+        attempt.AuditEntry = AddAudit(
+            actorUserId,
+            isActive ? "reactivate" : "archive",
+            food,
+            before,
+            Snapshot(food),
+            now);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return GlobalFoodStoreResult.For(GlobalFoodStoreResult.Status.Changed);
     }
 
     private async Task<GlobalFoodStoreResult> DeleteOnceAsync(
         Guid actorUserId,
         Guid foodId,
         DateTime now,
+        MutationAttempt attempt,
         CancellationToken cancellationToken)
     {
-        await using var transaction = await _dbContext.Database
-            .BeginTransactionAsync(cancellationToken);
+        var food = await _dbContext.LockGlobalFoodAsync(foodId, cancellationToken);
+        if (food is null)
+            return GlobalFoodStoreResult.For(GlobalFoodStoreResult.Status.NotFound);
 
-        try
-        {
-            var food = await _dbContext.LockGlobalFoodAsync(foodId, cancellationToken);
-            if (food is null)
-                return await RollbackAsync(transaction, GlobalFoodStoreResult.Status.NotFound);
+        if (await _dbContext.MealPlanMealItems.IgnoreQueryFilters()
+            .AnyAsync(item => item.FoodId == foodId, cancellationToken))
+            return GlobalFoodStoreResult.For(GlobalFoodStoreResult.Status.HasReferences);
 
-            if (await _dbContext.MealPlanMealItems.IgnoreQueryFilters()
-                .AnyAsync(item => item.FoodId == foodId, cancellationToken))
-                return await RollbackAsync(transaction, GlobalFoodStoreResult.Status.HasReferences);
-
-            var before = Snapshot(food);
-            _dbContext.Foods.Remove(food);
-            AddAudit(actorUserId, "delete", food, before, null, now);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-            return GlobalFoodStoreResult.For(GlobalFoodStoreResult.Status.Deleted);
-        }
-        catch (DbUpdateException ex)
-        {
-            await transaction.RollbackAsync(CancellationToken.None);
-            if (_translator.TryTranslate(ex, PersistenceOperation.DeleteGlobalFood, out var error) &&
-                error?.Code == "global_food_has_references")
-                return GlobalFoodStoreResult.For(GlobalFoodStoreResult.Status.HasReferences);
-            throw;
-        }
-        catch
-        {
-            await transaction.RollbackAsync(CancellationToken.None);
-            throw;
-        }
+        var before = Snapshot(food);
+        _dbContext.Foods.Remove(food);
+        attempt.AuditEntry = AddAudit(actorUserId, "delete", food, before, null, now);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return GlobalFoodStoreResult.For(GlobalFoodStoreResult.Status.Deleted);
     }
 
-    private void AddAudit(
+    private AdministrativeAuditEntry AddAudit(
         Guid actorUserId,
         string action,
         Food food,
         string? before,
         string? after,
-        DateTime now) =>
-        _dbContext.AdministrativeAuditEntries.Add(
-            new AdministrativeAuditEntry(
-                actorUserId,
-                action,
-                ResourceType,
-                food.Id,
-                before,
-                after,
-                now));
+        DateTime now)
+    {
+        var entry = new AdministrativeAuditEntry(
+            actorUserId, action, ResourceType, food.Id, before, after, now);
+        _dbContext.AdministrativeAuditEntries.Add(entry);
+        return entry;
+    }
 
     private static string Snapshot(Food food) => JsonSerializer.Serialize(new
     {
@@ -279,24 +232,45 @@ internal sealed class GlobalFoodStore : IGlobalFoodStore
         protein = food.Protein,
         carbs = food.Carbs,
         fats = food.Fats,
+        // A auditoria é criada antes do INSERT; a fórmula reproduz a coluna generated
+        // para o snapshot guardar o valor correto sem separar a escrita atómica.
+        kcal = food.Protein * 4 + food.Carbs * 4 + food.Fats * 9,
         fiber = food.Fiber,
         is_active = food.IsActive,
         created_at = food.CreatedAt,
         updated_at = food.UpdatedAt
     });
 
-    private static async Task<GlobalFoodStoreResult> RollbackAsync(
-        Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction,
-        GlobalFoodStoreResult.Status status)
-    {
-        await transaction.RollbackAsync(CancellationToken.None);
-        return GlobalFoodStoreResult.For(status);
-    }
-
     private Task<GlobalFoodStoreResult> ExecuteAsync(
-        Func<Task<GlobalFoodStoreResult>> operation)
+        Func<CancellationToken, Task<GlobalFoodStoreResult>> operation,
+        MutationAttempt attempt,
+        CancellationToken cancellationToken)
     {
         var strategy = _dbContext.Database.CreateExecutionStrategy();
-        return strategy.ExecuteAsync(operation);
+        return strategy.ExecuteInTransactionAsync(
+            async operationToken =>
+            {
+                // Uma tentativa repetida reconstrói tracking e a prova do commit.
+                _dbContext.ChangeTracker.Clear();
+                attempt.AuditEntry = null;
+                return await operation(operationToken);
+            },
+            verificationToken => VerifySucceededAsync(attempt, verificationToken),
+            IsolationLevel.ReadCommitted,
+            cancellationToken);
+    }
+
+    private Task<bool> VerifySucceededAsync(
+        MutationAttempt attempt,
+        CancellationToken cancellationToken) =>
+        attempt.AuditEntry is null
+            ? Task.FromResult(false)
+            : _dbContext.AdministrativeAuditEntries
+                .AsNoTracking()
+                .AnyAsync(entry => entry.Id == attempt.AuditEntry.Id, cancellationToken);
+
+    private sealed class MutationAttempt
+    {
+        public AdministrativeAuditEntry? AuditEntry { get; set; }
     }
 }

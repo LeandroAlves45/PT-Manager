@@ -50,10 +50,6 @@ internal sealed class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
             .HasDefaultValue(true)
             .IsRequired();
 
-        builder.Property(e => e.IsDeleted)
-            .HasColumnName("is_deleted")
-            .HasDefaultValue(false);
-
         builder.Property(e => e.CreatedAt)
             .HasColumnName("created_at")
             .HasDefaultValueSql("now()")

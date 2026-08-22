@@ -29,5 +29,9 @@ internal enum PersistenceOperation
     /// <summary>Reativa uma atribuição direta de suplemento.</summary>
     ReactivateSupplementAssignment,
     /// <summary>Elimina fisicamente um suplemento global do catálogo.</summary>
-    DeleteGlobalSupplement
+    DeleteGlobalSupplement,
+    /// <summary>Elimina fisicamente um alimento global do catálogo.</summary>
+    DeleteGlobalFood,
+    /// <summary>Elimina fisicamente um exercício global do catálogo.</summary>
+    DeleteGlobalExercise
 }

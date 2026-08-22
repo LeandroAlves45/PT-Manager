@@ -131,11 +131,11 @@ public sealed class PtManagerDbContext : DbContext
         // POLÍTICA B — catálogo com linhas globais. OwnerTrainerId é
         // Guid? (nullable) + IsDeleted bool.
         modelBuilder.Entity<Food>().HasQueryFilter(f =>
-            CurrentTrainerId.HasValue && !f.IsDeleted &&
+            CurrentTrainerId.HasValue &&
             (f.OwnerTrainerId == null || f.OwnerTrainerId == CurrentTrainerId));
 
         modelBuilder.Entity<Exercise>().HasQueryFilter(e =>
-            CurrentTrainerId.HasValue && !e.IsDeleted &&
+            CurrentTrainerId.HasValue &&
             (e.OwnerTrainerId == null || e.OwnerTrainerId == CurrentTrainerId));
 
         modelBuilder.Entity<Supplement>().HasQueryFilter(s =>

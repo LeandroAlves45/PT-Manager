@@ -34,6 +34,9 @@ public sealed class Exercise
         DateTime now
     )
     {
+        if (ownerTrainerId.HasValue && ownerTrainerId.Value == Guid.Empty)
+            throw new DomainException("Owner trainer ID cannot be empty.");
+
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
         SetFields(name, description, muscleGroups, equipment, difficultyLevel, videoUrl);

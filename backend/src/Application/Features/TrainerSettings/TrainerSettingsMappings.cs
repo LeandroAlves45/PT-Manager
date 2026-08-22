@@ -11,8 +11,6 @@ public static class TrainerSettingsMappings
         ArgumentNullException.ThrowIfNull(settings);
 
         return new TrainerSettingsDto(
-            settings.Id,
-            settings.TrainerId,
             settings.AppName,
             settings.LogoUrl,
             settings.PrimaryColor,

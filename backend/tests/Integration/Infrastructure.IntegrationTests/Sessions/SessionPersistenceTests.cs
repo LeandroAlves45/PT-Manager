@@ -1,5 +1,5 @@
 using Application.Features.Sessions.Abstractions;
-using Domain.Entities.TrainerSettings;
+using TrainerSettingsEntity = global::Domain.Entities.TrainerSettings.TrainerSettings;
 using Domain.ValueObjects;
 using Infrastructure.IntegrationTests.Clients;
 using Infrastructure.IntegrationTests.Support;
@@ -692,7 +692,7 @@ public sealed class SessionPersistenceTests
             packType,
             new DateOnly(2026, 8, 1),
             null);
-        var settings = new TrainerSettings(trainer.Id, Now);
+        var settings = new TrainerSettingsEntity(trainer.Id, Now);
 
         var entities = second is null
             ? new object[] { trainer, client, packType, pack, settings }

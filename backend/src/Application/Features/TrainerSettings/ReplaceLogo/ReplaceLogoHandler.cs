@@ -75,19 +75,23 @@ public sealed class ReplaceLogoHandler
 
             return Result<TrainerSettingsDto>.Success(outcome.Settings!.ToDto());
         }
+        catch (OperationCanceledException)
+        {
+            if (!await TryDeleteUploadedMediaAsync(uploaded.PublicId))
+            {
+                return Result<TrainerSettingsDto>.Failure(
+                    TrainerSettingsErrors.LogoCompensationFailed);
+            }
+
+            throw;
+        }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             // O upload já está confirmado no storage externo; a transação
             // local falhou depois disso. Compensar de imediato para não
             // deixar o asset órfão — não há segunda oportunidade automática,
             // porque a outbox só é escrita DENTRO da transação que falhou.
-            try
-            {
-                await _mediaStorage.DeleteAsync(
-                    uploaded.PublicId, CancellationToken.None);
-            }
-            catch (Exception compesationEx)
-                when (compesationEx is not OperationCanceledException)
+            if (!await TryDeleteUploadedMediaAsync(uploaded.PublicId))
             {
                 return Result<TrainerSettingsDto>.Failure(
                     TrainerSettingsErrors.LogoCompensationFailed);
@@ -95,6 +99,19 @@ public sealed class ReplaceLogoHandler
 
             return Result<TrainerSettingsDto>.Failure(
                 TrainerSettingsErrors.PersistenceFailed);
+        }
+    }
+
+    private async Task<bool> TryDeleteUploadedMediaAsync(string publicId)
+    {
+        try
+        {
+            await _mediaStorage.DeleteAsync(publicId, CancellationToken.None);
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
         }
     }
 }

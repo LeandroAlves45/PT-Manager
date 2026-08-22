@@ -15,7 +15,17 @@ public sealed class ChangeTimezoneCommandValidator : AbstractValidator<ChangeTim
             .WithMessage("Timezone is not a known IANA identifier.");
     }
 
-    private static bool BeAKnownIanaTimezone(string timezone) =>
-        !string.IsNullOrWhiteSpace(timezone) &&
-        TimeZoneInfo.TryFindSystemTimeZoneById(timezone.Trim(), out _);
+    private static bool BeAKnownIanaTimezone(string? timezone)
+    {
+        var normalized = timezone?.Trim() ?? string.Empty;
+
+        return IsValidIanaShape(normalized) &&
+            TimeZoneInfo.TryFindSystemTimeZoneById(normalized, out _);
+    }
+
+    private static bool IsValidIanaShape(string value) =>
+        value == "UTC" ||
+        (value.Length is > 2 and <= 100 && value.Contains('/') &&
+            value.All(character =>
+                char.IsLetterOrDigit(character) || character is '/' or '_' or '-' or '+'));
 }

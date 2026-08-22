@@ -159,7 +159,7 @@ public sealed class CrossTenantConstraintTests
                 id, owner_trainer_id, created_by_user_id, name,
                 unit_of_measure, serving_size, timing, created_at, updated_at)
             VALUES (
-                @supplement_id, NULL, NULL, 'Global supplement',
+                @supplement_id, NULL, @owner_trainer_id, 'Global supplement',
                 'grams', '5 g', 'Daily', @now, @now);
 
             INSERT INTO pack_types (

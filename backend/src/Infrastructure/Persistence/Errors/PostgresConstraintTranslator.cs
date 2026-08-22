@@ -127,6 +127,30 @@ internal sealed class PostgresConstraintTranslator
             return true;
         }
 
+        if (postgresException.SqlState == ForeignKeyViolation &&
+            operation is PersistenceOperation.DeleteGlobalFood &&
+            postgresException.ConstraintName == "fk_meal_plan_meal_items_food")
+        {
+            error = Error.Create(
+                code: "global_food_has_references",
+                category: ErrorCategory.Conflict,
+                description: "A referenced global food cannot be deleted."
+            );
+            return true;
+        }
+
+        if (postgresException.SqlState == ForeignKeyViolation &&
+            operation is PersistenceOperation.DeleteGlobalExercise &&
+            postgresException.ConstraintName == "fk_training_plan_day_exercises_exercise")
+        {
+            error = Error.Create(
+                code: "global_exercise_has_references",
+                category: ErrorCategory.Conflict,
+                description: "A referenced global exercise cannot be deleted."
+            );
+            return true;
+        }
+
         error = null;
         return false;
     }

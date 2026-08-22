@@ -55,7 +55,7 @@ public sealed class TrainerSettings
         if (!IsValidIanaShape(normalized))
             throw new DomainException("Timezone must be a valid IANA identifier");
 
-        if (!string.Equals(Timezone, normalized, StringComparison.Ordinal))
+        if (string.Equals(Timezone, normalized, StringComparison.Ordinal))
             return;
 
         Timezone = normalized;
@@ -71,7 +71,7 @@ public sealed class TrainerSettings
     )
     {
         var normalizedAppName = appName?.Trim() ?? string.Empty;
-        if (normalizedAppName.Length is < 2 or > 255)
+        if (normalizedAppName.Length is < 2 or > 50)
             throw new DomainException("App name must contain between 2 and 50 characters.");
         if ((primaryColor is not null && !IsHexColor(primaryColor)) ||
             (bodyColor is not null && !IsHexColor(bodyColor)))

@@ -1,68 +1,72 @@
 using Domain.Entities.Nutrition;
 using Domain.Exceptions;
-using Xunit;
 
 namespace Domain.UnitTests.Entities.Nutrition;
 
 public sealed class FoodTests
 {
-    [Fact]
-    public void Constructor_NameWithOuterWhitespace_StoresNormalizedName()
-    {
-        // Arrange & Act
-        var food = new Food(
-            null,
-            "  Chicken breast  ",
-            null,
-            31,
-            0,
-            3.6m,
-            null,
-            new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc)
-        );
+    private static readonly DateTime Now = new(2026, 8, 20, 10, 0, 0, DateTimeKind.Utc);
 
-        // Assert
-        Assert.Equal("Chicken breast", food.Name);
+    [Fact]
+    public void Constructor_WithValidValues_CreatesNormalizedActiveGlobalFood()
+    {
+        var food = new Food(null, "  Chicken breast  ", "  Fresh  ", 31m, 0m, 3.6m, 0m, Now);
+
+        Assert.Equal(("Chicken breast", "Fresh", true, null),
+            (food.Name, food.Description, food.IsActive, food.OwnerTrainerId));
     }
 
     [Fact]
-    public void Update_NameWithOuterWhitespace_StoresNormalizedName()
+    public void Constructor_WhenOwnerTrainerIdIsEmpty_ThrowsDomainException()
     {
-        // Arrange
-        var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
-        var food = new Food(null, "Rice", null, 2.7m, 28, 0.3m, null, now);
+        var action = () => new Food(Guid.Empty, "Chicken", null, 31m, 0m, 3.6m, null, Now);
 
-        // Act
-        food.Update("  Brown rice  ", null, 2.7m, 25.6m, 1m, null, now);
+        Assert.Throws<DomainException>(action);
+    }
 
-        // Assert
-        Assert.Equal("Brown rice", food.Name);
+    [Theory]
+    [InlineData(101, 0, 0)]
+    [InlineData(0, 101, 0)]
+    [InlineData(0, 0, 101)]
+    [InlineData(60, 60, 0)]
+    public void Constructor_WhenMacrosAreInvalid_ThrowsDomainException(int protein, int carbs, int fats)
+    {
+        var action = () => new Food(null, "Invalid", null, protein, carbs, fats, null, Now);
+
+        Assert.Throws<DomainException>(action);
     }
 
     [Fact]
-    public void Update_DeletedFood_ThrowsDomainException()
+    public void SetActive_ToSameValue_DoesNotChangeTimestamp()
     {
-        // Arrange
-        var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
-        var food = new Food(null, "Rice", null, 2.7m, 28, 0.3m, null, now);
-        food.SoftDelete(now);
+        var food = CreateFood();
 
-        // Act & Assert
-        Assert.Throws<DomainException>(() =>
-            food.Update("Brown rice", null, 2.7m, 25.6m, 1m, null, now));
+        food.SetActive(true, Now.AddMinutes(1));
+
+        Assert.Equal(Now, food.UpdatedAt);
     }
 
     [Fact]
-    public void SoftDelete_ActiveFood_DeactivatesAndDeletesFood()
+    public void SetActive_ToFalse_ArchivesFood()
     {
-        // Arrange
-        var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
-        var food = new Food(null, "Rice", null, 2.7m, 28, 0.3m, null, now);
+        var food = CreateFood();
 
-        // Act
-        food.SoftDelete(now.AddMinutes(1));
+        food.SetActive(false, Now.AddMinutes(1));
 
-        // Assert
-        Assert.Equal((false, true), (food.IsActive, food.IsDeleted));
+        Assert.False(food.IsActive);
     }
+
+    [Fact]
+    public void Update_AfterArchive_UpdatesEditableValues()
+    {
+        var food = CreateFood();
+        food.SetActive(false, Now.AddMinutes(1));
+
+        food.Update("  Chicken thigh  ", null, 26m, 0m, 9m, null, Now.AddMinutes(2));
+
+        Assert.Equal("Chicken thigh", food.Name);
+    }
+
+    private static Food CreateFood() =>
+        new(null, "Chicken breast", null, 31m, 0m, 3.6m, null, Now);
 }

@@ -21,6 +21,14 @@ namespace Infrastructure.Data.Interceptors;
 /// </summary>
 public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
 {
+    private static readonly IReadOnlyDictionary<Type, string> CatalogResourceTypes =
+        new Dictionary<Type, string>
+        {
+            [typeof(Food)] = "food",
+            [typeof(Exercise)] = "exercise",
+            [typeof(Supplement)] = "supplement"
+        };
+
     private readonly ITenantContext _tenantContext;
 
     public TenantWriteValidationInterceptor(ITenantContext tenantContext)
@@ -333,24 +341,31 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
         // Recolher ids do catálogo
         var referenceFoodIds = context.ChangeTracker
             .Entries<MealPlanMealItem>()
-            .Where(entry => entry.State == EntityState.Added || entry.State == EntityState.Modified)
+            .Where(entry => entry.State == EntityState.Added ||
+                entry.State == EntityState.Modified && entry.Property(item => item.FoodId).IsModified)
             .Select(entry => entry.Entity.FoodId)
             .Distinct()
             .ToList();
 
         var referenceSupplementIds = context.ChangeTracker
             .Entries<MealPlanMealSupplement>()
-            .Where(entry => entry.State == EntityState.Added || entry.State == EntityState.Modified)
+            .Where(entry => entry.State == EntityState.Added ||
+                entry.State == EntityState.Modified &&
+                entry.Property(item => item.SupplementId).IsModified)
             .Select(entry => entry.Entity.SupplementId)
             .Concat(context.ChangeTracker.Entries<ClientSupplementAssignment>()
-                .Where(entry => entry.State == EntityState.Added || entry.State == EntityState.Modified)
+                .Where(entry => entry.State == EntityState.Added ||
+                    entry.State == EntityState.Modified &&
+                    entry.Property(item => item.SupplementId).IsModified)
                 .Select(entry => entry.Entity.SupplementId))
             .Distinct()
             .ToList();
 
         var referenceExerciseIds = context.ChangeTracker
             .Entries<TrainingPlanDayExercise>()
-            .Where(entry => entry.State == EntityState.Added || entry.State == EntityState.Modified)
+            .Where(entry => entry.State == EntityState.Added ||
+                entry.State == EntityState.Modified &&
+                entry.Property(item => item.ExerciseId).IsModified)
             .Select(entry => entry.Entity.ExerciseId)
             .Distinct()
             .ToList();
@@ -368,7 +383,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 {
                     entry.Entity.Id,
                     entry.Entity.OwnerTrainerId,
-                    entry.Entity.IsDeleted,
+                    entry.Entity.IsActive,
                 })
                 .ToDictionary(food => food.Id);
 
@@ -387,7 +402,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                     {
                         food.Id,
                         food.OwnerTrainerId,
-                        food.IsDeleted,
+                        food.IsActive,
                     })
                     .ToListAsync(cancellationToken);
 
@@ -400,8 +415,8 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 if (!foods.TryGetValue(foodId, out var food))
                     throw new DomainException("Referenced catalog food does not exist.");
 
-                if (food.IsDeleted)
-                    throw new DomainException("Cannot reference a deleted catalog food.");
+                if (!food.IsActive)
+                    throw new DomainException("Cannot create a reference to an archived catalog food.");
 
                 if (food.OwnerTrainerId is not null && food.OwnerTrainerId != tenantId)
                     throw new DomainException(
@@ -473,7 +488,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 {
                     entry.Entity.Id,
                     entry.Entity.OwnerTrainerId,
-                    entry.Entity.IsDeleted,
+                    entry.Entity.IsActive,
                 })
                 .ToDictionary(exercise => exercise.Id);
 
@@ -491,7 +506,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                     {
                         exercise.Id,
                         exercise.OwnerTrainerId,
-                        exercise.IsDeleted,
+                        exercise.IsActive,
                     })
                     .ToListAsync(cancellationToken);
 
@@ -504,8 +519,8 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 if (!exercises.TryGetValue(exerciseId, out var exercise))
                     throw new DomainException("Referenced catalog exercise does not exist.");
 
-                if (exercise.IsDeleted)
-                    throw new DomainException("Cannot reference a deleted catalog exercise.");
+                if (!exercise.IsActive)
+                    throw new DomainException("Cannot create a reference to an archived catalog exercise.");
 
                 if (exercise.OwnerTrainerId is not null && exercise.OwnerTrainerId != tenantId)
                     throw new DomainException(
@@ -589,24 +604,28 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                     "Administrative audit actor does not match the authorized context.");
         }
 
-        var globalSupplementWrites = context.ChangeTracker.Entries<Supplement>()
-            .Where(entry =>
-                entry.State is EntityState.Added or
-                EntityState.Modified or EntityState.Deleted)
-            .Where(entry => entry.Entity.OwnerTrainerId is null)
-            .Select(entry => entry.Entity.Id)
-            .ToList();
-
-        foreach (var supplementId in globalSupplementWrites)
+        foreach (var (catalogType, resourceType) in CatalogResourceTypes)
         {
-            var hasAudit = auditEntries.Any(entry =>
-                entry.State == EntityState.Added &&
-                entry.Entity.ResourceType == "supplement" &&
-                entry.Entity.ResourceId == supplementId);
+            var globalWrites = context.ChangeTracker.Entries()
+                .Where(entry => entry.Entity.GetType() == catalogType)
+                .Where(entry =>
+                    entry.State is EntityState.Added or
+                    EntityState.Modified or EntityState.Deleted)
+                .Where(entry => (Guid?)entry.Property("OwnerTrainerId").CurrentValue is null)
+                .Select(entry => (Guid?)entry.Property("Id").CurrentValue!)
+                .ToList();
 
-            if (!hasAudit)
-                throw new DomainException(
-                    "A global supplement mutation requires an audit entry.");
+            foreach (var resourceId in globalWrites)
+            {
+                var hasAudit = auditEntries.Any(entry =>
+                    entry.State == EntityState.Added &&
+                    entry.Entity.ResourceType == resourceType &&
+                    entry.Entity.ResourceId == resourceId);
+
+                if (!hasAudit)
+                    throw new DomainException(
+                        $"A global {resourceType} mutation requires an audit entry.");
+            }
         }
     }
 

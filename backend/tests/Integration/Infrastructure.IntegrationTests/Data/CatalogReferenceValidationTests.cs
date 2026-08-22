@@ -1,3 +1,4 @@
+using Domain.Entities.Administration;
 using Domain.Entities.Nutrition;
 using Domain.Entities.Supplements;
 using Domain.Entities.Training;
@@ -88,13 +89,13 @@ public sealed class CatalogReferenceValidationTests
     }
 
     [Fact]
-    public async Task SaveChanges_WhenFoodIsDeleted_ThrowsDomainException()
+    public async Task SaveChanges_WhenFoodIsArchived_ThrowsDomainException()
     {
         // Arrange
         var cancellationToken = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(
             Guid.NewGuid().ToString("N"), cancellationToken);
-        var foodId = await SeedFoodAsync(tenant.TrainerId, cancellationToken, deleted: true);
+        var foodId = await SeedFoodAsync(tenant.TrainerId, cancellationToken, archived: true);
         var plan = CreateMealPlanWithItem(tenant.TrainerId, tenant.ClientId, foodId);
 
         await using var context = _fixture.CreateContext(tenant.TrainerId);
@@ -202,13 +203,16 @@ public sealed class CatalogReferenceValidationTests
     }
 
     [Fact]
-    public async Task SaveChanges_WhenExerciseIsDeleted_ThrowsDomainException()
+    public async Task SaveChanges_WhenExerciseIsArchived_ThrowsDomainException()
     {
         // Arrange
         var cancellationToken = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(
             Guid.NewGuid().ToString("N"), cancellationToken);
-        var exerciseId = await SeedExerciseAsync(tenant.TrainerId, cancellationToken, deleted: true);
+        var exerciseId = await SeedExerciseAsync(
+            tenant.TrainerId,
+            cancellationToken,
+            archived: true);
         var (plan, day, prescription) = CreateTrainingPlanWithExercise(
             tenant.TrainerId, tenant.ClientId, exerciseId);
 
@@ -248,9 +252,9 @@ public sealed class CatalogReferenceValidationTests
 
     // ---------- Supplement ----------
     // Movidos de TenantWriteValidationInterceptorTests para fechar a matriz
-    // simÃ©trica de catÃ¡logos neste ficheiro (ver doc 05, secÃ§Ã£o "Cobertura
-    // simÃ©trica obrigatÃ³ria dos catÃ¡logos"). Os cenÃ¡rios de FK composta,
-    // Ã­ndice Ãºnico de assignment ativo e persistÃªncia global/privada
+    // simétrica de catálogos neste ficheiro (ver doc 05, secção "Cobertura
+    // simétrica obrigatória dos catálogos"). Os cenários de FK composta,
+    // índice único de assignment ativo e persistência global/privada
     // continuam em Catalogs/ClientSupplementAssignmentTests.cs.
 
     [Fact]
@@ -297,16 +301,20 @@ public sealed class CatalogReferenceValidationTests
     private async Task<Guid> SeedFoodAsync(
         Guid? ownerTrainerId,
         CancellationToken cancellationToken,
-        bool deleted = false)
+        bool archived = false)
     {
         var food = IntegrationTestData.Food(ownerTrainerId, Now);
-        if (deleted)
-            food.SoftDelete(Now.AddMinutes(1));
+        if (archived)
+            food.SetActive(false, Now.AddMinutes(1));
 
+        var actorUserId = ownerTrainerId ?? Guid.NewGuid();
         await using var context = ownerTrainerId is null
-            ? _fixture.CreateAdministrativeContext()
+            ? _fixture.CreateAdministrativeContext(actorUserId)
             : _fixture.CreateContext(ownerTrainerId);
         context.Foods.Add(food);
+        if (ownerTrainerId is null)
+            context.AdministrativeAuditEntries.Add(
+                CreateAudit(actorUserId, "food", food.Id));
         await context.SaveChangesAsync(cancellationToken);
 
         return food.Id;
@@ -315,16 +323,20 @@ public sealed class CatalogReferenceValidationTests
     private async Task<Guid> SeedExerciseAsync(
         Guid? ownerTrainerId,
         CancellationToken cancellationToken,
-        bool deleted = false)
+        bool archived = false)
     {
         var exercise = IntegrationTestData.Exercise(ownerTrainerId, Now);
-        if (deleted)
-            exercise.SoftDelete(Now.AddMinutes(1));
+        if (archived)
+            exercise.SetActive(false, Now.AddMinutes(1));
 
+        var actorUserId = ownerTrainerId ?? Guid.NewGuid();
         await using var context = ownerTrainerId is null
-            ? _fixture.CreateAdministrativeContext()
+            ? _fixture.CreateAdministrativeContext(actorUserId)
             : _fixture.CreateContext(ownerTrainerId);
         context.Exercises.Add(exercise);
+        if (ownerTrainerId is null)
+            context.AdministrativeAuditEntries.Add(
+                CreateAudit(actorUserId, "exercise", exercise.Id));
         await context.SaveChangesAsync(cancellationToken);
 
         return exercise.Id;
@@ -339,14 +351,24 @@ public sealed class CatalogReferenceValidationTests
         if (archived)
             supplement.Archive(Now.AddMinutes(1));
 
+        var actorUserId = ownerTrainerId ?? Guid.NewGuid();
         await using var context = ownerTrainerId is null
-            ? _fixture.CreateAdministrativeContext()
+            ? _fixture.CreateAdministrativeContext(actorUserId)
             : _fixture.CreateContext(ownerTrainerId);
         context.Supplements.Add(supplement);
+        if (ownerTrainerId is null)
+            context.AdministrativeAuditEntries.Add(
+                CreateAudit(actorUserId, "supplement", supplement.Id));
         await context.SaveChangesAsync(cancellationToken);
 
         return supplement.Id;
     }
+
+    private static AdministrativeAuditEntry CreateAudit(
+        Guid actorUserId,
+        string resourceType,
+        Guid resourceId) =>
+        new(actorUserId, "create", resourceType, resourceId, null, "{}", Now);
 
     private static MealPlan CreateMealPlanWithItem(Guid trainerId, Guid clientId, Guid foodId)
     {

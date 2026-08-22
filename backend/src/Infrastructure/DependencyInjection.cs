@@ -9,6 +9,7 @@ using Application.Features.Packs.ClientSessionPacks.Abstractions;
 using Application.Features.Packs.PackTypes.Abstractions;
 using Application.Features.Sessions.Abstractions;
 using Application.Features.Supplements.Abstractions;
+using Application.Features.TrainerSettings.Abstractions;
 using Application.Features.Training.Exercises.Abstractions;
 using Application.Features.Training.ExerciseSetLogs.Abstractions;
 using Application.Features.Training.TrainingPlans.Abstractions;
@@ -23,6 +24,7 @@ using Infrastructure.Persistence.Packs;
 using Infrastructure.Persistence.Sessions;
 using Infrastructure.Persistence.Supplements;
 using Infrastructure.Persistence.Training;
+using Infrastructure.Persistence.TrainerSettings;
 using Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -74,10 +76,13 @@ public static class DependencyInjection
         // Clients
         services.AddScoped<IClientStore, ClientStore>();
         services.AddScoped<IClientQueries, ClientQueries>();
+        services.AddScoped<IClientBrandingQueries, ClientBrandingQueries>();
 
         // Foods
         services.AddScoped<IFoodStore, FoodStore>();
         services.AddScoped<IFoodQueries, FoodQueries>();
+        services.AddScoped<IGlobalFoodStore, GlobalFoodStore>();
+        services.AddScoped<IGlobalFoodQueries, GlobalFoodQueries>();
 
         // Meal Plans
         services.AddScoped<IMealPlanStore, MealPlanStore>();
@@ -86,6 +91,8 @@ public static class DependencyInjection
         // Exercises
         services.AddScoped<IExerciseStore, ExerciseStore>();
         services.AddScoped<IExerciseQueries, ExerciseQueries>();
+        services.AddScoped<IGlobalExerciseStore, GlobalExerciseStore>();
+        services.AddScoped<IGlobalExerciseQueries, GlobalExerciseQueries>();
 
         // Training Plans
         services.AddScoped<ITrainingPlanStore, TrainingPlanStore>();
@@ -117,6 +124,10 @@ public static class DependencyInjection
         // Sessions
         services.AddScoped<ISessionStore, SessionStore>();
         services.AddScoped<ISessionQueries, SessionQueries>();
+
+        // Trainer Settings
+        services.AddScoped<ITrainerSettingsStore, TrainerSettingsStore>();
+        services.AddScoped<ITrainerSettingsQueries, TrainerSettingsQueries>();
 
         // Interceptors
         services.AddScoped<TenantWriteValidationInterceptor>();

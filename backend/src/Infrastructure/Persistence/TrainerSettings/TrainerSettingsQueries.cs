@@ -22,8 +22,6 @@ internal sealed class TrainerSettingsQueries : ITrainerSettingsQueries
             .AsNoTracking()
             .Where(settings => settings.TrainerId == trainerId)
             .Select(settings => new TrainerSettingsDto(
-                settings.Id,
-                settings.TrainerId,
                 settings.AppName,
                 settings.LogoUrl,
                 settings.PrimaryColor,

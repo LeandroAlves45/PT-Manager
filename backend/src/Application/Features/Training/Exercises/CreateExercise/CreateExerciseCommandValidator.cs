@@ -28,6 +28,13 @@ public sealed class CreateExerciseCommandValidator : AbstractValidator<CreateExe
 
         RuleFor(command => command.VideoUrl)
             .MaximumLength(500)
-            .WithErrorCode("exercise_video_url_too_long");
+            .WithErrorCode("exercise_video_url_too_long")
+            .Must(BeAnAbsoluteHttpsUrl)
+            .When(command => !string.IsNullOrWhiteSpace(command.VideoUrl))
+            .WithErrorCode("exercise_video_url_must_be_https");
     }
+
+    private static bool BeAnAbsoluteHttpsUrl(string? videoUrl) =>
+        Uri.TryCreate(videoUrl, UriKind.Absolute, out var uri) &&
+        uri.Scheme == Uri.UriSchemeHttps;
 }

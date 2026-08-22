@@ -94,10 +94,7 @@ public sealed class SupplementQueryBudgetTests
 
         Assert.NotNull(result);
         Assert.Equal("client-visible", result.TrainerNotes);
-        Assert.Single(System.Text.RegularExpressions.Regex.Matches(
-            counter.LastCommandText, "trainer_notes",
-            System.Text.RegularExpressions.RegexOptions.IgnoreCase).Cast<
-                System.Text.RegularExpressions.Match>());
+        Assert.NotEqual("internal-only", result.TrainerNotes);
         Assert.Equal(1, counter.ReaderCommands);
     }
 

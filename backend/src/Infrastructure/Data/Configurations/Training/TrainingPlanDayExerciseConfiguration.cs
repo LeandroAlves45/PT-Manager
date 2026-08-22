@@ -50,6 +50,10 @@ internal sealed class TrainingPlanDayExerciseConfiguration : IEntityTypeConfigur
 
         builder.HasIndex(tpde => tpde.TrainingPlanDayId)
             .HasDatabaseName("idx_day_exercises_day");
+
+        builder.HasIndex(tpde => tpde.ExerciseId)
+            .HasDatabaseName("idx_training_plan_day_exercises_exercise");
+
         builder.HasIndex(tpde => new { tpde.TrainingPlanDayId, tpde.OrderNumber })
             .HasFilter("exercise_group_id IS NULL")
             .HasDatabaseName("uq_day_exercise_isolated_order")
@@ -82,6 +86,7 @@ internal sealed class TrainingPlanDayExerciseConfiguration : IEntityTypeConfigur
         builder.HasOne<Exercise>()
             .WithMany()
             .HasForeignKey(tpde => tpde.ExerciseId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("fk_training_plan_day_exercises_exercise");
     }
 }
