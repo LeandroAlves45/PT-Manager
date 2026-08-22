@@ -136,8 +136,8 @@ internal sealed class ClientQueries : IClientQueries
             .AsNoTracking()
             .Where(pack => pack.ClientId == clientId)
             .Where(pack => pack.SessionsRemaining > 0)
-            .OrderBy(pack => pack.ExpectedEndDate == null)
-            .ThenBy(pack => pack.ExpectedEndDate)
+            // PostgreSQL ordena NULL por último em ASC e assim pode usar o índice físico.
+            .OrderBy(pack => pack.ExpectedEndDate)
             .ThenBy(pack => pack.CreatedAt)
             .ThenBy(pack => pack.Id)
             .Select(pack => new UsableClientPackDto(
@@ -152,5 +152,4 @@ internal sealed class ClientQueries : IClientQueries
                 pack.ExpectedEndDate,
                 pack.CreatedAt));
 }
-
 

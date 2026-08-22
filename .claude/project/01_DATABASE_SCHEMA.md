@@ -2,24 +2,35 @@
 
 *Schema Definition — Julho 2026*
 
-Estado: implementado no Sprint 2 e materializado pela migration EF Core
-`20260804163659_InitialCreate`. O modelo, o snapshot e a migration estavam
-sincronizados no gate final de 5 de agosto de 2026.
+Estado: o baseline foi materializado por `20260804163659_InitialCreate` e
+completado por `20260814121132_CompleteTrainingPhase2C`. O delta dos Lotes 3A a
+3E foi consolidado por `20260822155532_CompleteSprint3Phase3` e validado em
+PostgreSQL 17 descartável. O snapshot representa o modelo atual e não existem
+alterações pendentes. A migration não foi aplicada a uma base persistente.
 
 ---
 
 ## Overview
 
-Este documento é a **especificação do modelo EF Core alvo**, não um script SQL a correr manualmente. A migration `InitialCreate` é gerada a partir deste modelo com `dotnet ef migrations add InitialCreate` (ver `01_DATABASE_SCHEMA.md §12` e `03_DEVELOPER_GUIDE.md`). O histórico de migrations SQL do Python não é convertido — não existem dados de produção a preservar (ver `00_ARCHITECTURE.md §1` e `§7.3`).
+Este documento é a **especificação do modelo EF Core alvo**, não um script
+SQL a correr manualmente. `InitialCreate` e `CompleteTrainingPhase2C` são o
+baseline imutável; o delta atual foi gerado como `CompleteSprint3Phase3`. O
+histórico de migrations SQL do Python não é convertido. Embora não exista uma
+base de produção identificada, qualquer base .NET persistente pode conter dados
+e deve seguir o preflight e a política de backup deste documento.
 
 **Características:**
 - Contagem: 29 tabelas da aplicação mais `__EFMigrationsHistory`, total 30
 - Multi-tenancy: raízes com `owner_trainer_id`; filhas herdam o tenant por navegação para a raiz. Filtros centralizados no `DbContext`, ligados a `ITenantContext`, exigem tenant presente
 - IDs: `uuid` nativo (ver decisão §1 abaixo)
-- Soft delete: `is_deleted` apenas nas entidades que ainda distinguem arquivo de eliminação; `supplements` e `client_supplement_assignments` usam apenas `is_active`
+- Soft delete: `is_deleted` apenas nas entidades que ainda distinguem remoção
+  interna. `foods`, `exercises`, `supplements` e
+  `client_supplement_assignments` usam disponibilidade por `is_active`
 - Timestamps: `created_at`, `updated_at` em UTC
 - Constraints: FK cascades, unique indexes
 - Generated columns: `kcal` calculado automaticamente
+- Pesquisa: `pg_trgm` e índices GIN trigram para os filtros `ILIKE` de Food,
+  Exercise e Supplement
 - Novas tabelas de infraestrutura: `durable_jobs`, `outbox_messages`, `refresh_tokens` (substituem `active_tokens` + RabbitMQ, ver `00_ARCHITECTURE.md §9` e `§10.3`)
 
 ---
@@ -53,6 +64,9 @@ id UUID PRIMARY KEY
 ---
 
 ## Decisão 2 — Identity: tabela `users` própria, não o schema padrão do ASP.NET Core Identity
+
+Estado: desenho reservado ao Sprint 4. O Lote 3F não altera `users`, não cria
+logins externos e mantém `password_hash` obrigatório.
 
 **Decisão:** manter uma tabela `users` própria e simplificada (compatível com o que o frontend já espera), implementando `IUserStore<User>`/`IUserPasswordStore<User>` customizados sobre ela — em vez de adotar o schema completo por omissão do Identity (`AspNetUsers`, `AspNetRoles`, `AspNetUserRoles`, `AspNetUserClaims`, etc.).
 
@@ -259,7 +273,8 @@ CREATE INDEX idx_invites_client ON invite_tokens(client_id);
 
 ### 7. `foods`
 
-Catálogo global de alimentos (owner_trainer_id = NULL).
+Catálogo global ou privado de alimentos. `owner_trainer_id = NULL` identifica
+uma entrada global; um UUID identifica o trainer proprietário.
 
 ```sql
 CREATE TABLE foods (
@@ -274,53 +289,31 @@ CREATE TABLE foods (
         protein * 4 + carbs * 4 + fats * 9
     ) STORED,
     fiber DECIMAL(10, 2),
-    platform_enforcement_status VARCHAR(20) NOT NULL DEFAULT 'allowed',
-    platform_enforcement_reason_code VARCHAR(50),
-    platform_enforced_at TIMESTAMPTZ,
     is_active BOOLEAN NOT NULL DEFAULT true,
-    is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_foods_owner_trainer FOREIGN KEY (owner_trainer_id)
+        REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT ck_foods_nutrients_per_100g CHECK (
         protein BETWEEN 0 AND 100
         AND carbs BETWEEN 0 AND 100
         AND fats BETWEEN 0 AND 100
         AND protein + carbs + fats <= 100
-        AND (fiber IS NULL OR fiber >= 0)),
-    CONSTRAINT ck_foods_platform_enforcement_status CHECK (
-        platform_enforcement_status IN ('allowed', 'blocked')),
-    CONSTRAINT ck_foods_platform_enforcement_reason CHECK (
-        platform_enforcement_reason_code IS NULL OR
-        platform_enforcement_reason_code IN (
-            'malicious_content',
-            'dangerous_information',
-            'deliberately_false_information',
-            'prohibited_content')),
-    CONSTRAINT ck_foods_platform_enforcement_state CHECK (
-        (platform_enforcement_status = 'allowed'
-            AND platform_enforcement_reason_code IS NULL
-            AND platform_enforced_at IS NULL)
-        OR
-        (platform_enforcement_status = 'blocked'
-            AND platform_enforcement_reason_code IS NOT NULL
-            AND btrim(platform_enforcement_reason_code) <> ''
-            AND platform_enforced_at IS NOT NULL)),
-    CONSTRAINT ck_foods_global_not_platform_blocked CHECK (
-        owner_trainer_id IS NOT NULL OR platform_enforcement_status = 'allowed')
+        AND (fiber IS NULL OR fiber >= 0))
 );
 
-CREATE INDEX idx_foods_name ON foods(name);
-CREATE INDEX idx_foods_trainer ON foods(owner_trainer_id);
+CREATE INDEX idx_foods_owner_name ON foods(owner_trainer_id, name);
+CREATE INDEX idx_foods_search ON foods USING GIN(
+    to_tsvector('portuguese', name || ' ' || COALESCE(description, '')));
+CREATE INDEX idx_foods_search_trgm ON foods USING GIN(
+    description gin_trgm_ops, name gin_trgm_ops);
 ```
 
-`platform_enforcement_status` é independente de `is_active`: o primeiro é
-controlado apenas por moderação administrativa e o segundo pelo owner. Os
-valores PostgreSQL `allowed` e `blocked` correspondem a `Allowed` e `Blocked` no
-Domain. O ator fica na `administrative_audit_entries`, escrita atomicamente com
-a mudança, evitando duplicá-lo na linha do alimento. Catálogo global continua a
-usar os casos administrativos próprios de Archive, Reactivate e Delete.
+O Lote 3F remove `is_deleted` depois de converter linhas antigas apagadas para
+`is_active = false`. `PlatformEnforcementStatus`, motivo e timestamp pertencem
+ao vertical slice de moderação do Sprint 4B e exigem uma migration nova; não
+fazem parte de `CompleteSprint3Phase3`.
 
 ### 8. `supplements`
 
@@ -354,6 +347,8 @@ CREATE TABLE supplements (
 
 CREATE INDEX idx_supplements_scope_active_name_id
     ON supplements(owner_trainer_id, is_active, name, id);
+CREATE INDEX idx_supplements_search_trgm ON supplements USING GIN(
+    description gin_trgm_ops, name gin_trgm_ops);
 ```
 
 ### 9. `meal_plans`
@@ -555,7 +550,8 @@ CREATE UNIQUE INDEX uq_training_plan_day_weekday
 
 ### 15. `exercises`
 
-Catálogo global de exercícios (owner_trainer_id = NULL).
+Catálogo global ou privado de exercícios. `owner_trainer_id = NULL` identifica
+uma entrada global; um UUID identifica o trainer proprietário.
 
 ```sql
 CREATE TABLE exercises (
@@ -567,45 +563,25 @@ CREATE TABLE exercises (
     equipment VARCHAR(255),
     difficulty_level VARCHAR(50), -- 'beginner', 'intermediate', 'advanced'
     video_url VARCHAR(500),
-    platform_enforcement_status VARCHAR(20) NOT NULL DEFAULT 'allowed',
-    platform_enforcement_reason_code VARCHAR(50),
-    platform_enforced_at TIMESTAMPTZ,
     is_active BOOLEAN NOT NULL DEFAULT true,
-    is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT ck_exercises_platform_enforcement_status CHECK (
-        platform_enforcement_status IN ('allowed', 'blocked')),
-    CONSTRAINT ck_exercises_platform_enforcement_reason CHECK (
-        platform_enforcement_reason_code IS NULL OR
-        platform_enforcement_reason_code IN (
-            'malicious_content',
-            'dangerous_information',
-            'deliberately_false_information',
-            'prohibited_content')),
-    CONSTRAINT ck_exercises_platform_enforcement_state CHECK (
-        (platform_enforcement_status = 'allowed'
-            AND platform_enforcement_reason_code IS NULL
-            AND platform_enforced_at IS NULL)
-        OR
-        (platform_enforcement_status = 'blocked'
-            AND platform_enforcement_reason_code IS NOT NULL
-            AND btrim(platform_enforcement_reason_code) <> ''
-            AND platform_enforced_at IS NOT NULL)),
-    CONSTRAINT ck_exercises_global_not_platform_blocked CHECK (
-        owner_trainer_id IS NOT NULL OR platform_enforcement_status = 'allowed')
+    CONSTRAINT "FK_exercises_users_owner_trainer_id" FOREIGN KEY (owner_trainer_id)
+        REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_exercises_name ON exercises(name);
 CREATE INDEX idx_exercises_trainer ON exercises(owner_trainer_id);
+CREATE INDEX idx_exercises_search ON exercises USING GIN(
+    to_tsvector('portuguese', name || ' ' || COALESCE(description, '')));
+CREATE INDEX idx_exercises_search_trgm ON exercises USING GIN(
+    description gin_trgm_ops, name gin_trgm_ops);
 ```
 
-As regras de enforcement são iguais às de `foods`. Um exercício privado
-bloqueado preserva as referências existentes, mas não pode entrar em novos
-planos e o seu conteúdo deixa de ser projetado no portal do cliente. Não é
-criado um índice específico antes de existir uma query medida que o justifique.
+O Lote 3F remove `is_deleted` depois de preservar arquivo em
+`is_active = false`. As colunas e constraints de enforcement privado são
+adicionadas apenas no Sprint 4B, com testes e migration próprios.
 
 ### 16. `training_plan_day_exercises`
 
@@ -740,7 +716,6 @@ CREATE TABLE initial_assessments (
     CONSTRAINT fk_initial_assessments_client_tenant
         FOREIGN KEY (owner_trainer_id, client_id)
         REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE,
-    CONSTRAINT uq_initial_assessments_client UNIQUE (client_id),
     CONSTRAINT ck_initial_assessments_weight_positive CHECK (weight_kg > 0),
     CONSTRAINT ck_initial_assessments_height_positive CHECK (height_cm > 0),
     CONSTRAINT ck_initial_assessments_body_fat_range CHECK (
@@ -751,22 +726,47 @@ CREATE TABLE initial_assessments (
                            'very_active', 'extremely_active'))
 );
 
-CREATE INDEX idx_assessments_trainer ON initial_assessments(owner_trainer_id);
-CREATE INDEX idx_assessments_client ON initial_assessments(client_id);
+CREATE INDEX idx_initial_assessments_trainer
+    ON initial_assessments(owner_trainer_id);
+CREATE UNIQUE INDEX uq_initial_assessments_tenant_client_active
+    ON initial_assessments(owner_trainer_id, client_id)
+    WHERE is_deleted = false;
 ```
 
 **Estrutura de `nutrition_intake` (JSONB, todas as chaves opcionais):**
 
 ```json
 {
-    "food_preferences": "...",              // alimentos que tem preferência
-    "daily_routine": "...",                 // rotina do cliente
-    "disliked_or_intolerant_foods": "...",  // alimentos que não gosta / é intolerante
-    "sleep_quality": 4,                     // escala 1 a 5
-    "mood": 4,                              // escala 1 a 5
+    "food_preferences": "...",
+    "disliked_foods": "...",
+    "food_intolerances": "...",
+    "food_allergies": "...",
+    "dietary_restrictions": "...",
+    "daily_routine": "...",
+    "sleep_quality": 4,
+    "mood": 4,
+    "stress_level": 2,
     "avg_water_liters_per_day": 2.5,
     "hungriest_time_of_day": "...",
-    "uses_supplements": true
+    "uses_supplements": true,
+    "current_supplements": "...",
+    "other_notes": "..."
+}
+```
+
+**Estrutura de `body_measurements` (JSONB, todas as chaves opcionais):**
+
+```json
+{
+    "waist_cm": 80.0,
+    "hip_cm": 95.0,
+    "chest_cm": 100.0,
+    "right_arm_cm": 35.0,
+    "left_arm_cm": 35.0,
+    "right_thigh_cm": 55.0,
+    "left_thigh_cm": 55.0,
+    "right_calf_cm": 38.0,
+    "left_calf_cm": 38.0
 }
 ```
 
@@ -784,32 +784,45 @@ CREATE TABLE checkins (
     weight_kg DECIMAL(10, 2),
     body_fat_percentage DECIMAL(10, 2),
     notes TEXT,
-    measurements JSONB, -- mesma estrutura de initial_assessments.measurements — permite comparar evolução
-    adherence_score INTEGER, -- 0-100, resposta a "foi tudo cumprido a 100%?"
-    weeks_on_program INTEGER, -- semanas decorridas com o treino/plano atual
-    feedback JSONB, -- perguntas qualitativas do checkin (ver estrutura abaixo)
-    is_deleted BOOLEAN DEFAULT false,
+    body_measurements JSONB NOT NULL,
+    feedback JSONB NOT NULL,
+    training_adherence_score INTEGER,
+    nutrition_adherence_score INTEGER,
+    responded_at TIMESTAMPTZ,
+    cancelled_at TIMESTAMPTZ,
+    is_deleted BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
+    CONSTRAINT "FK_checkins_users_owner_trainer_id" FOREIGN KEY (owner_trainer_id)
+        REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_checkins_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
         REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE,
-    CONSTRAINT checkin_date_order CHECK (
+    CONSTRAINT ck_checkins_date_order CHECK (
         target_date IS NULL OR target_date >= check_in_date),
-    CONSTRAINT checkin_weight_positive CHECK (weight_kg IS NULL OR weight_kg > 0),
-    CONSTRAINT checkin_body_fat_range CHECK (
-        body_fat_percentage IS NULL OR body_fat_percentage BETWEEN 0 AND 100),
-    CONSTRAINT checkin_adherence_range CHECK (
-        adherence_score IS NULL OR adherence_score BETWEEN 0 AND 100),
-    CONSTRAINT checkin_weeks_non_negative CHECK (
-        weeks_on_program IS NULL OR weeks_on_program >= 0)
+    CONSTRAINT ck_checkins_weight_positive CHECK (
+        weight_kg IS NULL OR weight_kg > 0),
+    CONSTRAINT ck_checkins_body_fat_range CHECK (
+        body_fat_percentage IS NULL OR
+        (body_fat_percentage > 0 AND body_fat_percentage < 100)),
+    CONSTRAINT ck_checkins_training_adherence_range CHECK (
+        training_adherence_score IS NULL OR
+        training_adherence_score BETWEEN 0 AND 100),
+    CONSTRAINT ck_checkins_nutrition_adherence_range CHECK (
+        nutrition_adherence_score IS NULL OR
+        nutrition_adherence_score BETWEEN 0 AND 100),
+    CONSTRAINT ck_checkins_single_terminal_event CHECK (
+        NOT (responded_at IS NOT NULL AND cancelled_at IS NOT NULL)),
+    CONSTRAINT ck_checkins_response_requires_weight CHECK (
+        responded_at IS NULL OR weight_kg IS NOT NULL)
 );
 
 CREATE INDEX idx_checkins_trainer ON checkins(owner_trainer_id);
-CREATE INDEX idx_checkins_client ON checkins(client_id);
-CREATE INDEX idx_checkins_date ON checkins(check_in_date);
-CREATE INDEX idx_checkins_client_date ON checkins(client_id, check_in_date DESC) WHERE is_deleted = false;
+CREATE UNIQUE INDEX uq_checkins_tenant_client_date_active
+    ON checkins(owner_trainer_id, client_id, check_in_date)
+    WHERE is_deleted = false;
+CREATE INDEX idx_checkins_tenant_date_id
+    ON checkins(owner_trainer_id, check_in_date, id);
 ```
 
 **Estrutura de `feedback` (JSONB, todas as chaves opcionais):**
@@ -820,7 +833,7 @@ CREATE INDEX idx_checkins_client_date ON checkins(client_id, check_in_date DESC)
     "digestion": "...",       // "Trânsito intestinal ok? Algum alimento a fazer mal?"
     "training_load": "...",   // "Nível de rendimento/cargas no treino, a aumentar?"
     "recovery_sleep": "...",  // "Recuperação muscular / qualidade do sono?"
-    "energy_level": "...",    // "Níveis de energia?"
+    "energy_levels": "...",   // "Níveis de energia?"
     "body_response": "..."    // "Como sentes que o corpo está a responder?"
 }
 ```
@@ -844,7 +857,6 @@ CREATE TABLE client_supplement_assignments (
     timing VARCHAR(255) NOT NULL,
     trainer_notes TEXT,
     is_active BOOLEAN NOT NULL DEFAULT true,
-    is_deleted BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -888,25 +900,30 @@ CREATE TABLE sessions (
     client_session_pack_id UUID,
     session_type VARCHAR(50), -- 'strength', 'cardio', 'flexibility', 'assessment'
     notes TEXT,
-    status VARCHAR(40) NOT NULL DEFAULT 'scheduled',
-    is_deleted BOOLEAN DEFAULT false,
+    status VARCHAR(30) NOT NULL,
+    status_changed_at TIMESTAMPTZ NOT NULL,
+    is_deleted BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
+    CONSTRAINT fk_sessions_owner_trainer FOREIGN KEY (owner_trainer_id)
+        REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_sessions_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
         REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE,
-    CONSTRAINT session_duration_positive CHECK (
+    CONSTRAINT ck_sessions_duration CHECK (
         duration_minutes > 0),
-    CONSTRAINT session_status_check CHECK (status IN (
+    CONSTRAINT ck_sessions_status CHECK (status IN (
         'scheduled', 'completed', 'cancelled_by_trainer', 'cancelled_by_client', 'no_show'))
 );
 
-CREATE INDEX idx_sessions_trainer ON sessions(owner_trainer_id);
-CREATE INDEX idx_sessions_client ON sessions(client_id);
-CREATE INDEX idx_sessions_starts_at ON sessions(starts_at);
-CREATE INDEX idx_sessions_upcoming ON sessions(owner_trainer_id, starts_at)
+CREATE UNIQUE INDEX uq_sessions_tenant_scheduled_start
+    ON sessions(owner_trainer_id, starts_at)
     WHERE status = 'scheduled' AND is_deleted = false;
+CREATE INDEX idx_sessions_tenant_client_starts_at
+    ON sessions(owner_trainer_id, client_id, starts_at);
+CREATE INDEX idx_sessions_client_session_pack
+    ON sessions(client_session_pack_id)
+    WHERE client_session_pack_id IS NOT NULL;
 ```
 
 ---
@@ -925,23 +942,26 @@ CREATE TABLE pack_types (
     session_count INTEGER NOT NULL,
     price_cents INTEGER NOT NULL,
     currency VARCHAR(3) NOT NULL DEFAULT 'EUR',
-    duration_days INTEGER,
+    expected_duration_days INTEGER,
     is_active BOOLEAN NOT NULL DEFAULT true,
     is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT uq_pack_types_tenant_id UNIQUE(owner_trainer_id, id),
-    CONSTRAINT pack_session_count_positive CHECK (session_count > 0),
-    CONSTRAINT pack_price_non_negative CHECK (price_cents >= 0),
-    CONSTRAINT pack_duration_positive CHECK (
-        duration_days IS NULL OR duration_days > 0)
+    CONSTRAINT fk_pack_types_owner_trainer FOREIGN KEY (owner_trainer_id)
+        REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT "AK_pack_types_owner_trainer_id_id"
+        UNIQUE(owner_trainer_id, id),
+    CONSTRAINT ck_pack_types_session_count_positive CHECK (session_count > 0),
+    CONSTRAINT ck_pack_types_price_non_negative CHECK (price_cents >= 0),
+    CONSTRAINT ck_pack_types_expected_duration_positive CHECK (
+        expected_duration_days IS NULL OR expected_duration_days > 0)
 );
 
-CREATE INDEX idx_packs_trainer ON pack_types(owner_trainer_id);
-CREATE INDEX idx_pack_types_usable ON pack_types(owner_trainer_id, name)
+CREATE INDEX idx_pack_types_tenant_name_active ON pack_types(owner_trainer_id, name)
     WHERE is_active = true AND is_deleted = false;
+CREATE UNIQUE INDEX uq_pack_types_tenant_id
+    ON pack_types(owner_trainer_id, id);
 ```
 
 ### 24. `client_session_packs`
@@ -960,34 +980,40 @@ CREATE TABLE client_session_packs (
     currency VARCHAR(3) NOT NULL,
     sessions_remaining INTEGER NOT NULL,
     purchase_date DATE NOT NULL,
-    expiry_date DATE,
+    expected_end_date DATE,
+    completed_at TIMESTAMPTZ,
     is_deleted BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT fk_trainer FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
+    CONSTRAINT fk_client_session_packs_owner_trainer FOREIGN KEY (owner_trainer_id)
+        REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_client_session_packs_client_tenant FOREIGN KEY (owner_trainer_id, client_id)
         REFERENCES clients(owner_trainer_id, id) ON DELETE CASCADE,
-    CONSTRAINT fk_pack_type_tenant FOREIGN KEY (owner_trainer_id, pack_type_id)
+    CONSTRAINT fk_client_session_packs_pack_type_tenant FOREIGN KEY (owner_trainer_id, pack_type_id)
         REFERENCES pack_types(owner_trainer_id, id) ON DELETE RESTRICT,
-    CONSTRAINT uq_client_packs_tenant_client_id UNIQUE(owner_trainer_id, client_id, id),
-    CONSTRAINT sessions_remaining_non_negative CHECK (sessions_remaining >= 0),
-    CONSTRAINT pack_sessions_consistent CHECK (
-        total_sessions > 0 AND sessions_remaining <= total_sessions),
-    CONSTRAINT pack_snapshot_price_non_negative CHECK (price_cents >= 0),
-    CONSTRAINT pack_expiry_order CHECK (
-        expiry_date IS NULL OR expiry_date >= purchase_date)
+    CONSTRAINT "AK_client_session_packs_owner_trainer_id_client_id_id"
+        UNIQUE(owner_trainer_id, client_id, id),
+    CONSTRAINT ck_client_session_packs_balance CHECK (
+        total_sessions > 0 AND sessions_remaining >= 0
+        AND sessions_remaining <= total_sessions),
+    CONSTRAINT ck_client_session_packs_price_non_negative CHECK (price_cents >= 0),
+    CONSTRAINT ck_client_session_packs_expected_end_order CHECK (
+        expected_end_date IS NULL OR expected_end_date >= purchase_date),
+    CONSTRAINT ck_client_session_packs_completion_consistency CHECK (
+        (sessions_remaining = 0 AND completed_at IS NOT NULL)
+        OR (sessions_remaining > 0 AND completed_at IS NULL))
 );
 
-CREATE INDEX idx_client_packs_trainer ON client_session_packs(owner_trainer_id);
-CREATE INDEX idx_client_packs_client ON client_session_packs(client_id);
-CREATE INDEX idx_client_packs_usable ON client_session_packs(owner_trainer_id, client_id, expiry_date)
+CREATE INDEX idx_client_session_packs_usable_order
+    ON client_session_packs(
+        owner_trainer_id, client_id, expected_end_date, created_at, id)
     WHERE sessions_remaining > 0 AND is_deleted = false;
 
 -- A FK é adicionada depois de ambas as tabelas existirem. O EF Core ordenará
 -- esta operação de forma equivalente na migration gerada.
 ALTER TABLE sessions
-    ADD CONSTRAINT fk_session_pack_client_tenant
+    ADD CONSTRAINT fk_sessions_client_pack_tenant
     FOREIGN KEY (owner_trainer_id, client_id, client_session_pack_id)
     REFERENCES client_session_packs(owner_trainer_id, client_id, id)
     ON DELETE RESTRICT;
@@ -1179,12 +1205,11 @@ CREATE INDEX idx_administrative_audit_actor_time
 Entradas só podem ser adicionadas num contexto `superuser` com `UserId`
 autenticado e `IsAdministrative`. Update e Delete são rejeitados pelo interceptor.
 
-A moderação privada usa as ações `food_platform_blocked`,
-`food_platform_unblocked`, `exercise_platform_blocked` e
-`exercise_platform_unblocked`. O snapshot da decisão inclui o estado anterior,
-o novo estado e o `platform_enforcement_reason_code`; notas internas ou
-evidência sensível não são copiadas para DTOs funcionais. A auditoria e a
-mudança de estado pertencem à mesma transação PostgreSQL.
+A infraestrutura append-only entra no Lote 3F. A sua utilização para moderação
+privada, incluindo ações `food_platform_blocked`, `food_platform_unblocked`,
+`exercise_platform_blocked` e `exercise_platform_unblocked`, pertence ao Sprint
+4B. Esse vertical slice acrescentará os campos de enforcement, os contratos HTTP
+e a gravação transacional da decisão numa migration própria.
 
 ---
 
@@ -1213,23 +1238,57 @@ CREATE INDEX idx_training_plans_trainer_active ON training_plans(owner_trainer_i
 -- Search
 CREATE INDEX idx_foods_search ON foods USING GIN(to_tsvector('portuguese', name || ' ' || COALESCE(description, '')));
 CREATE INDEX idx_exercises_search ON exercises USING GIN(to_tsvector('portuguese', name || ' ' || COALESCE(description, '')));
+CREATE INDEX idx_foods_search_trgm ON foods USING GIN(description gin_trgm_ops, name gin_trgm_ops);
+CREATE INDEX idx_exercises_search_trgm ON exercises USING GIN(description gin_trgm_ops, name gin_trgm_ops);
+CREATE INDEX idx_supplements_search_trgm ON supplements USING GIN(description gin_trgm_ops, name gin_trgm_ops);
 ```
 
 ---
 
 ## Geração de Migrations (EF Core)
 
-Este documento é a spec; a migration real é gerada, nunca escrita manualmente:
+Este documento é a especificação. A migration real nasceu do scaffold do EF Core
+e não foi escrita integralmente à mão. O comando usado a partir de `backend/`
+foi:
 
-```bash
-# Depois do modelo EF Core (entities + Fluent API) estar pronto
-dotnet ef migrations add InitialCreate --project src/Infrastructure
-
-# Aplicar contra PostgreSQL local ou Neon
-dotnet ef database update --project src/Infrastructure
+```powershell
+dotnet tool restore
+dotnet tool run dotnet-ef migrations add CompleteSprint3Phase3 `
+  --project src/Infrastructure/Infrastructure.csproj `
+  --startup-project src/Api/Api.csproj `
+  --output-dir Data/Migrations `
+  --configuration Release `
+  --no-build
 ```
 
-Regra herdada do Python que se mantém, adaptada: **nunca editar uma migration EF Core já aplicada num ambiente partilhado** — uma correção é sempre uma migration nova (`dotnet ef migrations add FixX`).
+Antes de aplicar, confirmar a base alvo, rever `Up`, `Down`, Designer, snapshot e
+script SQL. Qualquer base persistente exige backup ou snapshot recuperável. Nunca
+editar `InitialCreate` nem `CompleteTrainingPhase2C`.
+
+### Transição consolidada do Lote 3F
+
+O `Up` da nova migration deve executar as transformações antes de remover colunas
+ou ativar constraints incompatíveis:
+
+1. Converter `is_deleted = true` em `is_active = false` para Food, Exercise,
+   Supplement e ClientSupplementAssignment.
+2. Preencher `client_session_packs.completed_at = updated_at` quando
+   `sessions_remaining = 0` e `completed_at IS NULL`.
+3. Preencher `checkins.responded_at = updated_at` quando `weight_kg IS NOT NULL`
+   e `responded_at IS NULL`, sem converter `checkins.is_deleted` em cancelamento.
+4. Preencher `supplements.created_by_user_id = owner_trainer_id` apenas para
+   suplementos privados sem autor.
+5. Abortar perante suplementos globais sem autor, UUID vazio como autoria,
+   `app_name` com mais de 50 caracteres, body fat igual a 0 ou 100, campos
+   obrigatórios de Supplement vazios, sessões agendadas duplicadas ou violações
+   das novas constraints.
+
+O `Down` deve recuperar a estrutura de `CompleteTrainingPhase2C`, mas não consegue
+reconstruir os valores originais de colunas removidas. O backup é a recuperação
+integral dos dados.
+
+Regra obrigatória: nunca editar uma migration EF Core já aplicada num ambiente
+partilhado. Uma correção é sempre uma migration nova.
 
 ---
 

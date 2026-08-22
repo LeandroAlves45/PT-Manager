@@ -71,6 +71,8 @@ public sealed class PtManagerDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // A extensão suporta os índices trigram medidos para pesquisas ILIKE.
+        modelBuilder.HasPostgresExtension("pg_trgm");
 
         // Carrega todas as IEntityTypeConfiguration<T> do assembly de uma vez.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PtManagerDbContext).Assembly);
@@ -226,5 +228,4 @@ public sealed class PtManagerDbContext : DbContext
             "No effective tenant is established for this operation."
         );
 }
-
 

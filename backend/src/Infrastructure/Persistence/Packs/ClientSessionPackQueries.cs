@@ -79,8 +79,8 @@ public sealed class ClientSessionPackQueries : IClientSessionPackQueries
     private static IOrderedQueryable<ClientSessionPack> ApplyStableOrder(
         IQueryable<ClientSessionPack> query
     ) => query
-        .OrderBy(pack => pack.ExpectedEndDate == null)
-        .ThenBy(pack => pack.ExpectedEndDate)
+        // PostgreSQL ordena NULL por último em ASC e assim pode usar o índice físico.
+        .OrderBy(pack => pack.ExpectedEndDate)
         .ThenBy(pack => pack.CreatedAt)
         .ThenBy(pack => pack.Id);
 

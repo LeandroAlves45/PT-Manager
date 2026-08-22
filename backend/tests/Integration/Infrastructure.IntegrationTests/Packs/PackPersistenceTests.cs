@@ -2,6 +2,7 @@ using Application.Features.Packs.ClientSessionPacks.Abstractions;
 using Domain.Entities.Sessions;
 using Infrastructure.IntegrationTests.Clients;
 using Infrastructure.IntegrationTests.Support;
+using Infrastructure.Persistence.Clients;
 using Infrastructure.Persistence.Packs;
 using Npgsql;
 
@@ -80,6 +81,53 @@ public sealed class PackPersistenceTests
         );
 
         Assert.Contains(result, pack => pack.Id == assigned.Pack!.Id);
+    }
+
+    [Fact]
+    public async Task ListUsable_ClientAndPackQueries_ReturnIdenticalStableOrder()
+    {
+        var seed = await SeedAsync();
+        var packType = ClientPersistenceTestData.CreatePackType(
+            seed.TrainerId,
+            Guid.NewGuid().ToString("N"));
+        var purchaseDate = new DateOnly(2026, 8, 1);
+        var sameCreatedAt = ClientPersistenceTestData.NowUtc.AddMinutes(1);
+        var packs = new[]
+        {
+            ClientPersistenceTestData.CreatePack(
+                seed.TrainerId, seed.ClientId, packType, purchaseDate,
+                purchaseDate.AddDays(5), now: sameCreatedAt),
+            ClientPersistenceTestData.CreatePack(
+                seed.TrainerId, seed.ClientId, packType, purchaseDate,
+                purchaseDate.AddDays(10), now: sameCreatedAt),
+            ClientPersistenceTestData.CreatePack(
+                seed.TrainerId, seed.ClientId, packType, purchaseDate,
+                purchaseDate.AddDays(10), now: sameCreatedAt),
+            ClientPersistenceTestData.CreatePack(
+                seed.TrainerId, seed.ClientId, packType, purchaseDate,
+                expectedEndDate: null, now: sameCreatedAt.AddMinutes(1))
+        };
+        await ClientPersistenceTestData.PersistAsync(
+            _fixture,
+            seed.TrainerId,
+            packType,
+            packs[0],
+            packs[1],
+            packs[2],
+            packs[3]);
+        await using var context = _fixture.CreateContext(seed.TrainerId);
+
+        var clientOrder = await new ClientQueries(context).ListUsablePacksAsync(
+            seed.ClientId,
+            TestContext.Current.CancellationToken);
+        var packOrder = await new ClientSessionPackQueries(context).ListUsableAsync(
+            seed.TrainerId,
+            seed.ClientId,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            clientOrder.Select(pack => pack.Id),
+            packOrder.Select(pack => pack.Id));
     }
 
     [Fact]

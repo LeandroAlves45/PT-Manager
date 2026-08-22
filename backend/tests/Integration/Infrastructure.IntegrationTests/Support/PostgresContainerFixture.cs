@@ -18,6 +18,10 @@ namespace Infrastructure.IntegrationTests.Support;
 public sealed class PostgresContainerFixture : IAsyncLifetime
 {
     public const string InitialCreateMigration = "20260804163659_InitialCreate";
+    public const string CompleteTrainingPhase2CMigration =
+        "20260814121132_CompleteTrainingPhase2C";
+    public const string CompleteSprint3Phase3Migration =
+        "20260822155532_CompleteSprint3Phase3";
     private readonly PostgreSqlContainer _container =
         new PostgreSqlBuilder("postgres:17-alpine")
         .WithDatabase("ptmanager_tests")
@@ -32,10 +36,8 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
         await _container.StartAsync();
 
         await using var context = CreateContext(TestTenantContext.Administrator());
-        // O schema funcional representa o modelo atual do Sprint 3. O lifecycle
-        // das migrations existentes usa um fixture separado, porque a migration
-        // consolidada deste modelo só será criada no Lote 3F.
-        await context.Database.EnsureCreatedAsync();
+        // MigrateAsync valida o mesmo caminho de evolução de schema usado fora dos testes.
+        await context.Database.MigrateAsync();
     }
 
     public async ValueTask DisposeAsync() => await _container.DisposeAsync();

@@ -8,8 +8,6 @@ namespace Infrastructure.IntegrationTests.Migrations;
 [Collection(MigrationLifecycleCollection.Name)]
 public sealed class CompleteTrainingPhase2CMigrationTests : IAsyncLifetime
 {
-    private const string CompleteTrainingPhase2CMigration =
-        "20260814121132_CompleteTrainingPhase2C";
     private readonly MigrationLifecycleFixture _fixture;
 
     public CompleteTrainingPhase2CMigrationTests(MigrationLifecycleFixture fixture)
@@ -28,19 +26,23 @@ public sealed class CompleteTrainingPhase2CMigrationTests : IAsyncLifetime
         var cancellationToken = TestContext.Current.CancellationToken;
         await using var context = _fixture.CreateContext();
         var migrator = context.GetService<IMigrator>();
-        await migrator.MigrateAsync(CompleteTrainingPhase2CMigration, cancellationToken);
+        await migrator.MigrateAsync(
+            PostgresContainerFixture.CompleteTrainingPhase2CMigration,
+            cancellationToken);
         await migrator.MigrateAsync(
             PostgresContainerFixture.InitialCreateMigration,
             cancellationToken);
 
-        await migrator.MigrateAsync(CompleteTrainingPhase2CMigration, cancellationToken);
+        await migrator.MigrateAsync(
+            PostgresContainerFixture.CompleteTrainingPhase2CMigration,
+            cancellationToken);
         var appliedMigrations = await context.Database
             .GetAppliedMigrationsAsync(cancellationToken);
 
         Assert.Equal(
             [
                 PostgresContainerFixture.InitialCreateMigration,
-                CompleteTrainingPhase2CMigration
+                PostgresContainerFixture.CompleteTrainingPhase2CMigration
             ],
             appliedMigrations);
     }

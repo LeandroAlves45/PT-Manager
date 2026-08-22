@@ -63,6 +63,10 @@ internal sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
             .HasMethod("GIN")
             .IsTsVectorExpressionIndex("portuguese")
             .HasDatabaseName("idx_foods_search");
+        builder.HasIndex(food => new { food.Description, food.Name })
+            .HasMethod("GIN")
+            .HasOperators("gin_trgm_ops", "gin_trgm_ops")
+            .HasDatabaseName("idx_foods_search_trgm");
 
         builder.HasOne<User>().WithMany().HasForeignKey(food => food.OwnerTrainerId)
             .OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_foods_owner_trainer");

@@ -77,6 +77,10 @@ internal sealed class SupplementConfiguration : IEntityTypeConfiguration<Supplem
         builder.HasIndex(s => new
         { s.OwnerTrainerId, s.IsActive, s.Name, s.Id })
             .HasDatabaseName("idx_supplements_scope_active_name_id");
+        builder.HasIndex(s => new { s.Description, s.Name })
+            .HasMethod("GIN")
+            .HasOperators("gin_trgm_ops", "gin_trgm_ops")
+            .HasDatabaseName("idx_supplements_search_trgm");
 
         builder.HasOne<User>()
             .WithMany()

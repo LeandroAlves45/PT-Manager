@@ -1,6 +1,5 @@
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
 using Testcontainers.PostgreSql;
 
@@ -28,10 +27,6 @@ public sealed class MigrationLifecycleFixture : IAsyncLifetime
         var tenantContext = Support.TestTenantContext.Administrator();
         var options = new DbContextOptionsBuilder<PtManagerDbContext>()
             .UseNpgsql(_container.GetConnectionString())
-            // Estes testes validam migrations já aplicadas. O modelo pendente
-            // pertence ao Lote 3E e só terá migration consolidada no Lote 3F.
-            .ConfigureWarnings(warnings => warnings.Ignore(
-                RelationalEventId.PendingModelChangesWarning))
             .Options;
 
         return new PtManagerDbContext(options, tenantContext);
@@ -41,6 +36,31 @@ public sealed class MigrationLifecycleFixture : IAsyncLifetime
     {
         await using var context = CreateContext();
         await context.Database.EnsureDeletedAsync(cancellationToken);
+    }
+
+    public async Task<int> ExecuteSqlAsync(
+        string sql,
+        CancellationToken cancellationToken = default,
+        params NpgsqlParameter[] parameters)
+    {
+        await using var connection = new NpgsqlConnection(_container.GetConnectionString());
+        await connection.OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddRange(parameters);
+        return await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task<T?> QueryScalarAsync<T>(
+        string sql,
+        CancellationToken cancellationToken = default,
+        params NpgsqlParameter[] parameters)
+    {
+        await using var connection = new NpgsqlConnection(_container.GetConnectionString());
+        await connection.OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddRange(parameters);
+        var value = await command.ExecuteScalarAsync(cancellationToken);
+        return value is null or DBNull ? default : (T)value;
     }
 
     public async Task<int> CountApplicationTablesAsync(CancellationToken cancellationToken = default)

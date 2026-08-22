@@ -17,17 +17,25 @@ notas de `.claude/memory/Sessions/`.
   Testcontainers.
 - `backend-python/` é apenas referência funcional e não define a arquitetura
   de destino.
-- Sprint 2 está concluído. Sprint 3 está em execução; Clients, Nutrition,
-  Training, Packs, Sessions, Assessments, Supplements, TrainerSettings,
-  branding e administração global foram materializados até ao Lote 3E.
+- Sprint 2 e Sprint 3 estão concluídos. Clients, Nutrition, Training, Packs,
+  Sessions, Assessments, Supplements, TrainerSettings, branding e administração
+  global foram materializados e consolidados pelo Lote 3F.
 
 ## Execução em curso
 
-1. Lote 3E concluído e validado no backend real.
-2. Não gerar migration intermédia.
-3. No Lote 3F, consolidar a migration, medir os planos SQL relevantes com
-   `EXPLAIN` e validar migrate, rollback e migrate.
-4. Manter `CompleteTrainingPhase2C` imutável.
+1. Lote 3F concluído e validado em PostgreSQL 17 descartável.
+2. `20260822155532_CompleteSprint3Phase3` contém preflight, preservação de
+   arquivo, backfills e índices trigram comprovados por medição.
+3. Migrate, rollback e migrate passaram; nenhuma base persistente foi alterada.
+4. Fixtures usam `MigrateAsync` e não suprimem pending model changes.
+5. Suite final: 1085 testes aprovados, com 365 Domain, 365 Application, 331
+   Infrastructure e 24 Architecture; build Release sem warnings.
+6. `pg_trgm` foi aprovado com reduções medianas entre 97,7% e 98,3% nas três
+   pesquisas seletivas medidas. O rollback remove os índices, mas mantém a
+   extensão instalada por segurança.
+7. A ordenação de packs foi alinhada com o índice PostgreSQL, reduzindo o plano
+   medido de 6,888 ms para 0,146 ms.
+8. Manter `InitialCreate` e `CompleteTrainingPhase2C` imutáveis.
 
 O gate final do Lote 3E aprovou build Release sem warnings, formatação e 1065
 testes: 365 Domain, 365 Application, 311 integração PostgreSQL e 24 arquitetura.
@@ -95,6 +103,10 @@ alegações anteriores desatualizadas está em
   a identidade do aggregate entre retries.
 - `uq_clients_user` continua único global. Permitir a mesma conta cliente com
   vários trainers requer decisão de produto e auth no Sprint 4.
+- Google Sign-In pertence ao Sprint 4: trainers podem entrar diretamente;
+  clientes exigem convite válido; associação a conta existente é explícita;
+  `sub` é a identidade externa; roles, tenant, JWT e refresh token continuam
+  controlados pelo PT Manager. `PasswordHash` não muda no Lote 3F.
 
 ## Regras funcionais com fonte canónica
 

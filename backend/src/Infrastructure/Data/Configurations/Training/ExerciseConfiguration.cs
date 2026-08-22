@@ -67,6 +67,10 @@ internal sealed class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
             .HasMethod("GIN")
             .IsTsVectorExpressionIndex("portuguese")
             .HasDatabaseName("idx_exercises_search");
+        builder.HasIndex(e => new { e.Description, e.Name })
+            .HasMethod("GIN")
+            .HasOperators("gin_trgm_ops", "gin_trgm_ops")
+            .HasDatabaseName("idx_exercises_search_trgm");
 
         builder.HasOne<User>()
             .WithMany()
