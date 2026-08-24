@@ -24,6 +24,7 @@ internal sealed class PostgresConstraintTranslator
             return false;
         }
 
+        // Unique Violations
         if (postgresException.SqlState == UniqueViolation &&
             operation is PersistenceOperation.CreateClient or
                 PersistenceOperation.UpdateClient)
@@ -49,14 +50,26 @@ internal sealed class PostgresConstraintTranslator
             }
         }
 
-        if (postgresException.SqlState == ForeignKeyViolation &&
-            operation is PersistenceOperation.RemoveTrainingPlanStructure &&
-            postgresException.ConstraintName == "fk_client_exercise_set_logs_training_plan_day_exercise")
+        if (postgresException.SqlState == UniqueViolation &&
+            operation is PersistenceOperation.ReactivateClient &&
+            postgresException.ConstraintName == "uq_clients_user_active")
         {
             error = Error.Create(
-                code: "training_structure_has_history",
+                code: "client_user_already_has_active_relationship",
                 category: ErrorCategory.Conflict,
-                description: "Training structure with execution history cannot be removed."
+                description: "The user already has an active client relationship."
+            );
+            return true;
+        }
+
+        if (postgresException.SqlState == UniqueViolation &&
+            operation is PersistenceOperation.EnqueueNotification &&
+            postgresException.ConstraintName == "unique_idempotency_key")
+        {
+            error = Error.Create(
+                code: "notification_already_queued",
+                category: ErrorCategory.Conflict,
+                description: "The notification operation was already queued."
             );
             return true;
         }
@@ -113,6 +126,7 @@ internal sealed class PostgresConstraintTranslator
             return true;
         }
 
+        // Foreign Key Violations
         if (postgresException.SqlState == ForeignKeyViolation &&
             operation is PersistenceOperation.DeleteGlobalSupplement &&
             postgresException.ConstraintName is
@@ -123,6 +137,18 @@ internal sealed class PostgresConstraintTranslator
                 code: "global_supplement_has_references",
                 category: ErrorCategory.Conflict,
                 description: "A referenced global supplement cannot be deleted."
+            );
+            return true;
+        }
+
+        if (postgresException.SqlState == ForeignKeyViolation &&
+            operation is PersistenceOperation.RemoveTrainingPlanStructure &&
+            postgresException.ConstraintName == "fk_client_exercise_set_logs_training_plan_day_exercise")
+        {
+            error = Error.Create(
+                code: "training_structure_has_history",
+                category: ErrorCategory.Conflict,
+                description: "Training structure with execution history cannot be removed."
             );
             return true;
         }

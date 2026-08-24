@@ -5,49 +5,48 @@ namespace Application.Features.Clients;
 /// <summary>Erros estáveis dos casos de uso de Clients.</summary>
 public static class ClientErrors
 {
-    /// <summary>Cliente inexistente ou invisível no tenant.</summary>
     public static readonly Error ClientNotFound = Error.Create(
         "client_not_found",
         ErrorCategory.NotFound,
         "Client was not found."
     );
 
-    /// <summary>Email já usado por um cliente não eliminado no tenant.</summary>
     public static readonly Error ClientDuplicateEmail = Error.Create(
         "client_email_already_exists",
         ErrorCategory.Conflict,
         "A client with this email already exists."
     );
 
-    /// <summary>Telefone já usado por um cliente não eliminado no tenant.</summary>
     public static readonly Error ClientDuplicatePhone = Error.Create(
         "client_phone_already_exists",
         ErrorCategory.Conflict,
         "A client with this phone already exists."
     );
 
-    /// <summary>Subscrição inativa bloqueia novos clientes ativos.</summary>
+    public static readonly Error UserAlreadyHasActiveRelationship = Error.Create(
+        "client_user_already_has_active_relationship",
+        ErrorCategory.Conflict,
+        "The user already has an active client relationship."
+    );
+
     public static readonly Error SubscriptionInactive = Error.Create(
         "subscription_inactive",
         ErrorCategory.PaymentRequired,
         "The subscription is inactive."
     );
 
-    /// <summary>Subscrição suspensa bloqueia novos clientes ativos.</summary>
     public static readonly Error SubscriptionSuspended = Error.Create(
         "subscription_suspended",
         ErrorCategory.PaymentRequired,
         "The subscription is suspended."
     );
 
-    /// <summary>Subscrição cancelada bloqueia novos clientes ativos.</summary>
     public static readonly Error SubscriptionCancelled = Error.Create(
         "subscription_cancelled",
         ErrorCategory.PaymentRequired,
         "The subscription is cancelled."
     );
 
-    /// <summary>O tier atual atingiu o limite de clientes ativos.</summary>
     public static readonly Error ClientLimitReached = Error.Create(
         "client_limit_reached",
         ErrorCategory.PaymentRequired,

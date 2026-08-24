@@ -8,30 +8,49 @@ internal enum PersistenceOperation
 {
     /// <summary>Criação de cliente.</summary>
     CreateClient,
+
     /// <summary>Atualização do perfil de cliente.</summary>
     UpdateClient,
+
+    /// <summary>Reativação de uma relação de cliente.</summary>
+    ReactivateClient,
+
     /// <summary>Remoção estrutural de um plano de treino.</summary>
     RemoveTrainingPlanStructure,
+
     /// <summary>Criação de sessão.</summary>
     CreateSession,
+
     /// <summary>Restaura uma sessão.</summary>
     RestoreSession,
+
     /// <summary>Reagendamento de uma sessão Scheduled.</summary>
     RescheduleSession,
+
     /// <summary>Criação de avaliação inicial.</summary>
     CreateInitialAssessment,
+
     /// <summary>Cria um check-in para o cliente do tenant.</summary>
     CreateCheckIn,
+
     /// <summary>Reagenda um check-in futuro sem respostas.</summary>
     RescheduleCheckIn,
+
     /// <summary>Cria uma atribuição direta de suplemento para o cliente do tenant.</summary>
     AssignSupplement,
+
     /// <summary>Reativa uma atribuição direta de suplemento.</summary>
     ReactivateSupplementAssignment,
+
     /// <summary>Elimina fisicamente um suplemento global do catálogo.</summary>
     DeleteGlobalSupplement,
+
     /// <summary>Elimina fisicamente um alimento global do catálogo.</summary>
     DeleteGlobalFood,
+
     /// <summary>Elimina fisicamente um exercício global do catálogo.</summary>
-    DeleteGlobalExercise
+    DeleteGlobalExercise,
+
+    /// <summary>Criação atómica de uma notificação e do respetivo job durável.</summary>
+    EnqueueNotification
 }

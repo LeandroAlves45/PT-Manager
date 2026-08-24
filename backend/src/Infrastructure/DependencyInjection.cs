@@ -5,6 +5,7 @@ using Application.Features.Clients.Abstractions;
 using Application.Features.Jobs.Abstractions;
 using Application.Features.Nutrition.Foods.Abstractions;
 using Application.Features.Nutrition.MealPlans.Abstractions;
+using Application.Features.Notifications.Abstractions;
 using Application.Features.Packs.ClientSessionPacks.Abstractions;
 using Application.Features.Packs.PackTypes.Abstractions;
 using Application.Features.Sessions.Abstractions;
@@ -20,6 +21,7 @@ using Infrastructure.Persistence.Assessments;
 using Infrastructure.Persistence.Clients;
 using Infrastructure.Persistence.Errors;
 using Infrastructure.Persistence.Nutrition;
+using Infrastructure.Persistence.Notifications;
 using Infrastructure.Persistence.Packs;
 using Infrastructure.Persistence.Sessions;
 using Infrastructure.Persistence.Supplements;
@@ -128,6 +130,9 @@ public static class DependencyInjection
         // Trainer Settings
         services.AddScoped<ITrainerSettingsStore, TrainerSettingsStore>();
         services.AddScoped<ITrainerSettingsQueries, TrainerSettingsQueries>();
+
+        // Notifications
+        services.AddScoped<INotificationQueueStore, NotificationQueueStore>();
 
         // Interceptors
         services.AddScoped<TenantWriteValidationInterceptor>();

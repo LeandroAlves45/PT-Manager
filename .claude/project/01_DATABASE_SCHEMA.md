@@ -5,8 +5,11 @@
 Estado: o baseline foi materializado por `20260804163659_InitialCreate` e
 completado por `20260814121132_CompleteTrainingPhase2C`. O delta dos Lotes 3A a
 3E foi consolidado por `20260822155532_CompleteSprint3Phase3` e validado em
-PostgreSQL 17 descartável. O snapshot representa o modelo atual e não existem
-alterações pendentes. A migration não foi aplicada a uma base persistente.
+PostgreSQL 17 descartável. O snapshot representa o modelo implementado atual e
+não existem alterações pendentes. O Gate 3G-A aprovou como alvo futuro a
+substituição de `uq_clients_user` por unicidade parcial da relação ativa; essa
+alteração ainda não foi implementada nem migrada. A migration consolidada não
+foi aplicada a uma base persistente.
 
 ---
 
@@ -177,7 +180,10 @@ CREATE TABLE clients (
 );
 
 CREATE INDEX idx_clients_owner_trainer ON clients(owner_trainer_id);
-CREATE UNIQUE INDEX uq_clients_user ON clients(user_id) WHERE user_id IS NOT NULL;
+-- MODELO ALVO DO GATE 3G-A, AINDA NÃO MIGRADO:
+-- permite relações históricas, mantendo uma única relação ativa por conta.
+CREATE UNIQUE INDEX uq_clients_user_active ON clients(user_id)
+    WHERE user_id IS NOT NULL AND is_active = true AND is_deleted = false;
 CREATE UNIQUE INDEX uq_clients_tenant_contact_email_active
     ON clients(owner_trainer_id, normalized_contact_email)
     WHERE normalized_contact_email IS NOT NULL AND is_deleted = false;

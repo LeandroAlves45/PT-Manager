@@ -60,10 +60,12 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
         builder.HasIndex(client => new { client.OwnerTrainerId, client.Id })
             .HasDatabaseName("uq_clients_tenant_id")
             .IsUnique();
+
         builder.HasIndex(client => client.UserId)
-            .HasDatabaseName("uq_clients_user")
-            .HasFilter("user_id IS NOT NULL")
+            .HasDatabaseName("uq_clients_user_active")
+            .HasFilter("user_id IS NOT NULL AND is_active = true AND is_deleted = false")
             .IsUnique();
+
         builder.HasIndex(client => new { client.OwnerTrainerId, client.NormalizedContactEmail })
             .HasDatabaseName("uq_clients_tenant_contact_email_active")
             .HasFilter("normalized_contact_email IS NOT NULL AND is_deleted = false")

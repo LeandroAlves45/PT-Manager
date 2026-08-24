@@ -17,9 +17,10 @@ notas de `.claude/memory/Sessions/`.
   Testcontainers.
 - `backend-python/` é apenas referência funcional e não define a arquitetura
   de destino.
-- Sprint 2 e Sprint 3 estão concluídos. Clients, Nutrition, Training, Packs,
-  Sessions, Assessments, Supplements, TrainerSettings, branding e administração
-  global foram materializados e consolidados pelo Lote 3F.
+- Sprint 2 está concluído. O Sprint 3 foi reaberto de forma controlada depois de
+  a revisão final confirmar que Authentication, Billing SaaS e Notifications
+  previstos no roadmap não estavam completos na Application. Os restantes
+  vertical slices foram materializados e consolidados pelo Lote 3F.
 
 ## Execução em curso
 
@@ -35,7 +36,14 @@ notas de `.claude/memory/Sessions/`.
    extensão instalada por segurança.
 7. A ordenação de packs foi alinhada com o índice PostgreSQL, reduzindo o plano
    medido de 6,888 ms para 0,146 ms.
-8. Manter `InitialCreate` e `CompleteTrainingPhase2C` imutáveis.
+8. Manter `InitialCreate`, `CompleteTrainingPhase2C` e
+   `CompleteSprint3Phase3` imutáveis.
+9. Gates 3G-A e 3G-B: código revisto/corrigido e testes escritos (764 testes
+   unit+architecture passam). Testes PostgreSQL não correm — migration
+   adiada para depois de Auth+Billing bloqueia a fixture partilhada de
+   integração inteira, não só o 3G-A. Detalhe em
+   `Sessions/2026-08-24-lote-3g-revisao-testes-validacao-parcial.md` e
+   `docs/backend-files/lote_3G/09_gates_3ga_3gb_validacao_final.md`.
 
 O gate final do Lote 3E aprovou build Release sem warnings, formatação e 1065
 testes: 365 Domain, 365 Application, 311 integração PostgreSQL e 24 arquitetura.
@@ -101,8 +109,19 @@ alegações anteriores desatualizadas está em
 - Mutações globais de Food e Exercise usam `ExecuteInTransactionAsync` e
   confirmam commits ambíguos pelo ID único da auditoria atómica. Create preserva
   a identidade do aggregate entre retries.
-- `uq_clients_user` continua único global. Permitir a mesma conta cliente com
-  vários trainers requer decisão de produto e auth no Sprint 4.
+- O Gate 3G-A aprovou substituir `uq_clients_user` por
+  `uq_clients_user_active`, filtrado por `user_id IS NOT NULL AND is_active =
+  true AND is_deleted = false`. Assim, uma conta pode conservar relações
+  históricas em vários tenants, mas apenas uma relação ativa. Código e testes
+  já implementados (2026-08-24); a migration EF Core fica deliberadamente
+  adiada para uma migration única gerada depois de Auth+Billing.
+- Adiar uma migration de schema bloqueia toda a suite partilhada de
+  `Infrastructure.IntegrationTests`, não apenas os testes da feature que a
+  motivou — `PostgresContainerFixture.InitializeAsync` falha a
+  `MigrateAsync` com `PendingModelChangesWarning` assim que o modelo EF
+  diverge de uma migration gerada. Confirmado em 2026-08-24 com o índice
+  `uq_clients_user_active` pendente: 308 de 340 testes de integração
+  falharam, incluindo testes sem relação com 3G-A/3G-B.
 - Google Sign-In pertence ao Sprint 4: trainers podem entrar diretamente;
   clientes exigem convite válido; associação a conta existente é explícita;
   `sub` é a identidade externa; roles, tenant, JWT e refresh token continuam
@@ -125,6 +144,8 @@ alegações anteriores desatualizadas está em
   `Sessions/2026-08-19-sprint3-phase3-lot3d-completion.md`.
 - TrainerSettings, branding e administração global:
   `Sessions/2026-08-22-sprint3-phase3-lot3e-completion.md`.
+- Client Active Relationship e Notifications (lote_3G, migration pendente):
+  `Sessions/2026-08-24-lote-3g-revisao-testes-validacao-parcial.md`.
 
 ## Padrões documentais
 

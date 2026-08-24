@@ -262,6 +262,13 @@ pontos não estiverem concluídos.
 
 ## SPRINT 3: Application Layer (Semanas 5-6)
 
+Estado em 23 de agosto de 2026: reaberto de forma controlada. Os vertical slices
+até ao Lote 3F foram implementados e validados, mas a revisão final confirmou
+que Authentication, Billing SaaS e Notifications previstos nesta secção ainda
+não estão completos na Application. `docs/backend-files/lote_3G/` contém os
+blueprints dos Gates 3G-A e 3G-B; a implementação continua pendente. O Sprint 4
+só será planeado depois do gate técnico do Lote 3G.
+
 ### Objectivo
 Handlers explícitos por caso de uso, DTOs, validação, mapping manual.
 
@@ -303,11 +310,10 @@ Handlers explícitos por caso de uso, DTOs, validação, mapping manual.
    - ~60 testes
 
 ### Deliverables
-- ✓ `Application` compila, sem depender de Infrastructure
-- ✓ Handlers implementados por feature
-- ✓ DTOs e Validators colocados junto da feature
-- ✓ Mapping explícito, sem AutoMapper
-- ✓ ~60 testes unitários passam
+- ✓ `Application` atual compila sem depender de Infrastructure.
+- ✓ Vertical slices até ao Lote 3F usam DTOs, validators e mapping explícito.
+- Pendente: completar Authentication, Billing SaaS e Notifications no Lote 3G.
+- Pendente: executar novamente o gate integral depois de implementar o Lote 3G.
 
 ### Commits
 - `feat: add application handlers organized by feature`

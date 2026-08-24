@@ -23,7 +23,10 @@ public sealed class ReactivateClientHandler
         _clientStore = clientStore ?? throw new ArgumentNullException(nameof(clientStore));
     }
 
-    /// <summary>É idempotente quando o cliente já está ativo.</summary>
+    /// <summary>
+    /// A constraint PostgreSQL fecha a corrida; o handler converte o outcome
+    /// seguro sem consultar nem revelar a relação pertencente a outro tenant.
+    /// </summary>
     public async Task<Result> HandleAsync(
         ReactivateClientCommand command,
         CancellationToken cancellationToken)
@@ -48,6 +51,8 @@ public sealed class ReactivateClientHandler
             ReactivateClientStoreOutcome.Reactivated => Result.Success(),
             ReactivateClientStoreOutcome.AlreadyActive => Result.Success(),
             ReactivateClientStoreOutcome.NotFound => Result.Failure(ClientErrors.ClientNotFound),
+            ReactivateClientStoreOutcome.UserAlreadyHasActiveRelationship =>
+                Result.Failure(ClientErrors.UserAlreadyHasActiveRelationship),
             ReactivateClientStoreOutcome.SubscriptionInactive =>
                 Result.Failure(ClientErrors.SubscriptionInactive),
             ReactivateClientStoreOutcome.SubscriptionSuspended =>

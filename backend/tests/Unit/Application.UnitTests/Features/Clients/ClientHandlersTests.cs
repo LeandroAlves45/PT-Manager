@@ -446,6 +446,26 @@ public sealed class ClientHandlersTests
         Assert.Equal(ErrorCategory.PaymentRequired, result.Error.Category);
     }
 
+    [Fact]
+    public async Task Reactivate_ActiveRelationshipConflict_MapsSafeConflict()
+    {
+        var store = new FakeClientStore
+        {
+            ReactivateOutcome = ReactivateClientStoreOutcome.UserAlreadyHasActiveRelationship
+        };
+        var handler = new ReactivateClientHandler(CreateTenant(), _clock, store);
+
+        var result = await handler.HandleAsync(
+            new ReactivateClientCommand(ClientId),
+            CancellationToken.None);
+
+        Assert.Equal(
+            "client_user_already_has_active_relationship",
+            result.Error!.Code);
+        Assert.Equal(ErrorCategory.Conflict, result.Error.Category);
+        Assert.Empty(result.Error.Metadata);
+    }
+
     [Theory]
     [InlineData(ReactivateClientStoreOutcome.Reactivated)]
     [InlineData(ReactivateClientStoreOutcome.AlreadyActive)]

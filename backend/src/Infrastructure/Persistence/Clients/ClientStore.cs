@@ -160,36 +160,19 @@ internal sealed class ClientStore : IClientStore
             _dbContext.Clients.Add(client);
             await _dbContext.SaveChangesAsync(cancellationToken);
 
-            var affectedSubscription = await _dbContext.TrainerSubscriptions
-                .Where(subscription => subscription.TrainerId == trainerId)
-                .Where(subscription =>
-                    subscription.IsExemptFromBilling ||
-                    subscription.Status == SubscriptionStatus.Active &&
-                    subscription.CurrentClientCount < subscription.ClientLimit)
-                .ExecuteUpdateAsync(
-                    setters => setters
-                        .SetProperty(
-                            subscription => subscription.CurrentClientCount,
-                            subscription => subscription.CurrentClientCount + 1)
-                        .SetProperty(
-                            subscription => subscription.UpdatedAt,
-                            now),
-                    cancellationToken);
+            var capacityFailure = await TryConsumeSubscriptionCapacityAsync(
+                trainerId,
+                now,
+                cancellationToken);
 
-            if (affectedSubscription == 1)
+            if (capacityFailure is null)
             {
                 await transaction.CommitAsync(cancellationToken);
                 return CreateClientStoreOutcome.Created;
             }
 
-            var state = await LoadSubscriptionStateAsync(
-                trainerId,
-                cancellationToken);
-
-            var outcome = MapCreateSubscriptionFailure(state);
-
             await transaction.RollbackAsync(CancellationToken.None);
-            return outcome;
+            return MapCreateOutcome(capacityFailure.Value);
         }
         catch (DbUpdateException exception)
         {
@@ -325,42 +308,68 @@ internal sealed class ClientStore : IClientStore
                 return outcomeReactivate;
             }
 
-            var affectedSubscription = await _dbContext.TrainerSubscriptions
-                .Where(subscription => subscription.TrainerId == trainerId)
-                .Where(subscription =>
-                    subscription.IsExemptFromBilling ||
-                    subscription.Status == SubscriptionStatus.Active &&
-                    subscription.CurrentClientCount < subscription.ClientLimit)
-                .ExecuteUpdateAsync(
-                    setters => setters
-                        .SetProperty(
-                            subscription => subscription.CurrentClientCount,
-                            subscription => subscription.CurrentClientCount + 1)
-                        .SetProperty(
-                            subscription => subscription.UpdatedAt,
-                            now),
-                    cancellationToken);
+            var capacityFailure = await TryConsumeSubscriptionCapacityAsync(
+                trainerId,
+                now,
+                cancellationToken);
 
-            if (affectedSubscription == 1)
+            if (capacityFailure is null)
             {
                 await transaction.CommitAsync(cancellationToken);
                 return ReactivateClientStoreOutcome.Reactivated;
             }
 
-            var state = await LoadSubscriptionStateAsync(
-                trainerId,
-                cancellationToken);
-
-            var outcome = MapReactivateSubscriptionFailure(state);
-
             await transaction.RollbackAsync(CancellationToken.None);
-            return outcome;
+            return MapReactivateOutcome(capacityFailure.Value);
         }
-        catch
+        catch (Exception exception)
         {
             await transaction.RollbackAsync(CancellationToken.None);
+
+            if (_constraintTranslator.TryTranslate(
+                    exception,
+                    PersistenceOperation.ReactivateClient,
+                    out var error) &&
+                error?.Code == "client_user_already_has_active_relationship")
+            {
+                return ReactivateClientStoreOutcome.UserAlreadyHasActiveRelationship;
+            }
             throw;
         }
+    }
+
+    /// <summary>
+    /// Tenta consumir uma vaga de capacidade da subscrição do personal trainer, na mesma
+    /// transação do chamador. Devolve null em sucesso; caso contrário devolve o
+    /// motivo funcional da falha, partilhado entre CreateOnceAsync e
+    /// ReactivateOnceAsync — os dois únicos casos que ocupam capacidade.
+    /// </summary>
+    private async Task<SubscriptionCapacityFailure?> TryConsumeSubscriptionCapacityAsync(
+        Guid trainerId,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var affectedSubscription = await _dbContext.TrainerSubscriptions
+            .Where(subscription => subscription.TrainerId == trainerId)
+            .Where(subscription =>
+                subscription.IsExemptFromBilling ||
+                subscription.Status == SubscriptionStatus.Active &&
+                subscription.CurrentClientCount < subscription.ClientLimit)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(
+                        subscription => subscription.CurrentClientCount,
+                        subscription => subscription.CurrentClientCount + 1)
+                    .SetProperty(
+                        subscription => subscription.UpdatedAt,
+                        now),
+                cancellationToken);
+
+        if (affectedSubscription == 1)
+            return null;
+
+        var state = await LoadSubscriptionStateAsync(trainerId, cancellationToken);
+        return MapSubscriptionCapacityFailure(state);
     }
 
     private Task<SubscriptionState?> LoadSubscriptionStateAsync(
@@ -378,59 +387,54 @@ internal sealed class ClientStore : IClientStore
             .SingleOrDefaultAsync(cancellationToken);
     }
 
-    private static CreateClientStoreOutcome MapCreateSubscriptionFailure(
+    private static SubscriptionCapacityFailure MapSubscriptionCapacityFailure(
         SubscriptionState? state)
     {
         if (state is null)
-            return CreateClientStoreOutcome.SubscriptionMissing;
+            return SubscriptionCapacityFailure.SubscriptionMissing;
 
         if (state.IsExemptFromBilling)
             throw new InvalidOperationException(
                 "An exempt subscription should have satisfied the capacity update.");
 
         if (state.Status == SubscriptionStatus.Inactive)
-            return CreateClientStoreOutcome.SubscriptionInactive;
+            return SubscriptionCapacityFailure.SubscriptionInactive;
 
         if (state.Status == SubscriptionStatus.Suspended)
-            return CreateClientStoreOutcome.SubscriptionSuspended;
+            return SubscriptionCapacityFailure.SubscriptionSuspended;
 
         if (state.Status == SubscriptionStatus.Cancelled)
-            return CreateClientStoreOutcome.SubscriptionCancelled;
+            return SubscriptionCapacityFailure.SubscriptionCancelled;
 
         if (state.Status == SubscriptionStatus.Active &&
             state.CurrentClientCount >= state.ClientLimit)
-            return CreateClientStoreOutcome.ClientLimitReached;
+            return SubscriptionCapacityFailure.ClientLimitReached;
 
         throw new InvalidOperationException(
             "The subscription should have satisfied the client capacity update.");
     }
 
-    private static ReactivateClientStoreOutcome MapReactivateSubscriptionFailure(
-        SubscriptionState? state)
-    {
-        if (state is null)
-            return ReactivateClientStoreOutcome.SubscriptionMissing;
+    private static CreateClientStoreOutcome MapCreateOutcome(
+        SubscriptionCapacityFailure failure) => failure switch
+        {
+            SubscriptionCapacityFailure.SubscriptionMissing => CreateClientStoreOutcome.SubscriptionMissing,
+            SubscriptionCapacityFailure.SubscriptionInactive => CreateClientStoreOutcome.SubscriptionInactive,
+            SubscriptionCapacityFailure.SubscriptionSuspended => CreateClientStoreOutcome.SubscriptionSuspended,
+            SubscriptionCapacityFailure.SubscriptionCancelled => CreateClientStoreOutcome.SubscriptionCancelled,
+            SubscriptionCapacityFailure.ClientLimitReached => CreateClientStoreOutcome.ClientLimitReached,
+            _ => throw new InvalidOperationException("Unmapped subscription capacity failure.")
+        };
 
-        if (state.IsExemptFromBilling)
-            throw new InvalidOperationException(
-                "An exempt subscription should have satisfied the capacity update.");
-
-        if (state.Status == SubscriptionStatus.Inactive)
-            return ReactivateClientStoreOutcome.SubscriptionInactive;
-
-        if (state.Status == SubscriptionStatus.Suspended)
-            return ReactivateClientStoreOutcome.SubscriptionSuspended;
-
-        if (state.Status == SubscriptionStatus.Cancelled)
-            return ReactivateClientStoreOutcome.SubscriptionCancelled;
-
-        if (state.Status == SubscriptionStatus.Active &&
-            state.CurrentClientCount >= state.ClientLimit)
-            return ReactivateClientStoreOutcome.ClientLimitReached;
-
-        throw new InvalidOperationException(
-            "The subscription should have satisfied the client capacity update.");
-    }
+    private static ReactivateClientStoreOutcome MapReactivateOutcome(
+        SubscriptionCapacityFailure failure) => failure switch
+        {
+            SubscriptionCapacityFailure.SubscriptionMissing => ReactivateClientStoreOutcome.SubscriptionMissing,
+            SubscriptionCapacityFailure.SubscriptionInactive => ReactivateClientStoreOutcome.SubscriptionInactive,
+            SubscriptionCapacityFailure.SubscriptionSuspended => ReactivateClientStoreOutcome.SubscriptionSuspended,
+            SubscriptionCapacityFailure.SubscriptionCancelled => ReactivateClientStoreOutcome.SubscriptionCancelled,
+            SubscriptionCapacityFailure.ClientLimitReached => ReactivateClientStoreOutcome.ClientLimitReached,
+            _ => throw new InvalidOperationException("Unmapped subscription capacity failure.")
+        };
 
     private static void ValidateIdentifiers(Guid clientId, Guid trainerId)
     {
@@ -452,4 +456,13 @@ internal sealed class ClientStore : IClientStore
         bool IsExemptFromBilling,
         int CurrentClientCount,
         int ClientLimit);
+
+    private enum SubscriptionCapacityFailure
+    {
+        SubscriptionMissing,
+        SubscriptionInactive,
+        SubscriptionSuspended,
+        SubscriptionCancelled,
+        ClientLimitReached
+    }
 }
