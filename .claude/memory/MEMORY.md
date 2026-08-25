@@ -44,15 +44,16 @@ notas de `.claude/memory/Sessions/`.
    integração inteira, não só o 3G-A. Detalhe em
    `Sessions/2026-08-24-lote-3g-revisao-testes-validacao-parcial.md` e
    `docs/backend-files/lote_3G/lote_3G-A_B/09_gates_3ga_3gb_validacao_final.md`.
-10. Gates 3G-C (Authentication) e 3G-D (Billing SaaS): 12 blueprints revistos
-    em `docs/backend-files/lote_3G/lote_3G-C_D/`, com 39 caminhos únicos.
-    Implementação pendente. Auth envia links secretos diretamente depois do
-    commit e não usa Notifications. O webhook estabelece o tenant antes de
-    tocar na subscrição e confirma subscrição, evento e outbox na mesma
-    transação. JWT concreto fica no Sprint 4 e o adapter Stripe no Sprint 5.
-    O enforcement de capacidade já existe em `ClientStore.cs` e não é
-    reimplementado. Migration e testes PostgreSQL continuam adiados. Detalhe em
-    `Sessions/2026-08-24-lote-3g-c-d-planeamento.md`.
+10. Gates 3G-C (Authentication) e 3G-D (Billing SaaS): reconstrução documental
+    concluída em `docs/backend-files/lote_3G/lote_3G-C_D/`. Os documentos 02 a
+    09 contêm 140 caminhos únicos com código integral. Commands, validators,
+    DTOs, portas, StoreStatus, StoreResult e handlers estão separados; Auth e
+    Billing usam stores e gateways por área coesa. A materialização descartável
+    compilou com zero warnings e zero erros; 1154 testes tinham passado antes da
+    separação estrutural final dos dez StoreStatus. O backend real permanece
+    inalterado e a implementação continua pendente. JWT concreto fica no Sprint
+    4 e o adapter Stripe no Sprint 5. Detalhe em
+    `Sessions/2026-08-25-lote-3g-c-d-reconstrucao-documental-final.md`.
 11. Ajuste residual 3G-B concluído:
     `EnqueueNotificationCommandValidator.IsSensitiveName` normaliza nomes antes
     da comparação e rejeita `token_value`, `refreshToken` e `apiKey`. Os três
@@ -166,8 +167,8 @@ alegações anteriores desatualizadas está em
   `Sessions/2026-08-22-sprint3-phase3-lot3e-completion.md`.
 - Client Active Relationship e Notifications (lote_3G, migration pendente):
   `Sessions/2026-08-24-lote-3g-revisao-testes-validacao-parcial.md`.
-- Authentication e Billing SaaS (lote_3G-C/D, documentação apenas):
-  `Sessions/2026-08-24-lote-3g-c-d-planeamento.md`.
+- Authentication e Billing SaaS (lote_3G-C/D, documentação reconstruída):
+  `Sessions/2026-08-25-lote-3g-c-d-reconstrucao-documental-final.md`.
 
 ## Padrões documentais
 
