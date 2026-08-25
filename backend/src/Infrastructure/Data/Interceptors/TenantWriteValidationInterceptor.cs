@@ -3,6 +3,7 @@ using Domain.Entities.Administration;
 using Domain.Entities.Assessments;
 using Domain.Entities.Billing;
 using Domain.Entities.Clients;
+using Domain.Entities.Identity;
 using Domain.Entities.Notifications;
 using Domain.Entities.Nutrition;
 using Domain.Entities.Sessions;
@@ -57,6 +58,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
             throw new InvalidOperationException("DbContext is not of type PtManagerDbContext.");
 
         ValidateAdministrativeAuditEntries(context);
+        ValidateTenantTransferAuditEntries(context);
 
         var entries = context.ChangeTracker.Entries()
             .Where(entry => entry.State is EntityState.Added or EntityState.Modified)
@@ -626,6 +628,30 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                     throw new DomainException(
                         $"A global {resourceType} mutation requires an audit entry.");
             }
+        }
+    }
+
+    private void ValidateTenantTransferAuditEntries(PtManagerDbContext context)
+    {
+        var auditEntries = context.ChangeTracker
+            .Entries<TenantTransferAudit>()
+            .Where(entry => entry.State != EntityState.Unchanged)
+            .ToList();
+
+        foreach (var entry in auditEntries)
+        {
+            if (entry.State is EntityState.Modified or EntityState.Deleted)
+                throw new DomainException("Tenant transfer audit entries are append-only.");
+
+            if (entry.State != EntityState.Added)
+                continue;
+
+            // A transferência pode ocorrer antes de existir um tenant efetivo,
+            // mas tem sempre de corresponder ao utilizador autenticado.
+            if (!_tenantContext.UserId.HasValue ||
+                _tenantContext.UserId.Value != entry.Entity.UserId)
+                throw new DomainException(
+                    "Tenant transfer audit user does not match the authenticated context.");
         }
     }
 

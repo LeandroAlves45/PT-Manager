@@ -58,6 +58,9 @@ public sealed class NotificationHandlerTests
     [InlineData("{not-json")]
     [InlineData("[]")]
     [InlineData("{\"token\":\"secret\"}")]
+    [InlineData("{\"token_value\":\"secret\"}")]
+    [InlineData("{\"refreshToken\":\"secret\"}")]
+    [InlineData("{\"apiKey\":\"secret\"}")]
     [InlineData("{\"nested\":{\"password\":\"secret\"}}")]
     public async Task Handle_UnsafeTemplateData_ReturnsValidation(string templateDataJson)
     {

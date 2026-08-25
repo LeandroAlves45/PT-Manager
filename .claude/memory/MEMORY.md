@@ -43,7 +43,21 @@ notas de `.claude/memory/Sessions/`.
    adiada para depois de Auth+Billing bloqueia a fixture partilhada de
    integração inteira, não só o 3G-A. Detalhe em
    `Sessions/2026-08-24-lote-3g-revisao-testes-validacao-parcial.md` e
-   `docs/backend-files/lote_3G/09_gates_3ga_3gb_validacao_final.md`.
+   `docs/backend-files/lote_3G/lote_3G-A_B/09_gates_3ga_3gb_validacao_final.md`.
+10. Gates 3G-C (Authentication) e 3G-D (Billing SaaS): 12 blueprints revistos
+    em `docs/backend-files/lote_3G/lote_3G-C_D/`, com 39 caminhos únicos.
+    Implementação pendente. Auth envia links secretos diretamente depois do
+    commit e não usa Notifications. O webhook estabelece o tenant antes de
+    tocar na subscrição e confirma subscrição, evento e outbox na mesma
+    transação. JWT concreto fica no Sprint 4 e o adapter Stripe no Sprint 5.
+    O enforcement de capacidade já existe em `ClientStore.cs` e não é
+    reimplementado. Migration e testes PostgreSQL continuam adiados. Detalhe em
+    `Sessions/2026-08-24-lote-3g-c-d-planeamento.md`.
+11. Ajuste residual 3G-B concluído:
+    `EnqueueNotificationCommandValidator.IsSensitiveName` normaliza nomes antes
+    da comparação e rejeita `token_value`, `refreshToken` e `apiKey`. Os três
+    testes falharam antes da correção e passaram depois. Application.UnitTests:
+    378 aprovados; formatação aprovada. Migration e testes PostgreSQL inalterados.
 
 O gate final do Lote 3E aprovou build Release sem warnings, formatação e 1065
 testes: 365 Domain, 365 Application, 311 integração PostgreSQL e 24 arquitetura.
@@ -126,6 +140,12 @@ alegações anteriores desatualizadas está em
   clientes exigem convite válido; associação a conta existente é explícita;
   `sub` é a identidade externa; roles, tenant, JWT e refresh token continuam
   controlados pelo PT Manager. `PasswordHash` não muda no Lote 3F.
+- A política aprovada para novas passwords locais usa mínimo de 8 e máximo de
+  128 caracteres. ASP.NET Core Identity permanece a fonte autoritativa; os
+  validators de registo, alteração e recuperação repetem estes limites para
+  feedback antecipado. O login valida apenas presença e um limite defensivo.
+  Domain e EF Core recebem apenas o hash e não validam a password em claro nem
+  exigem alteração de schema ou migration por causa desta política.
 
 ## Regras funcionais com fonte canónica
 
@@ -146,6 +166,8 @@ alegações anteriores desatualizadas está em
   `Sessions/2026-08-22-sprint3-phase3-lot3e-completion.md`.
 - Client Active Relationship e Notifications (lote_3G, migration pendente):
   `Sessions/2026-08-24-lote-3g-revisao-testes-validacao-parcial.md`.
+- Authentication e Billing SaaS (lote_3G-C/D, documentação apenas):
+  `Sessions/2026-08-24-lote-3g-c-d-planeamento.md`.
 
 ## Padrões documentais
 

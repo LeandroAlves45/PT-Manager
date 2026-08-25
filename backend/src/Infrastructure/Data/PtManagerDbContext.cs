@@ -37,7 +37,7 @@ public sealed class PtManagerDbContext : DbContext
         _tenantContext = tenantContext;
     }
 
-    // DbSet<T> para as 29 entidades.
+    // DbSet<T> para as 32 entidades.
     public DbSet<User> Users => Set<User>();
     public DbSet<AdministrativeAuditEntry> AdministrativeAuditEntries =>
         Set<AdministrativeAuditEntry>();
@@ -51,6 +51,9 @@ public sealed class PtManagerDbContext : DbContext
     public DbSet<TrainerSubscription> TrainerSubscriptions => Set<TrainerSubscription>();
     public DbSet<InviteToken> InviteTokens => Set<InviteToken>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+    public DbSet<TenantTransferAudit> TenantTransferAudits => Set<TenantTransferAudit>();
     public DbSet<DurableJob> DurableJobs => Set<DurableJob>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<Notification> Notifications => Set<Notification>();

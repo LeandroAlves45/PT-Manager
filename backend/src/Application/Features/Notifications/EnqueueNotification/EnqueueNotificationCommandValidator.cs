@@ -96,12 +96,19 @@ public sealed class EnqueueNotificationCommandValidator : AbstractValidator<Enqu
         return false;
     }
 
-    private static bool IsSensitiveName(string name) =>
-        name.Equals("token", StringComparison.OrdinalIgnoreCase) ||
-        name.EndsWith("_token", StringComparison.OrdinalIgnoreCase) ||
-        name.Contains("password", StringComparison.OrdinalIgnoreCase) ||
-        name.Contains("secret", StringComparison.OrdinalIgnoreCase) ||
-        name.Contains("cookie", StringComparison.OrdinalIgnoreCase) ||
-        name.Equals("authorization", StringComparison.OrdinalIgnoreCase) ||
-        name.Equals("api_key", StringComparison.OrdinalIgnoreCase);
+    private static bool IsSensitiveName(string name)
+    {
+        // Separadores e casing são controlados pelo input e não podem contornar a denylist.
+        var normalizedName = new string(name
+            .Where(char.IsLetterOrDigit)
+            .Select(char.ToLowerInvariant)
+            .ToArray());
+
+        return normalizedName.Contains("token", StringComparison.Ordinal) ||
+            normalizedName.Contains("password", StringComparison.Ordinal) ||
+            normalizedName.Contains("secret", StringComparison.Ordinal) ||
+            normalizedName.Contains("cookie", StringComparison.Ordinal) ||
+            normalizedName.Contains("authorization", StringComparison.Ordinal) ||
+            normalizedName.Contains("apikey", StringComparison.Ordinal);
+    }
 }

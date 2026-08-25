@@ -19,7 +19,11 @@ internal sealed class InviteTokenConfiguration : IEntityTypeConfiguration<Invite
         builder.Property(token => token.TokenHash).HasColumnName("token_hash").HasMaxLength(255).IsRequired();
         builder.Property(token => token.ExpiresAt).HasColumnName("expires_at").IsRequired();
         builder.Property(token => token.UsedAt).HasColumnName("used_at");
-        builder.Property(token => token.CreatedAt).HasColumnName("created_at").IsRequired();
+        builder.Property(token => token.CreatedAt)
+            .HasColumnName("created_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
+
         builder.Ignore(token => token.IsUsed);
 
         builder.HasIndex(token => token.TokenHash)
