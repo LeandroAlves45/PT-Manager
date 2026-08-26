@@ -262,12 +262,11 @@ pontos não estiverem concluídos.
 
 ## SPRINT 3: Application Layer (Semanas 5-6)
 
-Estado em 23 de agosto de 2026: reaberto de forma controlada. Os vertical slices
-até ao Lote 3F foram implementados e validados, mas a revisão final confirmou
-que Authentication, Billing SaaS e Notifications previstos nesta secção ainda
-não estão completos na Application. `docs/backend-files/lote_3G/` contém os
-blueprints dos Gates 3G-A e 3G-B; a implementação continua pendente. O Sprint 4
-só será planeado depois do gate técnico do Lote 3G.
+Estado em 26 de agosto de 2026: concluído. O Lote 3G fechou Authentication,
+Billing SaaS, Notifications e a relação ativa de clientes. A migration
+`20260826172025_CompleteSprint3Lote3G` foi gerada pelo EF Core e validada com
+migrate, rollback e migrate em PostgreSQL 17 descartável. A solução terminou
+com 1228 testes aprovados e sem alterações pendentes no modelo EF Core.
 
 ### Objectivo
 Handlers explícitos por caso de uso, DTOs, validação, mapping manual.
@@ -312,8 +311,9 @@ Handlers explícitos por caso de uso, DTOs, validação, mapping manual.
 ### Deliverables
 - ✓ `Application` atual compila sem depender de Infrastructure.
 - ✓ Vertical slices até ao Lote 3F usam DTOs, validators e mapping explícito.
-- Pendente: completar Authentication, Billing SaaS e Notifications no Lote 3G.
-- Pendente: executar novamente o gate integral depois de implementar o Lote 3G.
+- ✓ Authentication, Billing SaaS e Notifications concluídos no Lote 3G.
+- ✓ Gate integral executado após a migration: 381 Domain, 451 Application,
+  360 Infrastructure e 36 Architecture.
 
 ### Commits
 - `feat: add application handlers organized by feature`

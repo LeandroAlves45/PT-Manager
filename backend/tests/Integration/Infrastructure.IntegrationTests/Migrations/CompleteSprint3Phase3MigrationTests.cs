@@ -25,12 +25,16 @@ public sealed class CompleteSprint3Phase3MigrationTests : IAsyncLifetime
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
     [Fact]
-    public async Task Migrate_WhenDatabaseIsEmpty_AppliesLatestSchema()
+    public async Task Migrate_WhenDatabaseIsEmpty_AppliesPhase3Schema()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         await using var context = _fixture.CreateContext();
+        var migrator = context.GetService<IMigrator>();
 
-        await context.Database.MigrateAsync(cancellationToken);
+        // O alvo explícito mantém este teste histórico estável quando surgem migrations novas.
+        await migrator.MigrateAsync(
+            PostgresContainerFixture.CompleteSprint3Phase3Migration,
+            cancellationToken);
 
         var tableCount = await _fixture.CountApplicationTablesAsync(cancellationToken);
         var applied = await context.Database.GetAppliedMigrationsAsync(cancellationToken);

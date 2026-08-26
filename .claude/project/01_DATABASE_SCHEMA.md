@@ -23,7 +23,7 @@ base de produção identificada, qualquer base .NET persistente pode conter dado
 e deve seguir o preflight e a política de backup deste documento.
 
 **Características:**
-- Contagem: 29 tabelas da aplicação mais `__EFMigrationsHistory`, total 30
+- Contagem: 32 tabelas da aplicação mais `__EFMigrationsHistory`, total 33
 - Multi-tenancy: raízes com `owner_trainer_id`; filhas herdam o tenant por navegação para a raiz. Filtros centralizados no `DbContext`, ligados a `ITenantContext`, exigem tenant presente
 - IDs: `uuid` nativo (ver decisão §1 abaixo)
 - Soft delete: `is_deleted` apenas nas entidades que ainda distinguem remoção
@@ -133,6 +133,7 @@ CREATE TABLE trainer_subscriptions (
     trial_ends_at TIMESTAMPTZ,
     stripe_subscription_id VARCHAR(255),
     stripe_customer_id VARCHAR(255),
+    last_provider_state_observed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -144,6 +145,12 @@ CREATE TABLE trainer_subscriptions (
 
 CREATE INDEX idx_subscriptions_trainer ON trainer_subscriptions(trainer_id);
 CREATE INDEX idx_subscriptions_status ON trainer_subscriptions(subscription_status);
+CREATE UNIQUE INDEX uq_trainer_subscriptions_stripe_customer
+    ON trainer_subscriptions(stripe_customer_id)
+    WHERE stripe_customer_id IS NOT NULL;
+CREATE UNIQUE INDEX uq_trainer_subscriptions_stripe_subscription
+    ON trainer_subscriptions(stripe_subscription_id)
+    WHERE stripe_subscription_id IS NOT NULL;
 ```
 
 ### 3. `clients`
@@ -180,7 +187,6 @@ CREATE TABLE clients (
 );
 
 CREATE INDEX idx_clients_owner_trainer ON clients(owner_trainer_id);
--- MODELO ALVO DO GATE 3G-A, AINDA NÃO MIGRADO:
 -- permite relações históricas, mantendo uma única relação ativa por conta.
 CREATE UNIQUE INDEX uq_clients_user_active ON clients(user_id)
     WHERE user_id IS NOT NULL AND is_active = true AND is_deleted = false;
@@ -271,6 +277,81 @@ CREATE TABLE invite_tokens (
 CREATE INDEX idx_invites_trainer ON invite_tokens(trainer_id);
 CREATE INDEX idx_invites_email ON invite_tokens(email);
 CREATE INDEX idx_invites_client ON invite_tokens(client_id);
+```
+
+### 6A. `email_verification_tokens`
+
+Tokens de utilização única para confirmação de email. Apenas o hash SHA-256 é
+persistido.
+
+```sql
+CREATE TABLE email_verification_tokens (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL,
+    token_hash VARCHAR(64) NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    consumed_at TIMESTAMPTZ,
+
+    CONSTRAINT fk_email_verification_tokens_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uq_email_verification_tokens_hash UNIQUE (token_hash)
+);
+
+CREATE INDEX idx_email_verification_tokens_user_consumed
+    ON email_verification_tokens(user_id, consumed_at);
+```
+
+### 6B. `password_reset_tokens`
+
+Tokens de utilização única para recuperação de password. Apenas o hash SHA-256
+é persistido.
+
+```sql
+CREATE TABLE password_reset_tokens (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL,
+    token_hash VARCHAR(64) NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    consumed_at TIMESTAMPTZ,
+
+    CONSTRAINT fk_password_reset_tokens_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uq_password_reset_tokens_hash UNIQUE (token_hash)
+);
+
+CREATE INDEX idx_password_reset_tokens_user_consumed
+    ON password_reset_tokens(user_id, consumed_at);
+```
+
+### 6C. `tenant_transfer_audits`
+
+Auditoria append-only da transferência explícita de uma conta de cliente entre
+tenants.
+
+```sql
+CREATE TABLE tenant_transfer_audits (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL,
+    source_trainer_id UUID NOT NULL,
+    target_trainer_id UUID NOT NULL,
+    target_client_id UUID NOT NULL,
+    occurred_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    CONSTRAINT fk_tenant_transfer_audits_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_tenant_transfer_audits_source_trainer
+        FOREIGN KEY (source_trainer_id) REFERENCES users(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_tenant_transfer_audits_target_trainer
+        FOREIGN KEY (target_trainer_id) REFERENCES users(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_tenant_transfer_audits_target_client_tenant
+        FOREIGN KEY (target_trainer_id, target_client_id)
+        REFERENCES clients(owner_trainer_id, id) ON DELETE RESTRICT
+);
+
+CREATE INDEX idx_tenant_transfer_audits_user_occurred
+    ON tenant_transfer_audits(user_id, occurred_at);
 ```
 
 ---

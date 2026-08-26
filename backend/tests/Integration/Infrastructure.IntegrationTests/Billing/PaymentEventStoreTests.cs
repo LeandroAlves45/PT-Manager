@@ -276,9 +276,12 @@ public sealed class PaymentEventStoreTests(PostgresContainerFixture database)
         using var document = JsonDocument.Parse(payload);
         var properties = document.RootElement.EnumerateObject()
             .Select(property => property.Name)
+            // PostgreSQL jsonb não preserva a ordem textual das propriedades.
+            // O contrato exige o conjunto exato de nomes, independentemente da ordem.
+            .Order()
             .ToArray();
         Assert.Equal(
-            ["trainer_id", "recipient_email", "event_id", "kind"],
+            ["event_id", "kind", "recipient_email", "trainer_id"],
             properties);
         Assert.Equal(
             trainer.TrainerId,

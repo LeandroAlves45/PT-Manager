@@ -9,18 +9,19 @@ notas de `.claude/memory/Sessions/`.
 - Backend alvo em .NET 10 e C# 14, com Domain, Application, Infrastructure e
   Api. Arquitetura modular monolith e Clean Architecture, sem MediatR,
   AutoMapper, repositório genérico ou Unit of Work genérico.
-- PostgreSQL com EF Core é a fonte de verdade. As migrations
-  `20260804163659_InitialCreate` e `20260814121132_CompleteTrainingPhase2C`
-  foram aplicadas em desenvolvimento e são imutáveis.
+- PostgreSQL com EF Core é a fonte de verdade. As migrations anteriores
+  `20260804163659_InitialCreate`, `20260814121132_CompleteTrainingPhase2C` e
+  `20260822155532_CompleteSprint3Phase3` são imutáveis. A migration
+  `20260826172025_CompleteSprint3Lote3G` foi validada apenas em PostgreSQL 17
+  descartável e ainda não foi aplicada a uma base persistente.
 - Ainda não existe base de dados de produção identificada. Migrations e testes
   de schema referem desenvolvimento local ou PostgreSQL efémero em
   Testcontainers.
 - `backend-python/` é apenas referência funcional e não define a arquitetura
   de destino.
-- Sprint 2 está concluído. O Sprint 3 foi reaberto de forma controlada depois de
-  a revisão final confirmar que Authentication, Billing SaaS e Notifications
-  previstos no roadmap não estavam completos na Application. Os restantes
-  vertical slices foram materializados e consolidados pelo Lote 3F.
+- Sprint 2 e Sprint 3 estão concluídos. O Lote 3G fechou Authentication,
+  Billing SaaS, Notifications e a relação ativa de clientes, incluindo a
+  migration consolidada e validação PostgreSQL.
 
 ## Execução em curso
 
@@ -54,17 +55,16 @@ notas de `.claude/memory/Sessions/`.
     inalterado e a implementação continua pendente. JWT concreto fica no Sprint
     4 e o adapter Stripe no Sprint 5. Detalhe em
     `Sessions/2026-08-25-lote-3g-c-d-reconstrucao-documental-final.md`.
-11. Gates 3G-C/D implementados e fechados pré-migration (2026-08-26): Billing
-    Application+Infrastructure reais, `PaymentEventStore` e
-    `BillingCheckoutStore` dentro da execution strategy com dedução por
-    `event.id`, payload outbox snake_case e trainer inativo sem poison event.
-    Review Authentication corrigiu os seis stores Identity que abriam
-    transações fora da strategy (falhariam com `EnableRetryOnFailure`).
-    868 testes sem PostgreSQL aprovados (381 Domain, 451 Application, 36
-    Architecture); build Release e formatação limpos; integração compilada mas
-    bloqueada pela migration deliberadamente pendente. Evidência em
-    `Sessions/2026-08-26-lote-3g-c-d-fecho-pre-migration.md` e
-    `docs/backend-files/lote_3G/lote_3G-C_D/12_gate_3gd_fecho_pre_migration.md`.
+11. Lote 3G e Sprint 3 fechados pós-migration (2026-08-26). A migration
+    `20260826172025_CompleteSprint3Lote3G` inclui Auth, Billing, relação ativa de
+    clientes e `last_provider_state_observed_at`. Migrate, rollback e migrate
+    passaram em PostgreSQL 17 descartável. A asserção de propriedades jsonb do
+    outbox foi tornada independente de ordem e o teste histórico Phase3 passou
+    a migrar para um alvo explícito. Suite final: 1228 testes aprovados (381
+    Domain, 451 Application, 360 Infrastructure, 36 Architecture), build Release
+    sem warnings, formatação limpa e modelo EF sem alterações pendentes.
+    Evidência em `Sessions/2026-08-26-sprint3-lote3g-pos-migration.md` e
+    `docs/backend-files/lote_3G/lote_3G-C_D/13_lote_3g_fecho_pos_migration.md`.
 12. Ajuste residual 3G-B concluído:
     `EnqueueNotificationCommandValidator.IsSensitiveName` normaliza nomes antes
     da comparação e rejeita `token_value`, `refreshToken` e `apiKey`. Os três
