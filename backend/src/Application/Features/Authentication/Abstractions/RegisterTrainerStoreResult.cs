@@ -1,14 +1,5 @@
 namespace Application.Features.Authentication.Abstractions;
 
-/// <summary>Estados esperados da persistência do signup.</summary>
-public enum RegisterTrainerStoreStatus
-{
-    Created,
-    DuplicateEmail,
-    InvalidIdentityData,
-    ConcurrencyConflict
-}
-
 /// <summary>Resultado do registo atómico de um personal trainer.</summary>
 public sealed record RegisterTrainerStoreResult(
     RegisterTrainerStoreStatus Kind,

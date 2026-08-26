@@ -32,7 +32,11 @@ internal sealed class ProcessedStripeEventConfiguration : IEntityTypeConfigurati
             .HasDefaultValueSql("now()")
             .IsRequired();
 
-        builder.HasIndex(pse => pse.StripeEventId).IsUnique();
-        builder.HasIndex(pse => pse.EventType).HasDatabaseName("idx_stripe_events_type");
+        builder.HasIndex(pse => pse.StripeEventId)
+            .HasDatabaseName("uq_processed_stripe_events_event_id")
+            .IsUnique();
+
+        builder.HasIndex(pse => pse.EventType)
+            .HasDatabaseName("idx_stripe_events_type");
     }
 }

@@ -4,7 +4,7 @@ using Application.Features.Authentication.Abstractions;
 namespace Infrastructure.Identity;
 
 /// <summary>Implementação criptográfica dos tokens opacos locais.</summary>
-public sealed class OpaqueTokenService : IOpaqueTokenService
+internal sealed class OpaqueTokenService : IOpaqueTokenService
 {
     public GeneratedOpaqueToken Generate()
     {

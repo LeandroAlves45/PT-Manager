@@ -276,5 +276,5 @@ internal sealed class UserIdentityStore :
     private static bool IsDuplicateEmail(DbUpdateException exception) =>
         exception.InnerException is PostgresException postgres &&
         postgres.SqlState == PostgresErrorCodes.UniqueViolation &&
-        postgres.ConstraintName == "eq_users_normalized_email";
+        postgres.ConstraintName == "uq_users_normalized_email";
 }

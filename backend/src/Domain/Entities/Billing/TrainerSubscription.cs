@@ -19,6 +19,7 @@ public sealed class TrainerSubscription
     public DateTime? TrialEndsAt { get; private set; }
     public string? StripeSubscriptionId { get; private set; }
     public string? StripeCustomerId { get; private set; }
+    public DateTime? LastProviderStateObservedAt { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -96,21 +97,128 @@ public sealed class TrainerSubscription
         UpdatedAt = now;
     }
 
-    /// <summary>Liga a subcrição ás referências do Stripe (checkout concluído).</summary>
-    public void LinkStripe(string customerId, string subscriptionId, DateTime now)
+    /// <summary>Associa o customer externo antes de existir uma subscription externa.</summary>
+    public void LinkStripeCustomer(string customerId, DateTime now)
     {
-        if (string.IsNullOrWhiteSpace(customerId) || string.IsNullOrWhiteSpace(subscriptionId))
-            throw new DomainException("Stripe references cannot be empty.");
+        var normalized = NormalizeProviderId(customerId, "Stripe customer ID is invalid.");
+        if (StripeCustomerId is not null && StripeCustomerId != normalized)
+            throw new DomainException("A different Stripe customer is already linked.");
+        if (StripeCustomerId == normalized)
+            return;
 
-        var trimmedCustomerId = customerId.Trim();
-        var trimmedSubscriptionId = subscriptionId.Trim();
-        if (trimmedCustomerId.Length > 255)
-            throw new DomainException("Stripe customer ID cannot exceed 255 characters.");
-        if (trimmedSubscriptionId.Length > 255)
-            throw new DomainException("Stripe subscription ID cannot exceed 255 characters.");
+        StripeCustomerId = normalized;
+        UpdatedAt = now;
+    }
 
-        StripeCustomerId = trimmedCustomerId;
-        StripeSubscriptionId = trimmedSubscriptionId;
+    /// <summary>Associa uma subscription externa ao customer já validado.</summary>
+    public void LinkStripeSubscription(string customerId, string subscriptionId, DateTime now)
+    {
+        var normalizedCustomerId = NormalizeProviderId(
+            customerId,
+            "Stripe customer ID is invalid.");
+        var normalizedSubscriptionId = NormalizeProviderId(
+            subscriptionId,
+            "Stripe subscription ID is invalid.");
+
+        if (StripeCustomerId is not null && StripeCustomerId != normalizedCustomerId)
+            throw new DomainException("A different Stripe customer is already linked.");
+
+        var mayReplace = Status == SubscriptionStatus.Inactive ||
+            Status == SubscriptionStatus.Cancelled;
+        if (StripeSubscriptionId is not null &&
+            StripeSubscriptionId != normalizedSubscriptionId &&
+            !mayReplace)
+        {
+            throw new DomainException("An active Stripe subscription cannot be replaced.");
+        }
+
+        if (StripeCustomerId == normalizedCustomerId &&
+            StripeSubscriptionId == normalizedSubscriptionId)
+        {
+            return;
+        }
+
+        StripeCustomerId = normalizedCustomerId;
+        StripeSubscriptionId = normalizedSubscriptionId;
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// Aplica um snapshot autoritativo apenas quando foi observado depois do último
+    /// estado aceite. A verificação acontece antes de qualquer mutação para impedir
+    /// que webhooks concorrentes façam regredir a subscrição.
+    /// </summary>
+    public bool ApplyProviderSnapshot(
+        string customerId,
+        string subscriptionId,
+        SubscriptionTier tier,
+        int clientLimit,
+        SubscriptionStatus status,
+        DateTime? trialEndsAt,
+        DateTime observedAt,
+        DateTime now
+    )
+    {
+        var normalizedCustomerId = NormalizeProviderId(
+            customerId,
+            "Stripe customer ID is invalid.");
+        var normalizedSubscriptionId = NormalizeProviderId(
+            subscriptionId,
+            "Stripe subscription ID is invalid.");
+        ArgumentNullException.ThrowIfNull(tier);
+        ArgumentNullException.ThrowIfNull(status);
+
+        if (clientLimit < 0)
+            throw new DomainException("Client limit cannot be negative.");
+        if (observedAt == default || observedAt.Kind != DateTimeKind.Utc)
+            throw new DomainException("Provider state observation time must be UTC.");
+        if (StripeCustomerId is not null && StripeCustomerId != normalizedCustomerId)
+            throw new DomainException("A different Stripe customer is already linked.");
+
+        var mayReplaceSubscription = Status == SubscriptionStatus.Inactive ||
+            Status == SubscriptionStatus.Cancelled;
+        if (StripeSubscriptionId is not null &&
+            StripeSubscriptionId != normalizedSubscriptionId &&
+            !mayReplaceSubscription)
+        {
+            throw new DomainException("An active Stripe subscription cannot be replaced.");
+        }
+
+        if (LastProviderStateObservedAt.HasValue &&
+            observedAt <= LastProviderStateObservedAt.Value)
+        {
+            return false;
+        }
+
+        StripeCustomerId = normalizedCustomerId;
+        StripeSubscriptionId = normalizedSubscriptionId;
+        Tier = tier;
+        ClientLimit = clientLimit;
+        Status = status;
+        TrialEndsAt = trialEndsAt;
+        LastProviderStateObservedAt = observedAt;
+        UpdatedAt = now;
+        return true;
+    }
+
+    /// <summary>Reconcilia tier, limite, estado e trial a partir do provider.</summary>
+    public void ApplyBillingState(
+        SubscriptionTier tier,
+        int clientLimit,
+        SubscriptionStatus status,
+        DateTime? trialEndsAt,
+        DateTime now
+    )
+    {
+        ArgumentNullException.ThrowIfNull(tier);
+        ArgumentNullException.ThrowIfNull(status);
+        if (clientLimit < 0)
+            throw new DomainException("Client limit cannot be negative.");
+
+        Tier = tier;
+        ClientLimit = clientLimit;
+        Status = status;
+        TrialEndsAt = trialEndsAt;
         UpdatedAt = now;
     }
 
@@ -134,5 +242,13 @@ public sealed class TrainerSubscription
     {
         Status = SubscriptionStatus.Inactive;
         UpdatedAt = now;
+    }
+
+    private static string NormalizeProviderId(string value, string message)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Trim().Length > 255)
+            throw new DomainException(message);
+
+        return value.Trim();
     }
 }

@@ -1,16 +1,5 @@
 namespace Application.Features.Authentication.Abstractions;
 
-/// <summary>Estados persistentes possíveis durante refresh.</summary>
-public enum RotateRefreshStoreStatus
-{
-    Rotated,
-    NotFound,
-    Expired,
-    Reused,
-    PrincipalInvalid,
-    ConcurrencyConflict
-}
-
 /// <summary>Resultado da rotation sem expor hash persistido.</summary>
 public sealed record RotateRefreshStoreResult(
     RotateRefreshStoreStatus Kind,

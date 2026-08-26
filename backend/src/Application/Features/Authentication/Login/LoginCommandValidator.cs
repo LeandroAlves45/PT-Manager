@@ -20,11 +20,8 @@ public sealed class LoginCommandValidator : AbstractValidator<LoginCommand>
         RuleFor(command => command.Password)
             .Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .WithErrorCode("authentication_password_required")
-            .MinimumLength(8)
-            .WithErrorCode("authentication_password_too_short")
-            .MaximumLength(128)
-            .WithErrorCode("authentication_password_too_long")
+            .MaximumLength(512)
+            .WithErrorCode("authentication_password_invalid")
             .WithMessage("Password is invalid.");
     }
 }

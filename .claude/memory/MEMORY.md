@@ -54,7 +54,18 @@ notas de `.claude/memory/Sessions/`.
     inalterado e a implementação continua pendente. JWT concreto fica no Sprint
     4 e o adapter Stripe no Sprint 5. Detalhe em
     `Sessions/2026-08-25-lote-3g-c-d-reconstrucao-documental-final.md`.
-11. Ajuste residual 3G-B concluído:
+11. Gates 3G-C/D implementados e fechados pré-migration (2026-08-26): Billing
+    Application+Infrastructure reais, `PaymentEventStore` e
+    `BillingCheckoutStore` dentro da execution strategy com dedução por
+    `event.id`, payload outbox snake_case e trainer inativo sem poison event.
+    Review Authentication corrigiu os seis stores Identity que abriam
+    transações fora da strategy (falhariam com `EnableRetryOnFailure`).
+    868 testes sem PostgreSQL aprovados (381 Domain, 451 Application, 36
+    Architecture); build Release e formatação limpos; integração compilada mas
+    bloqueada pela migration deliberadamente pendente. Evidência em
+    `Sessions/2026-08-26-lote-3g-c-d-fecho-pre-migration.md` e
+    `docs/backend-files/lote_3G/lote_3G-C_D/12_gate_3gd_fecho_pre_migration.md`.
+12. Ajuste residual 3G-B concluído:
     `EnqueueNotificationCommandValidator.IsSensitiveName` normaliza nomes antes
     da comparação e rejeita `token_value`, `refreshToken` e `apiKey`. Os três
     testes falharam antes da correção e passaram depois. Application.UnitTests:

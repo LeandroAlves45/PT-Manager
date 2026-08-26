@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Infrastructure.Identity;
 
 /// <summary>Persiste o onboarding local completo numa transação.</summary>
-public sealed class AuthenticationRegistrationStore : IAuthenticationRegistrationStore
+internal sealed class AuthenticationRegistrationStore : IAuthenticationRegistrationStore
 {
     private readonly PtManagerDbContext _dbContext;
     private readonly UserManager<User> _userManager;
@@ -42,9 +42,6 @@ public sealed class AuthenticationRegistrationStore : IAuthenticationRegistratio
 
         var now = _clock.UtcNow;
         var generated = _tokens.Generate();
-        await using var transaction = await _dbContext.Database
-            .BeginTransactionAsync(cancellationToken);
-
         var user = new User(
             new EmailAddress(request.Email),
             "trainer",
@@ -52,47 +49,75 @@ public sealed class AuthenticationRegistrationStore : IAuthenticationRegistratio
             now
         );
 
-        var identityResult = await _userManager.CreateAsync(user, request.Password);
-        if (!identityResult.Succeeded)
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            return RegisterTrainerStoreResult.For(identityResult.Errors.Any(error =>
-                error.Code == nameof(IdentityErrorDescriber.DuplicateEmail))
-                ? RegisterTrainerStoreStatus.DuplicateEmail
-                : RegisterTrainerStoreStatus.InvalidIdentityData);
-        }
-
+        // O tenant é estabelecido uma única vez, fora do delegate repetível.
         _tenantInitializer.Establish(user.Id, user.Id, "trainer", TenantOrigin.System, false);
-        _dbContext.TrainerSubscriptions.Add(new TrainerSubscription(
-            user.Id,
-            request.TrialEndsAt,
-            now
-        ));
-        _dbContext.TrainerSettings.Add(new TrainerSettings(user.Id, now));
-        _dbContext.EmailVerificationTokens.Add(new EmailVerificationToken(
-            user.Id,
-            generated.TokenHash,
-            request.EmailConfirmationExpiresAt,
-            now
-        ));
 
-        try
-        {
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            return RegisterTrainerStoreResult.For(RegisterTrainerStoreStatus.ConcurrencyConflict);
-        }
-
-        return RegisterTrainerStoreResult.Created(user.Id, user.Id,
+        var created = RegisterTrainerStoreResult.Created(user.Id, user.Id,
             new IssuedAuthenticationSecret(
                 user.Email,
                 generated.RawToken,
                 request.EmailConfirmationExpiresAt
             )
         );
+
+        var strategy = _dbContext.Database.CreateExecutionStrategy();
+        var attempt = 0;
+
+        return await strategy.ExecuteAsync(async () =>
+        {
+            attempt++;
+
+            // Confirma um commit ambíguo antes de repetir a escrita.
+            if (attempt > 1)
+            {
+                _dbContext.ChangeTracker.Clear();
+                if (await _dbContext.EmailVerificationTokens
+                    .AsNoTracking()
+                    .AnyAsync(token => token.TokenHash == generated.TokenHash,
+                        cancellationToken))
+                {
+                    return created;
+                }
+            }
+
+            await using var transaction = await _dbContext.Database
+                .BeginTransactionAsync(cancellationToken);
+
+            var identityResult = await _userManager.CreateAsync(user, request.Password);
+            if (!identityResult.Succeeded)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return RegisterTrainerStoreResult.For(identityResult.Errors.Any(error =>
+                    error.Code == nameof(IdentityErrorDescriber.DuplicateEmail))
+                    ? RegisterTrainerStoreStatus.DuplicateEmail
+                    : RegisterTrainerStoreStatus.InvalidIdentityData);
+            }
+
+            _dbContext.TrainerSubscriptions.Add(new TrainerSubscription(
+                user.Id,
+                request.TrialEndsAt,
+                now
+            ));
+            _dbContext.TrainerSettings.Add(new TrainerSettings(user.Id, now));
+            _dbContext.EmailVerificationTokens.Add(new EmailVerificationToken(
+                user.Id,
+                generated.TokenHash,
+                request.EmailConfirmationExpiresAt,
+                now
+            ));
+
+            try
+            {
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return RegisterTrainerStoreResult.For(RegisterTrainerStoreStatus.ConcurrencyConflict);
+            }
+
+            return created;
+        });
     }
 }

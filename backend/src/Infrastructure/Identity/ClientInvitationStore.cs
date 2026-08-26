@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Infrastructure.Identity;
 
 /// <summary>Emite convites e confirma transferência entre tenants atomicamente.</summary>
-public sealed class ClientInvitationStore : IClientInvitationStore
+internal sealed class ClientInvitationStore : IClientInvitationStore
 {
     private readonly PtManagerDbContext _dbContext;
     private readonly IOpaqueTokenService _tokens;
@@ -33,56 +33,81 @@ public sealed class ClientInvitationStore : IClientInvitationStore
         CancellationToken cancellationToken
     )
     {
-        await using var transaction = await _dbContext.Database
-            .BeginTransactionAsync(cancellationToken);
-        var client = await _dbContext.Clients
-            .FromSqlInterpolated(
-                $"SELECT * FROM clients WHERE owner_trainer_id = {trainerId} AND id = {clientId} FOR UPDATE")
-            .SingleOrDefaultAsync(cancellationToken);
-        if (client is null)
-            return IssueClientInvitationStoreResult.For(
-                IssueClientInvitationStoreStatus.ClientNotFound);
-        if (!client.IsActive || client.IsDeleted)
-            return IssueClientInvitationStoreResult.For(
-                IssueClientInvitationStoreStatus.ClientInactive);
-
         var address = new EmailAddress(email);
-        if (client.NormalizedContactEmail != address.Normalized)
-            return IssueClientInvitationStoreResult.For(
-                IssueClientInvitationStoreStatus.EmailMismatch);
-        if (client.UserId.HasValue)
-            return IssueClientInvitationStoreResult.For(
-                IssueClientInvitationStoreStatus.RelationshipConflict);
-
-        var previous = await _dbContext.InviteTokens
-            .Where(token => token.TrainerId == trainerId &&
-                token.ClientId == clientId &&
-                token.UsedAt == null)
-            .ToListAsync(cancellationToken);
-        _dbContext.InviteTokens.RemoveRange(previous);
-
         var generated = _tokens.Generate();
-        _dbContext.InviteTokens.Add(new InviteToken(
-            trainerId,
-            clientId,
-            address,
-            generated.TokenHash,
-            expiresAt,
-            now
-        ));
+        var strategy = _dbContext.Database.CreateExecutionStrategy();
+        var attempt = 0;
 
-        try
+        return await strategy.ExecuteAsync(async () =>
         {
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-            return IssueClientInvitationStoreResult.Issued(
-                new IssuedAuthenticationSecret(address.Value, generated.RawToken, expiresAt));
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            return IssueClientInvitationStoreResult.For(
-                IssueClientInvitationStoreStatus.ConcurrencyConflict);
-        }
+            attempt++;
+
+            // Confirma um commit ambíguo antes de repetir a escrita.
+            if (attempt > 1)
+            {
+                _dbContext.ChangeTracker.Clear();
+                if (await _dbContext.InviteTokens
+                    .AsNoTracking()
+                    .AnyAsync(token => token.TokenHash == generated.TokenHash,
+                        cancellationToken))
+                {
+                    return IssueClientInvitationStoreResult.Issued(
+                        new IssuedAuthenticationSecret(
+                            address.Value,
+                            generated.RawToken,
+                            expiresAt));
+                }
+            }
+
+            await using var transaction = await _dbContext.Database
+                .BeginTransactionAsync(cancellationToken);
+            var client = await _dbContext.Clients
+                .FromSqlInterpolated(
+                    $"SELECT * FROM clients WHERE owner_trainer_id = {trainerId} AND id = {clientId} FOR UPDATE")
+                .SingleOrDefaultAsync(cancellationToken);
+            if (client is null)
+                return IssueClientInvitationStoreResult.For(
+                    IssueClientInvitationStoreStatus.ClientNotFound);
+            if (!client.IsActive || client.IsDeleted)
+                return IssueClientInvitationStoreResult.For(
+                    IssueClientInvitationStoreStatus.ClientInactive);
+
+            if (client.NormalizedContactEmail != address.Normalized)
+                return IssueClientInvitationStoreResult.For(
+                    IssueClientInvitationStoreStatus.EmailMismatch);
+            if (client.UserId.HasValue)
+                return IssueClientInvitationStoreResult.For(
+                    IssueClientInvitationStoreStatus.RelationshipConflict);
+
+            var previous = await _dbContext.InviteTokens
+                .Where(token => token.TrainerId == trainerId &&
+                    token.ClientId == clientId &&
+                    token.UsedAt == null)
+                .ToListAsync(cancellationToken);
+            _dbContext.InviteTokens.RemoveRange(previous);
+
+            _dbContext.InviteTokens.Add(new InviteToken(
+                trainerId,
+                clientId,
+                address,
+                generated.TokenHash,
+                expiresAt,
+                now
+            ));
+
+            try
+            {
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return IssueClientInvitationStoreResult.Issued(
+                    new IssuedAuthenticationSecret(address.Value, generated.RawToken, expiresAt));
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return IssueClientInvitationStoreResult.For(
+                    IssueClientInvitationStoreStatus.ConcurrencyConflict);
+            }
+        });
     }
 
     public async Task<ConsumeClientInvitationStoreResult> ConsumeAsync(
@@ -99,6 +124,81 @@ public sealed class ClientInvitationStore : IClientInvitationStore
                 ConsumeClientInvitationStoreStatus.AccountInactive);
 
         var hash = _tokens.Hash(rawToken);
+        var generated = _tokens.Generate();
+        var strategy = _dbContext.Database.CreateExecutionStrategy();
+        var attempt = 0;
+
+        return await strategy.ExecuteAsync(async () =>
+        {
+            attempt++;
+
+            // Confirma um commit ambíguo antes de repetir a escrita: o refresh
+            // token emitido é único por chamada e prova o sucesso anterior.
+            if (attempt > 1)
+            {
+                _dbContext.ChangeTracker.Clear();
+                var committed = await RebuildCommittedConsumeAsync(
+                    hash,
+                    generated,
+                    authenticatedUserId,
+                    refreshExpiresAt,
+                    cancellationToken);
+                if (committed is not null)
+                    return committed;
+            }
+
+            return await ConsumeOnceAsync(
+                hash,
+                generated,
+                authenticatedUserId,
+                transferApproved,
+                refreshExpiresAt,
+                now,
+                cancellationToken);
+        });
+    }
+
+    private async Task<ConsumeClientInvitationStoreResult?> RebuildCommittedConsumeAsync(
+        string hash,
+        GeneratedOpaqueToken generated,
+        Guid authenticatedUserId,
+        DateTime refreshExpiresAt,
+        CancellationToken cancellationToken
+    )
+    {
+        if (!await _dbContext.RefreshTokens
+            .AsNoTracking()
+            .AnyAsync(token => token.TokenHash == generated.TokenHash, cancellationToken))
+        {
+            return null;
+        }
+
+        var invite = await _dbContext.InviteTokens
+            .AsNoTracking()
+            .SingleAsync(token => token.TokenHash == hash, cancellationToken);
+        var user = await _dbContext.Users
+            .AsNoTracking()
+            .SingleAsync(user => user.Id == authenticatedUserId, cancellationToken);
+
+        return ConsumeClientInvitationStoreResult.Accepted(
+            new AuthenticatedPrincipal(
+                user.Id,
+                invite.TrainerId,
+                user.Role,
+                user.SecurityStamp),
+            new IssuedRefreshSession(generated.RawToken, refreshExpiresAt));
+    }
+
+    private async Task<ConsumeClientInvitationStoreResult> ConsumeOnceAsync(
+        string hash,
+        GeneratedOpaqueToken generated,
+        Guid authenticatedUserId,
+        bool transferApproved,
+        DateTime refreshExpiresAt,
+        DateTime now,
+        CancellationToken cancellationToken
+    )
+    {
         await using var transaction = await _dbContext.Database
             .BeginTransactionAsync(cancellationToken);
 
@@ -210,7 +310,6 @@ public sealed class ClientInvitationStore : IClientInvitationStore
                 now
             ));
 
-        var generated = _tokens.Generate();
         _dbContext.RefreshTokens.Add(new RefreshToken(
             user.Id,
             Guid.NewGuid(),

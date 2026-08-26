@@ -16,8 +16,10 @@ using Application.Features.Training.ExerciseSetLogs.Abstractions;
 using Application.Features.Training.TrainingPlans.Abstractions;
 using Infrastructure.Data;
 using Infrastructure.Data.Interceptors;
+using Infrastructure.Identity;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Assessments;
+using Infrastructure.Persistence.Billing;
 using Infrastructure.Persistence.Clients;
 using Infrastructure.Persistence.Errors;
 using Infrastructure.Persistence.Nutrition;
@@ -140,6 +142,12 @@ public static class DependencyInjection
         // Errors and Clock
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<PostgresConstraintTranslator>();
+
+        // Authentication Extensions
+        services.AddAuthenticationInfrastructure(configuration);
+
+        // Billing Extensions
+        services.AddBillingInfrastructure();
 
         // Timezone provider
         services.AddScoped<ITrainerTimeZoneProvider, TrainerTimeZoneProvider>();

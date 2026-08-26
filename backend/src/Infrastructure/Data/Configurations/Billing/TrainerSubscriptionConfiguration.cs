@@ -61,6 +61,9 @@ internal sealed class TrainerSubscriptionConfiguration : IEntityTypeConfiguratio
             .HasColumnName("stripe_customer_id")
             .HasMaxLength(255);
 
+        builder.Property(ts => ts.LastProviderStateObservedAt)
+            .HasColumnName("last_provider_state_observed_at");
+
         builder.Property(ts => ts.CreatedAt)
             .HasColumnName("created_at")
             .HasDefaultValueSql("now()")
@@ -78,7 +81,20 @@ internal sealed class TrainerSubscriptionConfiguration : IEntityTypeConfiguratio
             t.HasCheckConstraint("tier_check", "subscription_tier IN ('FREE', 'STARTER', 'PRO')");
         });
 
-        builder.HasIndex(ts => ts.TrainerId).HasDatabaseName("uq_trainer_subscriptions_trainer").IsUnique();
+        builder.HasIndex(ts => ts.TrainerId)
+            .HasDatabaseName("uq_trainer_subscriptions_trainer")
+            .IsUnique();
+
+        builder.HasIndex(ts => ts.StripeCustomerId)
+            .HasDatabaseName("uq_trainer_subscriptions_stripe_customer")
+            .HasFilter("stripe_customer_id IS NOT NULL")
+            .IsUnique();
+
+        builder.HasIndex(ts => ts.StripeSubscriptionId)
+            .HasDatabaseName("uq_trainer_subscriptions_stripe_subscription")
+            .HasFilter("stripe_subscription_id IS NOT NULL")
+            .IsUnique();
+
         builder.HasIndex(ts => ts.Status).HasDatabaseName("idx_subscriptions_status");
 
         builder.HasOne<User>()

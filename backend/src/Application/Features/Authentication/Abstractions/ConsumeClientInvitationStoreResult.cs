@@ -1,19 +1,5 @@
 namespace Application.Features.Authentication.Abstractions;
 
-/// <summary>Estados esperados do consumo de convite.</summary>
-public enum ConsumeClientInvitationStoreStatus
-{
-    Accepted,
-    TokenNotFound,
-    TokenExpired,
-    TokenAlreadyConsumed,
-    EmailMismatch,
-    TransferApprovalRequired,
-    RelationshipConflict,
-    AccountInactive,
-    ConcurrencyConflict
-}
-
 /// <summary>Resultado do consumo atómico de um convite.</summary>
 public sealed record ConsumeClientInvitationStoreResult(
     ConsumeClientInvitationStoreStatus Kind,

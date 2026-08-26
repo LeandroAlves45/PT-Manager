@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Infrastructure.Identity;
 
 /// <summary>Emite credenciais de reset sem permitir enumeração de contas.</summary>
-public sealed class PasswordResetRequestStore : IPasswordResetRequestStore
+internal sealed class PasswordResetRequestStore : IPasswordResetRequestStore
 {
     private readonly PtManagerDbContext _dbContext;
     private readonly IOpaqueTokenService _tokens;
@@ -31,40 +31,70 @@ public sealed class PasswordResetRequestStore : IPasswordResetRequestStore
     )
     {
         var normalized = _normalizer.NormalizeEmail(email);
-        await using var transaction = await _dbContext.Database
-            .BeginTransactionAsync(cancellationToken);
-
-        var user = await _dbContext.Users
-            .FromSqlInterpolated($"SELECT * FROM users WHERE normalized_email = {normalized} FOR UPDATE")
-            .SingleOrDefaultAsync(cancellationToken);
-        if (user is null || !user.IsActive || user.IsDeleted || !user.EmailConfirmed)
-            return PasswordResetRequestStoreResult.For(PasswordResetRequestStoreStatus.NotEligible);
-
-        var previous = await _dbContext.PasswordResetTokens
-            .Where(token => token.UserId == user.Id &&
-                token.ConsumedAt == null)
-            .ToListAsync(cancellationToken);
-        _dbContext.PasswordResetTokens.RemoveRange(previous);
-
         var generated = _tokens.Generate();
-        _dbContext.PasswordResetTokens.Add(new PasswordResetToken(
-            user.Id,
-            generated.TokenHash,
-            expiresAt,
-            now
-        ));
+        var strategy = _dbContext.Database.CreateExecutionStrategy();
+        var attempt = 0;
 
-        try
+        return await strategy.ExecuteAsync(async () =>
         {
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-            return PasswordResetRequestStoreResult.Issued(
-                new IssuedAuthenticationSecret(user.Email, generated.RawToken, expiresAt));
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            return PasswordResetRequestStoreResult.For(
-                PasswordResetRequestStoreStatus.ConcurrencyConflict);
-        }
+            attempt++;
+
+            // Confirma um commit ambíguo antes de repetir a escrita.
+            if (attempt > 1)
+            {
+                _dbContext.ChangeTracker.Clear();
+                var committedEmail = await _dbContext.PasswordResetTokens
+                    .AsNoTracking()
+                    .Where(token => token.TokenHash == generated.TokenHash)
+                    .Join(_dbContext.Users,
+                        token => token.UserId,
+                        user => user.Id,
+                        (token, user) => user.Email)
+                    .SingleOrDefaultAsync(cancellationToken);
+                if (committedEmail is not null)
+                {
+                    return PasswordResetRequestStoreResult.Issued(
+                        new IssuedAuthenticationSecret(
+                            committedEmail,
+                            generated.RawToken,
+                            expiresAt));
+                }
+            }
+
+            await using var transaction = await _dbContext.Database
+                .BeginTransactionAsync(cancellationToken);
+
+            var user = await _dbContext.Users
+                .FromSqlInterpolated($"SELECT * FROM users WHERE normalized_email = {normalized} FOR UPDATE")
+                .SingleOrDefaultAsync(cancellationToken);
+            if (user is null || !user.IsActive || user.IsDeleted || !user.EmailConfirmed)
+                return PasswordResetRequestStoreResult.For(PasswordResetRequestStoreStatus.NotEligible);
+
+            var previous = await _dbContext.PasswordResetTokens
+                .Where(token => token.UserId == user.Id &&
+                    token.ConsumedAt == null)
+                .ToListAsync(cancellationToken);
+            _dbContext.PasswordResetTokens.RemoveRange(previous);
+
+            _dbContext.PasswordResetTokens.Add(new PasswordResetToken(
+                user.Id,
+                generated.TokenHash,
+                expiresAt,
+                now
+            ));
+
+            try
+            {
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return PasswordResetRequestStoreResult.Issued(
+                    new IssuedAuthenticationSecret(user.Email, generated.RawToken, expiresAt));
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return PasswordResetRequestStoreResult.For(
+                    PasswordResetRequestStoreStatus.ConcurrencyConflict);
+            }
+        });
     }
 }

@@ -1,17 +1,5 @@
 namespace Application.Features.Authentication.Abstractions;
 
-/// <summary>Estados persistentes possíveis do login local.</summary>
-public enum AuthenticateStoreStatus
-{
-    Authenticated,
-    InvalidCredentials,
-    LockedOut,
-    EmailNotConfirmed,
-    AccountInactive,
-    RelationshipInactive,
-    ConcurrencyConflict
-}
-
 /// <summary>Resultado do login sem transportar entidades.</summary>
 public sealed record AuthenticateStoreResult(
     AuthenticateStoreStatus Kind,

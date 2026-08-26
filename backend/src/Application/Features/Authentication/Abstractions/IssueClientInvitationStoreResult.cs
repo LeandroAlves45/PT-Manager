@@ -1,16 +1,5 @@
 namespace Application.Features.Authentication.Abstractions;
 
-/// <summary>Estados esperados da emissão do convite.</summary>
-public enum IssueClientInvitationStoreStatus
-{
-    Issued,
-    ClientNotFound,
-    ClientInactive,
-    EmailMismatch,
-    RelationshipConflict,
-    ConcurrencyConflict
-}
-
 /// <summary>Resultado da emissão persistida de um convite.</summary>
 public sealed record IssueClientInvitationStoreResult(
     IssueClientInvitationStoreStatus Kind,
