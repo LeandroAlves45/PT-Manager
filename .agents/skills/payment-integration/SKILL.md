@@ -1,6 +1,6 @@
 ---
 name: payment-integration
-description: Expert em integração Stripe no ASP.NET Core. Setup SDK, Payment Intents, charges, refunds, webhooks, idempotência e retry logic.
+description: Expert em integração Stripe no ASP.NET Core. Setup SDK, Checkout Sessions, subscription lifecycle (SaaS billing), webhooks, idempotência e retry logic.
 color: green
 emoji: 💳
 vibe: Payment processing é crítico. Implementa com idempotência, retry automático e zero tolerância a ambiguidade.
@@ -8,7 +8,9 @@ vibe: Payment processing é crítico. Implementa com idempotência, retry autom�
 
 # Payment Integration Specialist — Stripe
 
-Expert em integração Stripe no backend C# .NET 10. Responsável por setup SDK, criação de Payment Intents, processamento de charges e refunds, webhook management, idempotência e tratamento de erros.
+Expert em integração Stripe no backend C# .NET 10. Responsável por setup SDK, Checkout Sessions, subscription lifecycle (SaaS billing), webhook management, idempotência e tratamento de erros.
+
+PT Manager é billing por **subscrição recorrente** (trainer paga plano SaaS), não pagamento avulso por card. O modelo é Stripe Checkout Session + Subscriptions, nunca Payment Intent/charge direto. A Application layer já existe (`Application/Features/Billing/`); a Infrastructure com o SDK Stripe real, endpoint de webhook e verificação de assinatura ainda está por implementar — esta skill descreve o alvo a seguir quando essa camada for escrita.
 
 ## 🎯 Core Mission
 
@@ -20,29 +22,28 @@ Expert em integração Stripe no backend C# .NET 10. Responsável por setup SDK,
 - Timeout e retry configuration
 - Idempotency key generation strategy
 
-### Payment Intent Workflow
+### Checkout Session Workflow
 
-- Criar Payment Intent no backend (nunca no cliente)
-- Devolver apenas clientSecret + Publishable Key ao frontend
-- Cliente confirma card via Stripe Elements (iframe seguro)
-- Backend processa webhook de confirmação
+- `CreateCheckoutHandler` (já existe em `Application/Features/Billing/CreateCheckout/`) orquestra via `ICheckoutGateway.CreateCheckoutAsync`, sem conhecer o SDK Stripe diretamente
+- Backend cria a Checkout Session e devolve apenas a `Url` de redirect (`Result<Uri>`)
+- Cliente é redirecionado para o Checkout hospedado pela Stripe — nunca há formulário de card próprio nem `paymentMethodId` a passar pelo backend
+- Stripe confirma via webhook (`checkout.session.completed`), nunca por chamada direta do frontend
 - Nunca armazenar card data raw
 
-### Charge & Refund Operations
+### Subscription Lifecycle
 
-- Processar charge via Payment Intent
-- Implementar full refund (reembolso total)
-- Implementar partial refund (reembolso parcial)
-- Listar histórico de pagamentos e reembolsos
-- Validar amount em cents (não decimais)
+- Estado da subscrição vive em `TrainerSubscription` (Domain) e é atualizado via `SubscriptionStatusMapper`
+- Mapeamento de status Stripe → interno: `trialing`/`active` → `Active`; `past_due`/`unpaid`/`paused` → `Suspended`; `canceled` → `Cancelled`; `incomplete`/`incomplete_expired` → `Inactive`
+- Sem conceito de refund/charge parcial — cancelamento e downgrade são geridos pelo ciclo de vida da subscrição na Stripe
+- Validar amount em cents (não decimais) sempre que aplicável (ex.: valores de plano)
 
 ### Webhook Management
 
-- Receber eventos de Stripe (raw JSON)
-- Verificar assinatura webhook (validar autenticidade)
-- Processar: charge.succeeded, charge.failed, charge.refunded, payment_intent.requires_action
+- Receber eventos de Stripe (raw JSON), verificar assinatura e normalizar antes de chegar à Application layer
+- Eventos suportados hoje pelo core (`PaymentEventKind`): `CheckoutCompleted`, `SubscriptionUpdated`, `SubscriptionDeleted`, `InvoicePaymentSucceeded`, `InvoicePaymentFailed`, `TrialWillEnd`
+- `ProcessPaymentWebhookHandler` já assume o evento autenticado e normalizado (`NormalizedPaymentEvent`) — a verificação de assinatura + parsing do JSON raw da Stripe é responsabilidade da Infrastructure, ainda por implementar
 - Retry automático para webhook failures
-- Idempotência (mesmo webhook recebido 2x = processado 1x)
+- Idempotência (mesmo webhook recebido 2x = processado 1x) via `IPaymentEventStore`
 
 ### Error Handling & Retry Logic
 
@@ -56,9 +57,9 @@ Expert em integração Stripe no backend C# .NET 10. Responsável por setup SDK,
 
 ### Nunca Tocar Card Data Raw
 
-- Stripe Elements é iframe sandboxed — cliente data é seguro lá
+- Checkout é hospedado pela Stripe (redirect completo) — card nunca passa por infraestrutura própria
 - Backend NUNCA recebe número de card, CVV, ou magnetic stripe
-- Backend recebe APENAS Stripe Payment Method ID (tokenizado)
+- Backend só lida com identificadores Stripe (Customer ID, Subscription ID, Checkout Session ID), nunca dados de card
 
 ### Idempotência é Obrigatória
 

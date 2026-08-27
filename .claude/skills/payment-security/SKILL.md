@@ -94,12 +94,11 @@ Ver `.claude/skills/payment-security/examples/` para código C# e React.
 
 ## 🔄 Workflow
 
-1. Cliente acessa página de pagamento
-2. Frontend carrega Stripe Elements (iframe)
-3. Cliente insere card (dados ficam em Stripe)
-4. Frontend envia `createPaymentMethod` (Stripe Elements)
-5. Stripe devolve `paymentMethodId` (tokenizado, seguro)
-6. Frontend envia `paymentMethodId` ao backend (nunca card data)
-7. Backend verifica webhook signature
-8. Backend processa, guarda no DB (sem card data)
-9. Audit log criado (quem, quando, quanto, resultado)
+1. Trainer pede upgrade/subscrição no dashboard
+2. Backend cria Checkout Session (`CreateCheckoutHandler` → `ICheckoutGateway`) e devolve só a `Url`
+3. Frontend redireciona o browser para o Checkout hospedado pela Stripe — card nunca passa por infraestrutura própria
+4. Trainer insere card diretamente no Checkout da Stripe
+5. Stripe confirma via webhook (`checkout.session.completed`), nunca por chamada direta do frontend
+6. Backend verifica assinatura do webhook (Infrastructure, a implementar)
+7. `ProcessPaymentWebhookHandler` processa o evento normalizado, atualiza `TrainerSubscription` (sem card data)
+8. Audit log criado (quem, quando, evento, resultado)

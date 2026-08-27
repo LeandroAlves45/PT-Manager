@@ -6,8 +6,6 @@ Deploy (MVP, todos free tier): Render (backend) + Vercel (frontend) + Neon (Post
 
 Graph location: C:\Users\Leandro Alves\Desktop\Projeto pt_manager\Projeto_pt_manager\graphify-out
 
-Quando analisares o projeto, consulta o graph para overview da arquitetura, dependências de módulos e pontos-chave de conexões.
-
 ## Memória
 
 Sistema persistente em `.claude/memory/` (índice `MEMORY.md` + notas de sessão em `Sessions/`), complementado pelo plugin claude-mem.
@@ -19,8 +17,9 @@ Rever `.claude/tasks/lessons.md` e a memória relevante no início da sessão.
 - Falar sempre em Português. Avaliar sempre as respostas antes de as apresentar.
 - Só editar código ou ficheiros se pedido especificamente.
 - Correr comandos no terminal é permitido, exceto comandos destrutivos mencionados em hooks.
-- Ao criar ficheiros md na pasta `docs` com código em pseudocódigo: pseudocódigo alargado com XML Docs e comentários explicativos no backend, JSDoc e comentários explicativos no frontend. Código real só quando pedido explicitamente.
+- Ao criar ficheiros md na pasta `docs` com código integral: incluir explicações detalhadas sobre o funcionamento do código e comentários relevantes. XML docs completos no backend, JSDoc no frontend.
 - Sempre que finalizarmos um sprint, ou for pedido, apresentar checklist e marcar "Finalizado" ao concluir.
+- Não agir por suposições; sempre verificar fatos e confirmar informações antes de tomar decisões.
 
 ## WORKFLOW ORCHESTRATION
 

@@ -44,7 +44,7 @@ notas de `.claude/memory/Sessions/`.
    adiada para depois de Auth+Billing bloqueia a fixture partilhada de
    integração inteira, não só o 3G-A. Detalhe em
    `Sessions/2026-08-24-lote-3g-revisao-testes-validacao-parcial.md` e
-   `docs/backend-files/lote_3G/lote_3G-A_B/09_gates_3ga_3gb_validacao_final.md`.
+   `docs/backend-files/sprints_concluidos/sprint_3/lote_3G/lote_3G-A_B/09_gates_3ga_3gb_validacao_final.md`.
 10. Gates 3G-C (Authentication) e 3G-D (Billing SaaS): reconstrução documental
     concluída em `docs/backend-files/lote_3G/lote_3G-C_D/`. Os documentos 02 a
     09 contêm 140 caminhos únicos com código integral. Commands, validators,
@@ -64,7 +64,7 @@ notas de `.claude/memory/Sessions/`.
     Domain, 451 Application, 360 Infrastructure, 36 Architecture), build Release
     sem warnings, formatação limpa e modelo EF sem alterações pendentes.
     Evidência em `Sessions/2026-08-26-sprint3-lote3g-pos-migration.md` e
-    `docs/backend-files/lote_3G/lote_3G-C_D/13_lote_3g_fecho_pos_migration.md`.
+    `docs/backend-files/sprints_concluidos/sprint_3/lote_3G/lote_3G-C_D/13_lote_3g_fecho_pos_migration.md`.
 12. Ajuste residual 3G-B concluído:
     `EnqueueNotificationCommandValidator.IsSensitiveName` normaliza nomes antes
     da comparação e rejeita `token_value`, `refreshToken` e `apiKey`. Os três
