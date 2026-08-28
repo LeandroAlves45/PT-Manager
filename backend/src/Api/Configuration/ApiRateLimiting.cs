@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
+using Api.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -39,7 +40,7 @@ public static class ApiRateLimiting
                 context => FixedWindow(IpKey(context), 3, TimeSpan.FromHours(1)));
 
             options.AddPolicy(ApiRateLimitPolicyNames.PasswordResetComplete,
-                context => FixedWindow(IpKey(context), 5, TimeSpan.FromHours(15)));
+                context => FixedWindow(IpKey(context), 5, TimeSpan.FromMinutes(15)));
 
             options.AddPolicy(ApiRateLimitPolicyNames.EmailConfirmation,
                 context => FixedWindow(IpKey(context), 10, TimeSpan.FromMinutes(15)));
@@ -54,13 +55,13 @@ public static class ApiRateLimiting
                 context => FixedWindow(IpKey(context), 10, TimeSpan.FromMinutes(1)));
 
             options.AddPolicy(ApiRateLimitPolicyNames.GoogleLink,
-                context => FixedWindow(UserAndIpKey(context), 10, TimeSpan.FromMinutes(15)));
+                context => FixedWindow(UserAndIpKey(context), 5, TimeSpan.FromMinutes(15)));
 
             options.AddPolicy(ApiRateLimitPolicyNames.ChangePassword,
                 context => FixedWindow(UserAndIpKey(context), 5, TimeSpan.FromMinutes(15)));
 
             options.AddPolicy(ApiRateLimitPolicyNames.Moderation,
-                context => FixedWindow(UserAndIpKey(context), 30, TimeSpan.FromMinutes(1)));
+                context => FixedWindow(UserKey(context), 30, TimeSpan.FromMinutes(1)));
         });
 
         return services;
@@ -83,7 +84,7 @@ public static class ApiRateLimiting
 
     private static string UserKey(HttpContext context)
     {
-        var subject = context.User.FindFirstValue("sub");
+        var subject = context.User.FindFirstValue(ApiClaimNames.Subject);
         return string.IsNullOrWhiteSpace(subject)
             ? IpKey(context)
             : $"user:{subject}";
@@ -114,7 +115,11 @@ public static class ApiRateLimiting
 
         problem.Extensions["correlation_id"] = context.HttpContext.TraceIdentifier;
 
-        context.HttpContext.Response.ContentType = "application/problem+json";
-        await context.HttpContext.Response.WriteAsJsonAsync(problem, cancellationToken);
+        // O content type tem de ir no overload: WriteAsJsonAsync sobrepoe o valor atribuido antes.
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            problem,
+            options: null,
+            contentType: "application/problem+json",
+            cancellationToken);
     }
 }

@@ -6,8 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="xunit.v3" />
+    <PackageReference Include="SSH.NET" />
 
     <PackageReference Include="xunit.runner.visualstudio">
       <PrivateAssets>all</PrivateAssets>
@@ -26,6 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Api\Api.csproj" />
+    <ProjectReference Include="..\..\..\src\Infrastructure\Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
