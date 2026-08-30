@@ -12,12 +12,19 @@ public interface IAuthenticationSessionStore
 
     Task<RotateRefreshStoreResult> RotateAsync(
         string rawToken,
+        string rawCsrfToken,
         DateTime now,
         DateTime refreshExpiresAt,
         CancellationToken cancellationToken);
 
-    Task RevokeAsync(
+    Task<RotateCsrfStoreResult> RotateCsrfAsync(
         string rawToken,
+        DateTime now,
+        CancellationToken cancellationToken);
+
+    Task<RevokeSessionStoreStatus> RevokeAsync(
+        string rawToken,
+        string rawCsrfToken,
         DateTime now,
         CancellationToken cancellationToken);
 

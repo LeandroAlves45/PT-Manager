@@ -44,6 +44,7 @@ public sealed class RefreshSessionHandler
         var now = _clock.UtcNow;
         var outcome = await _store.RotateAsync(
             command.RawToken,
+            command.RawCsrfToken,
             now,
             now.Add(_policy.RefreshSessionLifetime),
             cancellationToken
@@ -58,6 +59,8 @@ public sealed class RefreshSessionHandler
                 RotateRefreshStoreStatus.Reused or
                 RotateRefreshStoreStatus.PrincipalInvalid =>
                     AuthenticationErrors.RefreshSessionInvalid,
+                RotateRefreshStoreStatus.CsrfInvalid =>
+                    AuthenticationErrors.CsrfTokenInvalid,
                 RotateRefreshStoreStatus.ConcurrencyConflict =>
                     AuthenticationErrors.ConcurrencyConflict,
                 _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))

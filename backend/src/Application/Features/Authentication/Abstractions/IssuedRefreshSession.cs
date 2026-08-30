@@ -4,15 +4,23 @@ namespace Application.Features.Authentication.Abstractions;
 public sealed record IssuedRefreshSession
 {
     public string RawToken { get; }
+    public string RawCsrfToken { get; }
     public DateTime ExpiresAt { get; }
 
     /// <summary>Impede que um store devolva a sessão incompleta.</summary>
-    public IssuedRefreshSession(string rawToken, DateTime expiresAt)
+    public IssuedRefreshSession(
+        string rawToken,
+        string rawCsrfToken,
+        DateTime expiresAt)
     {
         if (string.IsNullOrWhiteSpace(rawToken))
             throw new ArgumentException("Raw refresh token is required.", nameof(rawToken));
 
+        if (string.IsNullOrWhiteSpace(rawCsrfToken))
+            throw new ArgumentException("Raw CSRF token is required.", nameof(rawCsrfToken));
+
         RawToken = rawToken;
+        RawCsrfToken = rawCsrfToken;
         ExpiresAt = expiresAt;
     }
 }

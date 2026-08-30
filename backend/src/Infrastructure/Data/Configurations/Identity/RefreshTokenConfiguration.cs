@@ -30,6 +30,11 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
             .HasMaxLength(255)
             .IsRequired();
 
+        builder.Property(token => token.CsrfTokenHash)
+            .HasColumnName("csrf_token_hash")
+            .HasMaxLength(64)
+            .IsRequired();
+
         builder.Property(token => token.RotatedFromId)
             .HasColumnName("rotated_from_id");
 

@@ -159,4 +159,16 @@ public static class AuthenticationErrors
         ErrorCategory.Unauthorized,
         "The password reset token is invalid or has expired."
     );
+
+    public static readonly Error CsrfTokenInvalid = Error.Create(
+        "authentication_csrf_token_invalid",
+        ErrorCategory.Forbidden,
+        "The anti-CSRF token is missing or invalid."
+    );
+
+    public static readonly Error OriginRejected = Error.Create(
+        "authentication_origin_rejected",
+        ErrorCategory.Forbidden,
+        "The request origin is not allowed."
+    );
 }

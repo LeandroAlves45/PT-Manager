@@ -1,3 +1,5 @@
+using System.Net.Http.Headers;
+using System.Text.Json;
 using Application.Features.Authentication;
 using Application.Features.Authentication.Abstractions;
 using Domain.Entities.Identity;
@@ -33,7 +35,59 @@ internal static class AuthenticationServiceCollectionExtensions
         services.AddScoped<IPasswordResetRequestStore, PasswordResetRequestStore>();
         services.AddScoped<IPasswordManagementStore, PasswordManagementStore>();
 
+        AddAccessTokenIssuer(services, configuration);
+        AddAuthenticationEmailSender(services, configuration);
+
         return services;
+    }
+
+    private static void AddAccessTokenIssuer(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddOptions<JwtOptions>()
+            .Bind(configuration.GetSection(JwtOptions.SectionName))
+            .Validate(
+                options => options.IsValid(),
+                "Configuration section 'Jwt' is missing or invalid."
+            )
+            .ValidateOnStart();
+
+        services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
+    }
+
+    private static void AddAuthenticationEmailSender(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddOptions<ResendOptions>()
+            .Bind(configuration.GetSection(ResendOptions.SectionName))
+            .Validate(
+                options => options.IsValid(),
+                "Configuration section 'Resend' is missing or invalid."
+            )
+            .ValidateOnStart();
+
+        services.AddHttpClient<IAuthenticationEmailSender, ResendAuthenticationEmailSender>(
+            (provider, client) =>
+            {
+                var options = provider
+                    .GetRequiredService<Microsoft.Extensions.Options.IOptions<ResendOptions>>()
+                    .Value;
+
+                client.BaseAddress = options.BaseAddress;
+                client.Timeout = options.Timeout;
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", options.ApiKey);
+            })
+            .ConfigureHttpClient(client =>
+                client.DefaultRequestHeaders.Accept.Add(
+                    new MediaTypeWithQualityHeaderValue("application/json")));
+
+        // A API da Resend espera "from", "to", "subject" e "html" em
+        // minúsculas. Sem estas opções, PostAsJsonAsync usa o nome PascalCase da
+        // propriedade C# e a Resend responde 422.
+        services.AddSingleton(new JsonSerializerOptions(JsonSerializerDefaults.Web));
     }
 
     private static AuthenticationPolicy CreatePolicy(IConfiguration configuration)

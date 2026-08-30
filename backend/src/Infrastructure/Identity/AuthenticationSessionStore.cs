@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Application.Common.Abstractions;
 using Application.Features.Authentication.Abstractions;
 using Domain.Entities.Identity;
@@ -71,10 +73,12 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
         Establish(principal);
 
         var generated = _tokens.Generate();
+        var csrf = _tokens.Generate();
         _dbContext.RefreshTokens.Add(new RefreshToken(
             user.Id,
             Guid.NewGuid(),
             generated.TokenHash,
+            csrf.TokenHash,
             null,
             refreshExpiresAt,
             now
@@ -85,7 +89,7 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
             await _dbContext.SaveChangesAsync(cancellationToken);
             return AuthenticateStoreResult.Authenticated(
                 principal,
-                new IssuedRefreshSession(generated.RawToken, refreshExpiresAt));
+                new IssuedRefreshSession(generated.RawToken, csrf.TokenHash, refreshExpiresAt));
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -95,13 +99,16 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
 
     public async Task<RotateRefreshStoreResult> RotateAsync(
         string rawToken,
+        string rawCsrfToken,
         DateTime now,
         DateTime refreshExpiresAt,
         CancellationToken cancellationToken
     )
     {
         var hash = _tokens.Hash(rawToken);
+        var presentedCsrfHash = _tokens.Hash(rawCsrfToken);
         var generated = _tokens.Generate();
+        var csrf = _tokens.Generate();
         var strategy = _dbContext.Database.CreateExecutionStrategy();
         var attempt = 0;
         var established = false;
@@ -117,6 +124,7 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
                 _dbContext.ChangeTracker.Clear();
                 var committed = await RebuildCommittedRotationAsync(
                     generated,
+                    csrf,
                     refreshExpiresAt,
                     cancellationToken);
                 if (committed is not null)
@@ -125,7 +133,9 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
 
             return await RotateOnceAsync(
                 hash,
+                presentedCsrfHash,
                 generated,
+                csrf,
                 now,
                 refreshExpiresAt,
                 principal =>
@@ -141,8 +151,60 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
         });
     }
 
+    public async Task<RotateCsrfStoreResult> RotateCsrfAsync(
+        string rawToken,
+        DateTime now,
+        CancellationToken cancellationToken
+    )
+    {
+        var hash = _tokens.Hash(rawToken);
+        var csrf = _tokens.Generate();
+        var strategy = _dbContext.Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
+        {
+            // Ao contrário de RotateAsync, aqui não existe o problema do
+            // commit ambíguo. A operação é idempotente na prática: repeti-la
+            // apenas escreve outro CSRF na mesma linha, e o cliente recebe o
+            // valor que a chamada bem sucedida devolveu.
+            _dbContext.ChangeTracker.Clear();
+
+            await using var transaction = await _dbContext.Database
+                .BeginTransactionAsync(cancellationToken);
+
+            var current = await _dbContext.RefreshTokens
+                .FromSqlInterpolated($"SELECT * FROM refresh_tokens WHERE token_hash = {hash} FOR UPDATE")
+                .SingleOrDefaultAsync(cancellationToken);
+            if (current is null)
+                return RotateCsrfStoreResult.Failure(RotateCsrfStoreStatus.NotFound);
+            if (current.IsReused())
+            {
+                await RevokeFamilyAsync(current.FamilyId, now, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return RotateCsrfStoreResult.Failure(RotateCsrfStoreStatus.Reused);
+            }
+            if (!current.IsActive(now))
+                return RotateCsrfStoreResult.Failure(RotateCsrfStoreStatus.Expired);
+
+            current.ReplaceCsrfTokenHash(csrf.TokenHash, now);
+
+            try
+            {
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return RotateCsrfStoreResult.Rotated(csrf.TokenHash);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return RotateCsrfStoreResult.Failure(RotateCsrfStoreStatus.ConcurrencyConflict);
+            }
+        });
+    }
+
     private async Task<RotateRefreshStoreResult?> RebuildCommittedRotationAsync(
         GeneratedOpaqueToken generated,
+        GeneratedOpaqueToken csrf,
         DateTime refreshExpiresAt,
         CancellationToken cancellationToken
     )
@@ -163,12 +225,14 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
 
         return RotateRefreshStoreResult.Rotated(
             principal,
-            new IssuedRefreshSession(generated.RawToken, refreshExpiresAt));
+            new IssuedRefreshSession(generated.RawToken, csrf.RawToken, refreshExpiresAt));
     }
 
     private async Task<RotateRefreshStoreResult> RotateOnceAsync(
         string hash,
+        string presentedCsrfHash,
         GeneratedOpaqueToken generated,
+        GeneratedOpaqueToken csrf,
         DateTime now,
         DateTime refreshExpiresAt,
         Action<AuthenticatedPrincipal> establish,
@@ -194,6 +258,9 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
         if (!current.IsActive(now))
             return RotateRefreshStoreResult.Failure(RotateRefreshStoreStatus.Expired);
 
+        if (!MatchesCsrf(current.CsrfTokenHash, presentedCsrfHash))
+            return RotateRefreshStoreResult.Failure(RotateRefreshStoreStatus.CsrfInvalid);
+
         var user = await _dbContext.Users
             .SingleOrDefaultAsync(user => user.Id == current.UserId, cancellationToken);
         if (user is null || !user.IsActive || user.IsDeleted || !user.EmailConfirmed)
@@ -209,6 +276,7 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
             user.Id,
             current.FamilyId,
             generated.TokenHash,
+            csrf.TokenHash,
             current.Id,
             refreshExpiresAt,
             now
@@ -220,7 +288,7 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
             await transaction.CommitAsync(cancellationToken);
             return RotateRefreshStoreResult.Rotated(
                 principal,
-                new IssuedRefreshSession(generated.RawToken, refreshExpiresAt));
+                new IssuedRefreshSession(generated.RawToken, csrf.RawToken, refreshExpiresAt));
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -228,19 +296,26 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
         }
     }
 
-    public async Task RevokeAsync(
+    public async Task<RevokeSessionStoreStatus> RevokeAsync(
         string rawToken,
+        string rawCsrfToken,
         DateTime now,
         CancellationToken cancellationToken
     )
     {
         var hash = _tokens.Hash(rawToken);
+        var presentedCsrfHash = _tokens.Hash(rawCsrfToken);
         var token = await _dbContext.RefreshTokens
             .SingleOrDefaultAsync(token => token.TokenHash == hash, cancellationToken);
         if (token is null || token.IsReused())
-            return;
+            return RevokeSessionStoreStatus.NotFound;
+
+        if (!MatchesCsrf(token.CsrfTokenHash, presentedCsrfHash))
+            return RevokeSessionStoreStatus.CsrfInvalid;
+
         token.Revoke(now);
         await _dbContext.SaveChangesAsync(cancellationToken);
+        return RevokeSessionStoreStatus.Revoked;
     }
 
     public async Task RevokeAllAsync(
@@ -256,6 +331,11 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
             token.Revoke(now);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    private static bool MatchesCsrf(string storedHash, string presentedHash) =>
+        CryptographicOperations.FixedTimeEquals(
+            Encoding.ASCII.GetBytes(storedHash),
+            Encoding.ASCII.GetBytes(presentedHash));
 
     private async Task<AuthenticatedPrincipal?> ResolvePrincipalAsync(
         User user,

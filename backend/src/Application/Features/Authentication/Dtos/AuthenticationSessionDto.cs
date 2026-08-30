@@ -10,6 +10,7 @@ public sealed record AuthenticationSessionDto(
     string AccessToken,
     DateTime AccessTokenExpiresAt,
     string RawRefreshToken,
+    string RawCsrfToken,
     DateTime RefreshTokenExpiresAt)
 {
     /// <summary>Compõe o DTO exclusivamente a partir de contratos validados.</summary>
@@ -29,6 +30,7 @@ public sealed record AuthenticationSessionDto(
             accessToken.Token,
             accessToken.ExpiresAt,
             issuedRefreshSession.RawToken,
+            issuedRefreshSession.RawCsrfToken,
             issuedRefreshSession.ExpiresAt);
     }
 }

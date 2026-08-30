@@ -16,6 +16,7 @@ public sealed class RefreshToken
     /// <summary>Agrupa toda a cadeia de rotação de uma sessão de login.</summary>
     public Guid FamilyId { get; private set; }
     public string TokenHash { get; private set; } = null!;
+    public string CsrfTokenHash { get; private set; } = null!;
     public Guid? RotatedFromId { get; private set; }
     public DateTime ExpiresAt { get; private set; }
     public DateTime? RevokedAt { get; private set; }
@@ -30,6 +31,7 @@ public sealed class RefreshToken
         Guid userId,
         Guid familyId,
         string tokenHash,
+        string csrfTokenHash,
         Guid? rotatedFromId,
         DateTime expiresAt,
         DateTime now
@@ -46,6 +48,7 @@ public sealed class RefreshToken
         UserId = userId;
         FamilyId = familyId;
         TokenHash = tokenHash;
+        CsrfTokenHash = NormalizeAndValidateCsrfToken(csrfTokenHash);
         RotatedFromId = rotatedFromId;
         ExpiresAt = expiresAt;
         RevokedAt = null;
@@ -67,5 +70,29 @@ public sealed class RefreshToken
         // Idempotente: revogar duas vezes não altera nada
         if (RevokedAt == null)
             RevokedAt = now;
+    }
+
+    /// <summary>Substitui o segredo anti-CSRF mantendo a mesma sessão de refresh.</summary>
+    public void ReplaceCsrfTokenHash(string csrfTokenHash, DateTime now)
+    {
+        if (!IsActive(now))
+            throw new DomainException("An inactive refresh token cannot rotate its CSRF secret");
+
+        CsrfTokenHash = NormalizeAndValidateCsrfToken(csrfTokenHash);
+    }
+
+    private static string NormalizeAndValidateCsrfToken(string csrfTokenHash)
+    {
+        if (string.IsNullOrWhiteSpace(csrfTokenHash))
+            throw new DomainException("CSRF token hash is required");
+
+        var normalizedHash = csrfTokenHash.Trim().ToUpperInvariant();
+        if (normalizedHash.Length != 64 ||
+            !normalizedHash.All(char.IsAsciiHexDigit))
+            throw new DomainException(
+                "CSRF token hash must contain exactly 64 hexadecimal characters"
+            );
+
+        return normalizedHash;
     }
 }

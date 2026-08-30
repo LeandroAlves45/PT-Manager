@@ -7,6 +7,7 @@ public enum RotateRefreshStoreStatus
     NotFound,
     Expired,
     Reused,
+    CsrfInvalid,
     PrincipalInvalid,
     ConcurrencyConflict
 }

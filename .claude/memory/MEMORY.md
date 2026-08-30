@@ -65,7 +65,23 @@ notas de `.claude/memory/Sessions/`.
     sem warnings, formatação limpa e modelo EF sem alterações pendentes.
     Evidência em `Sessions/2026-08-26-sprint3-lote3g-pos-migration.md` e
     `docs/backend-files/sprints_concluidos/sprint_3/lote_3G/lote_3G-C_D/13_lote_3g_fecho_pos_migration.md`.
-12. Ajuste residual 3G-B concluído:
+12. Sprint 4, Fase 1 implementada em código real e revista (2026-08-27): pipeline
+    HTTP, CORS, rate limiting, correlation, security headers e tenant
+    fail-closed, com 950 testes verdes. Deixou duas condições de deploy abertas:
+    Forwarded Headers e porta HTTPS. Evidência em
+    `docs/backend-files/sprint_4/fase_1/05_revisao_final_fase_1.md`.
+13. Sprint 4, Fase 2 documentada (2026-08-28): oito blueprints em
+    `docs/backend-files/sprint_4/fase_2/` para JWT, `AuthController`, cookies,
+    CSRF persistido, refresh rotation, adapter de email por typed `HttpClient`,
+    Forwarded Headers e a migration `AddRefreshSessionCsrf`. **Nada
+    implementado em `backend/`.** Três factos verificados que contradizem o
+    plano do Codex: `IAccessTokenIssuer` e `IAuthenticationEmailSender` já
+    existem na Application e só faltam as implementações; o lockout do Identity
+    já está implementado; a entidade é `RefreshToken`, não `RefreshSession`.
+    Bug latente encontrado: sem `TokenValidationParameters.RoleClaimType =
+    "role"`, as cinco policies da Fase 1 recusam toda a gente. Detalhe em
+    `Sessions/2026-08-28-sprint4-fase2-blueprints.md`.
+14. Ajuste residual 3G-B concluído:
     `EnqueueNotificationCommandValidator.IsSensitiveName` normaliza nomes antes
     da comparação e rejeita `token_value`, `refreshToken` e `apiKey`. Os três
     testes falharam antes da correção e passaram depois. Application.UnitTests:

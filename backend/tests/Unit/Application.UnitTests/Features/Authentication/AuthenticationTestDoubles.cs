@@ -155,6 +155,21 @@ internal sealed class SessionStoreStub : IAuthenticationSessionStore
         Guid userId,
         DateTime now,
         CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public Task<RotateRefreshStoreResult> RotateAsync(string rawToken, string rawCsrfToken, DateTime now, DateTime refreshExpiresAt, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<RotateCsrfStoreResult> RotateCsrfAsync(string rawToken, DateTime now, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<RevokeSessionStoreStatus> RevokeAsync(string rawToken, string rawCsrfToken, DateTime now, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 internal sealed class PasswordStoreStub(PasswordManagementStoreResult result) :

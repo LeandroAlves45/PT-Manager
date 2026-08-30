@@ -125,6 +125,7 @@ internal sealed class ClientInvitationStore : IClientInvitationStore
 
         var hash = _tokens.Hash(rawToken);
         var generated = _tokens.Generate();
+        var csrf = _tokens.Generate();
         var strategy = _dbContext.Database.CreateExecutionStrategy();
         var attempt = 0;
 
@@ -140,6 +141,7 @@ internal sealed class ClientInvitationStore : IClientInvitationStore
                 var committed = await RebuildCommittedConsumeAsync(
                     hash,
                     generated,
+                    csrf,
                     authenticatedUserId,
                     refreshExpiresAt,
                     cancellationToken);
@@ -150,6 +152,7 @@ internal sealed class ClientInvitationStore : IClientInvitationStore
             return await ConsumeOnceAsync(
                 hash,
                 generated,
+                csrf,
                 authenticatedUserId,
                 transferApproved,
                 refreshExpiresAt,
@@ -161,6 +164,7 @@ internal sealed class ClientInvitationStore : IClientInvitationStore
     private async Task<ConsumeClientInvitationStoreResult?> RebuildCommittedConsumeAsync(
         string hash,
         GeneratedOpaqueToken generated,
+        GeneratedOpaqueToken csrf,
         Guid authenticatedUserId,
         DateTime refreshExpiresAt,
         CancellationToken cancellationToken
@@ -186,12 +190,13 @@ internal sealed class ClientInvitationStore : IClientInvitationStore
                 invite.TrainerId,
                 user.Role,
                 user.SecurityStamp),
-            new IssuedRefreshSession(generated.RawToken, refreshExpiresAt));
+            new IssuedRefreshSession(generated.RawToken, csrf.RawToken, refreshExpiresAt));
     }
 
     private async Task<ConsumeClientInvitationStoreResult> ConsumeOnceAsync(
         string hash,
         GeneratedOpaqueToken generated,
+        GeneratedOpaqueToken csrf,
         Guid authenticatedUserId,
         bool transferApproved,
         DateTime refreshExpiresAt,
@@ -314,6 +319,7 @@ internal sealed class ClientInvitationStore : IClientInvitationStore
             user.Id,
             Guid.NewGuid(),
             generated.TokenHash,
+            csrf.TokenHash,
             null,
             refreshExpiresAt,
             now
@@ -331,7 +337,7 @@ internal sealed class ClientInvitationStore : IClientInvitationStore
             );
             return ConsumeClientInvitationStoreResult.Accepted(
                 principal,
-                new IssuedRefreshSession(generated.RawToken, refreshExpiresAt));
+                new IssuedRefreshSession(generated.RawToken, csrf.RawToken, refreshExpiresAt));
         }
         catch (DbUpdateConcurrencyException)
         {

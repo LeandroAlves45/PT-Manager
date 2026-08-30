@@ -34,8 +34,14 @@ public sealed class LogoutHandler
         if (!validation.IsValid)
             return Result.Failure(validation.ToApplicationError());
 
-        await _store.RevokeAsync(command.RawToken, _clock.UtcNow, cancellationToken);
+        var status = await _store.RevokeAsync(
+            command.RawToken,
+            command.RawCsrfToken,
+            _clock.UtcNow,
+            cancellationToken);
 
-        return Result.Success();
+        return status == RevokeSessionStoreStatus.CsrfInvalid
+            ? Result.Failure(AuthenticationErrors.CsrfTokenInvalid)
+            : Result.Success();
     }
 }

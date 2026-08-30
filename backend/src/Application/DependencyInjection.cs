@@ -75,14 +75,24 @@ public static class DependencyInjection
 
     private static void AddAuthentication(IServiceCollection services)
     {
+        services.AddScoped<Application.Features.Authentication.AcceptClientInvite.AcceptClientInviteHandler>();
+        services.AddScoped<Application.Features.Authentication.BootstrapCsrf.BootstrapCsrfHandler>();
         services.AddScoped<Application.Features.Authentication.ChangePassword.ChangePasswordHandler>();
         services.AddScoped<Application.Features.Authentication.ConfirmEmail.ConfirmEmailHandler>();
+        services.AddScoped<Application.Features.Authentication.InviteClient.InviteClientHandler>();
+        services.AddScoped<Application.Features.Authentication.Login.LoginHandler>();
         services.AddScoped<Application.Features.Authentication.Logout.LogoutHandler>();
+        services.AddScoped<Application.Features.Authentication.RefreshSession.RefreshSessionHandler>();
+        services.AddScoped<Application.Features.Authentication.RegisterTrainer.RegisterTrainerHandler>();
+        services.AddScoped<Application.Features.Authentication.RequestPasswordReset.RequestPasswordResetHandler>();
+        services.AddScoped<Application.Features.Authentication.ResendEmailConfirmation.ResendEmailConfirmationHandler>();
         services.AddScoped<Application.Features.Authentication.ResetPassword.ResetPasswordHandler>();
 
         // Validators
         services.AddScoped<IValidator<Application.Features.Authentication
             .AcceptClientInvite.AcceptClientInviteCommand>, Application.Features.Authentication.AcceptClientInvite.AcceptClientInviteCommandValidator>();
+        services.AddScoped<IValidator<Application.Features.Authentication
+            .BootstrapCsrf.BootstrapCsrfCommand>, Application.Features.Authentication.BootstrapCsrf.BootstrapCsrfCommandValidator>();
         services.AddScoped<IValidator<Application.Features.Authentication
             .ChangePassword.ChangePasswordCommand>, Application.Features.Authentication.ChangePassword.ChangePasswordCommandValidator>();
         services.AddScoped<IValidator<Application.Features.Authentication

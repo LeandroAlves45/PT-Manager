@@ -1,0 +1,25 @@
+# Old backend — not the target architecture, keep out of Tab/Agent context
+backend-python/
+
+# Build / packaging
+bin/
+obj/
+publish/
+dist/
+dist-ssr
+TestResults/
+coverage/
+
+# Dependencies
+node_modules/
+
+# Generated / large non-source content
+graphify-out/
+
+# Logs
+logs/
+*.log
+
+# Secrets
+.env
+.env.*
