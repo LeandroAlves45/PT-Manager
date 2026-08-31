@@ -1,0 +1,52 @@
+---
+description: Hierarquia de fontes, memória .claude e bootstrap de sessão
+alwaysApply: true
+---
+
+# Memória e fontes de verdade
+
+Complementa `AGENTS.md` e `pt-manager.md`. Não altera a precedência normativa;
+define como iniciar sessões e resolver ambiguidades operacionais.
+
+## Bootstrap de sessão (ler nesta ordem)
+
+1. Pedido explícito do utilizador
+2. `AGENTS.md`
+3. `.claude/memory/MEMORY.md`
+4. Nota relevante em `.claude/memory/Sessions/` (a mais recente do sprint/fase activo)
+5. `git status --short` e diff dos ficheiros tocados
+6. Documento canónico da tarefa (`.claude/project/00…03`)
+7. Código actual nos caminhos afectados
+8. `docs/backend-files/...` e gates — **só como plano ou blueprint**, nunca como estado
+
+## Resolução de conflitos
+
+Quando duas fontes divergem:
+
+1. Pedido do utilizador
+2. `AGENTS.md`
+3. `.claude/project/*.md`
+4. Código verificado
+5. `MEMORY.md` + `Sessions/`
+6. `docs/backend-files/` e documentos de gate
+
+Se memória ou plano contradizerem código ou docs canónicos, prevalecem estes
+últimos. A memória evita repetir trabalho e seguir planos obsoletos.
+
+## Regras operacionais
+
+- Gates e secções «estado inicial» são instantâneos. Se um gate diz «nada
+  implementado» mas `git status` ou o código dizem o contrário, prevalece o disco.
+- `docs/` é documentação local deliberadamente ignorada pelo Git. Nunca usar
+  `git add -f` para a versionar.
+- `backend-python/` serve apenas para inventariar contratos históricos; não define
+  arquitetura de destino.
+
+## Leitura por tipo de tarefa
+
+| Tarefa | Além do bootstrap |
+|---|---|
+| Auth / segurança | `00_ARCHITECTURE.md` (auth) + sessão Sprint 4 mais recente |
+| Migration EF | `01_DATABASE_SCHEMA.md` + sessões sobre armadilhas EF |
+| Novo endpoint | contrato HTTP + Python só para inventariar payload |
+| OpenAPI / Scalar | código + `Api.FunctionalTests` (não está no plano Sprint 4) |

@@ -18,7 +18,13 @@ public sealed record PasswordResetRequest(string Email);
 public sealed record PasswordResetCompletionRequest(
     string Token,
     string NewPassword,
-    string ConfirmPassword);
+    string ConfirmNewPassword);
+
+/// <summary>Alteração de password de uma conta autenticada.</summary>
+public sealed record ChangePasswordRequest(
+    string CurrentPassword,
+    string NewPassword,
+    string ConfirmNewPassword);
 
 /// <summary>Aceitação de um convite de cliente.</summary>
 public sealed record AcceptInvitationRequest(string Token, bool TransferApproved);

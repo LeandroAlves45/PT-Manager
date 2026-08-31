@@ -136,40 +136,45 @@ internal sealed class SessionStoreStub : IAuthenticationSessionStore
         DateTime refreshExpiresAt,
         CancellationToken cancellationToken) => Task.FromResult(AuthenticateResult);
 
+    public RotateCsrfStoreResult RotateCsrfResult { get; set; } =
+        RotateCsrfStoreResult.Failure(RotateCsrfStoreStatus.NotFound);
+    public RevokeSessionStoreStatus RevokeResult { get; set; } =
+        RevokeSessionStoreStatus.NotFound;
+
+    /// <summary>Último segredo anti-CSRF apresentado ao store, para asserção.</summary>
+    public string? LastPresentedCsrfToken { get; private set; }
+
     public Task<RotateRefreshStoreResult> RotateAsync(
         string rawToken,
+        string rawCsrfToken,
         DateTime now,
         DateTime refreshExpiresAt,
-        CancellationToken cancellationToken) => Task.FromResult(RotateResult);
+        CancellationToken cancellationToken)
+    {
+        LastPresentedCsrfToken = rawCsrfToken;
+        return Task.FromResult(RotateResult);
+    }
 
-    public Task RevokeAsync(
+    public Task<RotateCsrfStoreResult> RotateCsrfAsync(
         string rawToken,
+        DateTime now,
+        CancellationToken cancellationToken) => Task.FromResult(RotateCsrfResult);
+
+    public Task<RevokeSessionStoreStatus> RevokeAsync(
+        string rawToken,
+        string rawCsrfToken,
         DateTime now,
         CancellationToken cancellationToken)
     {
         RevokeCalls++;
-        return Task.CompletedTask;
+        LastPresentedCsrfToken = rawCsrfToken;
+        return Task.FromResult(RevokeResult);
     }
 
     public Task RevokeAllAsync(
         Guid userId,
         DateTime now,
         CancellationToken cancellationToken) => Task.CompletedTask;
-
-    public Task<RotateRefreshStoreResult> RotateAsync(string rawToken, string rawCsrfToken, DateTime now, DateTime refreshExpiresAt, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<RotateCsrfStoreResult> RotateCsrfAsync(string rawToken, DateTime now, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<RevokeSessionStoreStatus> RevokeAsync(string rawToken, string rawCsrfToken, DateTime now, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
 }
 
 internal sealed class PasswordStoreStub(PasswordManagementStoreResult result) :

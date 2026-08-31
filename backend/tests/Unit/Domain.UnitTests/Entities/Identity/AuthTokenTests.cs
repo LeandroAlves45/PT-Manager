@@ -50,6 +50,7 @@ public sealed class AuthTokenTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             Hash,
+            Hash,
             null,
             Now.AddDays(30),
             Now);

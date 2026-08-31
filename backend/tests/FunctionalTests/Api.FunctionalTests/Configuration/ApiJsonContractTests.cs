@@ -1,6 +1,8 @@
 using System.Text.Json;
+using Api.FunctionalTests.Support;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Options;
 
 namespace Api.FunctionalTests.Configuration;
@@ -48,13 +50,18 @@ public sealed class ApiJsonContractTests
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection([
-                new KeyValuePair<string, string?>("Cors:AllowedOrigins:0", "https://app.example.test")
+                new KeyValuePair<string, string?>("Cors:AllowedOrigins:0", "https://app.example.test"),
+                new KeyValuePair<string, string?>("Jwt:Issuer", ApiWebApplicationFactory.Issuer),
+                new KeyValuePair<string, string?>("Jwt:Audience", ApiWebApplicationFactory.Audience),
+                new KeyValuePair<string, string?>(
+                    "Jwt:SigningKey",
+                    ApiWebApplicationFactory.JwtSigningMaterial)
             ])
             .Build();
 
         return new ServiceCollection()
             .AddLogging()
-            .AddApi(configuration)
+            .AddApi(configuration, new HostingEnvironment { EnvironmentName = "Development" })
             .BuildServiceProvider();
     }
 }

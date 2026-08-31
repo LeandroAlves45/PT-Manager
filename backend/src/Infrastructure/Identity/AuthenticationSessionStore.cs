@@ -89,7 +89,7 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
             await _dbContext.SaveChangesAsync(cancellationToken);
             return AuthenticateStoreResult.Authenticated(
                 principal,
-                new IssuedRefreshSession(generated.RawToken, csrf.TokenHash, refreshExpiresAt));
+                new IssuedRefreshSession(generated.RawToken, csrf.RawToken, refreshExpiresAt));
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -193,7 +193,7 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
             {
                 await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
-                return RotateCsrfStoreResult.Rotated(csrf.TokenHash);
+                return RotateCsrfStoreResult.Rotated(csrf.RawToken);
             }
             catch (DbUpdateConcurrencyException)
             {

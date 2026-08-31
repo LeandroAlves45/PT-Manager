@@ -5,6 +5,8 @@ namespace Unit.Domain.UnitTests.Entities.Identity;
 
 public sealed class RefreshTokenTests
 {
+    private const string CsrfHash = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
     [Fact]
     public void IsActive_BeforeExpiry_ReturnsTrue()
     {
@@ -14,6 +16,7 @@ public sealed class RefreshTokenTests
             userId: Guid.NewGuid(),
             familyId: Guid.NewGuid(),
             tokenHash: "validhash",
+            csrfTokenHash: CsrfHash,
             rotatedFromId: null,
             expiresAt: now.AddDays(7),
             now: now
@@ -35,6 +38,7 @@ public sealed class RefreshTokenTests
             userId: Guid.NewGuid(),
             familyId: Guid.NewGuid(),
             tokenHash: "validhash",
+            csrfTokenHash: CsrfHash,
             rotatedFromId: null,
             expiresAt: now.AddDays(7),
             now: now
@@ -56,6 +60,7 @@ public sealed class RefreshTokenTests
             userId: Guid.NewGuid(),
             familyId: Guid.NewGuid(),
             tokenHash: "validhash",
+            csrfTokenHash: CsrfHash,
             rotatedFromId: null,
             expiresAt: now.AddDays(7),
             now: now

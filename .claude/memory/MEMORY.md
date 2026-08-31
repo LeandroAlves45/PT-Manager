@@ -12,8 +12,11 @@ notas de `.claude/memory/Sessions/`.
 - PostgreSQL com EF Core é a fonte de verdade. As migrations anteriores
   `20260804163659_InitialCreate`, `20260814121132_CompleteTrainingPhase2C` e
   `20260822155532_CompleteSprint3Phase3` são imutáveis. A migration
-  `20260826172025_CompleteSprint3Lote3G` foi validada apenas em PostgreSQL 17
-  descartável e ainda não foi aplicada a uma base persistente.
+  `20260826172025_CompleteSprint3Lote3G` e
+  `20260831131824_AddRefreshSessionCsrf` estão aplicadas à base local de
+  desenvolvimento. A última foi também validada em PostgreSQL 17 descartável,
+  acrescenta `csrf_token_hash` e o seu `Up` revoga todas as sessões ativas da
+  base onde correr. Não existe base de produção identificada.
 - Ainda não existe base de dados de produção identificada. Migrations e testes
   de schema referem desenvolvimento local ou PostgreSQL efémero em
   Testcontainers.
@@ -22,6 +25,12 @@ notas de `.claude/memory/Sessions/`.
 - Sprint 2 e Sprint 3 estão concluídos. O Lote 3G fechou Authentication,
   Billing SaaS, Notifications e a relação ativa de clientes, incluindo a
   migration consolidada e validação PostgreSQL.
+- Sprint 4: Fase 1 e Fase 2 concluídas. A Fase 2 entregou a autenticação local
+  ligada — JWT HS256, `AuthController` com 12 rotas, cookies environment-aware,
+  CSRF persistido por sessão e refresh rotation com reuse detection. A API
+  expõe OpenAPI JSON e Scalar apenas em Development, com autenticação Bearer
+  seletiva por operação, Agent desativado e CSP com nonce dinâmico. Suite
+  completa em 1315 testes verdes.
 
 ## Execução em curso
 
@@ -196,6 +205,9 @@ alegações anteriores desatualizadas está em
   `Sessions/2026-08-24-lote-3g-revisao-testes-validacao-parcial.md`.
 - Authentication e Billing SaaS (lote_3G-C/D, documentação reconstruída):
   `Sessions/2026-08-25-lote-3g-c-d-reconstrucao-documental-final.md`.
+- Sprint 4 Fase 2 FINALIZADA (auth local; 2 bugs críticos de CSRF corrigidos,
+  migration `20260831131824_AddRefreshSessionCsrf` validada, 1310 testes verdes):
+  `Sessions/2026-08-31-sprint4-fase2-finalizada.md`.
 
 ## Padrões documentais
 

@@ -1,4 +1,5 @@
 using Api.Configuration;
+using Scalar.AspNetCore;
 
 namespace Api.Middlewares;
 
@@ -18,8 +19,7 @@ public sealed class SecurityHeadersMiddleware
             headers.XContentTypeOptions = "nosniff";
             headers.XFrameOptions = "DENY";
             headers["Referrer-Policy"] = "no-referrer";
-            headers.ContentSecurityPolicy =
-                "default-src 'none'; frame-ancestors 'none'; base-uri 'none'";
+            headers.ContentSecurityPolicy = BuildContentSecurityPolicy(httpContext);
             headers["Permissions-Policy"] =
                 "camera=(), microphone=(), geolocation=(), payment=(), usb=()";
 
@@ -33,5 +33,26 @@ public sealed class SecurityHeadersMiddleware
         });
 
         await _next(httpContext);
+    }
+
+    private static string BuildContentSecurityPolicy(HttpContext httpContext)
+    {
+        if (!httpContext.Items.TryGetValue(
+                ScalarOptions.NonceHttpContextItemKey,
+                out var nonceValue)
+            || nonceValue is not string nonce)
+        {
+            return "default-src 'none'; frame-ancestors 'none'; base-uri 'none'";
+        }
+
+        // A UI Scalar precisa de executar o bundle e estilos no browser. O nonce
+        // por pedido mantém os scripts inline bloqueados fora desta resposta.
+        return $"default-src 'none'; "
+            + $"script-src 'nonce-{nonce}' https://cdn.jsdelivr.net; "
+            + "style-src 'self' 'unsafe-inline'; "
+            + "img-src 'self' data: blob:; "
+            + "font-src 'self' data:; "
+            + "connect-src 'self'; "
+            + "frame-ancestors 'none'; base-uri 'none'";
     }
 }

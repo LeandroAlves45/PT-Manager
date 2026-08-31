@@ -48,7 +48,7 @@ public sealed class SessionHandlerTests
             new AccessTokenIssuerStub());
 
         var result = await handler.HandleAsync(
-            new RefreshSessionCommand("raw"),
+            new RefreshSessionCommand("raw", "csrf"),
             TestContext.Current.CancellationToken);
 
         Assert.True(result.IsFailure);
@@ -65,7 +65,7 @@ public sealed class SessionHandlerTests
             store);
 
         var result = await handler.HandleAsync(
-            new LogoutCommand("unknown"),
+            new LogoutCommand("unknown", "csrf"),
             TestContext.Current.CancellationToken);
 
         Assert.True(result.IsSuccess);

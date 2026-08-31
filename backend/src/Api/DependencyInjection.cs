@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Api.Authorization;
 using Api.Configuration;
+using Api.Security;
 
 namespace Api;
 
@@ -10,9 +11,13 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApi(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
-        services.AddControllers()
+        services.AddControllers(options =>
+            {
+                options.Filters.Add<RequireOriginFilter>();
+            })
             .AddJsonOptions(options => ConfigureJson(options.JsonSerializerOptions));
 
         services.ConfigureHttpJsonOptions(options => ConfigureJson(options.SerializerOptions));
@@ -27,16 +32,27 @@ public static class DependencyInjection
             };
         });
 
-        services.AddOpenApi();
+        services.AddApiOpenApi();
         services.AddHsts(options =>
         {
             options.Preload = true;
             options.IncludeSubDomains = true;
             options.MaxAge = TimeSpan.FromDays(365);
         });
+        services.AddApiForwardedHeaders(configuration, environment);
         services.AddApiCors(configuration);
+        services.AddApiJwtBearer(configuration);
         services.AddApiAuthorization();
         services.AddApiRateLimiting();
+
+        services.AddOptions<AuthCookieOptions>()
+            .Bind(configuration.GetSection(AuthCookieOptions.SectionName))
+            .Validate(
+                options => options.IsValid(),
+                "Configuration section 'AuthCookies' is invalid")
+            .ValidateOnStart();
+
+        services.AddSingleton<AuthCookieWriter>();
 
         return services;
     }

@@ -19,8 +19,8 @@ public sealed class ApplicationRegistrationTests
             descriptor.ServiceType.IsGenericType
             && descriptor.ServiceType.GetGenericTypeDefinition() == typeof(IValidator<>));
 
-        Assert.Equal(116, handlerCount);
-        Assert.Equal(71, validatorCount);
+        Assert.Equal(124, handlerCount);
+        Assert.Equal(72, validatorCount);
     }
 
     [Fact]

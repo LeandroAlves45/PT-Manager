@@ -80,6 +80,15 @@ public sealed class ApiPipelineTests
     }
 
     [Fact]
+    public async Task ScalarUi_IsNotExposedOutsideDevelopment()
+    {
+        var response = await CreateClient()
+            .GetAsync("/scalar/v1", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Kestrel_DoesNotAdvertiseTheServerHeader()
     {
         var response = await CreateClient()
