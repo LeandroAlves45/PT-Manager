@@ -19,8 +19,10 @@ public sealed class ApplicationRegistrationTests
             descriptor.ServiceType.IsGenericType
             && descriptor.ServiceType.GetGenericTypeDefinition() == typeof(IValidator<>));
 
-        Assert.Equal(124, handlerCount);
-        Assert.Equal(72, validatorCount);
+        // 124 + 4 handlers de moderação administrativa (Block/Unblock de Food e Exercise).
+        Assert.Equal(128, handlerCount);
+        // 72 + 2 validators de moderação (BlockFood e BlockExercise; Unblock não tem payload).
+        Assert.Equal(74, validatorCount);
     }
 
     [Fact]

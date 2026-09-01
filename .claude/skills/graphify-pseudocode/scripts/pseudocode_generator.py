@@ -60,7 +60,7 @@ PUBLIC SEALED CLASS {feature}
             RETURN Result.Failure WITH stable field errors
         END IF
 
-        // WHY: o tenant nasce do contexto autenticado e nunca do payload.
+        // O tenant nasce do contexto autenticado e nunca do payload.
         REQUIRE trainer id FROM ITenantContext
         IF tenant is unavailable
             RETURN tenant failure

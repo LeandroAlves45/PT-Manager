@@ -16,7 +16,10 @@ notas de `.claude/memory/Sessions/`.
   `20260831131824_AddRefreshSessionCsrf` estão aplicadas à base local de
   desenvolvimento. A última foi também validada em PostgreSQL 17 descartável,
   acrescenta `csrf_token_hash` e o seu `Up` revoga todas as sessões ativas da
-  base onde correr. Não existe base de produção identificada.
+  base onde correr. A migration `20260901175332_AddPrivateCatalogEnforcement`
+  (Fase 3) está gerada e validada em container descartável mas **ainda não
+  aplicada** à base de desenvolvimento; é aditiva e não destrutiva. Não existe
+  base de produção identificada.
 - Ainda não existe base de dados de produção identificada. Migrations e testes
   de schema referem desenvolvimento local ou PostgreSQL efémero em
   Testcontainers.
@@ -31,6 +34,15 @@ notas de `.claude/memory/Sessions/`.
   expõe OpenAPI JSON e Scalar apenas em Development, com autenticação Bearer
   seletiva por operação, Agent desativado e CSP com nonce dinâmico. Suite
   completa em 1315 testes verdes.
+- Sprint 4: Fase 3 concluída (2026-09-01). Entregou templates de email de
+  autenticação como EmbeddedResource e moderação administrativa de Food e
+  Exercise privados: quatro casos de uso, store com revalidação do superuser
+  dentro da transação, auditoria atómica e bloqueio de novas referências.
+  A revisão encontrou e corrigiu dois defeitos reais — o interceptor impedia
+  qualquer moderação de catálogo privado, e a check constraint aceitava
+  `blocked` com motivo NULL. Suite completa em 1385 testes verdes com
+  PostgreSQL real. Falta apenas aplicar a migration à base de desenvolvimento.
+  Evidência em `docs/backend-files/sprint_4/fase_3/11_revisao_e_fecho_fase_3.md`.
 
 ## Execução em curso
 
@@ -95,6 +107,29 @@ notas de `.claude/memory/Sessions/`.
     da comparação e rejeita `token_value`, `refreshToken` e `apiKey`. Os três
     testes falharam antes da correção e passaram depois. Application.UnitTests:
     378 aprovados; formatação aprovada. Migration e testes PostgreSQL inalterados.
+15. Sprint 4, Fase 3 planeada (2026-09-01): onze documentos em
+    `docs/backend-files/sprint_4/fase_3/`, com 54 blocos integrais comparados
+    sem diferenças contra uma materialização temporária. Essa materialização
+    passou build Release sem warnings, 386 testes Domain, 454 Application, 36
+    Architecture, 3 testes de templates e 3 funcionais de API. A migration
+    `AddPrivateCatalogEnforcement` foi gerável apenas na cópia descartável.
+    Os testes PostgreSQL não iniciaram porque Docker não estava acessível; os
+    gates de atomicidade, concorrência, constraints e ciclo da migration
+    permanecem abertos. O backend real e as migrations reais não foram
+    alterados. Evidência em
+    `Sessions/2026-09-01-sprint4-fase3-blueprints.md`.
+16. Sprint 4, Fase 3 implementada e fechada (2026-09-01): revisão de segurança
+    dos documentos 01 a 06, testes dos documentos 07 criados e migration do
+    documento 08 gerada. Dois defeitos reais corrigidos: `ValidateCatalogOwnership`
+    chamava `RequireTenant()` para catálogo privado e tornava a moderação
+    impossível em produção; e a check constraint deixava passar `blocked` com
+    motivo NULL porque `NULL IN (...)` é `NULL` e um CHECK NULL conta como
+    satisfeito. Ciclo migrate/rollback/migrate validado em `postgres:17-alpine`
+    descartável com backfill provado sobre linhas legadas. 1385 testes verdes
+    (401 Domain, 465 Application, 36 Architecture, 98 funcionais, 385 PostgreSQL),
+    build Release sem warnings, `dotnet format` limpo. 15 gates QG3 fechados;
+    3 anotados como parciais e não bloqueantes. Evidência em
+    `Sessions/2026-09-01-sprint4-fase3-fecho.md`.
 
 O gate final do Lote 3E aprovou build Release sem warnings, formatação e 1065
 testes: 365 Domain, 365 Application, 311 integração PostgreSQL e 24 arquitetura.
@@ -208,6 +243,8 @@ alegações anteriores desatualizadas está em
 - Sprint 4 Fase 2 FINALIZADA (auth local; 2 bugs críticos de CSRF corrigidos,
   migration `20260831131824_AddRefreshSessionCsrf` validada, 1310 testes verdes):
   `Sessions/2026-08-31-sprint4-fase2-finalizada.md`.
+- Sprint 4 Fase 3 planeada, ainda não implementada:
+  `Sessions/2026-09-01-sprint4-fase3-blueprints.md`.
 
 ## Padrões documentais
 

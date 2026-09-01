@@ -1,6 +1,3 @@
-# Old backend — not the target architecture, keep out of Tab/Agent context
-backend-python/
-
 # Build / packaging
 bin/
 obj/

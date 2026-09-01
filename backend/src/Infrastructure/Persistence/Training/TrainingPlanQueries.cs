@@ -74,7 +74,9 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
                 row.item.OrderNumber,
                 row.item.ExerciseGroupId,
                 row.item.GroupPosition,
-                row.item.Notes
+                row.item.Notes,
+                IsPlatformBlocked = row.catalog.PlatformEnforcementStatus ==
+                    Domain.ValueObjects.PlatformEnforcementStatus.Blocked
             })
             .ToListAsync(cancellationToken);
         var dayExerciseIds = exercises.Select(item => item.Id).ToArray();
@@ -135,6 +137,7 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
             plan.EndDate,
             plan.IsActive,
             plan.IsArchived,
+            exercises.Any(item => item.IsPlatformBlocked),
             daysDtos,
             plan.CreatedAt,
             plan.UpdatedAt);
@@ -187,6 +190,13 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
                 plan.EndDate,
                 plan.IsActive,
                 plan.IsArchived,
+                _dbContext.TrainingPlanDayExercises.Any(item =>
+                    _dbContext.TrainingPlanDays.Any(day =>
+                        day.Id == item.TrainingPlanDayId && day.TrainingPlanId == plan.Id) &&
+                    _dbContext.Exercises.Any(exercise =>
+                        exercise.Id == item.ExerciseId &&
+                        exercise.PlatformEnforcementStatus ==
+                            Domain.ValueObjects.PlatformEnforcementStatus.Blocked)),
                 plan.CreatedAt,
                 plan.UpdatedAt))
             .ToListAsync(cancellationToken);

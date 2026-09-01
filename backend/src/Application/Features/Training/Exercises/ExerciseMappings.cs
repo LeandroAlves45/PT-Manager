@@ -21,6 +21,8 @@ public static class ExerciseMappings
             exercise.DifficultyLevel,
             exercise.VideoUrl,
             exercise.IsActive,
+            exercise.PlatformEnforcementStatus.Value,
+            exercise.PlatformEnforcementReason?.Value,
             exercise.CreatedAt,
             exercise.UpdatedAt
         );

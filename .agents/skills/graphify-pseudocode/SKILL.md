@@ -1,6 +1,6 @@
 ---
 name: graphify-pseudocode
-description: Generate or review extended pseudocode blueprints for PT Manager files in Domain, Application, Infrastructure, Api, frontend and tests. Use when the user asks for files.md, pseudocode, implementation guides, feature blueprints, handlers, stores, queries, entities, controllers or tests. Enforces one continuous complete blueprint per real target file with exact path, XML Docs or JSDoc, inline WHY comments, mentor notes and validations.
+description: Generate or review extended pseudocode blueprints for PT Manager files in Domain, Application, Infrastructure, Api, frontend and tests. Use when the user asks for files.md, pseudocode, implementation guides, feature blueprints, handlers, stores, queries, entities, controllers or tests. Enforces one continuous complete blueprint per real target file with exact path, XML Docs or JSDoc, inline justification comments, mentor notes and validations.
 ---
 
 # Graphify Pseudocode for PT Manager
@@ -39,10 +39,10 @@ The continuous block must include, when applicable:
 5. Every public and private method required by the responsibility.
 6. Complete branches, mapping, failures and return values.
 7. Transaction, concurrency, idempotency and cancellation behavior.
-8. WHY comments immediately beside non-obvious decisions.
+8. Justification comments immediately beside non-obvious decisions, explaining the reasoning without a literal label.
 
 Use English for identifiers. Use Portuguese from Portugal for XML Docs, JSDoc,
-WHY comments, mentor notes and explanations.
+justification comments, mentor notes and explanations.
 
 ## Prohibited output
 

@@ -44,7 +44,7 @@ function Send-Decision {
       permissionDecisionReason = $Reason
     }
   } | ConvertTo-Json -Compress
-  exit 2
+  exit 0
 }
 
 function Test-PathLike {
@@ -349,12 +349,64 @@ COMMANDS:
   exit 0
 }
 
+function Invoke-BuildTypecheck {
+  $projectDir = Get-ProjectDir
+  $inputJson = Read-HookInput
+  $filePath = $inputJson.tool_input.file_path
+  if ([string]::IsNullOrWhiteSpace($filePath) -or -not (Test-Path -LiteralPath $filePath)) { exit 0 }
+
+  $extension = [IO.Path]::GetExtension($filePath).ToLowerInvariant()
+
+  if ($extension -eq ".cs") {
+    $dir = [IO.Path]::GetDirectoryName($filePath)
+    $csproj = $null
+    while ($dir -and (Test-Path -LiteralPath $dir)) {
+      $found = Get-ChildItem -LiteralPath $dir -Filter "*.csproj" -ErrorAction SilentlyContinue | Select-Object -First 1
+      if ($found) { $csproj = $found.FullName; break }
+      $parent = Split-Path -Parent $dir
+      if ($parent -eq $dir) { break }
+      $dir = $parent
+    }
+    if ($csproj) {
+      $dotnet = Get-Command dotnet -ErrorAction SilentlyContinue
+      if ($dotnet) {
+        $output = & $dotnet.Source build "$csproj" --nologo -v q 2>&1
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error ("Build falhou em {0} apos editar {1}:`n{2}" -f $csproj, $filePath, ($output -join "`n"))
+          exit 2
+        }
+      }
+    }
+  } elseif ($extension -in @(".ts", ".tsx")) {
+    $eslint = Join-Path $projectDir "frontend\node_modules\.bin\eslint.cmd"
+    if (Test-Path -LiteralPath $eslint) {
+      $output = & $eslint "$filePath" 2>&1
+      if ($LASTEXITCODE -ne 0) {
+        Write-Error ("ESLint falhou em {0}:`n{1}" -f $filePath, ($output -join "`n"))
+        exit 2
+      }
+    }
+  }
+
+  exit 0
+}
+
+function Invoke-CorrectionReminder {
+  $projectDir = Get-ProjectDir
+  $correctionFile = Join-Path $projectDir ".claude\tasks\correction.md"
+  $lessonsFile = Join-Path $projectDir ".claude\tasks\lessons.md"
+  Write-Output "Lembrete: se nesta sessao houve correcoes do utilizador ao teu trabalho, regista o padrao em $correctionFile e a licao em $lessonsFile (ver CLAUDE.md, seccao Self-improvement Loop)."
+  exit 0
+}
+
 switch ($HookScript) {
   "protect-files-ADJUSTED.sh" { Invoke-ProtectFiles }
   "warn-large-files-ADJUSTED.sh" { Invoke-WarnLargeFiles }
   "scan-secrets-ADJUSTED.sh" { Invoke-ScanSecrets }
   "block-dangerous-commands.sh" { Invoke-BlockDangerousCommands }
   "format-on-save.sh" { Invoke-FormatOnSave }
+  "build-typecheck-on-edit.sh" { Invoke-BuildTypecheck }
+  "correction-reminder.sh" { Invoke-CorrectionReminder }
   "session-start.sh" { Invoke-SessionStart }
   "context-recovery-ADJUSTED.sh" { Invoke-ContextRecovery }
   default {

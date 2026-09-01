@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using Application.Features.Authentication.Abstractions;
+using Infrastructure.Email;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -30,8 +31,11 @@ internal sealed class ResendAuthenticationEmailSender : IAuthenticationEmailSend
         SendAsync(
             secret,
             "confirmar-email",
+            "confirm-email.html",
             "Confirme o seu email",
-            "Confirme o seu email para ativar a conta.",
+            "Obrigado por se registar no PT Manager. Para completar o registo e ativar a conta, " +
+            "confirme o email abaixo.",
+            "Confirmar email",
             cancellationToken);
 
     public Task<AuthenticationEmailDeliveryOutcome> SendClientInvitationAsync(
@@ -40,8 +44,10 @@ internal sealed class ResendAuthenticationEmailSender : IAuthenticationEmailSend
         SendAsync(
             secret,
             "aceitar-convite",
+            "client-invitation.html",
             "Convite do seu personal trainer",
-            "Aceite o convite para aceder ao seu plano.",
+            "Foi convidado para aceder ao PT Manager.",
+            "Aceitar convite",
             cancellationToken);
 
     public Task<AuthenticationEmailDeliveryOutcome> SendPasswordResetAsync(
@@ -50,26 +56,38 @@ internal sealed class ResendAuthenticationEmailSender : IAuthenticationEmailSend
         SendAsync(
             secret,
             "repor-password",
+            "password-reset.html",
             "Reposição de password",
-            "Reponha a sua password.",
+            "Recebemos um pedido para repor a password da sua conta. Se não foi você, ignore este email.",
+            "Repor password",
             cancellationToken);
 
     private async Task<AuthenticationEmailDeliveryOutcome> SendAsync(
         IssuedAuthenticationSecret secret,
         string path,
+        string templateName,
         string subject,
         string intro,
+        string actionLabel,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(secret);
 
         var link = BuildLink(path, secret.RawToken);
+        var rendered = AuthenticationEmailTemplateRenderer.Render(
+            templateName,
+            intro,
+            link,
+            actionLabel,
+            secret.ExpiresAt,
+            BuildTemplateOptions(templateName, secret));
+
         var payload = new ResendEmailRequest(
             _options.FromAddress,
             [secret.RecipientEmail],
             subject,
-            BuildHtmlBody(intro, link, secret.ExpiresAt)
-        );
+            rendered.Html,
+            rendered.Text);
 
         try
         {
@@ -111,17 +129,15 @@ internal sealed class ResendAuthenticationEmailSender : IAuthenticationEmailSend
         }.Uri.ToString();
 
     // TODO: Criar um template para o corpo do email em HTML, posteriormente.
-    private static string BuildHtmlBody(string intro, string link, DateTimeOffset expiresAt) =>
-        $"""
-        <p>{intro}</p>
-        <p><a href="{link}">Continuar</a></p>
-        <p>Este link expira em {expiresAt:yyyy-MM-dd HH:mm} UTC.</p>
-        """;
+    private static AuthenticationEmailTemplateOptions BuildTemplateOptions(
+        string templateName,
+        IssuedAuthenticationSecret secret) => new();
 
     /// <summary>Corpo do pedido aceite pela API do Resend.</summary>
     private sealed record ResendEmailRequest(
         string From,
         IReadOnlyList<string> To,
         string Subject,
-        string Html);
+        string Html,
+        string Text);
 }

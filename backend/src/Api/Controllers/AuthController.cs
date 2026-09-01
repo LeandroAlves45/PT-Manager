@@ -1,9 +1,9 @@
 using Api.Authorization;
 using Api.Configuration;
 using Api.Contracts.Authentication;
+using Api.Http;
 using Api.Security;
 using Application.Errors;
-using Application.Features.Authentication;
 using Application.Features.Authentication.AcceptClientInvite;
 using Application.Features.Authentication.BootstrapCsrf;
 using Application.Features.Authentication.ChangePassword;
@@ -218,44 +218,5 @@ public sealed class AuthController : ControllerBase
             : string.Empty;
 
     /// <summary>Converte um erro da Application em Problem Details.</summary>
-    private IActionResult Problem(Error error)
-    {
-        var status = error.Category switch
-        {
-            ErrorCategory.Validation => StatusCodes.Status400BadRequest,
-            ErrorCategory.NotFound => StatusCodes.Status404NotFound,
-            ErrorCategory.Conflict => StatusCodes.Status409Conflict,
-            ErrorCategory.Unauthorized => StatusCodes.Status401Unauthorized,
-            ErrorCategory.Forbidden => StatusCodes.Status403Forbidden,
-            ErrorCategory.PaymentRequired => StatusCodes.Status402PaymentRequired,
-            ErrorCategory.ExternalDependency => StatusCodes.Status503ServiceUnavailable,
-            _ => StatusCodes.Status500InternalServerError
-        };
-
-        var problem = new ProblemDetails
-        {
-            Status = status,
-            Title = error.Code,
-            Detail = error.Description,
-            Instance = Request.Path
-        };
-        problem.Extensions["correlation_id"] = HttpContext.TraceIdentifier;
-
-        if (error.Category == ErrorCategory.Validation)
-        {
-            problem.Extensions["errors"] = error.ValidationErrors
-                .Select(validation => new
-                {
-                    field = validation.Field,
-                    code = validation.Code,
-                    message = validation.Message
-                })
-                .ToArray();
-        }
-
-        if (status == StatusCodes.Status401Unauthorized)
-            Response.Headers.WWWAuthenticate = "Bearer";
-
-        return StatusCode(status, problem);
-    }
+    private IActionResult Problem(Error error) => ApiResultMapper.ToProblem(this, error);
 }

@@ -108,6 +108,25 @@
             "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \".claude/hooks/run-hook.ps1\" \"format-on-save.sh\"",
             "timeout": 15000,
             "statusMessage": "Formatting..."
+          },
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \".claude/hooks/run-hook.ps1\" \"build-typecheck-on-edit.sh\"",
+            "timeout": 60000,
+            "statusMessage": "Verificando build/lint..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \".claude/hooks/run-hook.ps1\" \"correction-reminder.sh\"",
+            "timeout": 5000,
+            "statusMessage": "Lembrete de memoria..."
           }
         ]
       }

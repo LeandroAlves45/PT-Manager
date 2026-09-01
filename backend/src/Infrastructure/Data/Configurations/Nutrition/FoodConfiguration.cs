@@ -10,13 +10,27 @@ internal sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
 {
     public void Configure(EntityTypeBuilder<Food> builder)
     {
-        builder.ToTable("foods", table => table.HasCheckConstraint(
-            "ck_foods_nutrients_per_100g",
-            "protein BETWEEN 0 AND 100 " +
-            "AND carbs BETWEEN 0 AND 100 " +
-            "AND fats BETWEEN 0 AND 100 " +
-            "AND protein + carbs + fats <= 100 " +
-            "AND (fiber IS NULL OR fiber >= 0)"));
+        builder.ToTable("foods", table =>
+        {
+            table.HasCheckConstraint(
+                "ck_foods_nutrients_per_100g",
+                "protein BETWEEN 0 AND 100 " +
+                "AND carbs BETWEEN 0 AND 100 " +
+                "AND fats BETWEEN 0 AND 100 " +
+                "AND protein + carbs + fats <= 100 " +
+                "AND (fiber IS NULL OR fiber >= 0)");
+
+            table.HasCheckConstraint(
+                "ck_foods_platform_enforcement",
+                "(platform_enforcement_status = 'allowed' AND platform_enforcement_reason IS NULL " +
+                "AND platform_enforced_at IS NULL) OR " +
+                "(platform_enforcement_status = 'blocked' AND owner_trainer_id IS NOT NULL " +
+                "AND platform_enforcement_reason IS NOT NULL " +
+                "AND platform_enforcement_reason IN ('malicious_content', 'dangerous_information', " +
+                "'deliberately_false_information', 'prohibited_content') AND platform_enforced_at IS NOT NULL)"
+            );
+        });
+
         builder.HasKey(food => food.Id);
         builder.Property(food => food.Id).HasColumnName("id").ValueGeneratedNever();
 
@@ -46,6 +60,22 @@ internal sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
             .HasColumnName("is_active")
             .HasDefaultValue(true)
             .IsRequired();
+
+        builder.Property(food => food.PlatformEnforcementStatus)
+            .HasColumnName("platform_enforcement_status")
+            .HasMaxLength(20)
+            .HasConversion(status => status.Value, value => Domain.ValueObjects.PlatformEnforcementStatus.FromString(value))
+            .HasDefaultValue(Domain.ValueObjects.PlatformEnforcementStatus.Allowed)
+            .IsRequired();
+
+        builder.Property(food => food.PlatformEnforcementReason)
+            .HasColumnName("platform_enforcement_reason")
+            .HasMaxLength(50)
+            .HasConversion(reason => reason == null ? null : reason.Value,
+                value => value == null ? null : Domain.ValueObjects.PlatformEnforcementReason.FromString(value));
+
+        builder.Property(food => food.PlatformEnforcedAt)
+            .HasColumnName("platform_enforced_at");
 
         builder.Property(food => food.CreatedAt)
             .HasColumnName("created_at")

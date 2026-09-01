@@ -190,7 +190,7 @@ public sealed class MealPlanHandlersTests
         new(1, "manual_energy", Now, null, 80m, null, null, null, null, null, null,
             null, null, null, null, 2000m, "percentage", 150m, 200m, 66.67m,
             30m, 40m, 30m, 2000m, 0m),
-        NutritionTotalsDto.Zero, true, false, [], Now, Now
+        NutritionTotalsDto.Zero, true, false, false, [], Now, Now
     );
 
     private static MealPlanStoreResult CreateFailure(MealPlanStoreResult.Status status) => status switch

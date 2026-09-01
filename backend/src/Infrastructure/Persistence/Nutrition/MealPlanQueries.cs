@@ -75,7 +75,9 @@ internal sealed class MealPlanQueries : IMealPlanQueries
                 item.Inner.Carbs,
                 item.Inner.Fats,
                 item.Inner.Kcal,
-                item.Inner.Fiber
+                item.Inner.Fiber,
+                item.Inner.PlatformEnforcementStatus ==
+                    Domain.ValueObjects.PlatformEnforcementStatus.Blocked
             ))
             .ToListAsync(cancellationToken);
 
@@ -158,6 +160,7 @@ internal sealed class MealPlanQueries : IMealPlanQueries
             CalculateTotals(items),
             plan.IsActive,
             plan.IsArchived,
+            items.Any(item => item.IsPlatformBlocked),
             mealDtos,
             plan.CreatedAt,
             plan.UpdatedAt
@@ -216,6 +219,13 @@ internal sealed class MealPlanQueries : IMealPlanQueries
                 plan.Targets.FatsGrams,
                 plan.IsActive,
                 plan.IsArchived,
+                _dbContext.MealPlanMealItems.Any(item =>
+                    _dbContext.MealPlanMeals.Any(meal =>
+                        meal.Id == item.MealPlanMealId && meal.MealPlanId == plan.Id) &&
+                    _dbContext.Foods.Any(food =>
+                        food.Id == item.FoodId &&
+                        food.PlatformEnforcementStatus ==
+                            Domain.ValueObjects.PlatformEnforcementStatus.Blocked)),
                 plan.CreatedAt,
                 plan.UpdatedAt
             ))
@@ -302,7 +312,8 @@ internal sealed class MealPlanQueries : IMealPlanQueries
         decimal Carbs,
         decimal Fats,
         decimal Kcal,
-        decimal? Fiber
+        decimal? Fiber,
+        bool IsPlatformBlocked
     );
 
     private sealed record SupplementRow(

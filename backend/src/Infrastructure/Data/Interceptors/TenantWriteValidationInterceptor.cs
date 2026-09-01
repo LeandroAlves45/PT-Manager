@@ -32,10 +32,8 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
 
     private readonly ITenantContext _tenantContext;
 
-    public TenantWriteValidationInterceptor(ITenantContext tenantContext)
-    {
+    public TenantWriteValidationInterceptor(ITenantContext tenantContext) =>
         _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
-    }
 
     /// <summary>
     /// Rejeita explicitamente chamadas síncronas para impedir que
@@ -386,6 +384,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                     entry.Entity.Id,
                     entry.Entity.OwnerTrainerId,
                     entry.Entity.IsActive,
+                    entry.Entity.PlatformEnforcementStatus,
                 })
                 .ToDictionary(food => food.Id);
 
@@ -405,6 +404,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                         food.Id,
                         food.OwnerTrainerId,
                         food.IsActive,
+                        food.PlatformEnforcementStatus,
                     })
                     .ToListAsync(cancellationToken);
 
@@ -419,6 +419,9 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
 
                 if (!food.IsActive)
                     throw new DomainException("Cannot create a reference to an archived catalog food.");
+
+                if (food.PlatformEnforcementStatus == Domain.ValueObjects.PlatformEnforcementStatus.Blocked)
+                    throw new DomainException("Cannot create a reference to platform-blocked catalog food.");
 
                 if (food.OwnerTrainerId is not null && food.OwnerTrainerId != tenantId)
                     throw new DomainException(
@@ -491,6 +494,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                     entry.Entity.Id,
                     entry.Entity.OwnerTrainerId,
                     entry.Entity.IsActive,
+                    entry.Entity.PlatformEnforcementStatus,
                 })
                 .ToDictionary(exercise => exercise.Id);
 
@@ -509,6 +513,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                         exercise.Id,
                         exercise.OwnerTrainerId,
                         exercise.IsActive,
+                        exercise.PlatformEnforcementStatus,
                     })
                     .ToListAsync(cancellationToken);
 
@@ -523,6 +528,9 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
 
                 if (!exercise.IsActive)
                     throw new DomainException("Cannot create a reference to an archived catalog exercise.");
+
+                if (exercise.PlatformEnforcementStatus == Domain.ValueObjects.PlatformEnforcementStatus.Blocked)
+                    throw new DomainException("Cannot create a reference to platform-blocked catalog exercise.");
 
                 if (exercise.OwnerTrainerId is not null && exercise.OwnerTrainerId != tenantId)
                     throw new DomainException(
@@ -580,6 +588,14 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
 
             return;
         }
+
+        // Moderação da plataforma altera catálogo privado sem tenant efetivo. O ator
+        // já foi revalidado dentro da transação e a auditoria é exigida em
+        // ValidateAdministrativeAuditEntries, pelo que não há escrita anónima.
+        if (_tenantContext.IsAdministrative &&
+            string.Equals(_tenantContext.Role, "superuser", StringComparison.Ordinal) &&
+            !_tenantContext.TrainerId.HasValue)
+            return;
 
         tenantId ??= context.RequireTenant();
 

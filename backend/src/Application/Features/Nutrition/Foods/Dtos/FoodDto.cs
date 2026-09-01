@@ -12,6 +12,8 @@ public sealed record FoodDto(
     decimal Kcal,
     decimal? Fiber,
     bool IsActive,
+    string PlatformEnforcementStatus,
+    string? PlatformEnforcementReason,
     DateTime CreatedAt,
     DateTime UpdatedAt
 );

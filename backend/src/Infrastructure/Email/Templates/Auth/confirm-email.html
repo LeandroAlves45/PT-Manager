@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Confirme o seu email</title>
+</head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:#f4f4f4">
+
+  <table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    style="background-color:#f4f4f4;padding:30px 0">
+    <tr>
+      <td align="center">
+
+        <table
+          role="presentation"
+          width="600"
+          cellpadding="0"
+          cellspacing="0"
+          style="background-color:#ffffff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);overflow:hidden;max-width:600px;width:100%">
+
+          <tr>
+            <td style="background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:30px 40px;text-align:center">
+              {{brand_header}}
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:40px">
+
+              <h1 style="color:#2d2d2d;font-size:24px;margin:0 0 20px 0;font-weight:600">
+                Confirme o seu email
+              </h1>
+
+              {{recipient_greeting}}
+
+              <p style="color:#666666;font-size:16px;line-height:1.6;margin:0 0 30px 0">
+                {{intro}}
+              </p>
+
+              <table
+                role="presentation"
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                style="background-color:#f0f9ff;border-left:4px solid #00a8e8;border-radius:5px;margin:0 0 35px 0">
+                <tr>
+                  <td style="padding:20px 25px">
+                    <p style="color:#0c4a6e;font-size:14px;margin:0 0 12px 0;font-weight:600">
+                      O que acontece a seguir?
+                    </p>
+                    <p style="color:#1e6a8e;font-size:14px;margin:0;line-height:1.8">
+                      Confirma o email abaixo<br>
+                      Ativa a conta<br>
+                      Acede à plataforma com credenciais completas
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <table
+                role="presentation"
+                cellpadding="0"
+                cellspacing="0"
+                style="margin:0 auto 30px auto">
+                <tr>
+                  <td align="center" style="background-color:#00a8e8;border-radius:8px">
+                    <a
+                      href="{{action_url}}"
+                      style="display:inline-block;padding:16px 40px;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px;letter-spacing:0.3px">
+                      {{action_label}}
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="color:#999999;font-size:13px;text-align:center;margin:0 0 25px 0;line-height:1.6">
+                Se o botão não funcionar, copia e cola este link no browser:<br>
+                <span style="color:#00a8e8;word-break:break-all">{{action_url}}</span>
+              </p>
+
+              <div style="background-color:#fff8e1;border-left:4px solid #ffc107;border-radius:5px;padding:15px 18px">
+                <p style="color:#7a5c00;font-size:13px;margin:0;line-height:1.6">
+                  Este link expira em <strong>{{expires_at_utc}}</strong>. Se não concluíres a confirmação a tempo, pede um novo email.
+                </p>
+              </div>
+
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background-color:#2d2d2d;padding:25px 40px;text-align:center">
+              <p style="color:#ffffff;font-size:14px;margin:0 0 8px 0">
+                {{footer_attribution}}
+              </p>
+              <p style="color:#aaaaaa;font-size:12px;margin:0">
+                Este é um email automático. Por favor não respondas a este email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

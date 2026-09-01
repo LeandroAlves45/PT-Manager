@@ -85,6 +85,8 @@ internal sealed class FoodQueries : IFoodQueries
         food.Kcal,
         food.Fiber,
         food.IsActive,
+        food.PlatformEnforcementStatus.Value,
+        food.PlatformEnforcementReason == null ? null : food.PlatformEnforcementReason.Value,
         food.CreatedAt,
         food.UpdatedAt
     );

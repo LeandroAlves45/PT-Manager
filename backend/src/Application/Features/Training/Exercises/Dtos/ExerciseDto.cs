@@ -11,6 +11,8 @@ public sealed record ExerciseDto(
     string? DifficultyLevel,
     string? VideoUrl,
     bool IsActive,
+    string PlatformEnforcementStatus,
+    string? PlatformEnforcementReason,
     DateTime CreatedAt,
     DateTime UpdatedAt
 );

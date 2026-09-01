@@ -13,7 +13,7 @@ alwaysApply: true
 - Don't add features or improvements beyond what was asked.
 - Don't refactor adjacent code while fixing a bug.
 - No dead code or commented-out blocks. Git has history.
-- WHY comments, never WHAT. If code needs a "what" comment, rename instead.
+- Comments justify non-obvious decisions, never restate what the code does. Write the reasoning directly, without a literal label. If code needs a "what" comment, rename instead.
 - API docs at module boundaries only, not every internal function.
 
 ## Naming

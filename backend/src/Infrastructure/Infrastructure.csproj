@@ -13,4 +13,8 @@
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Email\Templates\Auth\*.html" />
+  </ItemGroup>
+
 </Project>

@@ -85,6 +85,8 @@ internal sealed class ExerciseQueries : IExerciseQueries
             exercise.DifficultyLevel,
             exercise.VideoUrl,
             exercise.IsActive,
+            exercise.PlatformEnforcementStatus.Value,
+            exercise.PlatformEnforcementReason == null ? null : exercise.PlatformEnforcementReason.Value,
             exercise.CreatedAt,
             exercise.UpdatedAt);
 }

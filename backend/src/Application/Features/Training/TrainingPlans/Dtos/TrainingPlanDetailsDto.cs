@@ -12,6 +12,7 @@ public sealed record TrainingPlanDetailsDto(
     DateOnly? EndDate,
     bool IsActive,
     bool IsArchived,
+    bool NeedsReview,
     IReadOnlyList<TrainingPlanDetailsDto.TrainingDayDto> Days,
     DateTime CreatedAt,
     DateTime UpdatedAt)

@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Features.Administration.ContentModeration.Abstractions;
 using Application.Features.Assessments.CheckIns.Abstractions;
 using Application.Features.Assessments.InitialAssessments.Abstractions;
 using Application.Features.Clients.Abstractions;
@@ -18,6 +19,7 @@ using Infrastructure.Data;
 using Infrastructure.Data.Interceptors;
 using Infrastructure.Identity;
 using Infrastructure.Persistence;
+using Infrastructure.Persistence.Administration;
 using Infrastructure.Persistence.Assessments;
 using Infrastructure.Persistence.Billing;
 using Infrastructure.Persistence.Clients;
@@ -81,6 +83,9 @@ public static class DependencyInjection
         services.AddScoped<IClientStore, ClientStore>();
         services.AddScoped<IClientQueries, ClientQueries>();
         services.AddScoped<IClientBrandingQueries, ClientBrandingQueries>();
+
+        // Administrative content moderation
+        services.AddScoped<IPrivateCatalogModerationStore, PrivateCatalogModerationStore>();
 
         // Foods
         services.AddScoped<IFoodStore, FoodStore>();

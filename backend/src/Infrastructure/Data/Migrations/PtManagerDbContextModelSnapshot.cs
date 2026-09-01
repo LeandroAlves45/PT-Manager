@@ -1587,6 +1587,23 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("owner_trainer_id");
 
+                    b.Property<DateTime?>("PlatformEnforcedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("platform_enforced_at");
+
+                    b.Property<string>("PlatformEnforcementReason")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("platform_enforcement_reason");
+
+                    b.Property<string>("PlatformEnforcementStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("allowed")
+                        .HasColumnName("platform_enforcement_status");
+
                     b.Property<decimal>("Protein")
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)")
@@ -1618,6 +1635,8 @@ namespace Infrastructure.Data.Migrations
                     b.ToTable("foods", null, t =>
                         {
                             t.HasCheckConstraint("ck_foods_nutrients_per_100g", "protein BETWEEN 0 AND 100 AND carbs BETWEEN 0 AND 100 AND fats BETWEEN 0 AND 100 AND protein + carbs + fats <= 100 AND (fiber IS NULL OR fiber >= 0)");
+
+                            t.HasCheckConstraint("ck_foods_platform_enforcement", "(platform_enforcement_status = 'allowed' AND platform_enforcement_reason IS NULL AND platform_enforced_at IS NULL) OR (platform_enforcement_status = 'blocked' AND owner_trainer_id IS NOT NULL AND platform_enforcement_reason IS NOT NULL AND platform_enforcement_reason IN ('malicious_content', 'dangerous_information', 'deliberately_false_information', 'prohibited_content') AND platform_enforced_at IS NOT NULL)");
                         });
                 });
 
@@ -2458,6 +2477,23 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("owner_trainer_id");
 
+                    b.Property<DateTime?>("PlatformEnforcedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("platform_enforced_at");
+
+                    b.Property<string>("PlatformEnforcementReason")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("platform_enforcement_reason");
+
+                    b.Property<string>("PlatformEnforcementStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("allowed")
+                        .HasColumnName("platform_enforcement_status");
+
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -2489,7 +2525,10 @@ namespace Infrastructure.Data.Migrations
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Name", "Description"), "GIN");
 
-                    b.ToTable("exercises", (string)null);
+                    b.ToTable("exercises", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_exercises_platform_enforcement", "(platform_enforcement_status = 'allowed' AND platform_enforcement_reason IS NULL AND platform_enforced_at IS NULL) OR (platform_enforcement_status = 'blocked' AND owner_trainer_id IS NOT NULL AND platform_enforcement_reason IS NOT NULL AND platform_enforcement_reason IN ('malicious_content', 'dangerous_information', 'deliberately_false_information', 'prohibited_content') AND platform_enforced_at IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Training.ExerciseSet", b =>

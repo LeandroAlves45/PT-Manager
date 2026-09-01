@@ -10,6 +10,7 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         AddAssessments(services);
+        AddAdministration(services);
         AddAuthentication(services);
         AddBilling(services);
         AddClients(services);
@@ -22,6 +23,23 @@ public static class DependencyInjection
         AddTraining(services);
 
         return services;
+    }
+
+    private static void AddAdministration(IServiceCollection services)
+    {
+        services.AddScoped<Application.Features.Administration.ContentModeration.BlockFood.BlockFoodHandler>();
+        services.AddScoped<Application.Features.Administration.ContentModeration.UnblockFood.UnblockFoodHandler>();
+        services.AddScoped<Application.Features.Administration.ContentModeration.BlockExercise.BlockExerciseHandler>();
+        services.AddScoped<Application.Features.Administration.ContentModeration.UnblockExercise.UnblockExerciseHandler>();
+
+
+        // Validators
+        services.AddScoped<IValidator<Application.Features.Administration.ContentModeration
+            .BlockFood.BlockFoodCommand>,
+            Application.Features.Administration.ContentModeration.BlockFood.BlockFoodCommandValidator>();
+        services.AddScoped<IValidator<Application.Features.Administration.ContentModeration
+            .BlockExercise.BlockExerciseCommand>,
+            Application.Features.Administration.ContentModeration.BlockExercise.BlockExerciseCommandValidator>();
     }
 
     private static void AddAssessments(IServiceCollection services)

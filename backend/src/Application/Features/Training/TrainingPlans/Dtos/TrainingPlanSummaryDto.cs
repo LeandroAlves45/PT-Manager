@@ -11,6 +11,7 @@ public sealed record TrainingPlanSummaryDto(
     DateOnly? EndDate,
     bool IsActive,
     bool IsArchived,
+    bool NeedsReview,
     DateTime CreatedAt,
     DateTime UpdatedAt
 );

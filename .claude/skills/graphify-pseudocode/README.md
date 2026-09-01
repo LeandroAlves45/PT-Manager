@@ -1,72 +1,35 @@
 # Graphify Pseudocode Skill
 
-Generates extended pseudocode for Chatbot project components following Clean Architecture patterns and your specific style.
+Skill local do PT Manager para criar blueprints de pseudocódigo alargado por
+ficheiro real.
 
-## Quick Start
+## Contrato de output
 
-1. Ensure the project has been analyzed with Graphify:
-   ```bash
-   graphify . --code-only
-   graphify cluster-only .
-   ```
+Cada target contém:
 
-2. Use the skill when implementing new features:
-   ```
-   Feature: SendMessageUseCase
-   Context: Application.UseCases
-   File location: docs/pseudocode/SendMessageUseCase.md
-   Learning focus: Atomic transactions + Result pattern + IAnthropicService
-   Dependencies: IConversationRepository, IMessageRepository, IAnthropicService
-   ```
+1. Caminho exato.
+2. Estado atual.
+3. Adequação à camada.
+4. Um único bloco contínuo com o ficheiro completo.
+5. Notas de mentor.
+6. Validações específicas.
 
-3. The skill generates a .md file with:
-   - Extended pseudocode following your style
-   - XML/JSDoc structure suggestions
-   - WHY comments explaining decisions
-   - Mentor notes for learning
-   - Implementation checklist
+XML Docs ou JSDoc, assinaturas, regras, corpos, falhas e transações ficam no
+mesmo bloco. A skill não usa metas globais de cobertura e não escreve migrations
+manualmente.
 
-## Files
+## Gerador opcional
 
-- `SKILL.md` — Skill definition and usage guide
-- `scripts/pseudocode_generator.py` — Core generation logic
-- `README.md` — This file
+```powershell
+python .agents/skills/graphify-pseudocode/scripts/pseudocode_generator.py `
+  --feature CreateMealPlanHandler `
+  --layer Application `
+  --file-path backend/src/Application/Features/Nutrition/CreateMealPlan/CreateMealPlanHandler.cs `
+  --state "to create"
+```
 
-## Architecture
+Sem `--output`, o documento é enviado para stdout. Com `--output`, o destino é
+sempre explícito.
 
-The skill:
-1. Loads `graphify-out/graph.json` to understand dependencies
-2. Reads `GRAPH_REPORT.md` for architecture patterns
-3. Extracts golden rules from `claude.md`
-4. Generates pseudocode based on the requested feature
-5. Saves to `docs/pseudocode/[Feature].md`
-
-## Output Structure
-
-Generated pseudocode includes:
-- Objective (what this component does)
-- Mentor note (why this pattern matters)
-- XML doc structure with examples
-- Extended pseudocode (not compressed)
-- Implementation notes (testing, error handling, DI)
-- Checklist (verification points)
-- Next steps
-
-## Style
-
-All pseudocode follows your established patterns:
-- Classes and methods in English
-- Comments in Portuguese (PT-PT)
-- `MÉTODO ASYNC`, `CAMPO PRIVADO SÓ-LEITURA` notation
-- `Result<T>` pattern for business failures
-- Dependency Injection in constructors
-- Atomic database operations
-- No hardcoding
-
-## Integration
-
-This skill is designed to work with:
-- `graphify` (graph generation)
-- Your `claude.md` golden rules
-- Clean Architecture structure
-- Your existing `05-use-cases.md` style reference
+O skeleton gerado deve ser completado depois de inspecionar o código e as fontes
+canónicas do projeto.

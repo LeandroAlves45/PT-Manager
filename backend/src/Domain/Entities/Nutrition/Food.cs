@@ -1,4 +1,5 @@
 using Domain.Exceptions;
+using Domain.ValueObjects;
 
 namespace Domain.Entities.Nutrition;
 
@@ -23,6 +24,10 @@ public sealed class Food
     public decimal Kcal { get; private set; }
     public decimal? Fiber { get; private set; }
     public bool IsActive { get; private set; }
+    public PlatformEnforcementStatus PlatformEnforcementStatus { get; private set; } =
+        PlatformEnforcementStatus.Allowed;
+    public PlatformEnforcementReason? PlatformEnforcementReason { get; private set; }
+    public DateTime? PlatformEnforcedAt { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -55,6 +60,7 @@ public sealed class Food
         Fats = fats;
         Fiber = fiber;
         IsActive = true;
+        PlatformEnforcementStatus = PlatformEnforcementStatus.Allowed;
         CreatedAt = now;
         UpdatedAt = now;
     }
@@ -89,6 +95,38 @@ public sealed class Food
             return;
         IsActive = isActive;
         UpdatedAt = now;
+    }
+
+    /// <summary>Bloqueia conteúdo privado; o mesmo motivo não cria uma nova transição.</summary>
+    public bool Block(PlatformEnforcementReason reason, DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(reason);
+
+        if (!OwnerTrainerId.HasValue)
+            throw new DomainException("Only private catalog food can be blocked by platform enforcement.");
+
+        if (PlatformEnforcementStatus == PlatformEnforcementStatus.Blocked &&
+            PlatformEnforcementReason == reason)
+            return false;
+
+        PlatformEnforcementStatus = PlatformEnforcementStatus.Blocked;
+        PlatformEnforcementReason = reason;
+        PlatformEnforcedAt = now;
+        UpdatedAt = now;
+        return true;
+    }
+
+    /// <summary>Remove o bloqueio sem reativar o conteúdo arquivado pelo personal trainer.</summary>
+    public bool Unblock(DateTime now)
+    {
+        if (PlatformEnforcementStatus == PlatformEnforcementStatus.Allowed)
+            return false;
+
+        PlatformEnforcementStatus = PlatformEnforcementStatus.Allowed;
+        PlatformEnforcementReason = null;
+        PlatformEnforcedAt = null;
+        UpdatedAt = now;
+        return true;
     }
 
     /// <summary>Valida os parâmetros do alimento.</summary>

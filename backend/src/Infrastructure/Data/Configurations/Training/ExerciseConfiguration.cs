@@ -12,7 +12,17 @@ internal sealed class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
 {
     public void Configure(EntityTypeBuilder<Exercise> builder)
     {
-        builder.ToTable("exercises");
+        builder.ToTable("exercises", table =>
+            table.HasCheckConstraint(
+                "ck_exercises_platform_enforcement",
+                "(platform_enforcement_status = 'allowed' AND platform_enforcement_reason IS NULL " +
+                "AND platform_enforced_at IS NULL) OR " +
+                "(platform_enforcement_status = 'blocked' AND owner_trainer_id IS NOT NULL " +
+                "AND platform_enforcement_reason IS NOT NULL " +
+                "AND platform_enforcement_reason IN ('malicious_content', 'dangerous_information', " +
+                "'deliberately_false_information', 'prohibited_content') AND platform_enforced_at IS NOT NULL)"
+            ));
+
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id)
             .HasColumnName("id")
@@ -49,6 +59,22 @@ internal sealed class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
             .HasColumnName("is_active")
             .HasDefaultValue(true)
             .IsRequired();
+
+        builder.Property(e => e.PlatformEnforcementStatus)
+            .HasColumnName("platform_enforcement_status")
+            .HasMaxLength(20)
+            .HasConversion(status => status.Value, value => Domain.ValueObjects.PlatformEnforcementStatus.FromString(value))
+            .HasDefaultValue(Domain.ValueObjects.PlatformEnforcementStatus.Allowed)
+            .IsRequired();
+
+        builder.Property(e => e.PlatformEnforcementReason)
+            .HasColumnName("platform_enforcement_reason")
+            .HasMaxLength(50)
+            .HasConversion(reason => reason == null ? null : reason.Value,
+                value => value == null ? null : Domain.ValueObjects.PlatformEnforcementReason.FromString(value));
+
+        builder.Property(e => e.PlatformEnforcedAt)
+            .HasColumnName("platform_enforced_at");
 
         builder.Property(e => e.CreatedAt)
             .HasColumnName("created_at")

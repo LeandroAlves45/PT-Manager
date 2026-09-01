@@ -24,6 +24,8 @@ public static class FoodMappings
             food.Kcal,
             food.Fiber,
             food.IsActive,
+            food.PlatformEnforcementStatus.Value,
+            food.PlatformEnforcementReason?.Value,
             food.CreatedAt,
             food.UpdatedAt
         );

@@ -1,4 +1,6 @@
 using Domain.Exceptions;
+using Domain.ValueObjects;
+
 namespace Domain.Entities.Training;
 
 /// <summary>
@@ -15,6 +17,10 @@ public sealed class Exercise
     public string? DifficultyLevel { get; private set; }
     public string? VideoUrl { get; private set; }
     public bool IsActive { get; private set; }
+    public PlatformEnforcementStatus PlatformEnforcementStatus { get; private set; } =
+        PlatformEnforcementStatus.Allowed;
+    public PlatformEnforcementReason? PlatformEnforcementReason { get; private set; }
+    public DateTime? PlatformEnforcedAt { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -41,6 +47,7 @@ public sealed class Exercise
         OwnerTrainerId = ownerTrainerId;
         SetFields(name, description, muscleGroups, equipment, difficultyLevel, videoUrl);
         IsActive = true;
+        PlatformEnforcementStatus = PlatformEnforcementStatus.Allowed;
         CreatedAt = now;
         UpdatedAt = now;
     }
@@ -67,6 +74,38 @@ public sealed class Exercise
             return;
         IsActive = isActive;
         UpdatedAt = now;
+    }
+
+    /// <summary>Bloqueia conteúdo privado; o mesmo motivo não cria uma nova transição.</summary>
+    public bool Block(PlatformEnforcementReason reason, DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(reason);
+
+        if (!OwnerTrainerId.HasValue)
+            throw new DomainException("Only private catalog exercise can be blocked by platform enforcement.");
+
+        if (PlatformEnforcementStatus == PlatformEnforcementStatus.Blocked &&
+            PlatformEnforcementReason == reason)
+            return false;
+
+        PlatformEnforcementStatus = PlatformEnforcementStatus.Blocked;
+        PlatformEnforcementReason = reason;
+        PlatformEnforcedAt = now;
+        UpdatedAt = now;
+        return true;
+    }
+
+    /// <summary>Remove o bloqueio sem reativar o conteúdo arquivado pelo personal trainer.</summary>
+    public bool Unblock(DateTime now)
+    {
+        if (PlatformEnforcementStatus == PlatformEnforcementStatus.Allowed)
+            return false;
+
+        PlatformEnforcementStatus = PlatformEnforcementStatus.Allowed;
+        PlatformEnforcementReason = null;
+        PlatformEnforcedAt = null;
+        UpdatedAt = now;
+        return true;
     }
 
     /// <summary>Valida os parâmetros de criação/atualização do exercício.</summary>

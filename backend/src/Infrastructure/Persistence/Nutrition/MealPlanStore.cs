@@ -12,10 +12,8 @@ internal sealed class MealPlanStore : IMealPlanStore
 {
     private readonly PtManagerDbContext _dbContext;
 
-    public MealPlanStore(PtManagerDbContext dbContext)
-    {
+    public MealPlanStore(PtManagerDbContext dbContext) =>
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
 
     public async Task<MealPlanStoreResult> CreateAsync(
         Guid trainerId,
@@ -257,7 +255,8 @@ internal sealed class MealPlanStore : IMealPlanStore
         if (foods.Select(food => food.Id).ToHashSet().SetEquals(foodIds)
             && supplements.Select(item => item.Id).ToHashSet().SetEquals(supplementIds))
         {
-            return foods.Any(food => !food.IsActive)
+            return foods.Any(food => !food.IsActive ||
+                    food.PlatformEnforcementStatus == Domain.ValueObjects.PlatformEnforcementStatus.Blocked)
                 || supplements.Any(item => !item.IsActive)
                 ? CatalogReferenceStatus.Inactive
                 : CatalogReferenceStatus.Valid;

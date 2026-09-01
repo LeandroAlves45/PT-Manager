@@ -286,7 +286,8 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
         if (!rows.Select(row => row.Id).ToHashSet().SetEquals(exerciseIds))
             return ExerciseReferenceStatus.NotFound;
 
-        return rows.Any(row => !row.IsActive)
+        return rows.Any(row => !row.IsActive ||
+                row.PlatformEnforcementStatus == Domain.ValueObjects.PlatformEnforcementStatus.Blocked)
             ? ExerciseReferenceStatus.Inactive
             : ExerciseReferenceStatus.Valid;
     }

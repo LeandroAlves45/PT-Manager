@@ -22,7 +22,7 @@ Generates extended pseudocode for Chatbot project components following Clean Arc
 3. The skill generates a .md file with:
    - Extended pseudocode following your style
    - XML/JSDoc structure suggestions
-   - WHY comments explaining decisions
+   - Why (not WHY implicit, bad design)comments explaining decisions
    - Mentor notes for learning
    - Implementation checklist
 

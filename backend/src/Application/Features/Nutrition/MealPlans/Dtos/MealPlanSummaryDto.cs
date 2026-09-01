@@ -14,6 +14,7 @@ public sealed record MealPlanSummaryDto(
     decimal FatsTargetGrams,
     bool IsActive,
     bool IsArchived,
+    bool NeedsReview,
     DateTime CreatedAt,
     DateTime UpdatedAt
 );

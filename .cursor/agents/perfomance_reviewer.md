@@ -94,7 +94,7 @@ End with the single highest-impact fix to do first.
 **Verbose**:
 
 For each finding:
-- **Impact**: High / Medium / Low, with WHY ("runs per request", "called once at startup, low impact").
+- **Impact**: High / Medium / Low ("runs per request", "called once at startup, low impact").
 - **File:Line**: exact location.
 - **Issue**: what's slow ("await inside a `for` loop makes N sequential DB calls for N items").
 - **Fix**: specific code change.
