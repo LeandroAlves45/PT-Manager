@@ -1,0 +1,56 @@
+sprint: 4
+phase: 4
+status: documented-not-implemented
+updated: "2026-09-02"
+
+counts:
+  use_cases: 115
+  endpoints: 115
+  exclusions_sprint_5: 4
+  quality_gates: 75
+  sub_lots: 4
+
+sub_lots:
+  - id: 4A
+    docs: ["01", "02", "03"]
+    use_cases: 18
+    gate: "03_gate_4A.md"
+  - id: 4B
+    docs: ["04", "05", "06"]
+    use_cases: 20
+    gate: "06_gate_4B.md"
+  - id: 4C
+    docs: ["07", "08", "09"]
+    use_cases: 45
+    gate: "09_gate_4C.md"
+  - id: 4D
+    docs: ["10", "11", "12", "13", "14", "15"]
+    use_cases: 32
+    gate: "13_gate_4D.md"
+
+artifacts:
+  active_card: .claude/memory/ACTIVE.md
+  session: .claude/memory/Sessions/2026-09-02-fase4-blueprints-completos.md
+  blueprints_dir: docs/backend-files/sprint_4/fase_4/
+  quality_gates: backlogs/QualityGates.md
+
+blockers:
+  - id: BLK-4A-001
+    summary: "JWT claim trainerId vs trainer_id"
+    fix_in: "01_fundacoes_api_partilhadas.md"
+
+paths:
+  create_or_modify:
+    - backend/src/Api/Controllers/
+    - backend/src/Api/Contracts/
+    - backend/src/Application/Features/ClientPortal/
+    - backend/tests/Api.FunctionalTests/
+  existing_baseline:
+    - backend/src/Api/Controllers/AuthController.cs
+    - backend/src/Api/Controllers/AdminContentModerationController.cs
+
+excluded_handlers_sprint_5:
+  - ReplaceLogo
+  - CreateCheckout
+  - CreateCustomerPortal
+  - ProcessPaymentWebhook

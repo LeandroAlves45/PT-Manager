@@ -16,8 +16,9 @@ searching for missing signatures, rules or method bodies.
 3. Read `.claude/memory/Patterns/blueprints_pseudocodigo_por_ficheiro.md`.
 4. Treat `backend-python/` only as optional flow discovery. Never use it as the
    target contract or architecture.
-5. Prefer the actual source graph and code. Use `graphify-out/` only when it is
-   current and useful; the skill must still work without it.
+5. Prefer the actual source graph and code. Use `graphify-out/` only when current
+   (see `.claude/project/sprints/GRAPHIFY.md` and `graphify-pseudocode/README.md`).
+   The skill must still work without it.
 
 ## Mandatory structure per target file
 

@@ -12,12 +12,17 @@ define como iniciar sessões e resolver ambiguidades operacionais.
 
 1. Pedido explícito do utilizador
 2. `AGENTS.md`
-3. `.claude/memory/MEMORY.md`
-4. Nota relevante em `.claude/memory/Sessions/` (a mais recente do sprint/fase activo)
-5. `git status --short` e diff dos ficheiros tocados
-6. Documento canónico da tarefa (`.claude/project/00…03`)
-7. Código actual nos caminhos afectados
-8. `docs/backend-files/...` e gates — **só como plano ou blueprint**, nunca como estado
+3. `.claude/memory/ACTIVE.md` — fase activa, sub-lote, blockers e ordem de leitura
+4. `.claude/memory/MEMORY.md`
+5. Sprint Pack activo (`.claude/project/sprints/.../README.md` + `surface.yaml`)
+6. Nota relevante em `.claude/memory/Sessions/` (referenciada em ACTIVE)
+7. `git status --short` e diff dos ficheiros tocados
+8. Documento canónico da tarefa (`.claude/project/00…03`, secção relevante)
+9. Código actual nos caminhos do pack ou pedido — **não** grep global
+10. `docs/backend-files/...` e gates — **só como plano ou blueprint**, nunca como estado
+
+Tarefas de sprint/fase: seguir também `.cursor/rules/sprint-workflow.mdc` e skill
+`sprint-context`.
 
 ## Resolução de conflitos
 
@@ -46,6 +51,9 @@ Se memória ou plano contradizerem código ou docs canónicos, prevalecem estes
 
 | Tarefa | Além do bootstrap |
 |---|---|
+| Planear / rever fase | ACTIVE + Sprint Pack; skill `sprint-context` modo `plan` |
+| Gerar blueprints | + Patterns; skill `graphify-pseudocode` |
+| Review de sub-lote | Gate em `docs/...`; skill `sprint-context` modo `review` |
 | Auth / segurança | `00_ARCHITECTURE.md` (auth) + sessão Sprint 4 mais recente |
 | Migration EF | `01_DATABASE_SCHEMA.md` + sessões sobre armadilhas EF |
 | Novo endpoint | contrato HTTP + Python só para inventariar payload |

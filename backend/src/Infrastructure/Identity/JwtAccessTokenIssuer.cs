@@ -65,6 +65,6 @@ internal sealed class JwtAccessTokenIssuer : IAccessTokenIssuer
     internal static class ClaimNames
     {
         internal const string Role = "role";
-        internal const string TrainerId = "trainerId";
+        internal const string TrainerId = "trainer_id";
     }
 }

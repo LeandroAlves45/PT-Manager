@@ -1,8 +1,11 @@
 using System.Security.Cryptography;
 using Application.Features.Authentication.Abstractions;
+using Infrastructure.Data;
+using Infrastructure.Data.Interceptors;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http;
 
@@ -86,6 +89,20 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
                 nameof(IAuthenticationEmailSender),
                 options => options.HttpMessageHandlerBuilderActions.Add(
                     handlerBuilder => handlerBuilder.PrimaryHandler = EmailRequests));
+
+            services.AddSingleton<CommandCountingInterceptor>();
+            services.AddDbContext<PtManagerDbContext>((provider, options) =>
+            {
+                options.UseNpgsql(_connectionString, npgsql =>
+                {
+                    npgsql.MigrationsAssembly(typeof(PtManagerDbContext).Assembly.FullName);
+                    npgsql.EnableRetryOnFailure(maxRetryCount: 3);
+                });
+
+                options.AddInterceptors(
+                    provider.GetRequiredService<TenantWriteValidationInterceptor>(),
+                    provider.GetRequiredService<CommandCountingInterceptor>());
+            });
         });
     }
 

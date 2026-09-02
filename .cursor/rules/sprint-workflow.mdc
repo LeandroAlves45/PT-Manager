@@ -1,0 +1,42 @@
+---
+description: Workflow por fase — plan, blueprint, implement, review; entrada ACTIVE.md
+alwaysApply: true
+---
+
+# Sprint workflow (PT Manager)
+
+Complementa `memory-and-sources.mdc`. Define **modos** e **limites de exploração**.
+
+## Entrada obrigatória
+
+Antes de planear, gerar blueprints ou rever uma fase:
+
+1. `.claude/memory/ACTIVE.md`
+2. Sprint Pack referenciado (`.claude/project/sprints/.../README.md`)
+3. Skill `sprint-context` quando a tarefa envolve sprint, fase, sub-lote ou gate
+
+## Modos
+
+| Modo | Ferramentas típicas | Exploração permitida |
+|---|---|---|
+| **plan** | Claude, Codex | Só ACTIVE + pack + sessão + índice `docs/.../00_*` |
+| **blueprint** | Claude, Codex | + Patterns + paths em `surface.yaml` |
+| **implement** | Utilizador; Cursor para dúvidas | Doc N + ficheiros alvo do doc |
+| **review** | Claude, Codex (completa); Cursor (local) | Gate + testes + diff; correr `dotnet test` |
+
+## Proibido por defeito
+
+- Grep ou listagem recursiva de `backend/` sem path explícito do pack ou do pedido
+- Tratar `docs/backend-files/` como estado implementado
+- Usar `graphify-out/` desatualizado (ver `.claude/project/sprints/GRAPHIFY.md`)
+- Duplicar conteúdo de `.claude/project/` em respostas longas — apontar o ficheiro
+
+## Fonte canónica única
+
+- Project docs: `.claude/project/` (não `.cursor/project/`)
+- Memória: `.claude/memory/`
+- Blueprints integrais: `docs/backend-files/` (local)
+
+## Ao fechar marco
+
+Actualizar `ACTIVE.md` + nota em `.claude/memory/Sessions/`.

@@ -38,10 +38,13 @@ O código Python e as migrations antigas não definem a arquitetura de destino.
 ## Início de sessão e investigação
 
 1. Ler este `AGENTS.md`.
-2. Ler `.claude/memory/MEMORY.md` (memória operacional principal, partilhada por qualquer agente).
-3. Verificar `git status --short` antes de alterar ficheiros.
-4. Ler apenas a documentação e o código estritamente necessários.
-5. Se a memória contradisser o código atual ou os documentos canónicos, prevalecem
+2. Ler `.claude/memory/ACTIVE.md` (fase activa, sub-lote e ordem de leitura).
+3. Ler `.claude/memory/MEMORY.md` (memória operacional principal, partilhada por qualquer agente).
+4. Ler o Sprint Pack activo em `.claude/project/sprints/` quando a tarefa for sprint, fase,
+   blueprint ou review (skill `sprint-context`).
+5. Verificar `git status --short` antes de alterar ficheiros.
+6. Ler apenas a documentação e o código nos caminhos do pack ou do pedido — evitar grep global.
+7. Se a memória contradisser o código atual ou os documentos canónicos, prevalecem
    os documentos e o código atual.
 
 ## Arquitetura obrigatória

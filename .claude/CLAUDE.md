@@ -6,6 +6,14 @@ Deploy (MVP, todos free tier): Render (backend) + Vercel (frontend) + Neon (Post
 
 Graph location: C:\Users\Leandro Alves\Desktop\Projeto pt_manager\Projeto_pt_manager\graphify-out
 
+Regenerar no fecho de cada Sprint — ver `.claude/project/sprints/GRAPHIFY.md`.
+
+## Contexto de sprint (ler primeiro)
+
+1. `.claude/memory/ACTIVE.md` — fase activa e sub-lote
+2. Sprint Pack em `.claude/project/sprints/`
+3. Skill `sprint-context` para plan, blueprint ou review
+
 ## Memória
 
 Sistema persistente em `.claude/memory/` (índice `MEMORY.md` + notas de sessão em `Sessions/`), complementado pelo plugin claude-mem.

@@ -4,6 +4,11 @@ O código e os documentos em `.claude/project/` são as fontes de verdade. Esta
 memória é um índice operacional conciso; detalhes e evidência permanecem nas
 notas de `.claude/memory/Sessions/`.
 
+## Entrada rápida
+
+**Fase activa:** ler primeiro `.claude/memory/ACTIVE.md` (sub-lote, blockers,
+ordem de leitura). Sprint Pack: `.claude/project/sprints/sprint-4/fase-4/`.
+
 ## Estado atual
 
 - Backend alvo em .NET 10 e C# 14, com Domain, Application, Infrastructure e
@@ -130,6 +135,30 @@ notas de `.claude/memory/Sessions/`.
     build Release sem warnings, `dotnet format` limpo. 15 gates QG3 fechados;
     3 anotados como parciais e não bloqueantes. Evidência em
     `Sessions/2026-09-01-sprint4-fase3-fecho.md`.
+17. Sprint 4, Fase 4 planeada (2026-09-01): 115 casos de uso de negócio sem
+    controller, divididos em quatro sub-lotes com gate próprio e aprovação
+    explícita entre cada um. Documentos `00` a `03` escritos. **Achado
+    bloqueante, ainda por corrigir:** `JwtAccessTokenIssuer` emite a claim
+    `trainerId` mas `ApiClaimNames`/`TenantContextMiddleware` exigem
+    `trainer_id`, com `MapInboundClaims = false` — todo o pedido autenticado de
+    trainer ou cliente falha com um token real. Não foi detetado porque nenhum
+    teste atravessa emissor e middleware. Evidência em
+    `Sessions/2026-09-01-sprint4-fase4-planeamento.md`.
+18. Sprint 4, Fase 4 documentada por completo (2026-09-02): os doze documentos
+    em falta (`04` a `15`) escritos em `docs/backend-files/sprint_4/fase_4/`,
+    totalizando dezasseis documentos e cerca de 9260 linhas. Superfície
+    documentada: **115 endpoints de negócio** para 119 casos de uso (115
+    existentes mais 4 novos client-scoped do portal), com quatro exclusões
+    justificadas, todas do Sprint 5: `ReplaceLogo`, `CreateCheckout`,
+    `CreateCustomerPortal` e `ProcessPaymentWebhook`. O documento `11` é o único
+    que cria código novo na Application. `backlogs/QualityGates.md` passou de
+    cinco linhas placeholder para **75 gates concretos**. **Nada implementado em
+    `backend/`** — `docs/` e `backlogs/` estão no `.gitignore`, pelo que um
+    `git status` limpo não é prova de que nada foi escrito. Duas decisões ficam
+    pendentes do utilizador: adaptadores de Infrastructure das quatro portas do
+    portal, e binder de paginação partilhado (o bloco de normalização está em
+    onze controllers). Evidência em
+    `Sessions/2026-09-02-fase4-blueprints-completos.md`.
 
 O gate final do Lote 3E aprovou build Release sem warnings, formatação e 1065
 testes: 365 Domain, 365 Application, 311 integração PostgreSQL e 24 arquitetura.
@@ -243,8 +272,13 @@ alegações anteriores desatualizadas está em
 - Sprint 4 Fase 2 FINALIZADA (auth local; 2 bugs críticos de CSRF corrigidos,
   migration `20260831131824_AddRefreshSessionCsrf` validada, 1310 testes verdes):
   `Sessions/2026-08-31-sprint4-fase2-finalizada.md`.
-- Sprint 4 Fase 3 planeada, ainda não implementada:
-  `Sessions/2026-09-01-sprint4-fase3-blueprints.md`.
+- Sprint 4 Fase 3 implementada e fechada (moderação de catálogo privado;
+  2 defeitos reais corrigidos, migration `AddPrivateCatalogEnforcement`
+  validada, 1385 testes verdes):
+  `Sessions/2026-09-01-sprint4-fase3-fecho.md`.
+- Sprint 4 Fase 4 documentada e por implementar (controllers de negócio e
+  Client Portal; 16 blueprints, 115 endpoints, 75 quality gates):
+  `Sessions/2026-09-02-fase4-blueprints-completos.md`.
 
 ## Padrões documentais
 

@@ -10,14 +10,15 @@ searching for missing signatures, rules or method bodies.
 
 ## Required preparation
 
-1. Read `AGENTS.md`, `.claude/memory/MEMORY.md` and the relevant canonical files
-   under `.claude/project/`.
+1. Read `AGENTS.md`, `.claude/memory/ACTIVE.md`, `.claude/memory/MEMORY.md` and the
+   relevant Sprint Pack under `.claude/project/sprints/`.
 2. Inspect the real code, tests and `git status --short` before describing a file.
 3. Read `.claude/memory/Patterns/blueprints_pseudocodigo_por_ficheiro.md`.
 4. Treat `backend-python/` only as optional flow discovery. Never use it as the
    target contract or architecture.
-5. Prefer the actual source graph and code. Use `graphify-out/` only when it is
-   current and useful; the skill must still work without it.
+5. Prefer the actual source graph and code. Use `graphify-out/` only when current
+   (see `.claude/project/sprints/GRAPHIFY.md` and `graphify-pseudocode/README.md`).
+   The skill must still work without it.
 
 ## Mandatory structure per target file
 

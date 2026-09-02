@@ -1,72 +1,90 @@
 # Graphify Pseudocode Skill
 
-Generates extended pseudocode for Chatbot project components following Clean Architecture patterns and your specific style.
+Skill do PT Manager para blueprints de pseudocódigo alargado por ficheiro real.
+Complementa `sprint-context` (modo `blueprint`).
 
-## Quick Start
+## Preparação obrigatória
 
-1. Ensure the project has been analyzed with Graphify:
-   ```bash
-   graphify . --code-only
-   graphify cluster-only .
-   ```
+1. `.claude/memory/ACTIVE.md` e Sprint Pack activo
+2. Código real e `git status --short`
+3. `.claude/memory/Patterns/blueprints_pseudocodigo_por_ficheiro.md` (ou
+   `blueprints_codigo_real_por_ficheiro.md` se pedido código integral)
+4. `graphify-out/` **só se actualizado** (ver abaixo)
 
-2. Use the skill when implementing new features:
-   ```
-   Feature: SendMessageUseCase
-   Context: Application.UseCases
-   File location: docs/pseudocode/SendMessageUseCase.md
-   Learning focus: Atomic transactions + Result pattern + IAnthropicService
-   Dependencies: IConversationRepository, IMessageRepository, IAnthropicService
-   ```
+## Regenerar o grafo (graphify 0.9.x)
 
-3. The skill generates a .md file with:
-   - Extended pseudocode following your style
-   - XML/JSDoc structure suggestions
-   - Why (not WHY implicit, bad design)comments explaining decisions
-   - Mentor notes for learning
-   - Implementation checklist
+**Quando:** fecho de cada Sprint, não por fase intermédia.  
+**Onde:** raiz do repositório. Detalhe completo em `.claude/project/sprints/GRAPHIFY.md`.
 
-## Files
+```powershell
+# 1. Extracção AST (sem LLM, sem API key)
+graphify extract . --code-only --no-cluster
 
-- `SKILL.md` — Skill definition and usage guide
-- `scripts/pseudocode_generator.py` — Core generation logic
-- `README.md` — This file
+# 2. Clustering + GRAPH_REPORT.md
+graphify cluster-only . --no-label
 
-## Architecture
+# Opcional: nomes de comunidades com LLM
+graphify label .
+```
 
-The skill:
-1. Loads `graphify-out/graph.json` to understand dependencies
-2. Reads `GRAPH_REPORT.md` for architecture patterns
-3. Extracts golden rules from `claude.md`
-4. Generates pseudocode based on the requested feature
-5. Saves to `docs/pseudocode/[Feature].md`
+**Saída:** `graphify-out/graph.json`, `graphify-out/GRAPH_REPORT.md`.  
+Com >5000 nós, `graph.html` não é gerado — usar `graphify explain "X"`.
 
-## Output Structure
+**Validação rápida:**
 
-Generated pseudocode includes:
-- Objective (what this component does)
-- Mentor note (why this pattern matters)
-- XML doc structure with examples
-- Extended pseudocode (not compressed)
-- Implementation notes (testing, error handling, DI)
-- Checklist (verification points)
-- Next steps
+```powershell
+graphify explain "AuthController"
+graphify explain "JwtAccessTokenIssuer"
+```
 
-## Style
+Última geração conhecida: 2026-09-02 (9262 nós, 508 comunidades).
 
-All pseudocode follows your established patterns:
-- Classes and methods in English
-- Comments in Portuguese (PT-PT)
-- `MÉTODO ASYNC`, `CAMPO PRIVADO SÓ-LEITURA` notation
-- `Result<T>` pattern for business failures
-- Dependency Injection in constructors
-- Atomic database operations
-- No hardcoding
+## Contrato de output
 
-## Integration
+Cada target contém:
 
-This skill is designed to work with:
-- `graphify` (graph generation)
-- Your `claude.md` golden rules
-- Clean Architecture structure
-- Your existing `05-use-cases.md` style reference
+1. Caminho exacto a partir da raiz do repo
+2. Estado: `existing`, `incomplete` ou `to create`
+3. Camada e responsabilidade
+4. Um único bloco contínuo com o ficheiro completo
+5. Notas de mentor
+6. Validações específicas
+
+XML Docs (C#) ou JSDoc (frontend), assinaturas, regras, corpos, falhas e
+transações ficam no **mesmo bloco**. Sem migrations escritas à mão.
+
+## Uso do grafo na skill
+
+| Serve para | Não serve para |
+|---|---|
+| Dependências entre handlers/stores | Estado do sprint |
+| Impacto de alteração | Decisões de negócio |
+| Ordem relativa de ficheiros | Substituir leitura do código real |
+
+Se `graph.json` for anterior ao último fecho de Sprint, **ignorar** e usar
+`surface.yaml` do Sprint Pack.
+
+## Gerador opcional (skeleton)
+
+```powershell
+python .cursor/skills/graphify-pseudocode/scripts/pseudocode_generator.py `
+  --feature CreateMealPlanHandler `
+  --layer Application `
+  --file-path backend/src/Application/Features/Nutrition/CreateMealPlan/CreateMealPlanHandler.cs `
+  --state "to create"
+```
+
+Sem `--output` → stdout. Com `--output` → destino explícito.  
+Completar sempre com inspecção do código e fontes canónicas.
+
+## Ficheiros
+
+- `SKILL.md` — definição e regras de output
+- `scripts/pseudocode_generator.py` — skeleton opcional
+- `README.md` — este ficheiro
+
+## Integração
+
+- `sprint-context` — bootstrap e modos plan/blueprint/review
+- `AGENTS.md` — arquitectura e contrato HTTP
+- Blueprints integrais → `docs/backend-files/` (local, gitignored)

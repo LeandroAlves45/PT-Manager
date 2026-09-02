@@ -23,9 +23,12 @@ Registar a contradição e corrigir a memória desatualizada em vez de adaptar c
 
 ```
 .claude/memory/
-├── MEMORY.md    # índice, ponto de partida de cada sessão
+├── ACTIVE.md    # fase activa — ler antes de MEMORY.md em tarefas de sprint
+├── MEMORY.md    # índice, ponto de partida geral
 ├── Sessions/    # uma nota datada por sessão relevante (YYYY-MM-DD-topico.md)
 └── Patterns/    # padrões reutilizáveis documentados (blueprints, convenções)
+
+.claude/project/sprints/   # Sprint Packs versionados (índice por fase)
 ```
 
 Não inventar pastas que não existem no projeto (ex.: Gotchas/, Architecture/, Corrections/). Se um desses tipos de nota passar a fazer falta, criar a pasta só quando houver o primeiro conteúdo real para lá colocar.
@@ -33,8 +36,9 @@ Não inventar pastas que não existem no projeto (ex.: Gotchas/, Architecture/, 
 ## Início de sessão
 
 1. Ler `.claude/memory/MEMORY.md`.
-2. Ler apenas as notas de sessão e padrões relevantes para o pedido atual.
-3. Correr `git status --short` antes de planear alterações.
+2. Ler `.claude/memory/ACTIVE.md` se a tarefa for sprint, fase, blueprint ou review.
+3. Ler apenas as notas de sessão e padrões relevantes para o pedido actual.
+4. Correr `git status --short` antes de planear alterações.
 
 Nunca ler ficheiros protegidos ao carregar contexto.
 
