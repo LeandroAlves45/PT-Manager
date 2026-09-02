@@ -202,3 +202,65 @@ Uma tarefa só está concluída quando:
 - Não fazer refactors grandes fora do âmbito solicitado.
 - Não assumir que um bug é pequeno quando envolve autenticação, tenant, billing ou schema.
 - Não alterar a funcionalidade de um endpoint ou payload sem atualizar frontend, testes e documentação relevantes.
+
+## Cursor Cloud specific instructions
+
+Contexto durável para agentes no ambiente cloud. O *update script* já instalou/atualizou
+as dependências do projeto (NuGet, ferramentas .NET, `node_modules`). As ferramentas de
+sistema (**.NET SDK 10.0.301**, **PostgreSQL 16**, **Docker**) já estão instaladas na imagem.
+Comandos canónicos de build/lint/test/run estão na secção **Comandos** acima; abaixo ficam
+apenas os detalhes não óbvios deste ambiente.
+
+### Arrancar serviços (não estão em execução no arranque)
+
+- PostgreSQL: `sudo pg_ctlcluster 16 main start` (cluster local na porta **5432**).
+  Base de dados de dev `ptmanager_dev`, role `ptmanager` / password `ptmanager_dev_pw`.
+  Os dados e as migrations aplicadas persistem em `/var/lib/postgresql/16/main`.
+- Docker (necessário para os testes de Integration/Functional, que usam Testcontainers
+  com `postgres:17-alpine`): `sudo dockerd > /tmp/dockerd.log 2>&1 &` e, se o utilizador
+  `ubuntu` não tiver acesso ao socket, `sudo chmod 666 /var/run/docker.sock`.
+- API: a partir de `backend/`, `source /home/ubuntu/.ptmanager-dev.env` e depois
+  `dotnet run --project src/Api/Api.csproj` (perfil `http` → **http://localhost:5045**,
+  Scalar em `/scalar`). As migrations nunca correm no arranque; aplicar com
+  `dotnet tool run dotnet-ef database update --project src/Infrastructure/Infrastructure.csproj --startup-project src/Api/Api.csproj`.
+- Frontend: a partir de `frontend/`, `VITE_API_BASE_URL=http://localhost:5045 npm run dev`
+  (**http://localhost:5173**).
+
+### Configuração de dev exigida pela API (falha fechada no arranque)
+
+`Program.cs` valida a configuração no arranque (`ValidateOnStart`). Sem estes valores a API
+não inicia. São placeholders de desenvolvimento (não são segredos reais), guardados em
+`/home/ubuntu/.ptmanager-dev.env` (fora do repo; fazer `source` antes de correr a API):
+
+- `ConnectionStrings__DefaultConnection` → `Host=127.0.0.1;Port=5432;Database=ptmanager_dev;Username=ptmanager;Password=ptmanager_dev_pw`
+- `Jwt__SigningKey` → qualquer chave com ≥ 32 bytes (Issuer/Audience já vêm no `appsettings.json`).
+- `Resend__ApiKey`, `Resend__FromAddress`, `Resend__FrontendBaseUrl` (URL absoluto) — todos obrigatórios.
+- `Cors__AllowedOrigins__0` → **tem de ser um origin HTTPS** (ex.: `https://localhost:5173`);
+  `HasValidOrigins()` rejeita origins não-HTTPS.
+
+### Gotchas descobertos (não óbvios)
+
+- **`npm ci` falha**: o `package-lock.json` foi gerado noutra plataforma (Windows) e diverge
+  em dependências nativas opcionais (`@emnapi/*`). Usar `npm install` (é o que o update script faz).
+- **CORS bloqueia o browser em dev**: como só são aceites origins HTTPS, o SPA servido em
+  `http://localhost:5173` não consegue chamar a API cross-origin a partir do browser. Para
+  E2E autenticado usar chamadas via terminal (curl com header `Origin: https://localhost:5173`),
+  um proxy same-origin, ou HTTPS em ambos os lados. O `AuthController` tem `[RequireOrigin]`,
+  por isso os endpoints de auth exigem o header `Origin` na allowlist.
+- **Email de confirmação**: o signup envia email via Resend e o **login exige email confirmado**.
+  Em dev, apontar `Resend__BaseAddress` para um mock local que devolva 200 (ex.
+  `/home/ubuntu/mock-email-server.py` em `http://localhost:8025/`, que trata `Transfer-Encoding: chunked`),
+  capturar o `token=` do corpo do email e chamar `POST /api/v1/auth/confirm-email`. Rate limit de
+  signup: 3/hora por IP.
+- **Bug pré-existente de claims (bloqueia endpoints autenticados)**: o `JwtAccessTokenIssuer`
+  emite a claim `trainerId` (camelCase), mas o `TenantContextMiddleware` lê `trainer_id`
+  (`ApiClaimNames.TrainerId`). Resultado: qualquer chamada de `trainer`/`client` a um endpoint
+  autorizado devolve `401 "The authenticated identity is invalid."`. Não é problema de ambiente
+  — é uma incoerência no código (fora do âmbito de setup). O fluxo signup → confirm-email → login
+  funciona ponta a ponta; endpoints protegidos por tenant não, até esta claim ser reconciliada.
+- **Contrato frontend/backend**: `frontend/src/api/axiosConfig.js` usa por omissão
+  `http://localhost:8000` (porta legada Python) e alguns paths do frontend (ex.
+  `/api/v1/signup/trainer`) não correspondem às rotas reais (`/api/v1/auth/signup`).
+- **Testes frontend**: `src/lib/helpers.test.js` importa `node:test` e falha a carregar no Vitest
+  (bug do próprio ficheiro de teste); os restantes 27 testes passam. `npm run lint` tem erros
+  pré-existentes no código do repo.
