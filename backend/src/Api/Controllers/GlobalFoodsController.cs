@@ -49,13 +49,12 @@ public sealed class GlobalFoodsController : ApiControllerBase
     public Task<IActionResult> ListAsync(
         [FromQuery(Name = "search")] string? search,
         [FromQuery(Name = "activity")] GlobalFoodActivityFilter activity,
-        [FromQuery(Name = "page_number")] int pageNumber,
-        [FromQuery(Name = "page_size")] int pageSize,
+        [FromQuery] PageParameters pageParameters,
         [FromServices] ListGlobalFoodsHandler handler,
         CancellationToken cancellationToken)
     {
-        var page = pageNumber <= 0 ? 1 : pageNumber;
-        var size = pageSize <= 0 ? 50 : pageSize;
+        var page = pageParameters.EffectivePageNumber;
+        var size = pageParameters.EffectivePageSize;
 
         return RespondAsync(
             handler.HandleAsync(

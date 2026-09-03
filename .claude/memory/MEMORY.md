@@ -6,8 +6,9 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
-**Fase activa:** ler primeiro `.claude/memory/ACTIVE.md` (sub-lote, blockers,
-ordem de leitura). Sprint Pack: `.claude/project/sprints/sprint-4/fase-4/`.
+**Fase activa:** ler primeiro `.claude/memory/ACTIVE.md`. **Sprint 4 Fase 4 fechada
+(2026-09-03)** — ver `Sessions/2026-09-03-fase4-fecho-completo.md` e
+`docs/backend-files/sprint_4/fase_4/16_fase_4_finalizada.md`. Próximo: fase 5.
 
 ## Estado atual
 
@@ -193,29 +194,46 @@ alegações anteriores desatualizadas está em
   `Sessions/2026-08-21-private-catalog-moderation-decision.md` e
   `.claude/project/00_ARCHITECTURE.md` §17.5.
 - PostgreSQL é a fonte de verdade para jobs, outbox, autorização, billing e
-  quotas de negócio. Redis é apenas cache reconstruível e rate limiting; QStash
-  apenas ativa o dispatcher.
+  quotas de negócio. QStash apenas ativa o dispatcher. Redis continua limitado a
+  cache reconstruível e rate limiting, mas a sua implementação saiu do Sprint 5:
+  o Gate 6B decide com métricas do 6A e remete nova avaliação para o Sprint 9B se
+  ainda não existir consumidor medido.
 - Webhooks Stripe exigem raw body, assinatura, deduplicação, idempotência,
   reconciliação e outbox transacional.
 - `TrainerSettings.LogoUrl` e `LogoPublicId` representam apenas media
   personalizado. Null instrui o frontend a usar o seu asset padrão; o backend
   não persiste uma URL global. Detalhe em
   `Sessions/2026-08-21-correcao-final-blueprints-lote-3e.md`.
+- O avatar representa a fotografia de perfil e só pode ser substituído ou
+  removido pelo próprio cliente autenticado. O Sprint 5C implementa upload gerido,
+  moderação síncrona fail-closed e `Client.AvatarPublicId`; apenas `Approved`
+  publica, enquanto `ReviewRequired` e `Unavailable` preservam o avatar anterior.
+  `SensitiveResponse` impede cache HTTP e não classifica conteúdo. O Sprint 5 foi
+  separado em gates 5A dispatcher/outbox, 5B Stripe, 5C imagens e 5D vídeo. Detalhe
+  em `Sessions/2026-09-03-sprint5-avatar-moderado-e-revisao.md`.
 - `IMediaStorage` é uma porta agnóstica ao tipo de media. O logótipo usa upload
   antes da transação, compensação síncrona se a persistência falhar e outbox
   transacional para eliminar o asset anterior.
 - `Exercise.VideoUrl` permanece URL HTTPS externa no Lote 3E, sem download nem
   garantia de validação técnica ou de conteúdo.
-- Upload privado de vídeo fica para o Sprint 5B, depois do Lote 3F, Sprint 4 e
-  integração base do Cloudinary no Sprint 5A. Inclui ownership, integridade,
+- Upload privado de vídeo fica para o Sprint 5D, depois do Lote 3F, Sprint 4 e
+  integração base do Cloudinary no Sprint 5C. Inclui ownership, integridade,
   inspeção real, estados técnicos, jobs, acesso assinado, rate limiting, quotas
   e testes cross-tenant.
-- Moderação automática fica fora do Sprint 5B e do MVP atual. A futura porta da
+- Moderação automática fica fora do Sprint 5D e do MVP atual. A futura porta da
   Application será independente do fornecedor e criada apenas com o primeiro
   consumidor real. Estado técnico e decisão de moderação permanecem separados.
+  A reavaliação está registada no Sprint 9A.
   Decisão completa em
   `Sessions/2026-08-21-exercise-video-upload-decision.md` e
   `.claude/project/00_ARCHITECTURE.md` §17.4.
+- Todo o trabalho diferido tem registo central em
+  `.claude/project/02_SPRINTS_ROADMAP.md`: Sprint 9A para Trust & Safety, 9B para
+  escala e segurança, 9C para produto, administração e compliance e 9D para
+  consolidação de contratos. Cada item conserva origem, destino e critério de
+  entrada. AutoMapper, MediatR,
+  repositório genérico e Unit of Work genérica são decisões rejeitadas, não
+  backlog oculto.
 - `Food`, `Exercise` e `Supplement` usam disponibilidade por `IsActive`, sem
   soft delete. Referências históricas permanecem legíveis; novas referências
   rejeitam itens inativos ou invisíveis ao tenant.
@@ -237,10 +255,11 @@ alegações anteriores desatualizadas está em
   diverge de uma migration gerada. Confirmado em 2026-08-24 com o índice
   `uq_clients_user_active` pendente: 308 de 340 testes de integração
   falharam, incluindo testes sem relação com 3G-A/3G-B.
-- Google Sign-In pertence ao Sprint 4: trainers podem entrar diretamente;
-  clientes exigem convite válido; associação a conta existente é explícita;
-  `sub` é a identidade externa; roles, tenant, JWT e refresh token continuam
-  controlados pelo PT Manager. `PasswordHash` não muda no Lote 3F.
+- Google Sign-In estava planeado para o Sprint 4 e foi diferido para o Sprint 9C.
+  Quando existir implementação, trainers podem entrar diretamente; clientes exigem
+  convite válido; associação a conta existente é explícita; `sub` é a identidade
+  externa; roles, tenant, JWT e refresh token continuam controlados pelo PT Manager.
+  `PasswordHash` não muda no Lote 3F.
 - A política aprovada para novas passwords locais usa mínimo de 8 e máximo de
   128 caracteres. ASP.NET Core Identity permanece a fonte autoritativa; os
   validators de registo, alteração e recuperação repetem estes limites para

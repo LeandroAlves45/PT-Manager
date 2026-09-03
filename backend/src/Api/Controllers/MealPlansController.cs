@@ -49,13 +49,12 @@ public sealed class MealPlansController : ApiControllerBase
         [FromQuery(Name = "client_id")] Guid? clientId,
         [FromQuery(Name = "search")] string? search,
         [FromQuery(Name = "activity")] MealPlanActivityFilter activity,
-        [FromQuery(Name = "page_number")] int pageNumber,
-        [FromQuery(Name = "page_size")] int pageSize,
+        [FromQuery] PageParameters pageParameters,
         [FromServices] ListMealPlansHandler handler,
         CancellationToken cancellationToken)
     {
-        var page = pageNumber <= 0 ? 1 : pageNumber;
-        var size = pageSize <= 0 ? 50 : pageSize;
+        var page = pageParameters.EffectivePageNumber;
+        var size = pageParameters.EffectivePageSize;
 
         return RespondAsync(
             handler.HandleAsync(

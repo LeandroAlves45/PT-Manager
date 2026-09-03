@@ -1,4 +1,4 @@
-# PT Manager — Sprint Roadmap (12 semanas)
+# PT Manager — Sprint Roadmap por gates
 
 *Planeamento Detalhado — Julho 2026 — alinhado com `00_ARCHITECTURE.md` v3.0*
 
@@ -8,9 +8,12 @@
 
 Migração Backend: Python (FastAPI + SQLModel) → C# (.NET 10 + EF Core), modular monolith com Clean Architecture organizada por feature (ver `00_ARCHITECTURE.md §2`).
 
-**Timeline:** 12 semanas (3 meses)
-**Entrega:** Backend MVP em Render (free tier) com Neon PostgreSQL, Upstash Redis, Upstash QStash, Resend, Stripe, Cloudinary
-**Fora do MVP:** RabbitMQ/MassTransit, AutoMapper, MediatR, `IRepository<T>` genérico, PostgreSQL RLS (ver `00_ARCHITECTURE.md §17`)
+**Timeline:** sequência por gates; a estimativa original de 12 semanas é reavaliada no
+fecho do Sprint 4 devido à divisão do Sprint 5 em quatro slices independentes.
+**Entrega MVP:** Backend em Render com Neon PostgreSQL, Upstash QStash, Resend, Stripe
+e Cloudinary. Upstash Redis é condicional ao Gate 6B.
+**Fora do MVP:** capacidades do Sprint 9. AutoMapper, MediatR e `IRepository<T>`
+genérico são decisões rejeitadas, não trabalho diferido.
 
 ---
 
@@ -31,7 +34,7 @@ Preparação técnica. Zero código novo de domínio.
    - Visual Studio 2026 ou VS Code + C# Dev Kit
    - PostgreSQL 17 local (ou Neon branch de teste)
    - Docker (para Testcontainers)
-   - Conta Upstash (Redis + QStash) em modo dev/free
+   - Conta Upstash QStash em modo dev/free; Redis só é necessário se o Gate 6B aprovar a implementação
 
 3. **Setup Inicial**
    ```bash
@@ -285,7 +288,7 @@ Handlers explícitos por caso de uso, DTOs, validação, mapping manual.
    Notifications/EnqueueNotificationHandler.cs
    Authentication/LoginHandler.cs, RefreshTokenHandler.cs, SignupHandler.cs
    ```
-   - Cada handler recebe um DTO de entrada, chama as portas necessárias (repositórios, `IEmailSender`, `IPaymentGateway`, `ICacheService`), devolve `Result`/`Result<T>` (`00_ARCHITECTURE.md §4.3`)
+   - Cada handler recebe um DTO de entrada, chama portas específicas do caso de uso e devolve `Result`/`Result<T>` (`00_ARCHITECTURE.md §4.3`). Não antecipar gateways ou cache genéricos sem consumidor real
    - Sem MediatR: os controllers chamam o handler diretamente via DI
 
 3. **DTOs (`Application/Features/<Feature>/Dtos/`)** — junto ao handler que os usa, não numa pasta `DTOs/` global
@@ -359,10 +362,12 @@ moderação de alimentos e exercícios privados.
    AssessmentsController   /assessments, /checkins
    SupplementsController   /supplements, /client-supplement-assignments
    SessionsController      /sessions
-   AdminController         /admin/trainers, /admin/health (superuser only)
    AdminContentModerationController /admin/content-moderation (superuser + contexto administrativo)
    InternalJobsController  /api/internal/jobs/dispatch (QStash, assinatura validada, sem auth de utilizador)
    ```
+
+   A administração read-only de trainers não entra neste sprint porque não existe
+   handler dedicado. A transferência está registada como `DEF-ADMIN-001`.
 
 5. **Matriz de migração de contrato**
    - Antes de implementar cada controller, classificar os endpoints Python correspondentes como Preserve / Alias / Remove (`00_ARCHITECTURE.md §4.2`)
@@ -411,102 +416,212 @@ moderação de alimentos e exercícios privados.
 
 ---
 
-## SPRINT 5: Jobs Duráveis, Outbox, Serviços Externos e Media (Semana 9)
+## SPRINT 5: Execução Durável, Billing e Media (a partir da Semana 9)
 
 ### Objectivo
-O Sprint 5 divide-se em dois slices. O Sprint 5A entrega o dispatcher de jobs,
-a outbox e as integrações externas base. O Sprint 5B entrega o upload técnico
-de vídeos de exercícios depois de concluídos o Lote 3F, o Sprint 4 e a integração
-base do Cloudinary. **Sem RabbitMQ/MassTransit** (ver `00_ARCHITECTURE.md §9`).
 
-### Tarefas
+O Sprint 5 é entregue em quatro sub-slices com gates independentes. A separação é
+obrigatória porque jobs, billing e processamento de media têm modelos de falha,
+segurança e validação diferentes. A estimativa de uma única semana é reavaliada no
+fecho do Sprint 4; não se fecha um gate por pressão de calendário.
 
-1. **Dispatcher (`Infrastructure/Jobs/`)**
-   ```
-   JobDispatcher.cs          (reclama jobs vencidos com FOR UPDATE SKIP LOCKED, aplica lease, cria scope+TenantContext por job)
-   OutboxDispatcher.cs       (entrega itens pendentes da outbox de forma idempotente)
-   ```
-   - Endpoint `POST /api/internal/jobs/dispatch`: valida assinatura QStash, limita tamanho do body, processa batch limitado, propaga correlation ID, não expõe detalhes na resposta
-   - Entrega at-least-once — handlers de job devem ser idempotentes (chave `idempotency_key`)
-   - Job em `Processing` cujo lease expira volta a ficar elegível (recuperação de falhas do processo)
+Dependências: 5B e 5C só fecham depois do Gate 5A, porque os seus efeitos posteriores
+usam a outbox. O 5D depende dos Gates 5A e 5C. Desenvolvimento independente pode
+avançar antes, mas nenhum gate ignora estas dependências operacionais.
 
-2. **Handlers de job (`Application/Features/Jobs/`)**
-   ```
-   SendNotificationJobHandler.cs
-   ProcessBillingJobHandler.cs
-   ```
+Estado de partida verificado antes do Sprint 5:
 
-3. **External Services (`Infrastructure/ExternalServices/`)**
-   ```
-   ResendEmailSender.cs      implementa IEmailSender
-   StripePaymentGateway.cs   implementa IPaymentGateway, idempotency key por operação de negócio
-   CloudinaryMediaService.cs
-   UpstashRedisCacheService.cs  implementa ICacheService sobre HybridCache + Upstash Redis
-   ```
-   - Todas com timeout e tratamento de erro transitório
-   - Se um SDK não estiver ativamente mantido, preferir `HttpClient` tipado (`00_ARCHITECTURE.md §11`)
+- `DurableJob`, `OutboxMessage`, `IDurableJobStore`, `IOutboxStore` e os respectivos
+  repositórios PostgreSQL já existem. O trabalho em falta é a orquestração do
+  dispatcher, routing por tipo/versão e o endpoint QStash.
+- O email de autenticação já usa `IAuthenticationEmailSender` com
+  `ResendAuthenticationEmailSender`. O envio de notificações de negócio precisa de
+  uma porta própria; não se recria um `IEmailSender` genérico.
+- Billing já expõe `ICheckoutGateway`, `ICustomerPortalGateway` e
+  `ISubscriptionReconciliationGateway`. O adapter Stripe implementa estas portas em
+  vez de introduzir `IPaymentGateway`.
+- `IMediaStorage`, `MediaUpload`, `ReplaceLogoHandler` e `RemoveLogoHandler` já
+  existem. Falta o adapter Cloudinary, a superfície HTTP do logo e o slice do avatar.
+- Não existe `ICacheService` nem um consumidor que justifique cache distribuída. O
+  adapter Redis deixa de ser deliverable obrigatório e só nasce com um caso medido.
 
-4. **Exercise Video Upload, Sprint 5B**
-   - Vertical slice próprio, separado da integração base do Cloudinary
-   - Upload direto do browser para storage privado através de autorização
-     limitada emitida pelo backend
-   - Finalização autenticada confirma ownership do exercício, asset, tamanho
-     real e integridade no storage
-   - Processamento assíncrono valida container, MIME, codec, duração e resolução
-   - Estados técnicos: `Pending`, `Processing`, `Ready`, `Rejected` e `Failed`
-   - Acesso através de URL assinada de curta duração; nunca por path controlado
-     pelo utilizador
-   - Rate limiting por ator, quotas de negócio em PostgreSQL e testes negativos
-     cross-tenant
-   - Limites concretos de tamanho, duração, resolução, formatos, codecs e
-     quotas aprovados antes da implementação
-   - Moderação de conteúdo por AI e `IVideoModerationService` ficam fora deste
-     slice e do MVP atual, conforme `00_ARCHITECTURE.md §17.4`
+**Sem RabbitMQ/MassTransit** (ver `00_ARCHITECTURE.md §9`).
 
-5. **Webhook Stripe**
-   - Lê raw body, valida `Stripe-Signature`, deduplica via `processed_stripe_events`, escreve o outbox message na mesma transação (`00_ARCHITECTURE.md §10.2`)
+### Sprint 5A: Dispatcher, outbox e notificações
 
-6. **Configuration (`Program.cs`)**
-   ```
-   builder.Configuration["Stripe:SecretKey"]
-   builder.Configuration["Resend:ApiKey"]
-   builder.Configuration["Cloudinary:CloudName"]
-   builder.Configuration["Upstash:RedisConnectionString"]
-   builder.Configuration["Upstash:QStashSigningKey"]
-   ```
+1. Implementar `JobDispatcher` e `OutboxDispatcher` sobre as stores existentes.
+2. Usar routing por allowlist de `job_type`/`job_version` e `message_type`; tipos ou
+   versões desconhecidos falham de forma permanente e sanitizada.
+3. Criar um scope e estabelecer `TenantContext` explícito por item. Um tenant ausente
+   só é aceite para tipos internos que o contrato declare como globais.
+4. Preservar entrega at-least-once, idempotency key, lease com owner, renovação antes
+   da expiração, backoff limitado com jitter e `dead_letter` terminal.
+5. Limitar batch, concorrência e duração total da activação. Perder o lease cancela o
+   processamento local e impede marcar o item como concluído.
+6. Expor `POST /api/internal/jobs/dispatch` com raw body limitado, validação da
+   assinatura QStash, protecção contra replay conforme o protocolo do fornecedor,
+   correlation ID e resposta sem detalhes dos itens.
+7. Implementar `SendNotificationJobHandler` e uma porta específica de entrega de
+   notificações. Templates são escolhidos por allowlist e nunca por path recebido no
+   payload.
+8. Não criar `ProcessBillingJobHandler` genérico. Cada mensagem futura de billing terá
+   um handler explícito quando existir um efeito concreto.
 
-7. **Testes**
-   - Reclamação concorrente de jobs (dois dispatchers não processam o mesmo job)
-   - Retry transitório, falha permanente → `dead_letter`
-   - Assinatura QStash inválida rejeitada
-   - Webhook Stripe: evento duplicado, fora de ordem, falha antes/depois do commit
-   - Cache: falha de Redis não impede a operação principal (fallback documentado em `00_ARCHITECTURE.md §8.2`)
-   - Vídeo: upload incompleto, metadata incompatível, ownership incorreto,
-     acesso cross-tenant, transições de estado e limpeza de assets abandonados
-   - Suite base de jobs e integrações, acrescida da suite específica de vídeo
+Gate 5A:
+
+- Dois dispatchers concorrentes não reclamam o mesmo item.
+- Lease expirado recupera; lease perdido não conclui o item.
+- Retry transitório reutiliza a mesma idempotency key; falha permanente termina em
+  `dead_letter` sem expor payload ou segredo nos logs.
+- Tipo e versão desconhecidos são rejeitados de forma determinística.
+- Assinatura inválida, replay e body excessivo não activam o dispatcher.
+- Testes PostgreSQL reais cobrem claim, renovação, conclusão e falha concorrente.
+
+### Sprint 5B: Stripe e billing SaaS
+
+1. Implementar adapters Stripe para `ICheckoutGateway`, `ICustomerPortalGateway` e
+   `ISubscriptionReconciliationGateway`.
+2. Expor Checkout e Customer Portal apenas ao trainer autenticado e derivar o tenant
+   de `ITenantContext`.
+3. Usar idempotency key estável em operações mutáveis, timeout e retry apenas para
+   falhas transitórias; nenhuma transacção PostgreSQL permanece aberta durante uma
+   chamada externa.
+4. Implementar o webhook com raw body, `Stripe-Signature`, versão explícita da API,
+   allowlist de eventos, deduplicação por `event.id`, reconciliação de eventos fora de
+   ordem e outbox na mesma transacção da alteração local.
+5. Registar apenas IDs técnicos necessários e Stripe request ID sanitizado. Segredos,
+   payload integral e dados de pagamento não entram em logs.
+
+Gate 5B:
+
+- Checkout repetido preserva idempotência e associação consistente do customer.
+- Customer Portal não aceita customer ou trainer fornecido pelo caller.
+- Webhook inválido não escreve; evento duplicado é sucesso idempotente.
+- Eventos fora de ordem reconciliam o estado actual antes do commit.
+- Falhas antes e depois do commit têm comportamento de retry provado em PostgreSQL
+  real.
+
+### Sprint 5C: Imagens geridas, logo e avatar moderado
+
+1. Implementar o adapter Cloudinary de `IMediaStorage` com timeout, cancelamento,
+   identificadores gerados pelo servidor e eliminação idempotente.
+2. Expor `ReplaceLogo` e `RemoveLogo` depois de validar o ciclo upload, compensação,
+   commit e eliminação posterior pela outbox.
+3. Criar `ReplaceMyAvatar` e `RemoveMyAvatar` em
+   `Application/Features/ClientPortal/`. Apenas o próprio cliente autenticado pode
+   executar estes casos de uso; trainer e superuser recebem falha de autorização.
+4. Expor `PUT /api/v1/portal/my-profile/avatar` com `multipart/form-data` e
+   `DELETE /api/v1/portal/my-profile/avatar`. Não aceitar `avatar_url`, `client_id` nem
+   `trainer_id` do caller.
+5. Manter `[SensitiveResponse]` nos endpoints para impedir cache, sem o reutilizar como
+   contrato de moderação.
+6. Validar no mínimo tamanho, allowlist inicial `image/jpeg`, `image/png` e
+   `image/webp`, assinatura real, descodificação, dimensões e número máximo de píxeis.
+   O limite inicial de tamanho é 5 MiB, coerente com `ReplaceLogoCommandValidator`;
+   limites de dimensões e transformação final são fechados no blueprint antes de
+   implementar. Metadados EXIF, incluindo geolocalização, são removidos e a imagem é
+   reencodificada antes da publicação.
+7. Criar `IImageModerationService` com `Approved`, `Rejected`, `ReviewRequired` e
+   `Unavailable`. Bloquear nudez explícita, conteúdo sexual e violência gráfica.
+   Categorias e thresholds são configuração controlada pelo servidor, nunca input do
+   cliente.
+8. Aplicar moderação síncrona e fail-closed. Apenas `Approved` publica o avatar;
+   `ReviewRequired` é rejeitado no MVP e `Unavailable` devolve falha temporária. A API
+   não revela scores, thresholds ou categorias internas.
+9. Moderar antes do upload público quando o fornecedor aceitar conteúdo directo. Se
+   exigir URL, usar quarentena privada sem URL pública até à aprovação. A selecção do
+   fornecedor compara privacidade, retenção, região, latência, custo e falsos
+   positivos em fotografias de fitness; prefere-se análise directa do conteúdo.
+10. Acrescentar `Client.AvatarPublicId` e a constraint de par com `AvatarUrl` numa
+    migration EF Core nova gerada neste slice. Não persistir estado de moderação no
+    fluxo síncrono.
+11. Em qualquer falha, manter o avatar anterior. Compensar o novo asset quando o
+    upload já ocorreu e entregar a eliminação do asset anterior pela outbox apenas
+    depois do commit.
+12. Serializar substituições concorrentes sobre a ficha do cliente e voltar a
+    confirmar a referência activa antes de agendar qualquer eliminação.
+13. Aplicar rate limiting específico ao upload para limitar abuso e custos do storage
+    e da moderação.
+
+Gate 5C:
+
+- MIME falso, imagem corrompida, ficheiro vazio, excesso de tamanho/dimensões e actor
+  diferente do próprio cliente são rejeitados antes de alterar o perfil.
+- `Rejected`, `ReviewRequired` e `Unavailable` nunca tornam o asset público nem mudam
+  o avatar activo.
+- Falha de persistência compensa o novo asset; retry não elimina o avatar activo.
+- Duas substituições concorrentes não eliminam o asset que ficar activo.
+- EXIF e geolocalização não permanecem no asset publicado.
+- Replace e Remove são tenant-safe, idempotentes onde aplicável e cobertos com testes
+  negativos cross-tenant.
+- Migrate, rollback e migrate da nova migration passam em PostgreSQL descartável.
+
+### Sprint 5D: Upload técnico de vídeo privado
+
+1. Manter este vertical slice separado das imagens geridas e dependente dos gates 5A
+   e 5C.
+2. Preferir upload directo do browser para storage privado através de autorização
+   limitada emitida pelo backend.
+3. A finalização autenticada confirma ownership do exercício, asset, tamanho real e
+   integridade no fornecedor.
+4. Processar assincronamente container, MIME, codec, duração e resolução através dos
+   jobs duráveis.
+5. Usar estados técnicos `Pending`, `Processing`, `Ready`, `Rejected` e `Failed`, URL
+   assinada de curta duração, rate limiting por actor e quotas autoritativas em
+   PostgreSQL.
+6. Fechar limites concretos de tamanho, duração, resolução, formatos, codecs e quotas
+   antes da implementação.
+7. Manter moderação automática de conteúdo de vídeo fora do MVP. A moderação síncrona
+   aprovada no 5C aplica-se apenas ao avatar.
+
+Gate 5D:
+
+- Upload incompleto, metadata incompatível, ownership incorrecto, acesso cross-tenant,
+  transições inválidas e limpeza de assets abandonados estão cobertos.
+- Retry do processamento é idempotente e a perda de lease não publica um vídeo.
+- Assets não validados permanecem privados e nenhum path controlado pelo utilizador é
+  utilizado.
+
+### Configuração e secrets
+
+Cada adapter valida as suas opções no arranque quando a feature está activa. Secrets
+só vêm da configuração do ambiente, nunca de ficheiros versionados, respostas HTTP ou
+logs. Os nomes exactos das opções são definidos junto do adapter e cobertos por testes
+de configuração. Um fornecedor opcional indisponível não degrada `/health/ready`, mas
+o caso de uso dependente falha de forma explícita e segura.
 
 ### Deliverables
-- ✓ Dispatcher de jobs e outbox funcionando contra Postgres real (Testcontainers)
-- ✓ Endpoint interno validado por assinatura QStash
-- ✓ 4 serviços externos integrados (Resend, Stripe, Cloudinary, Upstash Redis)
-- ✓ Webhook Stripe idempotente e transacional
-- ✓ Upload técnico de vídeo privado concluído no Sprint 5B, sem moderação
-  automática
-- ✓ Testes de jobs, integrações e vídeo passam
 
-### Commits
-- `feat: add durable job dispatcher and outbox pattern`
-- `feat: add QStash-triggered internal dispatch endpoint`
-- `feat: add external service integrations (Resend, Stripe, Cloudinary, Upstash Redis)`
-- `feat: add private exercise video upload and technical processing`
-- `test: add job dispatcher and webhook idempotency tests`
+- Gate 5A: dispatcher e outbox operacionais contra PostgreSQL real, activados por
+  QStash e com entrega de notificações.
+- Gate 5B: Checkout, Customer Portal e webhook Stripe idempotentes e transaccionais.
+- Gate 5C: Cloudinary, logo e avatar exclusivo do cliente com moderação síncrona
+  fail-closed e lifecycle de assets completo.
+- Gate 5D: upload técnico de vídeo privado concluído sem moderação automática.
+- Cache distribuída é transferida explicitamente para o Gate 6B, onde observabilidade
+  e um consumidor concreto determinam se deve ser implementada.
+
+### Commits sugeridos
+
+- `feat: add durable job and outbox dispatchers`
+- `feat: add signed qstash dispatch endpoint`
+- `feat: add notification delivery worker`
+- `feat: integrate stripe billing flows`
+- `feat: add managed image storage and moderated client avatars`
+- `feat: add private exercise video processing`
+- `test: verify sprint 5 integration and failure semantics`
 
 ---
 
-## SPRINT 6: Observabilidade (Semana 10)
+## SPRINT 6: Observabilidade e decisão de resiliência distribuída
 
 ### Objectivo
-Logs estruturados, tracing, error tracking — adequados ao filesystem efémero do Render.
+
+O Sprint 6 divide-se em 6A e 6B. Primeiro mede o sistema real; depois decide e, quando
+justificado, implementa cache e rate limiting distribuídos. Esta ordem evita escolher
+consumidores, TTLs e invalidação sem evidência.
+
+### Sprint 6A: Observabilidade
 
 ### Tarefas
 
@@ -534,23 +649,74 @@ Logs estruturados, tracing, error tracking — adequados ao filesystem efémero 
    ```
 
 6. **Métricas mínimas**
-   - Latência/erros HTTP, duração de queries, pool de ligações, cache hit ratio, jobs pendentes/tentativas/dead-letter, webhooks Stripe duplicados/falhados, falhas de email
+   - Latência/erros HTTP, duração e volume de queries, pool de ligações, saturação do
+     rate limiting local, jobs pendentes/tentativas/dead-letter, webhooks Stripe
+     duplicados/falhados, falhas de email e custos/latência das integrações de media
+
+Gate 6A:
+
+- Logs e traces não contêm passwords, tokens, cookies, API keys, payloads Stripe nem
+  scores de moderação.
+- Métricas permitem identificar endpoints de leitura repetitiva, pressão sobre
+  PostgreSQL e necessidade de coordenação entre instâncias.
+- Falhas dos exporters não interrompem operações de negócio.
+
+### Sprint 6B: HybridCache, Upstash Redis e rate limiting distribuído
+
+O Gate 6B é obrigatório como decisão, mas a implementação é condicional. Analisa as
+medições do 6A e documenta um resultado `Implementar` ou `Não implementar ainda`.
+
+Implementar quando existir pelo menos um destes sinais:
+
+1. Mais de uma instância da API precisa de partilhar limites por actor.
+2. Uma query de leitura repetitiva excede o orçamento de latência ou carga definido
+   no Gate 6A e mantém semântica segura com cache.
+3. O rate limiting local deixa de proteger de forma consistente endpoints com custo
+   externo, como login, email ou moderação de avatar.
+4. Existe um consumidor concreto com estratégia verificável de chave, TTL,
+   invalidação e fallback.
+
+Se a implementação for aprovada:
+
+1. Introduzir portas estreitas por consumidor; não criar um `ICacheService` genérico
+   sem semântica da feature.
+2. Usar HybridCache como camada local e Upstash Redis como coordenação distribuída.
+3. Incluir ambiente e tenant nas chaves, prevenir cache stampede e nunca guardar
+   autorização, refresh tokens, billing, jobs ou outro estado autoritativo.
+4. Aplicar timeouts curtos e fallback para PostgreSQL ou memória local. Uma falha de
+   Redis não bloqueia a operação principal.
+5. Implementar rate limiting distribuído apenas nas policies cujo risco o justifique;
+   quotas comerciais continuam autoritativas em PostgreSQL.
+6. Medir hit ratio, miss, latência, erro, evicção e custo antes e depois da activação.
+
+Se os sinais não existirem, o gate regista a evidência, mantém a implementação local e
+agenda nova avaliação no Sprint 9B. O item não desaparece nem é declarado concluído.
+
+Gate 6B:
+
+- A decisão `Implementar` ou `Não implementar ainda` tem métricas e consumidores
+  concretos associados.
+- Quando implementado, testes provam isolamento de tenant, invalidação, fallback e
+  comportamento com Redis indisponível.
+- O Sprint 8 configura e valida Redis apenas quando a decisão for `Implementar`.
 
 ### Deliverables
 - ✓ Logs estruturados em JSON, sem file sink
 - ✓ Correlation IDs propagados
 - ✓ Sentry + OpenTelemetry ativos
 - ✓ `/health/live` e `/health/ready` distintos e operacionais
-- ✓ ~10 testes passam
+- ✓ Decisão do Gate 6B registada; Redis implementado apenas quando justificado
+- ✓ Testes de observabilidade e, quando aplicável, de cache e rate limiting passam
 
 ### Commits
 - `feat: add structured logging and correlation IDs`
 - `feat: add Sentry and OpenTelemetry instrumentation`
 - `feat: add liveness and readiness health endpoints`
+- `feat: add distributed cache and rate limiting` apenas se o Gate 6B aprovar
 
 ---
 
-## SPRINT 7: Testing + CI/CD (Semana 11)
+## SPRINT 7: Testing + CI/CD (após o Gate 6B)
 
 ### Objectivo
 Suite completa, incluindo testes de arquitetura, pipeline automatizado.
@@ -602,7 +768,7 @@ Suite completa, incluindo testes de arquitetura, pipeline automatizado.
 
 ---
 
-## SPRINT 8: Produção (Semana 12)
+## SPRINT 8: Produção (após o Sprint 7)
 
 ### Objectivo
 Deploy no Render free tier, validação final, documentação de handoff.
@@ -618,7 +784,7 @@ Deploy no Render free tier, validação final, documentação de handoff.
      Stripe__SecretKey=sk_live_...
      Resend__ApiKey=re_...
      Jwt__Secret=...
-     Upstash__RedisConnectionString=...
+     Upstash__RedisConnectionString=...  # apenas se o Gate 6B aprovou Redis
      Upstash__QStashSigningKey=...
      Sentry__DSN=...
      ```
@@ -646,12 +812,14 @@ Deploy no Render free tier, validação final, documentação de handoff.
 6. **Validação Final**
    - E2E manual: signup trainer → convite cliente → primeiro login → sessão → email
    - Confirmar `/health/live` e `/health/ready`
-   - Confirmar que uma falha de Redis não bloqueia login/signup (fallback local)
+   - Se Redis foi implementado no 6B, confirmar que a sua falha não bloqueia
+     operações principais e que endpoints sensíveis mantêm a protecção local aprovada
 
 ### Deliverables
 - ✓ Backend deployado em Render (free tier)
 - ✓ Neon PostgreSQL em produção com migration aplicada de forma controlada
-- ✓ Upstash Redis + QStash confirmados em produção
+- ✓ Upstash QStash confirmado em produção
+- ✓ Upstash Redis confirmado apenas se o Gate 6B aprovou a implementação
 - ✓ Resend, Stripe, Cloudinary integrados
 - ✓ Sentry + OpenTelemetry ativos
 - ✓ Documentação de deploy e rollback completa
@@ -659,6 +827,99 @@ Deploy no Render free tier, validação final, documentação de handoff.
 ### Commits
 - `chore: configure production environment`
 - `docs: add deployment runbook and rollback checklist`
+
+---
+
+## SPRINT 9: Backlog pós-MVP governado
+
+### Objectivo
+
+Reavaliar capacidades deliberadamente excluídas do MVP sem as transformar em
+compromissos automáticos. Cada sub-slice começa por confirmar os critérios de entrada,
+produz uma decisão e só implementa quando existir necessidade aprovada.
+
+### Sprint 9A: Trust & Safety de media e conteúdo
+
+- Revisão humana para resultados `ReviewRequired` do avatar.
+- Moderação automática de vídeo para nudez, conteúdo sexual, violência, armas e
+  política de relevância.
+- Antivírus e scanning adicional de uploads.
+- Sistema de denúncias, preservação de evidência e fila de revisão.
+
+Critério de entrada: volume de conteúdo, falsos positivos, incidentes, obrigação de
+plataforma ou necessidade operacional que não possa ser tratada pelo fluxo síncrono do
+avatar e pela moderação administrativa actual.
+
+### Sprint 9B: Escalabilidade e defesa em profundidade
+
+- Nova avaliação de Redis se o Gate 6B decidiu `Não implementar ainda`.
+- PostgreSQL Row-Level Security como camada adicional de isolamento.
+- RabbitMQ/MassTransit ou outro broker gerido.
+- Extracção de módulos para serviços separados.
+- Revogação global imediata de access tokens através de versão de sessão ou security
+  stamp validado no servidor.
+
+Critério de entrada: múltiplas instâncias, compliance, throughput, latência, consumers
+independentes, necessidade de deploy separado ou incidente que demonstre insuficiência
+dos controlos actuais. RabbitMQ e microserviços mantêm os critérios detalhados de
+`00_ARCHITECTURE.md §9.5` e §2.1.
+
+### Sprint 9C: Produto, administração e compliance
+
+- Métricas customizáveis por cliente.
+- Versionamento de planos de treino e nutrição.
+- Relatórios persistidos de cliente.
+- `client_consents`, apenas depois de análise legal e de produto própria.
+- Google Sign-In com regras de convite, associação explícita e identidade externa por
+  `sub`.
+- Superfície administrativa read-only de trainers, removida do Sprint 4 até existir um
+  caso administrativo dedicado e auditado.
+- Registo de séries pelo próprio cliente, sem reutilizar handlers autorizados apenas
+  para trainer.
+- Cancelamento de sessão pelo cliente no portal, com política própria para janela de
+  cancelamento, impacto no pack e auditoria.
+
+Critério de entrada: pedido de produto aprovado, contrato HTTP definido, impacto de
+schema avaliado e testes de autorização/multi-tenancy especificados.
+
+### Sprint 9D: Consolidação de contratos
+
+- Uniformizar `StartDate` e `StartsDate` entre Training e Nutrition através de uma
+  decisão Preserve, Alias ou Remove.
+
+Critério de entrada: consumidores identificados, contrato OpenAPI e frontend
+inventariados, estratégia de compatibilidade aprovada e migration avaliada caso a
+alteração alcance persistência.
+
+### Registo central de trabalho diferido
+
+| ID | Capacidade | Origem | Destino | Estado e condição |
+|---|---|---|---|---|
+| DEF-BILLING-001 | Billing de escrita | Sprint 4 | Sprint 5B | Agendado; depende do adapter Stripe e do Gate 5A |
+| DEF-MEDIA-001 | ReplaceLogo e upload de imagem | Sprint 4 | Sprint 5C | Agendado; depende de Cloudinary e do lifecycle por outbox |
+| DEF-MEDIA-002 | Upload técnico de vídeo privado | Sprint 5B original | Sprint 5D | Agendado; separado de Billing e dependente dos Gates 5A e 5C |
+| DEF-INFRA-001 | HybridCache e Upstash Redis | Sprint 5 original | Sprint 6B | Decisão obrigatória; implementação condicionada às métricas do 6A |
+| DEF-TRUST-001 | Revisão humana de avatar | Sprint 5C | Sprint 9A | Entrar com volume relevante de `ReviewRequired` ou falsos positivos |
+| DEF-TRUST-002 | Moderação automática de vídeo | Arquitectura §17.4 | Sprint 9A | Entrar com política, orçamento, fornecedor e processo de revisão aprovados |
+| DEF-TRUST-003 | Antivírus e scanning adicional de media | Arquitectura §17.4 | Sprint 9A | Entrar após avaliação de risco ou incidente |
+| DEF-TRUST-004 | Denúncias, evidência e fila de revisão | Arquitectura §17.5 | Sprint 9A | Entrar com caso operacional e política de retenção aprovados |
+| DEF-SCALE-001 | PostgreSQL RLS | Arquitectura §6.5 | Sprint 9B | Entrar com compliance, acesso SQL externo ou complexidade multi-tenant relevante |
+| DEF-SCALE-002 | RabbitMQ/MassTransit | Arquitectura §9.5 | Sprint 9B | Entrar quando um dos critérios de broker for medido |
+| DEF-SCALE-003 | Extracção para microserviços | Arquitectura §2.1 | Sprint 9B | Entrar com escala, ownership ou deploy independente comprovado |
+| DEF-SEC-001 | Revogação imediata de access tokens | Arquitectura §5.3 | Sprint 9B | Entrar quando a janela máxima de 15 minutos deixar de ser aceitável |
+| DEF-PROD-001 | Métricas customizáveis | Arquitectura §17 | Sprint 9C | Entrar com requisito de produto concreto |
+| DEF-PROD-002 | Versionamento de planos | Arquitectura §17 | Sprint 9C | Entrar com requisito de histórico/versionamento aprovado |
+| DEF-PROD-003 | Relatórios persistidos | Arquitectura §17 | Sprint 9C | Entrar com formato, retenção e consumidores definidos |
+| DEF-COMP-001 | Consentimentos do cliente | Arquitectura §17.1 | Sprint 9C | Entrar apenas após análise legal e de produto |
+| DEF-AUTH-001 | Google Sign-In | Sprint 4 original | Sprint 9C | Entrar com fornecedor, linking e contratos aprovados |
+| DEF-ADMIN-001 | Administração read-only de trainers | Matriz HTTP da Fase 4 | Sprint 9C | Entrar com casos de uso administrativos explícitos e auditoria |
+| DEF-PORTAL-001 | Registo de séries pelo cliente | Fase 4 | Sprint 9C | Entrar com regra de produto e autorização exclusiva do próprio cliente |
+| DEF-PORTAL-002 | Cancelamento de sessão pelo cliente | Fase 4 | Sprint 9C | Entrar com regras de janela, saldo do pack e notificações aprovadas |
+| DEF-CONTRACT-001 | Uniformizar `StartDate` e `StartsDate` | Fase 4 | Sprint 9D | Entrar com matriz Preserve/Alias/Remove e consumidores inventariados |
+
+Itens rejeitados não entram neste registo como implementação futura: AutoMapper,
+MediatR, `IRepository<T>` genérico e Unit of Work genérica continuam proibidos pela
+arquitectura enquanto não existir uma decisão canónica que os substitua.
 
 ---
 
@@ -671,10 +932,11 @@ Deploy no Render free tier, validação final, documentação de handoff.
 | 3-4 | Sprint 2 | Infrastructure | DbContext + migration `InitialCreate` + stores de jobs/outbox |
 | 5-6 | Sprint 3 | Application | Handlers + DTOs + Validators por feature |
 | 7-8 | Sprint 4 | API + Moderação | 4A Auth e controllers; 4B enforcement auditado de catálogos privados |
-| 9 | Sprint 5 | Jobs + Outbox + Media | Integrações base no 5A e upload técnico de vídeo no 5B |
-| 10 | Sprint 6 | Observabilidade | Logs estruturados, Sentry, OpenTelemetry, health checks |
-| 11 | Sprint 7 | Testing + CI/CD | ~170 testes + architecture tests + CI |
-| 12 | Sprint 8 | Produção | Deploy Render free, QStash produção, docs |
+| 9+ | Sprint 5 | Execução durável + Billing + Media | Gates 5A a 5D; duração reestimada no fecho do Sprint 4 |
+| Após 5D | Sprint 6 | Observabilidade + decisão Redis | Gate 6A mede; Gate 6B decide e implementa se necessário |
+| Após 6B | Sprint 7 | Testing + CI/CD | Suite crítica + architecture tests + CI |
+| Após 7 | Sprint 8 | Produção | Deploy Render free, QStash produção, docs |
+| Pós-MVP | Sprint 9 | Backlog governado | Trust & Safety, escala, produto, compliance e contratos por critérios de entrada |
 
 ---
 
@@ -684,10 +946,15 @@ Deploy no Render free tier, validação final, documentação de handoff.
 |-----------|--------|------|----------|
 | Infrastructure Ready | 2 | Fim Semana 4 | DbContext + migration + persistência de jobs/outbox |
 | API funcional | 4 | Fim Semana 8 | Endpoints a responder, auth completo |
-| Jobs duráveis | 5 | Fim Semana 9 | Dispatcher + outbox + QStash a funcionar |
-| Observabilidade | 6 | Fim Semana 10 | Logs, Sentry, OpenTelemetry em produção |
-| Testes | 7 | Fim Semana 11 | ~170 testes, architecture tests, CI verde |
-| Go-live | 8 | Fim Semana 12 | Deploy em produção no Render free tier |
+| Jobs duráveis | 5A | Gate 5A | Dispatcher + outbox + QStash a funcionar |
+| Billing SaaS | 5B | Gate 5B | Checkout, Customer Portal e webhook Stripe validados |
+| Imagens geridas | 5C | Gate 5C | Logo e avatar moderado com lifecycle completo |
+| Vídeo privado | 5D | Gate 5D | Upload e processamento técnico privados |
+| Observabilidade | 6A | Após Gate 5D | Logs, Sentry, OpenTelemetry e métricas operacionais |
+| Decisão Redis | 6B | Gate 6B | Implementar com consumidor medido ou diferir explicitamente para 9B |
+| Testes | 7 | Após Gate 6B | Suite crítica, architecture tests e CI verde |
+| Go-live | 8 | Após Sprint 7 | Deploy em produção no Render free tier |
+| Backlog pós-MVP | 9 | Após go-live | Reavaliações condicionais com decisão registada |
 
 ---
 

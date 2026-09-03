@@ -65,12 +65,14 @@ Git
        "ApiKey": "re_test_..."
      },
      "Upstash": {
-       "RedisConnectionString": "localhost:6379",
        "QStashSigningKey": "dev_signing_key"
      }
    }
    ```
-   Em dev local, o `RedisConnectionString` pode apontar para um Redis local (Docker) em vez do Upstash — a app não pode depender de Redis estar sempre disponível (`00_ARCHITECTURE.md §8.2`).
+   `RedisConnectionString` não pertence à configuração base. Só é acrescentada se o
+   Gate 6B aprovar Redis. Nesse caso, em desenvolvimento pode apontar para Redis local
+   em Docker e a aplicação deve manter o fallback definido em
+   `00_ARCHITECTURE.md §8.2`.
 
 5. **Apply migrations**
    ```bash
@@ -547,7 +549,7 @@ dotnet tool run dotnet-ef database update --project src/Infrastructure/Infrastru
 - **ASP.NET Core Docs:** https://learn.microsoft.com/en-us/aspnet/core/
 - **FluentValidation:** https://docs.fluentvalidation.net/
 - **Upstash QStash:** https://upstash.com/docs/qstash
-- **Upstash Redis:** https://upstash.com/docs/redis
+- **Upstash Redis, apenas se aprovado no Gate 6B:** https://upstash.com/docs/redis
 - **OpenTelemetry .NET:** https://opentelemetry.io/docs/languages/net/
 
 ---

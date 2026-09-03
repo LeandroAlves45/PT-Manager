@@ -12,6 +12,7 @@ public static class DependencyInjection
         AddAssessments(services);
         AddAdministration(services);
         AddAuthentication(services);
+        AddClientPortal(services);
         AddBilling(services);
         AddClients(services);
         AddNotifications(services);
@@ -129,6 +130,19 @@ public static class DependencyInjection
             .RequestPasswordReset.RequestPasswordResetCommand>, Application.Features.Authentication.RequestPasswordReset.RequestPasswordResetCommandValidator>();
         services.AddScoped<IValidator<Application.Features.Authentication
             .ResetPassword.ResetPasswordCommand>, Application.Features.Authentication.ResetPassword.ResetPasswordCommandValidator>();
+    }
+
+    private static void AddClientPortal(IServiceCollection services)
+    {
+        services.AddScoped<Application.Features.ClientPortal.GetMyTrainingPlan.GetMyTrainingPlanHandler>();
+        services.AddScoped<Application.Features.ClientPortal.GetMyNutritionPlan.GetMyNutritionPlanHandler>();
+        services.AddScoped<Application.Features.ClientPortal.GetMyProfile.GetMyProfileHandler>();
+        services.AddScoped<Application.Features.ClientPortal.UpdateMyProfile.UpdateMyProfileHandler>();
+
+        // Validators
+        services.AddScoped<IValidator<Application.Features.ClientPortal.UpdateMyProfile
+            .UpdateMyProfileCommand>, Application.Features.ClientPortal.UpdateMyProfile
+                .UpdateMyProfileCommandValidator>();
     }
 
     private static void AddBilling(IServiceCollection services)

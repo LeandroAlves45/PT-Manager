@@ -1,75 +1,45 @@
-# Fase activa — Sprint 4, Fase 4
+# Fase activa — Sprint 4, fase 5 (a iniciar)
 
-**Actualizado:** 2026-09-02  
-**Modo actual:** sub-lote **4B fechado** → iniciar **4C** (docs `07`, `08`, `09`)
+**Actualizado:** 2026-09-03
+**Modo actual:** **Sprint 4 Fase 4 FECHADA** → planear fase 5
 
 ## Estado em uma linha
 
-Sub-lote **4B (Nutrition)** implementado e gate aprovado com **1534** testes Release verdes.
-Próximo: sub-lote **4C** após aprovação explícita do utilizador.
+Sprint 4 Fase 4 **concluída**: 115 endpoints de negócio, **1780** testes Release verdes,
+gates 4A–4D e contrato (doc 14/15) verificados. Documento de fecho:
+`docs/backend-files/sprint_4/fase_4/16_fase_4_finalizada.md`.
 
-## Workflow desta fase (4 papéis)
+## Último marco (Fase 4)
 
-| Papel | Ferramenta típica | O que fazer |
+| Sub-lote | Estado | Testes novos (aprox.) |
 |---|---|---|
-| Planear / rever plano | Claude Code, Codex | Ler este ficheiro + Sprint Pack; **não** explorar o repo inteiro |
-| Gerar blueprints | Claude Code, Codex | Skill `graphify-pseudocode` ou `sprint-context` modo `blueprint` |
-| Implementar | Tu (manual) | Seguir ordem dos docs `01`–`15`; Cursor só para dúvidas e ajustes pontuais |
-| Testes + review | Claude Code, Codex, Cursor | Skill `sprint-context` modo `review`; correr `dotnet test` com evidência |
+| 4A | ✅ | baseline |
+| 4B | ✅ | ~40 |
+| 4C | ✅ | 138 |
+| 4D | ✅ | 108 + 41 contrato |
 
-## Ler nesta ordem (obrigatório antes de planear ou rever)
+Bug corrigido no fecho 4D: `ClientSupplementAssignmentQueries` (500 em GET/List trainer).
 
-1. Este ficheiro (`.claude/memory/ACTIVE.md`)
-2. Sprint Pack: `.claude/project/sprints/sprint-4/fase-4/README.md`
-3. Sessão: `.claude/memory/Sessions/2026-09-02-fase4-blueprints-completos.md`
-4. Índice local dos blueprints: `docs/backend-files/sprint_4/fase_4/00_indice_ordem_e_decisoes.md`
-5. Documento do sub-lote em curso (ver tabela abaixo)
-6. Código **apenas** nos caminhos listados em «Superfície afectada»
+## Ler nesta ordem (próximo sprint) ainda faltando a fase 5 do sprint 4
 
-## Sub-lotes e ordem
+1. Este ficheiro
+2. Fase 5 do sprint 4
+2. `.claude/project/02_SPRINTS_ROADMAP.md` — Sprint 5
+3. Sprint Pack Sprint 5 quando existir em `.claude/project/sprints/`
+4. `.claude/memory/Sessions/2026-09-03-fase4-fecho-completo.md`
 
-| Sub-lote | Docs | Gate | Casos de uso |
-|---|---|---|---|
-| 4A | `01`, `02`, `03` | Gate 4A | 18 |
-| **4B** ← concluído | `04`, `05`, `06` | Gate 4B | 20 |
-| **4C** ← actual | `07`, `08`, `09` | Gate 4C | 45 |
-| 4D | `10`–`15` | Gate 4D | 32 + portal |
+## Fora de âmbito imediato (Sprint 5)
 
-**Regra:** um sub-lote só começa depois do gate anterior aprovado.
+- `ReplaceLogo`, `CreateCheckout`, `CreateCustomerPortal`, `ProcessPaymentWebhook`
+- Avatar moderado / Cloudinary
+- Regenerar Graphify (fecho Sprint 4 — ver `GRAPHIFY.md`)
 
-## Blocker conhecido (corrigir no doc 01 / sub-lote 4A)
+## Blockers
 
-`JwtAccessTokenIssuer` emite claim `trainerId`; `ApiClaimNames` e `TenantContextMiddleware` exigem `trainer_id` com `MapInboundClaims = false`. Tokens reais falham para trainer e cliente.
+Nenhum.
 
-## Decisões em aberto (utilizador)
+## Evidência de fecho Fase 4
 
-1. Adaptadores de Infrastructure das 4 portas do Client Portal — recomendado doc `11b` dentro do 4D.
-2. Binder de paginação partilhado — bloco duplicado em 11 controllers; QG4C-DRY-002.
-
-## Superfície afectada (não fazer grep global fora disto)
-
-```
-backend/src/Api/Controllers/
-backend/src/Api/Contracts/
-backend/src/Application/Features/ClientPortal/
-backend/tests/Api.FunctionalTests/
-```
-
-Controllers existentes (baseline): `AuthController`, `AdminContentModerationController`.
-
-## Fora de âmbito desta fase
-
-- Sprint 5: `ReplaceLogo`, `CreateCheckout`, `CreateCustomerPortal`, `ProcessPaymentWebhook`
-- Migrations EF (Fase 4 não altera schema)
-- Trainers administrativos read-only (rotas `Remove` na matriz Fase 0)
-
-## Evidência de fecho esperada
-
-- `dotnet test PTManager.sln --configuration Release` verde
-- Gates em `docs/backend-files/sprint_4/fase_4/03`, `06`, `09`, `13`, `15` e `backlogs/QualityGates.md`
-- Nota de sessão em `.claude/memory/Sessions/` + actualizar este ficheiro para a próxima fase
-
-## Graphify
-
-Regenerar **no fecho de cada Sprint** (não por fase intermédia). Última geração:
-**2026-09-02** (9262 nós). Ver `.claude/project/sprints/GRAPHIFY.md`.
+- `dotnet test PTManager.sln --configuration Release` → 1780 passed, 1 skipped
+- `backlogs/QualityGates.md` — secção Sprint 4 Fase 4 toda `[x]`
+- Snapshot: `docs/api/api-surface.v1.txt`

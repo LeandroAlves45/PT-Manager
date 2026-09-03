@@ -2,6 +2,7 @@ using Application.Common.Abstractions;
 using Application.Features.Administration.ContentModeration.Abstractions;
 using Application.Features.Assessments.CheckIns.Abstractions;
 using Application.Features.Assessments.InitialAssessments.Abstractions;
+using Application.Features.ClientPortal.Abstractions;
 using Application.Features.Clients.Abstractions;
 using Application.Features.Jobs.Abstractions;
 using Application.Features.Nutrition.Foods.Abstractions;
@@ -22,6 +23,7 @@ using Infrastructure.Persistence;
 using Infrastructure.Persistence.Administration;
 using Infrastructure.Persistence.Assessments;
 using Infrastructure.Persistence.Billing;
+using Infrastructure.Persistence.ClientPortal;
 using Infrastructure.Persistence.Clients;
 using Infrastructure.Persistence.Errors;
 using Infrastructure.Persistence.Nutrition;
@@ -83,6 +85,12 @@ public static class DependencyInjection
         services.AddScoped<IClientStore, ClientStore>();
         services.AddScoped<IClientQueries, ClientQueries>();
         services.AddScoped<IClientBrandingQueries, ClientBrandingQueries>();
+
+        // Client Portal
+        services.AddScoped<IMyTrainingPlanQueries, MyTrainingPlanQueries>();
+        services.AddScoped<IMyNutritionPlanQueries, MyNutritionPlanQueries>();
+        services.AddScoped<IMyProfileQueries, MyProfileQueries>();
+        services.AddScoped<IMyProfileStore, MyProfileStore>();
 
         // Administrative content moderation
         services.AddScoped<IPrivateCatalogModerationStore, PrivateCatalogModerationStore>();

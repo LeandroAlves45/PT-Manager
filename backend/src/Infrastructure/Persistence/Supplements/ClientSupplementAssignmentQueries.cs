@@ -1,3 +1,4 @@
+using Application.Features.Supplements;
 using Application.Features.Supplements.Abstractions;
 using Application.Features.Supplements.Dtos;
 using Application.Features.Supplements.ListSupplementAssignments;
@@ -17,12 +18,21 @@ internal sealed class ClientSupplementAssignmentQueries : IClientSupplementAssig
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
-    public Task<ClientSupplementAssignmentDto?> GetAsync(
+    public async Task<ClientSupplementAssignmentDto?> GetAsync(
         Guid trainerId,
         Guid assignmentId,
-        CancellationToken cancellationToken) => TrainerQuery(trainerId)
-        .Where(item => item.Id == assignmentId)
-        .SingleOrDefaultAsync(cancellationToken);
+        CancellationToken cancellationToken)
+    {
+        var row = await (
+            from assignment in _dbContext.ClientSupplementAssignments.AsNoTracking()
+            where assignment.OwnerTrainerId == trainerId && assignment.Id == assignmentId
+            join supplement in _dbContext.Supplements.AsNoTracking()
+                on assignment.SupplementId equals supplement.Id
+            select new { assignment, supplement })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return row is null ? null : row.assignment.ToDto(row.supplement);
+    }
 
     public async Task<PageResult<ClientSupplementAssignmentDto>> ListAsync(
         Guid trainerId,
@@ -31,26 +41,37 @@ internal sealed class ClientSupplementAssignmentQueries : IClientSupplementAssig
         PageRequest page,
         CancellationToken cancellationToken)
     {
-        var query = activity switch
+        var query =
+            from assignment in _dbContext.ClientSupplementAssignments.AsNoTracking()
+            where assignment.OwnerTrainerId == trainerId
+            join supplement in _dbContext.Supplements.AsNoTracking()
+                on assignment.SupplementId equals supplement.Id
+            select new { assignment, supplement };
+
+        query = activity switch
         {
-            SupplementAssignmentActivityFilter.Active => TrainerQuery(trainerId)
-                .Where(item => item.IsActive),
-            SupplementAssignmentActivityFilter.Inactive => TrainerQuery(trainerId)
-                .Where(item => !item.IsActive),
-            SupplementAssignmentActivityFilter.All => TrainerQuery(trainerId),
+            SupplementAssignmentActivityFilter.Active => query.Where(
+                item => item.assignment.IsActive),
+            SupplementAssignmentActivityFilter.Inactive => query.Where(
+                item => !item.assignment.IsActive),
+            SupplementAssignmentActivityFilter.All => query,
             _ => throw new ArgumentOutOfRangeException(nameof(activity))
         };
 
         if (clientId.HasValue)
-            query = query.Where(item => item.ClientId == clientId.Value);
+            query = query.Where(item => item.assignment.ClientId == clientId.Value);
 
         var totalCount = await query.CountAsync(cancellationToken);
-        var items = await query
-            .OrderByDescending(item => item.UpdatedAt)
-            .ThenBy(item => item.Id)
+        var rows = await query
+            .OrderByDescending(item => item.assignment.UpdatedAt)
+            .ThenBy(item => item.assignment.Id)
             .Skip((page.PageNumber - 1) * page.PageSize)
             .Take(page.PageSize)
             .ToListAsync(cancellationToken);
+
+        var items = rows
+            .Select(item => item.assignment.ToDto(item.supplement))
+            .ToList();
 
         return new PageResult<ClientSupplementAssignmentDto>(items, totalCount);
     }
@@ -119,25 +140,4 @@ internal sealed class ClientSupplementAssignmentQueries : IClientSupplementAssig
 
         return new PageResult<MySupplementAssignmentDto>(items, totalCount);
     }
-
-    private IQueryable<ClientSupplementAssignmentDto> TrainerQuery(Guid trainerId) =>
-        from assignment in _dbContext.ClientSupplementAssignments.AsNoTracking()
-        where assignment.OwnerTrainerId == trainerId
-        join supplement in _dbContext.Supplements.AsNoTracking()
-            on assignment.SupplementId equals supplement.Id
-        select new ClientSupplementAssignmentDto(
-            assignment.Id,
-            assignment.ClientId,
-            supplement.Id,
-            supplement.Name,
-            supplement.Description,
-            supplement.UnitOfMeasure,
-            assignment.ServingSize,
-            assignment.Timing,
-            assignment.TrainerNotes,
-            assignment.IsActive,
-            !supplement.IsActive,
-            assignment.CreatedAt,
-            assignment.UpdatedAt);
-
 }

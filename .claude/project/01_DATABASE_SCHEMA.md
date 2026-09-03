@@ -173,12 +173,17 @@ CREATE TABLE clients (
     emergency_contact_name VARCHAR(255),
     emergency_contact_phone VARCHAR(32),
     avatar_url VARCHAR(500),
+    avatar_public_id VARCHAR(500),
     is_active BOOLEAN NOT NULL DEFAULT true,
     is_deleted BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT ck_clients_sex CHECK (sex IN ('male', 'female')),
+    CONSTRAINT ck_clients_avatar_references CHECK (
+        (avatar_url IS NULL AND avatar_public_id IS NULL)
+        OR (avatar_url IS NOT NULL AND avatar_public_id IS NOT NULL)
+    ),
     CONSTRAINT fk_clients_owner_trainer
         FOREIGN KEY (owner_trainer_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_clients_user
@@ -197,6 +202,13 @@ CREATE UNIQUE INDEX uq_clients_tenant_phone_active
     ON clients(owner_trainer_id, phone)
     WHERE is_deleted = false;
 ```
+
+`avatar_url` e `avatar_public_id` representam apenas o avatar personalizado e
+moderado do próprio cliente. Null em ambos instrui o frontend a usar o avatar padrão.
+O cliente nunca fornece estes valores directamente: o Sprint 5C obtém-nos do storage
+depois da validação e moderação síncrona. A coluna `avatar_public_id` e a constraint
+`ck_clients_avatar_references` entram numa migration EF Core nova desse slice; não se
+altera uma migration existente.
 
 ### 4. `trainer_settings`
 
