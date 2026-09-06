@@ -17,6 +17,13 @@ public sealed class PostgresApiFixture : IAsyncLifetime
 
     public ApiWebApplicationFactory Factory { get; private set; } = null!;
 
+    /// <summary>
+    /// Connection string do container, para uma classe que precise de uma factory
+    /// própria — por exemplo para substituir uma porta via ConfigureServices —
+    /// continuando a partilhar a mesma base já migrada.
+    /// </summary>
+    public string ConnectionString => _container.GetConnectionString();
+
     public async ValueTask InitializeAsync()
     {
         await _container.StartAsync();

@@ -915,6 +915,100 @@ namespace Infrastructure.Data.Migrations
                     b.ToTable("email_verification_tokens", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.Identity.ExternalAuthenticationChallenge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("NonceHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .HasColumnName("nonce_hash")
+                        .IsFixedLength();
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("purpose");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("idx_external_auth_challenges_expires_at");
+
+                    b.HasIndex("NonceHash")
+                        .IsUnique()
+                        .HasDatabaseName("uq_external_auth_challenges_nonce_hash");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("external_authentication_challenges", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_external_auth_challenges_actor", "(purpose = 'sign_in' AND user_id IS NULL) OR (purpose = 'link' AND user_id IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_external_auth_challenges_expiration", "expires_at > created_at");
+
+                            t.HasCheckConstraint("ck_external_auth_challenges_purpose", "purpose IN ('sign_in', 'link')");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Entities.Identity.ExternalIdentity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("provider");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("subject");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Provider", "Subject")
+                        .IsUnique()
+                        .HasDatabaseName("uq_external_identities_provider_subject");
+
+                    b.HasIndex("UserId", "Provider")
+                        .IsUnique()
+                        .HasDatabaseName("uq_external_identities_user_provider");
+
+                    b.ToTable("external_identities", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_external_identities_provider", "provider IN ('google')");
+                        });
+                });
+
             modelBuilder.Entity("Domain.Entities.Identity.InviteToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1178,7 +1272,6 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnName("normalized_email");
 
                     b.Property<string>("PasswordHash")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("password_hash");
@@ -2915,6 +3008,23 @@ namespace Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_email_verification_tokens_user");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Identity.ExternalAuthenticationChallenge", b =>
+                {
+                    b.HasOne("Domain.Entities.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Identity.ExternalIdentity", b =>
+                {
+                    b.HasOne("Domain.Entities.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Domain.Entities.Identity.InviteToken", b =>

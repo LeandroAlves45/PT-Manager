@@ -38,8 +38,21 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
     /// <summary>Credencial fictícia do adapter de email; nunca sai do processo.</summary>
     public const string EmailProviderCredential = "email-provider-double";
 
+    /// <summary>
+    /// Client ID Google fictício. É um identificador público por desenho, não um
+    /// segredo: o que valida a credencial é a assinatura do ID token, verificada
+    /// pelo adapter real ou pelo duplo instalado em <see cref="ConfigureServices"/>.
+    /// </summary>
+    public const string GoogleClientId = "ptmanager-tests.apps.googleusercontent.com";
+
     private readonly string _connectionString;
     private readonly string _environmentName;
+
+    /// <summary>
+    /// Registos adicionais aplicados depois dos serviços da API, para um teste
+    /// substituir portas como o verificador Google sem contactar a Google.
+    /// </summary>
+    public Action<IServiceCollection>? ConfigureServices { get; init; }
 
     /// <summary>Grava os pedidos que o adapter de email teria enviado.</summary>
     public RecordingHttpMessageHandler EmailRequests { get; } = new();
@@ -74,6 +87,10 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
 
         builder.UseSetting("AuthCookies:SameSite", "Lax");
 
+        // AddGoogleAuthenticationInfrastructure valida esta secção com ValidateOnStart:
+        // sem ela nenhum host funcional arranca.
+        builder.UseSetting("Google:ClientId", GoogleClientId);
+
         builder.UseSetting("Resend:ApiKey", EmailProviderCredential);
         builder.UseSetting("Resend:FromAddress", "no-reply@ptmanager.test");
         builder.UseSetting("Resend:FrontendBaseUrl", AllowedOrigin);
@@ -103,6 +120,8 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
                     provider.GetRequiredService<TenantWriteValidationInterceptor>(),
                     provider.GetRequiredService<CommandCountingInterceptor>());
             });
+
+            ConfigureServices?.Invoke(services);
         });
     }
 

@@ -949,8 +949,8 @@ As decisões anteriormente listadas nesta secção têm o seguinte estado:
    Sprint 9B.
 7. Métricas customizáveis por cliente (`client_tracked_metrics` e
    `client_metric_values`), versionamento de planos de treino e nutrição,
-   relatórios persistidos (`client_reports`), `client_consents`, Google Sign-In e
-   consulta administrativa read-only de trainers estão registados no Sprint 9C.
+   relatórios persistidos (`client_reports`), `client_consents` e consulta
+   administrativa read-only de trainers estão registados no Sprint 9C.
 8. Registo de séries e cancelamento de sessões pelo próprio cliente estão
    registados no Sprint 9C. A consolidação de `StartDate` e `StartsDate` está
    registada no Sprint 9D, sujeita à matriz Preserve, Alias ou Remove.
@@ -1199,6 +1199,30 @@ aplicadas nem aumenta o âmbito da migration consolidada do Lote 3F. Um sistema
 genérico de denúncias, evidência e filas de revisão fica registado no Sprint 9A e
 só entra em implementação quando existir um caso real que o justifique.
 
+## 17.6 Google Sign-In
+
+Estado: implementado no backend real (2026-09-06). Migration aplicada à base local.
+
+A Application define contratos provider-neutral para emitir e consumir challenges,
+validar identidades externas e executar sign-in ou linking. Apenas Infrastructure
+referencia `Google.Apis.Auth`. A Api limita-se ao contrato HTTP, ao cookie do nonce,
+às policies e à conversão de `Result` em Problem Details.
+
+O identificador externo é sempre `(provider, subject)`. O email nunca identifica a
+conta Google nem cria linking automático. Linking exige utilizador PT Manager
+autenticado, password local atual, challenge associado ao próprio UserId e email
+Google coincidente com o email principal.
+
+O nonce tem pelo menos 256 bits, é devolvido ao frontend uma vez, persiste apenas como
+hash e é consumido atomicamente no PostgreSQL. O cookie
+`__Secure-ptm-google-nonce` é HttpOnly, Secure, host-only, dura cinco minutos e usa
+`Path=/api/v1/auth/google` e o SameSite dos cookies Auth.
+
+Uma identidade nova sem convite cria trainer e trial. Gmail ou Workspace autoritativo
+recebe sessão; outro domínio recebe 202 e confirmação PT Manager. Uma identidade nova
+com convite válido cria client, associa o Client do convite e consome o convite na mesma
+transação. Uma identidade conhecida ignora o convite apresentado no sign-in.
+
 ## 18. Referências oficiais
 
 1. [.NET releases and support](https://learn.microsoft.com/dotnet/core/releases-and-support)
@@ -1215,3 +1239,4 @@ só entra em implementação quando existir um caso real que o justifique.
 12. [Upstash QStash schedules](https://upstash.com/docs/qstash/features/schedules)
 13. [Upstash QStash security](https://upstash.com/docs/qstash/features/security)
 14. [Render free instance limitations](https://render.com/docs/free)
+15. [Google ID token validation](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token)

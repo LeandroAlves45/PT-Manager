@@ -3,6 +3,7 @@ using Api.Configuration;
 using Api.Middlewares;
 using Application;
 using Infrastructure;
+using Infrastructure.Identity;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,8 +18,11 @@ builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
 
 // Secção de configuração de serviços
 builder.Services.AddApplication();
+builder.Services.AddGoogleAuthenticationApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddGoogleAuthenticationInfrastructure(builder.Configuration);
 builder.Services.AddApi(builder.Configuration, builder.Environment);
+builder.Services.AddGoogleAuthenticationApi();
 
 var app = builder.Build();
 

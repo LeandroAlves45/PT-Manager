@@ -1391,6 +1391,25 @@ partilhado. Uma correção é sempre uma migration nova.
 
 ---
 
+## Identidade externa, Sprint 4 Fase 5
+
+Estado: implementado no backend real (2026-09-06). Migration `20260906154210_AddExternalIdentities`
+aplicada à base local Docker.
+
+`external_identities` contém `id`, `user_id`, `provider`, `subject` e
+`created_at`. Aceita inicialmente apenas `google`, tem FK para `users`, unicidade
+em `(provider, subject)` e em `(user_id, provider)`. Não persiste tokens, fotografia
+nem email devolvido pela Google.
+
+`external_authentication_challenges` contém `id`, `nonce_hash`, `purpose`,
+`user_id` opcional, `created_at` e `expires_at`. `purpose` aceita `sign_in`
+com `user_id` nulo ou `link` com `user_id` preenchido. O hash é único, existe
+índice em `expires_at` e o consumo é atómico.
+
+`users.password_hash` passa a nullable porque uma conta externa não recebe password
+fictícia. O rollback de `AddExternalIdentities` deve abortar antes de remover tabelas
+quando existir qualquer utilizador com `password_hash IS NULL`.
+
 ## Performance Considerations
 
 ### Vacuum & Analyze

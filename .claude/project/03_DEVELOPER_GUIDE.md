@@ -543,6 +543,22 @@ dotnet tool run dotnet-ef database update --project src/Infrastructure/Infrastru
 
 ---
 
+## Configuração Google Sign-In
+
+Definir apenas o client ID público do projeto OAuth:
+
+```json
+{
+  "Google": {
+    "ClientId": "valor-publico.apps.googleusercontent.com"
+  }
+}
+```
+
+A API valida `Google:ClientId` no arranque. Este fluxo usa um ID token emitido ao
+frontend e não necessita de client secret. Não guardar ID tokens, nonces ou cookies
+em configuração ou logs.
+
 ## Recursos Úteis
 
 - **EF Core Docs:** https://learn.microsoft.com/en-us/ef/core/

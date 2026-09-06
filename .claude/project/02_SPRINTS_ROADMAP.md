@@ -397,6 +397,15 @@ moderação de alimentos e exercícios privados.
    - Suite base de API e auth, acrescida das suites de persistência e contrato
      do Sprint 4B
 
+8. **Google Sign-In, Sprint 4 Fase 5**
+   - Fase reativada em 2026-09-03; deixa de pertencer ao Sprint 9C
+   - Quatro operações sob `/api/v1/auth/google`: challenge, sign-in,
+     link/challenge e link
+   - Portas provider-neutral na Application e `Google.Apis.Auth` apenas em Infrastructure
+   - Identidade externa por `provider + subject`; linking nunca é automático por email
+   - Implementação real concluída em 2026-09-06; migration local aplicada;
+     `QG5-FRONTEND-001` diferido para fase frontend
+
 ### Deliverables
 - ✓ `Api` compila e corre localmente
 - ✓ Controllers implementados, sem lógica de negócio nem EF Core direto
@@ -870,8 +879,6 @@ dos controlos actuais. RabbitMQ e microserviços mantêm os critérios detalhado
 - Versionamento de planos de treino e nutrição.
 - Relatórios persistidos de cliente.
 - `client_consents`, apenas depois de análise legal e de produto própria.
-- Google Sign-In com regras de convite, associação explícita e identidade externa por
-  `sub`.
 - Superfície administrativa read-only de trainers, removida do Sprint 4 até existir um
   caso administrativo dedicado e auditado.
 - Registo de séries pelo próprio cliente, sem reutilizar handlers autorizados apenas
@@ -911,7 +918,6 @@ alteração alcance persistência.
 | DEF-PROD-002 | Versionamento de planos | Arquitectura §17 | Sprint 9C | Entrar com requisito de histórico/versionamento aprovado |
 | DEF-PROD-003 | Relatórios persistidos | Arquitectura §17 | Sprint 9C | Entrar com formato, retenção e consumidores definidos |
 | DEF-COMP-001 | Consentimentos do cliente | Arquitectura §17.1 | Sprint 9C | Entrar apenas após análise legal e de produto |
-| DEF-AUTH-001 | Google Sign-In | Sprint 4 original | Sprint 9C | Entrar com fornecedor, linking e contratos aprovados |
 | DEF-ADMIN-001 | Administração read-only de trainers | Matriz HTTP da Fase 4 | Sprint 9C | Entrar com casos de uso administrativos explícitos e auditoria |
 | DEF-PORTAL-001 | Registo de séries pelo cliente | Fase 4 | Sprint 9C | Entrar com regra de produto e autorização exclusiva do próprio cliente |
 | DEF-PORTAL-002 | Cancelamento de sessão pelo cliente | Fase 4 | Sprint 9C | Entrar com regras de janela, saldo do pack e notificações aprovadas |
@@ -931,7 +937,7 @@ arquitectura enquanto não existir uma decisão canónica que os substitua.
 | 1-2 | Sprint 1 | Domain Layer | Entities + Value Objects por feature |
 | 3-4 | Sprint 2 | Infrastructure | DbContext + migration `InitialCreate` + stores de jobs/outbox |
 | 5-6 | Sprint 3 | Application | Handlers + DTOs + Validators por feature |
-| 7-8 | Sprint 4 | API + Moderação | 4A Auth e controllers; 4B enforcement auditado de catálogos privados |
+| 7-8 | Sprint 4 | API + Moderação + Google | Backend fechado; Fase 5 Google implementada; frontend Google diferido (`QG5-FRONTEND-001`) |
 | 9+ | Sprint 5 | Execução durável + Billing + Media | Gates 5A a 5D; duração reestimada no fecho do Sprint 4 |
 | Após 5D | Sprint 6 | Observabilidade + decisão Redis | Gate 6A mede; Gate 6B decide e implementa se necessário |
 | Após 6B | Sprint 7 | Testing + CI/CD | Suite crítica + architecture tests + CI |

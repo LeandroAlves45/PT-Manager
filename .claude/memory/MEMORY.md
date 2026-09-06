@@ -6,9 +6,10 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
-**Fase activa:** ler primeiro `.claude/memory/ACTIVE.md`. **Sprint 4 Fase 4 fechada
-(2026-09-03)** — ver `Sessions/2026-09-03-fase4-fecho-completo.md` e
-`docs/backend-files/sprint_4/fase_4/16_fase_4_finalizada.md`. Próximo: fase 5.
+**Fase ativa:** ler primeiro `.claude/memory/ACTIVE.md`. **Sprint 4 Fase 5 fechada no
+backend (2026-09-06)**. Ver
+`Sessions/2026-09-06-sprint4-fase5-migration-local-aplicada.md` e
+`docs/backend-files/sprint_4/fase_5/13_fase_5_implementacao_concluida.md`.
 
 ## Estado atual
 
@@ -20,12 +21,10 @@ notas de `.claude/memory/Sessions/`.
   `20260822155532_CompleteSprint3Phase3` são imutáveis. A migration
   `20260826172025_CompleteSprint3Lote3G` e
   `20260831131824_AddRefreshSessionCsrf` estão aplicadas à base local de
-  desenvolvimento. A última foi também validada em PostgreSQL 17 descartável,
-  acrescenta `csrf_token_hash` e o seu `Up` revoga todas as sessões ativas da
-  base onde correr. A migration `20260901175332_AddPrivateCatalogEnforcement`
-  (Fase 3) está gerada e validada em container descartável mas **ainda não
-  aplicada** à base de desenvolvimento; é aditiva e não destrutiva. Não existe
-  base de produção identificada.
+  desenvolvimento. As migrations `20260901175332_AddPrivateCatalogEnforcement`
+  (Fase 3) e `20260906154210_AddExternalIdentities` (Fase 5) estão também
+  aplicadas à base local Docker (`ptmanager-postgres-dev`, PostgreSQL 17).
+  Não existe base de produção identificada.
 - Ainda não existe base de dados de produção identificada. Migrations e testes
   de schema referem desenvolvimento local ou PostgreSQL efémero em
   Testcontainers.
@@ -47,7 +46,7 @@ notas de `.claude/memory/Sessions/`.
   A revisão encontrou e corrigiu dois defeitos reais — o interceptor impedia
   qualquer moderação de catálogo privado, e a check constraint aceitava
   `blocked` com motivo NULL. Suite completa em 1385 testes verdes com
-  PostgreSQL real. Falta apenas aplicar a migration à base de desenvolvimento.
+  PostgreSQL real. Migration aplicada à base local Docker.
   Evidência em `docs/backend-files/sprint_4/fase_3/11_revisao_e_fecho_fase_3.md`.
 
 ## Execução em curso
@@ -255,11 +254,13 @@ alegações anteriores desatualizadas está em
   diverge de uma migration gerada. Confirmado em 2026-08-24 com o índice
   `uq_clients_user_active` pendente: 308 de 340 testes de integração
   falharam, incluindo testes sem relação com 3G-A/3G-B.
-- Google Sign-In estava planeado para o Sprint 4 e foi diferido para o Sprint 9C.
-  Quando existir implementação, trainers podem entrar diretamente; clientes exigem
-  convite válido; associação a conta existente é explícita; `sub` é a identidade
-  externa; roles, tenant, JWT e refresh token continuam controlados pelo PT Manager.
-  `PasswordHash` não muda no Lote 3F.
+- Google Sign-In foi reativado na Sprint 4 Fase 5 e removido do Sprint 9C.
+  Backend implementado em 2026-09-06: quatro rotas `/api/v1/auth/google`,
+  portas provider-neutral, `Google.Apis.Auth` só em Infrastructure, 1896 testes
+  verdes. Trainers com email Google autoritativo podem receber sessão directa;
+  outros confirmam email no PT Manager; clientes novos exigem convite; linking é
+  explícito; `provider + subject` identifica a conta externa. Frontend Google
+  (`QG5-FRONTEND-001`) permanece diferido.
 - A política aprovada para novas passwords locais usa mínimo de 8 e máximo de
   128 caracteres. ASP.NET Core Identity permanece a fonte autoritativa; os
   validators de registo, alteração e recuperação repetem estes limites para
@@ -295,9 +296,12 @@ alegações anteriores desatualizadas está em
   2 defeitos reais corrigidos, migration `AddPrivateCatalogEnforcement`
   validada, 1385 testes verdes):
   `Sessions/2026-09-01-sprint4-fase3-fecho.md`.
-- Sprint 4 Fase 4 documentada e por implementar (controllers de negócio e
-  Client Portal; 16 blueprints, 115 endpoints, 75 quality gates):
+- Sprint 4 Fase 4 implementada e fechada (controllers de negócio e Client Portal;
+  1780 testes verdes na documentação de fecho):
   `Sessions/2026-09-02-fase4-blueprints-completos.md`.
+- Sprint 4 Fase 5 implementada e fechada no backend (Google Sign-In;
+  migration local aplicada, 1896 testes verdes, `QG5-FRONTEND-001` aberto):
+  `Sessions/2026-09-06-sprint4-fase5-migration-local-aplicada.md`.
 
 ## Padrões documentais
 
