@@ -59,6 +59,13 @@ Git
    dotnet user-secrets set "Google:ClientId" "<client-id-publico>.apps.googleusercontent.com"
    ```
 
+   Depois de aplicar a Fase 5A, configurar também as duas chaves de rotação QStash:
+
+   ```bash
+   dotnet user-secrets set "QStash:CurrentSigningKey" "<current-signing-key>"
+   dotnet user-secrets set "QStash:NextSigningKey" "<next-signing-key>"
+   ```
+
    Configuração não secreta esperada pelo backend:
 
    ```json
@@ -78,9 +85,17 @@ Git
       "ForwardedHeaders": {
         "KnownProxies": [],
         "KnownNetworks": []
+      },
+      "QStash": {
+        "Enabled": false,
+        "ExpectedUrl": "https://<host-publico>/api/internal/jobs/dispatch"
       }
     }
    ```
+   `QStash:Enabled` permanece `false` durante deploy, migration e preflight. O URL
+   esperado é canónico e tem de coincidir exactamente com o claim `sub` assinado.
+   Nunca guardar as signing keys neste JSON.
+
    `RedisConnectionString` não pertence à configuração base. Só é acrescentada se o
    Gate 6B aprovar Redis. Nesse caso, em desenvolvimento pode apontar para Redis local
    em Docker e a aplicação deve manter o fallback definido em
@@ -303,50 +318,34 @@ public class MealPlanValidator : AbstractValidator<CreateMealPlanRequest>
 
 ### Adicionar Job Durável (dispatcher + QStash, sem RabbitMQ)
 
-Ver `00_ARCHITECTURE.md §9` e `01_DATABASE_SCHEMA.md` tabela `durable_jobs`. Não existe broker — o job é uma linha em Postgres, reclamada pelo dispatcher quando o QStash acorda a API.
+Ver `00_ARCHITECTURE.md §9` e `01_DATABASE_SCHEMA.md` tabela `durable_jobs`. Não
+existe broker. O job é uma linha PostgreSQL e QStash apenas activa o processamento.
 
-1. **Enfileirar o job no handler que originou a necessidade**
-   ```csharp
-   public class CreateClientHandler
-   {
-       private readonly IClientRepository _clients;
-       private readonly IDurableJobRepository _jobs;
+Estado do Sprint 5A: o primeiro routing aprovado é `send_notification` versão 1 e o
+único template aprovado é `session_reminder`. Até a fase ser aplicada, estes tipos
+existem apenas nos blueprints de `docs/backend-files/sprint_5/sprint_5A`.
 
-       public async Task<Result<ClientResponse>> HandleAsync(CreateClientRequest request, CancellationToken ct)
-       {
-           var client = new Client(request.Name, _tenantContext.TrainerId);
-           await _clients.AddAsync(client, ct);
+Ao adicionar um job depois do Gate 5A:
 
-           // Mesma unidade de trabalho — o job só existe se o cliente for criado
-           await _jobs.EnqueueAsync(new DurableJob(
-               jobType: "send_welcome_email",
-               trainerId: client.OwnerTrainerId,
-               payload: new { client.Id, client.Name },
-               idempotencyKey: $"welcome-email:{client.Id}"), ct);
+1. Criar uma necessidade real e um produtor que persista o durable job na mesma
+   transacção da alteração que o origina. Usar uma porta específica da feature, como
+   o `INotificationQueueStore` existente; não criar um repository genérico.
+2. Definir payload versionado, pequeno e sem segredo. Persistir `trainer_id` a partir
+   do contexto autorizado, nunca a partir do body, query string ou route.
+3. Implementar `IDurableJobHandler` na Application com `JobType`, `JobVersion` e
+   `HandleAsync(DurableJobEnvelope, CancellationToken)`.
+4. Devolver apenas `DispatchItemOutcome`: sucesso, falha transitória, falha permanente
+   ou lease perdido. Não transportar excepções ou respostas integrais de providers.
+5. Registar o handler na allowlist do composition root. Duplicação de tipo e versão
+   tem de falhar no arranque ou no teste de DI.
+6. Garantir que o efeito remoto aceita a `idempotency_key` persistida ou documentar a
+   limitação exacta do provider.
+7. Cobrir payload inválido, versão desconhecida, tenant, retry, lease perdido,
+   concorrência PostgreSQL e logs sem dados sensíveis.
 
-           return Result<ClientResponse>.Success(client.ToResponse());
-       }
-   }
-   ```
-
-2. **Implementar o handler do job (`Application/Features/Jobs/SendWelcomeEmailJobHandler.cs`)**
-   ```csharp
-   public class SendWelcomeEmailJobHandler : IJobHandler
-   {
-       public string JobType => "send_welcome_email";
-       private readonly IEmailSender _emailSender;
-
-       public async Task HandleAsync(DurableJob job, CancellationToken ct)
-       {
-           var payload = job.DeserializePayload<SendWelcomeEmailPayload>();
-           _logger.LogInformation("[JOBS] Sending welcome email to client {ClientId}", payload.ClientId);
-           await _emailSender.SendWelcomeAsync(payload.Email, payload.ClientName, ct);
-           // idempotente: reenviar o mesmo email duas vezes não deve causar efeito duplicado visível
-       }
-   }
-   ```
-
-3. **O dispatcher (`Infrastructure/Jobs/JobDispatcher.cs`) é único e genérico** — reclama jobs vencidos, resolve o `IJobHandler` pelo `JobType`, cria `ITenantContext` a partir do `TrainerId` persistido, chama `HandleAsync`. Não se escreve um dispatcher por feature.
+Existem dois dispatchers explícitos: `JobDispatcher` para durable jobs e
+`OutboxDispatcher` para efeitos originados por outbox. Não criar um dispatcher por
+feature nem fundir os dois através de delegates genéricos.
 
 ### Structured Logging
 

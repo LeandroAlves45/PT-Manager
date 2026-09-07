@@ -6,9 +6,10 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
-**Estado ativo:** ler primeiro `.claude/memory/ACTIVE.md`. **Sprint 4 finalizado
-em 2026-09-06**. Ver `Sessions/2026-09-06-sprint4-finalizado.md` e
-`docs/backend-files/sprint_4/Validacao_Final_Sprint_4.md`.
+**Estado ativo:** ler primeiro `.claude/memory/ACTIVE.md`. **Sprint 4 finalizado e
+Sprint 5A planeado em 2026-09-07**. A implementação real da Fase 5A ainda não
+começou. Ver `Sessions/2026-09-07-sprint5-planeamento-fase5a-blueprints.md` e
+`docs/backend-files/sprint_5/sprint_5A/00_indice_ordem_decisoes_e_gates.md`.
 
 ## Estado atual
 
@@ -306,6 +307,14 @@ alegações anteriores desatualizadas está em
   de referências privadas. Evidência final: 1907 testes aprovados, 1 ignorado manual,
   build e format limpos, modelo EF sincronizado e auditoria NuGet sem vulnerabilidades.
   Ver `Sessions/2026-09-06-sprint4-finalizado.md`.
+- Sprint 5 planeado em quatro fases: 5A execução durável, 5B Stripe, 5C imagens e
+  5D vídeo privado. A Fase 5A tem blueprints de produção completos para os dois
+  dispatchers, QStash, replay persistido e `session_reminder`; 44 ficheiros
+  materializados compilaram com zero avisos e zero erros. Backend real e testes não
+  foram alterados. `billing_notification` e `trainer-logo.delete` bloqueiam o
+  rollout se existirem não concluídos ou em `dead_letter` antes dos handlers 5B e
+  5C. Ver
+  `Sessions/2026-09-07-sprint5-planeamento-fase5a-blueprints.md`.
 
 ## Padrões documentais
 

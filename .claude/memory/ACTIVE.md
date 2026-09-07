@@ -1,40 +1,38 @@
-# Estado ativo: Sprint 4 FINALIZADO
+# Estado ativo: Sprint 5A PLANEADO
 
-Atualizado: 2026-09-06
-Próximo passo: planear o primeiro slice do Sprint 5 antes de alterar código
+Atualizado: 2026-09-07
+Próximo passo: aplicar os blueprints da Fase 5A ao backend real e implementar a
+matriz de testes antes de activar QStash
 
 ## Estado em uma linha
 
-As Fases 1 a 6 do Sprint 4 estão implementadas, revistas e validadas. Não existem
-blockers backend pendentes deste sprint.
+O Sprint 4 está finalizado. O plano geral do Sprint 5 e os blueprints de produção da
+Fase 5A estão concluídos; a implementação real ainda não começou.
 
-## Evidência final
+## Evidência documental
 
-1. Build Release: 0 avisos e 0 erros.
-2. Suite integral: 1907 aprovados, 1 ignorado manual, 0 falhas.
-3. Domain 421, Application 503, Infrastructure 406, API 538 e Architecture 39.
-4. Format check aprovado sem alterações.
-5. EF Core sem pending model changes.
-6. Snapshot OpenAPI com 135 operações e sem query parameters auxiliares ou fora de snake_case.
-7. Dependências dos nove projetos sem vulnerabilidades reportadas pelo feed NuGet.
+1. Plano geral dividido em 5A dispatcher, 5B Stripe, 5C imagens e 5D vídeo.
+2. Único job real 5A: `send_notification` versão 1.
+3. Único template real 5A: `session_reminder` com quatro campos fechados.
+4. Quarenta e quatro ficheiros dos blueprints materializados numa cópia temporária.
+5. Build Release da cópia: zero avisos e zero erros.
+6. Nenhum ficheiro real de backend, teste ou migration foi alterado.
+7. Format da cópia aprovado; testes, migration e gates de runtime permanecem
+   abertos.
 
-## Correções da Fase 6
+## Bloqueios de rollout
 
-1. `PageParameters` deixou de expor propriedades auxiliares ao ApiExplorer.
-2. `ExternalAuthenticationStore` suporta retry e confirmação de commit ambígua sem duplicados.
-3. Eventos de segurança do plano usam logging estruturado sem credenciais ou tokens.
-4. QG3-REF-001 tem corrida concorrente provada em PostgreSQL real.
-
-## Trabalho diferido
-
-`QG5-FRONTEND-001` continua aberto e é obrigatório no primeiro slice que alterar
-React, previsivelmente no Sprint 5 ou 6. Não está atribuído a um sprint específico
-até o respetivo planeamento ser aprovado.
+1. `QStash:Enabled` permanece `false` até aplicação, testes e migration.
+2. O preflight tem de encontrar zero itens não concluídos ou em `dead_letter` dos
+   tipos `billing_notification` e `trainer-logo.delete`, porque os handlers pertencem
+   às Fases 5B e 5C.
+3. Não existe job global na allowlist inicial.
 
 ## Ler nesta ordem
 
 1. Este ficheiro.
-2. `.claude/memory/Sessions/2026-09-06-sprint4-finalizado.md`.
-3. `docs/backend-files/sprint_4/Validacao_Final_Sprint_4.md`.
-4. `.claude/project/02_SPRINTS_ROADMAP.md`.
-5. `backlogs/QualityGates.md`.
+2. `.claude/memory/Sessions/2026-09-07-sprint5-planeamento-fase5a-blueprints.md`.
+3. `docs/backend-files/sprint_5/Plan_sprint_5.md`.
+4. `docs/backend-files/sprint_5/sprint_5A/00_indice_ordem_decisoes_e_gates.md`.
+5. Documentos 01 a 14 da Fase 5A, pela ordem numérica.
+6. `backlogs/QualityGates.md`, secção Sprint 5 Fase 5A.

@@ -460,6 +460,16 @@ Estado de partida verificado antes do Sprint 5:
    payload.
 8. Não criar `ProcessBillingJobHandler` genérico. Cada mensagem futura de billing terá
    um handler explícito quando existir um efeito concreto.
+9. Persistir apenas o hash SHA-256 do `jti` QStash numa tabela técnica com chave
+   primária, para impedir replay entre processos e reinícios sem guardar o
+   identificador original.
+10. A allowlist inicial contém apenas o durable job `send_notification` versão 1 e o
+    template `session_reminder`. Não existem jobs globais na Fase 5A.
+11. Antes de activar o schedule, executar preflight aos tipos de outbox já produzidos
+    `billing_notification` e `trainer-logo.delete`. A presença de itens não
+    concluídos ou em `dead_letter` bloqueia o rollout até às Fases 5B e 5C
+    fornecerem os respectivos handlers ou existir decisão explícita sobre os dados
+    reais.
 
 Gate 5A:
 
@@ -470,6 +480,9 @@ Gate 5A:
 - Tipo e versão desconhecidos são rejeitados de forma determinística.
 - Assinatura inválida, replay e body excessivo não activam o dispatcher.
 - Testes PostgreSQL reais cobrem claim, renovação, conclusão e falha concorrente.
+- O renderer `session_reminder` aceita apenas `client_name`, `trainer_name`,
+  `session_starts_at_utc` e `trainer_timezone`, codifica conteúdo dinâmico e propaga a
+  idempotency key persistida ao Resend.
 
 ### Sprint 5B: Stripe e billing SaaS
 

@@ -1272,6 +1272,28 @@ CREATE INDEX idx_outbox_trainer ON outbox_messages(trainer_id);
 
 Um item de outbox é escrito **na mesma transação** que a alteração de domínio que o originou (ex.: `processed_stripe_events` + `outbox_messages` no mesmo `SaveChanges`). O dispatcher de jobs entrega os itens pendentes de forma idempotente; um item só passa a `completed` depois do efeito (ex. email enviado) ser confirmado.
 
+### 28A. `qstash_dispatch_receipts` (planeado para o Sprint 5A)
+
+Estado técnico para impedir replay do endpoint interno QStash entre processos e
+reinícios. A tabela só entra no schema aplicado quando a migration da Fase 5A for
+gerada e validada. Não é tenant-owned e não recebe Global Query Filter.
+
+```sql
+CREATE TABLE qstash_dispatch_receipts (
+    jti_hash CHAR(64) PRIMARY KEY,
+    token_expires_at TIMESTAMPTZ NOT NULL,
+    consumed_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX ix_qstash_dispatch_receipts_token_expires_at
+    ON qstash_dispatch_receipts(token_expires_at);
+```
+
+`jti_hash` contém o SHA-256 hexadecimal normalizado do claim `jti`; o valor original
+nunca é persistido. A chave primária torna o primeiro consumo atómico. O índice
+temporal suporta a remoção oportunista de recibos expirados sem percorrer toda a
+tabela.
+
 ---
 
 ### 29. `administrative_audit_entries`

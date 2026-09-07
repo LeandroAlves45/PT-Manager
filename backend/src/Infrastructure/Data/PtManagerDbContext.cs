@@ -11,6 +11,7 @@ using Domain.Entities.Sessions;
 using Domain.Entities.Supplements;
 using Domain.Entities.TrainerSettings;
 using Domain.Entities.Training;
+using Infrastructure.Jobs.QStash;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data;
@@ -37,7 +38,7 @@ public sealed class PtManagerDbContext : DbContext
         _tenantContext = tenantContext;
     }
 
-    // DbSet<T> para as 33 entidades.
+    // DbSet<T> para as 33 entidades de domínio e um modelo técnico de replay QStash.
     public DbSet<User> Users => Set<User>();
     public DbSet<AdministrativeAuditEntry> AdministrativeAuditEntries =>
         Set<AdministrativeAuditEntry>();
@@ -71,6 +72,10 @@ public sealed class PtManagerDbContext : DbContext
     public DbSet<TrainingPlan> TrainingPlans => Set<TrainingPlan>();
     public DbSet<TrainingPlanDay> TrainingPlanDays => Set<TrainingPlanDay>();
     public DbSet<TrainingPlanDayExercise> TrainingPlanDayExercises => Set<TrainingPlanDayExercise>();
+
+    // O modelo é interno porque representa segurança do adapter, não domínio público.
+    internal DbSet<QStashDispatchReceipt> QStashDispatchReceipts =>
+        Set<QStashDispatchReceipt>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -216,9 +221,8 @@ public sealed class PtManagerDbContext : DbContext
                         tp.OwnerTrainerId == CurrentTrainerId))));
 
         // POLÍTICA C — sem filtro de tenant.
-        // User, RefreshToken, InviteToken, ProcessedStripeEvent: raiz do
-        // tenant ou identidade externa — filtrá-los impediria o próprio
-        // login de encontrar a conta.
+        // User, RefreshToken, InviteToken, ProcessedStripeEvent e recibos QStash:
+        // raiz de tenant, identidade ou estado técnico necessário antes de existir tenant
     }
 
     /// <summary>
