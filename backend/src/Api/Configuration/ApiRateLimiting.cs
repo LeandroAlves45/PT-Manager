@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Api.Authorization;
+using Api.Security;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -101,6 +102,16 @@ public static class ApiRateLimiting
         CancellationToken cancellationToken
     )
     {
+        var policyName = context.HttpContext.GetEndpoint()
+            ?.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName
+            ?? "global";
+        var logger = context.HttpContext.RequestServices
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("Api.Security.RateLimiting");
+        logger.LogWarning(SecurityLogEvents.RateLimitRejection,
+            "Request was rejected by rate limiting policy {RateLimitPolicy} for path {RequestPath}.",
+            policyName, context.HttpContext.Request.Path.Value);
+
         if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
             context.HttpContext.Response.Headers.RetryAfter = Math.Ceiling(retryAfter.TotalSeconds)
                 .ToString(CultureInfo.InvariantCulture);

@@ -30,12 +30,13 @@ Backup automático da geração anterior em `graphify-out/YYYY-MM-DD/`.
 ## Validação rápida pós-geração
 
 ```powershell
+graphify explain "GoogleAuthController"
+graphify explain "ExternalAuthenticationStore"
 graphify explain "AuthController"
-graphify explain "JwtAccessTokenIssuer"
 ```
 
 Confirmar símbolos do sprint actual presentes. Comparar `nodes` em `graph.json`
-(deve crescer após sprints grandes; 2026-09-02: **9262 nós**, 508 comunidades).
+após sprints grandes.
 
 ## Uso pelas IAs
 
@@ -46,12 +47,20 @@ Confirmar símbolos do sprint actual presentes. Comparar `nodes` em `graph.json`
 | Validar ordem de implementação | Contratos HTTP |
 
 **Regra:** se `graph.json` for mais antigo que o fecho do Sprint anterior, **ignorar**
-e usar `surface.yaml` do Sprint Pack activo.
+e usar documentação canónica em `.claude/project/` + `ACTIVE.md`.
 
 ## Última geração
 
-2026-09-02 — **9262 nós**, 508 comunidades. Inclui Sprint 3 completo e Sprint 4
-(Fases 1–3: Auth, moderação, interceptors). `graph.html` não regenerado (>5000 nós).
+**2026-09-06** — **4211 nós**, 250 comunidades, 7907 arestas (graphify 0.9.12).
+
+Inclui Sprint 4 completo no backend: Auth local, moderação, controllers de negócio,
+Client Portal e **Google Sign-In (Fase 5)** — `GoogleAuthController`,
+`ExternalAuthenticationStore`, `GoogleExternalIdentityVerifier`, migration
+`AddExternalIdentities`.
+
+`graph.html` regenerado (<5000 nós). Backup anterior em `graphify-out/2026-09-06/`
+(geração de 2026-09-02: 9262 nós, 508 comunidades — métricas não comparáveis
+directamente entre extracções incrementais).
 
 ## Opcional (futuro)
 

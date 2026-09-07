@@ -75,7 +75,7 @@ Preparação técnica. Zero código novo de domínio.
 
 ---
 
-## SPRINT 1: Domain Layer (Semanas 1-2)
+## SPRINT 1: Domain Layer (Semanas 1-2) [finalizado]
 
 ### Objectivo
 Portar entidades Python → C# Entities + Value Objects, sem abstrações genéricas de persistência.
@@ -128,13 +128,9 @@ Portar entidades Python → C# Entities + Value Objects, sem abstrações genér
 - ✓ Portas específicas definidas (sem genéricos)
 - ✓ ~20 testes unitários passam
 
-### Commits
-- `feat: add domain entities and value objects organized by feature`
-- `test: add domain unit tests`
-
 ---
 
-## SPRINT 2: Infrastructure + EF Core (Semanas 3-4)
+## SPRINT 2: Infrastructure + EF Core (Semanas 3-4) [finalizado]
 
 ### Estado final
 
@@ -256,14 +252,9 @@ pontos não estiverem concluídos.
 - ✓ ~40 testes integração passam, incluindo isolamento multi-tenant em leituras
   e escritas, leases de jobs e recuperação da outbox
 
-### Commits
-- `feat: add EF Core DbContext with global query filters`
-- `feat: implement feature-specific repositories`
-- `test: add repository and multi-tenant isolation tests`
-
 ---
 
-## SPRINT 3: Application Layer (Semanas 5-6)
+## SPRINT 3: Application Layer (Semanas 5-6) [finalizado]
 
 Estado em 26 de agosto de 2026: concluído. O Lote 3G fechou Authentication,
 Billing SaaS, Notifications e a relação ativa de clientes. A migration
@@ -318,14 +309,14 @@ Handlers explícitos por caso de uso, DTOs, validação, mapping manual.
 - ✓ Gate integral executado após a migration: 381 Domain, 451 Application,
   360 Infrastructure e 36 Architecture.
 
-### Commits
-- `feat: add application handlers organized by feature`
-- `feat: add DTOs and validators`
-- `test: add unit tests for handlers and validators`
-
 ---
 
 ## SPRINT 4: API Controllers, Auth e Moderação Administrativa (Semanas 7-8)
+
+Estado em 2026-09-06: **Sprint 4 finalizado**. As Fases 1 a 6 estão implementadas e
+validadas. Os bloqueios encontrados na revisão final de contrato OpenAPI, logging de
+segurança, retry Google e concorrência foram corrigidos; 1907 testes passam, com 1
+teste manual de regeneração do snapshot ignorado e 0 falhas.
 
 ### Objectivo
 O Sprint 4A entrega endpoints HTTP, ASP.NET Core Identity, middleware e
@@ -363,7 +354,7 @@ moderação de alimentos e exercícios privados.
    SupplementsController   /supplements, /client-supplement-assignments
    SessionsController      /sessions
    AdminContentModerationController /admin/content-moderation (superuser + contexto administrativo)
-   InternalJobsController  /api/internal/jobs/dispatch (QStash, assinatura validada, sem auth de utilizador)
+   InternalJobsController  /api/internal/jobs/dispatch (Sprint 5A; não exposto no Sprint 4)
    ```
 
    A administração read-only de trainers não entra neste sprint porque não existe
@@ -404,7 +395,8 @@ moderação de alimentos e exercícios privados.
    - Portas provider-neutral na Application e `Google.Apis.Auth` apenas em Infrastructure
    - Identidade externa por `provider + subject`; linking nunca é automático por email
    - Implementação real concluída em 2026-09-06; migration local aplicada;
-     `QG5-FRONTEND-001` diferido para fase frontend
+     `QG5-FRONTEND-001` obrigatório no primeiro slice frontend, previsivelmente
+     no Sprint 5 ou 6
 
 ### Deliverables
 - ✓ `Api` compila e corre localmente
@@ -415,13 +407,6 @@ moderação de alimentos e exercícios privados.
 - ✓ Moderação privada restrita a casos administrativos auditados
 - ✓ Testes de API, auth, persistência e moderação passam
 - ✓ Swagger/OpenAPI gerado
-
-### Commits
-- `feat: add API controllers and endpoints`
-- `feat: add JWT authentication with refresh token rotation`
-- `feat: add middleware stack and rate limiting`
-- `feat: add audited private catalog moderation`
-- `test: add endpoint integration and contract tests`
 
 ---
 
@@ -610,16 +595,6 @@ o caso de uso dependente falha de forma explícita e segura.
 - Cache distribuída é transferida explicitamente para o Gate 6B, onde observabilidade
   e um consumidor concreto determinam se deve ser implementada.
 
-### Commits sugeridos
-
-- `feat: add durable job and outbox dispatchers`
-- `feat: add signed qstash dispatch endpoint`
-- `feat: add notification delivery worker`
-- `feat: integrate stripe billing flows`
-- `feat: add managed image storage and moderated client avatars`
-- `feat: add private exercise video processing`
-- `test: verify sprint 5 integration and failure semantics`
-
 ---
 
 ## SPRINT 6: Observabilidade e decisão de resiliência distribuída
@@ -716,12 +691,6 @@ Gate 6B:
 - ✓ `/health/live` e `/health/ready` distintos e operacionais
 - ✓ Decisão do Gate 6B registada; Redis implementado apenas quando justificado
 - ✓ Testes de observabilidade e, quando aplicável, de cache e rate limiting passam
-
-### Commits
-- `feat: add structured logging and correlation IDs`
-- `feat: add Sentry and OpenTelemetry instrumentation`
-- `feat: add liveness and readiness health endpoints`
-- `feat: add distributed cache and rate limiting` apenas se o Gate 6B aprovar
 
 ---
 
@@ -833,10 +802,6 @@ Deploy no Render free tier, validação final, documentação de handoff.
 - ✓ Sentry + OpenTelemetry ativos
 - ✓ Documentação de deploy e rollback completa
 
-### Commits
-- `chore: configure production environment`
-- `docs: add deployment runbook and rollback checklist`
-
 ---
 
 ## SPRINT 9: Backlog pós-MVP governado
@@ -937,7 +902,7 @@ arquitectura enquanto não existir uma decisão canónica que os substitua.
 | 1-2 | Sprint 1 | Domain Layer | Entities + Value Objects por feature |
 | 3-4 | Sprint 2 | Infrastructure | DbContext + migration `InitialCreate` + stores de jobs/outbox |
 | 5-6 | Sprint 3 | Application | Handlers + DTOs + Validators por feature |
-| 7-8 | Sprint 4 | API + Moderação + Google | Backend fechado; Fase 5 Google implementada; frontend Google diferido (`QG5-FRONTEND-001`) |
+| 7-8 | Sprint 4 | API + Moderação + Google | Finalizado em 2026-09-06; Fases 1 a 6 aprovadas e 1907 testes verdes |
 | 9+ | Sprint 5 | Execução durável + Billing + Media | Gates 5A a 5D; duração reestimada no fecho do Sprint 4 |
 | Após 5D | Sprint 6 | Observabilidade + decisão Redis | Gate 6A mede; Gate 6B decide e implementa se necessário |
 | Após 6B | Sprint 7 | Testing + CI/CD | Suite crítica + architecture tests + CI |

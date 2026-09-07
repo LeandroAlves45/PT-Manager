@@ -1,11 +1,17 @@
 using Application.Features.Administration.ContentModeration.Abstractions;
+using Application.Features.Nutrition.MealPlans.Abstractions;
 using Domain.Entities.Identity;
 using Domain.Entities.Nutrition;
 using Domain.Exceptions;
 using Domain.ValueObjects;
+using Infrastructure.Data;
+using Infrastructure.Data.Interceptors;
 using Infrastructure.IntegrationTests.Support;
+using Infrastructure.IntegrationTests.Nutrition;
 using Infrastructure.Persistence.Administration;
+using Infrastructure.Persistence.Nutrition;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
 
 namespace Infrastructure.IntegrationTests.Administration;
@@ -273,6 +279,63 @@ public sealed class PrivateCatalogModerationStoreTests
     }
 
     [Fact]
+    public async Task NewMealPlanReference_WhenConcurrentBlockWins_IsRejectedAfterWaitingForLock()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var catalog = await NutritionPlanTestData.SeedCatalogAsync(_fixture, cancellationToken);
+        var actor = await SeedSuperuserAsync(cancellationToken);
+        var pause = new PauseAfterSaveChangesInterceptor();
+        await using var admin = CreatePausingAdministrativeContext(actor.Id, pause);
+        var blockTask = new PrivateCatalogModerationStore(admin).BlockFoodAsync(
+            actor.Id,
+            catalog.FoodId,
+            PlatformEnforcementReason.DangerousInformation,
+            Now,
+            CancellationToken.None);
+
+        await pause.WaitUntilPersistedAsync(cancellationToken);
+        await using var trainer = _fixture.CreateContext(catalog.TrainerId);
+        await trainer.Database.OpenConnectionAsync(cancellationToken);
+        await using var backendPidCommand = trainer.Database.GetDbConnection().CreateCommand();
+        backendPidCommand.CommandText = "SELECT pg_backend_pid();";
+        var backendPid = (int)(await backendPidCommand.ExecuteScalarAsync(cancellationToken))!;
+        var createTask = new MealPlanStore(trainer).CreateAsync(
+            catalog.TrainerId,
+            NutritionPlanTestData.CreateModel(
+                catalog.ClientId,
+                catalog.FoodId,
+                catalog.SupplementId),
+            Now.AddMinutes(1),
+            CancellationToken.None);
+
+        bool waitedForLock;
+        bool completedWhileBlockWasUncommitted;
+        try
+        {
+            waitedForLock = await WaitUntilBackendWaitsForLockAsync(
+                backendPid,
+                cancellationToken);
+            completedWhileBlockWasUncommitted = createTask.IsCompleted;
+        }
+        finally
+        {
+            // A operação administrativa não pode ficar suspensa se a observação falhar.
+            pause.Release();
+        }
+
+        var blockOutcome = await blockTask;
+        var createOutcome = await createTask;
+        var persistedPlans = await trainer.MealPlans.AsNoTracking()
+            .CountAsync(plan => plan.ClientId == catalog.ClientId, cancellationToken);
+
+        Assert.Equal(
+            (true, false, PrivateCatalogModerationStoreResult.Changed,
+                MealPlanStoreResult.Status.CatalogReferenceInactive, 0),
+            (waitedForLock, completedWhileBlockWasUncommitted, blockOutcome,
+                createOutcome.Kind, persistedPlans));
+    }
+
+    [Fact]
     public async Task NewTrainingPlanReference_ToBlockedExercise_IsRejected()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
@@ -457,5 +520,68 @@ public sealed class PrivateCatalogModerationStoreTests
         context.Exercises.Add(exercise);
         await context.SaveChangesAsync(cancellationToken);
         return exercise.Id;
+    }
+
+    private PtManagerDbContext CreatePausingAdministrativeContext(
+        Guid actorUserId,
+        SaveChangesInterceptor pause)
+    {
+        var tenantContext = TestTenantContext.Administrator(actorUserId);
+        var options = new DbContextOptionsBuilder<PtManagerDbContext>()
+            .UseNpgsql(_fixture.ConnectionString)
+            .AddInterceptors(
+                new TenantWriteValidationInterceptor(tenantContext),
+                pause)
+            .Options;
+        return new PtManagerDbContext(options, tenantContext);
+    }
+
+    private async Task<bool> WaitUntilBackendWaitsForLockAsync(
+        int backendPid,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT EXISTS (
+                SELECT 1
+                FROM pg_stat_activity
+                WHERE pid = @backend_pid
+                    AND wait_event_type = 'Lock');
+            """;
+
+        for (var attempt = 0; attempt < 50; attempt++)
+        {
+            if (await _fixture.QueryScalarAsync<bool>(
+                sql,
+                cancellationToken,
+                new NpgsqlParameter("backend_pid", backendPid)))
+                return true;
+
+            await Task.Delay(100, cancellationToken);
+        }
+
+        return false;
+    }
+
+    private sealed class PauseAfterSaveChangesInterceptor : SaveChangesInterceptor
+    {
+        private readonly TaskCompletionSource<bool> _persisted =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource<bool> _release =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Task WaitUntilPersistedAsync(CancellationToken cancellationToken) =>
+            _persisted.Task.WaitAsync(cancellationToken);
+
+        public void Release() => _release.TrySetResult(true);
+
+        public override async ValueTask<int> SavedChangesAsync(
+            SaveChangesCompletedEventData eventData,
+            int result,
+            CancellationToken cancellationToken = default)
+        {
+            _persisted.TrySetResult(true);
+            await _release.Task.WaitAsync(cancellationToken);
+            return result;
+        }
     }
 }

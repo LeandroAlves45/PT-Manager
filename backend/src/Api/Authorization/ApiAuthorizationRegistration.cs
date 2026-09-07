@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Policy;
 
 namespace Api.Authorization;
 
@@ -28,6 +29,7 @@ public static class ApiAuthorizationRegistration
             });
 
         services.AddSingleton<IAuthorizationHandler, AdministrativeContextAuthorizationHandler>();
+        services.AddSingleton<IAuthorizationMiddlewareResultHandler, SecurityAuthorizationResultHandler>();
         return services;
     }
 }

@@ -6,10 +6,9 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
-**Fase ativa:** ler primeiro `.claude/memory/ACTIVE.md`. **Sprint 4 Fase 5 fechada no
-backend (2026-09-06)**. Ver
-`Sessions/2026-09-06-sprint4-fase5-migration-local-aplicada.md` e
-`docs/backend-files/sprint_4/fase_5/13_fase_5_implementacao_concluida.md`.
+**Estado ativo:** ler primeiro `.claude/memory/ACTIVE.md`. **Sprint 4 finalizado
+em 2026-09-06**. Ver `Sessions/2026-09-06-sprint4-finalizado.md` e
+`docs/backend-files/sprint_4/Validacao_Final_Sprint_4.md`.
 
 ## Estado atual
 
@@ -302,6 +301,11 @@ alegações anteriores desatualizadas está em
 - Sprint 4 Fase 5 implementada e fechada no backend (Google Sign-In;
   migration local aplicada, 1896 testes verdes, `QG5-FRONTEND-001` aberto):
   `Sessions/2026-09-06-sprint4-fase5-migration-local-aplicada.md`.
+- Sprint 4 finalizado em 2026-09-06 após corrigir os quatro bloqueios da Fase 6:
+  contrato OpenAPI, logging de segurança, retry idempotente do Google e concorrência
+  de referências privadas. Evidência final: 1907 testes aprovados, 1 ignorado manual,
+  build e format limpos, modelo EF sincronizado e auditoria NuGet sem vulnerabilidades.
+  Ver `Sessions/2026-09-06-sprint4-finalizado.md`.
 
 ## Padrões documentais
 

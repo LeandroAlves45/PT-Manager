@@ -48,8 +48,8 @@ public sealed class CheckInsController : ApiControllerBase
         [FromServices] ListCheckInsHandler handler,
         CancellationToken cancellationToken)
     {
-        var page = pageParameters.EffectivePageNumber;
-        var size = pageParameters.EffectivePageSize;
+        var page = pageParameters.GetEffectivePageNumber();
+        var size = pageParameters.GetEffectivePageSize();
 
         return RespondAsync(
             handler.HandleAsync(

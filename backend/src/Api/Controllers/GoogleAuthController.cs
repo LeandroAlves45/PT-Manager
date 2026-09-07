@@ -28,13 +28,16 @@ public sealed class GoogleAuthController : ApiControllerBase
 {
     private readonly AuthCookieWriter _authCookies;
     private readonly GoogleChallengeCookieWriter _challengeCookies;
+    private readonly ILogger<GoogleAuthController> _logger;
 
     public GoogleAuthController(
         AuthCookieWriter authCookies,
-        GoogleChallengeCookieWriter challengeCookies)
+        GoogleChallengeCookieWriter challengeCookies,
+        ILogger<GoogleAuthController> logger)
     {
         _authCookies = authCookies ?? throw new ArgumentNullException(nameof(authCookies));
         _challengeCookies = challengeCookies ?? throw new ArgumentNullException(nameof(challengeCookies));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     [HttpPost("challenge")]
@@ -45,6 +48,9 @@ public sealed class GoogleAuthController : ApiControllerBase
     {
         var challenge = await handler.HandleAsync(cancellationToken);
         _challengeCookies.Write(Response, challenge.Nonce, challenge.ExpiresAt);
+        _logger.LogInformation(SecurityLogEvents.GoogleSignIn,
+            "Security operation {SecurityOperation} completed with outcome {SecurityOutcome}.",
+            "google_sign_in_challenge", "succeeded");
         return Ok(GoogleChallengeResponse.From(challenge));
     }
 
@@ -65,16 +71,27 @@ public sealed class GoogleAuthController : ApiControllerBase
                 cancellationToken);
 
             if (!result.IsSuccess)
+            {
+                LogResult(SecurityLogEvents.GoogleSignIn, "google_sign_in", result);
                 return Problem(result.Error!);
+            }
 
             if (result.Value.IsEmailConfirmationRequired)
+            {
+                _logger.LogInformation(SecurityLogEvents.GoogleSignIn,
+                    "Security operation {SecurityOperation} completed with outcome {SecurityOutcome}.",
+                    "google_sign_in", "email_confirmation_required");
                 return Accepted(new GooglePendingResponse(
                     GooglePendingResponse.EmailConfirmationRequired));
+            }
 
             var session = result.Value.Session ?? throw new InvalidOperationException(
                 "Successful Google sign-in has no session");
 
             _authCookies.Write(Response, session.RawRefreshToken, session.RefreshTokenExpiresAt);
+            _logger.LogInformation(SecurityLogEvents.GoogleSignIn,
+                "Security operation {SecurityOperation} completed with outcome {SecurityOutcome} for user {UserId} and role {Role}.",
+                "google_sign_in", "succeeded", session.UserId, session.Role);
             return Ok(SessionResponse.From(session));
         }
         finally
@@ -92,6 +109,7 @@ public sealed class GoogleAuthController : ApiControllerBase
         CancellationToken cancellationToken)
     {
         var result = await handler.HandleAsync(cancellationToken);
+        LogResult(SecurityLogEvents.GoogleLink, "google_link_challenge", result);
         if (!result.IsSuccess)
             return Problem(result.Error!);
 
@@ -115,6 +133,7 @@ public sealed class GoogleAuthController : ApiControllerBase
                     GoogleChallengeCookieWriter.Read(Request) ?? string.Empty,
                     request.CurrentPassword),
                 cancellationToken);
+            LogResult(SecurityLogEvents.GoogleLink, "google_link", result);
             return result.IsSuccess ? NoContent() : Problem(result.Error!);
         }
         finally
@@ -124,4 +143,19 @@ public sealed class GoogleAuthController : ApiControllerBase
     }
 
     private IActionResult Problem(Error error) => ApiResultMapper.ToProblem(this, error);
+
+    private void LogResult(EventId eventId, string operation, Result result)
+    {
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation(eventId,
+                "Security operation {SecurityOperation} completed with outcome {SecurityOutcome}.",
+                operation, "succeeded");
+            return;
+        }
+
+        _logger.LogWarning(eventId,
+            "Security operation {SecurityOperation} completed with outcome {SecurityOutcome} and error {ErrorCode}.",
+            operation, "rejected", result.Error!.Code);
+    }
 }

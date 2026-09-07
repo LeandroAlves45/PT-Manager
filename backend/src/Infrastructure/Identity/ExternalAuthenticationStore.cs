@@ -22,6 +22,7 @@ internal sealed class ExternalAuthenticationStore :
     private readonly UserManager<User> _userManager;
     private readonly ITenantContextInitializer _tenantInitializer;
 
+    /// <summary>Inicializa o store com contexto, tokens opacos, Identity e tenant.</summary>
     public ExternalAuthenticationStore(
         PtManagerDbContext dbContext,
         IOpaqueTokenService tokens,
@@ -35,6 +36,7 @@ internal sealed class ExternalAuthenticationStore :
         _tenantInitializer = tenantInitializer ?? throw new ArgumentNullException(nameof(tenantInitializer));
     }
 
+    /// <summary>Emite um challenge efémero e remove expirados antes de persistir.</summary>
     public async Task<IssuedExternalChallenge> IssueAsync(
         string purpose,
         Guid? userId,
@@ -64,6 +66,10 @@ internal sealed class ExternalAuthenticationStore :
         return new IssuedExternalChallenge(generated.RawToken, expiresAt);
     }
 
+    /// <summary>
+    /// Conclui o sign-in Google: utilizador existente, link necessário ou criação
+    /// Personal Trainer ou Cliente.
+    /// </summary>
     public async Task<GoogleSignInStoreResult> SignInAsync(
         VerifiedExternalIdentity identity,
         string rawNonce,
@@ -79,11 +85,42 @@ internal sealed class ExternalAuthenticationStore :
         var refresh = _tokens.Generate();
         var csrf = _tokens.Generate();
         var confirmation = _tokens.Generate();
+        var prospectiveUser = new User(
+            new EmailAddress(identity.Email),
+            rawInvitationToken is null ? "trainer" : "client",
+            identity.FullName,
+            now);
+        var prospectiveExternalIdentity = new ExternalIdentity(
+            prospectiveUser.Id,
+            identity.Provider,
+            identity.Subject,
+            now);
+        var attemptState = new SignInAttemptState();
         var strategy = _dbContext.Database.CreateExecutionStrategy();
+        var attempt = 0;
 
         return await strategy.ExecuteAsync(async () =>
         {
+            attempt++;
             _dbContext.ChangeTracker.Clear();
+
+            // Os hashes emitidos identificam de forma inequívoca esta invocação. Se o
+            // commit anterior foi confirmado pelo PostgreSQL mas a confirmação não chegou
+            // ao processo, devolvemos o mesmo resultado sem repetir a escrita.
+            if (attempt > 1)
+            {
+                var completed = await TryResolveCompletedSignInAsync(
+                    refresh,
+                    csrf,
+                    confirmation,
+                    refreshExpiresAt,
+                    confirmationExpiresAt,
+                    attemptState,
+                    cancellationToken);
+                if (completed is not null)
+                    return completed;
+            }
+
             await using var transaction = await _dbContext.Database
                 .BeginTransactionAsync(cancellationToken);
 
@@ -119,6 +156,7 @@ internal sealed class ExternalAuthenticationStore :
                         refresh,
                         csrf,
                         refreshExpiresAt,
+                        attemptState,
                         now,
                         cancellationToken);
                 }
@@ -156,6 +194,9 @@ internal sealed class ExternalAuthenticationStore :
                         refresh,
                         csrf,
                         confirmation,
+                        prospectiveUser,
+                        prospectiveExternalIdentity,
+                        attemptState,
                         now,
                         cancellationToken)
                     : await CreateClientAsync(
@@ -165,6 +206,9 @@ internal sealed class ExternalAuthenticationStore :
                         refreshExpiresAt,
                         refresh,
                         csrf,
+                        prospectiveUser,
+                        prospectiveExternalIdentity,
+                        attemptState,
                         now,
                         cancellationToken);
             }
@@ -180,6 +224,7 @@ internal sealed class ExternalAuthenticationStore :
         });
     }
 
+    /// <summary>Liga uma identidade Google a uma conta local após validar password e email.</summary>
     public async Task<GoogleLinkStoreStatus> LinkAsync(
         Guid userId,
         VerifiedExternalIdentity identity,
@@ -190,11 +235,29 @@ internal sealed class ExternalAuthenticationStore :
     {
         ArgumentNullException.ThrowIfNull(identity);
 
+        var linkedIdentity = new ExternalIdentity(
+            userId,
+            identity.Provider,
+            identity.Subject,
+            now);
         var strategy = _dbContext.Database.CreateExecutionStrategy();
+        var attempt = 0;
 
         return await strategy.ExecuteAsync(async () =>
         {
+            attempt++;
             _dbContext.ChangeTracker.Clear();
+
+            if (attempt > 1)
+            {
+                var completed = await ResolveCompletedLinkAsync(
+                    userId,
+                    identity,
+                    cancellationToken);
+                if (completed.HasValue)
+                    return completed.Value;
+            }
+
             await using var transaction = await _dbContext.Database
                 .BeginTransactionAsync(cancellationToken);
 
@@ -243,11 +306,7 @@ internal sealed class ExternalAuthenticationStore :
                     transaction,
                     cancellationToken);
 
-            identities.Add(new ExternalIdentity(
-                userId,
-                identity.Provider,
-                identity.Subject,
-                now));
+            identities.Add(linkedIdentity);
             try
             {
                 await _dbContext.SaveChangesAsync(cancellationToken);
@@ -265,6 +324,7 @@ internal sealed class ExternalAuthenticationStore :
         });
     }
 
+    /// <summary>Autentica um utilizador com identidade externa já persistida.</summary>
     private async Task<GoogleSignInStoreResult> SignInReturningAsync(
         ExternalIdentity external,
         ExternalAuthenticationChallenge challenge,
@@ -273,6 +333,7 @@ internal sealed class ExternalAuthenticationStore :
         GeneratedOpaqueToken refresh,
         GeneratedOpaqueToken csrf,
         DateTime refreshExpiresAt,
+        SignInAttemptState attemptState,
         DateTime now,
         CancellationToken cancellationToken)
     {
@@ -289,11 +350,9 @@ internal sealed class ExternalAuthenticationStore :
                 .Where(token => token.UserId == user.Id && token.ConsumedAt == null)
                 .ToListAsync(cancellationToken);
             _dbContext.EmailVerificationTokens.RemoveRange(previous);
-            _dbContext.EmailVerificationTokens.Add(new EmailVerificationToken(
-                user.Id,
-                confirmation.TokenHash,
-                confirmationExpiresAt,
-                now));
+            attemptState.Confirmation ??= new EmailVerificationToken(
+                user.Id, confirmation.TokenHash, confirmationExpiresAt, now);
+            _dbContext.EmailVerificationTokens.Add(attemptState.Confirmation);
             await _dbContext.SaveChangesAsync(cancellationToken);
             return GoogleSignInStoreResult.ConfirmationRequired(
                 new IssuedAuthenticationSecret(
@@ -307,15 +366,17 @@ internal sealed class ExternalAuthenticationStore :
         if (principal is null)
             return GoogleSignInStoreResult.Failure(GoogleSignInStoreStatus.RelationshipInactive);
 
-        AddRefresh(user.Id, refresh, csrf, refreshExpiresAt, now);
+        attemptState.Refresh ??= CreateRefresh(user.Id, refresh, csrf, refreshExpiresAt, now);
+        _dbContext.RefreshTokens.Add(attemptState.Refresh);
         _dbContext.Set<ExternalAuthenticationChallenge>().Remove(challenge);
         await _dbContext.SaveChangesAsync(cancellationToken);
-        Establish(principal);
+        EstablishOnce(principal, attemptState);
         return GoogleSignInStoreResult.Authenticated(
             principal,
             new IssuedRefreshSession(refresh.RawToken, csrf.RawToken, refreshExpiresAt));
     }
 
+    /// <summary>Cria conta do personal trainer, subscrição trial e identidade Google numa transação.</summary>
     private async Task<GoogleSignInStoreResult> CreateTrainerAsync(
         VerifiedExternalIdentity identity,
         ExternalAuthenticationChallenge challenge,
@@ -325,28 +386,24 @@ internal sealed class ExternalAuthenticationStore :
         GeneratedOpaqueToken refresh,
         GeneratedOpaqueToken csrf,
         GeneratedOpaqueToken confirmation,
+        User user,
+        ExternalIdentity externalIdentity,
+        SignInAttemptState attemptState,
         DateTime now,
         CancellationToken cancellationToken)
     {
-        var user = new User(
-            new EmailAddress(identity.Email),
-            "trainer",
-            identity.FullName,
-            now);
         if (identity.IsEmailAuthoritative)
             user.ConfirmEmail(now);
 
         _dbContext.Users.Add(user);
-        _dbContext.Set<ExternalIdentity>().Add(new ExternalIdentity(
-            user.Id,
-            identity.Provider,
-            identity.Subject,
-            now));
-        _dbContext.TrainerSettings.Add(new TrainerSettings(user.Id, now));
-        _dbContext.TrainerSubscriptions.Add(new TrainerSubscription(user.Id, trialEndsAt, now));
+        _dbContext.Set<ExternalIdentity>().Add(externalIdentity);
+        attemptState.TrainerSettings ??= new TrainerSettings(user.Id, now);
+        attemptState.Subscription ??= new TrainerSubscription(user.Id, trialEndsAt, now);
+        _dbContext.TrainerSettings.Add(attemptState.TrainerSettings);
+        _dbContext.TrainerSubscriptions.Add(attemptState.Subscription);
 
         // TrainerSettings e TrainerSubscription são política A': o interceptor de tenant
-        // exige um tenant efetivo no SaveChanges. O trainer é a raiz do seu próprio
+        // exige um tenant efetivo no SaveChanges. O pertrainer é a raiz do seu próprio
         // tenant, pelo que este é o instante em que passa a existir — estabelecer só
         // depois de gravar faria toda a criação de conta Google falhar.
         var principal = new AuthenticatedPrincipal(
@@ -354,15 +411,13 @@ internal sealed class ExternalAuthenticationStore :
             user.Id,
             user.Role,
             user.SecurityStamp);
-        Establish(principal);
+        EstablishOnce(principal, attemptState);
 
         if (!identity.IsEmailAuthoritative)
         {
-            _dbContext.EmailVerificationTokens.Add(new EmailVerificationToken(
-                user.Id,
-                confirmation.TokenHash,
-                confirmationExpiresAt,
-                now));
+            attemptState.Confirmation ??= new EmailVerificationToken(
+                user.Id, confirmation.TokenHash, confirmationExpiresAt, now);
+            _dbContext.EmailVerificationTokens.Add(attemptState.Confirmation);
 
             await SaveSignInAsync(cancellationToken);
             return GoogleSignInStoreResult.ConfirmationRequired(
@@ -373,13 +428,15 @@ internal sealed class ExternalAuthenticationStore :
                 ));
         }
 
-        AddRefresh(user.Id, refresh, csrf, refreshExpiresAt, now);
+        attemptState.Refresh ??= CreateRefresh(user.Id, refresh, csrf, refreshExpiresAt, now);
+        _dbContext.RefreshTokens.Add(attemptState.Refresh);
         await SaveSignInAsync(cancellationToken);
         return GoogleSignInStoreResult.Authenticated(
             principal,
             new IssuedRefreshSession(refresh.RawToken, csrf.RawToken, refreshExpiresAt));
     }
 
+    /// <summary>Consome convite, associa cliente e cria conta com identidade Google.</summary>
     private async Task<GoogleSignInStoreResult> CreateClientAsync(
         VerifiedExternalIdentity identity,
         ExternalAuthenticationChallenge challenge,
@@ -387,6 +444,9 @@ internal sealed class ExternalAuthenticationStore :
         DateTime refreshExpiresAt,
         GeneratedOpaqueToken refresh,
         GeneratedOpaqueToken csrf,
+        User user,
+        ExternalIdentity externalIdentity,
+        SignInAttemptState attemptState,
         DateTime now,
         CancellationToken cancellationToken)
     {
@@ -414,32 +474,24 @@ internal sealed class ExternalAuthenticationStore :
         if (client is null || client.IsDeleted || !client.IsActive || client.UserId.HasValue)
             return GoogleSignInStoreResult.Failure(GoogleSignInStoreStatus.RelationshipConflict);
 
-        var user = new User(
-            new EmailAddress(identity.Email),
-            "client",
-            identity.FullName,
-            now);
         user.ConfirmEmail(now);
         client.AttachUser(user.Id, now);
         invitation.MarkUsed(now);
 
         _dbContext.Users.Add(user);
-        _dbContext.Set<ExternalIdentity>().Add(new ExternalIdentity(
-            user.Id,
-            identity.Provider,
-            identity.Subject,
-            now));
-        AddRefresh(user.Id, refresh, csrf, refreshExpiresAt, now);
+        _dbContext.Set<ExternalIdentity>().Add(externalIdentity);
+        attemptState.Refresh ??= CreateRefresh(user.Id, refresh, csrf, refreshExpiresAt, now);
+        _dbContext.RefreshTokens.Add(attemptState.Refresh);
 
         // O Client alterado é política A: o interceptor valida a ownership contra o
-        // tenant efetivo, que aqui é o trainer dono do convite. Tem de estar
+        // tenant efetivo, que aqui é o personal trainer dono do convite. Tem de estar
         // estabelecido antes do SaveChanges, não depois.
         var principal = new AuthenticatedPrincipal(
             user.Id,
             invitation.TrainerId,
             user.Role,
             user.SecurityStamp);
-        Establish(principal);
+        EstablishOnce(principal, attemptState);
         await SaveSignInAsync(cancellationToken);
 
         return GoogleSignInStoreResult.Authenticated(
@@ -447,6 +499,7 @@ internal sealed class ExternalAuthenticationStore :
             new IssuedRefreshSession(refresh.RawToken, csrf.RawToken, refreshExpiresAt));
     }
 
+    /// <summary>Bloqueia e valida o challenge de nonce para o propósito e utilizador esperados.</summary>
     private async Task<ExternalAuthenticationChallenge?> LockChallengeAsync(
         string rawNonce,
         string purpose,
@@ -465,6 +518,7 @@ internal sealed class ExternalAuthenticationStore :
             : null;
     }
 
+    /// <summary>Confirma a remoção do challenge e devolve o estado de falha do link.</summary>
     private async Task<GoogleLinkStoreStatus> CompleteLinkFailureAsync(
         GoogleLinkStoreStatus status,
         Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction,
@@ -475,6 +529,7 @@ internal sealed class ExternalAuthenticationStore :
         return status;
     }
 
+    /// <summary>Resolve o principal autenticado e o tenant efetivo consoante o role.</summary>
     private async Task<AuthenticatedPrincipal?> ResolvePrincipalAsync(
         User user,
         CancellationToken cancellationToken)
@@ -496,21 +551,101 @@ internal sealed class ExternalAuthenticationStore :
             : new AuthenticatedPrincipal(user.Id, trainerId, user.Role, user.SecurityStamp);
     }
 
-    private void AddRefresh(
+    /// <summary>Reconstrói o resultado de um sign-in já commitado após retry da execution strategy.</summary>
+    private async Task<GoogleSignInStoreResult?> TryResolveCompletedSignInAsync(
+        GeneratedOpaqueToken refresh,
+        GeneratedOpaqueToken csrf,
+        GeneratedOpaqueToken confirmation,
+        DateTime refreshExpiresAt,
+        DateTime confirmationExpiresAt,
+        SignInAttemptState attemptState,
+        CancellationToken cancellationToken)
+    {
+        var refreshedUserId = await _dbContext.RefreshTokens
+            .AsNoTracking()
+            .Where(token => token.TokenHash == refresh.TokenHash &&
+                token.CsrfTokenHash == csrf.TokenHash)
+            .Select(token => (Guid?)token.UserId)
+            .SingleOrDefaultAsync(cancellationToken);
+        if (refreshedUserId.HasValue)
+        {
+            var user = await _dbContext.Users
+                .AsNoTracking()
+                .SingleOrDefaultAsync(candidate => candidate.Id == refreshedUserId.Value,
+                    cancellationToken);
+            if (user is null)
+                return GoogleSignInStoreResult.Failure(
+                    GoogleSignInStoreStatus.ConcurrencyConflict);
+
+            var principal = await ResolvePrincipalAsync(user, cancellationToken);
+            if (principal is null)
+                return GoogleSignInStoreResult.Failure(
+                    GoogleSignInStoreStatus.RelationshipInactive);
+
+            EstablishOnce(principal, attemptState);
+            return GoogleSignInStoreResult.Authenticated(
+                principal,
+                new IssuedRefreshSession(
+                    refresh.RawToken,
+                    csrf.RawToken,
+                    refreshExpiresAt));
+        }
+
+        var confirmationEmail = await _dbContext.EmailVerificationTokens
+            .AsNoTracking()
+            .Where(token => token.TokenHash == confirmation.TokenHash)
+            .Join(
+                _dbContext.Users.AsNoTracking(),
+                token => token.UserId,
+                user => user.Id,
+                (_, user) => user.Email)
+            .SingleOrDefaultAsync(cancellationToken);
+        return confirmationEmail is null
+            ? null
+            : GoogleSignInStoreResult.ConfirmationRequired(
+                new IssuedAuthenticationSecret(
+                    confirmationEmail,
+                    confirmation.RawToken,
+                    confirmationExpiresAt));
+    }
+
+    /// <summary>Detecta se o link já foi persistido por outra tentativa concorrente.</summary>
+    private async Task<GoogleLinkStoreStatus?> ResolveCompletedLinkAsync(
+        Guid userId,
+        VerifiedExternalIdentity identity,
+        CancellationToken cancellationToken)
+    {
+        var persisted = await _dbContext.Set<ExternalIdentity>()
+            .AsNoTracking()
+            .Where(candidate => candidate.Provider == identity.Provider &&
+                (candidate.Subject == identity.Subject || candidate.UserId == userId))
+            .Select(candidate => new { candidate.UserId, candidate.Subject })
+            .ToListAsync(cancellationToken);
+        if (persisted.Count == 0)
+            return null;
+
+        return persisted.Any(candidate => candidate.UserId == userId &&
+            string.Equals(candidate.Subject, identity.Subject, StringComparison.Ordinal))
+            ? GoogleLinkStoreStatus.Linked
+            : GoogleLinkStoreStatus.IdentityConflict;
+    }
+
+    /// <summary>Materializa um refresh token opaco com CSRF associado.</summary>
+    private static RefreshToken CreateRefresh(
         Guid userId,
         GeneratedOpaqueToken refresh,
         GeneratedOpaqueToken csrf,
         DateTime expiresAt,
-        DateTime now) =>
-        _dbContext.RefreshTokens.Add(new RefreshToken(
+        DateTime now) => new(
             userId,
             Guid.NewGuid(),
             refresh.TokenHash,
             csrf.TokenHash,
             null,
             expiresAt,
-            now));
+            now);
 
+    /// <summary>Persiste mutações do sign-in, traduzindo conflitos de unicidade em concorrência.</summary>
     private async Task SaveSignInAsync(CancellationToken cancellationToken)
     {
         try
@@ -528,24 +663,44 @@ internal sealed class ExternalAuthenticationStore :
         }
     }
 
-    private void Establish(AuthenticatedPrincipal principal) =>
+    /// <summary>Estabelece o tenant efetivo uma única vez por tentativa de sign-in.</summary>
+    private void EstablishOnce(
+        AuthenticatedPrincipal principal,
+        SignInAttemptState attemptState)
+    {
+        if (attemptState.IsTenantEstablished)
+            return;
+
         _tenantInitializer.Establish(
             principal.TrainerId,
             principal.UserId,
             principal.Role,
             TenantOrigin.System,
             false);
+        attemptState.IsTenantEstablished = true;
+    }
 
+    /// <summary>Identifica violação de unicidade nas constraints de external_identities.</summary>
     private static bool IsExternalIdentityConflict(DbUpdateException exception) =>
         exception.InnerException is PostgresException postgres &&
         postgres.SqlState == PostgresErrorCodes.UniqueViolation &&
         postgres.ConstraintName is "uq_external_identities_provider_subject" or
             "uq_external_identities_user_provider";
 
+    /// <summary>Identifica corrida concorrente na criação de utilizador com email já normalizado.</summary>
     private static bool IsDuplicateEmail(DbUpdateException exception) =>
         exception.InnerException is PostgresException postgres &&
         postgres.SqlState == PostgresErrorCodes.UniqueViolation &&
         postgres.ConstraintName == "uq_users_normalized_email";
+
+    private sealed class SignInAttemptState
+    {
+        internal RefreshToken? Refresh { get; set; }
+        internal EmailVerificationToken? Confirmation { get; set; }
+        internal TrainerSettings? TrainerSettings { get; set; }
+        internal TrainerSubscription? Subscription { get; set; }
+        internal bool IsTenantEstablished { get; set; }
+    }
 
     private sealed class ExternalAuthenticationConcurrencyException : Exception;
 }

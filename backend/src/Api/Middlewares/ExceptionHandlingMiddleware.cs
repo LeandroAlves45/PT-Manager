@@ -1,3 +1,4 @@
+using Api.Security;
 using Microsoft.Net.Http.Headers;
 
 namespace Api.Middlewares;
@@ -5,7 +6,6 @@ namespace Api.Middlewares;
 /// <summary>Converte falhas inesperadas em Problem Details sem expor stack traces.</summary>
 public sealed class ExceptionHandlingMiddleware
 {
-    private static readonly EventId InvalidPrincipalEvent = new(1001, "InvalidPrincipal");
     private static readonly EventId UnexpectedFailureEvent = new(1002, "UnexpectedFailure");
     private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
@@ -34,8 +34,9 @@ public sealed class ExceptionHandlingMiddleware
         }
         catch (InvalidAuthenticatedPrincipalException)
         {
-            _logger.LogWarning(InvalidPrincipalEvent,
-                "An authenticated request contained invalid identity claims.");
+            _logger.LogWarning(SecurityLogEvents.TenantRejection,
+                "An authenticated request was rejected while establishing tenant context with category {TenantRejectionCategory}.",
+                "invalid_identity_claims");
 
             // O handler JWT escreve-o nas suas próprias rejeições,
             // mas este caminho corre depois da autenticação ter sucedido as

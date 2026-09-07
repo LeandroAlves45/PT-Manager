@@ -68,8 +68,8 @@ id UUID PRIMARY KEY
 
 ## Decisão 2 — Identity: tabela `users` própria, não o schema padrão do ASP.NET Core Identity
 
-Estado: desenho reservado ao Sprint 4. O Lote 3F não altera `users`, não cria
-logins externos e mantém `password_hash` obrigatório.
+Estado: implementado no Sprint 4. A migration `AddExternalIdentities` cria os
+logins externos e torna `password_hash` anulável para contas sem password local.
 
 **Decisão:** manter uma tabela `users` própria e simplificada (compatível com o que o frontend já espera), implementando `IUserStore<User>`/`IUserPasswordStore<User>` customizados sobre ela — em vez de adotar o schema completo por omissão do Identity (`AspNetUsers`, `AspNetRoles`, `AspNetUserRoles`, `AspNetUserClaims`, etc.).
 
@@ -90,7 +90,7 @@ CREATE TABLE users (
     id UUID PRIMARY KEY,
     email VARCHAR(255) NOT NULL,
     normalized_email VARCHAR(255) NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255), -- null apenas quando existe autenticação externa válida
     security_stamp VARCHAR(255) NOT NULL,
     concurrency_stamp VARCHAR(255) NOT NULL,
     full_name VARCHAR(255),

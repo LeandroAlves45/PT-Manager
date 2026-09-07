@@ -4,6 +4,7 @@ using Api.Contracts.Authentication;
 using Api.Http;
 using Api.Security;
 using Application.Errors;
+using Application.Features.Authentication;
 using Application.Features.Authentication.AcceptClientInvite;
 using Application.Features.Authentication.BootstrapCsrf;
 using Application.Features.Authentication.ChangePassword;
@@ -39,20 +40,27 @@ public sealed class AuthController : ControllerBase
     public const string CsrfHeaderName = "X-CSRF-Token";
 
     private readonly AuthCookieWriter _cookies;
+    private readonly ILogger<AuthController> _logger;
 
-    public AuthController(AuthCookieWriter cookies) =>
+    /// <summary>Inicializa o controlador com o escritor de cookies e logger de segurança.</summary>
+    public AuthController(AuthCookieWriter cookies, ILogger<AuthController> logger)
+    {
         _cookies = cookies ?? throw new ArgumentNullException(nameof(cookies));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
     [HttpPost("login")]
     [EnableRateLimiting(ApiRateLimitPolicyNames.Login)]
-    public Task<IActionResult> LoginAsync(
+    public async Task<IActionResult> LoginAsync(
         [FromBody] LoginRequest request,
         [FromServices] LoginHandler handler,
-        CancellationToken cancellationToken) =>
-        RunSessionAsync(
-            handler.HandleAsync(
-                new LoginCommand(request.Email, request.Password),
-                cancellationToken));
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(
+            new LoginCommand(request.Email, request.Password), cancellationToken);
+        LogResult(SecurityLogEvents.Login, "login", result);
+        return CompleteSession(result);
+    }
 
     [HttpPost("signup")]
     [EnableRateLimiting(ApiRateLimitPolicyNames.SignUp)]
@@ -65,6 +73,8 @@ public sealed class AuthController : ControllerBase
             new RegisterTrainerCommand(request.Email, request.Password, request.FullName),
             cancellationToken);
 
+        LogResult(SecurityLogEvents.SignUp, "signup", result);
+
         return result.IsSuccess
             ? Created(string.Empty, SignUpResponse.From(result.Value))
             : Problem(result.Error!);
@@ -72,13 +82,17 @@ public sealed class AuthController : ControllerBase
 
     [HttpPost("refresh")]
     [EnableRateLimiting(ApiRateLimitPolicyNames.Refresh)]
-    public Task<IActionResult> RefreshAsync(
+    public async Task<IActionResult> RefreshAsync(
         [FromServices] RefreshSessionHandler handler,
-        CancellationToken cancellationToken) =>
-        RunSessionAsync(
-            handler.HandleAsync(
-                new RefreshSessionCommand(ReadRefreshCookie(), ReadCsrfHeader()),
-                cancellationToken));
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(
+            new RefreshSessionCommand(ReadRefreshCookie(), ReadCsrfHeader()), cancellationToken);
+
+        LogResult(SecurityLogEvents.RefreshRotation, "refresh", result);
+        LogCsrfRejection("refresh", result);
+        return CompleteSession(result);
+    }
 
     [HttpPost("logout")]
     [EnableRateLimiting(ApiRateLimitPolicyNames.Logout)]
@@ -90,6 +104,8 @@ public sealed class AuthController : ControllerBase
             new LogoutCommand(ReadRefreshCookie(), ReadCsrfHeader()),
             cancellationToken);
 
+        LogResult(SecurityLogEvents.Logout, "logout", result);
+        LogCsrfRejection("logout", result);
         if (!result.IsSuccess)
             return Problem(result.Error!);
 
@@ -120,10 +136,14 @@ public sealed class AuthController : ControllerBase
     public async Task<IActionResult> ConfirmEmailAsync(
         [FromBody] ConfirmEmailRequest request,
         [FromServices] ConfirmEmailHandler handler,
-        CancellationToken cancellationToken) =>
-        Respond(await handler.HandleAsync(
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(
             new ConfirmEmailCommand(request.Token),
-            cancellationToken));
+            cancellationToken);
+        LogResult(SecurityLogEvents.EmailConfirmation, "confirm_email", result);
+        return Respond(result);
+    }
 
     [HttpPost("resend-confirmation")]
     [Authorize(ApiPolicyNames.Authenticated)]
@@ -138,23 +158,31 @@ public sealed class AuthController : ControllerBase
     public async Task<IActionResult> RequestPasswordResetAsync(
         [FromBody] PasswordResetRequest request,
         [FromServices] RequestPasswordResetHandler handler,
-        CancellationToken cancellationToken) =>
-        Respond(await handler.HandleAsync(
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(
             new RequestPasswordResetCommand(request.Email),
-            cancellationToken));
+            cancellationToken);
+        LogResult(SecurityLogEvents.PasswordReset, "request_password_reset", result);
+        return Respond(result);
+    }
 
     [HttpPost("password-reset/complete")]
     [EnableRateLimiting(ApiRateLimitPolicyNames.PasswordResetComplete)]
     public async Task<IActionResult> CompletePasswordResetAsync(
         [FromBody] PasswordResetCompletionRequest request,
         [FromServices] ResetPasswordHandler handler,
-        CancellationToken cancellationToken) =>
-        Respond(await handler.HandleAsync(
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(
             new ResetPasswordCommand(
                 request.Token,
                 request.NewPassword,
                 request.ConfirmNewPassword),
-            cancellationToken));
+            cancellationToken);
+        LogResult(SecurityLogEvents.PasswordReset, "complete_password_reset", result);
+        return Respond(result);
+    }
 
     [HttpPost("change-password")]
     [Authorize(ApiPolicyNames.Authenticated)]
@@ -162,25 +190,32 @@ public sealed class AuthController : ControllerBase
     public async Task<IActionResult> ChangePasswordAsync(
         [FromBody] ChangePasswordRequest request,
         [FromServices] ChangePasswordHandler handler,
-        CancellationToken cancellationToken) =>
-        Respond(await handler.HandleAsync(
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(
             new ChangePasswordCommand(
                 request.CurrentPassword,
                 request.NewPassword,
                 request.ConfirmNewPassword),
-            cancellationToken));
+            cancellationToken);
+        LogResult(SecurityLogEvents.PasswordChange, "change_password", result);
+        return Respond(result);
+    }
 
     [HttpPost("accept-invite")]
     [Authorize(ApiPolicyNames.Client)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.InviteClient)]
-    public Task<IActionResult> AcceptInviteAsync(
+    public async Task<IActionResult> AcceptInviteAsync(
         [FromBody] AcceptInvitationRequest request,
         [FromServices] AcceptClientInviteHandler handler,
-        CancellationToken cancellationToken) =>
-        RunSessionAsync(
-            handler.HandleAsync(
-                new AcceptClientInviteCommand(request.Token, request.TransferApproved),
-                cancellationToken));
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(
+            new AcceptClientInviteCommand(request.Token, request.TransferApproved),
+            cancellationToken);
+        LogResult(SecurityLogEvents.SignUp, "accept_invite", result);
+        return CompleteSession(result);
+    }
 
     [HttpPost("invite-client")]
     [Authorize(ApiPolicyNames.Trainer)]
@@ -194,10 +229,8 @@ public sealed class AuthController : ControllerBase
             cancellationToken));
 
     /// <summary>Emite o cookie e devolve a sessão sem o refresh token no corpo.</summary>
-    private async Task<IActionResult> RunSessionAsync(
-        Task<Result<AuthenticationSessionDto>> operation)
+    private IActionResult CompleteSession(Result<AuthenticationSessionDto> result)
     {
-        var result = await operation;
         if (!result.IsSuccess)
             return Problem(result.Error!);
 
@@ -206,12 +239,40 @@ public sealed class AuthController : ControllerBase
         return Ok(SessionResponse.From(session));
     }
 
+    /// <summary>Regista sucesso ou recusa de uma operação de segurança.</summary>
+    private void LogResult(EventId eventId, string operation, Result result)
+    {
+        if (result.IsSuccess)
+        {
+            _logger.LogInformation(eventId,
+                "Security operation {SecurityOperation} completed with outcome {SecurityOutcome}.",
+                operation, "succeeded");
+            return;
+        }
+
+        _logger.LogWarning(eventId,
+            "Security operation {SecurityOperation} completed with outcome {SecurityOutcome} and error {ErrorCode}.",
+            operation, "rejected", result.Error!.Code);
+    }
+
+    /// <summary>Regista recusas explícitas por token CSRF inválido.</summary>
+    private void LogCsrfRejection(string operation, Result result)
+    {
+        if (result.Error?.Code != AuthenticationErrors.CsrfTokenInvalid.Code)
+            return;
+
+        _logger.LogWarning(SecurityLogEvents.CsrfRejection,
+            "Security operation {SecurityOperation} was rejected by CSRF validation.", operation);
+    }
+
+    /// <summary>Devolve 204 quando a operação não produz corpo de resposta.</summary>
     private IActionResult Respond(Result result) =>
         result.IsSuccess ? NoContent() : Problem(result.Error!);
 
     /// <summary>Lê o cookie de refresh, devolvendo string vazia quando ausente.</summary>
     private string ReadRefreshCookie() => AuthCookieWriter.Read(Request) ?? string.Empty;
 
+    /// <summary>Lê o header CSRF, devolvendo string vazia quando ausente ou ambíguo.</summary>
     private string ReadCsrfHeader() =>
         Request.Headers.TryGetValue(CsrfHeaderName, out var values) && values.Count == 1
             ? values[0] ?? string.Empty

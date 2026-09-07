@@ -6,30 +6,41 @@ using Domain.Entities.Identity;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Identity;
 
 /// <summary>Autentica, roda e revoga sessões locais.</summary>
 internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
 {
+    private static readonly EventId LoginEvent = new(2001, "Login");
+    private static readonly EventId LockoutEvent = new(2003, "Lockout");
+    private static readonly EventId RefreshRotationEvent = new(2008, "RefreshRotation");
+    private static readonly EventId RefreshReuseEvent = new(2009, "RefreshReuse");
+    private static readonly EventId RefreshFamilyRevocationEvent = new(2010, "RefreshFamilyRevocation");
+    private static readonly EventId CsrfRejectionEvent = new(2012, "CsrfRejection");
+
     private readonly PtManagerDbContext _dbContext;
     private readonly UserManager<User> _userManager;
     private readonly ILookupNormalizer _normalizer;
     private readonly IOpaqueTokenService _tokens;
     private readonly ITenantContextInitializer _tenantInitializer;
+    private readonly ILogger<AuthenticationSessionStore> _logger;
 
     public AuthenticationSessionStore(
         PtManagerDbContext dbContext,
         UserManager<User> userManager,
         ILookupNormalizer normalizer,
         IOpaqueTokenService tokens,
-        ITenantContextInitializer tenantInitializer)
+        ITenantContextInitializer tenantInitializer,
+        ILogger<AuthenticationSessionStore> logger)
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         _normalizer = normalizer ?? throw new ArgumentNullException(nameof(normalizer));
         _tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
         _tenantInitializer = tenantInitializer ?? throw new ArgumentNullException(nameof(tenantInitializer));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<AuthenticateStoreResult> AuthenticateAsync(
@@ -45,31 +56,53 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
             user => user.NormalizedEmail == normalized,
             cancellationToken);
         if (user is null)
+        {
+            LogLoginRejection(AuthenticateStoreStatus.InvalidCredentials);
             return AuthenticateStoreResult.Failure(AuthenticateStoreStatus.InvalidCredentials);
+        }
         if (!user.IsActive || user.IsDeleted)
+        {
+            LogLoginRejection(AuthenticateStoreStatus.AccountInactive);
             return AuthenticateStoreResult.Failure(AuthenticateStoreStatus.AccountInactive);
+        }
 
         if (await _userManager.IsLockedOutAsync(user))
+        {
+            _logger.LogWarning(LockoutEvent,
+                "Authentication login was rejected with outcome {SecurityOutcome}.",
+                "locked_out");
             return AuthenticateStoreResult.Failure(AuthenticateStoreStatus.LockedOut);
+        }
 
         if (!await _userManager.CheckPasswordAsync(user, password))
         {
             var failed = await _userManager.AccessFailedAsync(user);
-            return AuthenticateStoreResult.Failure(failed.Succeeded
+            var status = failed.Succeeded
                 ? AuthenticateStoreStatus.InvalidCredentials
-                : AuthenticateStoreStatus.ConcurrencyConflict);
+                : AuthenticateStoreStatus.ConcurrencyConflict;
+            LogLoginRejection(status);
+            return AuthenticateStoreResult.Failure(status);
         }
 
         if (!user.EmailConfirmed)
+        {
+            LogLoginRejection(AuthenticateStoreStatus.EmailNotConfirmed);
             return AuthenticateStoreResult.Failure(AuthenticateStoreStatus.EmailNotConfirmed);
+        }
 
         var reset = await _userManager.ResetAccessFailedCountAsync(user);
         if (!reset.Succeeded)
+        {
+            LogLoginRejection(AuthenticateStoreStatus.ConcurrencyConflict);
             return AuthenticateStoreResult.Failure(AuthenticateStoreStatus.ConcurrencyConflict);
+        }
 
         var principal = await ResolvePrincipalAsync(user, cancellationToken);
         if (principal is null)
+        {
+            LogLoginRejection(AuthenticateStoreStatus.RelationshipInactive);
             return AuthenticateStoreResult.Failure(AuthenticateStoreStatus.RelationshipInactive);
+        }
         Establish(principal);
 
         var generated = _tokens.Generate();
@@ -87,12 +120,19 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
         try
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation(LoginEvent,
+                "Authentication login completed with outcome {SecurityOutcome} for user {UserId} and role {Role}.",
+                "succeeded",
+                principal.UserId,
+                principal.Role);
+
             return AuthenticateStoreResult.Authenticated(
                 principal,
                 new IssuedRefreshSession(generated.RawToken, csrf.RawToken, refreshExpiresAt));
         }
         catch (DbUpdateConcurrencyException)
         {
+            LogLoginRejection(AuthenticateStoreStatus.ConcurrencyConflict);
             return AuthenticateStoreResult.Failure(AuthenticateStoreStatus.ConcurrencyConflict);
         }
     }
@@ -113,7 +153,7 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
         var attempt = 0;
         var established = false;
 
-        return await strategy.ExecuteAsync(async () =>
+        var outcome = await strategy.ExecuteAsync(async () =>
         {
             attempt++;
 
@@ -149,6 +189,9 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
                 },
                 cancellationToken);
         });
+
+        LogRefreshResult(outcome);
+        return outcome;
     }
 
     public async Task<RotateCsrfStoreResult> RotateCsrfAsync(
@@ -161,7 +204,7 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
         var csrf = _tokens.Generate();
         var strategy = _dbContext.Database.CreateExecutionStrategy();
 
-        return await strategy.ExecuteAsync(async () =>
+        var outcome = await strategy.ExecuteAsync(async () =>
         {
             // Ao contrário de RotateAsync, aqui não existe o problema do
             // commit ambíguo. A operação é idempotente na prática: repeti-la
@@ -200,6 +243,11 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
                 return RotateCsrfStoreResult.Failure(RotateCsrfStoreStatus.ConcurrencyConflict);
             }
         });
+
+        if (outcome.Kind == RotateCsrfStoreStatus.Reused)
+            LogRefreshReuseAndFamilyRevocation();
+
+        return outcome;
     }
 
     private async Task<RotateRefreshStoreResult?> RebuildCommittedRotationAsync(
@@ -259,7 +307,11 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
             return RotateRefreshStoreResult.Failure(RotateRefreshStoreStatus.Expired);
 
         if (!MatchesCsrf(current.CsrfTokenHash, presentedCsrfHash))
+        {
+            _logger.LogWarning(CsrfRejectionEvent,
+                "Refresh rotation was rejected with outcome {SecurityOutcome}.", "csrf_invalid");
             return RotateRefreshStoreResult.Failure(RotateRefreshStoreStatus.CsrfInvalid);
+        }
 
         var user = await _dbContext.Users
             .SingleOrDefaultAsync(user => user.Id == current.UserId, cancellationToken);
@@ -311,7 +363,11 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
             return RevokeSessionStoreStatus.NotFound;
 
         if (!MatchesCsrf(token.CsrfTokenHash, presentedCsrfHash))
+        {
+            _logger.LogWarning(CsrfRejectionEvent,
+                "Logout was rejected with outcome {SecurityOutcome}.", "csrf_invalid");
             return RevokeSessionStoreStatus.CsrfInvalid;
+        }
 
         token.Revoke(now);
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -388,5 +444,41 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
             .ToListAsync(cancellationToken);
         foreach (var token in family)
             token.Revoke(now);
+
+    }
+
+    private void LogLoginRejection(AuthenticateStoreStatus status) =>
+        _logger.LogWarning(LoginEvent,
+            "Authentication login was rejected with outcome {SecurityOutcome}.",
+            status.ToString());
+
+    private void LogRefreshResult(RotateRefreshStoreResult result)
+    {
+        if (result.Kind == RotateRefreshStoreStatus.Rotated)
+        {
+            _logger.LogInformation(RefreshRotationEvent,
+                "Refresh rotation completed with outcome {SecurityOutcome} for user {UserId} and role {Role}.",
+                "succeeded",
+                result.Principal!.UserId,
+                result.Principal.Role);
+            return;
+        }
+
+        if (result.Kind == RotateRefreshStoreStatus.Reused)
+        {
+            LogRefreshReuseAndFamilyRevocation();
+            return;
+        }
+
+        _logger.LogWarning(RefreshRotationEvent,
+            "Refresh rotation was rejected with outcome {SecurityOutcome}.", result.Kind.ToString());
+    }
+
+    private void LogRefreshReuseAndFamilyRevocation()
+    {
+        _logger.LogWarning(RefreshReuseEvent,
+            "Refresh reuse was detected with outcome {SecurityOutcome}.", "family_revoked");
+        _logger.LogWarning(RefreshFamilyRevocationEvent,
+            "A refresh token family was revoked with outcome {SecurityOutcome}.", "reuse_detected");
     }
 }

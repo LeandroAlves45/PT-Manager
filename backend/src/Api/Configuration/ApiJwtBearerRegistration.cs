@@ -1,5 +1,6 @@
 using System.Text;
 using Api.Authorization;
+using Api.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -9,6 +10,7 @@ namespace Api.Configuration;
 public static class ApiJwtBearerRegistration
 {
     private const string SectionName = "Jwt";
+    private const string JwtRejectionLoggedItemKey = "Api.Security.JwtRejectionLogged";
 
     /// <summary>Adiciona o esquema bearer com validação estrita.</summary>
     public static IServiceCollection AddApiJwtBearer(
@@ -59,8 +61,22 @@ public static class ApiJwtBearerRegistration
 
                 options.Events = new JwtBearerEvents
                 {
+                    OnAuthenticationFailed = context =>
+                    {
+                        LogJwtRejection(context.HttpContext, ClassifyJwtFailure(context.Exception));
+                        return Task.CompletedTask;
+                    },
                     OnChallenge = context =>
                     {
+                        if (!context.HttpContext.Items.ContainsKey(JwtRejectionLoggedItemKey)
+                            && context.Request.Headers.Authorization.Count > 0)
+                        {
+                            var category = context.AuthenticateFailure is null
+                                ? "invalid_token"
+                                : ClassifyJwtFailure(context.AuthenticateFailure);
+                            LogJwtRejection(context.HttpContext, category);
+                        }
+
                         context.ErrorDescription = null;
                         context.Error = null;
                         return Task.CompletedTask;
@@ -108,5 +124,31 @@ public static class ApiJwtBearerRegistration
             ? throw new InvalidOperationException(
                 "Configuration 'Jwt:ClockSkew' cannot exceed 30 seconds.")
             : parsed;
+    }
+
+    private static string ClassifyJwtFailure(Exception exception) => exception switch
+    {
+        SecurityTokenExpiredException => "expired",
+        SecurityTokenNotYetValidException => "not_yet_valid",
+        SecurityTokenInvalidLifetimeException => "invalid_lifetime",
+        SecurityTokenNoExpirationException => "missing_expiration",
+        SecurityTokenInvalidSignatureException => "invalid_signature",
+        SecurityTokenInvalidIssuerException => "invalid_issuer",
+        SecurityTokenInvalidAudienceException => "invalid_audience",
+        SecurityTokenValidationException => "validation_failed",
+        _ => "malformed"
+    };
+
+    private static void LogJwtRejection(HttpContext context, string category)
+    {
+        var logger = context.RequestServices
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("Api.Security.JwtBearer");
+
+        // A exceção não é anexada porque algumas implementações incluem partes
+        // da credencial na mensagem.
+        logger.LogWarning(SecurityLogEvents.JwtRejection,
+            "A bearer token was rejected with category {JwtRejectionCategory}.", category);
+        context.Items[JwtRejectionLoggedItemKey] = true;
     }
 }

@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Api.FunctionalTests.Controllers;
 
@@ -182,13 +183,14 @@ public sealed class AdminContentModerationControllerTests
             routes);
     }
 
-    private static AdminContentModerationController CreateController() => new()
-    {
-        ControllerContext = new ControllerContext
+    private static AdminContentModerationController CreateController() =>
+        new(NullLogger<AdminContentModerationController>.Instance)
         {
-            HttpContext = new DefaultHttpContext()
-        }
-    };
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            }
+        };
 
     private static BlockFoodHandler CreateHandler(PrivateCatalogModerationStoreResult outcome) =>
         new(new BlockFoodCommandValidator(), new TestTenantContext(), new TestClock(), new StubStore(outcome));

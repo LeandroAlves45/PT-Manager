@@ -50,8 +50,8 @@ public sealed class ClientSupplementAssignmentsController : ApiControllerBase
         [FromServices] ListSupplementAssignmentsHandler handler,
         CancellationToken cancellationToken)
     {
-        var page = pageParameters.EffectivePageNumber;
-        var size = pageParameters.EffectivePageSize;
+        var page = pageParameters.GetEffectivePageNumber();
+        var size = pageParameters.GetEffectivePageSize();
 
         return RespondAsync(
             handler.HandleAsync(

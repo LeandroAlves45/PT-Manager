@@ -17,9 +17,9 @@ public sealed record PageParameters
     [FromQuery(Name = "page_size")]
     public int PageSize { get; init; }
 
-    public int EffectivePageNumber =>
+    public int GetEffectivePageNumber() =>
         PageNumber <= 0 ? DefaultPageNumber : PageNumber;
 
-    public int EffectivePageSize =>
+    public int GetEffectivePageSize() =>
         PageSize <= 0 ? DefaultPageSize : PageSize;
 }

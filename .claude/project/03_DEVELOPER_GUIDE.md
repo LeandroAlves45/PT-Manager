@@ -44,30 +44,42 @@ Git
    **Opção B: Neon Cloud**
    ```
    Acesso: https://console.neon.tech
-   Criar projecto, copiar connection string para appsettings.json
+   Criar projecto e guardar a connection string em user secrets
    ```
 
-4. **Configure appsettings.json**
+4. **Configurar desenvolvimento local sem versionar segredos**
+
+   Usar user secrets a partir de `backend/src/Api`. Nunca guardar connection strings,
+   signing keys ou API keys em `appsettings.json`.
+
+   ```bash
+   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<connection-string-local>"
+   dotnet user-secrets set "Jwt:SigningKey" "<chave-com-pelo-menos-32-bytes>"
+   dotnet user-secrets set "Resend:ApiKey" "<api-key>"
+   dotnet user-secrets set "Google:ClientId" "<client-id-publico>.apps.googleusercontent.com"
+   ```
+
+   Configuração não secreta esperada pelo backend:
+
    ```json
    {
-     "ConnectionStrings": {
-       "DefaultConnection": "Host=localhost;Database=ptmanager_dev;Username=postgres;Password=postgres"
-     },
-     "Jwt": {
-       "Secret": "dev_secret_key_min_32_chars_long",
-       "AccessTokenMinutes": 15,
-       "RefreshTokenDays": 30
-     },
-     "Stripe": {
-       "SecretKey": "sk_test_..."
-     },
-     "Resend": {
-       "ApiKey": "re_test_..."
-     },
-     "Upstash": {
-       "QStashSigningKey": "dev_signing_key"
-     }
-   }
+      "Jwt": {
+        "Issuer": "https://api.ptmanager.local",
+        "Audience": "ptmanager.spa",
+        "Lifetime": "00:15:00",
+        "ClockSkew": "00:00:30"
+      },
+      "Cors": {
+        "AllowedOrigins": ["https://localhost:<porta-vite>"]
+      },
+      "AuthCookies": {
+        "SameSite": "Lax"
+      },
+      "ForwardedHeaders": {
+        "KnownProxies": [],
+        "KnownNetworks": []
+      }
+    }
    ```
    `RedisConnectionString` não pertence à configuração base. Só é acrescentada se o
    Gate 6B aprovar Redis. Nesse caso, em desenvolvimento pode apontar para Redis local
@@ -84,8 +96,8 @@ Git
    dotnet run --project src/Api/Api.csproj
    ```
    
-   Acesso: http://localhost:5000
-   Swagger UI: http://localhost:5000/swagger
+   API HTTPS: https://localhost:7186
+   Scalar: https://localhost:7186/scalar/v1
 
    Em dev local não há QStash a chamar `/api/internal/jobs/dispatch` — chamar manualmente com `curl` ou um script simples para testar o dispatcher.
 
@@ -359,6 +371,13 @@ using (_logger.BeginScope(new Dictionary<string, object>
     _logger.LogInformation("[NUTRITION] Processing meal plan");
 }
 ```
+
+Desde o fecho do Sprint 4, eventos de autenticação, JWT, Origin e CSRF, rate
+limiting, autorização, tenant, contexto administrativo, moderação e Google usam
+EventIds estáveis entre 2001 e 2020. Os logs registam categorias e identificadores
+seguros; nunca passwords, headers Authorization, cookies, tokens, hashes, nonces,
+emails completos ou request bodies. Testes de logging devem inspecionar mensagem
+formatada, estado estruturado e exceção com sentinelas.
 
 ---
 

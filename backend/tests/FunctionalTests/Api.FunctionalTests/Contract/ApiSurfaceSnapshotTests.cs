@@ -34,6 +34,16 @@ public sealed class ApiSurfaceSnapshotTests : IDisposable
         Assert.Equal(expected, Normalize(current));
     }
 
+    [Fact]
+    public async Task ApiSurface_QueryParametersUseSnakeCaseAndExcludeBindingHelpers()
+    {
+        using var document = await GetOpenApiDocumentAsync();
+
+        var invalidParameters = FindInvalidQueryParameters(document.RootElement);
+
+        Assert.Empty(invalidParameters);
+    }
+
     [Fact(Skip = "Run manually when accepting an intentional contract change.")]
     public async Task RegenerateSnapshot()
     {
@@ -47,11 +57,7 @@ public sealed class ApiSurfaceSnapshotTests : IDisposable
 
     private async Task<string> BuildSurfaceAsync()
     {
-        using var client = _factory.CreateClient();
-        using var stream = await client.GetStreamAsync(
-            "/openapi/v1.json", TestContext.Current.CancellationToken);
-        using var document = await JsonDocument.ParseAsync(
-            stream, cancellationToken: TestContext.Current.CancellationToken);
+        using var document = await GetOpenApiDocumentAsync();
 
         var lines = new List<string>();
 
@@ -77,6 +83,87 @@ public sealed class ApiSurfaceSnapshotTests : IDisposable
 
         return builder.ToString();
     }
+
+    private async Task<JsonDocument> GetOpenApiDocumentAsync()
+    {
+        using var client = _factory.CreateClient();
+        using var stream = await client.GetStreamAsync(
+            "/openapi/v1.json", TestContext.Current.CancellationToken);
+
+        return await JsonDocument.ParseAsync(
+            stream, cancellationToken: TestContext.Current.CancellationToken);
+    }
+
+    private static IReadOnlyList<string> FindInvalidQueryParameters(JsonElement document)
+    {
+        var invalidParameters = new List<string>();
+
+        foreach (var path in document.GetProperty("paths").EnumerateObject())
+        {
+            if (path.Value.TryGetProperty("parameters", out var pathParameters))
+                AddInvalidQueryParameters(pathParameters, path.Name, invalidParameters);
+
+            foreach (var operation in path.Value.EnumerateObject())
+            {
+                if (operation.Value.ValueKind != JsonValueKind.Object)
+                    continue;
+
+                if (!operation.Value.TryGetProperty("parameters", out var parameters))
+                    continue;
+
+                AddInvalidQueryParameters(parameters, path.Name, invalidParameters);
+            }
+        }
+
+        return invalidParameters;
+    }
+
+    private static void AddInvalidQueryParameters(
+        JsonElement parameters,
+        string path,
+        ICollection<string> invalidParameters)
+    {
+        foreach (var parameter in parameters.EnumerateArray())
+        {
+            if (parameter.GetProperty("in").GetString() != "query")
+                continue;
+
+            var name = parameter.GetProperty("name").GetString()!;
+            if (!IsSnakeCase(name) || IsBindingHelper(name))
+                invalidParameters.Add($"{path}: {name}");
+        }
+    }
+
+    private static bool IsSnakeCase(string value)
+    {
+        if (value.Length == 0 || value[0] is < 'a' or > 'z' || value[^1] == '_')
+            return false;
+
+        var previousWasUnderscore = false;
+        foreach (var character in value)
+        {
+            if (character == '_')
+            {
+                if (previousWasUnderscore)
+                    return false;
+
+                previousWasUnderscore = true;
+                continue;
+            }
+
+            if (character is not (>= 'a' and <= 'z')
+                && character is not (>= '0' and <= '9'))
+                return false;
+
+            previousWasUnderscore = false;
+        }
+
+        return true;
+    }
+
+    private static bool IsBindingHelper(string value) =>
+        value.Equals("effective_page_number", StringComparison.OrdinalIgnoreCase)
+        || value.Equals("effective_page_size", StringComparison.OrdinalIgnoreCase);
 
     private static string DescribeParameters(JsonElement operation)
     {

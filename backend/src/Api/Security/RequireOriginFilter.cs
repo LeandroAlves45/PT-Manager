@@ -32,11 +32,13 @@ public sealed class RequireOriginFilter : IAsyncAuthorizationFilter
         if (endpoint?.Metadata.GetMetadata<RequireOriginAttribute>() is null)
             return;
 
-        if (IsAllowed(context.HttpContext.Request.Headers.Origin))
+        var rejectionCategory = GetRejectionCategory(context.HttpContext.Request.Headers.Origin);
+        if (rejectionCategory is null)
             return;
 
-        _logger.LogWarning(
-            "A cookie-authorized request was rejected because its origin is not allowed.");
+        _logger.LogWarning(SecurityLogEvents.OriginRejection,
+            "A cookie-authorized request was rejected by Origin validation with category {RejectionCategory}.",
+            rejectionCategory);
 
         await ProblemDetailsResponseWriter.WriteAsync(
             context.HttpContext,
@@ -48,17 +50,17 @@ public sealed class RequireOriginFilter : IAsyncAuthorizationFilter
         context.Result = new EmptyResult();
     }
 
-    private bool IsAllowed(StringValues origin)
+    private string? GetRejectionCategory(StringValues origin)
     {
         if (origin.Count != 1)
-            return false;
+            return origin.Count == 0 ? "missing" : "multiple";
 
         var value = origin[0];
         if (string.IsNullOrWhiteSpace(value))
-            return false;
+            return "missing";
 
         if (!Uri.TryCreate(value, UriKind.Absolute, out var parsed))
-            return false;
+            return "malformed";
 
         // A comparação é feita sobre a autoridade normalizada, para que
         // "https://app.pt" e "https://app.pt:443" não sejam tratados como
@@ -72,9 +74,9 @@ public sealed class RequireOriginFilter : IAsyncAuthorizationFilter
                     allowedUri.GetLeftPart(UriPartial.Authority),
                     normalized,
                     StringComparison.OrdinalIgnoreCase))
-                return true;
+                return null;
         }
 
-        return false;
+        return "not_allowed";
     }
 }
