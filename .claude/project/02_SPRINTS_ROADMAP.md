@@ -443,6 +443,10 @@ Estado de partida verificado antes do Sprint 5:
 
 ### Sprint 5A: Dispatcher, outbox e notificações
 
+Estado: **fechada em 2026-09-08.** `QStash:Enabled` permanece `false` até
+migration local, user-secrets e preflight SQL no ambiente persistente.
+Evidência: `docs/backend-files/sprint_5/sprint_5A/15_revisao_implementacao_validacao.md`.
+
 1. Implementar `JobDispatcher` e `OutboxDispatcher` sobre as stores existentes.
 2. Usar routing por allowlist de `job_type`/`job_version` e `message_type`; tipos ou
    versões desconhecidos falham de forma permanente e sanitizada.
@@ -471,7 +475,7 @@ Estado de partida verificado antes do Sprint 5:
     fornecerem os respectivos handlers ou existir decisão explícita sobre os dados
     reais.
 
-Gate 5A:
+Gate 5A: **fechado em 2026-09-08.**
 
 - Dois dispatchers concorrentes não reclamam o mesmo item.
 - Lease expirado recupera; lease perdido não conclui o item.
@@ -599,8 +603,8 @@ o caso de uso dependente falha de forma explícita e segura.
 
 ### Deliverables
 
-- Gate 5A: dispatcher e outbox operacionais contra PostgreSQL real, activados por
-  QStash e com entrega de notificações.
+- Gate 5A: fechado em 2026-09-08. Dispatcher e outbox operacionais contra
+  PostgreSQL real; QStash permanece desligado até migration local e preflight.
 - Gate 5B: Checkout, Customer Portal e webhook Stripe idempotentes e transaccionais.
 - Gate 5C: Cloudinary, logo e avatar exclusivo do cliente com moderação síncrona
   fail-closed e lifecycle de assets completo.

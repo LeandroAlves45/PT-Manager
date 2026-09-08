@@ -54,6 +54,13 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
     /// </summary>
     public Action<IServiceCollection>? ConfigureServices { get; init; }
 
+    /// <summary>
+    /// Definições de configuração aplicadas depois das predefinições, para um
+    /// teste activar uma integração que está desligada por omissão — por exemplo
+    /// o receptor QStash — sem alterar o host partilhado pelos restantes testes.
+    /// </summary>
+    public IReadOnlyDictionary<string, string>? AdditionalSettings { get; init; }
+
     /// <summary>Grava os pedidos que o adapter de email teria enviado.</summary>
     public RecordingHttpMessageHandler EmailRequests { get; } = new();
 
@@ -95,6 +102,13 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
         builder.UseSetting("Resend:FromAddress", "no-reply@ptmanager.test");
         builder.UseSetting("Resend:FrontendBaseUrl", AllowedOrigin);
         builder.UseSetting("Resend:BaseAddress", "https://resend.test/");
+
+        // Aplicadas no fim para poderem sobrepor-se às predefinições acima.
+        if (AdditionalSettings is not null)
+        {
+            foreach (var setting in AdditionalSettings)
+                builder.UseSetting(setting.Key, setting.Value);
+        }
 
         builder.ConfigureTestServices(services =>
         {

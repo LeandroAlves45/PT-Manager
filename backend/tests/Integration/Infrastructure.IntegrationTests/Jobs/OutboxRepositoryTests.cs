@@ -456,6 +456,53 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
             (beforeSchedule.Count, Assert.Single(atSchedule).Id));
     }
 
+    [Fact]
+    public async Task ClaimPendingAsync_WhenAllowedTypesAreEmpty_DoesNotClaim()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var reserved = IntegrationTestData.Message(Now, messageType: "billing_notification");
+        await SeedAsync(cancellationToken, reserved);
+        await using var context = _fixture.CreateAdministrativeContext();
+        var repository = new OutboxRepository(context, new TestClock(Now));
+
+        var claimed = await repository.ClaimPendingAsync(
+            TimeSpan.FromMinutes(5),
+            10,
+            cancellationToken,
+            []);
+
+        Assert.Empty(claimed);
+        context.ChangeTracker.Clear();
+        var stored = await context.OutboxMessages.SingleAsync(
+            message => message.Id == reserved.Id, cancellationToken);
+        Assert.Equal(JobStatus.Pending, stored.Status);
+    }
+
+    [Fact]
+    public async Task ClaimPendingAsync_WhenAllowedTypesAreProvided_ClaimsOnlyThoseTypes()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var allowed = IntegrationTestData.Message(Now, messageType: "phase5a_test");
+        var billing = IntegrationTestData.Message(Now, messageType: "billing_notification");
+        var logo = IntegrationTestData.Message(Now, messageType: "trainer-logo.delete");
+        await SeedAsync(cancellationToken, allowed, billing, logo);
+        await using var context = _fixture.CreateAdministrativeContext();
+        var repository = new OutboxRepository(context, new TestClock(Now));
+
+        var claimed = await repository.ClaimPendingAsync(
+            TimeSpan.FromMinutes(5),
+            10,
+            cancellationToken,
+            ["phase5a_test"]);
+
+        Assert.Equal(allowed.Id, Assert.Single(claimed).Id);
+        context.ChangeTracker.Clear();
+        var reserved = await context.OutboxMessages
+            .Where(message => message.Id == billing.Id || message.Id == logo.Id)
+            .ToListAsync(cancellationToken);
+        Assert.All(reserved, message => Assert.Equal(JobStatus.Pending, message.Status));
+    }
+
     private async Task SeedAsync(
         CancellationToken cancellationToken,
         params Domain.Entities.Jobs.OutboxMessage[] messages)

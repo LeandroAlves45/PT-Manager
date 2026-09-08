@@ -59,11 +59,13 @@ Git
    dotnet user-secrets set "Google:ClientId" "<client-id-publico>.apps.googleusercontent.com"
    ```
 
-   Depois de aplicar a Fase 5A, configurar também as duas chaves de rotação QStash:
+   Depois de aplicar a Fase 5A, configurar também as duas chaves de rotação QStash
+   e o URL canónico (a propriedade de código é `DestinationUrl`, não `ExpectedUrl`):
 
    ```bash
    dotnet user-secrets set "QStash:CurrentSigningKey" "<current-signing-key>"
    dotnet user-secrets set "QStash:NextSigningKey" "<next-signing-key>"
+   dotnet user-secrets set "QStash:DestinationUrl" "https://<host-publico>/api/internal/jobs/dispatch"
    ```
 
    Configuração não secreta esperada pelo backend:
@@ -88,7 +90,7 @@ Git
       },
       "QStash": {
         "Enabled": false,
-        "ExpectedUrl": "https://<host-publico>/api/internal/jobs/dispatch"
+        "DestinationUrl": "https://<host-publico>/api/internal/jobs/dispatch"
       }
     }
    ```

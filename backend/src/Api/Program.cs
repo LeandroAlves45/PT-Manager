@@ -2,8 +2,10 @@ using Api;
 using Api.Configuration;
 using Api.Middlewares;
 using Application;
+using Application.Features.Jobs.Dispatching;
 using Infrastructure;
 using Infrastructure.Identity;
+using Infrastructure.Jobs;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,10 +21,13 @@ builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
 // Secção de configuração de serviços
 builder.Services.AddApplication();
 builder.Services.AddGoogleAuthenticationApplication();
+builder.Services.AddJobDispatchApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddGoogleAuthenticationInfrastructure(builder.Configuration);
+builder.Services.AddJobDispatchInfrastructure(builder.Configuration);
 builder.Services.AddApi(builder.Configuration, builder.Environment);
 builder.Services.AddGoogleAuthenticationApi();
+builder.Services.AddInternalJobDispatchApi(builder.Configuration);
 
 var app = builder.Build();
 

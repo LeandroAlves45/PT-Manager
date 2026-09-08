@@ -35,6 +35,17 @@ public sealed class ApiSurfaceSnapshotTests : IDisposable
     }
 
     [Fact]
+    public async Task ApiSurface_IncludesInternalJobDispatchAsAnonymous()
+    {
+        var current = await BuildSurfaceAsync();
+
+        Assert.Contains(
+            "POST /api/internal/jobs/dispatch auth=anonymous",
+            Normalize(current),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task ApiSurface_QueryParametersUseSnakeCaseAndExcludeBindingHelpers()
     {
         using var document = await GetOpenApiDocumentAsync();

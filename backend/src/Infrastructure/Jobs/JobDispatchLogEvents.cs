@@ -5,6 +5,7 @@ namespace Infrastructure.Jobs;
 /// <summary>IDs estáveis dos eventos operacionais de execução durável.</summary>
 public static class JobDispatchLogEvents
 {
+    public static readonly EventId ActivationStarted = new(3000, nameof(ActivationStarted));
     public static readonly EventId ActivationFailure = new(3001, nameof(ActivationFailure));
     public static readonly EventId ItemSucceeded = new(3002, nameof(ItemSucceeded));
     public static readonly EventId ItemRetryScheduled = new(3003, nameof(ItemRetryScheduled));

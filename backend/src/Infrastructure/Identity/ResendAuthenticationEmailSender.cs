@@ -1,4 +1,3 @@
-using System.Net.Http.Json;
 using Application.Features.Authentication.Abstractions;
 using Infrastructure.Email;
 using Microsoft.Extensions.Logging;
@@ -82,44 +81,33 @@ internal sealed class ResendAuthenticationEmailSender : IAuthenticationEmailSend
             secret.ExpiresAt,
             BuildTemplateOptions(templateName, secret));
 
-        var payload = new ResendEmailRequest(
-            _options.FromAddress,
-            [secret.RecipientEmail],
-            subject,
-            rendered.Html,
-            rendered.Text);
+        var result = await ResendEmailTransport.SendAsync(
+            _httpClient,
+            new ResendEmailMessage(
+                _options.FromAddress,
+                [secret.RecipientEmail],
+                subject,
+                rendered.Html,
+                rendered.Text),
+            idempotencyKey: null,
+            cancellationToken);
 
-        try
+        if (result.Kind == ResendTransportOutcomeKind.Sent)
+            return AuthenticationEmailDeliveryOutcome.Sent;
+
+        if (result.StatusCode.HasValue)
         {
-            using var response = await _httpClient.PostAsJsonAsync(
-                "emails",
-                payload,
-                cancellationToken);
-
-            if (response.IsSuccessStatusCode)
-                return AuthenticationEmailDeliveryOutcome.Sent;
-
             _logger.LogWarning(
                 "Authentication email delivery failed with status code {StatusCode}.",
-                (int)response.StatusCode);
-
-            return AuthenticationEmailDeliveryOutcome.Unavailable;
+                result.StatusCode.Value);
         }
-        catch (HttpRequestException exception)
+        else
         {
             _logger.LogWarning(
-                exception,
                 "Authentication email delivery failed because the provider was unreachable.");
-
-            return AuthenticationEmailDeliveryOutcome.Unavailable;
         }
 
-        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
-        {
-            // Timeout do HTTPClient, não cancelamento do pedido do utilizador
-            _logger.LogWarning("Authentication email delivery timed out.");
-            return AuthenticationEmailDeliveryOutcome.Unavailable;
-        }
+        return AuthenticationEmailDeliveryOutcome.Unavailable;
     }
 
     private string BuildLink(string path, string rawToken) =>
@@ -128,16 +116,8 @@ internal sealed class ResendAuthenticationEmailSender : IAuthenticationEmailSend
             Query = $"token={Uri.EscapeDataString(rawToken)}"
         }.Uri.ToString();
 
-    // TODO: Criar um template para o corpo do email em HTML, posteriormente.
+    // O contrato visual opcional continua isolado do transporte HTTP partilhado.
     private static AuthenticationEmailTemplateOptions BuildTemplateOptions(
         string templateName,
         IssuedAuthenticationSecret secret) => new();
-
-    /// <summary>Corpo do pedido aceite pela API do Resend.</summary>
-    private sealed record ResendEmailRequest(
-        string From,
-        IReadOnlyList<string> To,
-        string Subject,
-        string Html,
-        string Text);
 }

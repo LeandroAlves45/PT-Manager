@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Email\Templates\Auth\*.html" />
+    <EmbeddedResource Include="Email\Templates\Notifications\*.html" />
   </ItemGroup>
 
 </Project>

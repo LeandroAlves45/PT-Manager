@@ -22,7 +22,8 @@ public sealed class OutboxRepository : IOutboxStore
     public async Task<IReadOnlyList<OutboxMessage>> ClaimPendingAsync(
         TimeSpan leaseDuration,
         int batchSize,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyCollection<string>? allowedMessageTypes = null)
     {
         if (leaseDuration <= TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(leaseDuration));
@@ -30,22 +31,45 @@ public sealed class OutboxRepository : IOutboxStore
         if (batchSize <= 0)
             throw new ArgumentOutOfRangeException(nameof(batchSize));
 
+        if (allowedMessageTypes is { Count: 0 })
+            return [];
+
         var now = _clock.UtcNow;
         var leaseOwnerId = Guid.NewGuid();
         var leaseExpiresAt = now.Add(leaseDuration);
+        var parameters = new List<NpgsqlParameter>
+        {
+            new("now", now),
+            new("batch_size", batchSize),
+            new("lease_owner_id", leaseOwnerId),
+            new("lease_expires_at", leaseExpiresAt)
+        };
 
-        const string sql = """
+        var typeFilter = string.Empty;
+        if (allowedMessageTypes is not null)
+        {
+            typeFilter = "AND message_type = ANY(@allowed_types)";
+            parameters.Add(new NpgsqlParameter("allowed_types", allowedMessageTypes.ToArray())
+            {
+                DataTypeName = "text[]"
+            });
+        }
+
+        var sql = $"""
             WITH candidates AS (
                 SELECT id
                 FROM outbox_messages
                 WHERE (
-                        status = 'pending'
-                        AND COALESCE(next_attempt_at, created_at) <= @now
+                        (
+                            status = 'pending'
+                            AND COALESCE(next_attempt_at, created_at) <= @now
+                        )
+                        OR (
+                            status = 'processing'
+                            AND lease_expires_at <= @now
+                        )
                     )
-                    OR (
-                        status = 'processing'
-                        AND lease_expires_at <= @now
-                    )
+                    {typeFilter}
                 ORDER BY COALESCE(next_attempt_at, created_at)
                 LIMIT @batch_size
                 FOR UPDATE SKIP LOCKED
@@ -65,11 +89,7 @@ public sealed class OutboxRepository : IOutboxStore
             """;
 
         return await _db.OutboxMessages
-            .FromSqlRaw(sql,
-                new NpgsqlParameter("now", now),
-                new NpgsqlParameter("batch_size", batchSize),
-                new NpgsqlParameter("lease_owner_id", leaseOwnerId),
-                new NpgsqlParameter("lease_expires_at", leaseExpiresAt))
+            .FromSqlRaw(sql, [.. parameters])
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }

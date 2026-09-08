@@ -1272,11 +1272,15 @@ CREATE INDEX idx_outbox_trainer ON outbox_messages(trainer_id);
 
 Um item de outbox é escrito **na mesma transação** que a alteração de domínio que o originou (ex.: `processed_stripe_events` + `outbox_messages` no mesmo `SaveChanges`). O dispatcher de jobs entrega os itens pendentes de forma idempotente; um item só passa a `completed` depois do efeito (ex. email enviado) ser confirmado.
 
-### 28A. `qstash_dispatch_receipts` (planeado para o Sprint 5A)
+### 28A. `qstash_dispatch_receipts` (Sprint 5A)
 
 Estado técnico para impedir replay do endpoint interno QStash entre processos e
-reinícios. A tabela só entra no schema aplicado quando a migration da Fase 5A for
-gerada e validada. Não é tenant-owned e não recebe Global Query Filter.
+reinícios. Migration `20260908141012_AddQStashDispatchReceipts`: tabela, PK
+`pk_qstash_dispatch_receipts` e índice `ix_qstash_dispatch_receipts_token_expires_at`.
+O modelo EF não tem alterações pendentes (confirmado 2026-09-08). A tabela ainda
+pode não estar na base Docker local até `database update`. Não é tenant-owned e
+não recebe Global Query Filter. `QStash:Enabled` permanece `false` até o gate
+QG5A-ROLL-001.
 
 ```sql
 CREATE TABLE qstash_dispatch_receipts (

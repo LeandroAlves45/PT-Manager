@@ -113,7 +113,11 @@ public sealed class ApiControllerBaseTests
                 !type.IsAbstract &&
                 typeof(ControllerBase).IsAssignableFrom(type) &&
                 type != typeof(AuthController) &&
-                type != typeof(AdminContentModerationController))
+                type != typeof(AdminContentModerationController) &&
+                // O receptor interno de jobs não é um controller de negócio: não
+                // devolve Result<T>, responde 204 ou Problem Details fechados e é
+                // autenticado por assinatura QStash, não por JWT de utilizador.
+                type != typeof(InternalJobsController))
             .ToArray();
 
         Assert.All(businessControllers, controllerType =>

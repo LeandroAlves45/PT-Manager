@@ -35,7 +35,10 @@ public sealed record NotificationDeliveryOutcome
         NotificationDeliveryOutcomeKind kind,
         string failureCode)
     {
-        if (string.IsNullOrWhiteSpace(failureCode) || failureCode.Length > 100)
+        if (string.IsNullOrWhiteSpace(failureCode) ||
+            failureCode.Length > 100 ||
+            failureCode.Any(character =>
+                character is not (>= 'a' and <= 'z') and not (>= '0' and <= '9') and not '_'))
             throw new ArgumentException("Failure code is invalid.", nameof(failureCode));
 
         return new(kind, failureCode);

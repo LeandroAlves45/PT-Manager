@@ -8,23 +8,23 @@ using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Jobs;
 
-/// <summary>Processa uma passagem limitada pelos durable jobs vencidos.</summary>
-internal sealed class JobDispatcher
+/// <summary>Processa uma passagem limitada pelas mensagens de outbox pendentes.</summary>
+internal sealed class OutboxDispatcher
 {
-    private const string UnexpectedFailureCode = "job_handler_unexpected_failure";
-    private const string TenantUnavailableCode = "job_tenant_unavailable";
-    private const string HandlerMissingCode = "job_handler_not_registered";
+    private const string UnexpectedFailureCode = "outbox_handler_unexpected_failure";
+    private const string TenantUnavailableCode = "outbox_tenant_unavailable";
+    private const string HandlerMissingCode = "outbox_handler_not_registered";
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly JobDispatchOptions _options;
     private readonly IClock _clock;
-    private readonly ILogger<JobDispatcher> _logger;
+    private readonly ILogger<OutboxDispatcher> _logger;
 
-    public JobDispatcher(
+    public OutboxDispatcher(
         IServiceScopeFactory scopeFactory,
         IOptions<JobDispatchOptions> options,
         IClock clock,
-        ILogger<JobDispatcher> logger)
+        ILogger<OutboxDispatcher> logger)
     {
         ArgumentNullException.ThrowIfNull(options);
 
@@ -37,45 +37,60 @@ internal sealed class JobDispatcher
     /// <summary>Reclama e processa no máximo o batch configurado.</summary>
     public async Task DispatchAsync(CancellationToken cancellationToken)
     {
-        var remaining = _options.JobBatchSize;
+        var allowedTypes = ResolveRegisteredMessageTypes();
+        if (allowedTypes.Count == 0)
+            return;
+
+        var remaining = _options.OutboxBatchSize;
 
         while (remaining > 0 && !cancellationToken.IsCancellationRequested)
         {
             var claimSize = Math.Min(remaining, _options.MaxConcurrencyPerDispatcher);
-            var claimed = await ClaimAsync(claimSize, cancellationToken);
+            var claimed = await ClaimAsync(claimSize, allowedTypes, cancellationToken);
             if (claimed.Count == 0)
                 return;
 
             remaining -= claimed.Count;
-            await Task.WhenAll(claimed.Select(job =>
-                ProcessAsync(job, cancellationToken)));
+            await Task.WhenAll(claimed.Select(message =>
+                ProcessAsync(message, cancellationToken)));
         }
     }
 
-    private async Task<IReadOnlyList<DurableJob>> ClaimAsync(
+    private IReadOnlyCollection<string> ResolveRegisteredMessageTypes()
+    {
+        using var scope = _scopeFactory.CreateScope();
+        return scope.ServiceProvider
+            .GetServices<IOutboxMessageHandler>()
+            .Select(handler => handler.MessageType)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private async Task<IReadOnlyList<OutboxMessage>> ClaimAsync(
         int claimSize,
+        IReadOnlyCollection<string> allowedMessageTypes,
         CancellationToken cancellationToken)
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
-        var store = scope.ServiceProvider.GetRequiredService<IDurableJobStore>();
-        return await store.ClaimDueJobsAsync(
+        var store = scope.ServiceProvider.GetRequiredService<IOutboxStore>();
+        return await store.ClaimPendingAsync(
             _options.LeaseDuration,
             claimSize,
-            cancellationToken);
+            cancellationToken,
+            allowedMessageTypes);
     }
 
     private async Task ProcessAsync(
-        DurableJob claimed,
+        OutboxMessage claimed,
         CancellationToken activationCancellationToken)
     {
         if (!claimed.LeaseOwnerId.HasValue)
-            throw new InvalidOperationException("A claimed job must have a lease owner.");
+            throw new InvalidOperationException("A claimed outbox message must have a lease owner.");
 
-        var envelope = new DurableJobEnvelope(
+        var envelope = new OutboxMessageEnvelope(
             claimed.Id,
             claimed.TrainerId,
-            claimed.JobType,
-            claimed.JobVersion,
+            claimed.MessageType,
             claimed.Payload,
             claimed.IdempotencyKey,
             claimed.CorrelationId,
@@ -84,12 +99,11 @@ internal sealed class JobDispatcher
 
         using var logScope = _logger.BeginScope(new Dictionary<string, object?>
         {
-            ["JobId"] = envelope.Id,
-            ["JobType"] = envelope.JobType,
-            ["JobVersion"] = envelope.JobVersion,
-            ["JobAttempt"] = envelope.Attempts,
+            ["OutboxMessageId"] = envelope.Id,
+            ["MessageType"] = envelope.MessageType,
+            ["MessageAttempt"] = envelope.Attempts,
             ["CorrelationId"] = envelope.CorrelationId,
-            ["TrainerId"] = envelope.TrainerId,
+            ["TrainerId"] = envelope.TrainerId
         });
 
         DispatchItemOutcome outcome;
@@ -99,16 +113,13 @@ internal sealed class JobDispatcher
         }
         catch (OperationCanceledException) when (activationCancellationToken.IsCancellationRequested)
         {
-            // O lease permanece em Processing e será recuperado depois de expirar.
             return;
         }
         catch (Exception exception)
         {
-            // O tipo de exceção ajuda o diagnóstico sem persistir a mensagem, o
-            // stack trace ou dados potencialmente provenientes do provider.
             _logger.LogError(
                 JobDispatchLogEvents.ActivationFailure,
-                "Durable job handler failed unexpectedly with failure type {FailureType}.",
+                "Outbox handler failed unexpectedly with failure type {FailureType}.",
                 exception.GetType().Name);
             outcome = DispatchItemOutcome.TransientFailure(UnexpectedFailureCode);
         }
@@ -117,15 +128,13 @@ internal sealed class JobDispatcher
     }
 
     private async Task<DispatchItemOutcome> ExecuteHandlerAsync(
-        DurableJobEnvelope job,
+        OutboxMessageEnvelope message,
         CancellationToken activationCancellationToken)
     {
         await using var itemScope = _scopeFactory.CreateAsyncScope();
         var handlers = itemScope.ServiceProvider
-            .GetServices<IDurableJobHandler>()
-            .Where(handler =>
-                handler.JobType == job.JobType &&
-                handler.JobVersion == job.JobVersion)
+            .GetServices<IOutboxMessageHandler>()
+            .Where(handler => handler.MessageType == message.MessageType)
             .Take(2)
             .ToArray();
 
@@ -134,35 +143,35 @@ internal sealed class JobDispatcher
 
         if (handlers.Length > 1)
             throw new InvalidOperationException(
-                "More than one durable job handler is registered for the same route.");
+                "More than one outbox handler is registered for the same route.");
 
         var tenantValidator = itemScope.ServiceProvider.GetRequiredService<JobTenantValidator>();
-        if (!await tenantValidator.IsAvailableAsync(job.TrainerId, activationCancellationToken))
+        if (!await tenantValidator.IsAvailableAsync(message.TrainerId, activationCancellationToken))
         {
             _logger.LogWarning(
                 JobDispatchLogEvents.TenantRejected,
-                "Durable job tenant was rejected before handler execution.");
+                "Outbox tenant was rejected before handler execution.");
             return DispatchItemOutcome.PermanentFailure(TenantUnavailableCode);
         }
 
         var tenantInitializer = itemScope.ServiceProvider
             .GetRequiredService<ITenantContextInitializer>();
         tenantInitializer.Establish(
-            job.TrainerId,
+            message.TrainerId,
             userId: null,
             role: null,
             TenantOrigin.Job,
             isAdministrative: false);
 
         await using var heartbeat = LeaseHeartbeat.Start(
-            token => RenewLeaseAsync(job.Id, job.LeaseOwnerId, token),
+            token => RenewLeaseAsync(message.Id, message.LeaseOwnerId, token),
             _options.LeaseRenewalInterval,
             activationCancellationToken);
 
         DispatchItemOutcome outcome;
         try
         {
-            outcome = await handlers[0].HandleAsync(job, heartbeat.ProcessingToken);
+            outcome = await handlers[0].HandleAsync(message, heartbeat.ProcessingToken);
         }
         catch (OperationCanceledException) when (heartbeat.LeaseLost)
         {
@@ -174,21 +183,21 @@ internal sealed class JobDispatcher
     }
 
     private async Task<bool> RenewLeaseAsync(
-        Guid jobId,
+        Guid messageId,
         Guid leaseOwnerId,
         CancellationToken cancellationToken)
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
-        var store = scope.ServiceProvider.GetRequiredService<IDurableJobStore>();
+        var store = scope.ServiceProvider.GetRequiredService<IOutboxStore>();
         return await store.TryRenewLeaseAsync(
-            jobId,
+            messageId,
             leaseOwnerId,
             _options.LeaseDuration,
             cancellationToken);
     }
 
     private async Task ApplyOutcomeAsync(
-        DurableJobEnvelope job,
+        OutboxMessageEnvelope message,
         DispatchItemOutcome outcome,
         CancellationToken cancellationToken)
     {
@@ -196,38 +205,38 @@ internal sealed class JobDispatcher
         {
             _logger.LogWarning(
                 JobDispatchLogEvents.LeaseLost,
-                "Durable job processing stopped because its lease was lost.");
+                "Outbox processing stopped because its lease was lost.");
             return;
         }
 
         await using var scope = _scopeFactory.CreateAsyncScope();
-        var store = scope.ServiceProvider.GetRequiredService<IDurableJobStore>();
+        var store = scope.ServiceProvider.GetRequiredService<IOutboxStore>();
 
         bool updated;
         if (outcome.Kind == DispatchItemOutcomeKind.Succeeded)
         {
             updated = await store.TryCompleteAsync(
-                job.Id,
-                job.LeaseOwnerId,
+                message.Id,
+                message.LeaseOwnerId,
                 cancellationToken);
             if (updated)
                 _logger.LogInformation(
                     JobDispatchLogEvents.ItemSucceeded,
-                    "Durable job completed successfully.");
+                    "Outbox message completed successfully.");
         }
         else
         {
             var nextAttemptAt = outcome.Kind == DispatchItemOutcomeKind.TransientFailure
                 ? RetryScheduleCalculator.CalculateNextAttempt(
                     _clock.UtcNow,
-                    job.Attempts,
-                    job.IdempotencyKey,
+                    message.Attempts,
+                    message.IdempotencyKey,
                     _options)
                 : null;
 
             updated = await store.TryRecordFailureAsync(
-                job.Id,
-                job.LeaseOwnerId,
+                message.Id,
+                message.LeaseOwnerId,
                 outcome.FailureCode!,
                 nextAttemptAt,
                 cancellationToken);
@@ -236,14 +245,14 @@ internal sealed class JobDispatcher
             {
                 _logger.LogWarning(
                     JobDispatchLogEvents.ItemRetryScheduled,
-                    "Durable job scheduled for retry with failure code {FailureCode}.",
+                    "Outbox message scheduled for retry with failure code {FailureCode}.",
                     outcome.FailureCode);
             }
             else if (updated)
             {
                 _logger.LogError(
                     JobDispatchLogEvents.ItemDeadLettered,
-                    "Durable job moved to dead letter with failure code {FailureCode}.",
+                    "Outbox message moved to dead letter with failure code {FailureCode}.",
                     outcome.FailureCode);
             }
         }
@@ -251,6 +260,6 @@ internal sealed class JobDispatcher
         if (!updated)
             _logger.LogWarning(
                 JobDispatchLogEvents.LeaseLost,
-                "Durable job final transition was rejected because its lease was lost.");
+                "Outbox final transition was rejected because its lease was lost.");
     }
 }

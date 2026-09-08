@@ -18,8 +18,8 @@ internal static class IntegrationTestData
             scheduledAt, now);
 
     public static OutboxMessage Message(
-        DateTime now, string? idempotencyKey = null) => new(
-            null, "integration_test", "{\"value\":1}",
+        DateTime now, string? idempotencyKey = null, string messageType = "integration_test") => new(
+            null, messageType, "{\"value\":1}",
             idempotencyKey ?? Guid.NewGuid().ToString("N"), Guid.NewGuid(), now);
 
     public static Food Food(Guid? ownerTrainerId, DateTime now) =>

@@ -6,10 +6,10 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
-**Estado ativo:** ler primeiro `.claude/memory/ACTIVE.md`. **Sprint 4 finalizado e
-Sprint 5A planeado em 2026-09-07**. A implementação real da Fase 5A ainda não
-começou. Ver `Sessions/2026-09-07-sprint5-planeamento-fase5a-blueprints.md` e
-`docs/backend-files/sprint_5/sprint_5A/00_indice_ordem_decisoes_e_gates.md`.
+**Estado ativo:** ler primeiro `.claude/memory/ACTIVE.md`. **Sprint 5A fechada
+em 2026-09-08.** `QStash:Enabled` permanece `false`. Ver
+`Sessions/2026-09-08-sprint5a-fecho.md` e
+`docs/backend-files/sprint_5/sprint_5A/15_revisao_implementacao_validacao.md`.
 
 ## Estado atual
 
@@ -308,13 +308,12 @@ alegações anteriores desatualizadas está em
   build e format limpos, modelo EF sincronizado e auditoria NuGet sem vulnerabilidades.
   Ver `Sessions/2026-09-06-sprint4-finalizado.md`.
 - Sprint 5 planeado em quatro fases: 5A execução durável, 5B Stripe, 5C imagens e
-  5D vídeo privado. A Fase 5A tem blueprints de produção completos para os dois
-  dispatchers, QStash, replay persistido e `session_reminder`; 44 ficheiros
-  materializados compilaram com zero avisos e zero erros. Backend real e testes não
-  foram alterados. `billing_notification` e `trainer-logo.delete` bloqueiam o
-  rollout se existirem não concluídos ou em `dead_letter` antes dos handlers 5B e
-  5C. Ver
-  `Sessions/2026-09-07-sprint5-planeamento-fase5a-blueprints.md`.
+  5D vídeo privado. A Fase 5A está fechada (2026-09-08): dispatcher, outbox,
+  QStash desligado, replay persistido e `session_reminder`. Suite integral:
+  2148 aprovados, 1 ignorado. `OutboxDispatcher` não consome
+  `billing_notification` nem `trainer-logo.delete`. A migration
+  `20260908141012_AddQStashDispatchReceipts` ainda não foi aplicada à base
+  Docker local. Ver `Sessions/2026-09-08-sprint5a-fecho.md`.
 
 ## Padrões documentais
 

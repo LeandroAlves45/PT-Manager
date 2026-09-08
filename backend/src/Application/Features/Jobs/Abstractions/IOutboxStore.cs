@@ -15,7 +15,8 @@ public interface IOutboxStore
     Task<IReadOnlyList<OutboxMessage>> ClaimPendingAsync(
         TimeSpan leaseDuration,
         int batchSize,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        IReadOnlyCollection<string>? allowedMessageTypes = null);
 
     /// <summary>
     /// Renova o lease apenas se a mensagem continuar em processamento,

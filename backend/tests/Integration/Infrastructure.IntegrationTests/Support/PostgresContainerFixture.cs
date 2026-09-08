@@ -24,6 +24,10 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
         "20260822155532_CompleteSprint3Phase3";
     public const string CompleteSprint3Lote3GMigration =
         "20260826172025_CompleteSprint3Lote3G";
+    public const string AddExternalIdentitiesMigration =
+        "20260906154210_AddExternalIdentities";
+    public const string AddQStashDispatchReceiptsMigration =
+        "20260908141012_AddQStashDispatchReceipts";
     private readonly PostgreSqlContainer _container =
         new PostgreSqlBuilder("postgres:17-alpine")
         .WithDatabase("ptmanager_tests")
