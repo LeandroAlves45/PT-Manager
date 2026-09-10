@@ -4,6 +4,7 @@ using Application.Features.Training.ExerciseSetLogs.CorrectExerciseSetLog;
 using Application.Features.Training.ExerciseSetLogs.Dtos;
 using Application.Features.Training.ExerciseSetLogs.ListExerciseSetLogs;
 using Application.Features.Training.ExerciseSetLogs.RecordExerciseSetLog;
+using Application.Errors;
 using Application.Pagination;
 using Domain.Entities.Training;
 
@@ -51,7 +52,7 @@ public sealed class ExerciseSetLogHandlersTests
         var result = await handler.HandleAsync(ValidRecordCommand(), TestContext.Current.CancellationToken);
 
         Assert.Equal("exercise_set_log_trainer_only", result.Error!.Code);
-        Assert.Equal(Application.Errors.ErrorCategory.Forbidden, result.Error.Category);
+        Assert.Equal(ErrorCategory.Forbidden, result.Error.Category);
         Assert.Equal(0, store.RecordCalls);
     }
 
@@ -90,7 +91,7 @@ public sealed class ExerciseSetLogHandlersTests
         var result = await handler.HandleAsync(ValidCorrectCommand(), TestContext.Current.CancellationToken);
 
         Assert.Equal("exercise_set_log_trainer_only", result.Error!.Code);
-        Assert.Equal(Application.Errors.ErrorCategory.Forbidden, result.Error.Category);
+        Assert.Equal(ErrorCategory.Forbidden, result.Error.Category);
         Assert.Equal(0, store.CorrectCalls);
     }
 
@@ -125,7 +126,7 @@ public sealed class ExerciseSetLogHandlersTests
             TestContext.Current.CancellationToken);
 
         Assert.Equal("exercise_set_log_trainer_only", result.Error!.Code);
-        Assert.Equal(Application.Errors.ErrorCategory.Forbidden, result.Error.Category);
+        Assert.Equal(ErrorCategory.Forbidden, result.Error.Category);
         Assert.Equal(0, queries.ListCalls);
     }
 

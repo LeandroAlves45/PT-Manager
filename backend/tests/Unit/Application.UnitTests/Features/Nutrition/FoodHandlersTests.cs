@@ -4,6 +4,7 @@ using Application.Features.Nutrition.Foods.ArchiveFood;
 using Application.Features.Nutrition.Foods.CreateFood;
 using Application.Features.Nutrition.Foods.ReactivateFood;
 using Application.Features.Nutrition.Foods.UpdateFood;
+using Application.Errors;
 using Domain.Entities.Nutrition;
 
 namespace Application.UnitTests.Features.Nutrition;
@@ -63,7 +64,7 @@ public sealed class FoodHandlersTests
             TestContext.Current.CancellationToken);
 
         Assert.Equal("global_food_read_only", result.Error!.Code);
-        Assert.Equal(Application.Errors.ErrorCategory.Forbidden, result.Error.Category);
+        Assert.Equal(ErrorCategory.Forbidden, result.Error.Category);
     }
 
     [Fact]
@@ -142,7 +143,7 @@ public sealed class FoodHandlersTests
 
         // Assert
         Assert.Equal("food_trainer_only", result.Error!.Code);
-        Assert.Equal(Application.Errors.ErrorCategory.Forbidden, result.Error.Category);
+        Assert.Equal(ErrorCategory.Forbidden, result.Error.Category);
         Assert.Equal(0, store.AddCalls);
     }
 

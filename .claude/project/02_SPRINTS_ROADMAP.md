@@ -490,6 +490,10 @@ Gate 5A: **fechado em 2026-09-08.**
 
 ### Sprint 5B: Stripe e billing SaaS
 
+Estado: desenho aprovado, expandido para código integral e validado numa cópia em
+2026-09-09; implementação real pendente. O pack documental está em
+`docs/backend-files/sprint_5/sprint_5B/`.
+
 1. Implementar adapters Stripe para `ICheckoutGateway`, `ICustomerPortalGateway` e
    `ISubscriptionReconciliationGateway`.
 2. Expor Checkout e Customer Portal apenas ao trainer autenticado e derivar o tenant
@@ -502,6 +506,11 @@ Gate 5A: **fechado em 2026-09-08.**
    ordem e outbox na mesma transacção da alteração local.
 5. Registar apenas IDs técnicos necessários e Stripe request ID sanitizado. Segredos,
    payload integral e dados de pagamento não entram em logs.
+6. Usar Stripe.net 52.4.1 com API `2026-08-26.dahlia`, apenas em Infrastructure.
+7. Remover URLs dos requests e obter redirects exclusivamente de configuração.
+8. Persistir uma intenção de Checkout com lease e unicidade de operação ativa.
+9. Alterar capacidade para FREE 5, STARTER 25 e PRO ilimitado.
+10. Suportar no email apenas `payment_failed` e `trial_will_end`.
 
 Gate 5B:
 

@@ -5,6 +5,5 @@ public sealed record CreateCustomerPortalRequest(
     Guid TrainerId,
     Guid OperationId,
     string ProviderCustomerId,
-    Uri ReturnUrl,
     string IdempotencyKey
 );

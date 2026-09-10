@@ -1,7 +1,9 @@
 using System.Net.Http.Headers;
 using Application.Features.Jobs.Dispatching;
+using Application.Features.Billing.Notifications;
 using Application.Features.Notifications.Delivery;
 using Infrastructure.Identity;
+using Infrastructure.Email;
 using Infrastructure.Jobs.QStash;
 using Infrastructure.Notifications;
 using Infrastructure.Persistence.Notifications;
@@ -43,8 +45,21 @@ public static class JobDispatchInfrastructureExtensions
         services.AddSingleton<JobDispatcher>();
         services.AddSingleton<OutboxDispatcher>();
         services.AddSingleton<IJobDispatchActivation, JobDispatchActivation>();
+        services.AddScoped<IOutboxMessageHandler, BillingNotificationOutboxHandler>();
 
         services.AddHttpClient<INotificationDeliveryGateway, ResendNotificationDeliveryGateway>(
+            (provider, client) =>
+            {
+                var options = provider.GetRequiredService<IOptions<ResendOptions>>().Value;
+                client.BaseAddress = options.BaseAddress;
+                client.Timeout = options.Timeout;
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", options.ApiKey);
+                client.DefaultRequestHeaders.Accept.Add(
+                    new MediaTypeWithQualityHeaderValue("application/json"));
+            });
+
+        services.AddHttpClient<IBillingNotificationGateway, ResendBillingNotificationGateway>(
             (provider, client) =>
             {
                 var options = provider.GetRequiredService<IOptions<ResendOptions>>().Value;

@@ -6,10 +6,10 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
-**Estado ativo:** ler primeiro `.claude/memory/ACTIVE.md`. **Sprint 5A fechada
-em 2026-09-08.** `QStash:Enabled` permanece `false`. Ver
-`Sessions/2026-09-08-sprint5a-fecho.md` e
-`docs/backend-files/sprint_5/sprint_5A/15_revisao_implementacao_validacao.md`.
+**Estado ativo:** ler primeiro `.claude/memory/ACTIVE.md`. **Sprint 5A fechada e
+Sprint 5B planeada e materializada em 2026-09-09.** `QStash:Enabled` permanece `false`. Ver
+`Sessions/2026-09-08-sprint5b-planeamento.md` e
+`docs/backend-files/sprint_5/sprint_5B/00_desenho_aprovado_indice_dependencias_gates.md`.
 
 ## Estado atual
 
@@ -199,6 +199,10 @@ alegações anteriores desatualizadas está em
   ainda não existir consumidor medido.
 - Webhooks Stripe exigem raw body, assinatura, deduplicação, idempotência,
   reconciliação e outbox transacional.
+- Decisão 5B: Stripe.net 52.4.1 apenas em Infrastructure, API
+  `2026-08-26.dahlia`, URLs exclusivamente de configuração backend,
+  `Idempotency-Key` UUID e intenção durável de Checkout. FREE permite 5,
+  STARTER 25 e PRO é ilimitado com `client_limit = NULL`.
 - `TrainerSettings.LogoUrl` e `LogoPublicId` representam apenas media
   personalizado. Null instrui o frontend a usar o seu asset padrão; o backend
   não persiste uma URL global. Detalhe em
@@ -312,8 +316,13 @@ alegações anteriores desatualizadas está em
   QStash desligado, replay persistido e `session_reminder`. Suite integral:
   2148 aprovados, 1 ignorado. `OutboxDispatcher` não consome
   `billing_notification` nem `trainer-logo.delete`. A migration
-  `20260908141012_AddQStashDispatchReceipts` ainda não foi aplicada à base
-  Docker local. Ver `Sessions/2026-09-08-sprint5a-fecho.md`.
+  `20260908141012_AddQStashDispatchReceipts` foi aplicada localmente segundo
+  confirmação do utilizador. O utilizador confirmou também as current/next keys
+  QStash em user-secrets; os valores não foram lidos. `DestinationUrl` continua
+  ausente e QStash disabled. O desenho 5B está em `docs/backend-files/sprint_5/sprint_5B/`.
+  Os 97 ficheiros alvo foram validados numa cópia temporária com restore locked,
+  build, 2151 testes, EF e ciclo PostgreSQL 17; o backend real não foi alterado.
+  Ver `Sessions/2026-09-08-sprint5b-planeamento.md`.
 
 ## Padrões documentais
 

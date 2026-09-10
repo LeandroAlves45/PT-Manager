@@ -120,7 +120,6 @@ public sealed class TrainerSubscriptionBillingTests
             " cus_provider ",
             " sub_provider ",
             SubscriptionTier.Pro,
-            100,
             SubscriptionStatus.Suspended,
             trialEndsAt,
             observedAt,
@@ -131,7 +130,7 @@ public sealed class TrainerSubscriptionBillingTests
         Assert.Equal("cus_provider", subscription.StripeCustomerId);
         Assert.Equal("sub_provider", subscription.StripeSubscriptionId);
         Assert.Equal(SubscriptionTier.Pro, subscription.Tier);
-        Assert.Equal(100, subscription.ClientLimit);
+        Assert.Null(subscription.ClientLimit);
         Assert.Equal(SubscriptionStatus.Suspended, subscription.Status);
         Assert.Equal(trialEndsAt, subscription.TrialEndsAt);
         Assert.Equal(observedAt, subscription.LastProviderStateObservedAt);
@@ -152,7 +151,6 @@ public sealed class TrainerSubscriptionBillingTests
             "cus_current",
             "sub_current",
             SubscriptionTier.Pro,
-            100,
             SubscriptionStatus.Active,
             Now.AddDays(30),
             currentObservedAt,
@@ -163,7 +161,6 @@ public sealed class TrainerSubscriptionBillingTests
             "cus_current",
             "sub_current",
             SubscriptionTier.Starter,
-            25,
             SubscriptionStatus.Cancelled,
             null,
             Now.AddMinutes(staleObservedAtMinute),
@@ -174,7 +171,7 @@ public sealed class TrainerSubscriptionBillingTests
         Assert.Equal("cus_current", subscription.StripeCustomerId);
         Assert.Equal("sub_current", subscription.StripeSubscriptionId);
         Assert.Equal(SubscriptionTier.Pro, subscription.Tier);
-        Assert.Equal(100, subscription.ClientLimit);
+        Assert.Null(subscription.ClientLimit);
         Assert.Equal(SubscriptionStatus.Active, subscription.Status);
         Assert.Equal(Now.AddDays(30), subscription.TrialEndsAt);
         Assert.Equal(currentObservedAt, subscription.LastProviderStateObservedAt);
@@ -206,7 +203,6 @@ public sealed class TrainerSubscriptionBillingTests
             "cus_1",
             "   ",
             SubscriptionTier.Pro,
-            100,
             SubscriptionStatus.Active,
             Now.AddDays(30),
             Now.AddMinutes(2),

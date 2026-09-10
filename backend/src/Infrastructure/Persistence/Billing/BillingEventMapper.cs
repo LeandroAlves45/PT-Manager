@@ -2,6 +2,7 @@ using Application.Features.Billing.Abstractions;
 using Application.Features.Billing.Webhooks;
 using Domain.Entities.Billing;
 using Domain.Exceptions;
+using Domain.ValueObjects;
 
 namespace Infrastructure.Persistence.Billing;
 
@@ -26,7 +27,6 @@ internal static class BillingEventMapper
                     snapshot.ProviderCustomerId,
                     snapshot.ProviderSubscriptionId,
                     snapshot.Tier,
-                    snapshot.ClientLimit,
                     SubscriptionStatusMapper.Map(snapshot.ProviderStatus),
                     snapshot.TrialEndsAt,
                     snapshot.ObservedAt,
@@ -57,12 +57,10 @@ internal static class BillingEventMapper
 
         if (subscription.StripeCustomerId is not null &&
             subscription.StripeCustomerId != customerId)
-        {
             return true;
-        }
 
-        var mayReplaceSubscription = subscription.Status == Domain.ValueObjects.SubscriptionStatus.Inactive ||
-            subscription.Status == Domain.ValueObjects.SubscriptionStatus.Cancelled;
+        var mayReplaceSubscription = subscription.Status == SubscriptionStatus.Inactive ||
+            subscription.Status == SubscriptionStatus.Cancelled;
 
         return subscription.StripeSubscriptionId is not null &&
             subscription.StripeSubscriptionId != subscriptionId &&

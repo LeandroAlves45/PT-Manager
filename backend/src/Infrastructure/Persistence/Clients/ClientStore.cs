@@ -354,7 +354,8 @@ internal sealed class ClientStore : IClientStore
             .Where(subscription =>
                 subscription.IsExemptFromBilling ||
                 subscription.Status == SubscriptionStatus.Active &&
-                subscription.CurrentClientCount < subscription.ClientLimit)
+                (subscription.ClientLimit == null ||
+                 subscription.CurrentClientCount < subscription.ClientLimit))
             .ExecuteUpdateAsync(
                 setters => setters
                     .SetProperty(
@@ -407,7 +408,8 @@ internal sealed class ClientStore : IClientStore
             return SubscriptionCapacityFailure.SubscriptionCancelled;
 
         if (state.Status == SubscriptionStatus.Active &&
-            state.CurrentClientCount >= state.ClientLimit)
+            state.ClientLimit.HasValue &&
+            state.CurrentClientCount >= state.ClientLimit.Value)
             return SubscriptionCapacityFailure.ClientLimitReached;
 
         throw new InvalidOperationException(
@@ -455,7 +457,7 @@ internal sealed class ClientStore : IClientStore
         SubscriptionStatus Status,
         bool IsExemptFromBilling,
         int CurrentClientCount,
-        int ClientLimit);
+        int? ClientLimit);
 
     private enum SubscriptionCapacityFailure
     {

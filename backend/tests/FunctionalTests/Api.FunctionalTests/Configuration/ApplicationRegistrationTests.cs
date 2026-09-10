@@ -19,11 +19,9 @@ public sealed class ApplicationRegistrationTests
             descriptor.ServiceType.IsGenericType
             && descriptor.ServiceType.GetGenericTypeDefinition() == typeof(IValidator<>));
 
-        // 128 anteriores + 4 handlers do Client Portal: GetMyTrainingPlan,
-        // GetMyNutritionPlan, GetMyProfile e UpdateMyProfile.
-        Assert.Equal(132, handlerCount);
-        // 74 anteriores + 1 validator do portal (UpdateMyProfileCommand; as três leituras
-        // não têm payload e por isso não têm validator).
+        // 132 anteriores + Checkout, Customer Portal e processamento de webhook.
+        Assert.Equal(135, handlerCount);
+        // Checkout e Customer Portal usam validators explícitos, já incluídos no total.
         Assert.Equal(75, validatorCount);
     }
 

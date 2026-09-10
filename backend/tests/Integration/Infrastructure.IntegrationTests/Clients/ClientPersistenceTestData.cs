@@ -71,7 +71,9 @@ internal static class ClientPersistenceTestData
             trainerId,
             NowUtc.AddDays(15),
             NowUtc);
-        subscription.ChangeTier(SubscriptionTier.Free, clientLimit, NowUtc);
+        if (clientLimit != SubscriptionTier.Free.ClientLimit)
+            throw new ArgumentOutOfRangeException(nameof(clientLimit));
+        subscription.ChangeTier(SubscriptionTier.Free, NowUtc);
         subscription.SetBillingExemption(isExemptFromBilling, NowUtc);
 
         for (var count = 0; count < currentClientCount; count++)

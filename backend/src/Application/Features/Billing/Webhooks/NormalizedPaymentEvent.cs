@@ -9,5 +9,6 @@ public sealed record NormalizedPaymentEvent(
     string? ProviderSubscriptionId,
     string? ProviderStatus,
     Guid CorrelationId,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    string? ProviderCheckoutSessionId = null
 );

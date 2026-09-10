@@ -38,7 +38,7 @@ public sealed class PtManagerDbContext : DbContext
         _tenantContext = tenantContext;
     }
 
-    // DbSet<T> para as 33 entidades de domínio e um modelo técnico de replay QStash.
+    // DbSet<T> para as 34 entidades de domínio e um modelo técnico de replay QStash.
     public DbSet<User> Users => Set<User>();
     public DbSet<AdministrativeAuditEntry> AdministrativeAuditEntries =>
         Set<AdministrativeAuditEntry>();
@@ -50,6 +50,7 @@ public sealed class PtManagerDbContext : DbContext
     public DbSet<PackType> PackTypes => Set<PackType>();
     public DbSet<ProcessedStripeEvent> ProcessedStripeEvents => Set<ProcessedStripeEvent>();
     public DbSet<TrainerSubscription> TrainerSubscriptions => Set<TrainerSubscription>();
+    public DbSet<BillingCheckoutOperation> BillingCheckoutOperations => Set<BillingCheckoutOperation>();
     public DbSet<InviteToken> InviteTokens => Set<InviteToken>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
@@ -137,6 +138,9 @@ public sealed class PtManagerDbContext : DbContext
 
         modelBuilder.Entity<TrainerSubscription>().HasQueryFilter(ts =>
             CurrentTrainerId.HasValue && ts.TrainerId == CurrentTrainerId);
+
+        modelBuilder.Entity<BillingCheckoutOperation>().HasQueryFilter(operation =>
+            CurrentTrainerId.HasValue && operation.TrainerId == CurrentTrainerId);
 
         // POLÍTICA B — catálogo com linhas globais. OwnerTrainerId é
         // Guid? (nullable) + IsDeleted bool.

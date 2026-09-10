@@ -4,6 +4,7 @@ using Application.Features.Training.TrainingPlans.Abstractions;
 using Application.Features.Training.TrainingPlans.CreateTrainingPlan;
 using Application.Features.Training.TrainingPlans.Dtos;
 using Application.Features.Training.TrainingPlans.UpdateTrainingPlanStructure;
+using Application.Errors;
 using Application.Pagination;
 
 namespace Application.UnitTests.Features.Training;
@@ -83,7 +84,7 @@ public sealed class TrainingHandlersTests
 
         // Assert
         Assert.Equal("training_trainer_only", result.Error!.Code);
-        Assert.Equal(Application.Errors.ErrorCategory.Forbidden, result.Error.Category);
+        Assert.Equal(ErrorCategory.Forbidden, result.Error.Category);
         Assert.Equal(0, queries.DetailsCalls);
     }
 

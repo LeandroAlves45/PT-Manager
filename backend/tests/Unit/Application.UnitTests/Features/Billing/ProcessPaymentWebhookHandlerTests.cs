@@ -51,6 +51,45 @@ public sealed class ProcessPaymentWebhookHandlerTests
     }
 
     [Fact]
+    public async Task DuplicateEvent_SucceedsWithoutCallingProviderOrCommittingAgain()
+    {
+        var gateway = new ReconciliationGatewayStub { Snapshot = Snapshot() };
+        var store = new PaymentEventStoreStub { IsProcessed = true };
+        var handler = CreateHandler(gateway, store);
+
+        var result = await handler.HandleAsync(
+            Event(PaymentEventKind.InvoicePaid, "cus_1", "sub_1"),
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(0, gateway.Calls);
+        Assert.Equal(0, store.Calls);
+    }
+
+    [Theory]
+    [InlineData(SubscriptionReconciliationStatus.Disabled, "billing_provider_disabled")]
+    [InlineData(SubscriptionReconciliationStatus.TransientFailure, "billing_provider_unavailable")]
+    [InlineData(SubscriptionReconciliationStatus.NotFound, "billing_subscription_not_found")]
+    [InlineData(SubscriptionReconciliationStatus.InvalidResponse, "billing_provider_invalid_response")]
+    [InlineData(SubscriptionReconciliationStatus.ConfigurationMismatch, "billing_provider_configuration_mismatch")]
+    public async Task ReconciliationFailure_MapsStableErrorWithoutLocalCommit(
+        SubscriptionReconciliationStatus status,
+        string expectedCode)
+    {
+        var gateway = new ReconciliationGatewayStub { Status = status };
+        var store = new PaymentEventStoreStub();
+        var handler = CreateHandler(gateway, store);
+
+        var result = await handler.HandleAsync(
+            Event(PaymentEventKind.SubscriptionUpdated, "cus_1", "sub_1"),
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(expectedCode, result.Error!.Code);
+        Assert.Equal(0, store.Calls);
+    }
+
+    [Fact]
     public async Task KnownEventWithoutExternalIdentity_CommitsWithoutSnapshotRequest()
     {
         var gateway = new ReconciliationGatewayStub();
@@ -93,7 +132,7 @@ public sealed class ProcessPaymentWebhookHandlerTests
         var handler = CreateHandler(new ReconciliationGatewayStub(), store);
 
         var result = await handler.HandleAsync(
-            Event(PaymentEventKind.InvoicePaymentSucceeded, "cus_1", "sub_1"),
+            Event(PaymentEventKind.InvoicePaid, "cus_1", "sub_1"),
             TestContext.Current.CancellationToken);
 
         Assert.True(result.IsSuccess);
@@ -148,7 +187,6 @@ public sealed class ProcessPaymentWebhookHandlerTests
         "cus_1",
         "sub_1",
         SubscriptionTier.Pro,
-        100,
         "active",
         Now.AddDays(7),
         Now);

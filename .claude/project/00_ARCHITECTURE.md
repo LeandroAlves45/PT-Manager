@@ -617,6 +617,16 @@ corresponde aos consumidores reais da Application.
 
 Todos os pedidos mutáveis enviados à Stripe usam uma idempotency key estável por operação de negócio. Retries usam a mesma key e os mesmos parâmetros.
 
+No Sprint 5B, Checkout e Customer Portal exigem `Idempotency-Key` HTTP em formato
+UUID. As URLs de sucesso, cancelamento, retorno e gestão de billing vêm apenas de
+configuração backend validada. O contrato rejeita propriedades URL recebidas do
+caller. Uma `BillingCheckoutOperation` persistida garante no máximo uma intenção
+`pending` ou `created` por trainer, permite recuperar leases e não guarda a URL
+temporária da sessão.
+
+A capacidade comercial é derivada exclusivamente do tier: FREE permite 5 clientes,
+STARTER 25 e PRO é ilimitado, representado por `client_limit = NULL`.
+
 Chamadas à Stripe:
 
 1. Têm timeout.
@@ -639,6 +649,12 @@ O webhook Stripe:
 9. Devolve uma resposta de erro quando a persistência falha, permitindo retry da Stripe.
 
 O endpoint Stripe é configurado para uma versão explícita da Stripe API. Um evento autenticado mas não suportado é registado de forma sanitizada e recebe 2xx, evitando retries inúteis. A configuração da Stripe deve subscrever apenas os event types necessários.
+
+A versão aprovada é `2026-08-26.dahlia`. A allowlist contém apenas
+`checkout.session.completed`, `customer.subscription.updated`,
+`customer.subscription.deleted`, `customer.subscription.trial_will_end`,
+`invoice.paid` e `invoice.payment_failed`. Estado, deduplicação, eventual conclusão
+da intenção e outbox são confirmados na mesma transação.
 
 Eventos Stripe podem chegar duplicados ou fora de ordem. Quando a ordem afectar a decisão, o handler reconcilia o estado actual com a Stripe em vez de confiar apenas na sequência de entrega.
 

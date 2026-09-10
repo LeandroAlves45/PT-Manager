@@ -4,7 +4,9 @@ using Application.Features.Billing.Abstractions;
 using Application.Features.Billing.Webhooks;
 using Domain.Entities.Billing;
 using Domain.Entities.Jobs;
+using Domain.ValueObjects;
 using Infrastructure.Data;
+using Infrastructure.Email;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -35,7 +37,7 @@ internal sealed class PaymentEventStore : IPaymentEventStore
         CancellationToken cancellationToken
     )
     {
-        if (await IsAlreadyProcessedAsync(paymentEvent.EventId, cancellationToken))
+        if (await IsProcessedAsync(paymentEvent.EventId, cancellationToken))
             return new(CommitPaymentEventStoreStatus.AlreadyProcessed);
 
         // A resolução do trainer usa apenas identidades externas já persistidas;
@@ -82,13 +84,11 @@ internal sealed class PaymentEventStore : IPaymentEventStore
                         operationToken);
 
                     if (status == CommitPaymentEventStoreStatus.Processed)
-                    {
                         await _dbContext.SaveChangesAsync(
                             acceptAllChangesOnSuccess: false,
                             operationToken);
-                    }
                 },
-                verifyToken => IsAlreadyProcessedAsync(paymentEvent.EventId, verifyToken),
+                verifyToken => IsProcessedAsync(paymentEvent.EventId, verifyToken),
                 cancellationToken);
         }
         catch (DbUpdateConcurrencyException)
@@ -121,6 +121,7 @@ internal sealed class PaymentEventStore : IPaymentEventStore
         if (subscription is null)
             return CommitPaymentEventStoreStatus.SubscriptionNotFound;
 
+        var previousLastObservedAt = subscription.LastProviderStateObservedAt;
         var applyStatus = BillingEventMapper.Apply(subscription, paymentEvent, snapshot, now);
         if (applyStatus == BillingEventApplyStatus.ExternalIdentityConflict)
             return CommitPaymentEventStoreStatus.ExternalIdentityConflict;
@@ -135,26 +136,40 @@ internal sealed class PaymentEventStore : IPaymentEventStore
             now
         ));
 
-        if (applyStatus == BillingEventApplyStatus.Applied &&
-            paymentEvent.Kind is PaymentEventKind.InvoicePaymentFailed or
-                PaymentEventKind.TrialWillEnd)
+        if (paymentEvent.Kind == PaymentEventKind.CheckoutCompleted &&
+            paymentEvent.ProviderCheckoutSessionId is not null)
         {
-            var recipientEmail = await _dbContext.Users
+            var checkout = await _dbContext.BillingCheckoutOperations
+                .SingleOrDefaultAsync(operation =>
+                    operation.StripeCheckoutSessionId == paymentEvent.ProviderCheckoutSessionId &&
+                    operation.Status == BillingCheckoutOperationStatus.Created,
+                    cancellationToken);
+            checkout?.MarkCompleted(now);
+        }
+
+        // A decisão de notificar depende do snapshot atual, não de ter havido uma
+        // mutação local. Isto preserva notificações válidas quando o estado já estava
+        // reconciliado e suprime eventos neutralizados por um snapshot mais recente.
+        if (ShouldNotify(paymentEvent, snapshot, applyStatus, now, previousLastObservedAt))
+        {
+            var notificationKind = MapNotificationKind(paymentEvent.Kind);
+            if (notificationKind is null)
+                return CommitPaymentEventStoreStatus.Processed;
+
+            var hasActiveRecipient = await _dbContext.Users
                 .AsNoTracking()
                 .Where(user => user.Id == trainerId && user.Role == "trainer" &&
                     user.IsActive && !user.IsDeleted)
-                .Select(user => user.Email)
-                .SingleOrDefaultAsync(cancellationToken);
+                .AnyAsync(cancellationToken);
 
-            // Sem destinatário ativo, a alteração autoritativa e o deduplicado
-            // são confirmados sem notificação: evita retries permanentes.
-            if (recipientEmail is not null)
+            // Sem destinatário ativo, o estado e o deduplicado são confirmados
+            // sem outbox para evitar retries que nunca poderão ser entregues.
+            if (hasActiveRecipient)
             {
                 var payload = JsonSerializer.Serialize(new BillingNotificationPayload(
                     trainerId,
-                    recipientEmail,
                     paymentEvent.EventId,
-                    paymentEvent.Kind.ToString()
+                    notificationKind
                 ), PayloadSerializerOptions);
                 _dbContext.OutboxMessages.Add(new OutboxMessage(
                     trainerId,
@@ -170,17 +185,60 @@ internal sealed class PaymentEventStore : IPaymentEventStore
         return CommitPaymentEventStoreStatus.Processed;
     }
 
-    private Task<bool> IsAlreadyProcessedAsync(
+    public Task<bool> IsProcessedAsync(
         string eventId,
         CancellationToken cancellationToken
     ) => _dbContext.ProcessedStripeEvents
         .AsNoTracking()
         .AnyAsync(processed => processed.StripeEventId == eventId, cancellationToken);
 
+    private static bool ShouldNotify(
+        NormalizedPaymentEvent paymentEvent,
+        ProviderSubscriptionSnapshot? snapshot,
+        BillingEventApplyStatus applyStatus,
+        DateTime now,
+        DateTime? previousLastObservedAt)
+    {
+        if (snapshot is null || applyStatus == BillingEventApplyStatus.StaleSnapshot)
+            return false;
+
+        var providerStatus = snapshot.ProviderStatus.Trim().ToLowerInvariant();
+        return paymentEvent.Kind switch
+        {
+            PaymentEventKind.InvoicePaymentFailed =>
+                providerStatus is "past_due" or "unpaid" or "paused",
+            PaymentEventKind.TrialWillEnd =>
+                providerStatus == "trialing" && snapshot.TrialEndsAt > now,
+            PaymentEventKind.CheckoutCompleted =>
+                providerStatus is "active" or "trialing",
+            PaymentEventKind.SubscriptionDeleted =>
+                providerStatus is "canceled" or "cancelled" or "unpaid",
+            PaymentEventKind.InvoicePaid =>
+                providerStatus == "active" &&
+                previousLastObservedAt.HasValue &&
+                now - previousLastObservedAt.Value >= TimeSpan.FromHours(1),
+            _ => false
+        };
+    }
+
+    private static string? MapNotificationKind(PaymentEventKind kind) => kind switch
+    {
+        PaymentEventKind.InvoicePaymentFailed =>
+            BillingNotificationTemplateRenderer.PaymentFailedKind,
+        PaymentEventKind.TrialWillEnd =>
+            BillingNotificationTemplateRenderer.TrialWillEndKind,
+        PaymentEventKind.CheckoutCompleted =>
+            BillingNotificationTemplateRenderer.SubscriptionActivatedKind,
+        PaymentEventKind.InvoicePaid =>
+            BillingNotificationTemplateRenderer.PaymentSucceededKind,
+        PaymentEventKind.SubscriptionDeleted =>
+            BillingNotificationTemplateRenderer.SubscriptionCanceledKind,
+        _ => null
+    };
+
     /// <summary>Contrato snake_case consumido pelo dispatcher de notificações.</summary>
     private sealed record BillingNotificationPayload(
         [property: System.Text.Json.Serialization.JsonPropertyName("trainer_id")] Guid TrainerId,
-        [property: System.Text.Json.Serialization.JsonPropertyName("recipient_email")] string RecipientEmail,
         [property: System.Text.Json.Serialization.JsonPropertyName("event_id")] string EventId,
         [property: System.Text.Json.Serialization.JsonPropertyName("kind")] string Kind
     );

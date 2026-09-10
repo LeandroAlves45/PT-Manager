@@ -7,7 +7,7 @@ using FluentValidation;
 
 namespace Application.Features.Billing.CreateCustomerPortal;
 
-/// <summary>Orquestra o portal sem conhecer SDK externo.</summary>
+/// <summary>Abre o portal apenas para o customer persistido do personal trainer autenticado.</summary>
 public sealed class CreateCustomerPortalHandler
 {
     private readonly IValidator<CreateCustomerPortalCommand> _validator;
@@ -50,15 +50,18 @@ public sealed class CreateCustomerPortalHandler
         if (customerId is null)
             return Result<Uri>.Failure(BillingErrors.CustomerNotLinked);
 
-        var request = new CreateCustomerPortalRequest(
-            actor.Value.TrainerId,
-            command.OperationId,
-            customerId,
-            command.ReturnUrl,
-            $"portal:{actor.Value.TrainerId:N}:{command.OperationId:N}"
-        );
+        var outcome = await _gateway.CreateAsync(
+            new CreateCustomerPortalRequest(
+                actor.Value.TrainerId,
+                command.OperationId,
+                customerId,
+                $"billing:portal:{command.OperationId:N}"),
+            cancellationToken);
 
-        var url = await _gateway.CreateCustomerPortalAsync(request, cancellationToken);
-        return Result<Uri>.Success(url);
+        return outcome.Status == BillingGatewayStatus.Success
+            ? Result<Uri>.Success(outcome.Url!)
+            : Result<Uri>.Failure(outcome.Status == BillingGatewayStatus.Disabled
+                ? BillingErrors.StripeDisabled
+                : BillingErrors.ProviderUnavailable);
     }
 }

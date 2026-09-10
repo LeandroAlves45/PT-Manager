@@ -4,7 +4,7 @@ namespace Application.Features.Billing.Dtos;
 public sealed record SubscriptionDto(
     string Status,
     string Tier,
-    int ClientLimit,
+    int? ClientLimit,
     int CurrentClientCount,
     DateTime? TrialEndsAt
 );

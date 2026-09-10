@@ -7,7 +7,7 @@ public enum PaymentEventKind
     CheckoutCompleted,
     SubscriptionUpdated,
     SubscriptionDeleted,
-    InvoicePaymentSucceeded,
+    InvoicePaid,
     InvoicePaymentFailed,
     TrialWillEnd
 }

@@ -1,16 +1,16 @@
 using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using Api.FunctionalTests.Support;
 
 namespace Api.FunctionalTests.Controllers;
 
 /// <summary>
-/// Prova o único endpoint de Billing exposto na Fase 4: a leitura da subscrição.
+/// Prova o contrato HTTP de Billing exposto no Sprint 5B.
 /// </summary>
 /// <remarks>
-/// Checkout, portal Stripe e webhooks pertencem ao Sprint 5 e não estão expostos.
-/// Um teste confirma que essas rotas continuam ausentes, para que a decisão de as
-/// adiar seja verificável e não apenas documentada.
+/// A configuração funcional mantém Stripe desativado. Assim, os testes validam
+/// autenticação, parsing estrito e falhas sanitizadas sem chamadas externas.
 /// </remarks>
 [Collection(ApiTestCollection.Name)]
 public sealed class BillingControllerTests
@@ -122,23 +122,71 @@ public sealed class BillingControllerTests
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    [Theory]
-    [InlineData("/api/v1/billing/checkout")]
-    [InlineData("/api/v1/billing/customer-portal")]
-    [InlineData("/api/v1/billing/webhook")]
-    public async Task DeferredBillingRoutes_AreNotExposedInThisPhase(string route)
+    [Fact]
+    public async Task Checkout_CallerControlledRedirect_IsRejectedAsUnknownJson()
     {
-        // O último segmento identifica a rota de forma estável; string.GetHashCode() é
-        // aleatorizado por processo em .NET e não serve como discriminador legível.
-        var trainer = await SeedTrainerAsync(
-            $"billing-absent-{route[(route.LastIndexOf('/') + 1)..]}");
+        var trainer = await SeedTrainerAsync("billing-redirect-rejected");
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/billing/checkout");
+        request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("D"));
+        request.Content = JsonContent.Create(new { tier = "PRO", success_url = "https://evil.example" });
+
+        var response = await TrainerClient(trainer.TrainerId).SendAsync(request, Token);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CustomerPortal_WithoutIdempotencyKey_ReturnsBadRequest()
+    {
+        var trainer = await SeedTrainerAsync("billing-portal-key");
 
         var response = await TrainerClient(trainer.TrainerId).PostAsync(
-            route,
+            "/api/v1/billing/customer-portal",
             content: null,
             Token);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CustomerPortal_CallerControlledReturnUrl_IsRejectedAsUnknownJson()
+    {
+        var trainer = await SeedTrainerAsync("billing-portal-redirect");
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/billing/customer-portal");
+        request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("D"));
+        request.Content = JsonContent.Create(new { return_url = "https://evil.example" });
+
+        var response = await TrainerClient(trainer.TrainerId).SendAsync(request, Token);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Webhook_WithoutStripeSignature_ReturnsBadRequest()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/billing/webhook")
+        {
+            Content = JsonContent.Create(new { id = "evt_missing_signature" })
+        };
+
+        var response = await _factory.CreateOriginClient().SendAsync(request, Token);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Webhook_ExceedingConfiguredRawBodyLimit_ReturnsPayloadTooLarge()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/billing/webhook");
+        request.Headers.Add("Stripe-Signature", "t=1,v1=invalid");
+        request.Content = new StringContent(
+            new string('x', 262_145),
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        var response = await _factory.CreateOriginClient().SendAsync(request, Token);
+
+        Assert.Equal(HttpStatusCode.RequestEntityTooLarge, response.StatusCode);
     }
 
     private Task<SeededTrainer> SeedTrainerAsync(string discriminator) =>

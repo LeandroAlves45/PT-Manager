@@ -2,14 +2,12 @@ using Domain.ValueObjects;
 
 namespace Application.Features.Billing.Abstractions;
 
-/// <summary>Pedido provider-neutral para criar Checkout.</summary>
+/// <summary>Pedido provider-neutral para criar uma Checkout Session.</summary>
 public sealed record CreateCheckoutRequest(
     Guid TrainerId,
     Guid OperationId,
-    string? ProviderCustomerId,
-    string TrainerEmail,
+    string ProviderCustomerId,
     SubscriptionTier Tier,
-    Uri SuccessUrl,
-    Uri CancelUrl,
+    DateTime? EffectiveTrialEndsAt,
     string IdempotencyKey
 );

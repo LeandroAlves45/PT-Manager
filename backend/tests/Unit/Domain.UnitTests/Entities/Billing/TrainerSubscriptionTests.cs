@@ -21,7 +21,7 @@ public sealed class TrainerSubscriptionTests
         );
 
         // Act
-        subscription.ChangeTier(subscriptionTier, 5, now);
+        subscription.ChangeTier(subscriptionTier, now);
         for (var i = 0; i < 5; i++)
             subscription.RegisterClientAdded(now);
 
@@ -65,7 +65,7 @@ public sealed class TrainerSubscriptionTests
         );
 
         // Act
-        subscription.ChangeTier(subscriptionTier, 5, now);
+        subscription.ChangeTier(subscriptionTier, now);
         for (var i = 0; i < 5; i++)
             subscription.RegisterClientAdded(now);
 

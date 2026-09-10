@@ -2,17 +2,13 @@ using Application.Common.Abstractions;
 using Application.Features.Billing.Abstractions;
 using Application.Features.Billing.Dtos;
 using Application.Features.Billing.Webhooks;
+using Domain.ValueObjects;
 using FluentValidation;
 
 namespace Application.UnitTests.Features.Billing;
 
 internal sealed class BillingValidValidator<T> : AbstractValidator<T> { }
-
-internal sealed class BillingClock(DateTime utcNow) : IClock
-{
-    public DateTime UtcNow { get; } = utcNow;
-}
-
+internal sealed class BillingClock(DateTime utcNow) : IClock { public DateTime UtcNow { get; } = utcNow; }
 internal sealed class BillingTenant : ITenantContext
 {
     public Guid? TrainerId { get; init; }
@@ -27,134 +23,86 @@ internal sealed class SubscriptionStoreStub : ISubscriptionQueryStore
     public SubscriptionDto? Value { get; set; }
     public int Calls { get; private set; }
     public Guid? RequestedTrainerId { get; private set; }
-
-    public Task<SubscriptionDto?> GetSubscriptionAsync(
-        Guid trainerId,
-        CancellationToken cancellationToken)
-    {
-        Calls++;
-        RequestedTrainerId = trainerId;
-        return Task.FromResult(Value);
-    }
+    public Task<SubscriptionDto?> GetSubscriptionAsync(Guid trainerId, CancellationToken cancellationToken)
+    { Calls++; RequestedTrainerId = trainerId; return Task.FromResult(Value); }
 }
 
 internal sealed class CheckoutStoreStub : IBillingCheckoutStore
 {
-    public CheckoutContext? Context { get; set; }
+    public CheckoutReservationResult Reservation { get; set; } = new(
+        CheckoutReservationStatus.SubscriptionNotFound);
+    public CheckoutMutationStatus LinkResult { get; set; } = CheckoutMutationStatus.Applied;
+    public CheckoutMutationStatus SessionResult { get; set; } = CheckoutMutationStatus.Applied;
     public string? CustomerId { get; set; }
-    public LinkPaymentCustomerStoreResult LinkResult { get; set; } =
-        new(LinkPaymentCustomerStoreStatus.Linked);
-    public int CheckoutContextCalls { get; private set; }
+    public int ReserveCalls { get; private set; }
     public int LinkCustomerCalls { get; private set; }
-    public int CustomerIdCalls { get; private set; }
+    public int SessionCalls { get; private set; }
     public Guid? RequestedTrainerId { get; private set; }
-    public string? LinkedProviderCustomerId { get; private set; }
-    public DateTime? LinkedAt { get; private set; }
 
-    public Task<CheckoutContext?> GetCheckoutContextAsync(
-        Guid trainerId,
-        CancellationToken cancellationToken)
-    {
-        CheckoutContextCalls++;
-        RequestedTrainerId = trainerId;
-        return Task.FromResult(Context);
-    }
-
-    public Task<LinkPaymentCustomerStoreResult> LinkCustomerAsync(
-        Guid trainerId,
-        string providerCustomerId,
-        DateTime now,
-        CancellationToken cancellationToken)
-    {
-        LinkCustomerCalls++;
-        RequestedTrainerId = trainerId;
-        LinkedProviderCustomerId = providerCustomerId;
-        LinkedAt = now;
-        return Task.FromResult(LinkResult);
-    }
-
-    public Task<string?> GetCustomerIdAsync(
-        Guid trainerId,
-        CancellationToken cancellationToken)
-    {
-        CustomerIdCalls++;
-        RequestedTrainerId = trainerId;
-        return Task.FromResult(CustomerId);
-    }
+    public Task<CheckoutReservationResult> ReserveAsync(Guid trainerId, Guid clientOperationId,
+        SubscriptionTier tier, DateTime now, TimeSpan leaseDuration, CancellationToken cancellationToken)
+    { ReserveCalls++; RequestedTrainerId = trainerId; return Task.FromResult(Reservation); }
+    public Task<CheckoutMutationStatus> LinkCustomerAsync(Guid operationId, Guid leaseOwnerId,
+        string providerCustomerId, DateTime now, CancellationToken cancellationToken)
+    { LinkCustomerCalls++; return Task.FromResult(LinkResult); }
+    public Task<CheckoutMutationStatus> MarkSessionCreatedAsync(Guid operationId, Guid leaseOwnerId,
+        string providerSessionId, DateTime sessionExpiresAt, DateTime now, CancellationToken cancellationToken)
+    { SessionCalls++; return Task.FromResult(SessionResult); }
+    public Task MarkFailedAsync(Guid operationId, Guid leaseOwnerId, string failureCode,
+        DateTime now, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task<string?> GetCustomerIdAsync(Guid trainerId, CancellationToken cancellationToken)
+    { RequestedTrainerId = trainerId; return Task.FromResult(CustomerId); }
 }
 
 internal sealed class CheckoutGatewayStub : ICheckoutGateway
 {
-    public CreatedCheckout Checkout { get; set; } = new(
-        new Uri("https://pay.example/checkout"),
-        "cus_created");
+    public EnsureCustomerOutcome Customer { get; set; } = new(BillingGatewayStatus.Success, "cus_created");
+    public CheckoutSessionOutcome Checkout { get; set; } = new(BillingGatewayStatus.Success,
+        "cs_created", new Uri("https://checkout.stripe.com/example"),
+        new DateTime(2026, 9, 1, 13, 0, 0, DateTimeKind.Utc));
     public int Calls { get; private set; }
     public CreateCheckoutRequest? Request { get; private set; }
-
-    public Task<CreatedCheckout> CreateCheckoutAsync(
-        CreateCheckoutRequest request,
-        CancellationToken cancellationToken)
-    {
-        Calls++;
-        Request = request;
-        return Task.FromResult(Checkout);
-    }
+    public Task<EnsureCustomerOutcome> EnsureCustomerAsync(EnsureCustomerRequest request, CancellationToken cancellationToken)
+        => Task.FromResult(Customer);
+    public Task<CheckoutSessionOutcome> CreateSessionAsync(CreateCheckoutRequest request, CancellationToken cancellationToken)
+    { Calls++; Request = request; return Task.FromResult(Checkout); }
+    public Task<CheckoutSessionOutcome> GetSessionAsync(string providerSessionId, CancellationToken cancellationToken)
+    { Calls++; return Task.FromResult(Checkout); }
 }
 
 internal sealed class PortalGatewayStub : ICustomerPortalGateway
 {
-    public Uri Url { get; set; } = new("https://pay.example/portal");
+    public CustomerPortalOutcome Outcome { get; set; } = new(BillingGatewayStatus.Success,
+        new Uri("https://billing.stripe.com/example"));
     public int Calls { get; private set; }
     public CreateCustomerPortalRequest? Request { get; private set; }
-
-    public Task<Uri> CreateCustomerPortalAsync(
-        CreateCustomerPortalRequest request,
-        CancellationToken cancellationToken)
-    {
-        Calls++;
-        Request = request;
-        return Task.FromResult(Url);
-    }
+    public Task<CustomerPortalOutcome> CreateAsync(CreateCustomerPortalRequest request, CancellationToken cancellationToken)
+    { Calls++; Request = request; return Task.FromResult(Outcome); }
 }
 
 internal sealed class ReconciliationGatewayStub : ISubscriptionReconciliationGateway
 {
     public ProviderSubscriptionSnapshot? Snapshot { get; set; }
+    public SubscriptionReconciliationStatus Status { get; set; } = SubscriptionReconciliationStatus.Success;
     public int Calls { get; private set; }
     public string? RequestedProviderCustomerId { get; private set; }
     public string? RequestedProviderSubscriptionId { get; private set; }
-
-    public Task<ProviderSubscriptionSnapshot?> GetSubscriptionSnapshotAsync(
-        string? providerCustomerId,
-        string? providerSubscriptionId,
-        CancellationToken cancellationToken)
-    {
-        Calls++;
-        RequestedProviderCustomerId = providerCustomerId;
-        RequestedProviderSubscriptionId = providerSubscriptionId;
-        return Task.FromResult(Snapshot);
-    }
+    public Task<SubscriptionReconciliationOutcome> GetSubscriptionSnapshotAsync(string? providerCustomerId,
+        string? providerSubscriptionId, CancellationToken cancellationToken)
+    { Calls++; RequestedProviderCustomerId = providerCustomerId; RequestedProviderSubscriptionId = providerSubscriptionId; return Task.FromResult(new SubscriptionReconciliationOutcome(Status, Snapshot)); }
 }
 
 internal sealed class PaymentEventStoreStub : IPaymentEventStore
 {
-    public CommitPaymentEventStoreResult Result { get; set; } =
-        new(CommitPaymentEventStoreStatus.Processed);
+    public bool IsProcessed { get; set; }
+    public CommitPaymentEventStoreResult Result { get; set; } = new(CommitPaymentEventStoreStatus.Processed);
     public int Calls { get; private set; }
     public NormalizedPaymentEvent? PaymentEvent { get; private set; }
     public ProviderSubscriptionSnapshot? Snapshot { get; private set; }
     public DateTime? CommittedAt { get; private set; }
-
-    public Task<CommitPaymentEventStoreResult> CommitAsync(
-        NormalizedPaymentEvent paymentEvent,
-        ProviderSubscriptionSnapshot? reconciledSnapshot,
-        DateTime now,
-        CancellationToken cancellationToken)
-    {
-        Calls++;
-        PaymentEvent = paymentEvent;
-        Snapshot = reconciledSnapshot;
-        CommittedAt = now;
-        return Task.FromResult(Result);
-    }
+    public Task<bool> IsProcessedAsync(string eventId, CancellationToken cancellationToken) =>
+        Task.FromResult(IsProcessed);
+    public Task<CommitPaymentEventStoreResult> CommitAsync(NormalizedPaymentEvent paymentEvent,
+        ProviderSubscriptionSnapshot? reconciledSnapshot, DateTime now, CancellationToken cancellationToken)
+    { Calls++; PaymentEvent = paymentEvent; Snapshot = reconciledSnapshot; CommittedAt = now; return Task.FromResult(Result); }
 }

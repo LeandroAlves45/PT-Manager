@@ -7,7 +7,6 @@ public sealed record ProviderSubscriptionSnapshot(
     string ProviderCustomerId,
     string ProviderSubscriptionId,
     SubscriptionTier Tier,
-    int ClientLimit,
     string ProviderStatus,
     DateTime? TrialEndsAt,
     DateTime ObservedAt

@@ -605,6 +605,15 @@
         "resolved": "7.0.0",
         "contentHash": "GLltyqEsE5/3IE+zYRP5sNa1l44qKl9v+bfdMcwg+M9qnQf47wK3H0SUR/T+3N4JEQXF3vV4CSuuo0rsg+nq2A=="
       },
+      "System.Configuration.ConfigurationManager": {
+        "type": "Transitive",
+        "resolved": "9.0.0",
+        "contentHash": "PdkuMrwDhXoKFo/JxISIi9E8L+QGn9Iquj2OKDWHB6Y/HnUOuBouF7uS3R4Hw3FoNmwwMo6hWgazQdyHIIs27A==",
+        "dependencies": {
+          "System.Diagnostics.EventLog": "9.0.0",
+          "System.Security.Cryptography.ProtectedData": "9.0.0"
+        }
+      },
       "System.Diagnostics.EventLog": {
         "type": "Transitive",
         "resolved": "10.0.10",
@@ -626,6 +635,11 @@
         "dependencies": {
           "System.CodeDom": "7.0.0"
         }
+      },
+      "System.Security.Cryptography.ProtectedData": {
+        "type": "Transitive",
+        "resolved": "9.0.0",
+        "contentHash": "CJW+x/F6fmRQ7N6K8paasTw9PDZp4t7G76UjGNlSDgoHPF0h08vTzLYbLZpOLEJSg35d5wy2jCXGo84EN05DpQ=="
       },
       "Testcontainers": {
         "type": "Transitive",
@@ -738,7 +752,8 @@
           "Microsoft.Extensions.Http": "[10.0.10, )",
           "Microsoft.Extensions.Identity.Core": "[10.0.10, )",
           "Microsoft.IdentityModel.JsonWebTokens": "[8.19.2, )",
-          "Npgsql.EntityFrameworkCore.PostgreSQL": "[10.0.3, )"
+          "Npgsql.EntityFrameworkCore.PostgreSQL": "[10.0.3, )",
+          "Stripe.net": "[52.4.1, )"
         }
       },
       "FluentValidation": {
@@ -861,6 +876,16 @@
         "requested": "[2.17.2, )",
         "resolved": "2.17.2",
         "contentHash": "ciW2HuRWJgNEecophHN9DvoRlTs/+8TNPhB6tQW1gmJWh/eoAIO0ys8XIxx7irUpIu3KRHZyxyuHstqqrTn1Tw=="
+      },
+      "Stripe.net": {
+        "type": "CentralTransitive",
+        "requested": "[52.4.1, )",
+        "resolved": "52.4.1",
+        "contentHash": "eJaJo3blztCJoSsf9GetvBGnqUyoBHfUkbSasJTQdmCjHK6NJGcneZV2cOA+XcnYC5ic26rr624ZCkFaYgBU1A==",
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3",
+          "System.Configuration.ConfigurationManager": "9.0.0"
+        }
       }
     }
   }

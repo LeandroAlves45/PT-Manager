@@ -160,7 +160,7 @@ public static class DependencyInjection
         services.AddAuthenticationInfrastructure(configuration);
 
         // Billing Extensions
-        services.AddBillingInfrastructure();
+        services.AddBillingInfrastructure(configuration);
 
         // Timezone provider
         services.AddScoped<ITrainerTimeZoneProvider, TrainerTimeZoneProvider>();

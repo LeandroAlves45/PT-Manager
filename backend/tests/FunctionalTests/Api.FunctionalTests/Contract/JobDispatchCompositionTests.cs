@@ -57,12 +57,13 @@ public sealed class JobDispatchCompositionTests
     }
 
     [Fact]
-    public void OutboxHandlers_AreNotRegisteredInThisPhase()
+    public void BillingNotification_IsTheOnlyRegisteredOutboxRoute()
     {
         using var scope = _fixture.Factory.Services.CreateScope();
 
-        // billing_notification e trainer-logo.delete pertencem às Fases 5B e 5C.
-        Assert.Empty(scope.ServiceProvider.GetServices<IOutboxMessageHandler>());
+        var handler = Assert.Single(
+            scope.ServiceProvider.GetServices<IOutboxMessageHandler>());
+        Assert.Equal("billing_notification", handler.MessageType);
     }
 
     [Fact]

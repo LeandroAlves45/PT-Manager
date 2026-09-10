@@ -1,0 +1,33 @@
+---
+description: Usar security-audit em pedidos de auditoria de segurança, CVE, secrets, XSS, IDOR, cross-tenant, JWT, webhooks Stripe ou API ASP.NET Core.
+alwaysApply: false
+---
+
+# Security Audit — PT Manager
+
+Seguir `.cursor/skills/security-audit/SKILL.md` e ficheiros em `refs/`.
+
+Alternativas equivalentes: `.claude/skills/security-audit/` ou `.agents/skills/security-audit/`.
+
+## Quando activar
+
+- Pedidos de auditoria **completa** (não só review de diff)
+- IDOR, BOLA, cross-tenant, `trainer_id` no request
+- Webhooks Stripe, billing, checkout
+- Secrets expostos, `npm audit`, pacotes NuGet vulneráveis
+- Convenção `/security-audit [path]`
+
+## Quando NÃO activar (usar outra skill)
+
+- Review de PR / diff → `security-reviewer`
+- Detalhe PCI/webhook Stripe isolado → `payment-security`
+
+## Escopo
+
+- **Incluir:** `backend/`, `frontend/`
+- **Incluir sempre em full audit:** checklist Billing (`refs/aspnet-checklist.md` §6)
+- **Excluir por defeito:** `backend-python/`
+
+## Saída
+
+Relatório em português de Portugal, formato `refs/report.md`. Patches só como proposta — nunca aplicar automaticamente.

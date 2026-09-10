@@ -38,9 +38,7 @@ internal sealed class TrainerSubscriptionConfiguration : IEntityTypeConfiguratio
             .HasDefaultValue(SubscriptionTier.Free);
 
         builder.Property(ts => ts.ClientLimit)
-            .HasColumnName("client_limit")
-            .IsRequired()
-            .HasDefaultValue(5);
+            .HasColumnName("client_limit");
 
         builder.Property(ts => ts.CurrentClientCount)
             .HasColumnName("current_client_count")
@@ -79,6 +77,11 @@ internal sealed class TrainerSubscriptionConfiguration : IEntityTypeConfiguratio
             t.HasCheckConstraint("status_check",
                 "subscription_status IN ('ACTIVE', 'INACTIVE', 'SUSPENDED', 'CANCELLED')");
             t.HasCheckConstraint("tier_check", "subscription_tier IN ('FREE', 'STARTER', 'PRO')");
+            t.HasCheckConstraint(
+                "ck_trainer_subscriptions_tier_client_limit",
+                "(subscription_tier = 'FREE' AND client_limit = 5) OR " +
+                "(subscription_tier = 'STARTER' AND client_limit = 25) OR " +
+                "(subscription_tier = 'PRO' AND client_limit IS NULL)");
         });
 
         builder.HasIndex(ts => ts.TrainerId)

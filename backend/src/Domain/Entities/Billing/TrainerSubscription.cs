@@ -13,7 +13,7 @@ public sealed class TrainerSubscription
     public Guid TrainerId { get; private set; }
     public SubscriptionStatus Status { get; private set; } = null!;
     public SubscriptionTier Tier { get; private set; } = null!;
-    public int ClientLimit { get; private set; }
+    public int? ClientLimit { get; private set; }
     public int CurrentClientCount { get; private set; }
     public bool IsExemptFromBilling { get; private set; }
     public DateTime? TrialEndsAt { get; private set; }
@@ -39,7 +39,7 @@ public sealed class TrainerSubscription
         TrainerId = trainerId;
         Status = SubscriptionStatus.Active;
         Tier = SubscriptionTier.Free;
-        ClientLimit = 5;
+        ClientLimit = Tier.ClientLimit;
         CurrentClientCount = 0;
         IsExemptFromBilling = false;
         TrialEndsAt = trialEndsAt;
@@ -52,7 +52,7 @@ public sealed class TrainerSubscription
     /// CreateClientHandler antes de criar um cliente.
     /// </summary>
     public bool CanAddClient() => IsExemptFromBilling || (Status == SubscriptionStatus.Active &&
-        CurrentClientCount < ClientLimit);
+        (ClientLimit is null || CurrentClientCount < ClientLimit.Value));
 
     /// <summary>Incrementa a contagem de clientes ativos (na mesma transação da criação)</summary>
     public void RegisterClientAdded(DateTime now)
@@ -87,22 +87,25 @@ public sealed class TrainerSubscription
     /// Aplica uma mudança de tier confirmada pelo Stripe (upgrade/downgrade),
     /// atualizando o limite de clientes do novo tier.
     /// </summary>
-    public void ChangeTier(SubscriptionTier tier, int clientLimit, DateTime now)
+    public void ChangeTier(SubscriptionTier tier, DateTime now)
     {
-        if (clientLimit < 0)
-            throw new DomainException("Client limit cannot be negative.");
+        ArgumentNullException.ThrowIfNull(tier);
 
         Tier = tier;
-        ClientLimit = clientLimit;
+        ClientLimit = tier.ClientLimit;
         UpdatedAt = now;
     }
 
     /// <summary>Associa o customer externo antes de existir uma subscription externa.</summary>
-    public void LinkStripeCustomer(string customerId, DateTime now)
+    public void LinkStripeCustomer(
+        string customerId,
+        DateTime now)
     {
         var normalized = NormalizeProviderId(customerId, "Stripe customer ID is invalid.");
+
         if (StripeCustomerId is not null && StripeCustomerId != normalized)
             throw new DomainException("A different Stripe customer is already linked.");
+
         if (StripeCustomerId == normalized)
             return;
 
@@ -128,15 +131,11 @@ public sealed class TrainerSubscription
         if (StripeSubscriptionId is not null &&
             StripeSubscriptionId != normalizedSubscriptionId &&
             !mayReplace)
-        {
             throw new DomainException("An active Stripe subscription cannot be replaced.");
-        }
 
         if (StripeCustomerId == normalizedCustomerId &&
             StripeSubscriptionId == normalizedSubscriptionId)
-        {
             return;
-        }
 
         StripeCustomerId = normalizedCustomerId;
         StripeSubscriptionId = normalizedSubscriptionId;
@@ -152,7 +151,6 @@ public sealed class TrainerSubscription
         string customerId,
         string subscriptionId,
         SubscriptionTier tier,
-        int clientLimit,
         SubscriptionStatus status,
         DateTime? trialEndsAt,
         DateTime observedAt,
@@ -168,8 +166,6 @@ public sealed class TrainerSubscription
         ArgumentNullException.ThrowIfNull(tier);
         ArgumentNullException.ThrowIfNull(status);
 
-        if (clientLimit < 0)
-            throw new DomainException("Client limit cannot be negative.");
         if (observedAt == default || observedAt.Kind != DateTimeKind.Utc)
             throw new DomainException("Provider state observation time must be UTC.");
         if (StripeCustomerId is not null && StripeCustomerId != normalizedCustomerId)
@@ -177,49 +173,25 @@ public sealed class TrainerSubscription
 
         var mayReplaceSubscription = Status == SubscriptionStatus.Inactive ||
             Status == SubscriptionStatus.Cancelled;
+
         if (StripeSubscriptionId is not null &&
             StripeSubscriptionId != normalizedSubscriptionId &&
             !mayReplaceSubscription)
-        {
             throw new DomainException("An active Stripe subscription cannot be replaced.");
-        }
 
         if (LastProviderStateObservedAt.HasValue &&
             observedAt <= LastProviderStateObservedAt.Value)
-        {
             return false;
-        }
 
         StripeCustomerId = normalizedCustomerId;
         StripeSubscriptionId = normalizedSubscriptionId;
         Tier = tier;
-        ClientLimit = clientLimit;
+        ClientLimit = tier.ClientLimit;
         Status = status;
         TrialEndsAt = trialEndsAt;
         LastProviderStateObservedAt = observedAt;
         UpdatedAt = now;
         return true;
-    }
-
-    /// <summary>Reconcilia tier, limite, estado e trial a partir do provider.</summary>
-    public void ApplyBillingState(
-        SubscriptionTier tier,
-        int clientLimit,
-        SubscriptionStatus status,
-        DateTime? trialEndsAt,
-        DateTime now
-    )
-    {
-        ArgumentNullException.ThrowIfNull(tier);
-        ArgumentNullException.ThrowIfNull(status);
-        if (clientLimit < 0)
-            throw new DomainException("Client limit cannot be negative.");
-
-        Tier = tier;
-        ClientLimit = clientLimit;
-        Status = status;
-        TrialEndsAt = trialEndsAt;
-        UpdatedAt = now;
     }
 
     /// <summary>Transições de estado vindas de eventos do Stripe.</summary>

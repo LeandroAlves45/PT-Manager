@@ -127,7 +127,7 @@ CREATE TABLE trainer_subscriptions (
     trainer_id UUID NOT NULL,
     subscription_status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE', -- ACTIVE, INACTIVE, SUSPENDED, CANCELLED
     subscription_tier VARCHAR(50) NOT NULL DEFAULT 'FREE', -- FREE, STARTER, PRO
-    client_limit INTEGER NOT NULL DEFAULT 5,
+    client_limit INTEGER,
     current_client_count INTEGER DEFAULT 0,
     is_exempt_from_billing BOOLEAN DEFAULT false,
     trial_ends_at TIMESTAMPTZ,
@@ -140,7 +140,11 @@ CREATE TABLE trainer_subscriptions (
     CONSTRAINT fk_trainer FOREIGN KEY (trainer_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT uq_trainer_subscriptions_trainer UNIQUE (trainer_id),
     CONSTRAINT status_check CHECK (subscription_status IN ('ACTIVE', 'INACTIVE', 'SUSPENDED', 'CANCELLED')),
-    CONSTRAINT tier_check CHECK (subscription_tier IN ('FREE', 'STARTER', 'PRO'))
+    CONSTRAINT tier_check CHECK (subscription_tier IN ('FREE', 'STARTER', 'PRO')),
+    CONSTRAINT ck_trainer_subscriptions_tier_client_limit CHECK (
+        (subscription_tier = 'FREE' AND client_limit = 5) OR
+        (subscription_tier = 'STARTER' AND client_limit = 25) OR
+        (subscription_tier = 'PRO' AND client_limit IS NULL))
 );
 
 CREATE INDEX idx_subscriptions_trainer ON trainer_subscriptions(trainer_id);
@@ -152,6 +156,9 @@ CREATE UNIQUE INDEX uq_trainer_subscriptions_stripe_subscription
     ON trainer_subscriptions(stripe_subscription_id)
     WHERE stripe_subscription_id IS NOT NULL;
 ```
+
+No Sprint 5B, `NULL` em `client_limit` significa ilimitado e só é válido para PRO.
+Uma migration EF Core nova normaliza FREE para 5, STARTER para 25 e PRO para NULL.
 
 ### 3. `clients`
 
@@ -1028,6 +1035,46 @@ CREATE INDEX idx_sessions_client_session_pack
 ---
 
 ## Tabelas Billing
+
+### 22A. `billing_checkout_operations` (Sprint 5B)
+
+Intenção durável de Checkout tenant-owned. Guarda o UUID idempotente do caller,
+tier, estado, lease, trial efetivo, IDs e expiração Stripe, falha sanitizada e
+timestamps. Não guarda `checkout_url`.
+
+```sql
+CREATE TABLE billing_checkout_operations (
+    id UUID PRIMARY KEY,
+    trainer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    client_operation_id UUID NOT NULL,
+    tier VARCHAR(16) NOT NULL,
+    status VARCHAR(16) NOT NULL,
+    lease_owner_id UUID,
+    lease_expires_at TIMESTAMPTZ,
+    effective_trial_ends_at TIMESTAMPTZ,
+    stripe_checkout_session_id VARCHAR(255),
+    stripe_session_expires_at TIMESTAMPTZ,
+    failure_code VARCHAR(255),
+    created_at TIMESTAMPTZ NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL,
+    CONSTRAINT ck_billing_checkout_operations_status
+        CHECK (status IN ('pending', 'created', 'completed', 'expired', 'failed')),
+    CONSTRAINT ck_billing_checkout_operations_lease CHECK (
+        (status = 'pending' AND lease_owner_id IS NOT NULL AND lease_expires_at IS NOT NULL) OR
+        (status <> 'pending' AND lease_owner_id IS NULL AND lease_expires_at IS NULL))
+);
+
+CREATE UNIQUE INDEX uq_billing_checkout_operations_trainer_client_operation
+    ON billing_checkout_operations(trainer_id, client_operation_id);
+CREATE UNIQUE INDEX uq_billing_checkout_operations_active_trainer
+    ON billing_checkout_operations(trainer_id)
+    WHERE status IN ('pending', 'created');
+CREATE INDEX ix_billing_checkout_operations_status_lease_expires_at
+    ON billing_checkout_operations(status, lease_expires_at);
+CREATE INDEX ix_billing_checkout_operations_stripe_session
+    ON billing_checkout_operations(stripe_checkout_session_id)
+    WHERE stripe_checkout_session_id IS NOT NULL;
+```
 
 ### 23. `pack_types`
 

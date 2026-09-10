@@ -349,6 +349,25 @@ Existem dois dispatchers explícitos: `JobDispatcher` para durable jobs e
 `OutboxDispatcher` para efeitos originados por outbox. Não criar um dispatcher por
 feature nem fundir os dois através de delegates genéricos.
 
+## Desenvolvimento Stripe no Sprint 5B
+
+Manter `Stripe:Enabled=false` enquanto secrets, Price IDs e URLs públicas não
+estiverem completos. Checkout e Portal recebem um header `Idempotency-Key` UUID;
+não recebem URLs, trainer ID ou customer ID. Configuração enabled valida no arranque
+as quatro URLs HTTPS canónicas, secret, dois Price IDs distintos, timeout, retries,
+tolerância de assinatura, limite do webhook e lifetime da sessão. As quatro URLs
+usam o mesmo host canónico. O `StripeClient` é criado de forma lazy apenas quando a
+integração está ativa, com timeout e retries nativos configurados na instância.
+
+Usar `Stripe.net` apenas em Infrastructure e os retries nativos do SDK. Nunca abrir
+uma transação PostgreSQL durante uma chamada Stripe. O webhook lê raw body uma vez,
+exige um único `Stripe-Signature`, suporta secret atual e seguinte, e confirma
+estado, deduplicação, intenção e outbox na mesma transação antes de devolver 204.
+
+Os comandos de migration permanecem explícitos em `--project` e
+`--startup-project`. O rollout ativa Stripe apenas depois do ciclo PostgreSQL 17,
+Stripe sandbox/CLI, configuração pública e preflight de `billing_notification`.
+
 ### Structured Logging
 
 ```csharp

@@ -803,7 +803,10 @@ public sealed class GoogleAuthControllerTests : IAsyncLifetime
             clientId,
             new EmailAddress(email),
             generated.TokenHash,
-            expiresAt ?? SeedInstant.AddDays(7),
+            // A validade do convite e comparada com o relogio real do store, nao com
+            // SeedInstant. Ancorar em SeedInstant tornava o convite valido apenas ate
+            // SeedInstant + 7 dias, fazendo o teste falhar sozinho a partir dessa data.
+            expiresAt ?? DateTime.UtcNow.AddDays(7),
             expiresAt.HasValue ? expiresAt.Value.AddSeconds(-1) : SeedInstant);
         if (markUsed)
             invitation.MarkUsed(SeedInstant.AddMinutes(1));

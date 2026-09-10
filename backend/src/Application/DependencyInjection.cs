@@ -148,6 +148,9 @@ public static class DependencyInjection
     private static void AddBilling(IServiceCollection services)
     {
         services.AddScoped<Application.Features.Billing.GetSubscription.GetSubscriptionHandler>();
+        services.AddScoped<Application.Features.Billing.CreateCheckout.CreateCheckoutHandler>();
+        services.AddScoped<Application.Features.Billing.CreateCustomerPortal.CreateCustomerPortalHandler>();
+        services.AddScoped<Application.Features.Billing.Webhooks.ProcessPaymentWebhookHandler>();
 
         // Validators
         services.AddScoped<IValidator<Application.Features.Billing

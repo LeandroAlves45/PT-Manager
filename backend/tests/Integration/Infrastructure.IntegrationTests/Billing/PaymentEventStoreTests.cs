@@ -220,7 +220,7 @@ public sealed class PaymentEventStoreTests(PostgresContainerFixture database)
         {
             var newerResult = await new PaymentEventStore(newerContext, newerTenant).CommitAsync(
                 Event("evt_newer", PaymentEventKind.SubscriptionUpdated, "cus_stale", "sub_stale"),
-                Snapshot("cus_stale", "sub_stale", Now.AddMinutes(10), "active", SubscriptionTier.Pro, 100),
+                Snapshot("cus_stale", "sub_stale", Now.AddMinutes(10), "active", SubscriptionTier.Pro),
                 Now.AddMinutes(11),
                 cancellationToken);
             Assert.Equal(CommitPaymentEventStoreStatus.Processed, newerResult.Kind);
@@ -229,7 +229,7 @@ public sealed class PaymentEventStoreTests(PostgresContainerFixture database)
         await using var staleContext = support.CreateRetryingWebhookContext(out var staleTenant);
         var staleResult = await new PaymentEventStore(staleContext, staleTenant).CommitAsync(
             FailureEvent("evt_stale", "cus_stale", "sub_stale"),
-            Snapshot("cus_stale", "sub_stale", Now.AddMinutes(5), "past_due", SubscriptionTier.Starter, 25),
+            Snapshot("cus_stale", "sub_stale", Now.AddMinutes(5), "past_due", SubscriptionTier.Starter),
             Now.AddMinutes(12),
             cancellationToken);
 
@@ -281,19 +281,16 @@ public sealed class PaymentEventStoreTests(PostgresContainerFixture database)
             .Order()
             .ToArray();
         Assert.Equal(
-            ["event_id", "kind", "recipient_email", "trainer_id"],
+            ["event_id", "kind", "trainer_id"],
             properties);
         Assert.Equal(
             trainer.TrainerId,
             document.RootElement.GetProperty("trainer_id").GetGuid());
         Assert.Equal(
-            trainer.Email,
-            document.RootElement.GetProperty("recipient_email").GetString());
-        Assert.Equal(
             "evt_payload",
             document.RootElement.GetProperty("event_id").GetString());
         Assert.Equal(
-            "InvoicePaymentFailed",
+            "payment_failed",
             document.RootElement.GetProperty("kind").GetString());
     }
 
@@ -388,12 +385,10 @@ public sealed class PaymentEventStoreTests(PostgresContainerFixture database)
         string subscriptionId,
         DateTime observedAt,
         string providerStatus = "past_due",
-        SubscriptionTier? tier = null,
-        int clientLimit = 25) => new(
+        SubscriptionTier? tier = null) => new(
             customerId,
             subscriptionId,
             tier ?? SubscriptionTier.Starter,
-            clientLimit,
             providerStatus,
             null,
             observedAt);

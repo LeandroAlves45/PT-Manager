@@ -11,10 +11,5 @@ public sealed class CreateCustomerPortalCommandValidator
         RuleFor(command => command.OperationId)
             .NotEmpty()
             .WithErrorCode("billing_operation_id_required");
-
-        RuleFor(command => command.ReturnUrl)
-            .Must(command => command is not null && command.IsAbsoluteUri &&
-                command.Scheme == Uri.UriSchemeHttps)
-            .WithErrorCode("billing_return_url_invalid");
     }
 }

@@ -1,5 +1,6 @@
 using Application.Common.Abstractions;
 using Application.Features.Billing.Abstractions;
+using Application.Errors;
 using Application.Results;
 
 namespace Application.Features.Billing.Webhooks;
@@ -29,14 +30,25 @@ public sealed class ProcessPaymentWebhookHandler
 
         if (paymentEvent.Kind == PaymentEventKind.Unknown)
             return Result.Success();
+
+        if (await _store.IsProcessedAsync(paymentEvent.EventId, cancellationToken))
+            return Result.Success();
+
         ProviderSubscriptionSnapshot? snapshot = null;
         if (paymentEvent.ProviderCustomerId is not null ||
             paymentEvent.ProviderSubscriptionId is not null)
-            snapshot = await _gateway.GetSubscriptionSnapshotAsync(
+        {
+            var reconciliation = await _gateway.GetSubscriptionSnapshotAsync(
                 paymentEvent.ProviderCustomerId,
                 paymentEvent.ProviderSubscriptionId,
                 cancellationToken
             );
+
+            if (reconciliation.Status != SubscriptionReconciliationStatus.Success)
+                return Result.Failure(MapReconciliationError(reconciliation.Status));
+
+            snapshot = reconciliation.Snapshot;
+        }
 
         var committed = await _store.CommitAsync(
             paymentEvent,
@@ -60,4 +72,16 @@ public sealed class ProcessPaymentWebhookHandler
             _ => throw new ArgumentOutOfRangeException(nameof(committed.Kind))
         };
     }
+
+    private static Error MapReconciliationError(SubscriptionReconciliationStatus status) =>
+        status switch
+        {
+            SubscriptionReconciliationStatus.Disabled => BillingErrors.StripeDisabled,
+            SubscriptionReconciliationStatus.TransientFailure => BillingErrors.ProviderUnavailable,
+            SubscriptionReconciliationStatus.NotFound => BillingErrors.SubscriptionNotFound,
+            SubscriptionReconciliationStatus.InvalidResponse => BillingErrors.ProviderInvalidResponse,
+            SubscriptionReconciliationStatus.ConfigurationMismatch =>
+                BillingErrors.ProviderConfigurationMismatch,
+            _ => throw new ArgumentOutOfRangeException(nameof(status))
+        };
 }

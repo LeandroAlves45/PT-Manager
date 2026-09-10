@@ -15,16 +15,5 @@ public sealed class CreateCheckoutCommandValidator
         RuleFor(command => command.Tier)
             .Must(command => command is "STARTER" or "PRO")
             .WithErrorCode("billing_tier_invalid");
-
-        RuleFor(command => command.SuccessUrl)
-            .Must(IsHttps)
-            .WithErrorCode("billing_success_url_invalid");
-
-        RuleFor(command => command.CancelUrl)
-            .Must(IsHttps)
-            .WithErrorCode("billing_cancel_url_invalid");
     }
-
-    private static bool IsHttps(Uri url) => url is not null && url.IsAbsoluteUri &&
-        url.Scheme == Uri.UriSchemeHttps;
 }

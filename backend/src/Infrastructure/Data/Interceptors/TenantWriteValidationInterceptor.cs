@@ -86,6 +86,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 // Política A': ownership obrigatório sem soft delete
                 case TrainerSettings:
                 case TrainerSubscription:
+                case BillingCheckoutOperation:
                     tenantId ??= context.RequireTenant();
                     ValidateRequiredOwnership(entry, "TrainerId", tenantId.Value);
                     break;

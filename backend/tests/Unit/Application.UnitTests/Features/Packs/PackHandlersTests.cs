@@ -5,6 +5,7 @@ using Application.Features.Packs.ClientSessionPacks.CancelClientSessionPack;
 using Application.Features.Packs.PackTypes.Abstractions;
 using Application.Features.Packs.PackTypes.ArchivePackType;
 using Application.Features.Packs.PackTypes.CreatePackType;
+using Application.Errors;
 using Domain.Entities.Billing;
 
 namespace Application.UnitTests.Features.Packs;
@@ -77,7 +78,7 @@ public sealed class PackHandlersTests
 
         // Assert
         Assert.Equal("packs_trainer_only", result.Error!.Code);
-        Assert.Equal(Application.Errors.ErrorCategory.Forbidden, result.Error.Category);
+        Assert.Equal(ErrorCategory.Forbidden, result.Error.Category);
         Assert.Null(store.Added);
     }
 
