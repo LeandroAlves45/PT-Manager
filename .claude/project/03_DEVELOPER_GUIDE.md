@@ -68,6 +68,22 @@ Git
    dotnet user-secrets set "QStash:DestinationUrl" "https://<host-publico>/api/internal/jobs/dispatch"
    ```
 
+   Depois de aplicar a migration `20260912145051_AddManagedImageAssets`, configurar
+   as credenciais dos providers de imagem antes de os ativar:
+
+   ```bash
+   dotnet user-secrets set "Cloudinary:CloudName" "<cloud-name>"
+   dotnet user-secrets set "Cloudinary:ApiKey" "<api-key>"
+   dotnet user-secrets set "Cloudinary:ApiSecret" "<api-secret>"
+   dotnet user-secrets set "Vision:ServiceAccountJson" "<json-completo-da-service-account>"
+   ```
+
+   `Cloudinary:FolderRoot` é configuração não secreta e, em Development, permanece
+   `pt-manager/dev`. `Cloudinary:Enabled` e `Vision:Enabled` ficam `false` até todos
+   os User Secrets acima estarem configurados. Depois, podem ser ativados por ambiente.
+   O arranque valida a configuração de forma fail-closed e nunca deve registar o JSON
+   da service account nem as credenciais Cloudinary.
+
    Configuração não secreta esperada pelo backend:
 
    ```json

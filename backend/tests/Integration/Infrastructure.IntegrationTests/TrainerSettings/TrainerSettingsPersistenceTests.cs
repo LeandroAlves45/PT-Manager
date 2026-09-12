@@ -62,6 +62,50 @@ public sealed class TrainerSettingsPersistenceTests
         Assert.Equal(1, outboxCount);
     }
 
+    /// <summary>
+    /// Ponto 5 do Gate 5C para o logo: duas substituições concorrentes ficam
+    /// serializadas pelo lock do trainer, e nenhuma agenda a eliminação do logo
+    /// que acaba por ficar ativo.
+    /// </summary>
+    [Fact]
+    public async Task ReplaceLogo_WhenTwoWritersRace_NeverSchedulesDeletionOfTheWinningAsset()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var tenant = await _fixture.SeedTenantWithClientAsync(
+            Guid.NewGuid().ToString("N"), cancellationToken);
+        await ReplaceInOwnContextAsync(tenant.TrainerId, "logo-initial", cancellationToken);
+
+        await Task.WhenAll(
+            ReplaceInOwnContextAsync(tenant.TrainerId, "logo-a", cancellationToken),
+            ReplaceInOwnContextAsync(tenant.TrainerId, "logo-b", cancellationToken));
+
+        await using var context = _fixture.CreateContext(tenant.TrainerId);
+        var winner = await context.TrainerSettings
+            .Where(settings => settings.TrainerId == tenant.TrainerId)
+            .Select(settings => settings.LogoPublicId)
+            .SingleAsync(cancellationToken);
+        var scheduled = await context.OutboxMessages
+            .Where(message => message.TrainerId == tenant.TrainerId &&
+                message.MessageType == "trainer-logo.delete")
+            .Select(message => message.Payload)
+            .ToListAsync(cancellationToken);
+
+        Assert.Contains(winner, new[] { "logo-a", "logo-b" });
+        Assert.Equal(2, scheduled.Count);
+        Assert.Contains(scheduled, payload => payload.Contains("\"logo-initial\"", StringComparison.Ordinal));
+        Assert.DoesNotContain(scheduled, payload => payload.Contains($"\"{winner}\"", StringComparison.Ordinal));
+    }
+
+    private async Task ReplaceInOwnContextAsync(
+        Guid trainerId,
+        string publicId,
+        CancellationToken cancellationToken)
+    {
+        await using var context = _fixture.CreateContext(trainerId);
+        await new Infrastructure.Persistence.TrainerSettings.TrainerSettingsStore(context).ReplaceLogoAsync(
+            trainerId, $"https://cdn/{publicId}.webp", publicId, Guid.NewGuid(), Now, cancellationToken);
+    }
+
     [Fact]
     public async Task ReplaceLogo_UsesFixedCorrelationIdempotencyKey()
     {

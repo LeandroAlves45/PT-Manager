@@ -19,6 +19,7 @@ using Application.Features.Training.TrainingPlans.Abstractions;
 using Infrastructure.Data;
 using Infrastructure.Data.Interceptors;
 using Infrastructure.Identity;
+using Infrastructure.Media;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Administration;
 using Infrastructure.Persistence.Assessments;
@@ -91,6 +92,7 @@ public static class DependencyInjection
         services.AddScoped<IMyNutritionPlanQueries, MyNutritionPlanQueries>();
         services.AddScoped<IMyProfileQueries, MyProfileQueries>();
         services.AddScoped<IMyProfileStore, MyProfileStore>();
+        services.AddScoped<IMyAvatarStore, MyAvatarStore>();
 
         // Administrative content moderation
         services.AddScoped<IPrivateCatalogModerationStore, PrivateCatalogModerationStore>();
@@ -161,6 +163,9 @@ public static class DependencyInjection
 
         // Billing Extensions
         services.AddBillingInfrastructure(configuration);
+
+        // Managed images: Cloudinary storage, SkiaSharp processing, Vision moderation
+        services.AddMediaInfrastructure(configuration);
 
         // Timezone provider
         services.AddScoped<ITrainerTimeZoneProvider, TrainerTimeZoneProvider>();

@@ -59,16 +59,7 @@ public sealed class BillingArchitectureTests
     [Fact]
     public void StripeSdk_IsDirectlyReferencedOnlyByInfrastructureProject()
     {
-        var backendRoot = ResolveBackendRoot();
-        var directReferences = Directory
-            .EnumerateFiles(backendRoot, "*.csproj", SearchOption.AllDirectories)
-            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}",
-                StringComparison.OrdinalIgnoreCase))
-            .Where(path => File.ReadAllText(path).Contains(
-                "PackageReference Include=\"Stripe.net\"",
-                StringComparison.Ordinal))
-            .Select(path => Path.GetRelativePath(backendRoot, path).Replace('\\', '/'))
-            .ToArray();
+        var directReferences = BackendProjects.DirectlyReferencing("Stripe.net");
 
         Assert.Equal(["src/Infrastructure/Infrastructure.csproj"], directReferences);
     }
@@ -108,13 +99,5 @@ public sealed class BillingArchitectureTests
 
         Assert.Equal(ServiceLifetime.Scoped, registration.Lifetime);
         Assert.Equal(implementationName, registration.ImplementationType?.FullName);
-    }
-
-    private static string ResolveBackendRoot()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "PTManager.sln")))
-            directory = directory.Parent;
-        return directory?.FullName ?? throw new InvalidOperationException("Backend root was not found.");
     }
 }

@@ -1,64 +1,47 @@
-# Estado ativo: Sprint 5B fechada; falta apenas configurar secrets Stripe
+# Estado ativo: Sprint 5C finalizada; User Secrets dos providers pendentes
 
-Atualizado: 2026-09-10
+Atualizado: 2026-09-12
 
 ## Estado em uma linha
 
-O Sprint 4 e a Fase 5A estão fechados. A Fase 5B está implementada no backend real,
-revista contra os blueprints, corrigida e verde: 2171 testes, build Release 0/0 e
-`dotnet format` exit 0. Cinco bugs de produção foram corrigidos, três deles críticos.
-A migration `20260910125857_AddStripeBillingOperations` foi aplicada à base local
-`ptmanager_dev` (Docker `ptmanager-postgres-dev`, porta 5437) e verificada no schema
-efetivo, com a API a arrancar limpa contra ela. Ver
-`docs/backend-files/sprint_5/sprint_5B/17_fecho_implementacao_achados_correcoes_testes.md`.
+A Fase 5B está fechada (falta configurar secrets Stripe). A implementação real da Fase
+5C foi revista, corrigida e validada em 2026-09-12. As cinco suites passaram com 2348
+testes, zero falhas e um teste manual ignorado. A migration
+`20260912145051_AddManagedImageAssets` passou o ciclo Up, Down e reaplicação em
+PostgreSQL 17 descartável e foi aplicada à base local persistente. A consulta direta a
+`__EFMigrationsHistory` confirmou-a como a migration mais recente, com EF Core 10.0.10.
+Os três preflights operacionais devolveram zero. Resta apenas fornecer os User Secrets
+de Cloudinary e Vision antes de ativar os providers.
 
-## Confirmações do utilizador
+## Decisões da 5C
 
-1. A migration `20260908141012_AddQStashDispatchReceipts` foi aplicada localmente.
-2. Os user-secrets QStash current key e next key foram configurados.
-3. Os valores não foram lidos nem guardados nesta documentação.
-4. `QStash:DestinationUrl` ainda não existe por falta de host público.
-5. `QStash:Enabled` permanece `false`.
-
-## Sprint 5B
-
-1. Stripe.net 52.4.1 e API `2026-08-26.dahlia`.
-2. URLs apenas em configuração backend e campos do caller rejeitados.
-3. Checkout com intenção durável, lease e uma operação ativa por trainer.
-4. A mesma Idempotency-Key retoma Pending/Failed/Expired; não cria outra linha.
-5. FREE 5, STARTER 25 e PRO ilimitado.
-6. Webhook raw body, correlation estável por `event.id`, rotação de secret, allowlist, reconciliação e outbox.
-7. `billing_notification` limitado a payment_failed e trial_will_end.
+1. Moderação Google Vision SafeSearch, síncrona e fail-closed, autenticada por service
+   account (`Google.Apis.Auth`). Add-ons Cloudinary rejeitados por serem assíncronos.
+2. Cloudinary por HttpClient tipado, sem SDK.
+3. SkiaSharp 4.152.0 + `SkiaSharp.NativeAssets.Linux.NoDependencies`; saída WebP.
+4. Só o avatar é moderado; o logo não.
+5. Imagem runtime Debian, nunca Alpine (restrição para o Dockerfile por escrever).
+6. Sem `[RequireOrigin]` nos uploads: autenticação Bearer.
+7. `IMediaStorage.DeleteAsync` recebe o `trainerId` e recusa identificadores de outro tenant.
+8. Migration `20260912145051_AddManagedImageAssets` com preflights manuais em Up e Down.
 
 ## Ler nesta ordem
 
 1. Este ficheiro.
-2. `.claude/memory/Sessions/2026-09-09-sprint5b-blueprints-retry.md`.
-3. `docs/backend-files/sprint_5/sprint_5B/00_desenho_aprovado_indice_dependencias_gates.md`.
-4. `docs/backend-files/sprint_5/sprint_5B/16_rastreabilidade_revisao_quality_gates.md`.
-5. `backlogs/QualityGates.md`, secção Sprint 5 Fase 5B.
+2. `.claude/memory/Sessions/2026-09-12-sprint5c-review-validacao.md`.
+3. `docs/backend-files/sprint_5/sprint_5C/00_desenho_aprovado_indice_dependencias_gates.md`.
+4. `docs/backend-files/sprint_5/sprint_5C/13_qa_da_fase.md`.
+5. `docs/backend-files/sprint_5/sprint_5C/14_rastreabilidade_revisao_quality_gates.md`.
+6. `docs/backend-files/sprint_5/sprint_5C/15_revisao_validacao_implementacao.md`.
 
-## Gates ainda abertos
+## Gates abertos
 
-`QG5B-STRIPE-001` e `QG5B-DEPLOY-001`: Stripe sandbox/CLI, host público, Price IDs,
-webhook secret, IP allowlisting e ativação. Dependem de recursos externos e não são
-fecháveis por código. Os gates de build, testes, migration e OpenAPI estão fechados.
+`QG5C-ROLL-001`, `QG5C-TEST-003` e `QG5C-MIG-001` estão fechados.
+`QG5C-PROVIDER-001` aguarda apenas os User Secrets e a ativação dos providers. Da 5B continuam abertos
+`QG5B-STRIPE-001` e `QG5B-DEPLOY-001`.
 
-## Passo imediato do utilizador
+## Passo imediato
 
-Configurar os secrets `Stripe:*` (nenhum existe ainda em user-secrets). Obrigatorios
-quando `Stripe:Enabled=true`: `SecretKey`, `CurrentWebhookSecret`, `StarterPriceId`,
-`ProPriceId` (tem de diferir do STARTER) e as quatro URLs `CheckoutSuccessUrl`,
-`CheckoutCancelUrl`, `PortalReturnUrl` e `BillingManagementUrl` — todas HTTPS absolutas,
-sem user-info nem fragmento, e todas no mesmo host canonico. `NextWebhookSecret` e
-opcional e existe para rotacao. Manter `Stripe:Enabled=false` ate tudo estar configurado:
-`ValidateOnStart` derruba o arranque da API se faltar algum.
-
-## Evidência da implementação 5B
-
-426 Domain, 524 Application, 53 Architecture, 588 Infrastructure (PostgreSQL real) e
-580 API, mais um teste manual de OpenAPI ignorado por desenho. Migration idêntica à
-referência do documento 14, com ciclo migrate, rollback bloqueado por preflight,
-downgrade, rollback e migrate validado em PostgreSQL 17.10 descartável. Cobertura dos
-bugs confirmada por mutação controlada. Ver os documentos 16 e 17 do pack e
-`.claude/memory/Sessions/2026-09-10-sprint5b-fecho-implementacao.md`.
+Configurar `Cloudinary:CloudName`, `Cloudinary:ApiKey`, `Cloudinary:ApiSecret` e
+`Vision:ServiceAccountJson` em User Secrets. Só depois ativar `Cloudinary:Enabled` e
+`Vision:Enabled`; a validação de arranque deve permanecer fail-closed.

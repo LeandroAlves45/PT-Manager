@@ -28,6 +28,10 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
         "20260906154210_AddExternalIdentities";
     public const string AddQStashDispatchReceiptsMigration =
         "20260908141012_AddQStashDispatchReceipts";
+    public const string AddStripeBillingOperationsMigration =
+        "20260910125857_AddStripeBillingOperations";
+    public const string AddManagedImageAssetsMigration =
+        "20260912145051_AddManagedImageAssets";
     private readonly PostgreSqlContainer _container =
         new PostgreSqlBuilder("postgres:17-alpine")
         .WithDatabase("ptmanager_tests")

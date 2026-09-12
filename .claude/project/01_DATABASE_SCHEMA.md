@@ -187,7 +187,7 @@ CREATE TABLE clients (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT ck_clients_sex CHECK (sex IN ('male', 'female')),
-    CONSTRAINT ck_clients_avatar_references CHECK (
+    CONSTRAINT ck_clients_avatar_pair CHECK (
         (avatar_url IS NULL AND avatar_public_id IS NULL)
         OR (avatar_url IS NOT NULL AND avatar_public_id IS NOT NULL)
     ),
@@ -214,8 +214,9 @@ CREATE UNIQUE INDEX uq_clients_tenant_phone_active
 moderado do próprio cliente. Null em ambos instrui o frontend a usar o avatar padrão.
 O cliente nunca fornece estes valores directamente: o Sprint 5C obtém-nos do storage
 depois da validação e moderação síncrona. A coluna `avatar_public_id` e a constraint
-`ck_clients_avatar_references` entram numa migration EF Core nova desse slice; não se
-altera uma migration existente.
+`ck_clients_avatar_pair` foram introduzidas pela migration EF Core
+`20260912145051_AddManagedImageAssets`, aplicada à base local em 2026-09-12. Nenhuma
+migration anterior foi alterada.
 
 ### 4. `trainer_settings`
 

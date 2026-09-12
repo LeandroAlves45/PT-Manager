@@ -1,14 +1,17 @@
 using Api.Authorization;
 using Api.Configuration;
 using Api.Contracts.TrainerSettings;
+using Api.Http;
 using Application.Features.TrainerSettings.ChangeTimezone;
 using Application.Features.TrainerSettings.GetTrainerSettings;
 using Application.Features.TrainerSettings.RemoveLogo;
+using Application.Features.TrainerSettings.ReplaceLogo;
 using Application.Features.TrainerSettings.ResetBrandingColors;
 using Application.Features.TrainerSettings.UpdateBranding;
 using Application.Features.TrainerSettings.UpdateContacts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Api.Controllers;
 
@@ -55,6 +58,34 @@ public sealed class TrainerSettingsController : ApiControllerBase
         RespondAsync(
             handler.HandleAsync(cancellationToken),
             TrainerSettingsResponse.From);
+
+    /// <summary>
+    /// Substitui o logo a partir de uma parte multipart única chamada "file" e
+    /// devolve as definições resultantes.
+    /// </summary>
+    [HttpPut("logo")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(FormFileMediaUpload.MaxRequestBytes)]
+    [RequestFormLimits(
+        MultipartBodyLengthLimit = FormFileMediaUpload.MaxRequestBytes,
+        MultipartHeadersLengthLimit = FormFileMediaUpload.MaxPartHeadersBytes,
+        ValueCountLimit = FormFileMediaUpload.MaxFormValues)]
+    [EnableRateLimiting(ApiRateLimitPolicyNames.MediaUpload)]
+    public async Task<IActionResult> ReplaceLogoAsync(
+        [FromForm(Name = "file")] IFormFile? file,
+        [FromServices] ReplaceLogoHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var upload = FormFileMediaUpload.From(file);
+        await using (upload?.Content)
+        {
+            return await RespondAsync(
+                handler.HandleAsync(
+                    new ReplaceLogoCommand(upload!),
+                    cancellationToken),
+                TrainerSettingsResponse.From);
+        }
+    }
 
     /// <summary>Remove o logo atual e devolve as definições resultantes.</summary>
     [HttpDelete("logo")]

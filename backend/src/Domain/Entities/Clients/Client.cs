@@ -9,7 +9,6 @@ namespace Domain.Entities.Clients;
 public sealed class Client
 {
     public Guid Id { get; private set; }
-    /// <summary>Personal trainer dono do tenant (chave tenant, Global Query Filter).</summary>
     public Guid OwnerTrainerId { get; private set; }
     /// <summary>Conta de utilizador associada (role "client").</summary>
     public Guid? UserId { get; private set; }
@@ -24,6 +23,7 @@ public sealed class Client
     public string? EmergencyContactName { get; private set; }
     public string? EmergencyContactPhone { get; private set; }
     public string? AvatarUrl { get; private set; }
+    public string? AvatarPublicId { get; private set; }
     public bool IsActive { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime CreatedAt { get; private set; }
@@ -97,16 +97,49 @@ public sealed class Client
         UpdatedAt = now;
     }
 
-    /// <summary>Atualiza o avatar apresentado no portal do cliente.</summary>
-    public void SetAvatar(string? avatarUrl, DateTime now)
+    /// <summary>
+    /// Substitui o avatar apresentado no portal do cliente e devolve o
+    /// identificador do asset anterior, para que o chamador agende a sua
+    /// eliminação por outbox depois do commit.
+    /// </summary>
+    public string? ReplaceAvatar(string avatarUrl, string avatarPublicId, DateTime now)
     {
         EnsureNotDeleted();
-        var normalized = NormalizeOptional(avatarUrl);
-        if (normalized is { Length: > 500 })
-            throw new DomainException("Avatar URL cannot exceed 500 characters.");
 
-        AvatarUrl = normalized;
+        var normalizedUrl = avatarUrl?.Trim();
+        var normalizedPublicId = avatarPublicId?.Trim();
+
+        if (normalizedUrl is not { Length: > 0 and <= 500 } ||
+            normalizedPublicId is not { Length: > 0 and <= 500 })
+            throw new DomainException(
+                "Avatar references must contain between 1 and 500 characters.");
+
+        var previousPublicId = AvatarPublicId;
+
+        AvatarUrl = normalizedUrl;
+        AvatarPublicId = normalizedPublicId;
         UpdatedAt = now;
+
+        return previousPublicId;
+    }
+
+    /// <summary>
+    /// Remove o avatar. É idempotente: sem avatar não escreve nem altera
+    /// UpdateAt, para que um retry não produza histórico falso.
+    /// </summary>
+    public string? RemoveAvatar(DateTime now)
+    {
+        EnsureNotDeleted();
+
+        if (AvatarUrl is null && AvatarPublicId is null)
+            return null;
+
+        var previousPublicId = AvatarPublicId;
+        AvatarUrl = null;
+        AvatarPublicId = null;
+        UpdatedAt = now;
+
+        return previousPublicId;
     }
 
     /// <summary>Desativa o cliente (arquivado) sem o apagar.</summary>

@@ -3,17 +3,21 @@ using Api.Configuration;
 using Api.Contracts.Assessments;
 using Api.Contracts.Common;
 using Api.Contracts.Portal;
+using Api.Http;
 using Application.Features.Assessments.CheckIns.GetMyDueCheckIn;
 using Application.Features.Assessments.CheckIns.SubmitCheckInResponse;
 using Application.Features.ClientPortal.GetMyNutritionPlan;
 using Application.Features.ClientPortal.GetMyProfile;
 using Application.Features.ClientPortal.GetMyTrainingPlan;
+using Application.Features.ClientPortal.RemoveMyAvatar;
+using Application.Features.ClientPortal.ReplaceMyAvatar;
 using Application.Features.ClientPortal.UpdateMyProfile;
 using Application.Features.Clients.GetClientBranding;
 using Application.Features.Supplements.GetMySupplementAssignment;
 using Application.Features.Supplements.ListMySupplementAssignments;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Api.Controllers;
 
@@ -78,6 +82,41 @@ public sealed class ClientPortalController : ApiControllerBase
                 cancellationToken),
             MyProfileResponse.From);
     }
+
+    /// <summary>
+    /// Substitui a fotografia de perfil do próprio cliente a partir de uma parte
+    /// multipart única chamada "file".
+    /// </summary>
+    [HttpPut("my-profile/avatar")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(FormFileMediaUpload.MaxRequestBytes)]
+    [RequestFormLimits(
+        MultipartBodyLengthLimit = FormFileMediaUpload.MaxRequestBytes,
+        MultipartHeadersLengthLimit = FormFileMediaUpload.MaxPartHeadersBytes,
+        ValueCountLimit = FormFileMediaUpload.MaxFormValues)]
+    [EnableRateLimiting(ApiRateLimitPolicyNames.MediaUpload)]
+    public async Task<IActionResult> ReplaceMyAvatarAsync(
+        [FromForm(Name = "file")] IFormFile? file,
+        [FromServices] ReplaceMyAvatarHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var upload = FormFileMediaUpload.From(file);
+        await using (upload?.Content)
+        {
+            return await RespondAsync(
+                handler.HandleAsync(new ReplaceMyAvatarCommand(upload!), cancellationToken),
+                MyProfileResponse.From);
+        }
+    }
+
+    /// <summary>Remove o avatar personalizado e agenda a eliminação depois do commit.</summary>
+    [HttpDelete("my-profile/avatar")]
+    public Task<IActionResult> RemoveMyAvatarAsync(
+        [FromServices] RemoveMyAvatarHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(
+            handler.HandleAsync(cancellationToken),
+            MyProfileResponse.From);
 
     /// <summary>Devolve o check-in pendente de resposta, se existir.</summary>
     [HttpGet("my-check-ins/due")]

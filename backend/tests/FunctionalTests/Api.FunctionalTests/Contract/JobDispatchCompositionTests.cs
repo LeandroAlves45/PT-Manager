@@ -56,14 +56,26 @@ public sealed class JobDispatchCompositionTests
         Assert.Equal(1, handler.JobVersion);
     }
 
+    /// <summary>
+    /// A allowlist que o OutboxDispatcher passa ao claim SQL deriva destes
+    /// registos. Tem de cobrir exatamente os tipos que os stores escrevem: um
+    /// tipo escrito sem consumidor fica pending para sempre, e um consumidor sem
+    /// produtor é superfície morta.
+    /// </summary>
     [Fact]
-    public void BillingNotification_IsTheOnlyRegisteredOutboxRoute()
+    public void RegisteredOutboxRoutes_CoverEveryTypeWrittenByTheStores()
     {
         using var scope = _fixture.Factory.Services.CreateScope();
 
-        var handler = Assert.Single(
-            scope.ServiceProvider.GetServices<IOutboxMessageHandler>());
-        Assert.Equal("billing_notification", handler.MessageType);
+        var messageTypes = scope.ServiceProvider
+            .GetServices<IOutboxMessageHandler>()
+            .Select(handler => handler.MessageType)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(
+            ["billing_notification", "client-avatar.delete", "trainer-logo.delete"],
+            messageTypes);
     }
 
     [Fact]

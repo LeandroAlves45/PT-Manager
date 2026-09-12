@@ -460,8 +460,10 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
     public async Task ClaimPendingAsync_WhenAllowedTypesAreEmpty_DoesNotClaim()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var reserved = IntegrationTestData.Message(Now, messageType: "billing_notification");
-        await SeedAsync(cancellationToken, reserved);
+        // Tipo neutro: estes testes exercitam só o filtro SQL do repositório e
+        // não podem depender de nomes de negócio que mudam de dono entre fases.
+        var excluded = IntegrationTestData.Message(Now, messageType: "unowned_type_a");
+        await SeedAsync(cancellationToken, excluded);
         await using var context = _fixture.CreateAdministrativeContext();
         var repository = new OutboxRepository(context, new TestClock(Now));
 
@@ -474,7 +476,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
         Assert.Empty(claimed);
         context.ChangeTracker.Clear();
         var stored = await context.OutboxMessages.SingleAsync(
-            message => message.Id == reserved.Id, cancellationToken);
+            message => message.Id == excluded.Id, cancellationToken);
         Assert.Equal(JobStatus.Pending, stored.Status);
     }
 
@@ -483,9 +485,9 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var allowed = IntegrationTestData.Message(Now, messageType: "phase5a_test");
-        var billing = IntegrationTestData.Message(Now, messageType: "billing_notification");
-        var logo = IntegrationTestData.Message(Now, messageType: "trainer-logo.delete");
-        await SeedAsync(cancellationToken, allowed, billing, logo);
+        var firstExcluded = IntegrationTestData.Message(Now, messageType: "unowned_type_a");
+        var secondExcluded = IntegrationTestData.Message(Now, messageType: "unowned_type_b");
+        await SeedAsync(cancellationToken, allowed, firstExcluded, secondExcluded);
         await using var context = _fixture.CreateAdministrativeContext();
         var repository = new OutboxRepository(context, new TestClock(Now));
 
@@ -497,10 +499,11 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
 
         Assert.Equal(allowed.Id, Assert.Single(claimed).Id);
         context.ChangeTracker.Clear();
-        var reserved = await context.OutboxMessages
-            .Where(message => message.Id == billing.Id || message.Id == logo.Id)
+        var excluded = await context.OutboxMessages
+            .Where(message => message.Id == firstExcluded.Id || message.Id == secondExcluded.Id)
             .ToListAsync(cancellationToken);
-        Assert.All(reserved, message => Assert.Equal(JobStatus.Pending, message.Status));
+        Assert.Equal(2, excluded.Count);
+        Assert.All(excluded, message => Assert.Equal(JobStatus.Pending, message.Status));
     }
 
     private async Task SeedAsync(

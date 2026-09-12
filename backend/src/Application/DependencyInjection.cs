@@ -15,6 +15,7 @@ public static class DependencyInjection
         AddClientPortal(services);
         AddBilling(services);
         AddClients(services);
+        AddMedia(services);
         AddNotifications(services);
         AddNutrition(services);
         AddPacks(services);
@@ -138,11 +139,16 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.ClientPortal.GetMyNutritionPlan.GetMyNutritionPlanHandler>();
         services.AddScoped<Application.Features.ClientPortal.GetMyProfile.GetMyProfileHandler>();
         services.AddScoped<Application.Features.ClientPortal.UpdateMyProfile.UpdateMyProfileHandler>();
+        services.AddScoped<Application.Features.ClientPortal.ReplaceMyAvatar.ReplaceMyAvatarHandler>();
+        services.AddScoped<Application.Features.ClientPortal.RemoveMyAvatar.RemoveMyAvatarHandler>();
 
         // Validators
         services.AddScoped<IValidator<Application.Features.ClientPortal.UpdateMyProfile
             .UpdateMyProfileCommand>, Application.Features.ClientPortal.UpdateMyProfile
                 .UpdateMyProfileCommandValidator>();
+        services.AddScoped<IValidator<Application.Features.ClientPortal.ReplaceMyAvatar
+            .ReplaceMyAvatarCommand>, Application.Features.ClientPortal.ReplaceMyAvatar
+            .ReplaceMyAvatarCommandValidator>();
     }
 
     private static void AddBilling(IServiceCollection services)
@@ -176,6 +182,11 @@ public static class DependencyInjection
             .ListClients.ListClientsQuery>, Application.Features.Clients.ListClients.ListClientsQueryValidator>();
         services.AddScoped<IValidator<Application.Features.Clients
             .UpdateClient.UpdateClientCommand>, Application.Features.Clients.UpdateClient.UpdateClientCommandValidator>();
+    }
+
+    private static void AddMedia(IServiceCollection services)
+    {
+        services.AddScoped<Application.Common.Media.MediaPreparationPipeline>();
     }
 
     private static void AddNotifications(IServiceCollection services)
@@ -379,6 +390,7 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.TrainerSettings.ChangeTimezone.ChangeTimezoneHandler>();
         services.AddScoped<Application.Features.TrainerSettings.GetTrainerSettings.GetTrainerSettingsHandler>();
         services.AddScoped<Application.Features.TrainerSettings.RemoveLogo.RemoveLogoHandler>();
+        services.AddScoped<Application.Features.TrainerSettings.ReplaceLogo.ReplaceLogoHandler>();
         services.AddScoped<Application.Features.TrainerSettings.ResetBrandingColors.ResetBrandingColorsHandler>();
         services.AddScoped<Application.Features.TrainerSettings.UpdateBranding.UpdateBrandingHandler>();
         services.AddScoped<Application.Features.TrainerSettings.UpdateContacts.UpdateContactsHandler>();

@@ -112,14 +112,38 @@ public sealed class JobDispatchArchitectureTests
     }
 
     [Fact]
-    public void NoOutboxHandlerIsRegisteredYet()
+    public void OutboxHandlers_LiveOnlyInInfrastructure()
     {
-        // Os tipos billing_notification e trainer-logo.delete pertencem às Fases
-        // 5B e 5C: um handler prematuro consumiria mensagens que ainda não sabe tratar.
+        // Um handler de outbox na Application arrastaria fornecedores externos
+        // para a camada de casos de uso. Todos os consumidores reais vivem em
+        // Infrastructure, ao lado dos adapters que chamam.
         Assert.DoesNotContain(
             ApplicationAssembly.GetTypes(),
             type => type is { IsClass: true, IsAbstract: false } &&
                 typeof(IOutboxMessageHandler).IsAssignableFrom(type));
+    }
+
+    [Fact]
+    public void OutboxHandlers_MatchTheClosedAllowlist()
+    {
+        // Allowlist positiva: acrescentar um consumidor de outbox é uma decisão
+        // que tem de passar por revisão, porque o OutboxDispatcher passa a
+        // reclamar mensagens desse tipo no instante em que ele é registado.
+        var handlers = InfrastructureAssembly.GetTypes()
+            .Where(type =>
+                type is { IsClass: true, IsAbstract: false } &&
+                typeof(IOutboxMessageHandler).IsAssignableFrom(type))
+            .Select(type => type.FullName!)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(
+            [
+                "Infrastructure.Jobs.BillingNotificationOutboxHandler",
+                "Infrastructure.Jobs.ClientAvatarDeletionOutboxHandler",
+                "Infrastructure.Jobs.TrainerLogoDeletionOutboxHandler"
+            ],
+            handlers);
     }
 
     [Fact]

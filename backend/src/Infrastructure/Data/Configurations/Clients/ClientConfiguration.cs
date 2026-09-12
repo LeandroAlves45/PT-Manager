@@ -15,16 +15,42 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
         {
             table.HasCheckConstraint("ck_clients_sex",
                 "sex IN ('male', 'female')");
+
+            table.HasCheckConstraint("ck_clients_avatar_pair",
+                "(avatar_url IS NULL AND avatar_public_id IS NULL) OR " +
+                "(avatar_url IS NOT NULL AND avatar_public_id IS NOT NULL)");
         });
 
         builder.HasKey(client => client.Id);
-        builder.Property(client => client.Id).HasColumnName("id").ValueGeneratedNever();
-        builder.Property(client => client.OwnerTrainerId).HasColumnName("owner_trainer_id").IsRequired();
-        builder.Property(client => client.UserId).HasColumnName("user_id");
-        builder.Property(client => client.Name).HasColumnName("name").HasMaxLength(255).IsRequired();
-        builder.Property(client => client.ContactEmail).HasColumnName("contact_email").HasMaxLength(255);
-        builder.Property(client => client.NormalizedContactEmail).HasColumnName("normalized_contact_email").HasMaxLength(255);
-        builder.Property(client => client.Phone).HasColumnName("phone").HasMaxLength(32).IsRequired();
+        builder.Property(client => client.Id)
+            .HasColumnName("id")
+            .ValueGeneratedNever();
+
+        builder.Property(client => client.OwnerTrainerId)
+            .HasColumnName("owner_trainer_id")
+            .IsRequired();
+
+        builder.Property(client => client.UserId)
+            .HasColumnName("user_id");
+
+        builder.Property(client => client.Name)
+            .HasColumnName("name")
+            .HasMaxLength(255)
+            .IsRequired();
+
+        builder.Property(client => client.ContactEmail)
+            .HasColumnName("contact_email")
+            .HasMaxLength(255);
+
+        builder.Property(client => client.NormalizedContactEmail)
+            .HasColumnName("normalized_contact_email")
+            .HasMaxLength(255);
+
+        builder.Property(client => client.Phone)
+            .HasColumnName("phone")
+            .HasMaxLength(32)
+            .IsRequired();
+
         builder.Property(client => client.BirthDate)
             .HasColumnName("date_of_birth")
             .HasColumnType("date")
@@ -32,6 +58,7 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
                 birthDate => birthDate.Value,
                 value => BirthDate.FromPersisted(value))
             .IsRequired();
+
         builder.Property(client => client.Sex)
             .HasColumnName("sex")
             .HasMaxLength(6)
@@ -39,17 +66,45 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
                 sex => sex.Value,
                 value => BiologicalSex.FromString(value))
             .IsRequired();
-        builder.Property(client => client.Objective).HasColumnName("objective").HasMaxLength(255);
-        builder.Property(client => client.Notes).HasColumnName("notes");
-        builder.Property(client => client.EmergencyContactName).HasColumnName("emergency_contact_name").HasMaxLength(255);
-        builder.Property(client => client.EmergencyContactPhone).HasColumnName("emergency_contact_phone").HasMaxLength(32);
-        builder.Property(client => client.AvatarUrl).HasColumnName("avatar_url").HasMaxLength(500);
-        builder.Property(client => client.IsActive).HasColumnName("is_active").HasDefaultValue(true).IsRequired();
-        builder.Property(client => client.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false).IsRequired();
+
+        builder.Property(client => client.Objective)
+            .HasColumnName("objective")
+            .HasMaxLength(255);
+
+        builder.Property(client => client.Notes)
+            .HasColumnName("notes");
+
+        builder.Property(client => client.EmergencyContactName)
+            .HasColumnName("emergency_contact_name")
+            .HasMaxLength(255);
+
+        builder.Property(client => client.EmergencyContactPhone)
+            .HasColumnName("emergency_contact_phone")
+            .HasMaxLength(32);
+
+        builder.Property(client => client.AvatarUrl)
+            .HasColumnName("avatar_url")
+            .HasMaxLength(500);
+
+        builder.Property(client => client.AvatarPublicId)
+            .HasColumnName("avatar_public_id")
+            .HasMaxLength(500);
+
+        builder.Property(client => client.IsActive)
+            .HasColumnName("is_active")
+            .HasDefaultValue(true)
+            .IsRequired();
+
+        builder.Property(client => client.IsDeleted)
+            .HasColumnName("is_deleted")
+            .HasDefaultValue(false)
+            .IsRequired();
+
         builder.Property(client => client.CreatedAt)
             .HasColumnName("created_at")
             .HasDefaultValueSql("now()")
             .IsRequired();
+
         builder.Property(client => client.UpdatedAt)
             .HasColumnName("updated_at")
             .HasDefaultValueSql("now()")
@@ -57,6 +112,7 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
 
         builder.HasIndex(client => client.OwnerTrainerId)
             .HasDatabaseName("idx_clients_owner_trainer");
+
         builder.HasIndex(client => new { client.OwnerTrainerId, client.Id })
             .HasDatabaseName("uq_clients_tenant_id")
             .IsUnique();

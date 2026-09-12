@@ -841,6 +841,11 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("AvatarPublicId")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("avatar_public_id");
+
                     b.Property<string>("AvatarUrl")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
@@ -955,6 +960,8 @@ namespace Infrastructure.Data.Migrations
 
                     b.ToTable("clients", null, t =>
                         {
+                            t.HasCheckConstraint("ck_clients_avatar_pair", "(avatar_url IS NULL AND avatar_public_id IS NULL) OR (avatar_url IS NOT NULL AND avatar_public_id IS NOT NULL)");
+
                             t.HasCheckConstraint("ck_clients_sex", "sex IN ('male', 'female')");
                         });
                 });
@@ -2537,7 +2544,10 @@ namespace Infrastructure.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("idx_settings_trainer");
 
-                    b.ToTable("trainer_settings", (string)null);
+                    b.ToTable("trainer_settings", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_trainer_settings_logo_pair", "(logo_url IS NULL AND logo_public_id IS NULL) OR (logo_url IS NOT NULL AND logo_public_id IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Training.ClientExerciseSetLog", b =>

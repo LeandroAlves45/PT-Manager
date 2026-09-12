@@ -63,6 +63,10 @@ public static class ApiRateLimiting
 
             options.AddPolicy(ApiRateLimitPolicyNames.Moderation,
                 context => FixedWindow(UserKey(context), 30, TimeSpan.FromMinutes(1)));
+
+            // O orçamento acompanha a conta mesmo quando o utilizador muda de IP.
+            options.AddPolicy(ApiRateLimitPolicyNames.MediaUpload,
+                context => FixedWindow(UserKey(context), 10, TimeSpan.FromHours(1)));
         });
 
         return services;

@@ -12,10 +12,8 @@ internal sealed class TrainerSettingsStore : ITrainerSettingsStore
 {
     private readonly PtManagerDbContext _dbContext;
 
-    public TrainerSettingsStore(PtManagerDbContext dbContext)
-    {
+    public TrainerSettingsStore(PtManagerDbContext dbContext) =>
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
 
     public Task<TrainerSettingsStoreResult> UpdateBrandingAsync(
         Guid trainerId,
@@ -107,7 +105,11 @@ internal sealed class TrainerSettingsStore : ITrainerSettingsStore
 
             var previousPublicId = settings.ReplaceLogo(logoUrl, logoPublicId, now);
 
-            if (previousPublicId is not null)
+            // A guarda de replay acima já impede este caso; a condição torna a
+            // invariante local em vez de derivada: nunca se agenda a eliminação
+            // do asset que acabou de ficar ativo.
+            if (previousPublicId is not null &&
+                !string.Equals(previousPublicId, logoPublicId, StringComparison.Ordinal))
                 EnqueueLogoDeletion(trainerId, previousPublicId, correlationId, now);
 
             await _dbContext.SaveChangesAsync(cancellationToken);

@@ -34,4 +34,16 @@ public static class ClientPortalErrors
         "client_phone_already_exists",
         ErrorCategory.Conflict,
         "A client with this phone already exists.");
+
+    public static readonly Error AvatarCompensationFailed = Error.Create(
+        "portal_avatar_compensation_failed",
+        ErrorCategory.Internal,
+        "The avatar was uploaded but the profile could not be saved and the uploaded" +
+        "asset could not be removed. Manual cleanup is required.");
+
+    public static readonly Error AvatarPersistenceFailed = Error.Create(
+        "portal_avatar_persistence_failed",
+        ErrorCategory.Internal,
+        "The avatar was uploaded but the profile could not be saved. The uploaded asset" +
+        "was removed.");
 }

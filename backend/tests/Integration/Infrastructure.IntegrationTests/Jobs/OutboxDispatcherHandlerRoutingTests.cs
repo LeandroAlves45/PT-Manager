@@ -15,60 +15,68 @@ using Microsoft.Extensions.Options;
 namespace Infrastructure.IntegrationTests.Jobs;
 
 /// <summary>
-/// Garante que a Fase 5A não consome tipos de outbox das fases seguintes.
-/// Sem handler registado o dispatcher não reclama nada; com um handler local
-/// só o tipo correspondente sai de <c>pending</c>.
+/// Prova que o OutboxDispatcher só reclama tipos com consumidor registado.
 /// </summary>
+/// <remarks>
+/// Substitui <c>OutboxDispatcherReservedTypesTests</c>, cuja premissa —
+/// <c>trainer-logo.delete</c> sem dono — deixou de ser verdadeira na Fase 5C. A
+/// intenção sobrevive com tipos genuinamente órfãos. A cobertura da composição
+/// real (quais tipos têm consumidor em produção) vive em
+/// <c>JobDispatchCompositionTests</c>, que monta o host verdadeiro: um provider
+/// construído à mão aqui continuaria verde mesmo que um handler real faltasse.
+/// </remarks>
 [Collection(PostgresCollection.Name)]
-public sealed class OutboxDispatcherReservedTypesTests : IAsyncLifetime
+public sealed class OutboxDispatcherHandlerRoutingTests : IAsyncLifetime
 {
-    private static readonly DateTime Now = new(2026, 9, 8, 14, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime Now = new(2026, 9, 11, 14, 0, 0, DateTimeKind.Utc);
 
     private readonly PostgresContainerFixture _fixture;
 
-    public OutboxDispatcherReservedTypesTests(PostgresContainerFixture fixture) =>
+    public OutboxDispatcherHandlerRoutingTests(PostgresContainerFixture fixture) =>
         _fixture = fixture;
 
     public async ValueTask InitializeAsync() =>
         await _fixture.ExecuteSqlAsync(
-            "TRUNCATE TABLE outbox_messages",
+            "DELETE FROM outbox_messages",
             TestContext.Current.CancellationToken);
 
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
     [Fact]
-    public async Task Dispatch_WhenNoHandlerIsRegistered_LeavesReservedTypesPending()
-    {
-        var cancellationToken = TestContext.Current.CancellationToken;
-        var billing = IntegrationTestData.Message(Now, messageType: "billing_notification");
-        var logo = IntegrationTestData.Message(Now, messageType: "trainer-logo.delete");
-        await SeedAsync(cancellationToken, billing, logo);
-
-        await using var provider = CreateProvider();
-        var dispatcher = CreateDispatcher(provider);
-        await dispatcher.DispatchAsync(cancellationToken);
-
-        await AssertPendingAsync(cancellationToken, billing.Id, logo.Id);
-    }
-
-    [Fact]
-    public async Task Dispatch_WhenHandlerExists_DoesNotClaimReservedTypes()
+    public async Task Dispatch_WhenNoHandlerIsRegistered_ClaimsNothing()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var owned = IntegrationTestData.Message(Now, messageType: "phase5a_test");
-        var billing = IntegrationTestData.Message(Now, messageType: "billing_notification");
+        var orphan = IntegrationTestData.Message(Now, messageType: "unowned_type");
+        await SeedAsync(cancellationToken, owned, orphan);
+
+        await using var provider = CreateProvider();
+        await CreateDispatcher(provider).DispatchAsync(cancellationToken);
+
+        await AssertPendingAsync(cancellationToken, owned.Id, orphan.Id);
+    }
+
+    [Fact]
+    public async Task Dispatch_ClaimsOnlyTypesWithARegisteredHandler()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var owned = IntegrationTestData.Message(Now, messageType: "phase5a_test");
         var logo = IntegrationTestData.Message(Now, messageType: "trainer-logo.delete");
-        await SeedAsync(cancellationToken, owned, billing, logo);
+        var avatar = IntegrationTestData.Message(Now, messageType: "client-avatar.delete");
+        var orphan = IntegrationTestData.Message(Now, messageType: "unowned_type");
+        await SeedAsync(cancellationToken, owned, logo, avatar, orphan);
 
         await using var provider = CreateProvider(new CompletingOutboxHandler());
-        var dispatcher = CreateDispatcher(provider);
-        await dispatcher.DispatchAsync(cancellationToken);
+        await CreateDispatcher(provider).DispatchAsync(cancellationToken);
 
         await using var context = _fixture.CreateAdministrativeContext();
         var ownedStored = await context.OutboxMessages.SingleAsync(
             message => message.Id == owned.Id, cancellationToken);
         Assert.NotEqual(JobStatus.Pending, ownedStored.Status);
-        await AssertPendingAsync(cancellationToken, billing.Id, logo.Id);
+
+        // Os tipos de media só são reclamados quando os seus consumidores estão
+        // registados; aqui não estão, e ficam intactos para o dono legítimo.
+        await AssertPendingAsync(cancellationToken, logo.Id, avatar.Id, orphan.Id);
     }
 
     private async Task SeedAsync(

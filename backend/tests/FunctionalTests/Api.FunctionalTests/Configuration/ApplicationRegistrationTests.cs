@@ -19,10 +19,10 @@ public sealed class ApplicationRegistrationTests
             descriptor.ServiceType.IsGenericType
             && descriptor.ServiceType.GetGenericTypeDefinition() == typeof(IValidator<>));
 
-        // 132 anteriores + Checkout, Customer Portal e processamento de webhook.
-        Assert.Equal(135, handlerCount);
-        // Checkout e Customer Portal usam validators explícitos, já incluídos no total.
-        Assert.Equal(75, validatorCount);
+        // 135 anteriores + substituição de logo, substituição e remoção de avatar.
+        Assert.Equal(138, handlerCount);
+        // O validator de logo já existia. A substituição de avatar acrescenta um.
+        Assert.Equal(76, validatorCount);
     }
 
     [Fact]

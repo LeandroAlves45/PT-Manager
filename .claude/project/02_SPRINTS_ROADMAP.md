@@ -576,6 +576,11 @@ Gate 5C:
   negativos cross-tenant.
 - Migrate, rollback e migrate da nova migration passam em PostgreSQL descartável.
 
+Estado em 2026-09-12: implementação, testes e rollout na base local finalizados. A
+migration `20260912145051_AddManagedImageAssets` é a mais recente em
+`__EFMigrationsHistory`; os três preflights operacionais devolveram zero. Faltam apenas
+os User Secrets de Cloudinary e Vision antes da ativação dos providers.
+
 ### Sprint 5D: Upload técnico de vídeo privado
 
 1. Manter este vertical slice separado das imagens geridas e dependente dos gates 5A

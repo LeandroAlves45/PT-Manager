@@ -46,6 +46,8 @@ public static class JobDispatchInfrastructureExtensions
         services.AddSingleton<OutboxDispatcher>();
         services.AddSingleton<IJobDispatchActivation, JobDispatchActivation>();
         services.AddScoped<IOutboxMessageHandler, BillingNotificationOutboxHandler>();
+        services.AddScoped<IOutboxMessageHandler, TrainerLogoDeletionOutboxHandler>();
+        services.AddScoped<IOutboxMessageHandler, ClientAvatarDeletionOutboxHandler>();
 
         services.AddHttpClient<INotificationDeliveryGateway, ResendNotificationDeliveryGateway>(
             (provider, client) =>

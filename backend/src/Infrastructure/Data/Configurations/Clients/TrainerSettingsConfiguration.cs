@@ -12,7 +12,12 @@ internal sealed class TrainerSettingsConfiguration : IEntityTypeConfiguration<Tr
 {
     public void Configure(EntityTypeBuilder<TrainerSettings> builder)
     {
-        builder.ToTable("trainer_settings");
+        builder.ToTable("trainer_settings", table =>
+        {
+            table.HasCheckConstraint("ck_trainer_settings_logo_pair",
+                "(logo_url IS NULL AND logo_public_id IS NULL) OR " +
+                "(logo_url IS NOT NULL AND logo_public_id IS NOT NULL)");
+        });
         builder.HasKey(settings => settings.Id);
         builder.Property(settings => settings.Id)
             .HasColumnName("id")

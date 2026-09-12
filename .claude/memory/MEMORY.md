@@ -6,10 +6,12 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
-**Estado ativo:** ler primeiro `.claude/memory/ACTIVE.md`. **Sprint 5A fechada e
-Sprint 5B planeada e materializada em 2026-09-09.** `QStash:Enabled` permanece `false`. Ver
-`Sessions/2026-09-08-sprint5b-planeamento.md` e
-`docs/backend-files/sprint_5/sprint_5B/00_desenho_aprovado_indice_dependencias_gates.md`.
+**Estado ativo:** ler primeiro `.claude/memory/ACTIVE.md`. **Sprint 5A e 5B fechadas
+(5B só aguarda secrets Stripe). Sprint 5C finalizada em 2026-09-12, incluindo a
+migration local e os preflights operacionais; faltam apenas os User Secrets de
+Cloudinary e Vision antes da ativação.** `QStash:Enabled` permanece `false`.
+Ver `Sessions/2026-09-12-sprint5c-review-validacao.md` e
+`docs/backend-files/sprint_5/sprint_5C/15_revisao_validacao_implementacao.md`.
 
 ## Estado atual
 

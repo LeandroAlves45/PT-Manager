@@ -1,6 +1,6 @@
 namespace Application.Common.Abstractions;
 
-/// <summary>Contéudo a enviar para o storage externo.</summary>
+/// <summary>Conteúdo bruto e não confiável recebido na fronteira HTTP.</summary>
 public sealed record MediaUpload(
     Stream Content,
     string ContentType,

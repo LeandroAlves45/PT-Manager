@@ -230,59 +230,116 @@ public sealed class ClientTests
     }
 
     [Fact]
-    public void SetAvatar_ValidUrl_SetsAvatarUrlAndUpdatesTimestamp()
+    public void ReplaceAvatar_WhenNoAvatarExists_SetsPairAndReturnsNoPrevious()
     {
         // Arrange
         var client = CreateValidClient();
 
         // Act
-        client.SetAvatar("https://cdn.example.com/avatar.png", Now.AddMinutes(1));
+        var previous = client.ReplaceAvatar(
+            "https://res.cloudinary.com/demo/avatar.webp", "pt-manager/avatars/a1", Now.AddMinutes(1));
 
         // Assert
-        Assert.Equal("https://cdn.example.com/avatar.png", client.AvatarUrl);
+        Assert.Null(previous);
+        Assert.Equal("https://res.cloudinary.com/demo/avatar.webp", client.AvatarUrl);
+        Assert.Equal("pt-manager/avatars/a1", client.AvatarPublicId);
         Assert.Equal(Now.AddMinutes(1), client.UpdatedAt);
     }
 
     [Fact]
-    public void SetAvatar_NullOrWhitespace_ClearsAvatarUrl()
+    public void ReplaceAvatar_WhenAvatarExists_ReturnsPreviousPublicIdForDeletion()
     {
         // Arrange
         var client = CreateValidClient();
-        client.SetAvatar("https://cdn.example.com/avatar.png", Now.AddMinutes(1));
+        client.ReplaceAvatar("https://res.cloudinary.com/demo/old.webp", "pt-manager/avatars/old", Now.AddMinutes(1));
 
         // Act
-        client.SetAvatar("   ", Now.AddMinutes(2));
+        var previous = client.ReplaceAvatar(
+            "https://res.cloudinary.com/demo/new.webp", "pt-manager/avatars/new", Now.AddMinutes(2));
 
         // Assert
+        Assert.Equal("pt-manager/avatars/old", previous);
+        Assert.Equal("pt-manager/avatars/new", client.AvatarPublicId);
+    }
+
+    [Theory]
+    [InlineData("", "pt-manager/avatars/a1")]
+    [InlineData("https://res.cloudinary.com/demo/a.webp", "   ")]
+    [InlineData(null, "pt-manager/avatars/a1")]
+    [InlineData("https://res.cloudinary.com/demo/a.webp", null)]
+    public void ReplaceAvatar_WhenPairIsIncomplete_ThrowsDomainException(string? url, string? publicId)
+    {
+        // Arrange
+        var client = CreateValidClient();
+
+        // Act
+        var action = () => client.ReplaceAvatar(url!, publicId!, Now.AddMinutes(1));
+
+        // Assert
+        Assert.Throws<DomainException>(action);
         Assert.Null(client.AvatarUrl);
+        Assert.Null(client.AvatarPublicId);
     }
 
     [Fact]
-    public void SetAvatar_ExceedsMaxLength_ThrowsDomainException()
+    public void ReplaceAvatar_ExceedsMaxLength_ThrowsDomainException()
     {
         // Arrange
         var client = CreateValidClient();
-        var tooLong = "https://cdn.example.com/" + new string('a', 480) + ".png";
+        var tooLong = "https://res.cloudinary.com/" + new string('a', 480) + ".webp";
 
         // Act
-        var action = () => client.SetAvatar(tooLong, Now.AddMinutes(1));
+        var action = () => client.ReplaceAvatar(tooLong, "pt-manager/avatars/a1", Now.AddMinutes(1));
 
         // Assert
         Assert.Throws<DomainException>(action);
     }
 
     [Fact]
-    public void SetAvatar_WhenClientIsDeleted_ThrowsDomainException()
+    public void ReplaceAvatar_WhenClientIsDeleted_ThrowsDomainException()
     {
         // Arrange
         var client = CreateValidClient();
         client.SoftDelete(Now.AddMinutes(1));
 
         // Act
-        var action = () => client.SetAvatar("https://cdn.example.com/avatar.png", Now.AddMinutes(2));
+        var action = () => client.ReplaceAvatar(
+            "https://res.cloudinary.com/demo/a.webp", "pt-manager/avatars/a1", Now.AddMinutes(2));
 
         // Assert
         Assert.Throws<DomainException>(action);
+    }
+
+    [Fact]
+    public void RemoveAvatar_WhenAvatarExists_ClearsPairAndReturnsPrevious()
+    {
+        // Arrange
+        var client = CreateValidClient();
+        client.ReplaceAvatar("https://res.cloudinary.com/demo/a.webp", "pt-manager/avatars/a1", Now.AddMinutes(1));
+
+        // Act
+        var previous = client.RemoveAvatar(Now.AddMinutes(2));
+
+        // Assert
+        Assert.Equal("pt-manager/avatars/a1", previous);
+        Assert.Null(client.AvatarUrl);
+        Assert.Null(client.AvatarPublicId);
+        Assert.Equal(Now.AddMinutes(2), client.UpdatedAt);
+    }
+
+    [Fact]
+    public void RemoveAvatar_WhenNoAvatarExists_IsIdempotentAndDoesNotTouchTimestamp()
+    {
+        // Arrange
+        var client = CreateValidClient();
+        var updatedAt = client.UpdatedAt;
+
+        // Act
+        var previous = client.RemoveAvatar(Now.AddMinutes(5));
+
+        // Assert
+        Assert.Null(previous);
+        Assert.Equal(updatedAt, client.UpdatedAt);
     }
 
     private static Client CreateClient(BirthDate birthDate, BiologicalSex sex) => new(

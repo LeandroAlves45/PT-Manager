@@ -1,5 +1,4 @@
 using Application.Features.ClientPortal.Abstractions;
-using Application.Features.ClientPortal.Dtos;
 using Infrastructure.Data;
 using Infrastructure.Persistence.Errors;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +13,6 @@ internal sealed class MyProfileStore : IMyProfileStore
     private readonly PtManagerDbContext _dbContext;
     private readonly PostgresConstraintTranslator _constraintTranslator;
 
-    /// <summary>Inicializa o store scoped e o tradutor de constraints do PostgreSQL.</summary>
     public MyProfileStore(
         PtManagerDbContext dbContext,
         PostgresConstraintTranslator constraintTranslator)
@@ -24,7 +22,6 @@ internal sealed class MyProfileStore : IMyProfileStore
             ?? throw new ArgumentNullException(nameof(constraintTranslator));
     }
 
-    /// <inheritdoc/>
     public async Task<UpdateMyProfileOutcome> UpdateAsync(
         Guid trainerId,
         Guid clientUserId,
@@ -76,16 +73,6 @@ internal sealed class MyProfileStore : IMyProfileStore
             throw;
         }
 
-        return UpdateMyProfileOutcome.Updated(
-            new MyProfileDto(
-                client.Name,
-                client.ContactEmail,
-                client.Phone,
-                client.BirthDate.Value,
-                client.Sex.Value,
-                client.EmergencyContactName,
-                client.EmergencyContactPhone,
-                client.AvatarUrl,
-                client.UpdatedAt));
+        return UpdateMyProfileOutcome.Updated(MyProfileMapping.ToDto(client));
     }
 }
