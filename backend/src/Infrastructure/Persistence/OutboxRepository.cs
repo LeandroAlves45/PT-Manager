@@ -15,13 +15,14 @@ public sealed class OutboxRepository : IOutboxStore
 
     public OutboxRepository(PtManagerDbContext db, IClock clock)
     {
-        _db = db;
-        _clock = clock;
+        _db = db ?? throw new ArgumentNullException(nameof(db));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     }
 
     public async Task<IReadOnlyList<OutboxMessage>> ClaimPendingAsync(
         TimeSpan leaseDuration,
         int batchSize,
+        int maxAttempts,
         CancellationToken cancellationToken,
         IReadOnlyCollection<string>? allowedMessageTypes = null)
     {
@@ -31,28 +32,62 @@ public sealed class OutboxRepository : IOutboxStore
         if (batchSize <= 0)
             throw new ArgumentOutOfRangeException(nameof(batchSize));
 
+        if (maxAttempts <= 0)
+            throw new ArgumentOutOfRangeException(nameof(maxAttempts));
+
         if (allowedMessageTypes is { Count: 0 })
             return [];
 
         var now = _clock.UtcNow;
         var leaseOwnerId = Guid.NewGuid();
         var leaseExpiresAt = now.Add(leaseDuration);
-        var parameters = new List<NpgsqlParameter>
-        {
-            new("now", now),
-            new("batch_size", batchSize),
-            new("lease_owner_id", leaseOwnerId),
-            new("lease_expires_at", leaseExpiresAt)
-        };
+        var typeFilter = allowedMessageTypes is null
+            ? string.Empty
+            : "AND message_type = ANY(@allowed_types)";
 
-        var typeFilter = string.Empty;
-        if (allowedMessageTypes is not null)
+        // Um lease expirado sem desfecho registado (processo morto, timeout da
+        // ativação) nunca passa pelo RetryScheduleCalculator. Sem este passo seria
+        // reclamado para sempre. Um NpgsqlParameter não pode pertencer
+        // a dois comandos, daí as duas listas. {typeFilter} é um literal do código; os
+        // valores seguem sempre como parâmetros, tal como no claim abaixo.
+        var deadLetterSql = $"""
+            UPDATE outbox_messages
+            SET status = 'dead_letter',
+                last_error = 'lease_expired_max_attempts',
+                lease_owner_id = NULL,
+                lease_expires_at = NULL,
+                updated_at = @now
+            WHERE status = 'processing'
+                AND lease_expires_at <= @now
+                AND attempts >= @max_attempts
+                {typeFilter}
+            """;
+        await _db.Database.ExecuteSqlRawAsync(
+            deadLetterSql,
+            CreateParameters(),
+            cancellationToken);
+
+        var parameters = CreateParameters();
+        parameters.Add(new NpgsqlParameter("batch_size", batchSize));
+        parameters.Add(new NpgsqlParameter("lease_owner_id", leaseOwnerId));
+        parameters.Add(new NpgsqlParameter("lease_expires_at", leaseExpiresAt));
+
+        List<NpgsqlParameter> CreateParameters()
         {
-            typeFilter = "AND message_type = ANY(@allowed_types)";
-            parameters.Add(new NpgsqlParameter("allowed_types", allowedMessageTypes.ToArray())
+            var created = new List<NpgsqlParameter>
             {
-                DataTypeName = "text[]"
-            });
+                new("now", now),
+                new("max_attempts", maxAttempts)
+            };
+            if (allowedMessageTypes is not null)
+            {
+                created.Add(new NpgsqlParameter("allowed_types", allowedMessageTypes.ToArray())
+                {
+                    DataTypeName = "text[]"
+                });
+            }
+
+            return created;
         }
 
         var sql = $"""
@@ -67,6 +102,7 @@ public sealed class OutboxRepository : IOutboxStore
                         OR (
                             status = 'processing'
                             AND lease_expires_at <= @now
+                            AND attempts < @max_attempts
                         )
                     )
                     {typeFilter}

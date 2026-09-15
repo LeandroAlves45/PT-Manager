@@ -7,7 +7,7 @@ namespace Infrastructure.IntegrationTests.Jobs;
 
 /// <summary>
 /// Verifica a validação de tenant antes de qualquer handler correr.
-/// O trainer é lido do item persistido e nunca do payload. Um job sem tenant
+/// O personal trainer é lido do item persistido e nunca do payload. Um job sem tenant
 /// válido não pode executar: na Fase 5A não existem tipos globais na allowlist,
 /// por isso "sem trainer" significa sempre recusa.
 /// </summary>
@@ -47,6 +47,45 @@ public sealed class JobTenantValidatorTests
         await SetSubscriptionStatusAsync(seed.TrainerId, status);
 
         Assert.False(await IsAvailableAsync(seed.TrainerId));
+    }
+
+    /// <summary>
+    /// PTM-SEC-05: avisos de falha de pagamento, cancelamento e limpeza de media
+    /// correm precisamente quando a subscrição deixou de estar ativa.
+    /// </summary>
+    [Theory]
+    [InlineData("INACTIVE")]
+    [InlineData("SUSPENDED")]
+    [InlineData("CANCELLED")]
+    public async Task IsAvailable_WhenSubscriptionIsNotRequiredAndNotActive_ReturnsTrue(string status)
+    {
+        var seed = await SeedAsync();
+        await SeedSubscriptionAsync(seed.TrainerId);
+        await SetSubscriptionStatusAsync(seed.TrainerId, status);
+
+        Assert.True(await IsAvailableAsync(seed.TrainerId, requireActiveSubscription: false));
+    }
+
+    [Fact]
+    public async Task IsAvailable_WhenSubscriptionIsNotRequiredButTrainerIsInactive_ReturnsFalse()
+    {
+        var seed = await SeedAsync();
+        await SeedSubscriptionAsync(seed.TrainerId);
+        await _fixture.ExecuteSqlAsync(
+            "UPDATE users SET is_active = false WHERE id = @id",
+            TestContext.Current.CancellationToken,
+            new NpgsqlParameter("id", seed.TrainerId));
+
+        Assert.False(await IsAvailableAsync(seed.TrainerId, requireActiveSubscription: false));
+    }
+
+    [Fact]
+    public async Task IsAvailable_WhenSubscriptionIsNotRequiredButMissing_ReturnsFalse()
+    {
+        var seed = await SeedAsync();
+
+        // O relaxamento é sobre o estado, não sobre a existência da subscrição.
+        Assert.False(await IsAvailableAsync(seed.TrainerId, requireActiveSubscription: false));
     }
 
     [Fact]
@@ -99,13 +138,15 @@ public sealed class JobTenantValidatorTests
         Assert.False(await IsAvailableAsync(useEmptyGuid ? Guid.Empty : null));
     }
 
-    private async Task<bool> IsAvailableAsync(Guid? trainerId)
+    private async Task<bool> IsAvailableAsync(
+        Guid? trainerId,
+        bool requireActiveSubscription = true)
     {
         await using var context = _fixture.CreateAdministrativeContext();
         var validator = new JobTenantValidator(context);
 
         return await validator.IsAvailableAsync(
-            trainerId, TestContext.Current.CancellationToken);
+            trainerId, TestContext.Current.CancellationToken, requireActiveSubscription);
     }
 
     /// <summary>Cria a subscrição pela entidade, que nasce activa.</summary>

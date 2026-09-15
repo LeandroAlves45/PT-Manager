@@ -21,6 +21,12 @@ internal abstract class MediaDeletionOutboxHandler : IOutboxMessageHandler
 
     public abstract string MessageType { get; }
 
+    /// <summary>
+    /// A limpeza de assets órfãos também tem de correr para trainers suspensos ou
+    /// cancelados; caso contrário ficariam ficheiros na Cloudinary.
+    /// </summary>
+    public bool RequiresActiveSubscription => false;
+
     public async Task<DispatchItemOutcome> HandleAsync(
         OutboxMessageEnvelope message,
         CancellationToken cancellationToken)

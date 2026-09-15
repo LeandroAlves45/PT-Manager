@@ -15,7 +15,8 @@ public sealed class GlobalExerciseStoreResult
         NotFound,
         Inactive,
         Referenced,
-        HasReferences
+        HasReferences,
+        HasVideo
     }
 
     public Status Kind { get; }

@@ -18,23 +18,30 @@ public static class ApiForwardedHeaders
         var knownProxies = section.GetSection("KnownProxies").Get<string[]>() ?? [];
         var knownNetworks = section.GetSection("KnownNetworks").Get<string[]>() ?? [];
 
-        // Em Production a lista vazia é um erro de deployment, não um
-        // default aceitável. Com a lista vazia o middleware ignora os headers e
-        // o rate limiting por IP fica silenciosamente inútil.
-        if (environment.IsProduction() &&
-            knownProxies.Length == 0 &&
-            knownNetworks.Length == 0)
+        var hasTrustedProxies = knownProxies.Length > 0 || knownNetworks.Length > 0;
+
+        // Listas vazias NÃO fazem o middleware ignorar os headers: com KnownProxies
+        // e KnownIPNetworks limpos, X-Forwarded-* é aceite de qualquer origem
+        // (breaking change do ASP.NET Core 8). Sem proxies confiáveis o
+        // processamento é desligado; em Production é erro de deployment.
+        if (!hasTrustedProxies && environment.IsProduction())
             throw new InvalidOperationException(
                 "Configuration 'ForwardedHeaders' must declare at least one known " +
                 "proxy or network in production.");
 
         services.Configure<ForwardedHeadersOptions>(options =>
         {
-            options.ForwardedHeaders =
-                ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-
             options.KnownProxies.Clear();
             options.KnownIPNetworks.Clear();
+
+            if (!hasTrustedProxies)
+            {
+                options.ForwardedHeaders = ForwardedHeaders.None;
+                return;
+            }
+
+            options.ForwardedHeaders =
+                ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
 
             foreach (var proxy in knownProxies)
                 options.KnownProxies.Add(IPAddress.Parse(proxy));

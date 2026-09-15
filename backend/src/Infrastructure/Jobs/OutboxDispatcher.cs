@@ -76,6 +76,7 @@ internal sealed class OutboxDispatcher
         return await store.ClaimPendingAsync(
             _options.LeaseDuration,
             claimSize,
+            _options.MaxAttempts,
             cancellationToken,
             allowedMessageTypes);
     }
@@ -146,7 +147,10 @@ internal sealed class OutboxDispatcher
                 "More than one outbox handler is registered for the same route.");
 
         var tenantValidator = itemScope.ServiceProvider.GetRequiredService<JobTenantValidator>();
-        if (!await tenantValidator.IsAvailableAsync(message.TrainerId, activationCancellationToken))
+        if (!await tenantValidator.IsAvailableAsync(
+                message.TrainerId,
+                activationCancellationToken,
+                handlers[0].RequiresActiveSubscription))
         {
             _logger.LogWarning(
                 JobDispatchLogEvents.TenantRejected,

@@ -11,10 +11,13 @@ public interface IOutboxStore
 {
     /// <summary>
     /// Reclama mensagens elegíveis e cria um token opaco novo para este claim.
+    /// Um lease expirado com <paramref name="maxAttempts"/> tentativas esgotadas vai
+    /// para dead letter em vez de ser reclamado outra vez.
     /// </summary>
     Task<IReadOnlyList<OutboxMessage>> ClaimPendingAsync(
         TimeSpan leaseDuration,
         int batchSize,
+        int maxAttempts,
         CancellationToken cancellationToken,
         IReadOnlyCollection<string>? allowedMessageTypes = null);
 

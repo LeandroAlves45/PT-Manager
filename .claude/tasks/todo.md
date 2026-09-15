@@ -1,62 +1,111 @@
-# Sprint 5 — Fase 5C: imagens geridas (logo + avatar)
+# Sprint 5 — Fase 5D: upload técnico de vídeo privado
 
-Plano aprovado: `C:\Users\Leandro Alves\.claude\plans\c-users-leandro-alves-desktop-projeto-p-glittery-adleman.md`
-Materialização: `C:\ptm5c` (cópia de `backend/`, fora do repositório — `backend/src`,
+Plano geral: `docs/backend-files/sprint_5/Plan_sprint_5.md` (Fase 5D).
+Blueprints: `docs/backend-files/sprint_5/sprint_5D/`.
+Materialização: `C:\ptm5d` (cópia de `backend/`, fora do repositório — `backend/src`,
 `backend/tests` e as migrations reais permanecem intocados).
+
+## Decisões fechadas com o utilizador (2026-09-13)
+
+1. Storage: Cloudflare R2 (presigned PUT/GET com expiração real, egress grátis).
+   Cloudinary recusado para vídeo: sem URL de leitura expirável no Free,
+   `resource_type` fora da assinatura, créditos partilhados com imagens.
+2. Formatos: container MP4 ou MOV; vídeo H.264 (`avc1`/`avc3`); áudio AAC (`mp4a`)
+   ou ausente. Máx 100 MB, 3 min, lado maior ≤ 1920 px, lado menor ≥ 240 px.
+   HEVC recusado (reprodução não garantida em todos os browsers).
+3. Modelo: tabela própria `exercise_videos`; um vídeo ativo por exercício;
+   substituição só troca quando o novo fica `Ready`; `exercises.video_url` externo
+   intacto (contrato Preserve).
+4. Quota: exercícios globais (superuser) sem quota — só limites por ficheiro e rate
+   limit. Trainer: 20 vídeos (`Pending`+`Processing`+`Ready`), igual para todos,
+   configurável, verificação atómica no store.
+5. Leitura (URL assinada): cliente — exercícios presentes no seu plano de treino;
+   trainer — globais e os seus privados; superuser — todos.
+   Upload: superuser para globais, trainer para os seus privados.
+6. TTL: presigned PUT 15 min; finalização até ao fim dessa janela; presigned GET
+   30 min. Abandono: job agendado por upload (`expires_at` + margem) apaga o objeto e
+   marca `Failed`; `Rejected`/`Failed`/substituídos apagados por outbox; lifecycle R2
+   no prefixo de pendentes como rede de segurança.
+7. Âmbito: só backend, `R2:Enabled=false` até existir bucket, CORS e secrets.
+   `QG5-FRONTEND-001` continua aberto. Moderação automática de vídeo fora (DEF-TRUST-002).
+
+## Decisões de arquitetura aprovadas (2026-09-13, 2.ª ronda)
+
+8. Jobs de vídeo global (tenant nulo): marker `IPlatformDurableJobHandler`; só os
+   handlers marcados (allowlist fechada) aceitam `TrainerId` nulo e correm com
+   `TenantOrigin.System`. Restantes jobs mantêm a recusa.
+9. Eliminação de objetos R2 (remover, substituído, rejeitado, abandonado): durable job
+   `exercise-video.delete-object` na mesma transação da mutação; outbox intacta.
+10. Eliminar exercício global com vídeo: 409 `global_exercise_has_video` (FK RESTRICT).
+11. Superuser a ler vídeo privado: sem auditoria administrativa, só log estruturado.
+    Escritas globais do superuser gravam `AdministrativeAuditEntry`.
+
+## Factos da pesquisa R2 (fontes no relatório da sessão)
+
+- `AWSSDK.S3` 4.0.103.2 / `AWSSDK.Core` 4.0.102.5, Apache-2.0, target net8.0.
+- Config: `ServiceURL=https://<account>.r2.cloudflarestorage.com`, `AuthenticationRegion=auto`,
+  `ForcePathStyle=true`, checksums `WHEN_REQUIRED`.
+- Presign é cálculo local; R2 aceita 1 s–7 dias; não funciona com custom domain.
+- Content-Type assinado é imposto pelo R2; Content-Length assinado NÃO garantido →
+  `HeadObject` na finalização é a autoridade do tamanho.
+- CORS do bucket obrigatório (PUT, GET, HEAD; `Content-Type`; expõe `ETag`).
+- Lifecycle por prefixo remove em até 24 h → só rede de segurança.
+- Class B (Head/GetObject) conta operações; DeleteObject gratuito.
+
+## Factos verificados que condicionam o desenho
+
+- `JobTenantValidator` recusa `TrainerId` nulo → vídeos globais exigem caminho de job
+  de plataforma explícito e fechado (não genérico).
+- Portal do cliente não expõe `video_url` hoje.
+- Não há cron interno; jobs com `ScheduledAt` futuro são reclamados na ativação QStash.
+- Media 5C é só imagem (rotas `image/*`, Skia, 6 MiB) — vídeo é slice separado.
+- Testes de allowlist fechada (`JobDispatchArchitectureTests`,
+  `JobDispatchCompositionTests`) têm de ser atualizados.
 
 ## 0. Preparação
 
-- [x] Cópia do backend para `C:\ptm5c` sem `bin`/`obj` (1210 ficheiros .cs)
-- [x] `dotnet restore --locked-mode` verde na cópia
-- [x] Build Release de baseline verde na cópia (0 warnings, 0 erros)
-- [x] Baseline registada: 2171 testes antes da fase (ACTIVE.md, fecho 5B)
+- [x] Pesquisa R2 + AWSSDK.S3 (presign, HeadObject, Range, CORS, checksums)
+- [x] Pesquisa layout ISO BMFF (parser MP4/MOV próprio)
+- [x] Mapa: leitura do plano pelo cliente, leitura administrativa, tenant System
+- [x] Cópia do backend para `C:\ptm5d` sem `bin`/`obj`
+- [x] `dotnet restore --locked-mode` e build Release de baseline verdes na cópia
 
-## 1. Materialização do código real (por lote, na ordem obrigatória)
+## 1. Desenho
 
-- [x] A/01 — Portas e contratos de media na Application (~12 ficheiros)
-- [x] B/02 — Domain: `Client.AvatarPublicId`, `ReplaceAvatar`, `RemoveAvatar`, −`SetAvatar`
-- [x] C/03 — Application: logo (`ReplaceLogoHandler`, validator, erros)
-- [x] D/04 — Application: avatar (store port, commands, validators, 2 handlers, DI)
-- [x] E/05 — Infrastructure: `SkiaImageProcessor`, `BoundedStreamReader`
-- [x] F/06 — Infrastructure: Cloudinary (options, validator, assinatura, transport, storage)
-- [x] G/07 — Infrastructure: moderação Vision (options, validator, token provider, service)
-- [x] H/08 — Infrastructure: `MyAvatarStore`, `ClientLocking`, configurations, 2 handlers de outbox
-- [x] I/09 — Composition root, packages, configuração, logging
-- [x] J/10 — Api: binder multipart, rotas, rate limit
-- [x] K/11 — Migration `AddManagedImageAssets` + os dois preflights SQL
-- [x] L/12 — Testes (todas as suites) + reescrita dos 3 testes bloqueadores
+- [x] Arquitetura (portas, entidade, estados, jobs, rotas, migration)
+- [x] Documento 00 com decisões, ordem, invariantes, budget de I/O e gates
 
-## 2. Validação executável na cópia
+## 2. Materialização e validação na cópia
 
-- [x] `dotnet restore` regenerou 5 lock files; locked-mode de baseline verde
-- [x] `dotnet build -c Release` e `-c Debug`: 0 warnings, 0 erros
-- [ ] 5 suites verdes — PARCIAL: Domain 432, Application 569, Architecture 65, Integration sem PostgreSQL 79, contrato OpenAPI 3; PostgreSQL e Functional NÃO executados (Docker)
-- [x] `dotnet format --verify-no-changes` exit 0
-- [x] `has-pending-model-changes` limpo (binários de Debug)
-- [ ] Ciclo da migration em PostgreSQL 17 — NÃO executado (Docker); SQL Up/Down gerado e revisto
-- [x] Snapshot OpenAPI regenerado: exatamente +3 operações
+- [x] Domain, Application, Infrastructure, Api, migration, testes
+- [x] Restore, build Release/Debug sem warnings, format, suites, has-pending-model-changes (não reexecutados nesta revisão)
+- [x] Ciclo da migration no filtro de testes (62 Integration, inclui AddExerciseVideos)
+- [x] Snapshot OpenAPI
 
-## 3. Blueprints (extraídos da cópia, nunca escritos à mão)
+## 3. Blueprints (extraídos da cópia)
 
-- [x] `00_desenho_aprovado_indice_dependencias_gates.md`
-- [x] `01` a `12` — 91 blocos integrais
-- [x] `13_qa_da_fase.md`
-- [x] `14_rastreabilidade_revisao_quality_gates.md` com validação pendente declarada
-- [x] Comparação programática: 91/91 exatas
+- [x] Documentos 01..N por camada com blocos integrais (00–13)
+- [x] QA da fase e rastreabilidade
+- [x] `backlogs/QualityGates.md` com gates `QG5D-*`
 
 ## 4. Fecho
 
-- [x] `backlogs/QualityGates.md` — secção 5C com 4 gates abertos
-- [x] `.claude/memory/ACTIVE.md` e `MEMORY.md` atualizados
-- [x] Nota de sessão `Sessions/2026-09-11-sprint5c-blueprints.md`
-- [x] `C:\ptm5c` eliminado
-- [x] Confirmar por `git status` que nada em `backend/` foi tocado, nada pelo claude durante
-o processo
+- [x] `git status`: nenhum ficheiro real de backend alterado
+- [x] Memória (ACTIVE.md, MEMORY.md, nota de sessão)
 
-## Review
+---
 
-Pack completo e verificado onde a execução foi possível. Dois defeitos reais encontrados
-pela materialização (PNG truncado aceite pelo SkiaSharp; eliminação sem prova de posse
-pelo tenant) e corrigidos antes da extração. A fase NÃO está fechada: faltam a parte
-PostgreSQL das suites Infrastructure e Functional e o ciclo da migration, por o Docker
-não ter arrancado. Gates `QG5C-TEST-003` e `QG5C-MIG-001` abertos.
+# Correções da auditoria de segurança 2026-09-14 (patches 1–7)
+
+Plano: `C:\Users\Leandro Alves\.claude\plans\stateless-moseying-truffle.md`.
+Relatório: `backlogs/Security_and_Review_audit/11_relatorio_implementacao_patches.md`.
+
+- [x] Patch 1 — PTM-SEC-18: `User.ResetAccessFailedCount` preserva `LockoutEnd`
+- [x] Patch 2 — PTM-SEC-02: perfis 4096 px / 12 MP + semáforo de decode (sem rácio bytes/píxel)
+- [x] Patch 3 — PTM-SEC-01: SDK 10.0.401 + `global.json` + Dockerfile/.dockerignore
+- [x] Patch 4 — PTM-SEC-03: `ForwardedHeaders.None` sem proxies confiáveis
+- [x] Patch 5 — PTM-SEC-04: lockout no change-password e no link Google (email antes da password)
+- [x] Patch 6 — PTM-SEC-05: `IOutboxMessageHandler.RequiresActiveSubscription`
+- [x] Patch 7 — PTM-SEC-06: teto `maxAttempts` no claim (outbox + durable) + docs 07/10 da 5D
+- [x] Build Release + suite completa (real: 5D sem migration → worktree isolado: 2372 ✓ · 1 ✗ ambiental · 1 skip)
+- [x] Relatório 11 + nota de sessão + memória

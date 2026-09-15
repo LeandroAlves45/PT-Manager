@@ -51,6 +51,9 @@ internal enum PersistenceOperation
     /// <summary>Elimina fisicamente um exercício global do catálogo.</summary>
     DeleteGlobalExercise,
 
+    /// <summary>Registo de um upload de vídeo gerido e do respetivo job de limpeza.</summary>
+    RegisterExerciseVideoUpload,
+
     /// <summary>Criação atómica de uma notificação e do respetivo job durável.</summary>
     EnqueueNotification
 }

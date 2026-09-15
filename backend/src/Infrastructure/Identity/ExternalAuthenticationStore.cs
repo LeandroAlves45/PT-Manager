@@ -281,12 +281,9 @@ internal sealed class ExternalAuthenticationStore :
                     transaction,
                     cancellationToken);
 
-            if (!await _userManager.CheckPasswordAsync(user, currentPassword))
-                return await CompleteLinkFailureAsync(
-                    GoogleLinkStoreStatus.PasswordInvalid,
-                    transaction,
-                    cancellationToken);
-
+            // O email é validado antes da password: com a ordem inversa, quem usa a
+            // sua própria conta Google distinguia "password errada" de "email
+            // diferente".
             if (!string.Equals(
                 user.NormalizedEmail,
                 new EmailAddress(identity.Email).Normalized,
@@ -295,6 +292,23 @@ internal sealed class ExternalAuthenticationStore :
                     GoogleLinkStoreStatus.EmailMismatch,
                     transaction,
                     cancellationToken);
+
+            // O mesmo contrato de lockout do login. CompleteLinkFailureAsync faz commit,
+            // pelo que a falha registada por AccessFailedAsync persiste.
+            if (await _userManager.IsLockedOutAsync(user))
+                return await CompleteLinkFailureAsync(
+                    GoogleLinkStoreStatus.PasswordInvalid,
+                    transaction,
+                    cancellationToken);
+
+            if (!await _userManager.CheckPasswordAsync(user, currentPassword))
+            {
+                await _userManager.AccessFailedAsync(user);
+                return await CompleteLinkFailureAsync(
+                    GoogleLinkStoreStatus.PasswordInvalid,
+                    transaction,
+                    cancellationToken);
+            }
 
             var identities = _dbContext.Set<ExternalIdentity>();
             if (await identities.AnyAsync(candidate =>

@@ -123,6 +123,12 @@ public static class TrainingErrors
         "A referenced global exercise cannot be deleted. Archive it instead."
     );
 
+    public static readonly Error GlobalExerciseHasVideo = Error.Create(
+        "global_exercise_has_video",
+        ErrorCategory.Conflict,
+        "A global exercise with a managed video cannot be deleted. Remove the video first."
+    );
+
     public static readonly Error GlobalExerciseReferenced = Error.Create(
         "global_exercise_referenced",
         ErrorCategory.Conflict,

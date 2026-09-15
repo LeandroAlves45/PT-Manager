@@ -11,11 +11,14 @@ public interface IDurableJobStore
 {
     /// <summary>
     /// Reclama até <paramref name="batchSize"/> jobs elegíveis. O store cria um
-    /// token opaco novo para esta execução de claim.
+    /// token opaco novo para esta execução de claim. Um lease expirado com
+    /// <paramref name="maxAttempts"/> tentativas esgotadas vai para dead letter em
+    /// vez de ser reclamado outra vez.
     /// </summary>
     Task<IReadOnlyList<DurableJob>> ClaimDueJobsAsync(
         TimeSpan leaseDuration,
         int batchSize,
+        int maxAttempts,
         CancellationToken cancellationToken);
 
     /// <summary>

@@ -60,9 +60,24 @@ internal sealed class PasswordManagementStore : IPasswordManagementStore
             if (user is null)
                 return PasswordManagementStoreResult.Failure(
                     PasswordManagementStoreStatus.UserNotFound);
-            if (!await _userManager.CheckPasswordAsync(user, currentPassword))
+
+            // O mesmo contrato de lockout do login: sem isto, um access token roubado
+            // permite forçar a password atual limitado só pelo rate limit.
+            // Uma conta bloqueada recebe a mesma resposta, sem revelar o estado.
+            if (await _userManager.IsLockedOutAsync(user))
                 return PasswordManagementStoreResult.Failure(
                     PasswordManagementStoreStatus.CurrentPasswordInvalid);
+
+            if (!await _userManager.CheckPasswordAsync(user, currentPassword))
+            {
+                await _userManager.AccessFailedAsync(user);
+                // Sem commit, o dispose da transação faria rollback do contador. Um
+                // retry depois de um commit ambíguo pode contar a falha duas vezes,
+                // o que só antecipa o bloqueio.
+                await transaction.CommitAsync(cancellationToken);
+                return PasswordManagementStoreResult.Failure(
+                    PasswordManagementStoreStatus.CurrentPasswordInvalid);
+            }
 
             return await ApplyAsync(
                 user,
@@ -161,6 +176,9 @@ internal sealed class PasswordManagementStore : IPasswordManagementStore
         user.SetPasswordHash(_userManager.PasswordHasher.HashPassword(user, newPassword), now);
         user.SetSecurityStamp(newSecurityStamp, now);
         user.RotateConcurrencyStamp(now);
+        // Uma troca com sucesso prova a posse da password: as falhas anteriores
+        // deixam de contar para o lockout.
+        user.ResetAccessFailedCount(now);
         resetToken?.MarkConsumed(now);
 
         var sessions = await _dbContext.RefreshTokens

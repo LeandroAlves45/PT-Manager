@@ -53,6 +53,8 @@ public static class GlobalExerciseMappings
                 Result.Failure(TrainingErrors.GlobalExerciseHasReferences),
             GlobalExerciseStoreResult.Status.Inactive =>
                 Result.Failure(TrainingErrors.ExerciseInactive),
+            GlobalExerciseStoreResult.Status.HasVideo =>
+                Result.Failure(TrainingErrors.GlobalExerciseHasVideo),
             _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
         };
 }

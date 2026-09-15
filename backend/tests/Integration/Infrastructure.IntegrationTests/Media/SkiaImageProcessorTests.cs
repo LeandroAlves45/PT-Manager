@@ -129,6 +129,52 @@ public sealed class SkiaImageProcessorTests
     }
 
     /// <summary>
+    /// PTM-SEC-02: o PNG de 6000×5000 de cor sólida usado na auditoria tinha ~88 KB
+    /// e custava +268 MiB de decode. Agora é recusado pelo cabeçalho, antes de alocar.
+    /// </summary>
+    [Fact]
+    public async Task NormalizeAsync_WhenCompressedPngDeclaresAuditDimensions_ReturnsDimensionsTooLarge()
+    {
+        var png = CreateSolidPng(6000, 5000);
+
+        var result = await NormalizeAsync(png, "image/png", ImageProfiles.TrainerLogo);
+
+        Assert.Null(result.Image);
+        Assert.Equal(ImageValidationFailure.DimensionsTooLarge, result.Failure);
+    }
+
+    [Theory]
+    [InlineData("trainer_logo")]
+    [InlineData("client_avatar")]
+    public async Task NormalizeAsync_WhenImageExceedsTwelveMegapixelsWithinMaxDimension_ReturnsBudgetExceeded(
+        string profileName)
+    {
+        // 4096 × 4096 = 16,7 MP: a dimensão passa, o orçamento de píxeis não.
+        var png = CreateSolidPng(4096, 4096);
+        var profile = profileName == ImageProfiles.TrainerLogo.Name
+            ? ImageProfiles.TrainerLogo
+            : ImageProfiles.ClientAvatar;
+
+        var result = await NormalizeAsync(png, "image/png", profile);
+
+        Assert.Null(result.Image);
+        Assert.Equal(ImageValidationFailure.PixelBudgetExceeded, result.Failure);
+    }
+
+    [Fact]
+    public async Task NormalizeAsync_WhenImageIsWithinTwelveMegapixels_IsAccepted()
+    {
+        // 4096 × 2929 ≈ 11,997 MP: o limite novo continua a aceitar fotografias grandes.
+        var png = CreateSolidPng(4096, 2929);
+
+        var result = await NormalizeAsync(png, "image/png", ImageProfiles.TrainerLogo);
+
+        Assert.Null(result.Failure);
+        var image = Assert.IsType<ProcessedImage>(result.Image);
+        Assert.Equal(512, image.Width);
+    }
+
+    /// <summary>
     /// O logo do trainer transporta frequentemente transparência. Se o formato de
     /// saída a perdesse, todos os logos ganhariam um fundo sólido — por isso o
     /// canal alfa é uma asserção, não uma suposição.
@@ -171,6 +217,66 @@ public sealed class SkiaImageProcessorTests
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(format, 95);
         return data.ToArray();
+    }
+
+    /// <summary>
+    /// Escreve um PNG RGB preto em streaming. Criar a imagem com SKBitmap alocaria o
+    /// mesmo bitmap de resolução total que o teste quer provar que já não é aceite.
+    /// </summary>
+    private static byte[] CreateSolidPng(int width, int height)
+    {
+        using var output = new MemoryStream();
+        output.Write([137, 80, 78, 71, 13, 10, 26, 10]);
+
+        var header = new byte[13];
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(0, 4), width);
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(4, 4), height);
+        header[8] = 8; // bit depth
+        header[9] = 2; // truecolor RGB
+        WritePngChunk(output, "IHDR", header);
+
+        using var compressed = new MemoryStream();
+        using (var zlib = new System.IO.Compression.ZLibStream(
+            compressed, System.IO.Compression.CompressionLevel.Fastest, leaveOpen: true))
+        {
+            // Byte de filtro 0 seguido de píxeis a zero.
+            var row = new byte[1 + (width * 3)];
+            for (var y = 0; y < height; y++)
+                zlib.Write(row);
+        }
+
+        WritePngChunk(output, "IDAT", compressed.ToArray());
+        WritePngChunk(output, "IEND", []);
+        return output.ToArray();
+    }
+
+    private static void WritePngChunk(Stream output, string type, byte[] data)
+    {
+        Span<byte> length = stackalloc byte[4];
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(length, data.Length);
+        output.Write(length);
+
+        var typeAndData = new byte[4 + data.Length];
+        System.Text.Encoding.ASCII.GetBytes(type, typeAndData);
+        data.CopyTo(typeAndData, 4);
+        output.Write(typeAndData);
+
+        Span<byte> crc = stackalloc byte[4];
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(crc, Crc32(typeAndData));
+        output.Write(crc);
+    }
+
+    private static uint Crc32(byte[] bytes)
+    {
+        var crc = 0xFFFFFFFFu;
+        foreach (var value in bytes)
+        {
+            crc ^= value;
+            for (var bit = 0; bit < 8; bit++)
+                crc = (crc & 1) != 0 ? (crc >> 1) ^ 0xEDB88320u : crc >> 1;
+        }
+
+        return ~crc;
     }
 
     private static byte[] CreateImageWithTransparentCorner(int width, int height)

@@ -1,0 +1,19 @@
+# Artefactos de build locais: a imagem compila do zero.
+**/bin/
+**/obj/
+**/TestResults/
+
+# Segredos e configuração local nunca entram no contexto de build (PTM-SEC-01).
+**/.env
+**/.env.*
+!**/.env.example
+**/*.pfx
+**/*.pem
+**/*.key
+**/secrets.json
+
+# Ferramentas e IDE.
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.user

@@ -38,7 +38,7 @@ public sealed class PtManagerDbContext : DbContext
         _tenantContext = tenantContext;
     }
 
-    // DbSet<T> para as 34 entidades de domínio e um modelo técnico de replay QStash.
+    // DbSet<T> para as 35 entidades de domínio e um modelo técnico de replay QStash.
     public DbSet<User> Users => Set<User>();
     public DbSet<AdministrativeAuditEntry> AdministrativeAuditEntries =>
         Set<AdministrativeAuditEntry>();
@@ -73,6 +73,7 @@ public sealed class PtManagerDbContext : DbContext
     public DbSet<TrainingPlan> TrainingPlans => Set<TrainingPlan>();
     public DbSet<TrainingPlanDay> TrainingPlanDays => Set<TrainingPlanDay>();
     public DbSet<TrainingPlanDayExercise> TrainingPlanDayExercises => Set<TrainingPlanDayExercise>();
+    public DbSet<ExerciseVideo> ExerciseVideos => Set<ExerciseVideo>();
 
     // O modelo é interno porque representa segurança do adapter, não domínio público.
     internal DbSet<QStashDispatchReceipt> QStashDispatchReceipts =>
@@ -151,6 +152,10 @@ public sealed class PtManagerDbContext : DbContext
         modelBuilder.Entity<Exercise>().HasQueryFilter(e =>
             CurrentTrainerId.HasValue &&
             (e.OwnerTrainerId == null || e.OwnerTrainerId == CurrentTrainerId));
+
+        modelBuilder.Entity<ExerciseVideo>().HasQueryFilter(ev =>
+            CurrentTrainerId.HasValue &&
+            (ev.OwnerTrainerId == null || ev.OwnerTrainerId == CurrentTrainerId));
 
         modelBuilder.Entity<Supplement>().HasQueryFilter(s =>
             CurrentTrainerId.HasValue &&

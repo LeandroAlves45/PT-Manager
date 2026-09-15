@@ -15,13 +15,14 @@ public sealed class DurableJobRepository : IDurableJobStore
 
     public DurableJobRepository(PtManagerDbContext db, IClock clock)
     {
-        _db = db;
-        _clock = clock;
+        _db = db ?? throw new ArgumentNullException(nameof(db));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     }
 
     public async Task<IReadOnlyList<DurableJob>> ClaimDueJobsAsync(
         TimeSpan leaseDuration,
         int batchSize,
+        int maxAttempts,
         CancellationToken cancellationToken)
     {
         if (leaseDuration <= TimeSpan.Zero)
@@ -30,9 +31,30 @@ public sealed class DurableJobRepository : IDurableJobStore
         if (batchSize <= 0)
             throw new ArgumentOutOfRangeException(nameof(batchSize));
 
+        if (maxAttempts <= 0)
+            throw new ArgumentOutOfRangeException(nameof(maxAttempts));
+
         var now = _clock.UtcNow;
         var leaseOwnerId = Guid.NewGuid();
         var leaseExpiresAt = now.Add(leaseDuration);
+
+        // Um lease expirado sem desfecho registado (processo morto, timeout da
+        // ativação) nunca passa pelo RetryScheduleCalculator. Sem este passo seria
+        // reclamado para sempre.
+        await _db.Database.ExecuteSqlRawAsync(
+            """
+            UPDATE durable_jobs
+            SET status = 'dead_letter',
+                last_error = 'lease_expired_max_attempts',
+                lease_owner_id = NULL,
+                lease_expires_at = NULL,
+                updated_at = @now
+            WHERE status = 'processing'
+                AND lease_expires_at <= @now
+                AND attempts >= @max_attempts
+            """,
+            [new NpgsqlParameter("now", now), new NpgsqlParameter("max_attempts", maxAttempts)],
+            cancellationToken);
 
         const string sql = """
             WITH candidates AS (
@@ -45,6 +67,7 @@ public sealed class DurableJobRepository : IDurableJobStore
                     OR (
                         status = 'processing'
                         AND lease_expires_at <= @now
+                        AND attempts < @max_attempts
                     )
                 ORDER BY COALESCE(next_attempt_at, scheduled_at)
                 LIMIT @batch_size
@@ -70,6 +93,7 @@ public sealed class DurableJobRepository : IDurableJobStore
                 sql,
                 new NpgsqlParameter("now", now),
                 new NpgsqlParameter("batch_size", batchSize),
+                new NpgsqlParameter("max_attempts", maxAttempts),
                 new NpgsqlParameter("lease_owner_id", leaseOwnerId),
                 new NpgsqlParameter("lease_expires_at", leaseExpiresAt))
             .AsNoTracking()

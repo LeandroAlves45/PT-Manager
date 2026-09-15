@@ -132,7 +132,7 @@ public sealed class OutboxClaimConcurrencyTests
         var repository = new OutboxRepository(context, new TestClock(now ?? Now));
 
         return await repository.ClaimPendingAsync(
-            Lease, batchSize, TestContext.Current.CancellationToken);
+            Lease, batchSize, maxAttempts: 5, TestContext.Current.CancellationToken);
     }
 
     private async Task<bool> CompleteAsync(Guid trainerId, Guid messageId, Guid owner)

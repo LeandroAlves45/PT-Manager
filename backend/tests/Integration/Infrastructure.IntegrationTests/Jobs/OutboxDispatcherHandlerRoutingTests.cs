@@ -79,6 +79,58 @@ public sealed class OutboxDispatcherHandlerRoutingTests : IAsyncLifetime
         await AssertPendingAsync(cancellationToken, logo.Id, avatar.Id, orphan.Id);
     }
 
+    /// <summary>
+    /// PTM-SEC-05: o dispatcher liga a política do handler ao validador de tenant.
+    /// Uma notificação de falha de pagamento nasce com a subscrição já suspensa e
+    /// tem de ser entregue; um handler que exige subscrição ativa continua recusado.
+    /// </summary>
+    [Theory]
+    [InlineData(false, 1)]
+    [InlineData(true, 0)]
+    public async Task Dispatch_ForSuspendedTrainer_AppliesTheHandlerSubscriptionPolicy(
+        bool requiresActiveSubscription,
+        int expectedCalls)
+    {
+        var expectedStatus = requiresActiveSubscription
+            ? JobStatus.DeadLetter
+            : JobStatus.Completed;
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var tenant = await _fixture.SeedTenantWithClientAsync(
+            $"dispatch-policy-{Guid.NewGuid():N}", cancellationToken);
+        await using (var tenantContext = _fixture.CreateContext(tenant.TrainerId))
+        {
+            tenantContext.TrainerSubscriptions.Add(
+                new Domain.Entities.Billing.TrainerSubscription(
+                    tenant.TrainerId, Now.AddDays(30), Now));
+            await tenantContext.SaveChangesAsync(cancellationToken);
+        }
+
+        await _fixture.ExecuteSqlAsync(
+            "UPDATE trainer_subscriptions SET subscription_status = 'SUSPENDED' WHERE trainer_id = @trainer_id",
+            cancellationToken,
+            new Npgsql.NpgsqlParameter("trainer_id", tenant.TrainerId));
+
+        var message = new OutboxMessage(
+            tenant.TrainerId,
+            "phase5a_test",
+            "{\"value\":1}",
+            Guid.NewGuid().ToString("N"),
+            Guid.NewGuid(),
+            Now);
+        await SeedAsync(cancellationToken, message);
+
+        var handler = new CompletingOutboxHandler(requiresActiveSubscription);
+        await using var provider = CreateProvider(handler);
+        await CreateDispatcher(provider).DispatchAsync(cancellationToken);
+
+        await using var context = _fixture.CreateAdministrativeContext();
+        var stored = await context.OutboxMessages.SingleAsync(
+            candidate => candidate.Id == message.Id, cancellationToken);
+        Assert.Equal((expectedStatus, expectedCalls), (stored.Status, handler.Calls));
+        if (expectedStatus == JobStatus.DeadLetter)
+            Assert.Equal("outbox_tenant_unavailable", stored.LastError);
+    }
+
     private async Task SeedAsync(
         CancellationToken cancellationToken,
         params OutboxMessage[] messages)
@@ -126,13 +178,21 @@ public sealed class OutboxDispatcherHandlerRoutingTests : IAsyncLifetime
             provider.GetRequiredService<IClock>(),
             provider.GetRequiredService<ILogger<OutboxDispatcher>>());
 
-    private sealed class CompletingOutboxHandler : IOutboxMessageHandler
+    private sealed class CompletingOutboxHandler(bool requiresActiveSubscription = true)
+        : IOutboxMessageHandler
     {
         public string MessageType => "phase5a_test";
 
+        public bool RequiresActiveSubscription => requiresActiveSubscription;
+
+        public int Calls { get; private set; }
+
         public Task<DispatchItemOutcome> HandleAsync(
             OutboxMessageEnvelope message,
-            CancellationToken cancellationToken) =>
-            Task.FromResult(DispatchItemOutcome.Succeeded());
+            CancellationToken cancellationToken)
+        {
+            Calls++;
+            return Task.FromResult(DispatchItemOutcome.Succeeded());
+        }
     }
 }

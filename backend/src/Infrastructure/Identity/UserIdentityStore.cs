@@ -238,7 +238,9 @@ internal sealed class UserIdentityStore :
     /// <inheritdoc/>
     public Task ResetAccessFailedCountAsync(User user, CancellationToken cancellationToken)
     {
-        RequireUser(user).ResetFailedAccess(_clock.UtcNow);
+        // Só o contador: o UserManager chama este método logo depois de definir o
+        // lockout, que tem de sobreviver.
+        RequireUser(user).ResetAccessFailedCount(_clock.UtcNow);
         return Task.CompletedTask;
     }
 

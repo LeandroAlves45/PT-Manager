@@ -41,6 +41,29 @@ public sealed class UserTests
         Assert.False(user.EmailConfirmed);
     }
 
+    /// <summary>
+    /// PTM-SEC-18: o UserManager define o lockout e chama o reset do contador logo a
+    /// seguir. O reset não pode apagar o bloqueio acabado de definir.
+    /// </summary>
+    [Fact]
+    public void ResetAccessFailedCount_LockedUser_ClearsCounterAndPreservesLockoutEnd()
+    {
+        // Arrange
+        var now = new DateTime(2026, 9, 14, 12, 0, 0, DateTimeKind.Utc);
+        var user = new User(new EmailAddress("john@example.com"), "trainer", "John Doe", now);
+        user.RegisterFailedAccess(now);
+        user.RegisterFailedAccess(now);
+        var lockoutEnd = now.AddMinutes(15);
+        user.SetLockoutEnd(lockoutEnd, now);
+
+        // Act
+        user.ResetAccessFailedCount(now.AddSeconds(1));
+
+        // Assert
+        Assert.Equal(0, user.AccessFailedCount);
+        Assert.Equal(lockoutEnd, user.LockoutEnd);
+    }
+
     [Fact]
     public void SetEmail_DeletedUser_ThrowsDomainException()
     {

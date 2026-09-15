@@ -577,6 +577,43 @@ public sealed class GoogleAuthControllerTests : IAsyncLifetime
         await AssertNoIdentityAsync(trainer.UserId);
     }
 
+    /// <summary>PTM-SEC-04: a password errada no link conta para o lockout, como no login.</summary>
+    [Fact]
+    public async Task Link_WithWrongPassword_CountsTowardsLockout()
+    {
+        var trainer = await SeedPasswordTrainerAsync("google-link-lockout");
+        var client = AuthenticatedTrainer(trainer.UserId);
+        var nonce = await IssueLinkChallengeAsync(client);
+        _verifier.Result = Verified($"sub-{Guid.NewGuid():N}", trainer.Email);
+
+        var response = await PostLinkAsync(client, nonce, "Wrong-Password-9!");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(1, await ReadAccessFailedCountAsync(trainer.UserId));
+    }
+
+    /// <summary>
+    /// PTM-SEC-04: o email é validado antes da password. Um atacante com a sua própria
+    /// conta Google deixa de conseguir distinguir "password errada" de "email
+    /// diferente", e o pedido não gasta tentativas de lockout da vítima.
+    /// </summary>
+    [Fact]
+    public async Task Link_WithDifferentEmailAndWrongPassword_ReportsEmailMismatchWithoutCountingFailure()
+    {
+        var trainer = await SeedPasswordTrainerAsync("google-link-order");
+        var client = AuthenticatedTrainer(trainer.UserId);
+        var nonce = await IssueLinkChallengeAsync(client);
+        _verifier.Result = Verified(
+            $"sub-{Guid.NewGuid():N}", $"different-{Guid.NewGuid():N}@gmail.com");
+
+        var response = await PostLinkAsync(client, nonce, "Wrong-Password-9!");
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var body = await ReadJsonAsync(response);
+        Assert.Equal("google_link_email_mismatch", body.GetProperty("title").GetString());
+        Assert.Equal(0, await ReadAccessFailedCountAsync(trainer.UserId));
+    }
+
     [Fact]
     public async Task Link_WithChallengeIssuedForAnotherUser_IsRejected()
     {
@@ -832,6 +869,18 @@ public sealed class GoogleAuthControllerTests : IAsyncLifetime
 
         return new InvitationSeed(
             trainer.TrainerId, invitation.Id, email, generated.RawToken);
+    }
+
+    private async Task<int> ReadAccessFailedCountAsync(Guid userId)
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<PtManagerDbContext>();
+        return await context.Users
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(user => user.Id == userId)
+            .Select(user => user.AccessFailedCount)
+            .SingleAsync(TestContext.Current.CancellationToken);
     }
 
     private static async Task<JsonElement> ReadJsonAsync(HttpResponseMessage response) =>

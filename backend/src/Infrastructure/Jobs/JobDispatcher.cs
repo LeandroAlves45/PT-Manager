@@ -61,6 +61,7 @@ internal sealed class JobDispatcher
         return await store.ClaimDueJobsAsync(
             _options.LeaseDuration,
             claimSize,
+            _options.MaxAttempts,
             cancellationToken);
     }
 

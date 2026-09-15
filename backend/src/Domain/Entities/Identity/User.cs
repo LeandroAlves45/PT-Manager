@@ -10,12 +10,7 @@ public sealed class User
 {
     public Guid Id { get; private set; }
     public string Email { get; private set; } = null!;
-
-    /// <summary>Email normalizado (uppercase invariante) para lookups do Identity.</summary>
     public string NormalizedEmail { get; private set; } = null!;
-    /// <summary>Hash da password, gerido por PasswordHasher&lt;User&gt; (nunca em claro).
-    /// Nullable para validar se vai fazer INSERT com hash
-    /// </summary>
     public string? PasswordHash { get; private set; }
 
     /// <summary>
@@ -102,12 +97,14 @@ public sealed class User
         UpdatedAt = now;
     }
 
-    /// <summary>Repõe o contador de tentativas falhadas (após login bem sucedido).</summary>
-    public void ResetFailedAccess(DateTime now)
+    /// <summary>
+    /// Repõe apenas o contador de tentativas falhadas, como exige o contrato de
+    /// <c>IUserLockoutStore.ResetAccessFailedCountAsync</c>.
+    /// </summary>
+    public void ResetAccessFailedCount(DateTime now)
     {
         EnsureNotDeleted();
         AccessFailedCount = 0;
-        LockoutEnd = null;
         UpdatedAt = now;
     }
 

@@ -65,8 +65,8 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
 
         // Act
         var results = await Task.WhenAll(
-            workerA.ClaimPendingAsync(TimeSpan.FromMinutes(5), 2, cancellationToken),
-            workerB.ClaimPendingAsync(TimeSpan.FromMinutes(5), 2, cancellationToken));
+            workerA.ClaimPendingAsync(TimeSpan.FromMinutes(5), 2, maxAttempts: 5, cancellationToken),
+            workerB.ClaimPendingAsync(TimeSpan.FromMinutes(5), 2, maxAttempts: 5, cancellationToken));
         var overlapCount = results[0].Select(message => message.Id)
             .Intersect(results[1].Select(message => message.Id))
             .Count();
@@ -86,7 +86,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
 
         await using var firstContext = _fixture.CreateAdministrativeContext();
         var firstWorker = new OutboxRepository(firstContext, clock);
-        await firstWorker.ClaimPendingAsync(TimeSpan.FromMinutes(5), 1, cancellationToken);
+        await firstWorker.ClaimPendingAsync(TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken);
         clock.Advance(TimeSpan.FromMinutes(6));
 
         await using var secondContext = _fixture.CreateAdministrativeContext();
@@ -94,7 +94,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
 
         // Act
         var reclaimed = await secondWorker.ClaimPendingAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken);
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken);
 
         // Assert
         Assert.Equal(message.Id, Assert.Single(reclaimed).Id);
@@ -112,7 +112,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
         await using var context = _fixture.CreateAdministrativeContext();
         var repository = new OutboxRepository(context, clock);
         var claimed = Assert.Single(await repository.ClaimPendingAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken));
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken));
 
         // Act
         var completed = await repository.TryCompleteAsync(
@@ -139,7 +139,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
         await using var context = _fixture.CreateAdministrativeContext();
         var repository = new OutboxRepository(context, clock);
         var claimed = Assert.Single(await repository.ClaimPendingAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken));
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken));
         clock.Advance(TimeSpan.FromMinutes(6));
 
         // Act
@@ -162,7 +162,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
         await using var context = _fixture.CreateAdministrativeContext();
         var repository = new OutboxRepository(context, new TestClock(Now));
         var claimed = Assert.Single(await repository.ClaimPendingAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken));
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken));
 
         // Act
         var completed = await repository.TryCompleteAsync(
@@ -188,7 +188,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
         await using var context = _fixture.CreateAdministrativeContext();
         var repository = new OutboxRepository(context, clock);
         var claimed = Assert.Single(await repository.ClaimPendingAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken));
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken));
 
         var recorded = await repository.TryRecordFailureAsync(
             claimed.Id,
@@ -242,7 +242,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
 
         // Act
         var claimed = await repository.ClaimPendingAsync(
-            TimeSpan.FromMinutes(5), 10, cancellationToken);
+            TimeSpan.FromMinutes(5), 10, maxAttempts: 5, cancellationToken);
 
         // Assert
         Assert.Equal(due.Id, Assert.Single(claimed).Id);
@@ -263,7 +263,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
 
         // Act
         var claimed = await repository.ClaimPendingAsync(
-            TimeSpan.FromMinutes(5), 2, cancellationToken);
+            TimeSpan.FromMinutes(5), 2, maxAttempts: 5, cancellationToken);
 
         // Assert
         Assert.Equal(2, claimed.Count);
@@ -281,7 +281,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
         await using var context = _fixture.CreateAdministrativeContext();
         var repository = new OutboxRepository(context, clock);
         var claimed = Assert.Single(await repository.ClaimPendingAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken));
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken));
         clock.Advance(TimeSpan.FromMinutes(1));
 
         // Act
@@ -309,7 +309,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
         await using var context = _fixture.CreateAdministrativeContext();
         var repository = new OutboxRepository(context, clock);
         var claimed = Assert.Single(await repository.ClaimPendingAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken));
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken));
         clock.Advance(TimeSpan.FromMinutes(6));
 
         // Act
@@ -335,7 +335,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
         await using var context = _fixture.CreateAdministrativeContext();
         var repository = new OutboxRepository(context, clock);
         var claimed = Assert.Single(await repository.ClaimPendingAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken));
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken));
         clock.Advance(TimeSpan.FromMinutes(6));
 
         // Act
@@ -364,7 +364,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
         await using var context = _fixture.CreateAdministrativeContext();
         var repository = new OutboxRepository(context, new TestClock(Now));
         var claimed = Assert.Single(await repository.ClaimPendingAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken));
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken));
 
         // Act
         var action = () => repository.TryRecordFailureAsync(
@@ -389,7 +389,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
         await using var context = _fixture.CreateAdministrativeContext();
         var repository = new OutboxRepository(context, new TestClock(Now));
         var claimed = Assert.Single(await repository.ClaimPendingAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken));
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken));
 
         // Act
         var recorded = await repository.TryRecordFailureAsync(
@@ -413,7 +413,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
         await using var context = _fixture.CreateAdministrativeContext();
         var repository = new OutboxRepository(context, new TestClock(Now));
         var claimed = Assert.Single(await repository.ClaimPendingAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken));
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken));
 
         // Act
         var renewed = await repository.TryRenewLeaseAsync(
@@ -434,7 +434,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
         await using var context = _fixture.CreateAdministrativeContext();
         var repository = new OutboxRepository(context, clock);
         var claimed = Assert.Single(await repository.ClaimPendingAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken));
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken));
         var nextAttemptAt = Now.AddMinutes(10);
         await repository.TryRecordFailureAsync(
             claimed.Id,
@@ -445,10 +445,10 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
 
         // Act
         var beforeSchedule = await repository.ClaimPendingAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken);
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken);
         clock.Set(nextAttemptAt);
         var atSchedule = await repository.ClaimPendingAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken);
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken);
 
         // Assert
         Assert.Equal(
@@ -470,6 +470,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
         var claimed = await repository.ClaimPendingAsync(
             TimeSpan.FromMinutes(5),
             10,
+            maxAttempts: 5,
             cancellationToken,
             []);
 
@@ -494,6 +495,7 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
         var claimed = await repository.ClaimPendingAsync(
             TimeSpan.FromMinutes(5),
             10,
+            maxAttempts: 5,
             cancellationToken,
             ["phase5a_test"]);
 
@@ -504,6 +506,68 @@ public sealed class OutboxRepositoryTests : IAsyncLifetime
             .ToListAsync(cancellationToken);
         Assert.Equal(2, excluded.Count);
         Assert.All(excluded, message => Assert.Equal(JobStatus.Pending, message.Status));
+    }
+
+    /// <summary>
+    /// PTM-SEC-06: um lease que expira sem desfecho (processo morto, timeout da
+    /// ativação) não passa pelo RetryScheduleCalculator. O teto tem de ser aplicado
+    /// no próprio claim, senão a mensagem é reclamada para sempre.
+    /// </summary>
+    [Fact]
+    public async Task ClaimPendingAsync_WhenExpiredLeaseReachedMaxAttempts_DeadLettersInsteadOfReclaiming()
+    {
+        // Arrange
+        const int maxAttempts = 5;
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var message = IntegrationTestData.Message(Now.AddMinutes(-1));
+        await SeedAsync(cancellationToken, message);
+        var clock = new TestClock(Now);
+
+        await using var context = _fixture.CreateAdministrativeContext();
+        var repository = new OutboxRepository(context, clock);
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            Assert.Single(await repository.ClaimPendingAsync(
+                TimeSpan.FromMinutes(1), 1, maxAttempts, cancellationToken));
+            clock.Advance(TimeSpan.FromMinutes(2));
+        }
+
+        // Act
+        var claimed = await repository.ClaimPendingAsync(
+            TimeSpan.FromMinutes(1), 1, maxAttempts, cancellationToken);
+        context.ChangeTracker.Clear();
+        var stored = await context.OutboxMessages
+            .SingleAsync(value => value.Id == message.Id, cancellationToken);
+
+        // Assert
+        Assert.Empty(claimed);
+        Assert.Equal(
+            (JobStatus.DeadLetter, "lease_expired_max_attempts", maxAttempts, (Guid?)null, (DateTime?)null),
+            (stored.Status, stored.LastError, stored.Attempts, stored.LeaseOwnerId, stored.LeaseExpiresAt));
+    }
+
+    [Fact]
+    public async Task ClaimPendingAsync_WhenLeaseOfExhaustedMessageIsStillValid_LeavesItProcessing()
+    {
+        // Arrange
+        const int maxAttempts = 1;
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var message = IntegrationTestData.Message(Now.AddMinutes(-1));
+        await SeedAsync(cancellationToken, message);
+
+        await using var context = _fixture.CreateAdministrativeContext();
+        var repository = new OutboxRepository(context, new TestClock(Now));
+        Assert.Single(await repository.ClaimPendingAsync(
+            TimeSpan.FromMinutes(5), 1, maxAttempts, cancellationToken));
+
+        // Act: o worker ainda detém o lease; o teto não pode interromper trabalho vivo.
+        await repository.ClaimPendingAsync(TimeSpan.FromMinutes(5), 1, maxAttempts, cancellationToken);
+        context.ChangeTracker.Clear();
+        var stored = await context.OutboxMessages
+            .SingleAsync(value => value.Id == message.Id, cancellationToken);
+
+        // Assert
+        Assert.Equal(JobStatus.Processing, stored.Status);
     }
 
     private async Task SeedAsync(

@@ -12,8 +12,10 @@ public static class ImageProfiles
         Name: "trainer_logo",
         MaxBytes: 5L * 1024 * 1024,
         MinDimension: 64,
-        MaxDimension: 6000,
-        MaxPixels: 30_000_000,
+        // A saída é ≤ 512 px: 12 MP chegam para qualquer fotografia de telemóvel
+        // e limitam o bitmap RGBA de decode a ~46 MiB por pedido.
+        MaxDimension: 4096,
+        MaxPixels: 12_000_000,
         OutputMaxDimension: 512,
         OutputContentType: "image/webp",
         OutputQuality: 90,
@@ -27,8 +29,8 @@ public static class ImageProfiles
         Name: "client_avatar",
         MaxBytes: 4L * 1024 * 1024,
         MinDimension: 64,
-        MaxDimension: 6000,
-        MaxPixels: 30_000_000,
+        MaxDimension: 4096,
+        MaxPixels: 12_000_000,
         OutputMaxDimension: 512,
         OutputContentType: "image/webp",
         OutputQuality: 82,

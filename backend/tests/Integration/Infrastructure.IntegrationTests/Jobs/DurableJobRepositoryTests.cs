@@ -45,6 +45,7 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         var claimed = await reposisotory.ClaimDueJobsAsync(
             TimeSpan.FromMinutes(5),
             10,
+            maxAttempts: 5,
             cancellationToken);
 
         // Assert
@@ -69,6 +70,7 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         var claimed = await reposisotory.ClaimDueJobsAsync(
             TimeSpan.FromMinutes(5),
             2,
+            maxAttempts: 5,
             cancellationToken);
 
         // Assert
@@ -94,8 +96,8 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
 
         // Act
         var results = await Task.WhenAll(
-            workerA.ClaimDueJobsAsync(TimeSpan.FromMinutes(5), 2, cancellationToken),
-            workerB.ClaimDueJobsAsync(TimeSpan.FromMinutes(5), 2, cancellationToken));
+            workerA.ClaimDueJobsAsync(TimeSpan.FromMinutes(5), 2, maxAttempts: 5, cancellationToken),
+            workerB.ClaimDueJobsAsync(TimeSpan.FromMinutes(5), 2, maxAttempts: 5, cancellationToken));
         var overlapCount = results[0].Select(job => job.Id)
             .Intersect(results[1].Select(job => job.Id))
             .Count();
@@ -116,7 +118,7 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         await using var firstContext = _fixture.CreateAdministrativeContext();
         var firstWorker = new DurableJobRepository(firstContext, clock);
         var firstClaim = Assert.Single(await firstWorker.ClaimDueJobsAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken));
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken));
         clock.Advance(TimeSpan.FromMinutes(6));
 
         await using var secondContext = _fixture.CreateAdministrativeContext();
@@ -124,7 +126,7 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
 
         // Act
         var secondClaim = Assert.Single(await secondWorker.ClaimDueJobsAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken));
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken));
 
         // Assert
         Assert.Equal(
@@ -152,6 +154,7 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         var claimed = await reposisotory.ClaimDueJobsAsync(
             TimeSpan.FromMinutes(5),
             2,
+            maxAttempts: 5,
             cancellationToken);
 
         // Assert
@@ -172,6 +175,7 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         var claimed = Assert.Single(await repository.ClaimDueJobsAsync(
             TimeSpan.FromMinutes(5),
             1,
+            maxAttempts: 5,
             cancellationToken));
         var nextAttemptAt = Now.AddMinutes(10);
         await repository.TryRecordFailureAsync(
@@ -185,11 +189,13 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         var beforeScheduled = await repository.ClaimDueJobsAsync(
             TimeSpan.FromMinutes(5),
             1,
+            maxAttempts: 5,
             cancellationToken);
         clock.Advance(TimeSpan.FromMinutes(10));
         var atScheduled = await repository.ClaimDueJobsAsync(
             TimeSpan.FromMinutes(5),
             1,
+            maxAttempts: 5,
             cancellationToken);
 
         // Assert
@@ -210,6 +216,7 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         var claimed = Assert.Single(await repository.ClaimDueJobsAsync(
             TimeSpan.FromMinutes(5),
             1,
+            maxAttempts: 5,
             cancellationToken));
 
         // Act
@@ -239,6 +246,7 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         var claimed = Assert.Single(await repository.ClaimDueJobsAsync(
             TimeSpan.FromMinutes(5),
             1,
+            maxAttempts: 5,
             cancellationToken));
         clock.Advance(TimeSpan.FromMinutes(6));
 
@@ -261,7 +269,7 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         await using var context = _fixture.CreateAdministrativeContext();
         var repository = new DurableJobRepository(context, new TestClock(Now));
         var claimed = Assert.Single(await repository.ClaimDueJobsAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken));
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken));
 
         // Act
         var completed = await repository.TryCompleteAsync(
@@ -285,6 +293,7 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         var claimed = Assert.Single(await repository.ClaimDueJobsAsync(
             TimeSpan.FromMinutes(5),
             1,
+            maxAttempts: 5,
             cancellationToken));
         var nextAttemptAt = Now.AddMinutes(10);
 
@@ -319,6 +328,7 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         var claimed = Assert.Single(await repository.ClaimDueJobsAsync(
             TimeSpan.FromMinutes(5),
             1,
+            maxAttempts: 5,
             cancellationToken));
 
         // Act
@@ -352,7 +362,7 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         await using var context = _fixture.CreateAdministrativeContext();
         var repository = new DurableJobRepository(context, new TestClock(Now));
         var claimed = Assert.Single(await repository.ClaimDueJobsAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken));
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken));
 
         // Act
         var action = () => repository.TryRecordFailureAsync(
@@ -378,7 +388,7 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         await using var context = _fixture.CreateAdministrativeContext();
         var repository = new DurableJobRepository(context, clock);
         var claimed = Assert.Single(await repository.ClaimDueJobsAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken));
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken));
         clock.Advance(TimeSpan.FromMinutes(6));
 
         // Act
@@ -404,7 +414,7 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         await using var context = _fixture.CreateAdministrativeContext();
         var repository = new DurableJobRepository(context, new TestClock(Now));
         var claimed = Assert.Single(await repository.ClaimDueJobsAsync(
-            TimeSpan.FromMinutes(5), 1, cancellationToken));
+            TimeSpan.FromMinutes(5), 1, maxAttempts: 5, cancellationToken));
 
         // Act
         var recorded = await repository.TryRecordFailureAsync(
@@ -432,6 +442,7 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         var claimed = Assert.Single(await repository.ClaimDueJobsAsync(
             TimeSpan.FromMinutes(5),
             1,
+            maxAttempts: 5,
             cancellationToken));
 
         // Act
@@ -461,6 +472,7 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         var claimed = Assert.Single(await repository.ClaimDueJobsAsync(
             TimeSpan.FromMinutes(5),
             1,
+            maxAttempts: 5,
             cancellationToken));
         clock.Advance(TimeSpan.FromMinutes(6));
 
@@ -484,6 +496,7 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         var claimed = Assert.Single(await repository.ClaimDueJobsAsync(
             TimeSpan.FromMinutes(5),
             1,
+            maxAttempts: 5,
             cancellationToken));
 
         // Act
@@ -515,6 +528,43 @@ public sealed class DurableJobRepositoryTests : IAsyncLifetime
         Assert.Equal(
             (PostgresErrorCodes.UniqueViolation, "unique_idempotency_key"),
             (postgres.SqlState, postgres.ConstraintName));
+    }
+
+    /// <summary>
+    /// PTM-SEC-06: um lease que expira sem desfecho não passa pelo
+    /// RetryScheduleCalculator; o teto tem de ser aplicado no claim.
+    /// </summary>
+    [Fact]
+    public async Task ClaimDueJobsAsync_WhenExpiredLeaseReachedMaxAttempts_DeadLettersInsteadOfReclaiming()
+    {
+        // Arrange
+        const int maxAttempts = 5;
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var job = IntegrationTestData.Job(Now.AddMinutes(-1), Now);
+        await SeedAsync(cancellationToken, job);
+        var clock = new TestClock(Now);
+
+        await using var context = _fixture.CreateAdministrativeContext();
+        var repository = new DurableJobRepository(context, clock);
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            Assert.Single(await repository.ClaimDueJobsAsync(
+                TimeSpan.FromMinutes(1), 1, maxAttempts, cancellationToken));
+            clock.Advance(TimeSpan.FromMinutes(2));
+        }
+
+        // Act
+        var claimed = await repository.ClaimDueJobsAsync(
+            TimeSpan.FromMinutes(1), 1, maxAttempts, cancellationToken);
+        context.ChangeTracker.Clear();
+        var stored = await context.DurableJobs
+            .SingleAsync(value => value.Id == job.Id, cancellationToken);
+
+        // Assert
+        Assert.Empty(claimed);
+        Assert.Equal(
+            (JobStatus.DeadLetter, "lease_expired_max_attempts", maxAttempts, (Guid?)null, (DateTime?)null),
+            (stored.Status, stored.LastError, stored.Attempts, stored.LeaseOwnerId, stored.LeaseExpiresAt));
     }
 
     private async Task SeedAsync(

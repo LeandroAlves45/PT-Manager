@@ -13,9 +13,17 @@ internal sealed class JobTenantValidator
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 
     /// <summary>Confirma que o personal trainer pode executar trabalho de tenant-safe.</summary>
+    /// <param name="trainerId">Tenant persistido no item.</param>
+    /// <param name="cancellationToken">Token de cancelamento.</param>
+    /// <param name="requireActiveSubscription">
+    /// Quando false, basta um personal trainer ativo com subscrição em qualquer estado. É o caso
+    /// dos avisos de falha de pagamento e de cancelamento e da limpeza de media, que
+    /// existem precisamente quando a subscrição deixou de estar ativa.
+    /// </param>
     public async Task<bool> IsAvailableAsync(
         Guid? trainerId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool requireActiveSubscription = true)
     {
         if (!trainerId.HasValue || trainerId.Value == Guid.Empty)
             return false;
@@ -38,7 +46,8 @@ internal sealed class JobTenantValidator
                     subscription => subscription.TrainerId,
                     (_, subscription) => subscription)
             .AnyAsync(
-                subscription => subscription.Status == SubscriptionStatus.Active,
+                subscription => !requireActiveSubscription ||
+                    subscription.Status == SubscriptionStatus.Active,
                 cancellationToken);
 
     }

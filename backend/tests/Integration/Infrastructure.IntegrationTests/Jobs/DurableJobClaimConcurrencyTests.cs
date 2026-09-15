@@ -205,7 +205,7 @@ public sealed class DurableJobClaimConcurrencyTests
         var repository = new DurableJobRepository(context, new TestClock(now ?? Now));
 
         return await repository.ClaimDueJobsAsync(
-            Lease, batchSize, TestContext.Current.CancellationToken);
+            Lease, batchSize, maxAttempts: 5, TestContext.Current.CancellationToken);
     }
 
     private async Task<bool> RenewAsync(

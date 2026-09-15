@@ -6,12 +6,12 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
-**Estado ativo:** ler primeiro `.claude/memory/ACTIVE.md`. **Sprint 5A e 5B fechadas
-(5B só aguarda secrets Stripe). Sprint 5C finalizada em 2026-09-12, incluindo a
-migration local e os preflights operacionais; faltam apenas os User Secrets de
-Cloudinary e Vision antes da ativação.** `QStash:Enabled` permanece `false`.
-Ver `Sessions/2026-09-12-sprint5c-review-validacao.md` e
-`docs/backend-files/sprint_5/sprint_5C/15_revisao_validacao_implementacao.md`.
+**Estado ativo:** ler primeiro `.claude/memory/ACTIVE.md`. **Sprint 5A, 5B e 5C
+fechadas no backend (5B aguarda Stripe; 5C aguarda User Secrets Cloudinary/Vision).
+Sprint 5D planeada em 2026-09-13: pack 00–13 e Sprint Pack prontos; `backend/`
+real intocado; materialização em `C:\ptm5d`.** `QStash:Enabled` permanece `false`.
+Ver `Sessions/2026-09-13-sprint5d-planeamento-blueprints.md` e
+`docs/backend-files/sprint_5/sprint_5D/00_desenho_aprovado_indice_dependencias_gates.md`.
 
 ## Estado atual
 
@@ -325,6 +325,15 @@ alegações anteriores desatualizadas está em
   Os 97 ficheiros alvo foram validados numa cópia temporária com restore locked,
   build, 2151 testes, EF e ciclo PostgreSQL 17; o backend real não foi alterado.
   Ver `Sessions/2026-09-08-sprint5b-planeamento.md`.
+- Sprint 5C fechada no backend em 2026-09-12 (2348 testes, migration
+  `20260912145051_AddManagedImageAssets`). Falta `QG5C-PROVIDER-001`.
+  Ver `Sessions/2026-09-12-sprint5c-review-validacao.md`.
+- Sprint 5D planeada em 2026-09-13: vídeo privado via Cloudflare R2, tabela
+  `exercise_videos`, probe ISO BMFF, jobs de plataforma. Quatro defeitos da
+  primeira extração corrigidos (Content-Type, rate limit no complete,
+  interceptor Deleted/`Remove`, `AbandonmentGrace` ≥ 1 h). Pack em
+  `docs/backend-files/sprint_5/sprint_5D/`. Cópia `C:\ptm5d` não recriar.
+  Ver `Sessions/2026-09-13-sprint5d-planeamento-blueprints.md`.
 
 ## Padrões documentais
 

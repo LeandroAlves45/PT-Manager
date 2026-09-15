@@ -98,6 +98,12 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 case Supplement:
                     ValidateCatalogOwnership(entry, context, ref tenantId);
                     break;
+
+                // Vídeos geridos: owner nulo é conteúdo global, criado por uma
+                // operação administrativa e transitado por jobs de plataforma.
+                case ExerciseVideo:
+                    ValidateExerciseVideoOwnership(entry, context, ref tenantId);
+                    break;
             }
         }
 
@@ -602,6 +608,43 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
 
         if (currentValue != tenantId)
             throw new DomainException("Cannot write a private catalog item for another tenant.");
+    }
+
+    /// <summary>
+    /// Valida o owner de um vídeo gerido. A criação global exige contexto
+    /// administrativo; um job de plataforma sem tenant só pode alterar vídeos
+    /// globais existentes. Um vídeo privado pertence sempre ao tenant efetivo.
+    /// </summary>
+    private void ValidateExerciseVideoOwnership(
+        Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry,
+        PtManagerDbContext context,
+        ref Guid? tenantId)
+    {
+        var property = entry.Property(nameof(ExerciseVideo.OwnerTrainerId));
+        var owner = entry.State == EntityState.Deleted
+            ? (Guid?)property.OriginalValue
+            : (Guid?)property.CurrentValue;
+
+        if (entry.State == EntityState.Modified && (Guid?)property.OriginalValue != owner)
+            throw new DomainException("Exercise video ownership cannot be changed.");
+
+        if (!owner.HasValue)
+        {
+            var platformJob = entry.State is EntityState.Modified or EntityState.Deleted &&
+                _tenantContext.Origin == TenantOrigin.System &&
+                !_tenantContext.TrainerId.HasValue;
+
+            if (!_tenantContext.IsAdministrative && !platformJob)
+                throw new DomainException(
+                    "Only an administrative operation or a platform job can write global exercise videos.");
+
+            return;
+        }
+
+        tenantId ??= context.RequireTenant();
+
+        if (owner != tenantId)
+            throw new DomainException("Cannot write an exercise video for another tenant.");
     }
 
     private void ValidateAdministrativeAuditEntries(PtManagerDbContext context)

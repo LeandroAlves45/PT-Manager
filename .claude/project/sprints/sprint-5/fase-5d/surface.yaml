@@ -1,0 +1,42 @@
+sprint: 5
+fase: 5D
+commit_baseline: 830cf6c
+materializacao: C:\ptm5d
+docs: docs/backend-files/sprint_5/sprint_5D
+alvos: 90
+paths:
+  domain:
+    - backend/src/Domain/Entities/Training/ExerciseVideo.cs
+    - backend/src/Domain/ValueObjects/ExerciseVideoStatus.cs
+  application:
+    - backend/src/Application/Features/Training/ExerciseVideos/
+  infrastructure:
+    - backend/src/Infrastructure/Persistence/Training/ExerciseVideoStore.cs
+    - backend/src/Infrastructure/Persistence/Training/ExerciseVideoProcessingStore.cs
+    - backend/src/Infrastructure/Persistence/Training/ExerciseVideoQueries.cs
+    - backend/src/Infrastructure/Persistence/Training/ExerciseVideoLocking.cs
+    - backend/src/Infrastructure/Data/Configurations/Training/ExerciseVideoConfiguration.cs
+    - backend/src/Infrastructure/Data/Interceptors/TenantWriteValidationInterceptor.cs
+    - backend/src/Infrastructure/Media/Video/
+    - backend/src/Infrastructure/Jobs/
+  api:
+    - backend/src/Api/Controllers/ManagedExerciseVideoControllerBase.cs
+    - backend/src/Api/Controllers/ExerciseVideosController.cs
+    - backend/src/Api/Controllers/GlobalExerciseVideosController.cs
+    - backend/src/Api/Controllers/AdminExerciseVideosController.cs
+    - backend/src/Api/Controllers/PortalExerciseVideosController.cs
+    - backend/src/Api/Contracts/Training/ExerciseVideoContracts.cs
+    - backend/src/Api/Configuration/ApiRateLimiting.cs
+  testes:
+    - backend/tests/ArchitectureTests/VideoArchitectureTests.cs
+    - backend/tests/Unit/Domain.UnitTests/Entities/Training/ExerciseVideoTests.cs
+    - backend/tests/Unit/Application.UnitTests/Features/Training/ExerciseVideos/
+    - backend/tests/Integration/Infrastructure.IntegrationTests/Media/Video/
+    - backend/tests/Integration/Infrastructure.IntegrationTests/Training/ExerciseVideoStoreTests.cs
+    - backend/tests/Integration/Infrastructure.IntegrationTests/Training/ExerciseVideoProcessingStoreTests.cs
+    - backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/ExerciseVideosControllerTests.cs
+nao_explorar:
+  - backend/ (fora dos paths acima)
+  - backend-python/
+  - graphify-out/
+  - docs/backend-files/ (excepto sprint_5/sprint_5D)

@@ -13,6 +13,13 @@ namespace Infrastructure.Media.Imaging;
 /// </remarks>
 internal sealed class SkiaImageProcessor : IImageProcessor
 {
+    /// <summary>
+    /// O decode aloca um bitmap de resolução total fora do heap gerido. O rate limit
+    /// por conta não impede pedidos simultâneos, e uma instância pequena não
+    /// suporta muitos bitmaps em paralelo.
+    /// </summary>
+    private static readonly SemaphoreSlim DecodeGate = new(initialCount: 2, maxCount: 2);
+
     public async Task<ImageProcessingResult> NormalizeAsync(
         MediaUpload upload,
         ImageProfile profile,
@@ -31,9 +38,15 @@ internal sealed class SkiaImageProcessor : IImageProcessor
         if (bytes.Length == 0)
             return ImageProcessingResult.Invalid(ImageValidationFailure.Empty);
 
-        cancellationToken.ThrowIfCancellationRequested();
-
-        return Normalize(bytes, upload.ContentType, profile);
+        await DecodeGate.WaitAsync(cancellationToken);
+        try
+        {
+            return Normalize(bytes, upload.ContentType, profile);
+        }
+        finally
+        {
+            DecodeGate.Release();
+        }
     }
 
     private static ImageProcessingResult Normalize(

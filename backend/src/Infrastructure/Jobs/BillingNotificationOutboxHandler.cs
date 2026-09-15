@@ -34,6 +34,12 @@ internal sealed class BillingNotificationOutboxHandler : IOutboxMessageHandler
 
     public string MessageType => "billing_notification";
 
+    /// <summary>
+    /// Os avisos de falha de pagamento e de cancelamento nascem precisamente quando a
+    /// subscrição deixa de estar ativa.
+    /// </summary>
+    public bool RequiresActiveSubscription => false;
+
     public async Task<DispatchItemOutcome> HandleAsync(
         OutboxMessageEnvelope message,
         CancellationToken cancellationToken)
