@@ -1,6 +1,9 @@
 # Design System e Marca
 
-*2026-09-15 — proposta base; tokens finais validados na Fase 6A com os assets do Codex.*
+*2026-09-15 — proposta base; tokens finais validados na Fase 6C com os assets do Codex.*
+*2026-09-16 — alinhado com o layout aprovado no Claude Design (ver
+[layout/06_ESTADOS_E_TOKENS.md](layout/06_ESTADOS_E_TOKENS.md)); os tokens de cor do
+design coincidem com a tabela da §4.*
 
 ## 1. Direção visual
 
@@ -52,7 +55,7 @@ como cor de texto sobre fundo claro.
 ## 4. Tokens (proposta)
 
 Definidos em `src/shared/styles/globals.css` com o padrão shadcn (`:root` + `.dark`,
-expostos via `@theme inline`). Valores em hex por legibilidade; a 6A pode converter para
+expostos via `@theme inline`). Valores em hex por legibilidade; a 6C pode converter para
 `oklch` mantendo os rácios acima.
 
 | Token | Light | Dark |
@@ -77,7 +80,7 @@ expostos via `@theme inline`). Valores em hex por legibilidade; a 6A pode conver
 | `--info` | `#0077B6` | `#38BDF8` |
 | `--radius` | `0.75rem` | `0.75rem` |
 
-Cada par cor/foreground novo é validado com cálculo de contraste na 6A (script no repo).
+Cada par cor/foreground novo é validado com cálculo de contraste na 6C (script no repo).
 
 Efeitos:
 
@@ -85,27 +88,28 @@ Efeitos:
 - **Glass (topbar, command menu, sheets):** fundo `color-mix(in oklab, var(--card) 72%, transparent)` + `backdrop-blur-md` + borda `--border`. Nunca em tabelas ou formulários longos.
 - **Gradiente de marca:** apenas em hero de dashboard e empty states, de `--primary` para transparente, opacidade baixa.
 
-## 5. Tipografia (proposta a validar)
+## 5. Tipografia (adoptada do layout; validar legibilidade na 6C)
 
-| Papel | Fonte sugerida | Porquê |
+| Papel | Fonte | Uso no layout |
 |---|---|---|
-| Display (títulos, KPIs, marca) | **Saira** ou **Barlow Semi Condensed**, itálico 700–800 | Ecoa o itálico condensado do logo |
-| UI e texto | **Inter** ou **Geist** | Legibilidade em tabelas e formulários |
-| Números tabulares | UI com `font-variant-numeric: tabular-nums` | Colunas alinhadas |
+| Display (títulos, KPIs, marca) | **Saira Condensed** 900 itálico | KPI 56, título de página 36–40, secção/sheet 22 |
+| UI e texto | **Geist** 400/600 | Corpo 14 (UI), corpo forte 16 |
+| Mono e números | **Geist Mono**, `tabular-nums` | 12 — ids, metadados, kcal, kg, correlation id |
 
 Self-host com `@fontsource` ou ficheiros locais (`font-display: swap`), sem pedidos a CDNs
-de terceiros. Escolha final depois de ver o logo SVG final.
+de terceiros.
 
-Escala: 12 · 14 · 16 (base) · 18 · 20 · 24 · 30 · 36 · 48.
+Escala: 12 · 14 · 16 (base) · 22 · 36 · 40 · 56. Títulos display em maiúsculas só em
+títulos de página e de sheet; nunca em texto corrido.
 
 ## 6. Componentes-chave
 
 | Componente | Base shadcn | Comportamento |
 |---|---|---|
-| **AppShell** | `sidebar` | Sidebar recolhível (monograma "PT" quando recolhida), `Sheet` em mobile |
-| **Topbar** | — | Breadcrumbs, botão ⌘K, toggle de tema, menu do utilizador |
+| **AppShell** | `sidebar` | Sidebar 248 px / 72 px recolhida (monograma "PT", tooltips à direita), `Sheet` 312 px em mobile |
+| **Topbar** | — | 56 px, glass; breadcrumbs, botão ⌘K / Ctrl K, toggle de tema, dropdown de perfil (perfil, tema, terminar sessão) |
 | **Breadcrumbs** | `breadcrumb` | Gerados a partir das rotas; último nível não clicável |
-| **CommandMenu** | `command` + `dialog` | ⌘K / Ctrl+K: navegação, pesquisa de clientes, ações rápidas por role |
+| **CommandMenu** | `command` + `dialog` | ⌘K / Ctrl+K: navegação, pesquisa por recurso (clientes, planos), ações rápidas por role. Sem atalhos globais com ⇧ (colidem com o browser: ⌘⇧T, ⌘⇧A) |
 | **PageHeader** | — | Título (display), descrição, ações primárias à direita |
 | **Tabs** | `tabs` | Secções do detalhe do cliente (Resumo, Treino, Nutrição, Suplementos, Check-ins, Sessões) sincronizadas com o URL |
 | **DataTable** | `table` + TanStack Table | Paginação servidor, pesquisa com debounce, filtros por `activity`, ações por linha |
@@ -121,7 +125,7 @@ Escala: 12 · 14 · 16 (base) · 18 · 20 · 24 · 30 · 36 · 48.
 
 | Caso | Fonte de dados | Modo |
 |---|---|---|
-| Músculos / grupos musculares | Lista fixa no cliente | Multi-seleção com chips, filtro local |
+| Músculos / grupos musculares | Lista fixa (validada no backend a partir da 6A; decisão final no blueprint) | Multi-seleção com chips, filtro local |
 | Alimentos | `GET /foods?search=` + `/global-foods` conforme role | Pesquisa no servidor com debounce 300 ms, React Query, "a carregar" e "sem resultados" |
 | Exercícios | `GET /exercises?search=` | Igual a alimentos; mostra badge "global" vs "privado" |
 | Suplementos | `GET /supplements?search=` | Igual |
@@ -145,9 +149,9 @@ fallback para o logo PT Manager quando `logo_url` é `null`.
 
 ## 9. Layouts por role (ordem de construção)
 
-1. **Admin (6B):** denso e utilitário — tabelas de catálogo global, fila de moderação.
-2. **Trainer (6C):** dashboard bento com alertas acionáveis (check-ins por rever, packs a
+1. **Admin (6D):** denso e utilitário — tabelas de catálogo global, fila de moderação.
+2. **Trainer (6E):** dashboard bento com alertas acionáveis (check-ins por rever, packs a
    acabar, planos a expirar, sessões de hoje); detalhe do cliente com tabs.
-3. **Cliente (6D):** mobile-first, navegação inferior, "o meu treino de hoje" em destaque,
+3. **Cliente (6F):** mobile-first, navegação inferior, "o meu treino de hoje" em destaque,
    marca do trainer.
-4. **Auth (6E):** ecrãs com o logo em destaque e fundo com gradiente de marca subtil.
+4. **Auth (6G):** ecrãs com o logo em destaque e fundo com gradiente de marca subtil.

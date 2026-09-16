@@ -101,18 +101,22 @@ frontend/
 
 | Feature | Endpoints (ver `../backend/01_API_ENDPOINTS.md`) | Role | Fase |
 |---|---|---|---|
-| `auth` | `/auth/*`, `/auth/google/*` | todos | 6A (mínimo) · 6E (final) |
-| `admin-moderation` | `/admin/content-moderation/*` | superuser | 6B |
-| `global-catalog` | `/global-exercises`, `/global-foods`, `/global-supplements` | superuser | 6B |
-| `clients` | `/clients`, `/auth/invite-client` | trainer | 6C |
-| `assessments` | `/initial-assessments`, `/clients/{id}/initial-assessment` | trainer | 6C |
-| `sessions` · `packs` | `/sessions`, `/pack-types`, `/client-session-packs` | trainer | 6C |
-| `training` | `/exercises`, `/training-plans`, `/exercise-set-logs` | trainer | 6C |
-| `nutrition` | `/foods`, `/meal-plans`, `/nutrition/preview` | trainer | 6C |
-| `supplements` | `/supplements`, `/supplement-assignments` | trainer | 6C |
-| `check-ins` | `/check-ins` | trainer | 6C |
-| `trainer-settings` · `billing` | `/trainer-settings/*`, `/billing/*` | trainer | 6C |
-| `portal` | `/portal/*`, `/auth/accept-invite` | client | 6D |
+| `auth` | `/auth/*`, `/auth/google/*` | todos | 6C (mínimo) · 6G (final) |
+| `admin-moderation` | `/admin/content-moderation/*` + fila de moderação (6B) | superuser | 6D |
+| `dashboard` | endpoint agregado do trainer (6B) | trainer | 6E |
+| `global-catalog` | `/global-exercises`, `/global-foods`, `/global-supplements` | superuser | 6D |
+| `clients` | `/clients`, `/auth/invite-client` | trainer | 6E |
+| `assessments` | `/initial-assessments`, `/clients/{id}/initial-assessment` | trainer | 6E |
+| `sessions` · `packs` | `/sessions`, `/pack-types`, `/client-session-packs` | trainer | 6E |
+| `training` | `/exercises`, `/training-plans`, `/exercise-set-logs` | trainer | 6E |
+| `nutrition` | `/foods`, `/meal-plans`, `/nutrition/preview` | trainer | 6E |
+| `supplements` | `/supplements`, `/supplement-assignments` | trainer | 6E |
+| `check-ins` | `/check-ins` | trainer | 6E |
+| `trainer-settings` · `billing` | `/trainer-settings/*`, `/billing/*` | trainer | 6E |
+| `portal` | `/portal/*` (inclui treino de hoje, registo de séries e tomas — 6A/6B), `/auth/accept-invite` | client | 6F |
+
+Endpoints marcados 6A/6B ainda não existem: os caminhos finais são fixados nos blueprints
+dessas fases (`docs/backend-files/sprint_6/`) e só depois entram em `../backend/01_API_ENDPOINTS.md`.
 
 ## 4. Fluxo de dados
 
@@ -171,12 +175,12 @@ sequenceDiagram
     B->>A: repetir GET /api/v1/clients uma vez
 ```
 
-Pontos de atenção a validar na 6A:
+Pontos de atenção a validar na 6C:
 
 1. **Vários separadores:** o refresh roda o token e o backend deteta reutilização. Dois
    separadores a fazer refresh ao mesmo tempo podem invalidar a sessão. Serializar o
    refresh entre separadores (Web Locks API `navigator.locks` ou `BroadcastChannel`) e
-   testar antes de fechar a 6A.
+   testar antes de fechar a 6C.
 2. **HTTPS em desenvolvimento:** o cookie usa o prefixo `__Secure-` (exige HTTPS), o
    CORS aceita apenas origens HTTPS e `AuthController` valida o `Origin`. O Vite local
    corre em HTTPS e a origem (ex.: `https://localhost:5173`) entra em
@@ -206,7 +210,7 @@ flowchart TD
     end
 
     subgraph ADM["/admin — RequireRole superuser"]
-        ADMIN --> A1["/admin/moderation"]
+        ADMIN --> A1["/admin/moderation<br/>fila de moderação"]
         ADMIN --> A2["/admin/catalog/exercises"]
         ADMIN --> A3["/admin/catalog/foods"]
         ADMIN --> A4["/admin/catalog/supplements"]
@@ -223,6 +227,7 @@ flowchart TD
     end
 
     subgraph PRT["/portal — RequireRole client"]
+        PORTAL --> P0["/portal/today<br/>treino de hoje"]
         PORTAL --> P1["/portal/plan"]
         PORTAL --> P2["/portal/nutrition"]
         PORTAL --> P3["/portal/supplements"]
@@ -244,7 +249,7 @@ flowchart LR
         SIDEBAR["Sidebar recolhível<br/>logo · navegação por role<br/>utilizador · tema"]
         subgraph MAINCOL["Coluna principal"]
             direction TB
-            TOPBAR["Topbar<br/>Breadcrumbs · ⌘K · notificações futuras · avatar"]
+            TOPBAR["Topbar<br/>Breadcrumbs · ⌘K / Ctrl K · tema · dropdown de perfil"]
             HEADER["PageHeader<br/>título · descrição · ações primárias"]
             CONTENT["Conteúdo<br/>Tabs · DataTable · cards bento"]
         end
@@ -253,14 +258,17 @@ flowchart LR
 ```
 
 Em mobile a sidebar passa a `Sheet` e o portal do cliente usa navegação inferior.
+Medidas, navegação por role e dropdown de perfil em
+[layout/02_APPSHELL_NAVEGACAO.md](layout/02_APPSHELL_NAVEGACAO.md). Notificações in-app
+são futuro (DEF-PROD-005) e não têm sino na topbar.
 
 ## 8. Testes
 
 | Nível | Ferramenta | O quê | Quando |
 |---|---|---|---|
-| Unitário | Vitest | `shared/lib`, schemas zod, mapeamento de ProblemDetails | desde 6A |
+| Unitário | Vitest | `shared/lib`, schemas zod, mapeamento de ProblemDetails | desde 6C |
 | Componente | Vitest + Testing Library + MSW | páginas e formulários com API simulada | cada feature |
-| Contrato | `openapi-typescript` no CI | build falha se o schema gerado divergir | 6A (CI mínimo) |
+| Contrato | `openapi-typescript` no CI | build falha se o schema gerado divergir | 6C (CI mínimo) |
 | E2E | Playwright | fluxos críticos contra backend real com seed | Sprint 8 |
 
 ## 9. Anti-padrões proibidos

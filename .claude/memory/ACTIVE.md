@@ -1,6 +1,6 @@
 # Estado ativo: Sprint 5D implementada e validada no backend
 
-Atualizado: 2026-09-16
+Atualizado: 2026-09-16 (Sprint 6 planeado — ver "Passo imediato")
 
 ## Estado em uma linha
 
@@ -53,12 +53,20 @@ validados por mutação. Detalhe em
 
 Da 5D: `QG5D-ROLL-001` e `QG5D-PROVIDER-001` (conta R2, bucket, CORS, token, User Secrets).
 Da 5C: `QG5C-PROVIDER-001`. Da 5B: `QG5B-STRIPE-001` e `QG5B-DEPLOY-001`.
-Transversal: `QG5-FRONTEND-001`.
+Transversal: `QG5-FRONTEND-001` (fecha na 6G).
 
 ## Passo imediato
 
-1. O utilizador revê e faz commit das alterações 5D.
-2. O Gate 5D do código está fechado, por isso segue-se a Sprint 6 (Frontend, 6A
-   Fundações), conforme a decisão de 2026-09-15.
-3. Não ativar `R2:Enabled` sem bucket, CORS e User Secrets.
-4. Não editar a migration `20260916115919_AddExerciseVideos`, que já foi aplicada.
+1. O Gate 5D do código está fechado (commit `8e0f8f0`).
+2. **Sprint 6 planeado em 2026-09-16 (backend-first):** 6A backend escrita/schema →
+   6B backend leituras agregadas → 6C–6G frontend. Nenhuma fase iniciada.
+   Entrada: `docs/backend-files/sprint_6/plan_sprint_6_por_atualizar.md`,
+   `.claude/project/sprints/sprint-6/README.md` e
+   `.claude/project/frontend/layout/01_RELATORIO_ANALISE.md`.
+   Nota: `Sessions/2026-09-16-sprint6-plano-layout.md`.
+3. Próximo pedido esperado: blueprint da 6A, fechando antes as decisões abertas
+   (relatório §8).
+4. Referência visual = PNG em `.claude/project/frontend/layout/assets/` (mapeamento no
+   README do layout). Não abrir o Claude Design nem PDF. Falta só screenshot do 08 (⌘K).
+5. Não ativar `R2:Enabled` sem bucket, CORS e User Secrets.
+6. Não editar a migration `20260916115919_AddExerciseVideos`, que já foi aplicada.

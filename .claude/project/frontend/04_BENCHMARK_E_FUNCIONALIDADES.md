@@ -34,22 +34,31 @@ de ficheiros; cursos; app do cliente.
 
 | Funcionalidade | UpCoach | Backend PT Manager | Frontend |
 |---|---|---|---|
-| Gestão de clientes (criar, editar, arquivar, reativar) | ✅ | ✅ `/clients` | 6C |
-| Convite do cliente e primeiro acesso | ✅ | ✅ `/auth/invite-client`, `/auth/accept-invite` | 6C · 6E |
-| Avaliação inicial | ✅ | ✅ `/initial-assessments` | 6C |
-| Planos de treino e estrutura | ✅ | ✅ `/training-plans`, `/structure` | 6C |
-| Biblioteca de exercícios (global + privada) | ✅ | ✅ `/global-exercises`, `/exercises` | 6B · 6C |
-| Registo de séries | ✅ | ✅ trainer `/exercise-set-logs` (cliente: DEF-PORTAL-001) | 6C |
-| Planos alimentares e cálculo nutricional | ✅ | ✅ `/meal-plans`, `/nutrition/preview` | 6C |
-| Base de alimentos (global + privada) | ✅ | ✅ `/global-foods`, `/foods` | 6B · 6C |
-| Planos de suplementação | ✅ | ✅ `/supplements`, `/supplement-assignments` | 6C |
-| Check-ins | ✅ | ✅ `/check-ins`, `/portal/check-ins/*/respond` | 6C · 6D |
-| Sessões presenciais e packs | parcial (calendário) | ✅ `/sessions`, `/pack-types`, `/client-session-packs` | 6C |
-| Billing SaaS do trainer | ✅ | ✅ Stripe `/billing/*` | 6C |
-| Marca própria do trainer | ✅ (plano 69 €) | ✅ `/trainer-settings/branding`, `/logo`, `/portal/branding` | 6C · 6D |
-| Avatar do cliente moderado | — | ✅ `/portal/my-profile/avatar` | 6D |
-| Moderação de conteúdo | — | ✅ `/admin/content-moderation/*` | 6B |
-| Vídeo de exercício privado | ✅ (vídeos) | 🔄 Fase 5D (R2) | 6C após 5D |
+| Gestão de clientes (criar, editar, arquivar, reativar) | ✅ | ✅ `/clients` | 6E |
+| Convite do cliente e primeiro acesso | ✅ | ✅ `/auth/invite-client`, `/auth/accept-invite` | 6E · 6G |
+| Avaliação inicial | ✅ | ✅ `/initial-assessments` | 6E |
+| Planos de treino e estrutura | ✅ | ✅ `/training-plans`, `/structure` | 6E |
+| Biblioteca de exercícios (global + privada) | ✅ | ✅ `/global-exercises`, `/exercises` | 6D · 6E |
+| Registo de séries pelo trainer | ✅ | ✅ `/exercise-set-logs` (só `Trainer`) | 6E |
+| Registo de séries e concluir treino pelo cliente | ✅ | 🔄 **6A** (DEF-PORTAL-001 antecipado) | 6F |
+| RPE prescrito por série | concorrentes | 🔄 **6A** (`PlannedRpe` opcional) | 6E |
+| Treino de hoje no portal | ✅ | 🔄 **6B** (hoje só `/portal/my-plan` com `day_of_week`) | 6F |
+| Porção padrão do alimento | ✅ | 🔄 **6A** (`DefaultServingGrams` opcional; macros são por 100 g) | 6D · 6E |
+| Registo de tomas de suplementos | ✅ | 🔄 **6A** (hoje `Timing` é texto livre, sem tomas) | 6F |
+| Dashboard do trainer (alertas e vendas de packs estimadas) | ✅ | 🔄 **6B** (sem endpoint agregado hoje) | 6E |
+| Resumo do cliente e adesão ao treino calculada | ✅ | 🔄 **6B** (hoje só `TrainingAdherenceScore` auto-declarado no check-in) | 6E |
+| Check-in marcado como revisto | — | 🔄 **6A** (hoje só `Scheduled/Answered/Missed/Cancelled`) | 6E |
+| Fila de moderação do superuser | — | 🔄 **6B** (hoje só block/unblock por id) | 6D |
+| Planos alimentares e cálculo nutricional | ✅ | ✅ `/meal-plans`, `/nutrition/preview` | 6E |
+| Base de alimentos (global + privada) | ✅ | ✅ `/global-foods`, `/foods` | 6D · 6E |
+| Planos de suplementação | ✅ | ✅ `/supplements`, `/supplement-assignments` | 6E |
+| Check-ins | ✅ | ✅ `/check-ins`, `/portal/check-ins/*/respond` | 6E · 6F |
+| Sessões presenciais e packs | parcial (calendário) | ✅ `/sessions`, `/pack-types`, `/client-session-packs` | 6E |
+| Billing SaaS do trainer | ✅ | ✅ Stripe `/billing/*` | 6E |
+| Marca própria do trainer | ✅ (plano 69 €) | ✅ `/trainer-settings/branding`, `/logo`, `/portal/branding` | 6E · 6F |
+| Avatar do cliente moderado | — | ✅ `/portal/my-profile/avatar` | 6F |
+| Moderação de conteúdo | — | ✅ `/admin/content-moderation/*` | 6D |
+| Vídeo de exercício privado | ✅ (vídeos) | ✅ Fase 5D (R2; gates de provider abertos) | 6E |
 | Chat 1-1 / grupo / comunidade | ✅ | ❌ | **Futuro** |
 | Calendário e marcações pelo cliente | ✅ | ❌ (cancelamento pelo cliente: DEF-PORTAL-002) | **Futuro** |
 | Hábitos diários | ✅ | ❌ | **Futuro** |
@@ -63,6 +72,14 @@ de ficheiros; cursos; app do cliente.
 | Notificações push | ✅ | ❌ (emails transacionais existem) | **Futuro** |
 | AI meal planner / scanner | concorrentes | ❌ | **Futuro** |
 | Relatórios persistidos | — | ❌ (DEF-PROD-003) | **Futuro** |
+| Importação CSV de alimentos | concorrentes | ❌ (DEF-PROD-004) | **Futuro** |
+| Notificações in-app | ✅ | ❌ (DEF-PROD-005; `Notification` é só fila de email) | **Futuro** |
+| Pesquisa transversal ⌘K no servidor | — | ❌ (DEF-PROD-006; ⌘K usa `search` por recurso) | **Futuro** |
+| Categoria de alimento | concorrentes | ❌ | **Excluído** (2026-09-16) |
+| Notas de moderação / fonte no alimento global | — | ❌ | **Excluído** (2026-09-16) |
+
+🔄 = decidido para o backend do Sprint 6 (ver `layout/01_RELATORIO_ANALISE.md` e
+`../02_SPRINTS_ROADMAP.md` §Sprint 6A/6B).
 
 Regra: tudo o que está marcado **Futuro** não aparece como ecrã funcional. Pode existir,
 no máximo, um item de navegação desativado com etiqueta "Brevemente", se o utilizador o

@@ -21,6 +21,17 @@ recomeça do zero (TS strict, shadcn/ui, sem Chakra). Docs em `.claude/project/f
 e `.claude/project/backend/`. Vite local exige HTTPS (CORS só HTTPS, cookie
 `__Secure-`). Ver `Sessions/2026-09-15-decisao-frontend-sprint6-documentacao.md`.
 
+**Decisão 2026-09-16 (substitui as letras acima):** Sprint 6 = **backend-first**. 6A
+backend escrita/schema (RPE, porção padrão, check-in revisto, séries e concluir treino
+pelo cliente — DEF-PORTAL-001 antecipado —, tomas de suplementos) → 6B backend leituras
+agregadas (dashboard com vendas de packs estimadas, resumo do cliente com adesão, filtros,
+fila de moderação, treino de hoje) → 6C Fundações → 6D Admin → 6E Trainer → 6F Cliente →
+6G Auth UX. Layout base = Claude Design (do v0 só dropdown de perfil). Excluídos: categoria
+de alimento, notas de moderação. Futuro: CSV, notificações in-app, pesquisa transversal
+(DEF-PROD-004–006). Docs em `.claude/project/frontend/layout/`, pack `sprints/sprint-6/`,
+entrada local `docs/backend-files/sprint_6/plan_sprint_6_por_atualizar.md`. Ver
+`Sessions/2026-09-16-sprint6-plano-layout.md`.
+
 ## Estado atual
 
 - Backend alvo em .NET 10 e C# 14, com Domain, Application, Infrastructure e

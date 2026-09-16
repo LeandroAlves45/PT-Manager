@@ -396,7 +396,7 @@ moderação de alimentos e exercícios privados.
    - Portas provider-neutral na Application e `Google.Apis.Auth` apenas em Infrastructure
    - Identidade externa por `provider + subject`; linking nunca é automático por email
    - Implementação real concluída em 2026-09-06; migration local aplicada;
-     `QG5-FRONTEND-001` obrigatório no frontend do Sprint 6 (fecha na Fase 6E,
+     `QG5-FRONTEND-001` obrigatório no frontend do Sprint 6 (fecha na Fase 6G,
      Auth UX)
 
 ### Deliverables
@@ -629,12 +629,19 @@ o caso de uso dependente falha de forma explícita e segura.
 
 ---
 
-## SPRINT 6: Frontend (após o Gate 5D)
+## SPRINT 6: Backend de suporte ao layout + Frontend (após o Gate 5D)
 
 > **Decisão de 2026-09-15.** O frontend passa à frente da observabilidade. O backend tem
 > 142 endpoints v1 prontos a consumir e o Gate 7B (Redis) precisa de métricas com tráfego
 > real, que só existe com frontend. Os sprints seguintes foram renumerados: Observabilidade
 > 7, Testing + CI/CD 8, Produção 9, backlog pós-MVP 10.
+>
+> **Decisão de 2026-09-16 (backend-first).** A análise do layout do Claude Design contra o
+> código real mostrou elementos PARCIAIS e NÃO SUPORTADOS (dashboard sem endpoint agregado,
+> RPE, registo de séries pelo cliente, tomas de suplementos, fila de moderação). O Sprint 6
+> abre com **duas fases de backend (6A, 6B)** e as fases de frontend passam a **6C–6G**.
+> Relatório e decisões: `.claude/project/frontend/layout/01_RELATORIO_ANALISE.md`; pack
+> `.claude/project/sprints/sprint-6/README.md`.
 >
 > ⚠️ **Critério de entrada:** Gate 5D fechado no `backend/` real. Os gates de provider
 > (`QG5B-STRIPE-001`, `QG5C-PROVIDER-001`, `QG5D-PROVIDER-001`) podem continuar abertos —
@@ -642,40 +649,92 @@ o caso de uso dependente falha de forma explícita e segura.
 
 ### Objectivo
 
-Reescrever o frontend **do zero** em React 19 + Vite + TypeScript strict + Tailwind v4 +
-shadcn/ui, consumindo o contrato HTTP v1 (cookie de refresh + CSRF, snake_case,
-ProblemDetails). O frontend anterior (backend Python, `X-API-KEY`, token em
-`localStorage`) não é migrado.
+1. **6A–6B:** fechar no backend as lacunas que o layout aprovado precisa, sem alargar o
+   âmbito para lá das decisões registadas.
+2. **6C–6G:** reescrever o frontend **do zero** em React 19 + Vite + TypeScript strict +
+   Tailwind v4 + shadcn/ui, consumindo o contrato HTTP v1 (cookie de refresh + CSRF,
+   snake_case, ProblemDetails). O frontend anterior (backend Python, `X-API-KEY`, token em
+   `localStorage`) não é migrado.
 
-Documentação canónica: `.claude/project/frontend/` (arquitetura com diagramas, stack,
-convenções, design system, benchmark e prompts de design) e `.claude/project/backend/`
-(endpoints e contrato HTTP). Blueprints de cada fase em `docs/frontend-files/sprint_6/`.
+Documentação canónica: `.claude/project/frontend/` (arquitetura, stack, convenções, design
+system, benchmark e **layout** com relatório e especificação por ecrã) e
+`.claude/project/backend/` (endpoints e contrato HTTP). Blueprints: backend em
+`docs/backend-files/sprint_6/`, frontend em `docs/frontend-files/sprint_6/`.
 
-### Sprint 6A: Fundações
+### Sprint 6A: Backend — escrita e schema
+
+1. **RPE nas séries:** `PlannedRpe` opcional em `ExerciseSet`, contratos de escrita e
+   leitura do plano de treino.
+2. **Porção padrão:** `DefaultServingGrams` opcional em `Food` (global e privado), usada
+   para pré-preencher `QuantityInGrams` no plano alimentar.
+3. **Check-in revisto:** `ReviewedAt` + endpoint do trainer para marcar como revisto;
+   "por rever" = respondido, não cancelado e não revisto.
+4. **Registo de séries pelo cliente (DEF-PORTAL-001, antecipado do 10C):** endpoints do
+   portal para registar série e concluir treino, autorização exclusiva do próprio cliente
+   e só sobre o plano activo; sem reutilizar handlers autorizados apenas para trainer.
+5. **Tomas de suplementos:** entidade de registo de toma por atribuição activa e
+   endpoints do portal (marcar/desmarcar toma, listar tomas do dia).
+6. Uma migration consolidada, gerada (nunca escrita à mão).
+
+Decisões a fechar no blueprint: escala e limites do RPE; semântica de "em atraso" nas
+tomas (`Timing` é texto livre hoje); regra de concluir treino (parcial ou completo);
+grupos musculares com lista fixa validada no backend sem migration de dados.
+
+Gate 6A: migration aplicada à dev; testes de autorização e multi-tenancy (cliente A não
+regista séries nem tomas do cliente B; trainer não usa endpoints do portal); contratos
+OpenAPI actualizados; suite completa verde.
+
+### Sprint 6B: Backend — leituras agregadas
+
+1. **Dashboard do trainer** (endpoint agregado, só leitura): check-ins por rever, packs a
+   terminar, planos de treino/alimentares a expirar, sessões de hoje, clientes sem plano
+   activo e **vendas de packs do mês (estimado)** a partir de `PriceCents`/`PurchaseDate`
+   — não são pagamentos de clientes.
+2. **Resumo do cliente:** peso actual e variação (check-ins), kcal e macros alvo (plano
+   alimentar activo), **adesão ao treino %** = séries registadas ÷ séries planeadas num
+   período, packs utilizáveis e fim previsto.
+3. **Filtros de listagem:** planos por data de fim, clientes sem plano activo, check-ins
+   por rever.
+4. **Fila de moderação** paginada para o superuser: alimentos e exercícios privados com
+   estado de enforcement, para block/unblock sem conhecer o id (distinta de DEF-TRUST-004,
+   denúncias).
+5. **Portal "treino de hoje":** semana calculada no servidor a partir de `StartDate` e dia
+   por `DayOfWeek`, no fuso do trainer.
+
+Decisões a fechar no blueprint: janela da adesão; limiares de "pack a terminar" e "plano a
+expirar"; top-N por bloco do dashboard; semântica de `TargetDate` para "responder até".
+
+Gate 6B: sem N+1 (queries verificadas); isolamento entre dois trainers; contagens corretas
+acima de 100 registos; suite completa verde.
+
+### Sprint 6C: Frontend — Fundações
 
 1. Projeto Vite + TypeScript strict novo em `frontend/`; estrutura `app/ · features/ · shared/`.
 2. **Auditoria de dependências** antes de instalar cada package
    (`frontend/01_STACK_E_DEPENDENCIAS.md`): `npm audit`, versão fixada, licença, manutenção,
    tamanho.
 3. Tokens de marca (logo PT Manager, `#00A3E9`), tema dark/light com toggle, fontes
-   self-hosted, assets SVG e favicons fornecidos pelo utilizador.
-4. AppShell: sidebar recolhível, topbar com breadcrumbs, ⌘K, PageHeader, estados vazio,
-   skeleton e erro.
+   self-hosted (Saira Condensed, Geist, Geist Mono), assets SVG e favicons fornecidos pelo
+   utilizador.
+4. AppShell conforme `frontend/layout/02_APPSHELL_NAVEGACAO.md`: sidebar recolhível
+   248/72 px, topbar com breadcrumbs, ⌘K/Ctrl K, dropdown de perfil, PageHeader, estados
+   vazio, skeleton e erro.
 5. Cliente HTTP gerado do OpenAPI (`openapi-typescript` + `openapi-fetch`), TanStack Query,
    `nuqs`, mapeamento de ProblemDetails.
 6. Sessão no browser: access token e CSRF em memória, arranque `csrf → refresh`, refresh
    single-flight serializado entre separadores, guards por role. Login **mínimo** de
-   desenvolvimento (a página final fica para a 6E).
+   desenvolvimento (a página final fica para a 6G).
 7. Vite local em HTTPS e origem em `Cors:AllowedOrigins` (User Secrets de Development).
 8. **Backend — seed de desenvolvimento** idempotente e só em Development: superuser,
    trainer com subscrição de teste, clientes ligados ao trainer e dados para todas as
-   páginas (planos, sessões, packs, check-ins, suplementos, catálogo global).
+   páginas (planos com RPE, sessões, packs, check-ins, séries e tomas registadas,
+   suplementos, catálogo global).
 9. **Backend — observabilidade mínima antecipada do 7A:** `/health/live` e `/health/ready`
    e logs JSON em consola. O `CorrelationIdMiddleware` já existe.
 10. **CI mínimo:** backend `restore/build/test`; frontend `npm ci`, lint, typecheck, testes,
     build.
 
-Gate 6A:
+Gate 6C:
 
 - Sessão restaura após reload e sobrevive a dois separadores abertos sem invalidar o refresh.
 - Nenhum token em `localStorage`/`sessionStorage`; pedidos só pelo cliente gerado.
@@ -683,48 +742,62 @@ Gate 6A:
 - Seed recria o ambiente de desenvolvimento do zero sem passos manuais.
 - Health checks respondem e o CI mínimo está verde.
 
-### Sprint 6B: Admin (superuser)
+### Sprint 6D: Frontend — Admin (superuser)
 
-- Moderação de conteúdo (`/admin/content-moderation/*`): block/unblock de alimentos e
-  exercícios privados.
+- Fila de moderação (6B) com block/unblock de alimentos e exercícios privados
+  (`/admin/content-moderation/*`).
 - Catálogos globais de exercícios, alimentos e suplementos: listar, pesquisar, criar,
-  editar, arquivar, reativar e apagar.
+  editar (kcal calculada só leitura, porção padrão), arquivar, reativar e apagar.
 
-Gate 6B: fluxos completos com o seed; 403 para outros roles; auditoria administrativa
+Gate 6D: fluxos completos com o seed; 403 para outros roles; auditoria administrativa
 visível no backend para cada escrita.
 
-### Sprint 6C: Personal Trainer
+### Sprint 6E: Frontend — Personal Trainer
 
-- Dashboard com alertas acionáveis (check-ins por rever, packs a terminar, planos a
-  expirar, sessões de hoje).
-- Clientes (CRUD, arquivo, convite), avaliação inicial, detalhe do cliente com tabs.
+- Dashboard bento a partir do endpoint 6B, com uma só ação por alerta.
+- Clientes (CRUD, arquivo, convite), avaliação inicial, detalhe do cliente com tabs e
+  resumo 6B.
 - Sessões, tipos de pack e packs do cliente.
-- Biblioteca privada (exercícios, alimentos, suplementos) e planos de treino (estrutura),
-  registo de séries, planos alimentares com preview nutricional, atribuição de suplementos.
-- Check-ins, definições (marca, logo, contactos, fuso horário) e billing.
+- Biblioteca privada (exercícios, alimentos, suplementos) e planos de treino (estrutura
+  com RPE), registo de séries, planos alimentares com preview nutricional, atribuição de
+  suplementos.
+- Check-ins (marcar como revisto), definições (marca, logo, contactos, fuso horário) e
+  billing (tier, limite e contagem de clientes).
 - Vídeo de exercício (5D) consumido nesta fase.
 
-Gate 6C: todas as features com loading/vazio/erro, validação do servidor mapeada para os
+Gate 6E: todas as features com loading/vazio/erro, validação do servidor mapeada para os
 campos, isolamento entre dois trainers do seed verificado na UI.
 
-### Sprint 6D: Portal do cliente
+### Sprint 6F: Frontend — Portal do cliente
 
-- Mobile-first: plano de treino, nutrição, suplementos, check-ins pendentes e resposta,
-  perfil e avatar moderado, marca do trainer aplicada com fallback de contraste.
+- Mobile-first: treino de hoje com registo de séries e concluir treino, nutrição,
+  suplementos com registo de tomas, check-ins pendentes e resposta, perfil e avatar
+  moderado, marca do trainer aplicada com fallback de contraste.
 
-Gate 6D: utilizável a 375px; marca do trainer não quebra contraste AA; o cliente só vê
-dados próprios.
+Gate 6F: utilizável a 375px; marca do trainer não quebra contraste AA; o cliente só vê e
+regista dados próprios.
 
-### Sprint 6E: Auth UX
+### Sprint 6G: Frontend — Auth UX
 
 - Login final, signup de trainer, confirmação de email, recuperação e mudança de password,
   aceitação de convite e primeiro acesso do cliente, Google Sign-In e linking.
 
-Gate 6E: fecha `QG5-FRONTEND-001`; mensagens de erro de auth não permitem enumeração de
+Gate 6G: fecha `QG5-FRONTEND-001`; mensagens de erro de auth não permitem enumeração de
 contas; rate limits (429) tratados sem loops.
+
+### Fora do Sprint 6 (decisão de 2026-09-16)
+
+| Item do mockup | Decisão |
+|---|---|
+| Categoria de alimento | **Excluído** — não entra no produto |
+| Notas de moderação / fonte no alimento global | **Excluído** — sem benefício identificado |
+| Importação CSV de alimentos | **Futuro** — `DEF-PROD-004` |
+| Notificações in-app | **Futuro** — `DEF-PROD-005` |
+| Endpoint de pesquisa transversal (⌘K) | **Futuro** — `DEF-PROD-006`; a 6C usa pesquisas por recurso |
 
 ### Deliverables
 
+- ✓ Lacunas de backend do layout fechadas (6A escrita e schema, 6B leituras agregadas)
 - ✓ Frontend novo em produção de desenvolvimento, sem código do frontend anterior
 - ✓ Três áreas por role (admin, trainer, cliente) e fluxos de auth completos
 - ✓ Seed de desenvolvimento, health checks e CI mínimo
@@ -752,7 +825,7 @@ consumidores, TTLs e invalidação sem evidência.
 
 2. **Logging**
    - `ILogger<T>` em todos os handlers/serviços, mensagens estruturadas (`{ClientId}`, nunca interpolação de string)
-   - Output JSON para console em produção (base antecipada para a Fase 6A; o 7A completa)
+   - Output JSON para console em produção (base antecipada para a Fase 6C; o 7A completa)
    - Redaction de passwords, tokens, cookies, API keys
 
 3. **Correlation ID Middleware**
@@ -763,7 +836,7 @@ consumidores, TTLs e invalidação sem evidência.
    - DSN e exporter confirmados no Sprint 0 dentro dos limites free tier
    - Instrumentação: ASP.NET Core, HttpClient, EF Core/Npgsql, jobs e integrações externas via Activities próprias
 
-5. **Health Checks** (antecipados para a Fase 6A; o 7A acrescenta métricas e alertas)
+5. **Health Checks** (antecipados para a Fase 6C; o 7A acrescenta métricas e alertas)
    ```
    GET /health/live    (processo responde, não consulta serviços externos)
    GET /health/ready    (confirma PostgreSQL; Redis/QStash/Stripe/Resend/Cloudinary não bloqueiam readiness)
@@ -852,7 +925,7 @@ Suite completa, incluindo testes de arquitetura, pipeline automatizado.
 4. **Test Coverage**
    - Target: 80%+, via Coverlet ou Microsoft Code Coverage (não OpenCover)
 
-5. **GitHub Actions CI** (evolui o CI mínimo criado na Fase 6A: coverage, architecture
+5. **GitHub Actions CI** (evolui o CI mínimo criado na Fase 6C: coverage, architecture
    tests, E2E Playwright do frontend e gates obrigatórios)
    ```yaml
    name: CI (Backend + Frontend)
@@ -984,8 +1057,10 @@ dos controlos actuais. RabbitMQ e microserviços mantêm os critérios detalhado
 - `client_consents`, apenas depois de análise legal e de produto própria.
 - Superfície administrativa read-only de trainers, removida do Sprint 4 até existir um
   caso administrativo dedicado e auditado.
-- Registo de séries pelo próprio cliente, sem reutilizar handlers autorizados apenas
-  para trainer.
+- ~~Registo de séries pelo próprio cliente~~ — antecipado para o Sprint 6A (decisão de
+  2026-09-16).
+- Importação CSV de alimentos globais, notificações in-app e endpoint de pesquisa
+  transversal (DEF-PROD-004 a 006).
 - Cancelamento de sessão pelo cliente no portal, com política própria para janela de
   cancelamento, impacto no pack e auditoria.
 
@@ -1022,7 +1097,10 @@ alteração alcance persistência.
 | DEF-PROD-003 | Relatórios persistidos | Arquitectura §17 | Sprint 10C | Entrar com formato, retenção e consumidores definidos |
 | DEF-COMP-001 | Consentimentos do cliente | Arquitectura §17.1 | Sprint 10C | Entrar apenas após análise legal e de produto |
 | DEF-ADMIN-001 | Administração read-only de trainers | Matriz HTTP da Fase 4 | Sprint 10C | Entrar com casos de uso administrativos explícitos e auditoria |
-| DEF-PORTAL-001 | Registo de séries pelo cliente | Fase 4 | Sprint 10C | Entrar com regra de produto e autorização exclusiva do próprio cliente |
+| DEF-PROD-004 | Importação CSV de alimentos globais | Layout Sprint 6 (2026-09-16) | Sprint 10C | Entrar com formato, validação por linha e relatório de erros aprovados |
+| DEF-PROD-005 | Notificações in-app | Layout Sprint 6 (2026-09-16) | Sprint 10C | Entrar com eventos, estado de leitura por utilizador e retenção definidos |
+| DEF-PROD-006 | Endpoint de pesquisa transversal (⌘K) | Layout Sprint 6 (2026-09-16) | Sprint 10C | Entrar quando as pesquisas por recurso em paralelo forem insuficientes (medido) |
+| DEF-PORTAL-001 | Registo de séries pelo cliente | Fase 4 | **Sprint 6A** | Antecipado em 2026-09-16; autorização exclusiva do próprio cliente e só sobre o plano activo |
 | DEF-PORTAL-002 | Cancelamento de sessão pelo cliente | Fase 4 | Sprint 10C | Entrar com regras de janela, saldo do pack e notificações aprovadas |
 | DEF-CONTRACT-001 | Uniformizar `StartDate` e `StartsDate` | Fase 4 | Sprint 10D | Entrar com matriz Preserve/Alias/Remove e consumidores inventariados |
 
@@ -1042,8 +1120,8 @@ arquitectura enquanto não existir uma decisão canónica que os substitua.
 | 5-6 | Sprint 3 | Application | Handlers + DTOs + Validators por feature |
 | 7-8 | Sprint 4 | API + Moderação + Google | Finalizado em 2026-09-06; Fases 1 a 6 aprovadas e 1907 testes verdes |
 | 9+ | Sprint 5 | Execução durável + Billing + Media | Gates 5A a 5D; duração reestimada no fecho do Sprint 4 |
-| Após 5D | Sprint 6 | Frontend | Fases 6A–6E: fundações, admin, trainer, cliente, auth UX; seed, health checks e CI mínimo |
-| Após 6E | Sprint 7 | Observabilidade + decisão Redis | Gate 7A mede; Gate 7B decide e implementa se necessário |
+| Após 5D | Sprint 6 | Backend de suporte + Frontend | 6A–6B backend (escrita/schema, leituras agregadas); 6C–6G frontend: fundações, admin, trainer, cliente, auth UX; seed, health checks e CI mínimo |
+| Após 6G | Sprint 7 | Observabilidade + decisão Redis | Gate 7A mede; Gate 7B decide e implementa se necessário |
 | Após 7B | Sprint 8 | Testing + CI/CD | Suite crítica + architecture tests + CI |
 | Após 8 | Sprint 9 | Produção | Deploy Render free + Vercel, QStash produção, docs |
 | Pós-MVP | Sprint 10 | Backlog governado | Trust & Safety, escala, produto, compliance e contratos por critérios de entrada |
@@ -1060,10 +1138,11 @@ arquitectura enquanto não existir uma decisão canónica que os substitua.
 | Billing SaaS | 5B | Gate 5B | Checkout, Customer Portal e webhook Stripe validados |
 | Imagens geridas | 5C | Gate 5C | Logo e avatar moderado com lifecycle completo |
 | Vídeo privado | 5D | Gate 5D | Upload e processamento técnico privados |
-| Fundações frontend | 6A | Após Gate 5D | Shell, sessão cookie + CSRF, cliente gerado, seed, health checks, CI mínimo |
-| Frontend por role | 6B–6D | Gates 6B–6D | Admin, trainer e portal do cliente completos |
-| Auth UX | 6E | Gate 6E | Fluxos de auth finais; `QG5-FRONTEND-001` fechado |
-| Observabilidade | 7A | Após Gate 6E | Logs, Sentry, OpenTelemetry e métricas operacionais |
+| Backend do layout | 6A–6B | Após Gate 5D | RPE, porção, séries e tomas pelo cliente, check-in revisto; dashboard, resumo do cliente, fila de moderação |
+| Fundações frontend | 6C | Após Gate 6B | Shell, sessão cookie + CSRF, cliente gerado, seed, health checks, CI mínimo |
+| Frontend por role | 6D–6F | Gates 6D–6F | Admin, trainer e portal do cliente completos |
+| Auth UX | 6G | Gate 6G | Fluxos de auth finais; `QG5-FRONTEND-001` fechado |
+| Observabilidade | 7A | Após Gate 6G | Logs, Sentry, OpenTelemetry e métricas operacionais |
 | Decisão Redis | 7B | Gate 7B | Implementar com consumidor medido ou diferir explicitamente para 10B |
 | Testes | 8 | Após Gate 7B | Suite crítica, architecture tests e CI verde |
 | Go-live | 9 | Após Sprint 8 | Deploy em produção no Render free tier e Vercel |
@@ -1081,7 +1160,7 @@ arquitectura enquanto não existir uma decisão canónica que os substitua.
 | Job preso em `Processing` | Baixa | Médio | Lease com expiração, recuperação automática (Sprint 5) |
 | Falha do Neon/migration | Muito Baixa | Crítico | Migration testada em branch antes de produção, rollback documentado |
 | Quota Sentry/Upstash excedida | Baixa | Médio | Sampling e limites confirmados no Sprint 0/7 |
-| Refresh concorrente entre separadores invalida a sessão | Média | Alto | Sprint 6A: refresh serializado (Web Locks) e teste com dois separadores |
+| Refresh concorrente entre separadores invalida a sessão | Média | Alto | Sprint 6C: refresh serializado (Web Locks) e teste com dois separadores |
 | Cookies cross-site bloqueados (Vercel ≠ Render) | Média | Alto | Sprint 9: subdomínios do mesmo site ou BFF (`00_ARCHITECTURE.md` §5) |
 
 ---

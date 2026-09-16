@@ -42,7 +42,7 @@ SPRINT 2   (Semanas 3-4)        Infrastructure + EF Core (DbContext, migration, 
 SPRINT 3   (Semanas 5-6)        Application (Handlers por feature, DTOs, Validators)
 SPRINT 4   (Semanas 7-8)        API Controllers + Auth (40 Endpoints)
 SPRINT 5   (Gates 5A–5D)        Jobs Duráveis + Outbox, Stripe, Cloudinary, vídeo R2
-SPRINT 6   (Gates 6A–6E)        Frontend novo (fundações, admin, trainer, cliente, auth UX)
+SPRINT 6   (Gates 6A–6G)        Backend do layout (6A–6B) + Frontend novo (6C–6G: fundações, admin, trainer, cliente, auth UX)
 SPRINT 7   (Gates 7A–7B)        Observabilidade (ILogger, OpenTelemetry, Sentry) + decisão Redis
 SPRINT 8                        Testing + CI/CD (~170 tests + Architecture Tests, GitHub Actions)
 SPRINT 9                        Production Setup (Deploy Render free tier + Vercel, QStash produção)
@@ -144,7 +144,7 @@ Ver justificação completa e trade-offs em `00_ARCHITECTURE.md`.
 | 3 | 5-6 | Handlers por feature, DTOs, Validators | Testes unitários passam |
 | 4 | 7-8 | 40 Endpoints, Auth JWT+refresh, Multi-tenancy | Testes integração dos endpoints |
 | 5 | 9 | Dispatcher QStash, Outbox, Resend, Stripe, Cloudinary | Reclamação de jobs, retry, idempotência testados |
-| 6 | — | Frontend React + TS + shadcn/ui por role, seed de dev, health checks, CI mínimo | Gates 6A–6E, `QG5-FRONTEND-001` fechado |
+| 6 | — | Backend do layout (dashboard, RPE, séries e tomas pelo cliente, fila de moderação) + Frontend React + TS + shadcn/ui por role, seed de dev, health checks, CI mínimo | Gates 6A–6G, `QG5-FRONTEND-001` fechado |
 | 7 | — | ILogger, OpenTelemetry, Sentry, métricas, decisão Redis | Logs estruturados em produção, Gate 7B registado |
 | 8 | — | ~170 testes + Architecture Tests, GitHub Actions CI/CD | Todos testes passam, pipeline verde |
 | 9 | — | Deploy Render (free) + Vercel, QStash produção, Docs | Go-live validado, rollback testado |

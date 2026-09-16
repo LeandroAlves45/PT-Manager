@@ -36,7 +36,7 @@ integral ficam em `docs/backend-files/` (local, gitignored).
 | 4 | 1–5 | **Fechado no backend** (2026-09-06) | Sem pack activo — ver `ACTIVE.md` e `Sessions/2026-09-06-sprint4-fase5-migration-local-aplicada.md` |
 | 5 | 5A–5C | 5A/5B/5C fechadas no backend (5B Stripe e 5C providers pendentes) | Ver `ACTIVE.md` e Sessions 2026-09-08 / 2026-09-12 |
 | 5 | 5D | **Planeada** (2026-09-13) — blueprints prontos, backend real intocado | [sprint-5/fase-5d](sprint-5/fase-5d/README.md) |
-| 6 | 6A–6E | **Decidido** (2026-09-15) — Frontend; entrada só após Gate 5D; pack por criar | Ver `02_SPRINTS_ROADMAP.md` §Sprint 6 e `.claude/project/frontend/README.md` |
+| 6 | 6A–6G | **Planeado** (2026-09-16) — 6A–6B backend do layout, 6C–6G frontend; entrada após Gate 5D | [sprint-6](sprint-6/README.md) |
 
 O pack `sprint-4/fase-4/` foi **removido** porque estava desactualizado (dizia «não
 implementada» com a Fase 4 já fechada). Não duplicar estado de sprint em packs históricos;

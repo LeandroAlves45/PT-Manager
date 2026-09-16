@@ -4,7 +4,7 @@
 
 ## ⚠️ Ressalva obrigatória: auditoria de dependências
 
-Nenhum package entra no `package.json` sem passar por esta verificação na Fase 6A (e em
+Nenhum package entra no `package.json` sem passar por esta verificação na Fase 6C (e em
 qualquer adição futura). Resultado registado no blueprint da fase.
 
 | Verificação | Critério de aceitação |
@@ -17,8 +17,8 @@ qualquer adição futura). Resultado registado no blueprint da fase.
 | Proveniência | Package oficial do autor/organização; nome confirmado (evitar typosquatting) |
 | Necessidade | Existe consumidor concreto na fase; sem instalação "para mais tarde" |
 
-As versões **não** são fixadas neste documento; a 6A escolhe a versão estável corrente
-no momento da auditoria. Reavaliação de necessidades adicionais no fecho da 6A.
+As versões **não** são fixadas neste documento; a 6C escolhe a versão estável corrente
+no momento da auditoria. Reavaliação de necessidades adicionais no fecho da 6C.
 
 ## Base
 
@@ -63,10 +63,10 @@ no momento da auditoria. Reavaliação de necessidades adicionais no fecho da 6A
 
 | Package | Papel | Fase |
 |---|---|---|
-| `vitest` + `@testing-library/react` + `@testing-library/user-event` + `jsdom` | Unitários e componentes | 6A |
-| `msw` | API simulada em testes e, opcionalmente, em dev sem backend | 6A |
-| `eslint` + `typescript-eslint` + `eslint-plugin-react-hooks` | Lint | 6A |
-| `prettier` + `prettier-plugin-tailwindcss` | Formatação | 6A |
+| `vitest` + `@testing-library/react` + `@testing-library/user-event` + `jsdom` | Unitários e componentes | 6C |
+| `msw` | API simulada em testes e, opcionalmente, em dev sem backend | 6C |
+| `eslint` + `typescript-eslint` + `eslint-plugin-react-hooks` | Lint | 6C |
+| `prettier` + `prettier-plugin-tailwindcss` | Formatação | 6C |
 | `@playwright/test` | E2E | Sprint 8 |
 
 ## Excluídos (e porquê)
@@ -84,4 +84,4 @@ no momento da auditoria. Reavaliação de necessidades adicionais no fecho da 6A
 
 Fornecidos pelo utilizador (criados com o Codex), colocados em `frontend/public/`:
 `logo.svg` (uso na app, sem perda de qualidade), `favicon.svg`, `favicon.ico`,
-`apple-touch-icon.png`. Até chegarem, a 6A usa placeholders com os mesmos nomes.
+`apple-touch-icon.png`. Até chegarem, a 6C usa placeholders com os mesmos nomes.

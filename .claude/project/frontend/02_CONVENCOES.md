@@ -118,4 +118,4 @@ botões só com ícone, estado nunca comunicado só por cor, `prefers-reduced-mo
 
 - Branch por fase: `sprint-6/6a-fundacoes`, `sprint-6/6b-admin`, …
 - Commits convencionais: `feat(frontend): …`, `test(frontend): …`, `chore(frontend): …`.
-- CI mínimo (6A): `npm ci`, `npm run lint`, `npm run typecheck`, `npm run test:run`, `npm run build`.
+- CI mínimo (6C): `npm ci`, `npm run lint`, `npm run typecheck`, `npm run test:run`, `npm run build`.

@@ -1,3 +1,31 @@
+# Sprint 6 — análise do layout e plano backend-first (2026-09-16)
+
+Plano: `C:\Users\Leandro Alves\.claude\plans\claude-atua-como-um-humble-wreath.md`.
+Âmbito: só documentação. `backend/` e `frontend/` intocados.
+
+- [x] 1. Analisar 13 artboards do Claude Design e app-shell do v0
+- [x] 2. Verificar cada elemento do mockup contra `backend/src` (35 itens com evidência)
+- [x] 3. Decisões do utilizador: backend-first 6A/6B, entram/excluídos/futuro, só perfil do v0
+- [x] 4. Roadmap §Sprint 6 (6A–6G), 10C, DEF-PROD-004–006, DEF-PORTAL-001 → 6A, summary, milestones
+- [x] 5. Renumeração de letras 6A–6E → 6C–6G em frontend/, backend/02, README do project, sprints 7–8 e riscos
+- [x] 6. `frontend/layout/` (README, 01 relatório, 02–06 por ecrã, assets/)
+- [x] 7. `sprints/sprint-6/README.md` e `sprints/README.md`
+- [x] 8. `docs/backend-files/sprint_6/plan_sprint_6_por_atualizar.md`
+- [x] 9. README, 00, 03, 04 do frontend actualizados; links partidos `design-prompts/` removidos
+- [x] 10. ACTIVE, MEMORY, nota de sessão
+- [x] 11. Verificação: links, letras órfãs, git status, doc-reviewer
+- [x] 12. Screenshots em `layout/assets/` (6 PNG do utilizador) e docs a apontar para eles em vez do link/PDF — falta só o 08 ⌘K
+
+## Review
+
+- Links relativos: todos resolvem, excepto os 14 `assets/*.png` (13 ficheiros) por exportar.
+- Letras órfãs (`6A–6E`, `6A Fundações`, `6B Admin`…): 0 ocorrências fora de `01_DATABASE_SCHEMA.md` (secções de tabelas, intocadas).
+- `git status`: só `.claude/` (12 modificados + `layout/` e `sprint-6/` novos); `docs/` gitignored.
+- doc-reviewer: 1 correção — avatar não tem estado "pendente" (moderação síncrona, `MediaPreparationErrorMapper.cs:31`); quota de vídeo 20 confirmada (`Api/appsettings.json:71`).
+- Achado: `design-prompts/` nunca existiu no git apesar do item 3b de 2026-09-15.
+
+---
+
 # Documentação — Frontend no Sprint 6 e renumeração (2026-09-15)
 
 Plano: `C:\Users\Leandro Alves\.claude\plans\resilient-moseying-river.md`.

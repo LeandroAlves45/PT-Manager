@@ -78,7 +78,7 @@ Claims relevantes do JWT: `sub`, `role` (`superuser` · `trainer` · `client`), 
 
 Política de password: 8 a 128 caracteres (Identity é a autoridade).
 
-Riscos de integração a tratar na Fase 6A (ver `../frontend/00_ARQUITETURA_FRONTEND.md` §5):
+Riscos de integração a tratar na Fase 6C (ver `../frontend/00_ARQUITETURA_FRONTEND.md` §5):
 refresh concorrente entre separadores e cookies cross-site em produção.
 
 ## 4. Erros — ProblemDetails

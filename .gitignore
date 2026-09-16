@@ -54,6 +54,7 @@ lerna-debug.log*
 .claude/settings.local.json
 .claude/memory/Sessions
 .claude/memory/Patterns
+.claude/project/frontend/layout/assets
 
 # Documentation and Backlog
 docs/
