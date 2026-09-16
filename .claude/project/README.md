@@ -23,11 +23,13 @@ Este repositório contém a documentação completa:
 |-----------|----------|
 | **00_ARCHITECTURE.md** | Arquitectura sistema (v3.0), stack tecnológico, padrões, decisões de MVP |
 | **01_DATABASE_SCHEMA.md** | Schema PostgreSQL alvo (29 tabelas, spec para o modelo EF Core) |
-| **02_SPRINTS_ROADMAP.md** | Planeamento 12 semanas, 8 sprints, tarefas detalhadas |
+| **02_SPRINTS_ROADMAP.md** | Roadmap por gates: Sprints 0–9 e backlog pós-MVP (Sprint 10) |
 | **03_DEVELOPER_GUIDE.md** | Setup local, workflow diário, troubleshooting |
-| **README (1).md** | Este ficheiro (overview) |
+| **backend/** | Índice de endpoints v1 e contrato HTTP consumido pelo frontend |
+| **frontend/** | Arquitetura, stack, convenções, design system, benchmark e prompts de design do frontend (Sprint 6) |
+| **README.md** | Este ficheiro (overview) |
 
-`04_PRODUCTION_CHECKLIST.md` ainda não existe — a criar antes do Sprint 8 (Produção), com o runbook e o procedimento de rollback referidos em `02_SPRINTS_ROADMAP.md`.
+`04_PRODUCTION_CHECKLIST.md` ainda não existe — a criar antes do Sprint 9 (Produção), com o runbook e o procedimento de rollback referidos em `02_SPRINTS_ROADMAP.md`.
 
 ---
 
@@ -39,11 +41,16 @@ SPRINT 1   (Semanas 1-2)        Domain Layer (Entities + Value Objects por featu
 SPRINT 2   (Semanas 3-4)        Infrastructure + EF Core (DbContext, migration, Repos)
 SPRINT 3   (Semanas 5-6)        Application (Handlers por feature, DTOs, Validators)
 SPRINT 4   (Semanas 7-8)        API Controllers + Auth (40 Endpoints)
-SPRINT 5   (Semana 9)           Jobs Duráveis + Outbox (QStash, Resend, Stripe, Cloudinary)
-SPRINT 6   (Semana 10)          Observabilidade (ILogger, OpenTelemetry, Sentry)
-SPRINT 7   (Semana 11)          Testing + CI/CD (~170 tests + Architecture Tests, GitHub Actions)
-SPRINT 8   (Semana 12)          Production Setup (Deploy Render free tier, QStash produção)
+SPRINT 5   (Gates 5A–5D)        Jobs Duráveis + Outbox, Stripe, Cloudinary, vídeo R2
+SPRINT 6   (Gates 6A–6E)        Frontend novo (fundações, admin, trainer, cliente, auth UX)
+SPRINT 7   (Gates 7A–7B)        Observabilidade (ILogger, OpenTelemetry, Sentry) + decisão Redis
+SPRINT 8                        Testing + CI/CD (~170 tests + Architecture Tests, GitHub Actions)
+SPRINT 9                        Production Setup (Deploy Render free tier + Vercel, QStash produção)
+SPRINT 10  (pós-MVP)            Backlog governado (10A–10D)
 ```
+
+Renumeração decidida em 2026-09-15: o frontend passou para o Sprint 6; os sprints
+seguintes avançaram um número.
 
 **Data estimada de go-live:** Outubro 2026
 
@@ -137,9 +144,10 @@ Ver justificação completa e trade-offs em `00_ARCHITECTURE.md`.
 | 3 | 5-6 | Handlers por feature, DTOs, Validators | Testes unitários passam |
 | 4 | 7-8 | 40 Endpoints, Auth JWT+refresh, Multi-tenancy | Testes integração dos endpoints |
 | 5 | 9 | Dispatcher QStash, Outbox, Resend, Stripe, Cloudinary | Reclamação de jobs, retry, idempotência testados |
-| 6 | 10 | ILogger, OpenTelemetry, Sentry, Correlation IDs | Logs estruturados em produção |
-| 7 | 11 | ~170 testes + Architecture Tests, GitHub Actions CI/CD | Todos testes passam, pipeline verde |
-| 8 | 12 | Deploy Render (free), QStash produção, Docs | Go-live validado, rollback testado |
+| 6 | — | Frontend React + TS + shadcn/ui por role, seed de dev, health checks, CI mínimo | Gates 6A–6E, `QG5-FRONTEND-001` fechado |
+| 7 | — | ILogger, OpenTelemetry, Sentry, métricas, decisão Redis | Logs estruturados em produção, Gate 7B registado |
+| 8 | — | ~170 testes + Architecture Tests, GitHub Actions CI/CD | Todos testes passam, pipeline verde |
+| 9 | — | Deploy Render (free) + Vercel, QStash produção, Docs | Go-live validado, rollback testado |
 
 ---
 
@@ -254,7 +262,7 @@ Workflow compartilhado entre backend e frontend:
 
 ---
 
-## Roadmap Futuro (Pós-Sprint 8)
+## Roadmap Futuro (Pós-Sprint 9)
 
 Após produção:
 

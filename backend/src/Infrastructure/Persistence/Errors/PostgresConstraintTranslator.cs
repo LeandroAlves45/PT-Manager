@@ -177,6 +177,30 @@ internal sealed class PostgresConstraintTranslator
             return true;
         }
 
+        if (postgresException.SqlState == ForeignKeyViolation &&
+            operation is PersistenceOperation.DeleteGlobalExercise &&
+            postgresException.ConstraintName == "fk_exercise_videos_exercise")
+        {
+            error = Error.Create(
+                code: "global_exercise_has_video",
+                category: ErrorCategory.Conflict,
+                description: "A global exercise with a managed video cannot be deleted.");
+
+            return true;
+        }
+
+        if (postgresException.SqlState == ForeignKeyViolation &&
+            operation is PersistenceOperation.RegisterExerciseVideoUpload &&
+            postgresException.ConstraintName == "uq_exercise_videos_in_flight")
+        {
+            error = Error.Create(
+                code: "exercise_video_upload_in_progress",
+                category: ErrorCategory.Conflict,
+                description: "The exercise already has a video upload in progress.");
+
+            return true;
+        }
+
         error = null;
         return false;
     }

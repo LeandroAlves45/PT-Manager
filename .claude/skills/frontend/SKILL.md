@@ -1,9 +1,14 @@
 ---
 name: frontend
-description: Convenções de design, acessibilidade e performance para o frontend React do PT Manager (React 19, Vite, Tailwind CSS, Chakra UI, shadcn/ui). Usar ao escrever ou rever .tsx/.jsx/.css.
+description: Convenções de design, acessibilidade e performance para o frontend React do PT Manager (React 19, Vite, TypeScript, Tailwind CSS v4, shadcn/ui). Usar ao escrever ou rever .tsx/.ts/.css.
 ---
 
 # Frontend
+
+**Stack fixa do PT Manager:** React 19 + Vite + TypeScript strict + Tailwind CSS v4 +
+shadcn/ui (Radix) + lucide-react + motion. **Chakra UI não é usado.** Referências
+canónicas: `.claude/project/frontend/` (arquitetura, stack, convenções, design system).
+As tabelas abaixo são guia genérico; neste projeto a escolha já está feita.
 
 ## Design Tokens
 

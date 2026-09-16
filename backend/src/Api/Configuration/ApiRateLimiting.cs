@@ -67,6 +67,11 @@ public static class ApiRateLimiting
             // O orçamento acompanha a conta mesmo quando o utilizador muda de IP.
             options.AddPolicy(ApiRateLimitPolicyNames.MediaUpload,
                 context => FixedWindow(UserKey(context), 10, TimeSpan.FromHours(1)));
+
+            // Cada autorização de upload de vídeo reserva a quota e agenda limpeza:
+            // o orçamento é por conta, independente do IP.
+            options.AddPolicy(ApiRateLimitPolicyNames.VideoUpload,
+                context => FixedWindow(UserKey(context), 20, TimeSpan.FromHours(1)));
         });
 
         return services;

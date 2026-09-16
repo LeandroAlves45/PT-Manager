@@ -13,6 +13,13 @@ real intocado; materialização em `C:\ptm5d`.** `QStash:Enabled` permanece `fal
 Ver `Sessions/2026-09-13-sprint5d-planeamento-blueprints.md` e
 `docs/backend-files/sprint_5/sprint_5D/00_desenho_aprovado_indice_dependencias_gates.md`.
 
+**Decisão 2026-09-15:** Sprint 6 = **Frontend** (6A Fundações → 6B Admin → 6C Trainer
+→ 6D Cliente → 6E Auth UX), só depois do Gate 5D. Renumeração: 7 Observabilidade +
+Redis (7A/7B), 8 Testing + CI/CD, 9 Produção, 10A–10D backlog pós-MVP. Frontend
+recomeça do zero (TS strict, shadcn/ui, sem Chakra). Docs em `.claude/project/frontend/`
+e `.claude/project/backend/`. Vite local exige HTTPS (CORS só HTTPS, cookie
+`__Secure-`). Ver `Sessions/2026-09-15-decisao-frontend-sprint6-documentacao.md`.
+
 ## Estado atual
 
 - Backend alvo em .NET 10 e C# 14, com Domain, Application, Infrastructure e
@@ -197,7 +204,7 @@ alegações anteriores desatualizadas está em
 - PostgreSQL é a fonte de verdade para jobs, outbox, autorização, billing e
   quotas de negócio. QStash apenas ativa o dispatcher. Redis continua limitado a
   cache reconstruível e rate limiting, mas a sua implementação saiu do Sprint 5:
-  o Gate 6B decide com métricas do 6A e remete nova avaliação para o Sprint 9B se
+  o Gate 7B decide com métricas do 7A e remete nova avaliação para o Sprint 10B se
   ainda não existir consumidor medido.
 - Webhooks Stripe exigem raw body, assinatura, deduplicação, idempotência,
   reconciliação e outbox transacional.
@@ -228,13 +235,13 @@ alegações anteriores desatualizadas está em
 - Moderação automática fica fora do Sprint 5D e do MVP atual. A futura porta da
   Application será independente do fornecedor e criada apenas com o primeiro
   consumidor real. Estado técnico e decisão de moderação permanecem separados.
-  A reavaliação está registada no Sprint 9A.
+  A reavaliação está registada no Sprint 10A.
   Decisão completa em
   `Sessions/2026-08-21-exercise-video-upload-decision.md` e
   `.claude/project/00_ARCHITECTURE.md` §17.4.
 - Todo o trabalho diferido tem registo central em
-  `.claude/project/02_SPRINTS_ROADMAP.md`: Sprint 9A para Trust & Safety, 9B para
-  escala e segurança, 9C para produto, administração e compliance e 9D para
+  `.claude/project/02_SPRINTS_ROADMAP.md`: Sprint 10A para Trust & Safety, 10B para
+  escala e segurança, 10C para produto, administração e compliance e 10D para
   consolidação de contratos. Cada item conserva origem, destino e critério de
   entrada. AutoMapper, MediatR,
   repositório genérico e Unit of Work genérica são decisões rejeitadas, não
@@ -260,7 +267,7 @@ alegações anteriores desatualizadas está em
   diverge de uma migration gerada. Confirmado em 2026-08-24 com o índice
   `uq_clients_user_active` pendente: 308 de 340 testes de integração
   falharam, incluindo testes sem relação com 3G-A/3G-B.
-- Google Sign-In foi reativado na Sprint 4 Fase 5 e removido do Sprint 9C.
+- Google Sign-In foi reativado na Sprint 4 Fase 5 e removido do Sprint 10C.
   Backend implementado em 2026-09-06: quatro rotas `/api/v1/auth/google`,
   portas provider-neutral, `Google.Apis.Auth` só em Infrastructure, 1896 testes
   verdes. Trainers com email Google autoritativo podem receber sessão directa;

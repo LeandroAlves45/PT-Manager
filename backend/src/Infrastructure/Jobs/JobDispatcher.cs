@@ -137,23 +137,46 @@ internal sealed class JobDispatcher
             throw new InvalidOperationException(
                 "More than one durable job handler is registered for the same route.");
 
-        var tenantValidator = itemScope.ServiceProvider.GetRequiredService<JobTenantValidator>();
-        if (!await tenantValidator.IsAvailableAsync(job.TrainerId, activationCancellationToken))
-        {
-            _logger.LogWarning(
-                JobDispatchLogEvents.TenantRejected,
-                "Durable job tenant was rejected before handler execution.");
-            return DispatchItemOutcome.PermanentFailure(TenantUnavailableCode);
-        }
-
         var tenantInitializer = itemScope.ServiceProvider
             .GetRequiredService<ITenantContextInitializer>();
-        tenantInitializer.Establish(
-            job.TrainerId,
+
+        if (job.TrainerId is null)
+        {
+            // Sem tenant só executa um handler de plataforma, numa allowlist fechada
+            // verificada por testes de arquitetura. Nunca há contexto administrativo.
+            if (handlers[0] is not IPlatformDurableJobHandler)
+            {
+                _logger.LogWarning(
+                    JobDispatchLogEvents.TenantRejected,
+                    "Durable job without tenant was rejected before handler execution.");
+                return DispatchItemOutcome.PermanentFailure(TenantUnavailableCode);
+            }
+
+            tenantInitializer.Establish(
+            null,
             userId: null,
             role: null,
-            TenantOrigin.Job,
+            TenantOrigin.System,
             isAdministrative: false);
+        }
+        else
+        {
+            var tenantValidator = itemScope.ServiceProvider.GetRequiredService<JobTenantValidator>();
+            if (!await tenantValidator.IsAvailableAsync(job.TrainerId, activationCancellationToken))
+            {
+                _logger.LogWarning(
+                    JobDispatchLogEvents.TenantRejected,
+                    "Durable job tenant was rejected before handler execution.");
+                return DispatchItemOutcome.PermanentFailure(TenantUnavailableCode);
+            }
+
+            tenantInitializer.Establish(
+                job.TrainerId,
+                userId: null,
+                role: null,
+                TenantOrigin.Job,
+                isAdministrative: false);
+        }
 
         await using var heartbeat = LeaseHeartbeat.Start(
             token => RenewLeaseAsync(job.Id, job.LeaseOwnerId, token),

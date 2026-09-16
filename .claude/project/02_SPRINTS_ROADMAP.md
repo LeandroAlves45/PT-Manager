@@ -11,8 +11,9 @@ Migração Backend: Python (FastAPI + SQLModel) → C# (.NET 10 + EF Core), modu
 **Timeline:** sequência por gates; a estimativa original de 12 semanas é reavaliada no
 fecho do Sprint 4 devido à divisão do Sprint 5 em quatro slices independentes.
 **Entrega MVP:** Backend em Render com Neon PostgreSQL, Upstash QStash, Resend, Stripe
-e Cloudinary. Upstash Redis é condicional ao Gate 6B.
-**Fora do MVP:** capacidades do Sprint 9. AutoMapper, MediatR e `IRepository<T>`
+e Cloudinary; frontend React reescrito no Sprint 6 e alojado na Vercel. Upstash Redis é
+condicional ao Gate 7B.
+**Fora do MVP:** capacidades do Sprint 10. AutoMapper, MediatR e `IRepository<T>`
 genérico são decisões rejeitadas, não trabalho diferido.
 
 ---
@@ -34,7 +35,7 @@ Preparação técnica. Zero código novo de domínio.
    - Visual Studio 2026 ou VS Code + C# Dev Kit
    - PostgreSQL 17 local (ou Neon branch de teste)
    - Docker (para Testcontainers)
-   - Conta Upstash QStash em modo dev/free; Redis só é necessário se o Gate 6B aprovar a implementação
+   - Conta Upstash QStash em modo dev/free; Redis só é necessário se o Gate 7B aprovar a implementação
 
 3. **Setup Inicial**
    ```bash
@@ -389,14 +390,14 @@ moderação de alimentos e exercícios privados.
      do Sprint 4B
 
 8. **Google Sign-In, Sprint 4 Fase 5**
-   - Fase reativada em 2026-09-03; deixa de pertencer ao Sprint 9C
+   - Fase reativada em 2026-09-03; deixa de pertencer ao Sprint 10C
    - Quatro operações sob `/api/v1/auth/google`: challenge, sign-in,
      link/challenge e link
    - Portas provider-neutral na Application e `Google.Apis.Auth` apenas em Infrastructure
    - Identidade externa por `provider + subject`; linking nunca é automático por email
    - Implementação real concluída em 2026-09-06; migration local aplicada;
-     `QG5-FRONTEND-001` obrigatório no primeiro slice frontend, previsivelmente
-     no Sprint 5 ou 6
+     `QG5-FRONTEND-001` obrigatório no frontend do Sprint 6 (fecha na Fase 6E,
+     Auth UX)
 
 ### Deliverables
 - ✓ `Api` compila e corre localmente
@@ -623,20 +624,124 @@ o caso de uso dependente falha de forma explícita e segura.
 - Gate 5C: Cloudinary, logo e avatar exclusivo do cliente com moderação síncrona
   fail-closed e lifecycle de assets completo.
 - Gate 5D: upload técnico de vídeo privado concluído sem moderação automática.
-- Cache distribuída é transferida explicitamente para o Gate 6B, onde observabilidade
+- Cache distribuída é transferida explicitamente para o Gate 7B, onde observabilidade
   e um consumidor concreto determinam se deve ser implementada.
 
 ---
 
-## SPRINT 6: Observabilidade e decisão de resiliência distribuída
+## SPRINT 6: Frontend (após o Gate 5D)
+
+> **Decisão de 2026-09-15.** O frontend passa à frente da observabilidade. O backend tem
+> 142 endpoints v1 prontos a consumir e o Gate 7B (Redis) precisa de métricas com tráfego
+> real, que só existe com frontend. Os sprints seguintes foram renumerados: Observabilidade
+> 7, Testing + CI/CD 8, Produção 9, backlog pós-MVP 10.
+>
+> ⚠️ **Critério de entrada:** Gate 5D fechado no `backend/` real. Os gates de provider
+> (`QG5B-STRIPE-001`, `QG5C-PROVIDER-001`, `QG5D-PROVIDER-001`) podem continuar abertos —
+> a UI trata as flags desligadas.
 
 ### Objectivo
 
-O Sprint 6 divide-se em 6A e 6B. Primeiro mede o sistema real; depois decide e, quando
+Reescrever o frontend **do zero** em React 19 + Vite + TypeScript strict + Tailwind v4 +
+shadcn/ui, consumindo o contrato HTTP v1 (cookie de refresh + CSRF, snake_case,
+ProblemDetails). O frontend anterior (backend Python, `X-API-KEY`, token em
+`localStorage`) não é migrado.
+
+Documentação canónica: `.claude/project/frontend/` (arquitetura com diagramas, stack,
+convenções, design system, benchmark e prompts de design) e `.claude/project/backend/`
+(endpoints e contrato HTTP). Blueprints de cada fase em `docs/frontend-files/sprint_6/`.
+
+### Sprint 6A: Fundações
+
+1. Projeto Vite + TypeScript strict novo em `frontend/`; estrutura `app/ · features/ · shared/`.
+2. **Auditoria de dependências** antes de instalar cada package
+   (`frontend/01_STACK_E_DEPENDENCIAS.md`): `npm audit`, versão fixada, licença, manutenção,
+   tamanho.
+3. Tokens de marca (logo PT Manager, `#00A3E9`), tema dark/light com toggle, fontes
+   self-hosted, assets SVG e favicons fornecidos pelo utilizador.
+4. AppShell: sidebar recolhível, topbar com breadcrumbs, ⌘K, PageHeader, estados vazio,
+   skeleton e erro.
+5. Cliente HTTP gerado do OpenAPI (`openapi-typescript` + `openapi-fetch`), TanStack Query,
+   `nuqs`, mapeamento de ProblemDetails.
+6. Sessão no browser: access token e CSRF em memória, arranque `csrf → refresh`, refresh
+   single-flight serializado entre separadores, guards por role. Login **mínimo** de
+   desenvolvimento (a página final fica para a 6E).
+7. Vite local em HTTPS e origem em `Cors:AllowedOrigins` (User Secrets de Development).
+8. **Backend — seed de desenvolvimento** idempotente e só em Development: superuser,
+   trainer com subscrição de teste, clientes ligados ao trainer e dados para todas as
+   páginas (planos, sessões, packs, check-ins, suplementos, catálogo global).
+9. **Backend — observabilidade mínima antecipada do 7A:** `/health/live` e `/health/ready`
+   e logs JSON em consola. O `CorrelationIdMiddleware` já existe.
+10. **CI mínimo:** backend `restore/build/test`; frontend `npm ci`, lint, typecheck, testes,
+    build.
+
+Gate 6A:
+
+- Sessão restaura após reload e sobrevive a dois separadores abertos sem invalidar o refresh.
+- Nenhum token em `localStorage`/`sessionStorage`; pedidos só pelo cliente gerado.
+- Tipos gerados coincidem com o OpenAPI atual; CI falha se divergirem.
+- Seed recria o ambiente de desenvolvimento do zero sem passos manuais.
+- Health checks respondem e o CI mínimo está verde.
+
+### Sprint 6B: Admin (superuser)
+
+- Moderação de conteúdo (`/admin/content-moderation/*`): block/unblock de alimentos e
+  exercícios privados.
+- Catálogos globais de exercícios, alimentos e suplementos: listar, pesquisar, criar,
+  editar, arquivar, reativar e apagar.
+
+Gate 6B: fluxos completos com o seed; 403 para outros roles; auditoria administrativa
+visível no backend para cada escrita.
+
+### Sprint 6C: Personal Trainer
+
+- Dashboard com alertas acionáveis (check-ins por rever, packs a terminar, planos a
+  expirar, sessões de hoje).
+- Clientes (CRUD, arquivo, convite), avaliação inicial, detalhe do cliente com tabs.
+- Sessões, tipos de pack e packs do cliente.
+- Biblioteca privada (exercícios, alimentos, suplementos) e planos de treino (estrutura),
+  registo de séries, planos alimentares com preview nutricional, atribuição de suplementos.
+- Check-ins, definições (marca, logo, contactos, fuso horário) e billing.
+- Vídeo de exercício (5D) consumido nesta fase.
+
+Gate 6C: todas as features com loading/vazio/erro, validação do servidor mapeada para os
+campos, isolamento entre dois trainers do seed verificado na UI.
+
+### Sprint 6D: Portal do cliente
+
+- Mobile-first: plano de treino, nutrição, suplementos, check-ins pendentes e resposta,
+  perfil e avatar moderado, marca do trainer aplicada com fallback de contraste.
+
+Gate 6D: utilizável a 375px; marca do trainer não quebra contraste AA; o cliente só vê
+dados próprios.
+
+### Sprint 6E: Auth UX
+
+- Login final, signup de trainer, confirmação de email, recuperação e mudança de password,
+  aceitação de convite e primeiro acesso do cliente, Google Sign-In e linking.
+
+Gate 6E: fecha `QG5-FRONTEND-001`; mensagens de erro de auth não permitem enumeração de
+contas; rate limits (429) tratados sem loops.
+
+### Deliverables
+
+- ✓ Frontend novo em produção de desenvolvimento, sem código do frontend anterior
+- ✓ Três áreas por role (admin, trainer, cliente) e fluxos de auth completos
+- ✓ Seed de desenvolvimento, health checks e CI mínimo
+- ✓ Testes de componentes com MSW por feature
+- ✓ `QG5-FRONTEND-001` fechado
+
+---
+
+## SPRINT 7: Observabilidade e decisão de resiliência distribuída (após o Sprint 6)
+
+### Objectivo
+
+O Sprint 7 divide-se em 7A e 7B. Primeiro mede o sistema real; depois decide e, quando
 justificado, implementa cache e rate limiting distribuídos. Esta ordem evita escolher
 consumidores, TTLs e invalidação sem evidência.
 
-### Sprint 6A: Observabilidade
+### Sprint 7A: Observabilidade
 
 ### Tarefas
 
@@ -647,17 +752,18 @@ consumidores, TTLs e invalidação sem evidência.
 
 2. **Logging**
    - `ILogger<T>` em todos os handlers/serviços, mensagens estruturadas (`{ClientId}`, nunca interpolação de string)
-   - Output JSON para console em produção
+   - Output JSON para console em produção (base antecipada para a Fase 6A; o 7A completa)
    - Redaction de passwords, tokens, cookies, API keys
 
 3. **Correlation ID Middleware**
-   - Gera se não existir, injeta em `LogContext`, propaga em headers de resposta
+   - Já implementado (`CorrelationIdMiddleware`, header `X-Correlation-ID`, `correlation_id`
+     nos ProblemDetails). O 7A só confirma a propagação para traces e jobs.
 
 4. **Sentry + OpenTelemetry**
    - DSN e exporter confirmados no Sprint 0 dentro dos limites free tier
    - Instrumentação: ASP.NET Core, HttpClient, EF Core/Npgsql, jobs e integrações externas via Activities próprias
 
-5. **Health Checks**
+5. **Health Checks** (antecipados para a Fase 6A; o 7A acrescenta métricas e alertas)
    ```
    GET /health/live    (processo responde, não consulta serviços externos)
    GET /health/ready    (confirma PostgreSQL; Redis/QStash/Stripe/Resend/Cloudinary não bloqueiam readiness)
@@ -668,7 +774,7 @@ consumidores, TTLs e invalidação sem evidência.
      rate limiting local, jobs pendentes/tentativas/dead-letter, webhooks Stripe
      duplicados/falhados, falhas de email e custos/latência das integrações de media
 
-Gate 6A:
+Gate 7A:
 
 - Logs e traces não contêm passwords, tokens, cookies, API keys, payloads Stripe nem
   scores de moderação.
@@ -676,16 +782,16 @@ Gate 6A:
   PostgreSQL e necessidade de coordenação entre instâncias.
 - Falhas dos exporters não interrompem operações de negócio.
 
-### Sprint 6B: HybridCache, Upstash Redis e rate limiting distribuído
+### Sprint 7B: HybridCache, Upstash Redis e rate limiting distribuído
 
-O Gate 6B é obrigatório como decisão, mas a implementação é condicional. Analisa as
-medições do 6A e documenta um resultado `Implementar` ou `Não implementar ainda`.
+O Gate 7B é obrigatório como decisão, mas a implementação é condicional. Analisa as
+medições do 7A e documenta um resultado `Implementar` ou `Não implementar ainda`.
 
 Implementar quando existir pelo menos um destes sinais:
 
 1. Mais de uma instância da API precisa de partilhar limites por actor.
 2. Uma query de leitura repetitiva excede o orçamento de latência ou carga definido
-   no Gate 6A e mantém semântica segura com cache.
+   no Gate 7A e mantém semântica segura com cache.
 3. O rate limiting local deixa de proteger de forma consistente endpoints com custo
    externo, como login, email ou moderação de avatar.
 4. Existe um consumidor concreto com estratégia verificável de chave, TTL,
@@ -705,27 +811,27 @@ Se a implementação for aprovada:
 6. Medir hit ratio, miss, latência, erro, evicção e custo antes e depois da activação.
 
 Se os sinais não existirem, o gate regista a evidência, mantém a implementação local e
-agenda nova avaliação no Sprint 9B. O item não desaparece nem é declarado concluído.
+agenda nova avaliação no Sprint 10B. O item não desaparece nem é declarado concluído.
 
-Gate 6B:
+Gate 7B:
 
 - A decisão `Implementar` ou `Não implementar ainda` tem métricas e consumidores
   concretos associados.
 - Quando implementado, testes provam isolamento de tenant, invalidação, fallback e
   comportamento com Redis indisponível.
-- O Sprint 8 configura e valida Redis apenas quando a decisão for `Implementar`.
+- O Sprint 9 configura e valida Redis apenas quando a decisão for `Implementar`.
 
 ### Deliverables
 - ✓ Logs estruturados em JSON, sem file sink
 - ✓ Correlation IDs propagados
 - ✓ Sentry + OpenTelemetry ativos
 - ✓ `/health/live` e `/health/ready` distintos e operacionais
-- ✓ Decisão do Gate 6B registada; Redis implementado apenas quando justificado
+- ✓ Decisão do Gate 7B registada; Redis implementado apenas quando justificado
 - ✓ Testes de observabilidade e, quando aplicável, de cache e rate limiting passam
 
 ---
 
-## SPRINT 7: Testing + CI/CD (após o Gate 6B)
+## SPRINT 8: Testing + CI/CD (após o Gate 7B)
 
 ### Objectivo
 Suite completa, incluindo testes de arquitetura, pipeline automatizado.
@@ -746,7 +852,8 @@ Suite completa, incluindo testes de arquitetura, pipeline automatizado.
 4. **Test Coverage**
    - Target: 80%+, via Coverlet ou Microsoft Code Coverage (não OpenCover)
 
-5. **GitHub Actions CI**
+5. **GitHub Actions CI** (evolui o CI mínimo criado na Fase 6A: coverage, architecture
+   tests, E2E Playwright do frontend e gates obrigatórios)
    ```yaml
    name: CI (Backend + Frontend)
    on: [push, pull_request]
@@ -777,7 +884,7 @@ Suite completa, incluindo testes de arquitetura, pipeline automatizado.
 
 ---
 
-## SPRINT 8: Produção (após o Sprint 7)
+## SPRINT 9: Produção (após o Sprint 8)
 
 ### Objectivo
 Deploy no Render free tier, validação final, documentação de handoff.
@@ -793,7 +900,7 @@ Deploy no Render free tier, validação final, documentação de handoff.
      Stripe__SecretKey=sk_live_...
      Resend__ApiKey=re_...
      Jwt__Secret=...
-     Upstash__RedisConnectionString=...  # apenas se o Gate 6B aprovou Redis
+     Upstash__RedisConnectionString=...  # apenas se o Gate 7B aprovou Redis
      Upstash__QStashSigningKey=...
      Sentry__DSN=...
      ```
@@ -821,21 +928,21 @@ Deploy no Render free tier, validação final, documentação de handoff.
 6. **Validação Final**
    - E2E manual: signup trainer → convite cliente → primeiro login → sessão → email
    - Confirmar `/health/live` e `/health/ready`
-   - Se Redis foi implementado no 6B, confirmar que a sua falha não bloqueia
+   - Se Redis foi implementado no 7B, confirmar que a sua falha não bloqueia
      operações principais e que endpoints sensíveis mantêm a protecção local aprovada
 
 ### Deliverables
 - ✓ Backend deployado em Render (free tier)
 - ✓ Neon PostgreSQL em produção com migration aplicada de forma controlada
 - ✓ Upstash QStash confirmado em produção
-- ✓ Upstash Redis confirmado apenas se o Gate 6B aprovou a implementação
+- ✓ Upstash Redis confirmado apenas se o Gate 7B aprovou a implementação
 - ✓ Resend, Stripe, Cloudinary integrados
 - ✓ Sentry + OpenTelemetry ativos
 - ✓ Documentação de deploy e rollback completa
 
 ---
 
-## SPRINT 9: Backlog pós-MVP governado
+## SPRINT 10: Backlog pós-MVP governado
 
 ### Objectivo
 
@@ -843,7 +950,7 @@ Reavaliar capacidades deliberadamente excluídas do MVP sem as transformar em
 compromissos automáticos. Cada sub-slice começa por confirmar os critérios de entrada,
 produz uma decisão e só implementa quando existir necessidade aprovada.
 
-### Sprint 9A: Trust & Safety de media e conteúdo
+### Sprint 10A: Trust & Safety de media e conteúdo
 
 - Revisão humana para resultados `ReviewRequired` do avatar.
 - Moderação automática de vídeo para nudez, conteúdo sexual, violência, armas e
@@ -855,9 +962,9 @@ Critério de entrada: volume de conteúdo, falsos positivos, incidentes, obriga�
 plataforma ou necessidade operacional que não possa ser tratada pelo fluxo síncrono do
 avatar e pela moderação administrativa actual.
 
-### Sprint 9B: Escalabilidade e defesa em profundidade
+### Sprint 10B: Escalabilidade e defesa em profundidade
 
-- Nova avaliação de Redis se o Gate 6B decidiu `Não implementar ainda`.
+- Nova avaliação de Redis se o Gate 7B decidiu `Não implementar ainda`.
 - PostgreSQL Row-Level Security como camada adicional de isolamento.
 - RabbitMQ/MassTransit ou outro broker gerido.
 - Extracção de módulos para serviços separados.
@@ -869,7 +976,7 @@ independentes, necessidade de deploy separado ou incidente que demonstre insufic
 dos controlos actuais. RabbitMQ e microserviços mantêm os critérios detalhados de
 `00_ARCHITECTURE.md §9.5` e §2.1.
 
-### Sprint 9C: Produto, administração e compliance
+### Sprint 10C: Produto, administração e compliance
 
 - Métricas customizáveis por cliente.
 - Versionamento de planos de treino e nutrição.
@@ -885,7 +992,7 @@ dos controlos actuais. RabbitMQ e microserviços mantêm os critérios detalhado
 Critério de entrada: pedido de produto aprovado, contrato HTTP definido, impacto de
 schema avaliado e testes de autorização/multi-tenancy especificados.
 
-### Sprint 9D: Consolidação de contratos
+### Sprint 10D: Consolidação de contratos
 
 - Uniformizar `StartDate` e `StartsDate` entre Training e Nutrition através de uma
   decisão Preserve, Alias ou Remove.
@@ -901,23 +1008,23 @@ alteração alcance persistência.
 | DEF-BILLING-001 | Billing de escrita | Sprint 4 | Sprint 5B | Agendado; depende do adapter Stripe e do Gate 5A |
 | DEF-MEDIA-001 | ReplaceLogo e upload de imagem | Sprint 4 | Sprint 5C | Agendado; depende de Cloudinary e do lifecycle por outbox |
 | DEF-MEDIA-002 | Upload técnico de vídeo privado | Sprint 5B original | Sprint 5D | Agendado; separado de Billing e dependente dos Gates 5A e 5C |
-| DEF-INFRA-001 | HybridCache e Upstash Redis | Sprint 5 original | Sprint 6B | Decisão obrigatória; implementação condicionada às métricas do 6A |
-| DEF-TRUST-001 | Revisão humana de avatar | Sprint 5C | Sprint 9A | Entrar com volume relevante de `ReviewRequired` ou falsos positivos |
-| DEF-TRUST-002 | Moderação automática de vídeo | Arquitectura §17.4 | Sprint 9A | Entrar com política, orçamento, fornecedor e processo de revisão aprovados |
-| DEF-TRUST-003 | Antivírus e scanning adicional de media | Arquitectura §17.4 | Sprint 9A | Entrar após avaliação de risco ou incidente |
-| DEF-TRUST-004 | Denúncias, evidência e fila de revisão | Arquitectura §17.5 | Sprint 9A | Entrar com caso operacional e política de retenção aprovados |
-| DEF-SCALE-001 | PostgreSQL RLS | Arquitectura §6.5 | Sprint 9B | Entrar com compliance, acesso SQL externo ou complexidade multi-tenant relevante |
-| DEF-SCALE-002 | RabbitMQ/MassTransit | Arquitectura §9.5 | Sprint 9B | Entrar quando um dos critérios de broker for medido |
-| DEF-SCALE-003 | Extracção para microserviços | Arquitectura §2.1 | Sprint 9B | Entrar com escala, ownership ou deploy independente comprovado |
-| DEF-SEC-001 | Revogação imediata de access tokens | Arquitectura §5.3 | Sprint 9B | Entrar quando a janela máxima de 15 minutos deixar de ser aceitável |
-| DEF-PROD-001 | Métricas customizáveis | Arquitectura §17 | Sprint 9C | Entrar com requisito de produto concreto |
-| DEF-PROD-002 | Versionamento de planos | Arquitectura §17 | Sprint 9C | Entrar com requisito de histórico/versionamento aprovado |
-| DEF-PROD-003 | Relatórios persistidos | Arquitectura §17 | Sprint 9C | Entrar com formato, retenção e consumidores definidos |
-| DEF-COMP-001 | Consentimentos do cliente | Arquitectura §17.1 | Sprint 9C | Entrar apenas após análise legal e de produto |
-| DEF-ADMIN-001 | Administração read-only de trainers | Matriz HTTP da Fase 4 | Sprint 9C | Entrar com casos de uso administrativos explícitos e auditoria |
-| DEF-PORTAL-001 | Registo de séries pelo cliente | Fase 4 | Sprint 9C | Entrar com regra de produto e autorização exclusiva do próprio cliente |
-| DEF-PORTAL-002 | Cancelamento de sessão pelo cliente | Fase 4 | Sprint 9C | Entrar com regras de janela, saldo do pack e notificações aprovadas |
-| DEF-CONTRACT-001 | Uniformizar `StartDate` e `StartsDate` | Fase 4 | Sprint 9D | Entrar com matriz Preserve/Alias/Remove e consumidores inventariados |
+| DEF-INFRA-001 | HybridCache e Upstash Redis | Sprint 5 original | Sprint 7B | Decisão obrigatória; implementação condicionada às métricas do 7A |
+| DEF-TRUST-001 | Revisão humana de avatar | Sprint 5C | Sprint 10A | Entrar com volume relevante de `ReviewRequired` ou falsos positivos |
+| DEF-TRUST-002 | Moderação automática de vídeo | Arquitectura §17.4 | Sprint 10A | Entrar com política, orçamento, fornecedor e processo de revisão aprovados |
+| DEF-TRUST-003 | Antivírus e scanning adicional de media | Arquitectura §17.4 | Sprint 10A | Entrar após avaliação de risco ou incidente |
+| DEF-TRUST-004 | Denúncias, evidência e fila de revisão | Arquitectura §17.5 | Sprint 10A | Entrar com caso operacional e política de retenção aprovados |
+| DEF-SCALE-001 | PostgreSQL RLS | Arquitectura §6.5 | Sprint 10B | Entrar com compliance, acesso SQL externo ou complexidade multi-tenant relevante |
+| DEF-SCALE-002 | RabbitMQ/MassTransit | Arquitectura §9.5 | Sprint 10B | Entrar quando um dos critérios de broker for medido |
+| DEF-SCALE-003 | Extracção para microserviços | Arquitectura §2.1 | Sprint 10B | Entrar com escala, ownership ou deploy independente comprovado |
+| DEF-SEC-001 | Revogação imediata de access tokens | Arquitectura §5.3 | Sprint 10B | Entrar quando a janela máxima de 15 minutos deixar de ser aceitável |
+| DEF-PROD-001 | Métricas customizáveis | Arquitectura §17 | Sprint 10C | Entrar com requisito de produto concreto |
+| DEF-PROD-002 | Versionamento de planos | Arquitectura §17 | Sprint 10C | Entrar com requisito de histórico/versionamento aprovado |
+| DEF-PROD-003 | Relatórios persistidos | Arquitectura §17 | Sprint 10C | Entrar com formato, retenção e consumidores definidos |
+| DEF-COMP-001 | Consentimentos do cliente | Arquitectura §17.1 | Sprint 10C | Entrar apenas após análise legal e de produto |
+| DEF-ADMIN-001 | Administração read-only de trainers | Matriz HTTP da Fase 4 | Sprint 10C | Entrar com casos de uso administrativos explícitos e auditoria |
+| DEF-PORTAL-001 | Registo de séries pelo cliente | Fase 4 | Sprint 10C | Entrar com regra de produto e autorização exclusiva do próprio cliente |
+| DEF-PORTAL-002 | Cancelamento de sessão pelo cliente | Fase 4 | Sprint 10C | Entrar com regras de janela, saldo do pack e notificações aprovadas |
+| DEF-CONTRACT-001 | Uniformizar `StartDate` e `StartsDate` | Fase 4 | Sprint 10D | Entrar com matriz Preserve/Alias/Remove e consumidores inventariados |
 
 Itens rejeitados não entram neste registo como implementação futura: AutoMapper,
 MediatR, `IRepository<T>` genérico e Unit of Work genérica continuam proibidos pela
@@ -935,10 +1042,11 @@ arquitectura enquanto não existir uma decisão canónica que os substitua.
 | 5-6 | Sprint 3 | Application | Handlers + DTOs + Validators por feature |
 | 7-8 | Sprint 4 | API + Moderação + Google | Finalizado em 2026-09-06; Fases 1 a 6 aprovadas e 1907 testes verdes |
 | 9+ | Sprint 5 | Execução durável + Billing + Media | Gates 5A a 5D; duração reestimada no fecho do Sprint 4 |
-| Após 5D | Sprint 6 | Observabilidade + decisão Redis | Gate 6A mede; Gate 6B decide e implementa se necessário |
-| Após 6B | Sprint 7 | Testing + CI/CD | Suite crítica + architecture tests + CI |
-| Após 7 | Sprint 8 | Produção | Deploy Render free, QStash produção, docs |
-| Pós-MVP | Sprint 9 | Backlog governado | Trust & Safety, escala, produto, compliance e contratos por critérios de entrada |
+| Após 5D | Sprint 6 | Frontend | Fases 6A–6E: fundações, admin, trainer, cliente, auth UX; seed, health checks e CI mínimo |
+| Após 6E | Sprint 7 | Observabilidade + decisão Redis | Gate 7A mede; Gate 7B decide e implementa se necessário |
+| Após 7B | Sprint 8 | Testing + CI/CD | Suite crítica + architecture tests + CI |
+| Após 8 | Sprint 9 | Produção | Deploy Render free + Vercel, QStash produção, docs |
+| Pós-MVP | Sprint 10 | Backlog governado | Trust & Safety, escala, produto, compliance e contratos por critérios de entrada |
 
 ---
 
@@ -952,11 +1060,14 @@ arquitectura enquanto não existir uma decisão canónica que os substitua.
 | Billing SaaS | 5B | Gate 5B | Checkout, Customer Portal e webhook Stripe validados |
 | Imagens geridas | 5C | Gate 5C | Logo e avatar moderado com lifecycle completo |
 | Vídeo privado | 5D | Gate 5D | Upload e processamento técnico privados |
-| Observabilidade | 6A | Após Gate 5D | Logs, Sentry, OpenTelemetry e métricas operacionais |
-| Decisão Redis | 6B | Gate 6B | Implementar com consumidor medido ou diferir explicitamente para 9B |
-| Testes | 7 | Após Gate 6B | Suite crítica, architecture tests e CI verde |
-| Go-live | 8 | Após Sprint 7 | Deploy em produção no Render free tier |
-| Backlog pós-MVP | 9 | Após go-live | Reavaliações condicionais com decisão registada |
+| Fundações frontend | 6A | Após Gate 5D | Shell, sessão cookie + CSRF, cliente gerado, seed, health checks, CI mínimo |
+| Frontend por role | 6B–6D | Gates 6B–6D | Admin, trainer e portal do cliente completos |
+| Auth UX | 6E | Gate 6E | Fluxos de auth finais; `QG5-FRONTEND-001` fechado |
+| Observabilidade | 7A | Após Gate 6E | Logs, Sentry, OpenTelemetry e métricas operacionais |
+| Decisão Redis | 7B | Gate 7B | Implementar com consumidor medido ou diferir explicitamente para 10B |
+| Testes | 8 | Após Gate 7B | Suite crítica, architecture tests e CI verde |
+| Go-live | 9 | Após Sprint 8 | Deploy em produção no Render free tier e Vercel |
+| Backlog pós-MVP | 10 | Após go-live | Reavaliações condicionais com decisão registada |
 
 ---
 
@@ -969,7 +1080,9 @@ arquitectura enquanto não existir uma decisão canónica que os substitua.
 | Cold start / atraso do QStash | Alta (aceite no MVP) | Baixo | Documentado como limitação do plano gratuito, não bloqueia go-live |
 | Job preso em `Processing` | Baixa | Médio | Lease com expiração, recuperação automática (Sprint 5) |
 | Falha do Neon/migration | Muito Baixa | Crítico | Migration testada em branch antes de produção, rollback documentado |
-| Quota Sentry/Upstash excedida | Baixa | Médio | Sampling e limites confirmados no Sprint 0/6 |
+| Quota Sentry/Upstash excedida | Baixa | Médio | Sampling e limites confirmados no Sprint 0/7 |
+| Refresh concorrente entre separadores invalida a sessão | Média | Alto | Sprint 6A: refresh serializado (Web Locks) e teste com dois separadores |
+| Cookies cross-site bloqueados (Vercel ≠ Render) | Média | Alto | Sprint 9: subdomínios do mesmo site ou BFF (`00_ARCHITECTURE.md` §5) |
 
 ---
 

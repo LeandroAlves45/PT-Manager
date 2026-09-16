@@ -3,6 +3,7 @@ using System.Text.Json;
 using Application.Features.Training.Exercises.Abstractions;
 using Domain.Entities.Administration;
 using Domain.Entities.Training;
+using Domain.ValueObjects;
 using Infrastructure.Data;
 using Infrastructure.Persistence.Errors;
 using Microsoft.EntityFrameworkCore;
@@ -110,9 +111,18 @@ internal sealed class GlobalExerciseStore : IGlobalExerciseStore
             if (_translator.TryTranslate(
                 ex,
                 PersistenceOperation.DeleteGlobalExercise,
-                out var error) && error?.Code == "global_exercise_has_references")
-                return GlobalExerciseStoreResult.For(
-                    GlobalExerciseStoreResult.Status.HasReferences);
+                out var error))
+            {
+                if (error?.Code == "global_exercise_has_references")
+                    return GlobalExerciseStoreResult.For(
+                        GlobalExerciseStoreResult.Status.HasReferences);
+
+                // Um vídeo registado em concorrência depois da verificação.
+                if (error?.Code == "global_exercise_has_video")
+                    return GlobalExerciseStoreResult.For(
+                        GlobalExerciseStoreResult.Status.HasVideo);
+            }
+
             throw;
         }
     }
@@ -214,10 +224,38 @@ internal sealed class GlobalExerciseStore : IGlobalExerciseStore
         if (exercise is null)
             return GlobalExerciseStoreResult.For(GlobalExerciseStoreResult.Status.NotFound);
 
-        if (await _dbContext.TrainingPlanDayExercises
+        // Uma única leitura decide referências de planos e vídeos: o orçamento de
+        // queries da eliminação (lock, verificação, escrita) mantém-se. Um vídeo
+        // publicado ou em curso bloqueia; vídeos recusados ou falhados já têm a
+        // eliminação do objeto agendada e são apenas histórico.
+        var blockers = await _dbContext.Exercises
             .IgnoreQueryFilters()
-            .AnyAsync(item => item.ExerciseId == exerciseId, cancellationToken))
+            .Where(candidate => candidate.Id == exerciseId)
+            .Select(candidate => new
+            {
+                Referenced = _dbContext.TrainingPlanDayExercises
+                    .IgnoreQueryFilters()
+                    .Any(item => item.ExerciseId == candidate.Id),
+                HasVideo = _dbContext.ExerciseVideos
+                    .IgnoreQueryFilters()
+                    .Any(video =>
+                        video.ExerciseId == candidate.Id &&
+                        (video.Status == ExerciseVideoStatus.Pending ||
+                            video.Status == ExerciseVideoStatus.Processing ||
+                            video.Status == ExerciseVideoStatus.Ready))
+            })
+            .SingleAsync(cancellationToken);
+
+        if (blockers.Referenced)
             return GlobalExerciseStoreResult.For(GlobalExerciseStoreResult.Status.HasReferences);
+
+        if (blockers.HasVideo)
+            return GlobalExerciseStoreResult.For(GlobalExerciseStoreResult.Status.HasVideo);
+
+        await _dbContext.ExerciseVideos
+            .IgnoreQueryFilters()
+            .Where(video => video.ExerciseId == exerciseId)
+            .ExecuteDeleteAsync(cancellationToken);
 
         var before = Snapshot(exercise);
         _dbContext.Exercises.Remove(exercise);

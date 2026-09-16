@@ -9,7 +9,8 @@ description: >
   um screenshot ou ficheiro de componente do frontend.
 
   Contexto do projecto: PT Manager SaaS — gestão de clientes, sessões, planos de treino, nutrição.
-  Stack frontend: React 19 + Vite + Tailwind + Chakra UI + shadcn/ui.
+  Stack frontend: React 19 + Vite + TypeScript + Tailwind v4 + shadcn/ui (sem Chakra UI).
+  Design system canónico: .claude/project/frontend/03_DESIGN_SYSTEM_E_MARCA.md.
   Utilizadores: trainers, clients, superuser.
 ---
 
@@ -42,7 +43,7 @@ Auditar cada princípio nesta ordem exata. Cada um tem um score 0–3 e pelo men
 
 1. **Inovador** — avança o padrão ou imita? Para um SaaS de gestão de PTs: propõe alguma melhoria clara sobre ferramentas comparáveis (Trainerize, TrueCoach), ou é um clone direto de tabelas/formulários genéricos?
 2. **Útil** — serve a tarefa primária do ecrã e da role? Um trainer consegue criar um plano de treino, um cliente consegue registar um set, sem fricção desnecessária?
-3. **Estético** — é visualmente coerente? Spacing, tipografia, cor seguem um sistema visível (tokens Tailwind/Chakra/shadcn), não estilos ad-hoc por página.
+3. **Estético** — é visualmente coerente? Spacing, tipografia, cor seguem um sistema visível (tokens Tailwind/shadcn), não estilos ad-hoc por página.
 4. **Compreensível** — a estrutura clarifica função? É óbvio qual é o cliente/plano ativo, o que uma ação vai fazer antes de a executar, e qual o estado de uma operação (a guardar, guardado, erro).
 5. **Discreto** — fica fora do caminho? Chrome, badges e decoração não competem com os dados do cliente/plano que o utilizador veio ver.
 6. **Honesto** — representa corretamente o estado? Guardar, sincronizar, e falhas de rede/Stripe são comunicados sem ambiguidade — nunca parece "guardado" quando falhou.
@@ -51,11 +52,11 @@ Auditar cada princípio nesta ordem exata. Cada um tem um score 0–3 e pelo men
 9. **Amigo do ambiente** — peso do bundle, páginas monolíticas (`AssessmentPage.jsx`, `MealsPlanPage.jsx`), re-renders desnecessários em listas e tabelas grandes.
 10. **Mínimo** — cada elemento ganha o seu lugar. Nada decorativo sem função.
 
-> Nota: produto multi-tenant B2B com três roles — tolerância baixa para ambiguidade de estado (dados de cliente errado, ação em tenant errado) e para inconsistência entre Chakra e shadcn coexistindo na mesma superfície.
+> Nota: produto multi-tenant B2B com três roles — tolerância baixa para ambiguidade de estado (dados de cliente errado, ação em tenant errado) e para bibliotecas de UI concorrentes a coexistir com shadcn na mesma superfície (Chakra não faz parte da stack).
 
 ## Modelo de Delegação
 
-Usa subagents para recolha de evidências (ler componentes React, medir contraste, contar elementos, inspecionar tokens Tailwind/Chakra/shadcn, fazer screenshots). Mantém o scoring e a síntese do veredicto no orquestrador. Rejeita relatórios de subagents sem evidência citada.
+Usa subagents para recolha de evidências (ler componentes React, medir contraste, contar elementos, inspecionar tokens Tailwind/shadcn, fazer screenshots). Mantém o scoring e a síntese do veredicto no orquestrador. Rejeita relatórios de subagents sem evidência citada.
 
 ### Contrato de Reporte dos Subagents (OBRIGATÓRIO)
 
@@ -83,7 +84,7 @@ Pede ao utilizador (ou infere do pedido) e escreve `00-scope.md`:
 - O que está a ser auditado? (componente, página, screenshot, URL local)
 - Para qual role? (trainer, client, superuser)
 - Qual a tarefa primária nesse ecrã? (criar plano, registar set, convidar cliente, gerir billing)
-- Stack frontend: React 19 + Vite + Tailwind + Chakra UI + shadcn/ui (confirmar se diferente)
+- Stack frontend: React 19 + Vite + TypeScript + Tailwind v4 + shadcn/ui (sem Chakra; confirmar se diferente)
 - Restrições (deadline, decisões já tomadas)
 
 Se o design não existir ainda, salta Fases 1–2 e vai diretamente para Fase 3 com veredicto = **NEW**.
@@ -106,7 +107,7 @@ Se só existe código estático → ler CSS/tokens e marcar findings como "INFER
 Campos obrigatórios:
 - Escala de spacing observada (array de px ou rem)
 - Escala tipográfica observada (array de px)
-- Contagem de cores distintas (tokens únicos hex/oklch renderizados) — sinalizar coexistência Chakra vs shadcn
+- Contagem de cores distintas (tokens únicos hex/oklch renderizados) — sinalizar cores fora dos tokens semânticos ou bibliotecas de UI concorrentes com shadcn
 - Rácio de contraste mais baixo observado em texto primário
 - Checklist de estados: empty (sem clientes/sessões) / loading / error / success / focus / disabled — presente ou ausente
 
@@ -166,7 +167,7 @@ N. Good design is <princípio> — Score: X/3
 
 #2 útil — 3: a tarefa primária completa-se sem fricção nem instrução. 2: possível mas requer navegação extra. 1: requer múltiplos cliques não óbvios. 0: a tarefa primária não está suportada no ecrã auditado.
 
-#3 estético — 3: spacing/type/cor obedecem a um sistema único visível; sem estilos órfãos nem mistura Chakra/shadcn não intencional. 2: ≤2 inconsistências menores. 1: 3–5 inconsistências OU uma violação marcada. 0: sem sistema visível OU ruído visual ativo.
+#3 estético — 3: spacing/type/cor obedecem a um sistema único visível; sem estilos órfãos nem componentes fora do sistema shadcn/tokens. 2: ≤2 inconsistências menores. 1: 3–5 inconsistências OU uma violação marcada. 0: sem sistema visível OU ruído visual ativo.
 
 #4 compreensível — 3: fica óbvio de imediato qual o cliente/plano ativo, o que cada ação faz, e o estado da operação. 2: 1 elemento necessita de tooltip ou hover. 1: 2–3 elementos pouco claros. 0: a ação primária não é identificável sem ajuda.
 
@@ -209,7 +210,7 @@ Preenche TODOS os `<placeholders>` com conteúdo concreto da auditoria. Inclui o
 /frontend Design <componente/página> de raiz para <role: trainer|client|superuser> do PT Manager.
 
 Tarefa primária: <uma frase>
-Stack: React 19 + Vite + Tailwind + Chakra UI + shadcn/ui
+Stack: React 19 + Vite + TypeScript + Tailwind v4 + shadcn/ui
 Restrições: <deadline, decisões já tomadas>
 
 Fora do scope (não desenhar agora):

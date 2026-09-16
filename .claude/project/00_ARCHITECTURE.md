@@ -18,12 +18,14 @@ A primeira versão do backend C# assume:
 
 1. Um MVP com até 100 trainers.
 2. Nenhum dado de produção a preservar.
-3. Compatibilidade funcional com o frontend existente.
+3. Frontend reescrito no Sprint 6 contra o contrato HTTP v1 (decisão de 2026-09-15; o
+   frontend anterior, feito para o backend Python, não é mantido compatível). Documentação
+   em `.claude/project/frontend/`.
 4. Backend alojado no plano gratuito do Render.
 5. Frontend alojado na Vercel.
 6. PostgreSQL alojado no Neon.
 7. Cache local e rate limiting em processo no MVP; HybridCache com Upstash Redis
-   fica sujeito ao Gate 6B e só é implementado com necessidade medida.
+   fica sujeito ao Gate 7B e só é implementado com necessidade medida.
 8. Upstash QStash para activar processamento assíncrono.
 9. Atrasos até cerca de vinte minutos, acrescidos de cold start, são aceitáveis nos lembretes do MVP gratuito.
 
@@ -40,7 +42,7 @@ Esta decisão oferece:
 3. Menor custo operacional do que microserviços.
 4. Separação suficiente para extrair um módulo no futuro, caso exista uma necessidade comprovada.
 
-Microserviços não fazem parte do MVP. Um módulo só deve ser extraído quando existirem requisitos mensuráveis de escalabilidade, disponibilidade, ownership ou deploy independente. Esta reavaliação está registada no Sprint 9B, sem compromisso de implementação.
+Microserviços não fazem parte do MVP. Um módulo só deve ser extraído quando existirem requisitos mensuráveis de escalabilidade, disponibilidade, ownership ou deploy independente. Esta reavaliação está registada no Sprint 10B, sem compromisso de implementação.
 
 ### 2.2 Clean Architecture
 
@@ -309,7 +311,7 @@ O JWT pode transportar identificadores e role necessários à autorização. Ped
 
 O refresh consulta sempre PostgreSQL e valida utilizador, sessão, email e estado de suspensão. Logout revoga o refresh token e o frontend elimina o access token em memória. Um access token já emitido pode permanecer tecnicamente válido até ao máximo de 15 minutos definido para a sua expiração.
 
-Operações de risco elevado, como administração global e alterações de billing, voltam a validar o estado actual do utilizador no PostgreSQL. Se no futuro for necessária revogação global imediata de access tokens, deve ser introduzida uma versão de sessão ou security stamp validada no servidor. Esta decisão é reavaliada no Sprint 9B a partir de requisitos de risco e compliance.
+Operações de risco elevado, como administração global e alterações de billing, voltam a validar o estado actual do utilizador no PostgreSQL. Se no futuro for necessária revogação global imediata de access tokens, deve ser introduzida uma versão de sessão ou security stamp validada no servidor. Esta decisão é reavaliada no Sprint 10B a partir de requisitos de risco e compliance.
 
 As políticas distinguem:
 
@@ -420,7 +422,7 @@ PostgreSQL Row-Level Security não faz parte do MVP. Deve ser reavaliado quando:
 3. Jobs e administração tiverem uma estratégia de contexto comprovada.
 4. Os testes demonstrarem que a complexidade adicional é sustentável.
 
-A decisão está registada no Sprint 9B. O sprint representa uma reavaliação
+A decisão está registada no Sprint 10B. O sprint representa uma reavaliação
 arquitectural e não uma implementação automática de RLS.
 
 ## 7. Persistência e migrations
@@ -473,8 +475,8 @@ Migrations futuras devem seguir expand-contract quando uma alteração precisar 
 
 ### 8.1 HybridCache e Upstash Redis
 
-O Sprint 6B contém um gate obrigatório para decidir se o MVP necessita de cache ou
-rate limiting distribuídos. Só quando as métricas do Sprint 6A e um consumidor
+O Sprint 7B contém um gate obrigatório para decidir se o MVP necessita de cache ou
+rate limiting distribuídos. Só quando as métricas do Sprint 7A e um consumidor
 concreto justificarem essa decisão é que a Application define uma porta estreita
 para o caso de uso e a Infrastructure a pode implementar sobre HybridCache:
 
@@ -598,7 +600,7 @@ RabbitMQ só volta a ser avaliado quando existir pelo menos um destes sinais:
 
 Se for adoptado, a decisão deve incluir broker gerido, worker separado, transactional outbox, inbox, idempotência, retries, delayed redelivery, dead-letter queues, observabilidade e custo. A adopção de MassTransit exige ainda uma avaliação actualizada do licenciamento.
 
-A reavaliação está registada no Sprint 9B. A presença no roadmap não substitui os
+A reavaliação está registada no Sprint 10B. A presença no roadmap não substitui os
 critérios anteriores nem aprova antecipadamente um broker.
 
 ## 10. Stripe
@@ -724,7 +726,7 @@ Métricas mínimas:
 2. Duração e falhas de queries.
 3. Pool de ligações.
 4. Cache hit ratio e falhas Redis, apenas se a implementação for aprovada no
-   Gate 6B; até lá, métricas de latência e volume suportam essa decisão.
+   Gate 7B; até lá, métricas de latência e volume suportam essa decisão.
 5. Jobs pendentes, tentativas e DeadLetter.
 6. Webhooks Stripe duplicados e falhados.
 7. Falhas de email.
@@ -757,7 +759,7 @@ Render Free Web Service
         .Api
         |
         |---- Neon PostgreSQL
-        |---- Upstash Redis (condicional ao Gate 6B)
+        |---- Upstash Redis (condicional ao Gate 7B)
         |---- Stripe
         |---- Resend
         `---- Cloudinary
@@ -812,7 +814,7 @@ O Central Package Management é criado no Sprint 0. Cada versão exacta é adici
 | Identidade | ASP.NET Core Identity |
 | JWT | `Microsoft.AspNetCore.Authentication.JwtBearer` |
 | Validação | FluentValidation core com validação explícita assíncrona |
-| Cache | Cache local no MVP; HybridCache e provider Redis compatível condicionais ao Gate 6B |
+| Cache | Cache local no MVP; HybridCache e provider Redis compatível condicionais ao Gate 7B |
 | Observabilidade | `ILogger`, Sentry e OpenTelemetry |
 | Testes | xUnit, WebApplicationFactory e Testcontainers |
 | Cobertura | Coverlet ou Microsoft Code Coverage |
@@ -851,7 +853,7 @@ API Functional Tests usam WebApplicationFactory e validam:
 5. Problem Details.
 6. Compatibilidade dos contratos.
 
-Se o Gate 6B aprovar Redis, o adapter é testado com um container nos cenários
+Se o Gate 7B aprovar Redis, o adapter é testado com um container nos cenários
 específicos de cache. Os testes principais devem provar que a aplicação continua
 funcional quando Redis está indisponível.
 
@@ -954,22 +956,22 @@ As decisões anteriormente listadas nesta secção têm o seguinte estado:
    foram materializados nos sprints de persistência e deixaram de estar adiados.
 2. Roadmap, `AGENTS.md` e instruções operacionais foram actualizados durante a
    preparação e execução dos sprints atuais.
-3. A configuração final de CI/CD está agendada no Sprint 7.
-4. HybridCache e Upstash Redis passam pelo Gate 6B e permanecem registados no
-   Sprint 9B se a implementação não for justificada nesse gate.
+3. A configuração final de CI/CD está agendada no Sprint 8.
+4. HybridCache e Upstash Redis passam pelo Gate 7B e permanecem registados no
+   Sprint 10B se a implementação não for justificada nesse gate.
 5. Revisão humana de avatares, moderação automática de vídeo, antivírus e scanning
    adicional e uma fila de denúncias/evidência estão agendados para avaliação no
-   Sprint 9A.
+   Sprint 10A.
 6. PostgreSQL RLS, RabbitMQ/MassTransit, eventual extração de microserviços e
    revogação global imediata de access tokens estão agendados para reavaliação no
-   Sprint 9B.
+   Sprint 10B.
 7. Métricas customizáveis por cliente (`client_tracked_metrics` e
    `client_metric_values`), versionamento de planos de treino e nutrição,
    relatórios persistidos (`client_reports`), `client_consents` e consulta
-   administrativa read-only de trainers estão registados no Sprint 9C.
+   administrativa read-only de trainers estão registados no Sprint 10C.
 8. Registo de séries e cancelamento de sessões pelo próprio cliente estão
-   registados no Sprint 9C. A consolidação de `StartDate` e `StartsDate` está
-   registada no Sprint 9D, sujeita à matriz Preserve, Alias ou Remove.
+   registados no Sprint 10C. A consolidação de `StartDate` e `StartsDate` está
+   registada no Sprint 10D, sujeita à matriz Preserve, Alias ou Remove.
 
 AutoMapper, MediatR, repositório genérico e Unit of Work genérico não são itens
 diferidos. São opções arquiteturais rejeitadas para este projeto enquanto não
@@ -992,7 +994,7 @@ existir uma decisão explícita que altere a arquitetura aprovada.
    cliente através de `ClientSupplementAssignment`.
 7. `client_consents` não integra a `InitialCreate`. Qualquer necessidade legal
    futura exige análise própria e não deve ser inferida a partir de dados de
-   avaliação. A avaliação está registada no Sprint 9C.
+   avaliação. A avaliação está registada no Sprint 10C.
 
 ## 17.2 Decisões nutricionais anteriores à InitialCreate
 
@@ -1148,14 +1150,14 @@ O desenho futuro deve:
 8. Manter o nome original fora do identificador e do path do storage. Se for
    conservado como metadata, é tratado como input não confiável.
 9. Manter assets em quarentena privada até à validação. Antivírus e scanning
-   adicional são avaliados no Sprint 9A quando a infraestrutura e o risco o
+   adicional são avaliados no Sprint 10A quando a infraestrutura e o risco o
    justificarem.
 
 A moderação automática destes vídeos para nudez, conteúdo sexual, violência, armas
 ou relevância para fitness não pertence ao Sprint 5D nem ao MVP atual. A moderação
 síncrona do avatar é a excepção explícita definida na secção 17.3.2. Quando
 existir política de conteúdo, processo de revisão humana, orçamento e fornecedor
-escolhido, a decisão é reavaliada no Sprint 9A. Se aprovada, a Application define
+escolhido, a decisão é reavaliada no Sprint 10A. Se aprovada, a Application define
 uma porta específica de moderação e a
 Infrastructure fornece o adaptador concreto. O Domain e a lógica de negócio não
 dependem de Google, AWS, Azure ou outro fornecedor.
@@ -1212,7 +1214,7 @@ A primeira implementação pertence a um vertical slice Sprint 4B, depois da
 autenticação e das políticas administrativas do Sprint 4A. Inclui uma migration
 EF Core nova gerada a partir do modelo desse slice; não altera migrations
 aplicadas nem aumenta o âmbito da migration consolidada do Lote 3F. Um sistema
-genérico de denúncias, evidência e filas de revisão fica registado no Sprint 9A e
+genérico de denúncias, evidência e filas de revisão fica registado no Sprint 10A e
 só entra em implementação quando existir um caso real que o justifique.
 
 ## 17.6 Google Sign-In

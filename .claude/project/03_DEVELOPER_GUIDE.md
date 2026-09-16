@@ -115,7 +115,7 @@ Git
    Nunca guardar as signing keys neste JSON.
 
    `RedisConnectionString` não pertence à configuração base. Só é acrescentada se o
-   Gate 6B aprovar Redis. Nesse caso, em desenvolvimento pode apontar para Redis local
+   Gate 7B aprovar Redis. Nesse caso, em desenvolvimento pode apontar para Redis local
    em Docker e a aplicação deve manter o fallback definido em
    `00_ARCHITECTURE.md §8.2`.
 
@@ -620,7 +620,7 @@ em configuração ou logs.
 - **ASP.NET Core Docs:** https://learn.microsoft.com/en-us/aspnet/core/
 - **FluentValidation:** https://docs.fluentvalidation.net/
 - **Upstash QStash:** https://upstash.com/docs/qstash
-- **Upstash Redis, apenas se aprovado no Gate 6B:** https://upstash.com/docs/redis
+- **Upstash Redis, apenas se aprovado no Gate 7B:** https://upstash.com/docs/redis
 - **OpenTelemetry .NET:** https://opentelemetry.io/docs/languages/net/
 
 ---

@@ -1,3 +1,34 @@
+# Documentação — Frontend no Sprint 6 e renumeração (2026-09-15)
+
+Plano: `C:\Users\Leandro Alves\.claude\plans\resilient-moseying-river.md`.
+Âmbito: só documentação. `backend/`, `frontend/` e `.claude/memory/ACTIVE.md` intocados.
+Entrada do Sprint 6 condicionada ao fecho do Gate 5D.
+
+- [x] 1. Roadmap: Sprint 6 Frontend (6A–6E) + renumeração 7/8/9/10A–D
+- [x] 1b. 00_ARCHITECTURE, README do project, 03_DEVELOPER_GUIDE alinhados
+- [x] 2. `.claude/project/backend/` (README, endpoints 142/142, contrato HTTP)
+- [x] 3. `.claude/project/frontend/` (arquitetura Mermaid, stack, convenções, design, benchmark)
+- [x] 3b. Prompts Claude Design e v0
+- [x] 4. sprints/README, MEMORY.md, nota de sessão, auto-memória
+- [x] 5. Skills alinhadas para shadcn/ui (sem Chakra)
+- [x] 6. Verificação: grep órfãos, 142/142, Mermaid, git status, doc review
+
+## Review
+
+- Endpoints: 142/142 iguais ao `api-surface.v1.txt` (diff por script, 0 em falta, 0 a mais).
+- Renumeração: sem `Sprint 9A–D`, `Gate 6A/6B` de observabilidade nem "8 sprints" órfãos;
+  números sem letra (Testes, Go-live) corrigidos à mão.
+- Mermaid: 5/5 blocos renderizados com mermaid 11.4.1.
+- Código confirmado: JWT 15 min (`JwtOptions.cs`), refresh 30 dias, CORS só HTTPS +
+  credentials, cookie `__Secure-ptm-refresh`, `CorrelationIdMiddleware` já existe, sem
+  health checks, OpenAPI só em Development.
+- `git status`: `ACTIVE.md` sem diff; `frontend/` intocado; o único ficheiro de `backend/`
+  modificado (`PostgresConstraintTranslator.cs`) já estava modificado antes desta sessão.
+- Achado: `api-surface.v1.txt` marca `POST /billing/webhook` como `auth=required`, mas o
+  controller é `[AllowAnonymous]`.
+
+---
+
 # Sprint 5 — Fase 5D: upload técnico de vídeo privado
 
 Plano geral: `docs/backend-files/sprint_5/Plan_sprint_5.md` (Fase 5D).

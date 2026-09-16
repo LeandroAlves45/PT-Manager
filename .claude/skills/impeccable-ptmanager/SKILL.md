@@ -1,270 +1,215 @@
 ---
 name: impeccable-ptmanager
 description: |
-  Design excellence for PT Manager frontend. Use when building UI components, pages, or modifying styles in React + Tailwind CSS + Chakra UI. Triggers on: creating new pages, building components, adjusting layouts, styling forms, designing dashboards, reviewing UI/UX, improving accessibility. Delivers cohesive, accessible, performance-optimized design that respects PT Manager's brand and user patterns.
+  Design excellence for PT Manager frontend. Use when building UI components, pages, or modifying styles in React 19 + TypeScript + Tailwind CSS v4 + shadcn/ui. Triggers on: creating new pages, building components, adjusting layouts, styling forms, designing dashboards, reviewing UI/UX, improving accessibility. Delivers cohesive, accessible, performance-optimized design that respects PT Manager's brand and user patterns.
 ---
 
 # Impeccable: Design Skill for PT Manager Frontend
 
 You are designing user interfaces for PT Manager — a SaaS dashboard for personal trainers. Every component, page, and interaction should feel intentional, consistent, and accessible.
 
+Canonical references (read before designing):
+- `.claude/project/frontend/03_DESIGN_SYSTEM_E_MARCA.md` — brand tokens, typography, key components
+- `.claude/project/frontend/02_CONVENCOES.md` — code conventions
+- `.claude/project/frontend/00_ARQUITETURA_FRONTEND.md` — folder structure
+
+**Stack: shadcn/ui (Radix) + Tailwind CSS v4 + TypeScript. Chakra UI is NOT used — never import `@chakra-ui/*`.**
+
 ## Design Principles for PT Manager
 
 ### 1. Clarity Over Decoration
 
-PT Manager serves busy personal trainers. They need information fast. No gradients-for-gradients-sake, no animations without purpose.
+PT Manager serves busy personal trainers. They need information fast. Motion and glass effects are allowed only when they reinforce hierarchy or state.
 
 - **Information hierarchy:** Largest text for what matters most. Related data grouped visually.
 - **White space:** Breathing room between sections. Dense data tables still need padding.
-- **Color:** Purposeful. Blue for primary actions, red for destructive, green for success. No random accent colors.
-- **Typography:** Clear sans-serif (Rubik, Inter, or system fonts). 16px base for readability. Don't go smaller than 12px for UI text.
+- **Color:** Purposeful. Brand blue (`--primary`) for primary actions, `--destructive` for destructive, `--success` for success. No random accent colors.
+- **Typography:** Display font only for headings/brand; UI font for everything else. 16px base. Never below 12px.
 
 ### 2. Accessibility is Not Optional
 
 Every component must:
-- Contrast: WCAG AA minimum (4.5:1 for text, 3:1 for graphics)
-- Keyboard navigation: Tab through interactive elements, Enter/Space to activate
+- Contrast: WCAG AA minimum (4.5:1 for text, 3:1 for graphics). Brand blue `#00A3E9` fails with white text — use dark foreground on it (see design system doc).
+- Keyboard navigation: Tab through interactive elements, Enter/Space to activate, Escape closes overlays
 - Screen readers: `aria-label`, `aria-describedby`, semantic HTML (`<button>`, `<nav>`, `<main>`)
-- Color blind safe: Don't rely on color alone (e.g., use icon + color for status)
-- Touch targets: Buttons/links 44px minimum (mobile), 32px minimum (desktop)
+- Color blind safe: Don't rely on color alone (icon + text for status)
+- Touch targets: 44px minimum (mobile), 32px minimum (desktop)
 
-**Use Chakra UI's built-in a11y props heavily:**
-```jsx
-<Button aria-label="Delete client" colorScheme="red">
-  Delete
+shadcn/ui components are built on Radix and already handle focus management and ARIA — keep them, don't rebuild primitives:
+```tsx
+<Button variant="destructive" aria-label="Apagar cliente">
+  <Trash2 aria-hidden /> Apagar
 </Button>
 ```
 
 ### 3. Consistency: Build Once, Use Everywhere
 
-PT Manager uses **Tailwind CSS 4** + **Chakra UI** + **shadcn/ui** for base components. Use existing components first.
-
-- **Pages (.jsx):** Feature pages, layout, data flow
-- **UI Components (.tsx):** Reusable button, card, modal, form field from shadcn/ui or Chakra
-- **Tailwind:** Only for custom layout/spacing when no component exists
-- **Never duplicate:** If a button pattern exists, use it. Don't create a new one.
+- **`src/shared/components/ui/`:** shadcn primitives (owned code, edit carefully)
+- **`src/shared/components/`:** composed app components (DataTable, PageHeader, Combobox, EmptyState)
+- **`src/features/*/components/`:** feature-specific components
+- **Tailwind:** layout/spacing via utilities; colors only through semantic tokens (`bg-card`, `text-muted-foreground`)
+- **Never duplicate:** If a pattern exists in `shared/`, use it.
 
 ### 4. Responsive Design: Mobile-First
 
-PT Manager users are on phones during gym sessions. Every page must work at 375px width.
+The client portal is used on phones in the gym. Every page must work at 375px width.
 
-```jsx
-// Good: Stack on mobile, row on desktop
-<Flex direction={{ base: 'column', md: 'row' }} gap={4}>
-  <Box flex={1}>Client List</Box>
-  <Box flex={1}>Details</Box>
-</Flex>
+```tsx
+// Stack on mobile, row on desktop
+<div className="flex flex-col gap-4 md:flex-row">
+  <section className="flex-1">Lista de clientes</section>
+  <section className="flex-1">Detalhe</section>
+</div>
 ```
 
-**Breakpoints (Chakra defaults):**
-- `base`: 0px (mobile)
-- `sm`: 640px
-- `md`: 768px (tablet)
-- `lg`: 1024px (desktop)
-- `xl`: 1280px (wide)
+**Breakpoints (Tailwind v4 defaults):** `sm` 640px · `md` 768px · `lg` 1024px · `xl` 1280px · `2xl` 1536px
 
 ### 5. Dark/Light Mode Support
 
-PT Manager supports dark mode. Every color must work in both.
+PT Manager ships a theme toggle (dark and light). Every color must work in both.
 
-- Use Chakra's `useColorMode()` and `_dark` pseudo-selectors
+- Colors come from CSS variables in `globals.css` (`:root` and `.dark`), exposed to Tailwind via `@theme inline`
+- Use semantic utilities (`bg-background`, `text-foreground`, `border-border`); use `dark:` only for exceptions
 - Test in both modes before shipping
-- Don't hardcode colors — use theme variables
-
-```jsx
-<Box bg={{ base: 'white', _dark: 'gray.900' }} />
-```
-
-Or use Chakra's semantic colors:
-```jsx
-<Box bg="bg.surface" color="fg.default" />
-```
 
 ## Component Patterns
 
-### Form Fields: Consistent Input
+### Form Fields: react-hook-form + zod + shadcn Form
 
-```jsx
-// Good: Use Chakra form control for labels, errors, helper text
-import { FormControl, FormLabel, FormErrorMessage, Input } from '@chakra-ui/react';
+```tsx
+const schema = z.object({ full_name: z.string().min(1, 'Nome obrigatório') });
 
-export function ClientNameField({ value, onChange, error }) {
+export function ClientNameForm({ onSubmit }: { onSubmit: (v: z.infer<typeof schema>) => void }) {
+  const form = useForm({ resolver: zodResolver(schema), defaultValues: { full_name: '' } });
   return (
-    <FormControl isInvalid={!!error}>
-      <FormLabel>Full Name</FormLabel>
-      <Input 
-        value={value} 
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="John Doe"
-      />
-      {error && <FormErrorMessage>{error}</FormErrorMessage>}
-    </FormControl>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="full_name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nome completo</FormLabel>
+              <FormControl><Input placeholder="João Silva" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </form>
+    </Form>
   );
 }
 ```
+
+Server validation errors (ProblemDetails `errors[]` with `field`) are mapped to `form.setError(field, …)`.
 
 ### Cards: Data Containers
 
-```jsx
-import { Box, HStack, VStack, Text, Button } from '@chakra-ui/react';
-
-export function ClientCard({ client, onEdit }) {
+```tsx
+export function ClientCard({ client, onEdit }: ClientCardProps) {
   return (
-    <Box 
-      p={6} 
-      borderWidth={1} 
-      borderRadius="md" 
-      shadow="sm"
-      _hover={{ shadow: 'md' }}
-      transition="shadow 0.2s"
-    >
-      <VStack align="start" gap={3}>
-        <Text fontWeight="bold" fontSize="lg">{client.name}</Text>
-        <Text color="gray.500" fontSize="sm">{client.email}</Text>
-        <HStack>
-          <Button size="sm" onClick={onEdit}>Edit</Button>
-        </HStack>
-      </VStack>
-    </Box>
+    <Card className="transition-shadow hover:shadow-md">
+      <CardHeader>
+        <CardTitle>{client.full_name}</CardTitle>
+        <CardDescription>{client.email}</CardDescription>
+      </CardHeader>
+      <CardFooter>
+        <Button size="sm" variant="outline" onClick={onEdit}>Editar</Button>
+      </CardFooter>
+    </Card>
   );
 }
 ```
 
-**Avoid:**
-- Hardcoded padding/margins — use Chakra spacing tokens (2, 4, 6, 8)
-- Custom shadows — use Chakra's shadow scale (`sm`, `md`, `lg`)
-- Hover states without transition — 0.2s-0.3s transition is standard
+**Avoid:** arbitrary values (`p-[13px]`), custom shadows outside the token scale, hover states without `transition-*`.
 
 ### Tables: Readable Data
 
-```jsx
-import { Table, Thead, Tbody, Tr, Th, Td, Box } from '@chakra-ui/react';
+Use the shared `DataTable` (TanStack Table + shadcn `Table`) for anything paginated by the server. For small static lists:
 
-export function SessionsTable({ sessions }) {
-  return (
-    <Box overflowX="auto">
-      <Table size="sm">
-        <Thead bg="gray.100" _dark={{ bg: 'gray.800' }}>
-          <Tr>
-            <Th>Date</Th>
-            <Th>Duration</Th>
-            <Th>Status</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          {sessions.map((session) => (
-            <Tr key={session.id} _hover={{ bg: 'gray.50' }} _dark={{ _hover: { bg: 'gray.800' } }}>
-              <Td>{new Date(session.date).toLocaleDateString()}</Td>
-              <Td>{session.durationMinutes} min</Td>
-              <Td><Badge colorScheme={session.status === 'completed' ? 'green' : 'gray'}>{session.status}</Badge></Td>
-            </Tr>
-          ))}
-        </Tbody>
-      </Table>
-    </Box>
-  );
-}
+```tsx
+<div className="overflow-x-auto">
+  <Table>
+    <TableHeader>
+      <TableRow><TableHead>Data</TableHead><TableHead>Duração</TableHead><TableHead>Estado</TableHead></TableRow>
+    </TableHeader>
+    <TableBody>
+      {sessions.map((s) => (
+        <TableRow key={s.id}>
+          <TableCell>{formatDate(s.starts_at)}</TableCell>
+          <TableCell>{s.duration_minutes} min</TableCell>
+          <TableCell><StatusBadge status={s.status} /></TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+</div>
 ```
 
-### Modals: Intentional Dialogs
+### Dialogs: Intentional
 
-```jsx
-import { 
-  Modal, 
-  ModalOverlay, 
-  ModalContent, 
-  ModalHeader, 
-  ModalFooter, 
-  ModalBody, 
-  ModalCloseButton,
-  Button 
-} from '@chakra-ui/react';
-
-export function DeleteClientModal({ isOpen, onClose, onConfirm }) {
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} isCentered>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Delete Client</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          Are you sure? This cannot be undone.
-        </ModalBody>
-        <ModalFooter gap={3}>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button colorScheme="red" onClick={onConfirm}>Delete</Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  );
-}
+```tsx
+<AlertDialog>
+  <AlertDialogTrigger asChild><Button variant="destructive">Arquivar</Button></AlertDialogTrigger>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Arquivar cliente?</AlertDialogTitle>
+      <AlertDialogDescription>Pode reativá-lo mais tarde.</AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+      <AlertDialogAction onClick={onConfirm}>Arquivar</AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
 ```
+
+### Selection from catalogs: Combobox
+
+Muscles, foods, exercises, supplements are chosen with the shared `Combobox` (Popover + Command), never a plain `<select>`:
+- Short fixed lists (muscles): client-side filter, multi-select with chips.
+- Large paginated catalogs (foods, exercises): server search with debounce via React Query.
 
 ## Performance: Keep Pages Snappy
 
-- **Image optimization:** Use `<Image />` from next/image or Chakra, with lazy loading
-- **Code splitting:** Use React.lazy() for non-critical pages
-- **Avoid re-renders:** Use `useMemo` and `useCallback` sparingly (only when profiler shows real impact)
-- **Bundle size:** Tree-shake unused Chakra components in barrel exports
+- **Images:** `loading="lazy"` below the fold, explicit `width`/`height`
+- **Code splitting:** lazy routes per feature
+- **Avoid re-renders:** `useMemo`/`useCallback` only when the profiler shows real impact
+- **Bundle size:** import icons individually from `lucide-react`; no whole-library imports
 
 ## PT Manager-Specific Patterns
 
 ### Navigation: Consistent Structure
 
-```jsx
-<HStack spacing={1}>
-  <NavLink href="/dashboard" active={isActive('/dashboard')}>Dashboard</NavLink>
-  <NavLink href="/clients" active={isActive('/clients')}>Clients</NavLink>
-  <NavLink href="/sessions" active={isActive('/sessions')}>Sessions</NavLink>
-  <NavLink href="/billing" active={isActive('/billing')}>Billing</NavLink>
-</HStack>
-```
+Sidebar (collapsible) + topbar with breadcrumbs + ⌘K command menu. Nav items come from `shared/config/navigation.ts` per role — never hardcode links in layouts.
 
 ### Status Badges: Semantic Colors
 
-```jsx
-const statusColors = {
-  pending: 'yellow',
-  completed: 'green',
-  cancelled: 'red',
-  scheduled: 'blue',
-};
+```tsx
+const statusVariant = {
+  scheduled: 'info',
+  completed: 'success',
+  cancelled: 'destructive',
+  no_show: 'warning',
+} as const satisfies Record<SessionStatus, BadgeVariant>;
 
-<Badge colorScheme={statusColors[status]}>{status}</Badge>
-```
-
-### Forms: Always Validate Visually
-
-```jsx
-<FormControl isInvalid={touched && !!errors.email}>
-  <FormLabel>Email</FormLabel>
-  <Input 
-    type="email"
-    value={email}
-    onChange={handleChange}
-    onBlur={handleBlur}
-  />
-  {touched && errors.email && <FormErrorMessage>{errors.email}</FormErrorMessage>}
-</FormControl>
+<Badge variant={statusVariant[status]}><StatusIcon status={status} />{t(status)}</Badge>
 ```
 
 ## Color Palette (PT Manager)
 
-Use Chakra's default palette. Recommended for PT Manager:
+Semantic tokens defined in `globals.css` (values in the design system doc):
 
-- **Primary actions:** `blue.500` (button, links)
-- **Success:** `green.500` (session completed, payment confirmed)
-- **Warning:** `yellow.500` (upcoming deadline, low stock)
-- **Destructive:** `red.500` (delete, cancel, error)
-- **Neutral:** `gray.*` (backgrounds, borders, secondary text)
+- **Primary actions:** `primary` (brand blue `#00A3E9` family)
+- **Success:** `success` · **Warning:** `warning` · **Destructive:** `destructive` · **Info:** `info`
+- **Neutral:** `background`, `card`, `muted`, `border`, `foreground`, `muted-foreground`
 
-**Don't hardcode colors — use semantic names:**
-```jsx
+**Don't hardcode colors:**
+```tsx
 // Good
-<Button colorScheme="blue">Create Session</Button>
-
+<Button>Criar sessão</Button>
 // Avoid
-<Button bg="#1e90ff">Create Session</Button>
+<button className="bg-[#1e90ff]">Criar sessão</button>
 ```
 
 ## Checklist: Before Shipping a Component
@@ -274,13 +219,14 @@ Use Chakra's default palette. Recommended for PT Manager:
 - ✓ Keyboard accessible (Tab, Enter, Space, Escape where needed)
 - ✓ Works at 375px width (mobile)
 - ✓ Responsive: test on mobile, tablet, desktop
-- ✓ Dark mode: toggle and verify
+- ✓ Dark and light mode: toggle and verify
 - ✓ Touch target 44px+ (mobile), 32px+ (desktop)
 - ✓ Contrast 4.5:1 (text/background)
 - ✓ Color + icon/text for status (not color alone)
-- ✓ No hardcoded colors — use theme/Chakra
-- ✓ Reuses existing components (no duplication)
+- ✓ No hardcoded colors — semantic tokens only
+- ✓ Reuses shared components (no duplication)
+- ✓ Loading (skeleton), empty and error states present
 - ✓ No layout shift on load
-- ✓ Error messages are clear and actionable
+- ✓ Error messages are clear and actionable (PT-PT)
 
 **When all checks pass, it's impeccable.**

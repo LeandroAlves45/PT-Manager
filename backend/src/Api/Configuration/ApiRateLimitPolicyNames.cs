@@ -18,4 +18,5 @@ public static class ApiRateLimitPolicyNames
     public const string ChangePassword = "auth_change_password";
     public const string Moderation = "admin_moderation";
     public const string MediaUpload = "media_upload";
+    public const string VideoUpload = "video_upload";
 }

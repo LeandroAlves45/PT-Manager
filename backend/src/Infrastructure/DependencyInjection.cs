@@ -20,6 +20,7 @@ using Infrastructure.Data;
 using Infrastructure.Data.Interceptors;
 using Infrastructure.Identity;
 using Infrastructure.Media;
+using Infrastructure.Media.Video;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Administration;
 using Infrastructure.Persistence.Assessments;
@@ -166,6 +167,9 @@ public static class DependencyInjection
 
         // Managed images: Cloudinary storage, SkiaSharp processing, Vision moderation
         services.AddMediaInfrastructure(configuration);
+
+        // Managed exercise videos: R2 private storage, container probe and persistence
+        services.AddVideoInfrastructure(configuration);
 
         // Timezone provider
         services.AddScoped<ITrainerTimeZoneProvider, TrainerTimeZoneProvider>();
