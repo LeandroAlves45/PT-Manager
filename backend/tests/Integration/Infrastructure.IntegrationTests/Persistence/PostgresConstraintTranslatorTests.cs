@@ -195,6 +195,46 @@ public sealed class PostgresConstraintTranslatorTests
             out _));
     }
 
+    [Fact]
+    public void ExerciseVideoInFlightUniqueViolation_OnRegister_MapsUploadInProgress()
+    {
+        var exception = CreatePostgresException("23505", "uq_exercise_videos_in_flight");
+
+        var translated = _translator.TryTranslate(
+            exception,
+            PersistenceOperation.RegisterExerciseVideoUpload,
+            out var error);
+
+        Assert.True(translated);
+        Assert.Equal("exercise_video_upload_in_progress", error!.Code);
+        Assert.Equal(ErrorCategory.Conflict, error.Category);
+    }
+
+    [Fact]
+    public void ExerciseVideoInFlightForeignKeyState_OnRegister_IsNotTranslated()
+    {
+        var exception = CreatePostgresException("23503", "uq_exercise_videos_in_flight");
+
+        Assert.False(_translator.TryTranslate(
+            exception,
+            PersistenceOperation.RegisterExerciseVideoUpload,
+            out _));
+    }
+
+    [Fact]
+    public void ExerciseVideoForeignKey_OnDeleteGlobalExercise_MapsHasVideo()
+    {
+        var exception = CreatePostgresException("23503", "fk_exercise_videos_exercise");
+
+        var translated = _translator.TryTranslate(
+            exception,
+            PersistenceOperation.DeleteGlobalExercise,
+            out var error);
+
+        Assert.True(translated);
+        Assert.Equal("global_exercise_has_video", error!.Code);
+    }
+
     private static PostgresException CreatePostgresException(
         string sqlState,
         string constraintName)

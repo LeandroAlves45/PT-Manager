@@ -127,10 +127,10 @@ public sealed class CompleteExerciseVideoUploadHandler
         VideoObjectInfo info)
     {
         if (info.SizeBytes != declaredSizeBytes || info.SizeBytes > ExerciseVideoPolicy.MaxSizeBytes)
-            return "execise_video_size_mismatch";
+            return "exercise_video_size_mismatch";
 
         if (!ExerciseVideoPolicy.ContentTypesMatch(declaredContentType, info.ContentType))
-            return "execise_video_content_type_mismatch";
+            return "exercise_video_content_type_mismatch";
 
         return null;
     }

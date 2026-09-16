@@ -1,6 +1,8 @@
 using Api.FunctionalTests.Support;
 using Application.Features.Jobs.Dispatching;
 using Application.Features.Notifications.Delivery;
+using Application.Features.Training.ExerciseVideos;
+using Application.Features.Training.ExerciseVideos.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Api.FunctionalTests.Contract;
@@ -45,15 +47,64 @@ public sealed class JobDispatchCompositionTests
     }
 
     [Fact]
-    public void SendNotification_IsTheOnlyRegisteredDurableJobRoute()
+    public void RegisteredDurableJobRoutes_AreTheClosedAllowlist()
     {
         using var scope = _fixture.Factory.Services.CreateScope();
 
-        var handlers = scope.ServiceProvider.GetServices<IDurableJobHandler>().ToArray();
+        var routes = scope.ServiceProvider
+            .GetServices<IDurableJobHandler>()
+            .Select(handler => $"{handler.JobType}:v{handler.JobVersion}")
+            .Order(StringComparer.Ordinal)
+            .ToArray();
 
-        var handler = Assert.Single(handlers);
-        Assert.Equal("send_notification", handler.JobType);
-        Assert.Equal(1, handler.JobVersion);
+        Assert.Equal(
+            [
+                "exercise-video.delete-object:v1",
+                "exercise-video.expire:v1",
+                "exercise-video.process:v1",
+                "send_notification:v1"
+            ],
+            routes);
+    }
+
+    /// <summary>
+    /// Os jobs de vídeo são escritos pelos stores com os tipos de
+    /// <see cref="ExerciseVideoJobs"/>. Um tipo escrito sem handler registado
+    /// terminaria em dead letter com job_handler_not_registered.
+    /// </summary>
+    [Fact]
+    public void ExerciseVideoJobTypesWrittenByTheStores_HaveRegisteredPlatformHandlers()
+    {
+        using var scope = _fixture.Factory.Services.CreateScope();
+
+        var platformRoutes = scope.ServiceProvider
+            .GetServices<IDurableJobHandler>()
+            .OfType<IPlatformDurableJobHandler>()
+            .Select(handler => handler.JobType)
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.Superset(
+            platformRoutes,
+            new HashSet<string>(StringComparer.Ordinal)
+            {
+                ExerciseVideoJobs.ProcessType,
+                ExerciseVideoJobs.ExpireType,
+                ExerciseVideoJobs.DeleteObjectType
+            });
+    }
+
+    [Fact]
+    public void CompositionRoot_ResolvesEveryVideoDependency()
+    {
+        using var scope = _fixture.Factory.Services.CreateScope();
+        var provider = scope.ServiceProvider;
+
+        Assert.NotNull(provider.GetRequiredService<IVideoObjectStorage>());
+        Assert.NotNull(provider.GetRequiredService<IVideoMetadataProbe>());
+        Assert.NotNull(provider.GetRequiredService<IExerciseVideoStore>());
+        Assert.NotNull(provider.GetRequiredService<IExerciseVideoQueries>());
+        Assert.NotNull(provider.GetRequiredService<IExerciseVideoProcessingStore>());
+        Assert.NotNull(provider.GetRequiredService<ExerciseVideoSettings>());
     }
 
     /// <summary>

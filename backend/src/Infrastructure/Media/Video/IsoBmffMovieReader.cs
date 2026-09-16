@@ -13,7 +13,7 @@ internal static class IsoBmffMovieReader
     private const long MaxDurationMilliseconds = 24L * 60 * 60 * 1000;
 
     private static readonly HashSet<string> Mp4Brands =
-        new(StringComparer.Ordinal) { "isom", "iso2", "mp41", "mp42", "avc1", "M4V" };
+        new(StringComparer.Ordinal) { "isom", "iso2", "mp41", "mp42", "avc1", "M4V " };
 
     private static readonly HashSet<string> FragmentedTopLevelBoxes =
         new(StringComparer.Ordinal) { "moof", "mfra", "sidx", "styp", "emsg" };

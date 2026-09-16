@@ -189,7 +189,7 @@ internal sealed class PostgresConstraintTranslator
             return true;
         }
 
-        if (postgresException.SqlState == ForeignKeyViolation &&
+        if (postgresException.SqlState == UniqueViolation &&
             operation is PersistenceOperation.RegisterExerciseVideoUpload &&
             postgresException.ConstraintName == "uq_exercise_videos_in_flight")
         {

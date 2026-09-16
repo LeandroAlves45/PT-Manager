@@ -14,7 +14,6 @@ public sealed class ExerciseVideo
         new HashSet<string>(StringComparer.Ordinal) { "video/mp4", "video/quicktime" };
 
     private const string ObjectKeyRoot = "exercise-videos";
-    private const int MaxContentTypeLength = 50;
     private const int MaxFailureCodeLength = 100;
     private const int MaxETagLength = 128;
     private const int MaxCodecLength = 8;
@@ -59,8 +58,7 @@ public sealed class ExerciseVideo
             throw new DomainException("Owner trainer ID cannot be empty.");
         if (createdByUserId == Guid.Empty)
             throw new DomainException("Creator user ID is required.");
-        if (contentType is null || !AcceptedContentTypes.Contains(contentType) ||
-            contentType.Length > MaxContentTypeLength)
+        if (contentType is null || !AcceptedContentTypes.Contains(contentType))
             throw new DomainException("Exercise video content type is not accepted.");
         if (declaredSizeBytes <= 0)
             throw new DomainException("Exercise video declared size must be positive.");

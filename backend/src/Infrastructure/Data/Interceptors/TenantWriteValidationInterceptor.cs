@@ -59,7 +59,9 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
         ValidateTenantTransferAuditEntries(context);
 
         var entries = context.ChangeTracker.Entries()
-            .Where(entry => entry.State is EntityState.Added or EntityState.Modified)
+            .Where(entry =>
+                entry.State is EntityState.Added or EntityState.Modified ||
+                (entry.State == EntityState.Deleted && entry.Entity is ExerciseVideo))
             .ToList();
 
         Guid? tenantId = null;

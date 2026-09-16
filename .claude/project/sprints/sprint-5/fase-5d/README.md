@@ -1,7 +1,8 @@
 # Sprint Pack — Fase 5D (vídeo privado de exercício)
 
-Estado: **planeada e documentada**. Implementação manual no `backend/` real ainda
-não começou. Materialização temporária em `C:\ptm5d` (fora do Git).
+Estado: **implementada e validada no `backend/` real (2026-09-16)**. Migration
+`20260916115919_AddExerciseVideos`; 2644 testes verdes. Faltam só os gates externos
+R2. Fecho em `docs/backend-files/sprint_5/sprint_5D/14_relatorio_fecho_fase_5D.md`.
 
 ## Scope
 
@@ -38,8 +39,7 @@ Abertos por recursos externos: `QG5D-ROLL-001`, `QG5D-PROVIDER-001`.
 
 ## Blockers
 
-- Implementar no `backend/` real só depois de copiar os blueprints na ordem do 00.
-- Não recriar `C:\ptm5d`. Não editar migrations já aplicadas.
+- Não recriar `C:\ptm5d`. Não editar `20260916115919_AddExerciseVideos` (já aplicada à dev).
 - Não activar `R2:Enabled` sem bucket, CORS, token S3 e User Secrets.
 
 ## Blueprints

@@ -9,9 +9,9 @@ namespace Application.Features.Training.ExerciseVideos;
 /// </summary>
 public static class ExerciseVideoJobs
 {
-    public const string ProcessType = "exercise_video.process";
-    public const string ExpireType = "exercise_video.expire";
-    public const string DeleteObjectType = "exercise_video.delete_object";
+    public const string ProcessType = "exercise-video.process";
+    public const string ExpireType = "exercise-video.expire";
+    public const string DeleteObjectType = "exercise-video.delete-object";
     public const int Version = 1;
 
     private static readonly JsonSerializerOptions PayloadOptions = new()

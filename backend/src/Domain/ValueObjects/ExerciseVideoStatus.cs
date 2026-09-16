@@ -13,11 +13,11 @@ public sealed record ExerciseVideoStatus
     private ExerciseVideoStatus(string value) => Value = value;
 
     /// <summary>Autorização de upload emitida; o objeto pode ainda não existir.</summary>
-    public static ExerciseVideoStatus Pending = new("pending");
-    public static ExerciseVideoStatus Processing = new("processing");
-    public static ExerciseVideoStatus Ready = new("ready");
-    public static ExerciseVideoStatus Rejected = new("rejected");
-    public static ExerciseVideoStatus Failed = new("failed");
+    public static readonly ExerciseVideoStatus Pending = new("pending");
+    public static readonly ExerciseVideoStatus Processing = new("processing");
+    public static readonly ExerciseVideoStatus Ready = new("ready");
+    public static readonly ExerciseVideoStatus Rejected = new("rejected");
+    public static readonly ExerciseVideoStatus Failed = new("failed");
 
     /// <summary>Indica que ainda existe trabalho técnico por concluir.</summary>
     public bool IsInFlight => this == Pending || this == Processing;

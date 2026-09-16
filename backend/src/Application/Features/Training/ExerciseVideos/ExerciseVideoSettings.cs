@@ -14,16 +14,16 @@ public sealed record ExerciseVideoSettings
     {
         if (maxVideosPerTrainer is < 1 or > 1000)
             throw new ArgumentOutOfRangeException(nameof(maxVideosPerTrainer));
-        if (uploadUrlLifetime <= TimeSpan.FromMinutes(1) ||
+        if (uploadUrlLifetime < TimeSpan.FromMinutes(1) ||
             uploadUrlLifetime > TimeSpan.FromHours(1))
             throw new ArgumentOutOfRangeException(nameof(uploadUrlLifetime));
-        if (playbackUrlLifetime <= TimeSpan.FromMinutes(1) ||
+        if (playbackUrlLifetime < TimeSpan.FromMinutes(1) ||
             playbackUrlLifetime > TimeSpan.FromHours(12))
             throw new ArgumentOutOfRangeException(nameof(playbackUrlLifetime));
 
         // O retry do dispatcher (5 tentativas, 1+2+4+8 min) cabe em ~15 min.
         // A margem mínima de 1 hora cobre esse orçamento e o jitter.
-        if (abandonmentGrace <= TimeSpan.FromHours(1) || abandonmentGrace > TimeSpan.FromDays(1))
+        if (abandonmentGrace < TimeSpan.FromHours(1) || abandonmentGrace > TimeSpan.FromDays(1))
             throw new ArgumentOutOfRangeException(nameof(abandonmentGrace));
 
         MaxVideosPerTrainer = maxVideosPerTrainer;

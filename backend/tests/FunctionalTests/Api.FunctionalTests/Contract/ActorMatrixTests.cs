@@ -26,14 +26,16 @@ public sealed class ActorMatrixTests
         "/api/v1/client-session-packs",
         "/api/v1/check-ins",
         "/api/v1/supplements",
-        "/api/v1/supplement-assignments"
+        "/api/v1/supplement-assignments",
+        "/api/v1/exercises/6f1c1f10-7b1f-4a31-9a8e-1a2b3c4d5e6f/video"
     ];
 
     public static TheoryData<string> SuperuserOnlyRoutes() =>
     [
         "/api/v1/global-foods",
         "/api/v1/global-exercises",
-        "/api/v1/global-supplements"
+        "/api/v1/global-supplements",
+        "/api/v1/global-exercises/6f1c1f10-7b1f-4a31-9a8e-1a2b3c4d5e6f/video"
     ];
 
     public static TheoryData<string> ClientOnlyRoutes() =>
@@ -42,7 +44,8 @@ public sealed class ActorMatrixTests
         "/api/v1/portal/my-plan",
         "/api/v1/portal/my-nutrition",
         "/api/v1/portal/my-profile",
-        "/api/v1/portal/my-supplements"
+        "/api/v1/portal/my-supplements",
+        "/api/v1/portal/my-plan/exercises/6f1c1f10-7b1f-4a31-9a8e-1a2b3c4d5e6f/video"
     ];
 
     [Theory]

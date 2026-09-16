@@ -32,6 +32,8 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
         "20260910125857_AddStripeBillingOperations";
     public const string AddManagedImageAssetsMigration =
         "20260912145051_AddManagedImageAssets";
+    public const string AddExerciseVideosMigration =
+        "20260916115919_AddExerciseVideos";
     private readonly PostgreSqlContainer _container =
         new PostgreSqlBuilder("postgres:17-alpine")
         .WithDatabase("ptmanager_tests")

@@ -1,6 +1,7 @@
 using System.Reflection;
 using Application.Features.Jobs.Dispatching;
 using Application.Features.Notifications.Delivery;
+using Application.Features.Training.ExerciseVideos.Processing;
 
 namespace ArchitectureTests;
 
@@ -98,17 +99,48 @@ public sealed class JobDispatchArchitectureTests
     }
 
     [Fact]
-    public void SendNotificationHandler_IsTheOnlyDurableJobHandlerInApplication()
+    public void DurableJobHandlers_MatchTheClosedAllowlist()
     {
         var handlers = ApplicationAssembly.GetTypes()
             .Where(type =>
                 type is { IsClass: true, IsAbstract: false } &&
                 typeof(IDurableJobHandler).IsAssignableFrom(type))
+            .Select(type => type.FullName!)
+            .Order(StringComparer.Ordinal)
             .ToArray();
 
-        // A allowlist da Fase 5A tem exactamente um job real.
-        var handler = Assert.Single(handlers);
-        Assert.Equal(typeof(SendNotificationJobHandler), handler);
+        // A Fase 5A trouxe send_notification; a Fase 5D acrescenta os três jobs de vídeo.
+        Assert.Equal(
+            [
+                typeof(SendNotificationJobHandler).FullName!,
+                typeof(DeleteExerciseVideoObjectJobHandler).FullName!,
+                typeof(ExpireExerciseVideoUploadJobHandler).FullName!,
+                typeof(ProcessExerciseVideoJobHandler).FullName!
+            ],
+            handlers);
+    }
+
+    [Fact]
+    public void PlatformDurableJobHandlers_MatchTheClosedAllowlist()
+    {
+        // Um handler de plataforma executa jobs sem tenant. Acrescentar um é uma
+        // decisão de segurança: o dispatcher deixa de exigir trainer para esse tipo.
+        var handlers = ApplicationAssembly.GetTypes()
+            .Where(type =>
+                type is { IsClass: true, IsAbstract: false } &&
+                typeof(IPlatformDurableJobHandler).IsAssignableFrom(type))
+            .Select(type => type.FullName!)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(
+            [
+                typeof(DeleteExerciseVideoObjectJobHandler).FullName!,
+                typeof(ExpireExerciseVideoUploadJobHandler).FullName!,
+                typeof(ProcessExerciseVideoJobHandler).FullName!
+            ],
+            handlers);
+        Assert.False(typeof(IPlatformDurableJobHandler).IsAssignableFrom(typeof(SendNotificationJobHandler)));
     }
 
     [Fact]

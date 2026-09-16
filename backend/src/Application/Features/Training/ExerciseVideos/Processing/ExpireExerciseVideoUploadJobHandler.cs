@@ -47,7 +47,7 @@ public sealed class ExpireExerciseVideoUploadJobHandler : IPlatformDurableJobHan
 
         var failureCode = video.Status == ExerciseVideoStatus.Pending
             ? "exercise_video_upload_abandoned"
-            : "exercise_video_processing_expired";
+            : "exercise_video_processing_timeout";
 
         var transition = await _store.TerminateAsync(
             new ExerciseVideoLease(

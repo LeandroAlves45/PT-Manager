@@ -10,7 +10,6 @@ using Infrastructure.Data;
 using Infrastructure.Persistence.Errors;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Stripe;
 
 namespace Infrastructure.Persistence.Training;
 
@@ -110,6 +109,14 @@ internal sealed class ExerciseVideoStore : IExerciseVideoStore
                     video.Status == ExerciseVideoStatus.Ready)
                     return new ExerciseVideoUploadTransition(
                         ExerciseVideoUploadTransitionStatus.AlreadyApplied, video);
+
+                if (video.Status != ExerciseVideoStatus.Pending || storedSizeBytes != video.DeclaredSizeBytes)
+                    return new ExerciseVideoUploadTransition(
+                        ExerciseVideoUploadTransitionStatus.InvalidState, video);
+
+                if (!video.IsUploadWindowOpen(completion.Now))
+                    return new ExerciseVideoUploadTransition(
+                        ExerciseVideoUploadTransitionStatus.UploadWindowClosed, video);
 
                 var before = Snapshot(video);
                 video.MarkUploaded(storedSizeBytes, storedETag, completion.Now);
@@ -369,7 +376,7 @@ internal sealed class ExerciseVideoStore : IExerciseVideoStore
 
     private Task<T> ExecuteAsync<T>(
         Func<CancellationToken, Task<T>> operation,
-        Func<CancellationToken, Task<bool>> verifiySucceeded,
+        Func<CancellationToken, Task<bool>> verifySucceeded,
         CancellationToken cancellationToken)
     {
         // Uma tentativa repetida reconstrói o tracking a partir da DB.
@@ -382,7 +389,7 @@ internal sealed class ExerciseVideoStore : IExerciseVideoStore
         var strategy = _dbContext.Database.CreateExecutionStrategy();
         return strategy.ExecuteInTransactionAsync(
             attempt,
-            verifiySucceeded,
+            verifySucceeded,
             IsolationLevel.ReadCommitted,
             cancellationToken);
     }

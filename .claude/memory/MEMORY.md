@@ -8,10 +8,11 @@ notas de `.claude/memory/Sessions/`.
 
 **Estado ativo:** ler primeiro `.claude/memory/ACTIVE.md`. **Sprint 5A, 5B e 5C
 fechadas no backend (5B aguarda Stripe; 5C aguarda User Secrets Cloudinary/Vision).
-Sprint 5D planeada em 2026-09-13: pack 00–13 e Sprint Pack prontos; `backend/`
-real intocado; materialização em `C:\ptm5d`.** `QStash:Enabled` permanece `false`.
-Ver `Sessions/2026-09-13-sprint5d-planeamento-blueprints.md` e
-`docs/backend-files/sprint_5/sprint_5D/00_desenho_aprovado_indice_dependencias_gates.md`.
+Sprint 5D implementada e validada no backend em 2026-09-16 (2644 testes, migration
+`20260916115919_AddExerciseVideos`); faltam só `QG5D-ROLL-001`/`QG5D-PROVIDER-001` (R2).**
+`QStash:Enabled` permanece `false`. Sem commit desta sessão.
+Ver `Sessions/2026-09-16-sprint5d-fecho-implementacao.md` e
+`docs/backend-files/sprint_5/sprint_5D/14_relatorio_fecho_fase_5D.md`.
 
 **Decisão 2026-09-15:** Sprint 6 = **Frontend** (6A Fundações → 6B Admin → 6C Trainer
 → 6D Cliente → 6E Auth UX), só depois do Gate 5D. Renumeração: 7 Observabilidade +
@@ -341,6 +342,11 @@ alegações anteriores desatualizadas está em
   interceptor Deleted/`Remove`, `AbandonmentGrace` ≥ 1 h). Pack em
   `docs/backend-files/sprint_5/sprint_5D/`. Cópia `C:\ptm5d` não recriar.
   Ver `Sessions/2026-09-13-sprint5d-planeamento-blueprints.md`.
+- Sprint 5D fechada no backend em 2026-09-16: 01–08 do utilizador revistos por diff
+  programático (13 defeitos + 5 divergências corrigidos, incl. codecs H.264 perdidos,
+  interceptor sem Deleted, tradutor com SQLSTATE errado), migration gerada + preflight,
+  testes do doc 10 + 10 regressões validadas por mutação. Faltam gates R2 externos.
+  Ver `Sessions/2026-09-16-sprint5d-fecho-implementacao.md`.
 
 ## Padrões documentais
 

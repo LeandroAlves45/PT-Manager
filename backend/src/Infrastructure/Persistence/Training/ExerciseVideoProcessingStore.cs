@@ -71,7 +71,7 @@ internal sealed class ExerciseVideoProcessingStore : IExerciseVideoProcessingSto
                     return ExerciseVideoJobTransitionStatus.InvalidState;
 
                 var previous = await _dbContext.LockReadyVideoAsync(
-                    video.ExerciseId, lease.OwnerTrainerId, token);
+                    video.ExerciseId, video.OwnerTrainerId, token);
                 if (previous is not null)
                 {
                     // Remove() entra no interceptor; ExecuteDelete não. Na mesma
@@ -153,7 +153,7 @@ internal sealed class ExerciseVideoProcessingStore : IExerciseVideoProcessingSto
 
     private Task<T> ExecuteAsync<T>(
         Func<CancellationToken, Task<T>> operation,
-        Func<CancellationToken, Task<bool>> verifiySucceeded,
+        Func<CancellationToken, Task<bool>> verifySucceeded,
         CancellationToken cancellationToken)
     {
         Func<CancellationToken, Task<T>> attempt = async operationToken =>
@@ -165,7 +165,7 @@ internal sealed class ExerciseVideoProcessingStore : IExerciseVideoProcessingSto
         var strategy = _dbContext.Database.CreateExecutionStrategy();
         return strategy.ExecuteInTransactionAsync(
             attempt,
-            verifiySucceeded,
+            verifySucceeded,
             IsolationLevel.ReadCommitted,
             cancellationToken);
     }

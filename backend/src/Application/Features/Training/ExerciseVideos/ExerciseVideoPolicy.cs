@@ -9,12 +9,14 @@ namespace Application.Features.Training.ExerciseVideos;
 /// </summary>
 public static class ExerciseVideoPolicy
 {
-    public const long MaxSizeBytes = 100L * 1024 * 1024; // 100MB
+    public const long MaxSizeBytes = 100L * 1024 * 1024;
     public const int MaxLongSidePixels = 1920;
     public const int MinShortSidePixels = 240;
     public static readonly TimeSpan MaxDuration = TimeSpan.FromMinutes(3);
-    public static IReadOnlySet<string> AcceptedContentTypes = ExerciseVideo.AcceptedContentTypes;
+    public static IReadOnlySet<string> AcceptedContentTypes => ExerciseVideo.AcceptedContentTypes;
     public static readonly IReadOnlySet<string> AcceptedVideoCodecs =
+        new HashSet<string>(StringComparer.Ordinal) { "avc1", "avc3" };
+    public static readonly IReadOnlySet<string> AcceptedAudioCodecs =
         new HashSet<string>(StringComparer.Ordinal) { "mp4a" };
 
     /// <summary>
@@ -44,11 +46,14 @@ public static class ExerciseVideoPolicy
             return "exercise_video_codec_unsupported";
 
         if (metadata.AudioTrackCount == 1 &&
-            (metadata.AudioCodec is null || !AcceptedVideoCodecs.Contains(metadata.AudioCodec)))
+            (metadata.AudioCodec is null || !AcceptedAudioCodecs.Contains(metadata.AudioCodec)))
             return "exercise_video_audio_codec_unsupported";
 
         if (metadata.DurationMilliseconds <= 0)
             return "exercise_video_duration_invalid";
+
+        if (metadata.DurationMilliseconds > (long)MaxDuration.TotalMilliseconds)
+            return "exercise_video_duration_exceeded";
 
         var longSide = Math.Max(metadata.Width, metadata.Height);
         var shortSide = Math.Min(metadata.Width, metadata.Height);
