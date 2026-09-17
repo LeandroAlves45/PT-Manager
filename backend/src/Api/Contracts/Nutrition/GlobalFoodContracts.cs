@@ -9,7 +9,8 @@ public sealed record CreateGlobalFoodRequest(
     decimal Protein,
     decimal Carbs,
     decimal Fats,
-    decimal? Fiber);
+    decimal? Fiber,
+    decimal? DefaultServingGrams = null);
 
 /// <summary>Substitui os campos editáveis de um alimento global existente.</summary>
 public sealed record UpdateGlobalFoodRequest(
@@ -18,7 +19,8 @@ public sealed record UpdateGlobalFoodRequest(
     decimal Protein,
     decimal Carbs,
     decimal Fats,
-    decimal? Fiber);
+    decimal? Fiber,
+    decimal? DefaultServingGrams = null);
 
 /// <summary>Alimento global apresentado ao superuser.</summary>
 public sealed record GlobalFoodResponse(
@@ -30,6 +32,7 @@ public sealed record GlobalFoodResponse(
     decimal Fats,
     decimal Kcal,
     decimal? Fiber,
+    decimal? DefaultServingGrams,
     bool IsActive,
     DateTime CreatedAt,
     DateTime UpdatedAt)
@@ -48,6 +51,7 @@ public sealed record GlobalFoodResponse(
             food.Fats,
             food.Kcal,
             food.Fiber,
+            food.DefaultServingGrams,
             food.IsActive,
             food.CreatedAt,
             food.UpdatedAt

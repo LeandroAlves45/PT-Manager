@@ -3,14 +3,18 @@ using Application.Features.Training.TrainingPlans.Dtos;
 
 namespace Api.Contracts.Training;
 
-/// <summary>Série prescrita. Identificador nulo cria; presente reconcilia.</summary>
+/// <summary>
+/// Série prescrita. Identificador nulo cria; presente reconcilia. <c>planned_rpe</c> é
+/// opcional (1–10, passo 0,5); omitido equivale a sem RPE.
+/// </summary>
 public sealed record ExerciseSetRequest(
     Guid? Id,
     int SetNumber,
     int? PlannedReps,
     decimal? PlannedWeightKg,
     int? RestSecondsMin,
-    int? RestSecondsMax);
+    int? RestSecondsMax,
+    decimal? PlannedRpe = null);
 
 /// <summary>Exercício prescrito num dia de treino.</summary>
 public sealed record DayExerciseRequest(
@@ -59,7 +63,8 @@ public sealed record TrainingPlanStructureRequest(IReadOnlyList<TrainingDayReque
                                 set.PlannedReps,
                                 set.PlannedWeightKg,
                                 set.RestSecondsMin,
-                                set.RestSecondsMax))
+                                set.RestSecondsMax,
+                                set.PlannedRpe))
                             .ToArray()))
                     .ToArray()))
                 .ToArray());
@@ -107,7 +112,8 @@ public sealed record ExerciseSetResponse(
     int? PlannedReps,
     decimal? PlannedWeightKg,
     int? RestSecondsMin,
-    int? RestSecondsMax)
+    int? RestSecondsMax,
+    decimal? PlannedRpe)
 {
     /// <summary>Projeta a série da Application.</summary>
     public static ExerciseSetResponse From(TrainingPlanDetailsDto.ExerciseSetDto set)
@@ -120,7 +126,8 @@ public sealed record ExerciseSetResponse(
             set.PlannedReps,
             set.PlannedWeightKg,
             set.RestSecondsMin,
-            set.RestSecondsMax);
+            set.RestSecondsMax,
+            set.PlannedRpe);
     }
 }
 

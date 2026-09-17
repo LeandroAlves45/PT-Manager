@@ -52,7 +52,8 @@ public sealed class RecordExerciseSetLogHandler
                 command.WeightKg,
                 command.RepsDone,
                 command.Notes,
-                command.PerformedAt),
+                command.PerformedAt,
+                command.Rpe),
             new DateTimeOffset(now),
             now,
             cancellationToken);

@@ -36,7 +36,8 @@ public sealed class FoodsController : ApiControllerBase
                     request.Protein,
                     request.Carbs,
                     request.Fats,
-                    request.Fiber),
+                    request.Fiber,
+                    request.DefaultServingGrams),
                 cancellationToken),
             FoodResponse.From,
             food => $"/api/v1/foods/{food.Id}");
@@ -101,7 +102,8 @@ public sealed class FoodsController : ApiControllerBase
                     request.Protein,
                     request.Carbs,
                     request.Fats,
-                    request.Fiber),
+                    request.Fiber,
+                    request.DefaultServingGrams),
                 cancellationToken),
             FoodResponse.From);
     }

@@ -3,6 +3,8 @@ using Application.Features.Assessments.CheckIns.Dtos;
 using Application.Features.ClientPortal.Dtos;
 using Application.Features.Clients.Dtos;
 using Application.Features.Supplements.Dtos;
+using Application.Features.Training.ExerciseSetLogs.Dtos;
+using Application.Features.Training.WorkoutCompletions.Dtos;
 
 namespace Api.Contracts.Portal;
 
@@ -28,11 +30,13 @@ public sealed record PortalBrandingResponse(
 
 /// <summary>Série prescrita, tal como o cliente a vê.</summary>
 public sealed record MyExerciseSetResponse(
+    Guid Id,
     int SetNumber,
     int? PlannedReps,
     decimal? PlannedWeightKg,
     int? RestSecondsMin,
-    int? RestSecondsMax)
+    int? RestSecondsMax,
+    decimal? PlannedRpe)
 {
     /// <summary>Projeta a série do DTO de portal.</summary>
     public static MyExerciseSetResponse From(MyTrainingPlanDto.SetDto set)
@@ -40,16 +44,22 @@ public sealed record MyExerciseSetResponse(
         ArgumentNullException.ThrowIfNull(set);
 
         return new(
+            set.Id,
             set.SetNumber,
             set.PlannedReps,
             set.PlannedWeightKg,
             set.RestSecondsMin,
-            set.RestSecondsMax);
+            set.RestSecondsMax,
+            set.PlannedRpe);
     }
 }
 
-/// <summary>Exercício prescrito, com marcador de indisponibilidade.</summary>
+/// <summary>
+/// Exercício prescrito, com marcador de indisponibilidade. O <c>id</c> é o da prescrição e
+/// é o valor a enviar em <c>training_plan_day_exercise_id</c> ao registar uma série.
+/// </summary>
 public sealed record MyDayExerciseResponse(
+    Guid Id,
     int OrderNumber,
     string ExerciseName,
     bool IsUnavailable,
@@ -64,6 +74,7 @@ public sealed record MyDayExerciseResponse(
         ArgumentNullException.ThrowIfNull(exercise);
 
         return new(
+            exercise.Id,
             exercise.OrderNumber,
             exercise.ExerciseName,
             exercise.IsUnavailable,
@@ -74,8 +85,9 @@ public sealed record MyDayExerciseResponse(
     }
 }
 
-/// <summary>Dia de treino visível ao cliente.</summary>
+/// <summary>Dia de treino visível ao cliente; o <c>id</c> identifica o dia ao concluir o treino.</summary>
 public sealed record MyTrainingDayResponse(
+    Guid Id,
     int DayOfWeek,
     int WeekNumber,
     string? Notes,
@@ -87,6 +99,7 @@ public sealed record MyTrainingDayResponse(
         ArgumentNullException.ThrowIfNull(day);
 
         return new(
+            day.Id,
             day.DayOfWeek,
             day.WeekNumber,
             day.Notes,
@@ -354,5 +367,132 @@ public sealed record MySupplementAssignmentResponse(
             assignment.TrainerNotes,
             assignment.IsSupplementArchived,
             assignment.UpdatedAt);
+    }
+}
+
+/// <summary>Regista uma série de hoje; o instante é atribuído pelo servidor.</summary>
+public sealed record RecordMyExerciseSetLogRequest(
+    Guid TrainingPlanDayExerciseId,
+    int SetNumber,
+    decimal WeightKg,
+    int RepsDone,
+    decimal? Rpe,
+    string? Notes);
+
+/// <summary>Corrige os valores de uma série própria registada hoje.</summary>
+public sealed record CorrectMyExerciseSetLogRequest(
+    decimal WeightKg,
+    int RepsDone,
+    decimal? Rpe,
+    string? Notes);
+
+/// <summary>Série registada pelo próprio cliente (sem identificadores de cliente ou tenant).</summary>
+public sealed record MyExerciseSetLogResponse(
+    Guid Id,
+    Guid TrainingPlanDayExerciseId,
+    int SetNumber,
+    decimal WeightKg,
+    int RepsDone,
+    decimal? Rpe,
+    string? Notes,
+    DateTimeOffset PerformedAt,
+    DateTime UpdatedAt)
+{
+    /// <summary>Projeta a série do DTO de portal.</summary>
+    public static MyExerciseSetLogResponse From(MyExerciseSetLogDto log)
+    {
+        ArgumentNullException.ThrowIfNull(log);
+
+        return new(
+            log.Id,
+            log.TrainingPlanDayExerciseId,
+            log.SetNumber,
+            log.WeightKg,
+            log.RepsDone,
+            log.Rpe,
+            log.Notes,
+            log.PerformedAt,
+            log.UpdatedAt);
+    }
+}
+
+/// <summary>Conclui hoje um dia do plano ativo (treino parcial permitido).</summary>
+public sealed record CompleteMyWorkoutRequest(
+    Guid TrainingPlanDayId,
+    string? Notes);
+
+/// <summary>Conclusão de treino do cliente.</summary>
+public sealed record MyWorkoutCompletionResponse(
+    Guid Id,
+    Guid TrainingPlanId,
+    Guid TrainingPlanDayId,
+    DateOnly LocalDate,
+    string? Notes,
+    DateTime CompletedAt)
+{
+    /// <summary>Projeta a conclusão do DTO de portal.</summary>
+    public static MyWorkoutCompletionResponse From(MyWorkoutCompletionDto completion)
+    {
+        ArgumentNullException.ThrowIfNull(completion);
+
+        return new(
+            completion.Id,
+            completion.TrainingPlanId,
+            completion.TrainingPlanDayId,
+            completion.LocalDate,
+            completion.Notes,
+            completion.CompletedAt);
+    }
+}
+
+/// <summary>Toma de hoje registada para uma atribuição.</summary>
+public sealed record MySupplementIntakeResponse(
+    Guid AssignmentId,
+    DateOnly LocalDate,
+    DateTime TakenAt)
+{
+    /// <summary>Projeta a toma do DTO de portal.</summary>
+    public static MySupplementIntakeResponse From(MySupplementIntakeDto intake)
+    {
+        ArgumentNullException.ThrowIfNull(intake);
+
+        return new(intake.AssignmentId, intake.LocalDate, intake.TakenAt);
+    }
+}
+
+/// <summary>Suplemento ativo e estado da toma de hoje.</summary>
+public sealed record MyTodaySupplementIntakeItemResponse(
+    Guid AssignmentId,
+    string SupplementName,
+    string ServingSize,
+    string Timing,
+    bool IsTaken,
+    DateTime? TakenAt);
+
+/// <summary>Resumo das tomas de hoje ("X de Y tomadas").</summary>
+public sealed record MyTodaySupplementIntakesResponse(
+    DateOnly LocalDate,
+    int TakenCount,
+    int TotalCount,
+    IReadOnlyList<MyTodaySupplementIntakeItemResponse> Items)
+{
+    /// <summary>Projeta o resumo do DTO de portal.</summary>
+    public static MyTodaySupplementIntakesResponse From(MyTodaySupplementIntakesDto intakes)
+    {
+        ArgumentNullException.ThrowIfNull(intakes);
+
+        return new(
+            intakes.LocalDate,
+            intakes.TakenCount,
+            intakes.TotalCount,
+            intakes.Items
+                .Select(item => new MyTodaySupplementIntakeItemResponse(
+                    item.AssignmentId,
+                    item.SupplementName,
+                    item.ServingSize,
+                    item.Timing,
+                    item.IsTaken,
+                    item.TakenAt))
+                .ToArray());
     }
 }

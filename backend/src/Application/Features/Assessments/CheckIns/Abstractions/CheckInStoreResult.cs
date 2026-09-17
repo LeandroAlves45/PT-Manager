@@ -12,6 +12,7 @@ public sealed class CheckInStoreResult
         Cancelled,
         Answered,
         Corrected,
+        Reviewed,
         AlreadyInRequestedState,
         ClientNotFound,
         ClientInactive,

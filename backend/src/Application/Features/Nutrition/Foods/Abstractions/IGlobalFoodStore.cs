@@ -11,6 +11,7 @@ public interface IGlobalFoodStore
         decimal carbs,
         decimal fats,
         decimal? fiber,
+        decimal? defaultServingGrams,
         DateTime now,
         CancellationToken cancellationToken
     );
@@ -24,6 +25,7 @@ public interface IGlobalFoodStore
         decimal carbs,
         decimal fats,
         decimal? fiber,
+        decimal? defaultServingGrams,
         DateTime now,
         CancellationToken cancellationToken
     );

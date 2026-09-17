@@ -38,6 +38,10 @@ internal sealed class ExerciseSetConfiguration : IEntityTypeConfiguration<Exerci
         builder.Property(es => es.RestSecondsMax)
             .HasColumnName("rest_seconds_max");
 
+        builder.Property(es => es.PlannedRpe)
+            .HasColumnName("planned_rpe")
+            .HasPrecision(3, 1);
+
         builder.Property(es => es.CreatedAt)
             .HasColumnName("created_at")
             .HasDefaultValueSql("now()")
@@ -57,6 +61,9 @@ internal sealed class ExerciseSetConfiguration : IEntityTypeConfiguration<Exerci
             t.HasCheckConstraint("rest_max_check", "rest_seconds_max IS NULL OR rest_seconds_max >= 0");
             t.HasCheckConstraint("rest_range_check",
                 "rest_seconds_min IS NULL OR rest_seconds_max IS NULL OR rest_seconds_min <= rest_seconds_max");
+            t.HasCheckConstraint("planned_rpe_check",
+                "planned_rpe IS NULL OR (planned_rpe >= 1 AND planned_rpe <= 10 " +
+                "AND planned_rpe * 2 = trunc(planned_rpe * 2))");
         });
 
         builder.HasIndex(es => es.TrainingPlanDayExerciseId)

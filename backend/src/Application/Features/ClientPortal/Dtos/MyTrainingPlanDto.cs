@@ -14,6 +14,7 @@ public sealed record MyTrainingPlanDto(
 {
     /// <summary>Dia de treino vísivel ao cliente.</summary>
     public sealed record DayDto(
+        Guid Id,
         int DayOfWeek,
         int WeekNumber,
         string? Notes,
@@ -21,6 +22,7 @@ public sealed record MyTrainingPlanDto(
 
     /// <summary>Exercício prescrito. IsUnavailable assinala conteúdo bloqueado.</summary>
     public sealed record ExerciseDto(
+        Guid Id,
         int OrderNumber,
         string ExerciseName,
         bool IsUnavailable,
@@ -31,9 +33,11 @@ public sealed record MyTrainingPlanDto(
 
     /// <summary>Série prescrita, sem identificadores internos.</summary>
     public sealed record SetDto(
+        Guid Id,
         int SetNumber,
         int? PlannedReps,
         decimal? PlannedWeightKg,
         int? RestSecondsMin,
-        int? RestSecondsMax);
+        int? RestSecondsMax,
+        decimal? PlannedRpe);
 }

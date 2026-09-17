@@ -1,9 +1,11 @@
 using Domain.Exceptions;
+using Domain.ValueObjects;
+
 namespace Domain.Entities.Training;
 
 /// <summary>
 /// Registo real de uma série executada pelo cliente: carga e repetições efetivas,
-/// com timestamp oficial.
+/// com esforço percebido (RPE) opcional e timestamp oficial.
 /// </summary>
 public sealed class ClientExerciseSetLog
 {
@@ -13,6 +15,7 @@ public sealed class ClientExerciseSetLog
     public int SetNumber { get; private set; }
     public decimal WeightKg { get; private set; }
     public int RepsDone { get; private set; }
+    public decimal? Rpe { get; private set; }
     public string? Notes { get; private set; }
     public DateTimeOffset PerformedAt { get; private set; }
     public DateTime CreatedAt { get; private set; }
@@ -31,17 +34,18 @@ public sealed class ClientExerciseSetLog
         int repsDone,
         string? notes,
         DateTimeOffset performedAt,
-        DateTime now
+        DateTime now,
+        decimal? rpe = null
     )
     {
         ValidateIdentifiers(clientId, trainingPlanDayExerciseId);
-        ValidateValues(setNumber, weightKg, repsDone);
+        ValidateValues(setNumber, weightKg, repsDone, rpe);
 
         Id = Guid.NewGuid();
         ClientId = clientId;
         TrainingPlanDayExerciseId = trainingPlanDayExerciseId;
         SetNumber = setNumber;
-        ApplyValues(weightKg, repsDone, notes, performedAt);
+        ApplyValues(weightKg, repsDone, rpe, notes, performedAt);
         CreatedAt = now;
         UpdatedAt = now;
     }
@@ -50,24 +54,27 @@ public sealed class ClientExerciseSetLog
     public void Correct(
         decimal weightKg,
         int repsDone,
+        decimal? rpe,
         string? notes,
         DateTimeOffset performedAt,
         DateTime now)
     {
-        ValidateValues(SetNumber, weightKg, repsDone);
-        ApplyValues(weightKg, repsDone, notes, performedAt);
+        ValidateValues(SetNumber, weightKg, repsDone, rpe);
+        ApplyValues(weightKg, repsDone, rpe, notes, performedAt);
         UpdatedAt = now;
     }
 
     private void ApplyValues(
         decimal weightKg,
         int repsDone,
+        decimal? rpe,
         string? notes,
         DateTimeOffset performedAt
     )
     {
         WeightKg = weightKg;
         RepsDone = repsDone;
+        Rpe = rpe;
         Notes = NormalizeOptional(notes);
         PerformedAt = performedAt.ToUniversalTime();
     }
@@ -83,7 +90,7 @@ public sealed class ClientExerciseSetLog
     /// <summary>
     /// Mêtodo privado para validação das cargas e repetições de uma série executada pelo cliente
     /// </summary>
-    private static void ValidateValues(int setNumber, decimal weightKg, int repsDone)
+    private static void ValidateValues(int setNumber, decimal weightKg, int repsDone, decimal? rpe)
     {
         if (setNumber is < 1 or > 15)
             throw new DomainException("Set number must be between 1 and 15.");
@@ -91,6 +98,7 @@ public sealed class ClientExerciseSetLog
             throw new DomainException("Weight cannot be negative.");
         if (repsDone is < 0 or > 100)
             throw new DomainException("Reps done must be between 0 and 100.");
+        RpeScale.EnsureValid(rpe, "RPE");
     }
 
     private static string? NormalizeOptional(string? value) =>

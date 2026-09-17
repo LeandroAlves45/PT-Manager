@@ -1,3 +1,4 @@
+using Application.Validation;
 using FluentValidation;
 
 namespace Application.Features.Training.Exercises.UpdateExercise;
@@ -12,6 +13,7 @@ public sealed class UpdateExerciseCommandValidator : AbstractValidator<UpdateExe
             .WithErrorCode("exercise_id_required");
 
         RuleFor(command => command.Name)
+            .Cascade(CascadeMode.Stop)
             .NotEmpty()
             .WithErrorCode("exercise_name_required")
             .MaximumLength(255)
@@ -19,7 +21,8 @@ public sealed class UpdateExerciseCommandValidator : AbstractValidator<UpdateExe
 
         RuleFor(command => command.MuscleGroups)
             .MaximumLength(500)
-            .WithErrorCode("exercise_muscle_groups_too_long");
+            .WithErrorCode("exercise_muscle_groups_too_long")
+            .MustBeKnownMuscleGroups();
 
         RuleFor(command => command.Equipment)
             .MaximumLength(255)
@@ -30,6 +33,7 @@ public sealed class UpdateExerciseCommandValidator : AbstractValidator<UpdateExe
             .WithErrorCode("exercise_difficulty_too_long");
 
         RuleFor(command => command.VideoUrl)
+            .Cascade(CascadeMode.Stop)
             .MaximumLength(500)
             .WithErrorCode("exercise_video_url_too_long")
             .Must(BeAnAbsoluteHttpsUrl)

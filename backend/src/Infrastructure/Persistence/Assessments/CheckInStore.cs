@@ -138,6 +138,20 @@ internal sealed class CheckInStore : ICheckInStore
             cancellationToken
         );
 
+    public Task<CheckInStoreResult> MarkReviewedAsync(
+        Guid trainerId,
+        Guid checkInId,
+        DateTime now,
+        CancellationToken cancellationToken) =>
+        ExecuteTransactionAsync(
+            () => MarkReviewedOnceAsync(
+                trainerId,
+                checkInId,
+                now,
+                cancellationToken),
+            cancellationToken
+        );
+
     private async Task<CheckInStoreResult> CreateOnceAsync(
         Guid trainerId,
         Guid clientId,
@@ -354,6 +368,32 @@ internal sealed class CheckInStore : ICheckInStore
         return CheckInStoreResult.For(CheckInStoreResult.Status.Corrected, checkIn);
     }
 
+    private async Task<CheckInStoreResult> MarkReviewedOnceAsync(
+        Guid trainerId,
+        Guid checkInId,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        // Mesma ordem de locks que as restantes mutações (cliente e depois check-in).
+        var locked = await LockClientAndCheckInAsync(trainerId, checkInId, cancellationToken);
+        if (locked is null)
+            return CheckInStoreResult.For(CheckInStoreResult.Status.CheckInNotFound);
+
+        var checkIn = locked.Value.CheckIn;
+        if (checkIn.CancelledAt.HasValue)
+            return CheckInStoreResult.For(CheckInStoreResult.Status.CheckInCancelled);
+        if (!checkIn.RespondedAt.HasValue)
+            return CheckInStoreResult.For(CheckInStoreResult.Status.NotAnswered);
+        if (checkIn.ReviewedAt.HasValue)
+            return CheckInStoreResult.For(
+                CheckInStoreResult.Status.AlreadyInRequestedState, checkIn);
+
+        // Alinhado com a DB para a repetição idempotente devolver exatamente o mesmo reviewed_at.
+        checkIn.MarkReviewed(PostgresTimestamps.Truncate(now));
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return CheckInStoreResult.For(CheckInStoreResult.Status.Reviewed, checkIn);
+    }
+
     private async Task<DateOnly> GetLocalTodayAsync(
         Guid trainerId,
         DateTime now,
@@ -454,6 +494,7 @@ internal sealed class CheckInStore : ICheckInStore
                 CheckInStoreResult.Status.Cancelled or
                 CheckInStoreResult.Status.Answered or
                 CheckInStoreResult.Status.Corrected or
+                CheckInStoreResult.Status.Reviewed or
                 CheckInStoreResult.Status.AlreadyInRequestedState)
                 await transaction.CommitAsync(cancellationToken);
             else

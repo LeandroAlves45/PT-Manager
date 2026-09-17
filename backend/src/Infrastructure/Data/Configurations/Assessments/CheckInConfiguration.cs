@@ -84,6 +84,9 @@ internal sealed class CheckInConfiguration : IEntityTypeConfiguration<CheckIn>
         builder.Property(c => c.CancelledAt)
             .HasColumnName("cancelled_at");
 
+        builder.Property(c => c.ReviewedAt)
+            .HasColumnName("reviewed_at");
+
         builder.Property(c => c.IsDeleted)
             .HasColumnName("is_deleted")
             .HasDefaultValue(false);
@@ -124,6 +127,9 @@ internal sealed class CheckInConfiguration : IEntityTypeConfiguration<CheckIn>
             table.HasCheckConstraint(
                 "ck_checkins_response_requires_weight",
                 "responded_at IS NULL OR weight_kg IS NOT NULL");
+            table.HasCheckConstraint(
+                "ck_checkins_review_requires_response",
+                "reviewed_at IS NULL OR (responded_at IS NOT NULL AND cancelled_at IS NULL)");
         });
 
         builder.HasIndex(c => c.OwnerTrainerId).HasDatabaseName("idx_checkins_trainer");

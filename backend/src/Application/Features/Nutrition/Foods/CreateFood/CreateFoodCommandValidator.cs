@@ -1,3 +1,4 @@
+using Application.Validation;
 using FluentValidation;
 
 namespace Application.Features.Nutrition.Foods.CreateFood;
@@ -9,6 +10,7 @@ public sealed class CreateFoodCommandValidator : AbstractValidator<CreateFoodCom
     public CreateFoodCommandValidator()
     {
         RuleFor(command => command.Name)
+            .Cascade(CascadeMode.Stop)
             .NotEmpty()
             .WithErrorCode("food_name_required")
             .MaximumLength(255)
@@ -35,5 +37,8 @@ public sealed class CreateFoodCommandValidator : AbstractValidator<CreateFoodCom
             .Must(command => command.Protein + command.Carbs + command.Fats <= 100m)
             .WithName("Macros")
             .WithErrorCode("food_macros_total_invalid");
+
+        RuleFor(command => command.DefaultServingGrams)
+            .MustBeValidDefaultServing("food_default_serving_invalid");
     }
 }

@@ -23,6 +23,7 @@ public sealed class Food
     /// <summary>Kcal calculadas (protein * 4 + carbs * 4 + fats * 9). Coluna gerada -> só leitura.</summary>
     public decimal Kcal { get; private set; }
     public decimal? Fiber { get; private set; }
+    public decimal? DefaultServingGrams { get; private set; }
     public bool IsActive { get; private set; }
     public PlatformEnforcementStatus PlatformEnforcementStatus { get; private set; } =
         PlatformEnforcementStatus.Allowed;
@@ -30,6 +31,9 @@ public sealed class Food
     public DateTime? PlatformEnforcedAt { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
+
+    /// <summary>Limite superior da porção padrão, em gramas.</summary>
+    public const decimal MaxDefaultServingGrams = 1000m;
 
     private Food() { } // EF Core
 
@@ -42,14 +46,15 @@ public sealed class Food
         decimal carbs,
         decimal fats,
         decimal? fiber,
-        DateTime now
+        DateTime now,
+        decimal? defaultServingGrams = null
     )
     {
         if (ownerTrainerId.HasValue && ownerTrainerId.Value == Guid.Empty)
             throw new DomainException("Owner trainer ID cannot be empty.");
 
         var normalizedName = name?.Trim() ?? string.Empty;
-        ValidateParametersFood(normalizedName, protein, carbs, fats, fiber);
+        ValidateParametersFood(normalizedName, protein, carbs, fats, fiber, defaultServingGrams);
 
         Id = Guid.NewGuid();
         OwnerTrainerId = ownerTrainerId;
@@ -59,6 +64,7 @@ public sealed class Food
         Carbs = carbs;
         Fats = fats;
         Fiber = fiber;
+        DefaultServingGrams = defaultServingGrams;
         IsActive = true;
         PlatformEnforcementStatus = PlatformEnforcementStatus.Allowed;
         CreatedAt = now;
@@ -73,11 +79,12 @@ public sealed class Food
         decimal carbs,
         decimal fats,
         decimal? fiber,
+        decimal? defaultServingGrams,
         DateTime now
     )
     {
         var normalizedName = name?.Trim() ?? string.Empty;
-        ValidateParametersFood(normalizedName, protein, carbs, fats, fiber);
+        ValidateParametersFood(normalizedName, protein, carbs, fats, fiber, defaultServingGrams);
 
         Name = normalizedName;
         Description = NormalizeOptional(description);
@@ -85,6 +92,7 @@ public sealed class Food
         Carbs = carbs;
         Fats = fats;
         Fiber = fiber;
+        DefaultServingGrams = defaultServingGrams;
         UpdatedAt = now;
     }
 
@@ -135,7 +143,8 @@ public sealed class Food
         decimal protein,
         decimal carbs,
         decimal fats,
-        decimal? fiber
+        decimal? fiber,
+        decimal? defaultServingGrams
     )
     {
         if (name.Length is 0 or > 255)
@@ -144,12 +153,19 @@ public sealed class Food
             throw new DomainException(
                 "Each macronutrient must be between 0 and 100 grams per 100 grams of food."
             );
+
         if (protein + carbs + fats > 100)
             throw new DomainException(
                 "Protein, carbs and fats combined cannot exceed 100 grams per 100 grams of food."
             );
+
         if (fiber.HasValue && fiber.Value is < 0 or > 100)
-            throw new DomainException("Fiber must be between 0 and 100 grams per 100 grams of food.");
+            throw new DomainException(
+                "Fiber must be between 0 and 100 grams per 100 grams of food.");
+
+        if (defaultServingGrams.HasValue && defaultServingGrams.Value is <= 0 or > MaxDefaultServingGrams)
+            throw new DomainException(
+                "Default serving must be greater than 0 and less than 1000 grams.");
     }
 
     private static string? NormalizeOptional(string? value) =>

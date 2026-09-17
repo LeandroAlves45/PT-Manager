@@ -11,10 +11,8 @@ internal sealed class ExerciseSetLogQueries : IExerciseSetLogQueries
 {
     private readonly PtManagerDbContext _dbContext;
 
-    public ExerciseSetLogQueries(PtManagerDbContext dbContext)
-    {
+    public ExerciseSetLogQueries(PtManagerDbContext dbContext) =>
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
 
     public async Task<ClientExerciseSetLogDto?> GetAsync(
         Guid exerciseSetLogId,
@@ -80,6 +78,7 @@ internal sealed class ExerciseSetLogQueries : IExerciseSetLogQueries
             SetNumber = log.SetNumber,
             WeightKg = log.WeightKg,
             RepsDone = log.RepsDone,
+            Rpe = log.Rpe,
             Notes = log.Notes,
             PerformedAt = log.PerformedAt,
             CreatedAt = log.CreatedAt,
@@ -97,6 +96,7 @@ internal sealed class ExerciseSetLogQueries : IExerciseSetLogQueries
         row.SetNumber,
         row.WeightKg,
         row.RepsDone,
+        row.Rpe,
         row.Notes,
         row.PerformedAt,
         row.CreatedAt,
@@ -114,6 +114,7 @@ internal sealed class ExerciseSetLogQueries : IExerciseSetLogQueries
         public required int SetNumber { get; init; }
         public required decimal WeightKg { get; init; }
         public required int RepsDone { get; init; }
+        public decimal? Rpe { get; init; }
         public string? Notes { get; init; }
         public required DateTimeOffset PerformedAt { get; init; }
         public required DateTime CreatedAt { get; init; }

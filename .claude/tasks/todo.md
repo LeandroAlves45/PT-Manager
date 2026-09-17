@@ -1,3 +1,31 @@
+# Sprint 6A — blueprints de código real com validação (2026-09-16/17)
+
+Plano: `C:\Users\Leandro Alves\.claude\plans\c-users-leandro-alves-desktop-projeto-p-sequential-cloud.md`.
+Âmbito: documentação + materialização descartável. `backend/` real intocado.
+
+- [x] 1. Bootstrap (ACTIVE, pack, relatório, padrão) e exploração do código com verificação direta
+- [x] 2. Decisões D1–D8 com o utilizador
+- [x] 3. Worktree `C:\ptm6a` e baseline Release
+- [x] 4. Domain, EF, Application, Infrastructure e Api na cópia
+- [x] 5. Migration gerada pelo EF + preflight
+- [x] 6. 111 testes novos e 16 testes existentes ajustados
+- [x] 7. Suite integral Release 2755/2755 (+1 skip), format, restore locked, pending model changes
+- [x] 8. Snapshot OpenAPI: +8, −0
+- [x] 9. Mutação dirigida 6/6 mortas
+- [x] 10. Docs 01–10 gerados por script; 00, 11, 12 e 13 escritos; validador (provado por mutação) com zero diferenças
+- [x] 11. Limpeza: worktree e branch removidos; git status real limpo
+- [x] 12. QualityGates, plano do sprint, pack, relatório §8, roadmap, 05_ECRAS_CLIENTE, ACTIVE, MEMORY e nota de sessão
+
+## Review
+
+- Defeitos reais apanhados: código de erro da porção (FluentValidation encadeado), precisão dos
+  instantes idempotentes, conclusão sem séries fora do histórico, `Deleted` fora do interceptor,
+  referências de conclusão/toma sem validação do cliente.
+- Incidentes: Docker Desktop parou a meio (run repetido); hook bloqueou `Truncate` (falso positivo).
+- Pendente: `QG6A-IMPL-001` (implementação manual, migration na dev, snapshot real).
+
+---
+
 # Sprint 6 — análise do layout e plano backend-first (2026-09-16)
 
 Plano: `C:\Users\Leandro Alves\.claude\plans\claude-atua-como-um-humble-wreath.md`.

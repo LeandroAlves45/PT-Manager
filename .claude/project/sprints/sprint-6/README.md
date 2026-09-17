@@ -1,6 +1,7 @@
 # Sprint Pack — Sprint 6 (backend do layout + frontend)
 
-Estado: **planeado (2026-09-16)**. Nenhuma fase iniciada; blueprints por gerar. Entrada
+Estado: **6A com blueprints validados (2026-09-17)**, por implementar no backend real
+(`QG6A-IMPL-001`); 6B–6G por planear. Pack 6A: `docs/backend-files/sprint_6/sprint_6A/` (00–13). Entrada
 permitida: Gate 5D do código fechado (gates de provider R2/Stripe/Cloudinary podem ficar
 abertos).
 
@@ -41,10 +42,9 @@ são atribuídos no blueprint de cada fase e registados em `backlogs/QualityGate
 
 ## Decisões abertas
 
-Lista em `frontend/layout/01_RELATORIO_ANALISE.md` §8 (grupos musculares, "em atraso" das
-tomas, escala de RPE, concluir treino parcial, janela da adesão, limiares de alertas,
-semântica de `TargetDate`, top-N e fuso do dashboard). Fechar no blueprint da 6A/6B,
-com verificação no código, antes de implementar.
+Decisões 1–4 do `frontend/layout/01_RELATORIO_ANALISE.md` §8 **fechadas na 6A** (ver
+`sprint_6A/00`). Continuam abertas para a 6B: janela da adesão, limiares de alertas,
+semântica de `TargetDate`, top-N e fuso do dashboard, filtro "por rever" e "treino de hoje".
 
 ## Blockers
 

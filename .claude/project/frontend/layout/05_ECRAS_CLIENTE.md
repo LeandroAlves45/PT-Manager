@@ -13,7 +13,7 @@ treinador") a partir de `GET /portal/branding` (`app_name`, `logo_url`).
 |---|---|---|---|
 | O meu treino de hoje | "Empurrar A · 5 exercícios" | Treino de hoje (6B) | ⚠️ hoje só `GET /portal/my-plan` sem noção de "hoje". "Empurrar A" não existe no modelo (o dia só tem `WeekNumber`, `DayOfWeek` e `Notes` opcional): título "Semana 3 · Terça", notas do dia como subtítulo se existirem |
 | Plano alimentar | "2 340 kcal · 4 refeições" | `GET /portal/my-nutrition` (`target_kcal`, `meals[]`) | ✅ |
-| Suplementos | "3 tomas · 1 em atraso" | `GET /portal/my-supplements` + tomas (6A) | ❌ até 6A; "em atraso" depende da decisão sobre `Timing` |
+| Suplementos | "3 tomas · 1 em atraso" | `GET /portal/my-supplements/intakes/today` (6A) | ⚠️ ajuste: "X de Y tomadas" / "1 por tomar" — sem "em atraso" (decisão 6A D3) |
 | Check-in semanal | "responder até 21/09/2026" | `GET /portal/my-check-ins/due` | ⚠️ `due` só devolve check-ins com data de hoje; "responder até" depende da semântica de `TargetDate` (6B) |
 
 ## 2. O meu treino de hoje — artboard 07
@@ -40,7 +40,7 @@ treinador") a partir de `GET /portal/branding` (`app_name`, `logo_url`).
 
 | No mockup | Ajuste |
 |---|---|
-| Registar série e "Concluir treino" | Só depois da 6A (endpoints do portal, autorização exclusiva do cliente, plano activo) |
+| Registar série e "Concluir treino" | 6A: `POST/PATCH/DELETE /portal/exercise-set-logs`, `POST /portal/workout-completions`; ids em `my-plan` (`exercises[].id`, `days[].id`); só hoje; desmarcar bloqueado depois de concluir |
 | "Série 1 · 16 kg × 8" | Prescrição de `ExerciseSet` (`PlannedWeightKg`, `PlannedReps`); ao registar, o cliente pode alterar kg e reps realizados |
 | "4 × 8 · 90s descanso" | "4 séries · 8 reps · 90–120 s" (descanso é intervalo) |
 | "Empurrar A" | Não existe nome de treino A/B; ver §1 |

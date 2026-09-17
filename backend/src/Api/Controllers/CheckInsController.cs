@@ -7,6 +7,7 @@ using Application.Features.Assessments.CheckIns.CorrectCheckIn;
 using Application.Features.Assessments.CheckIns.CreateCheckIn;
 using Application.Features.Assessments.CheckIns.GetCheckIn;
 using Application.Features.Assessments.CheckIns.ListCheckIns;
+using Application.Features.Assessments.CheckIns.MarkCheckInReviewed;
 using Application.Features.Assessments.CheckIns.RescheduleCheckIn;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -122,4 +123,17 @@ public sealed class CheckInsController : ApiControllerBase
         RespondAsync(
             handler.HandleAsync(new CancelCheckInCommand(checkInId), cancellationToken),
             CheckInResponse.From);
+
+    /// <summary>
+    /// Marca a resposta como revista. Idempotente.
+    /// </summary>
+    [HttpPost("{checkInId:guid}/review")]
+    public Task<IActionResult> MarkReviewedAsync(
+        Guid checkInId,
+        [FromServices] MarkCheckInReviewedHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(
+            handler.HandleAsync(new MarkCheckInReviewedCommand(checkInId), cancellationToken),
+            CheckInResponse.From);
+
 }

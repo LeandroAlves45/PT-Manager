@@ -26,7 +26,7 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
         Guid trainerId,
         CreateTrainingPlanWriteModel model,
         DateTime now,
-        CancellationToken cancellationToken = default) =>
+        CancellationToken cancellationToken) =>
         ExecuteTransactionAsync(async () =>
         {
             if (!await ActiveClientExistsAsync(model.ClientId, cancellationToken))
@@ -45,7 +45,7 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
                 return referenceFailure;
 
             var plan = CreatePlan(trainerId, model, now);
-            _structure.AddNewStructure(plan, model.Structure, now);
+            TrainingPlanStructureCoordinator.AddNewStructure(plan, model.Structure, now);
             _dbContext.TrainingPlans.Add(plan);
 
             try
@@ -64,7 +64,7 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
         Guid trainerId,
         UpdateTrainingPlanMetadataWriteModel model,
         DateTime now,
-        CancellationToken cancellationToken = default) =>
+        CancellationToken cancellationToken) =>
         ExecuteTransactionAsync(async () =>
         {
             var plan = await LockAndLoadPlanAsync(
@@ -97,7 +97,7 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
         Guid trainerId,
         UpdateTrainingPlanStructureWriteModel model,
         DateTime now,
-        CancellationToken cancellationToken = default) =>
+        CancellationToken cancellationToken) =>
         ExecuteTransactionAsync(async () =>
         {
             var plan = await LockAndLoadPlanAsync(
@@ -109,14 +109,14 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
                 return TrainingPlanStoreResult.ForNotFound();
             if (!plan.IsActive)
                 return TrainingPlanStoreResult.ForInactive();
-            if (!_structure.ReferenceBelongToAggregate(plan, model.Structure))
+            if (!TrainingPlanStructureCoordinator.ReferenceBelongToAggregate(plan, model.Structure))
                 return TrainingPlanStoreResult.ForStructureReferenceNotFound();
 
             var hasLogs = await HasLogsAsync(plan.Id, cancellationToken);
-            if (hasLogs && _structure.HasForbiddenHistoricalChanges(plan, model.Structure))
+            if (hasLogs && TrainingPlanStructureCoordinator.HasForbiddenHistoricalChanges(plan, model.Structure))
                 return TrainingPlanStoreResult.ForStructureHasHistory();
 
-            var references = _structure.GetChangedExerciseIds(plan, model.Structure);
+            var references = TrainingPlanStructureCoordinator.GetChangedExerciseIds(plan, model.Structure);
             var referenceFailure = MapReferenceFailure(
                 await ValidateExerciseReferencesAsync(
                     trainerId,
@@ -133,7 +133,7 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
             if (!canReorder)
                 return TrainingPlanStoreResult.ForStructureReorderRequiresFreeSlot();
 
-            _structure.Reconcile(plan, model.Structure, now);
+            TrainingPlanStructureCoordinator.Reconcile(plan, model.Structure, now);
             await _dbContext.SaveChangesAsync(cancellationToken);
             return TrainingPlanStoreResult.ForUpdated(plan.Id);
         }, cancellationToken);
@@ -142,7 +142,7 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
         Guid trainingPlanId,
         Guid trainerId,
         DateTime now,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var affected = await _dbContext.TrainingPlans
             .Where(plan => plan.Id == trainingPlanId && plan.OwnerTrainerId == trainerId)
@@ -177,7 +177,7 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
         Guid trainerId,
         ReplaceTrainingPlanWriteModel model,
         DateTime now,
-        CancellationToken cancellationToken = default) =>
+        CancellationToken cancellationToken) =>
         ExecuteTransactionAsync(async () =>
         {
             var current = await LockAndLoadPlanAsync(
@@ -218,7 +218,7 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
                 model.StartDate,
                 model.EndDate,
                 now);
-            _structure.AddNewStructure(replacement, model.Structure, now);
+            TrainingPlanStructureCoordinator.AddNewStructure(replacement, model.Structure, now);
             _dbContext.TrainingPlans.Add(replacement);
 
             try
@@ -254,16 +254,22 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
             .SingleOrDefaultAsync(cancellationToken);
     }
 
-    private Task<bool> HasLogsAsync(
+    // Histórico = séries registadas ou treinos concluídos. Uma conclusão sem séries (treino
+    // parcial) também congela a estrutura, porque referencia o dia com FK Restrict.
+    private async Task<bool> HasLogsAsync(
         Guid trainingPlanId,
         CancellationToken cancellationToken) =>
-        _dbContext.ClientExerciseSetLogs
+        await _dbContext.ClientExerciseSetLogs
             .AsNoTracking()
             .AnyAsync(log => _dbContext.TrainingPlanDayExercises
                 .Any(exercise => exercise.Id == log.TrainingPlanDayExerciseId &&
                     _dbContext.TrainingPlanDays
                         .Any(day => day.Id == exercise.TrainingPlanDayId &&
                             day.TrainingPlanId == trainingPlanId)),
+                cancellationToken) ||
+        await _dbContext.WorkoutCompletions
+            .AsNoTracking()
+            .AnyAsync(completion => completion.TrainingPlanId == trainingPlanId,
                 cancellationToken);
 
     private Task<bool> ActiveClientExistsAsync(

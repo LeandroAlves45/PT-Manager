@@ -4,6 +4,7 @@ using Application.Features.Training.Exercises.Abstractions;
 using Application.Features.Training.Exercises.Dtos;
 using Application.Results;
 using Application.Validation;
+using Domain.ValueObjects;
 using FluentValidation;
 
 namespace Application.Features.Training.Exercises.CreateGlobalExercise;
@@ -45,7 +46,7 @@ public sealed class CreateGlobalExerciseHandler
             actor.Value.UserId,
             command.Name,
             command.Description,
-            command.MuscleGroups,
+            MuscleGroupCatalog.Normalize(command.MuscleGroups),
             command.Equipment,
             command.DifficultyLevel,
             command.VideoUrl,

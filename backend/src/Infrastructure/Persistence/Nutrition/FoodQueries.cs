@@ -15,10 +15,8 @@ internal sealed class FoodQueries : IFoodQueries
 {
     private readonly PtManagerDbContext _dbContext;
 
-    public FoodQueries(PtManagerDbContext dbContext)
-    {
+    public FoodQueries(PtManagerDbContext dbContext) =>
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
 
     public Task<FoodDto?> GetAsync(Guid foodId, CancellationToken cancellationToken) =>
         BaseVisibleQuery()
@@ -84,6 +82,7 @@ internal sealed class FoodQueries : IFoodQueries
         food.Fats,
         food.Kcal,
         food.Fiber,
+        food.DefaultServingGrams,
         food.IsActive,
         food.PlatformEnforcementStatus.Value,
         food.PlatformEnforcementReason == null ? null : food.PlatformEnforcementReason.Value,

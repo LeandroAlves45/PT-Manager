@@ -8,5 +8,6 @@ public sealed record UpdateFoodCommand(
     decimal Protein,
     decimal Carbs,
     decimal Fats,
-    decimal? Fiber
+    decimal? Fiber,
+    decimal? DefaultServingGrams = null
 );

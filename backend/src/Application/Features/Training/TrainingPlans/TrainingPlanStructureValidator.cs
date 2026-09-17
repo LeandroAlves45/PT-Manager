@@ -1,3 +1,4 @@
+using Application.Validation;
 using FluentValidation;
 
 namespace Application.Features.Training.TrainingPlans;
@@ -118,6 +119,8 @@ public sealed class TrainingPlanStructureValidator : AbstractValidator<TrainingP
                             !value.RestSecondsMax.HasValue ||
                             value.RestSecondsMin <= value.RestSecondsMax)
                         .WithErrorCode("training_rest_range_invalid");
+                    set.RuleFor(value => value.PlannedRpe)
+                        .MustBeValidRpe("training_planned_rpe_invalid");
                 });
             });
         });

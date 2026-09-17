@@ -13,10 +13,8 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
 {
     private readonly PtManagerDbContext _dbContext;
 
-    public TrainingPlanQueries(PtManagerDbContext dbContext)
-    {
+    public TrainingPlanQueries(PtManagerDbContext dbContext) =>
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
 
     public async Task<TrainingPlanDetailsDto?> GetDetailsAsync(
         Guid trainingPlanId,
@@ -94,7 +92,8 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
                 set.PlannedReps,
                 set.PlannedWeightKg,
                 set.RestSecondsMin,
-                set.RestSecondsMax
+                set.RestSecondsMax,
+                set.PlannedRpe
             })
             .ToListAsync(cancellationToken);
 
@@ -121,7 +120,8 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
                             set.PlannedReps,
                             set.PlannedWeightKg,
                             set.RestSecondsMin,
-                            set.RestSecondsMax))
+                            set.RestSecondsMax,
+                            set.PlannedRpe))
                         .ToArray()))
                 .ToArray()))
             .ToArray();

@@ -39,6 +39,10 @@ internal sealed class ClientExerciseSetLogConfiguration : IEntityTypeConfigurati
             .HasColumnName("reps_done")
             .IsRequired();
 
+        builder.Property(cel => cel.Rpe)
+            .HasColumnName("rpe")
+            .HasPrecision(3, 1);
+
         builder.Property(cel => cel.Notes)
             .HasColumnName("notes")
             .HasMaxLength(500);
@@ -63,6 +67,8 @@ internal sealed class ClientExerciseSetLogConfiguration : IEntityTypeConfigurati
             t.HasCheckConstraint("set_num_check", "set_number >= 1 AND set_number <= 15");
             t.HasCheckConstraint("reps_check", "reps_done >= 0 AND reps_done <= 100");
             t.HasCheckConstraint("weight_check", "weight_kg >= 0");
+            t.HasCheckConstraint("rpe_check",
+                "rpe IS NULL OR (rpe >= 1 AND rpe <= 10 AND rpe * 2 = trunc(rpe * 2))");
         });
 
         builder.HasIndex(cel => new { cel.ClientId, cel.PerformedAt, cel.Id })

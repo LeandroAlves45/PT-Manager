@@ -45,6 +45,7 @@ public sealed record TrainingPlanDetailsDto(
         int? PlannedReps,
         decimal? PlannedWeightKg,
         int? RestSecondsMin,
-        int? RestSecondsMax
+        int? RestSecondsMax,
+        decimal? PlannedRpe
     );
 }

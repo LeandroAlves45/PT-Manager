@@ -38,7 +38,8 @@ public sealed class GlobalFoodsController : ApiControllerBase
                     request.Protein,
                     request.Carbs,
                     request.Fats,
-                    request.Fiber),
+                    request.Fiber,
+                    request.DefaultServingGrams),
                 cancellationToken),
             GlobalFoodResponse.From,
             food => $"/api/v1/global-foods/{food.Id}");
@@ -103,7 +104,8 @@ public sealed class GlobalFoodsController : ApiControllerBase
                     request.Protein,
                     request.Carbs,
                     request.Fats,
-                    request.Fiber),
+                    request.Fiber,
+                    request.DefaultServingGrams),
                 cancellationToken),
             GlobalFoodResponse.From);
     }

@@ -7,5 +7,6 @@ public sealed record CreateFoodCommand(
     decimal Protein,
     decimal Carbs,
     decimal Fats,
-    decimal? Fiber
+    decimal? Fiber,
+    decimal? DefaultServingGrams = null
 );

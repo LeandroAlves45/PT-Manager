@@ -40,6 +40,7 @@ public static class AssessmentMappings
         GetStatus(checkIn, localToday),
         checkIn.RespondedAt,
         checkIn.CancelledAt,
+        checkIn.ReviewedAt,
         checkIn.CreatedAt,
         checkIn.UpdatedAt
     );

@@ -10,10 +10,8 @@ internal sealed class FoodStore : IFoodStore
 {
     private readonly PtManagerDbContext _dbContext;
 
-    public FoodStore(PtManagerDbContext dbContext)
-    {
+    public FoodStore(PtManagerDbContext dbContext) =>
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
 
     public async Task AddAsync(Food food, CancellationToken cancellationToken)
     {
@@ -39,6 +37,7 @@ internal sealed class FoodStore : IFoodStore
         decimal carbs,
         decimal fats,
         decimal? fiber,
+        decimal? defaultServingGrams,
         DateTime now,
         CancellationToken cancellationToken
     )
@@ -55,7 +54,7 @@ internal sealed class FoodStore : IFoodStore
         if (food.OwnerTrainerId != trainerId)
             return FoodStoreResult.ForNotFound();
 
-        food.Update(name, description, protein, carbs, fats, fiber, now);
+        food.Update(name, description, protein, carbs, fats, fiber, defaultServingGrams, now);
         await _dbContext.SaveChangesAsync(cancellationToken);
         await _dbContext.Entry(food).ReloadAsync(cancellationToken);
         return FoodStoreResult.ForUpdated(food);

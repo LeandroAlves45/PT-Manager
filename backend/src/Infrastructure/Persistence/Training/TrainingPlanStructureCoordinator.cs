@@ -9,12 +9,10 @@ internal sealed class TrainingPlanStructureCoordinator
 {
     private readonly PtManagerDbContext _dbContext;
 
-    public TrainingPlanStructureCoordinator(PtManagerDbContext dbContext)
-    {
+    public TrainingPlanStructureCoordinator(PtManagerDbContext dbContext) =>
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
 
-    public bool ReferenceBelongToAggregate(
+    public static bool ReferenceBelongToAggregate(
         TrainingPlan plan,
         TrainingPlanStructureInput structure
     )
@@ -43,7 +41,7 @@ internal sealed class TrainingPlanStructureCoordinator
         return true;
     }
 
-    public bool HasForbiddenHistoricalChanges(
+    public static bool HasForbiddenHistoricalChanges(
         TrainingPlan plan,
         TrainingPlanStructureInput structure
     )
@@ -85,10 +83,9 @@ internal sealed class TrainingPlanStructureCoordinator
                         set.PlannedReps != setInput.PlannedReps ||
                         set.PlannedWeightKg != setInput.PlannedWeightKg ||
                         set.RestSecondsMin != setInput.RestSecondsMin ||
-                        set.RestSecondsMax != setInput.RestSecondsMax)
-                    {
+                        set.RestSecondsMax != setInput.RestSecondsMax ||
+                        set.PlannedRpe != setInput.PlannedRpe)
                         return true;
-                    }
                 }
             }
         }
@@ -96,7 +93,7 @@ internal sealed class TrainingPlanStructureCoordinator
         return false;
     }
 
-    public IReadOnlyCollection<Guid> GetChangedExerciseIds(
+    public static IReadOnlyCollection<Guid> GetChangedExerciseIds(
         TrainingPlan plan,
         TrainingPlanStructureInput structure
     )
@@ -114,7 +111,7 @@ internal sealed class TrainingPlanStructureCoordinator
             .ToArray();
     }
 
-    public void AddNewStructure(
+    public static void AddNewStructure(
         TrainingPlan plan,
         TrainingPlanStructureInput structure,
         DateTime now
@@ -170,7 +167,7 @@ internal sealed class TrainingPlanStructureCoordinator
         return true;
     }
 
-    public void Reconcile(
+    public static void Reconcile(
         TrainingPlan plan,
         TrainingPlanStructureInput structure,
         DateTime now
@@ -242,6 +239,7 @@ internal sealed class TrainingPlanStructureCoordinator
                 setInput.PlannedWeightKg,
                 setInput.RestSecondsMin,
                 setInput.RestSecondsMax,
+                setInput.PlannedRpe,
                 now);
         }
 
@@ -291,7 +289,8 @@ internal sealed class TrainingPlanStructureCoordinator
                 input.PlannedWeightKg,
                 input.RestSecondsMin,
                 input.RestSecondsMax,
-                now);
+                now,
+                input.PlannedRpe);
         }
     }
 
@@ -436,6 +435,7 @@ internal sealed class TrainingPlanStructureCoordinator
                     blocker.PlannedWeightKg,
                     blocker.RestSecondsMin,
                     blocker.RestSecondsMax,
+                    blocker.PlannedRpe,
                     now);
                 await _dbContext.SaveChangesAsync(cancellationToken);
             }
@@ -447,6 +447,7 @@ internal sealed class TrainingPlanStructureCoordinator
                 movable.PlannedWeightKg,
                 movable.RestSecondsMin,
                 movable.RestSecondsMax,
+                movable.PlannedRpe,
                 now);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }

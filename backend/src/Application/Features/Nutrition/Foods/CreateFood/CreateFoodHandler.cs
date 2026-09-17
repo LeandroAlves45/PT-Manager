@@ -51,7 +51,8 @@ public sealed class CreateFoodHandler
             command.Carbs,
             command.Fats,
             command.Fiber,
-            _clock.UtcNow
+            _clock.UtcNow,
+            command.DefaultServingGrams
         );
 
         await _foodStore.AddAsync(food, cancellationToken);

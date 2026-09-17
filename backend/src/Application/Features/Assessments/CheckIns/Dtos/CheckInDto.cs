@@ -16,6 +16,7 @@ public sealed record CheckInDto(
     string Status,
     DateTime? RespondedAt,
     DateTime? CancelledAt,
+    DateTime? ReviewedAt,
     DateTime CreatedAt,
     DateTime UpdatedAt
 );

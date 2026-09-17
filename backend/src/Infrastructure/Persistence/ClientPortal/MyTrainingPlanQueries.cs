@@ -49,6 +49,7 @@ internal sealed class MyTrainingPlanQueries : IMyTrainingPlanQueries
                     .ThenBy(day => day.DayOfWeek)
                     .ThenBy(day => day.Id)
                     .Select(day => new MyTrainingPlanDto.DayDto(
+                        day.Id,
                         day.DayOfWeek,
                         day.WeekNumber,
                         day.Notes,
@@ -63,6 +64,7 @@ internal sealed class MyTrainingPlanQueries : IMyTrainingPlanQueries
                             .ThenBy(row => row.item.GroupPosition)
                             .ThenBy(row => row.item.Id)
                             .Select(row => new MyTrainingPlanDto.ExerciseDto(
+                                row.item.Id,
                                 row.item.OrderNumber,
                                 row.catalog.PlatformEnforcementStatus ==
                                     PlatformEnforcementStatus.Blocked
@@ -79,11 +81,13 @@ internal sealed class MyTrainingPlanQueries : IMyTrainingPlanQueries
                                     .OrderBy(set => set.SetNumber)
                                     .ThenBy(set => set.Id)
                                     .Select(set => new MyTrainingPlanDto.SetDto(
+                                        set.Id,
                                         set.SetNumber,
                                         set.PlannedReps,
                                         set.PlannedWeightKg,
                                         set.RestSecondsMin,
-                                        set.RestSecondsMax))
+                                        set.RestSecondsMax,
+                                        set.PlannedRpe))
                                     .ToList()))
                             .ToList()))
                     .ToList(),

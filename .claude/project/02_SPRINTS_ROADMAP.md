@@ -676,9 +676,11 @@ system, benchmark e **layout** com relatório e especificação por ecrã) e
    endpoints do portal (marcar/desmarcar toma, listar tomas do dia).
 6. Uma migration consolidada, gerada (nunca escrita à mão).
 
-Decisões a fechar no blueprint: escala e limites do RPE; semântica de "em atraso" nas
-tomas (`Timing` é texto livre hoje); regra de concluir treino (parcial ou completo);
-grupos musculares com lista fixa validada no backend sem migration de dados.
+Decisões fechadas em 2026-09-16 (blueprints validados em 2026-09-17,
+`docs/backend-files/sprint_6/sprint_6A/`): RPE 1–10 em passos de 0,5; tomas sem "em atraso"
+(uma por atribuição e dia local); concluir treino parcial e idempotente; grupos musculares
+com 14 códigos EN validados só em escrita. Acrescentado: RPE real no registo e corrigir/
+desmarcar série do próprio dia pelo cliente.
 
 Gate 6A: migration aplicada à dev; testes de autorização e multi-tenancy (cliente A não
 regista séries nem tomas do cliente B; trainer não usa endpoints do portal); contratos

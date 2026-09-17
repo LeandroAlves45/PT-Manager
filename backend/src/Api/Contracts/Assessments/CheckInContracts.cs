@@ -52,6 +52,7 @@ public sealed record CheckInResponse(
     string Status,
     DateTime? RespondedAt,
     DateTime? CancelledAt,
+    DateTime? ReviewedAt,
     DateTime CreatedAt,
     DateTime UpdatedAt)
 {
@@ -75,6 +76,7 @@ public sealed record CheckInResponse(
             checkIn.Status,
             checkIn.RespondedAt,
             checkIn.CancelledAt,
+            checkIn.ReviewedAt,
             checkIn.CreatedAt,
             checkIn.UpdatedAt);
     }

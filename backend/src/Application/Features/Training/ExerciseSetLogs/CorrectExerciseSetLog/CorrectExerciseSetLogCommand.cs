@@ -6,5 +6,6 @@ public sealed record CorrectExerciseSetLogCommand(
     decimal WeightKg,
     int RepsDone,
     string? Notes,
-    DateTimeOffset PerformedAt
+    DateTimeOffset PerformedAt,
+    decimal? Rpe = null
 );

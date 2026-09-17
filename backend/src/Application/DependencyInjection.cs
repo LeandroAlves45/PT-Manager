@@ -63,6 +63,8 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.Assessments
             .CheckIns.SubmitCheckInResponse.SubmitCheckInResponseHandler>();
         services.AddScoped<Application.Features.Assessments
+            .CheckIns.MarkCheckInReviewed.MarkCheckInReviewedHandler>();
+        services.AddScoped<Application.Features.Assessments
             .InitialAssessments.CreateInitialAssessment.CreateInitialAssessmentHandler>();
         services.AddScoped<Application.Features.Assessments
             .InitialAssessments.GetInitialAssessment.GetInitialAssessmentHandler>();
@@ -343,6 +345,9 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.Supplements.GetSupplementAssignment.GetSupplementAssignmentHandler>();
         services.AddScoped<Application.Features.Supplements.ListGlobalSupplements.ListGlobalSupplementsHandler>();
         services.AddScoped<Application.Features.Supplements.ListMySupplementAssignments.ListMySupplementAssignmentsHandler>();
+        services.AddScoped<Application.Features.Supplements.ListMyTodaySupplementIntakes.ListMyTodaySupplementIntakesHandler>();
+        services.AddScoped<Application.Features.Supplements.MarkMySupplementIntake.MarkMySupplementIntakeHandler>();
+        services.AddScoped<Application.Features.Supplements.UnmarkMySupplementIntake.UnmarkMySupplementIntakeHandler>();
         services.AddScoped<Application.Features.Supplements.ListSupplementAssignments.ListSupplementAssignmentsHandler>();
         services.AddScoped<Application.Features.Supplements.ListSupplements.ListSupplementsHandler>();
         services.AddScoped<Application.Features.Supplements.ReactivateGlobalSupplement.ReactivateGlobalSupplementHandler>();
@@ -424,6 +429,10 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.Training.ExerciseSetLogs.CorrectExerciseSetLog.CorrectExerciseSetLogHandler>();
         services.AddScoped<Application.Features.Training.ExerciseSetLogs.ListExerciseSetLogs.ListExerciseSetLogsHandler>();
         services.AddScoped<Application.Features.Training.ExerciseSetLogs.RecordExerciseSetLog.RecordExerciseSetLogHandler>();
+        services.AddScoped<Application.Features.Training.ExerciseSetLogs.RecordMyExerciseSetLog.RecordMyExerciseSetLogHandler>();
+        services.AddScoped<Application.Features.Training.ExerciseSetLogs.CorrectMyExerciseSetLog.CorrectMyExerciseSetLogHandler>();
+        services.AddScoped<Application.Features.Training.ExerciseSetLogs.DeleteMyExerciseSetLog.DeleteMyExerciseSetLogHandler>();
+        services.AddScoped<Application.Features.Training.WorkoutCompletions.CompleteMyWorkout.CompleteMyWorkoutHandler>();
         services.AddScoped<Application.Features.Training.TrainingPlans.ArchiveTrainingPlan.ArchiveTrainingPlanHandler>();
         services.AddScoped<Application.Features.Training.TrainingPlans.CreateTrainingPlan.CreateTrainingPlanHandler>();
         services.AddScoped<Application.Features.Training.TrainingPlans.GetTrainingPlan.GetTrainingPlanHandler>();
@@ -455,6 +464,12 @@ public static class DependencyInjection
             .ListExerciseSetLogsQuery>, Application.Features.Training.ExerciseSetLogs.ListExerciseSetLogs.ListExerciseSetLogsQueryValidator>();
         services.AddScoped<IValidator<Application.Features.Training.ExerciseSetLogs.RecordExerciseSetLog
             .RecordExerciseSetLogCommand>, Application.Features.Training.ExerciseSetLogs.RecordExerciseSetLog.RecordExerciseSetLogCommandValidator>();
+        services.AddScoped<IValidator<Application.Features.Training.ExerciseSetLogs.RecordMyExerciseSetLog
+            .RecordMyExerciseSetLogCommand>, Application.Features.Training.ExerciseSetLogs.RecordMyExerciseSetLog.RecordMyExerciseSetLogCommandValidator>();
+        services.AddScoped<IValidator<Application.Features.Training.ExerciseSetLogs.CorrectMyExerciseSetLog
+            .CorrectMyExerciseSetLogCommand>, Application.Features.Training.ExerciseSetLogs.CorrectMyExerciseSetLog.CorrectMyExerciseSetLogCommandValidator>();
+        services.AddScoped<IValidator<Application.Features.Training.WorkoutCompletions.CompleteMyWorkout
+            .CompleteMyWorkoutCommand>, Application.Features.Training.WorkoutCompletions.CompleteMyWorkout.CompleteMyWorkoutCommandValidator>();
         services.AddScoped<IValidator<Application.Features.Training.TrainingPlans.CreateTrainingPlan
             .CreateTrainingPlanCommand>, Application.Features.Training.TrainingPlans.CreateTrainingPlan
             .CreateTrainingPlanCommandValidator>();

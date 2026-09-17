@@ -7,5 +7,6 @@ public sealed record RecordExerciseSetLogWriteModel(
     decimal WeightKg,
     int RepsDone,
     string? Notes,
-    DateTimeOffset PerformedAt
+    DateTimeOffset PerformedAt,
+    decimal? Rpe = null
 );

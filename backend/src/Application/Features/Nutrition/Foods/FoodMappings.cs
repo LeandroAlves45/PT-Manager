@@ -23,6 +23,7 @@ public static class FoodMappings
             food.Fats,
             food.Kcal,
             food.Fiber,
+            food.DefaultServingGrams,
             food.IsActive,
             food.PlatformEnforcementStatus.Value,
             food.PlatformEnforcementReason?.Value,
@@ -45,6 +46,7 @@ public static class FoodMappings
             food.Fats,
             food.Kcal,
             food.Fiber,
+            food.DefaultServingGrams,
             food.IsActive,
             food.CreatedAt,
             food.UpdatedAt

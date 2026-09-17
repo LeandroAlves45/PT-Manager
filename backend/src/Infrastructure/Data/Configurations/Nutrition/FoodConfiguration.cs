@@ -20,6 +20,9 @@ internal sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
                 "AND protein + carbs + fats <= 100 " +
                 "AND (fiber IS NULL OR fiber >= 0)");
 
+            table.HasCheckConstraint("ck_foods_default_serving_grams",
+                "default_serving_grams IS NULL OR (default_serving_grams > 0 AND default_serving_grams <= 1000)");
+
             table.HasCheckConstraint(
                 "ck_foods_platform_enforcement",
                 "(platform_enforcement_status = 'allowed' AND platform_enforcement_reason IS NULL " +
@@ -55,6 +58,10 @@ internal sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
             .HasComputedColumnSql("protein * 4 + carbs * 4 + fats * 9", stored: true);
 
         builder.Property(food => food.Fiber).HasColumnName("fiber").HasPrecision(10, 2);
+
+        builder.Property(food => food.DefaultServingGrams)
+            .HasColumnName("default_serving_grams")
+            .HasPrecision(10, 2);
 
         builder.Property(food => food.IsActive)
             .HasColumnName("is_active")

@@ -145,6 +145,34 @@ public static class TrainingErrors
         ErrorCategory.Forbidden,
         "Only a personal trainer can manage exercise set logs.");
 
+    public static readonly Error TrainingClientOnly = Error.Create(
+        "training_client_only",
+        ErrorCategory.Forbidden,
+        "Only the associated client can log their own training.");
+
+    public static readonly Error TrainingDateOutsidePlan = Error.Create(
+        "training_date_outside_plan",
+        ErrorCategory.Conflict,
+        "Today is outside the active training plan date range.");
+
+    public static readonly Error ExerciseSetLogNotEditable = Error.Create(
+        "exercise_set_log_not_editable",
+        ErrorCategory.Conflict,
+        "Only exercise set logs from today can be changed by the client.");
+
+    public static readonly Error WorkoutAlreadyCompleted = Error.Create(
+        "workout_already_completed",
+        ErrorCategory.Conflict,
+        "The workout for this day is already completed.");
+
+    public static readonly Error ExerciseSetLogIdRequired = Error.Validation([
+        new ValidationError(
+            "ExerciseSetLogId",
+            "exercise_set_log_id_required",
+            "Exercise set log ID is required."
+        )
+    ]);
+
     public static Error ExerciseIdRequired() => Error.Validation([
         new ValidationError(
             "ExerciseId",

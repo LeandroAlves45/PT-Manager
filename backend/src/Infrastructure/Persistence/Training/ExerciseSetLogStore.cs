@@ -12,10 +12,8 @@ internal sealed class ExerciseSetLogStore : IExerciseSetLogStore
 {
     private readonly PtManagerDbContext _dbContext;
 
-    public ExerciseSetLogStore(PtManagerDbContext dbContext)
-    {
+    public ExerciseSetLogStore(PtManagerDbContext dbContext) =>
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
 
     public Task<ExerciseSetLogStoreResult> RecordAsync(
         Guid trainerId,
@@ -32,7 +30,8 @@ internal sealed class ExerciseSetLogStore : IExerciseSetLogStore
             if (!planId.HasValue)
                 return ExerciseSetLogStoreResult.ForNotFound();
 
-            var plan = await LockAndLoadPlanAsync(planId.Value, trainerId, cancellationToken);
+            var plan = await TrainingPlanLocks.LockAndLoadAsync(
+                _dbContext, planId.Value, trainerId, cancellationToken);
             if (plan is null)
                 return ExerciseSetLogStoreResult.ForNotFound();
             if (!plan.IsActive || plan.IsArchived)
@@ -72,7 +71,8 @@ internal sealed class ExerciseSetLogStore : IExerciseSetLogStore
                 model.RepsDone,
                 model.Notes,
                 performedAt,
-                now);
+                now,
+                model.Rpe);
             _dbContext.ClientExerciseSetLogs.Add(log);
             await _dbContext.SaveChangesAsync(cancellationToken);
             return ExerciseSetLogStoreResult.ForRecorded(log);
@@ -93,7 +93,8 @@ internal sealed class ExerciseSetLogStore : IExerciseSetLogStore
             if (!planId.HasValue)
                 return ExerciseSetLogStoreResult.ForNotFound();
 
-            var plan = await LockAndLoadPlanAsync(planId.Value, trainerId, cancellationToken);
+            var plan = await TrainingPlanLocks.LockAndLoadAsync(
+                _dbContext, planId.Value, trainerId, cancellationToken);
             if (plan is null)
                 return ExerciseSetLogStoreResult.ForNotFound();
 
@@ -120,6 +121,7 @@ internal sealed class ExerciseSetLogStore : IExerciseSetLogStore
             log.Correct(
                 model.WeightKg,
                 model.RepsDone,
+                model.Rpe,
                 model.Notes,
                 performedAt,
                 now);
@@ -156,25 +158,6 @@ internal sealed class ExerciseSetLogStore : IExerciseSetLogStore
             where log.Id == logId && plan.OwnerTrainerId == trainerId
             select (Guid?)plan.Id
         ).SingleOrDefaultAsync(cancellationToken);
-
-    private async Task<TrainingPlan?> LockAndLoadPlanAsync(
-        Guid planId,
-        Guid trainerId,
-        CancellationToken cancellationToken)
-    {
-        // TrainingPlanStore usa exatamente esta linha como mutex relacional.
-        var lockedId = await _dbContext.Database.SqlQuery<Guid>(
-            $"SELECT id AS \"Value\" FROM training_plans WHERE id = {planId} AND owner_trainer_id = {trainerId} AND is_deleted = false FOR UPDATE")
-            .SingleOrDefaultAsync(cancellationToken);
-        if (lockedId == Guid.Empty)
-            return null;
-
-        return await _dbContext.TrainingPlans
-            .AsNoTracking()
-            .SingleOrDefaultAsync(plan =>
-                plan.Id == lockedId && plan.OwnerTrainerId == trainerId,
-                cancellationToken);
-    }
 
     private static ExerciseSetLogStoreResult? ValidatePerformedAt(
         TrainingPlan plan,

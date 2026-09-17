@@ -12,6 +12,7 @@ public sealed record ClientExerciseSetLogDto(
     int SetNumber,
     decimal WeightKg,
     int RepsDone,
+    decimal? Rpe,
     string? Notes,
     DateTimeOffset PerformedAt,
     DateTime CreatedAt,

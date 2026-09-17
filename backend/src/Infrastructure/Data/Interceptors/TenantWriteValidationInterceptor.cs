@@ -61,7 +61,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
         var entries = context.ChangeTracker.Entries()
             .Where(entry =>
                 entry.State is EntityState.Added or EntityState.Modified ||
-                (entry.State == EntityState.Deleted && entry.Entity is ExerciseVideo))
+                (entry.State == EntityState.Deleted && entry.Entity is ExerciseVideo or ClientSupplementIntake))
             .ToList();
 
         Guid? tenantId = null;
@@ -81,6 +81,8 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 case Notification:
                 case ClientSupplementAssignment:
                 case PackType:
+                case ClientSupplementIntake:
+                case WorkoutCompletion:
                     tenantId ??= context.RequireTenant();
                     ValidateRequiredOwnership(entry, "OwnerTrainerId", tenantId.Value);
                     break;
@@ -118,6 +120,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 tenantId.Value,
                 cancellationToken);
             await ValidateCatalogReferencesAsync(context, tenantId.Value, cancellationToken);
+            await ValidateClientActivityReferencesAsync(context, tenantId.Value, cancellationToken);
         }
 
         return await base.SavingChangesAsync(eventData, result, cancellationToken);
@@ -232,7 +235,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
             .ToList();
 
         var changedLogs = context.ChangeTracker.Entries<ClientExerciseSetLog>()
-            .Where(entry => entry.State is EntityState.Added or EntityState.Modified)
+            .Where(entry => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
             .Select(entry => entry.Entity)
             .ToList();
 
@@ -339,6 +342,80 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
 
             if (plan.ClientId != log.ClientId)
                 throw new DomainException("Log client does not match the training plan client.");
+        }
+    }
+
+    /// <summary>
+    /// Confirma que conclusões de treino e tomas apontam para um plano ou atribuição do
+    /// tenant efetivo e do mesmo cliente. A FK composta só garante o par tenant-cliente,
+    /// não o plano nem a atribuição.
+    /// </summary>
+    private static async Task ValidateClientActivityReferencesAsync(
+        PtManagerDbContext context,
+        Guid tenantId,
+        CancellationToken cancellationToken)
+    {
+        var completions = context.ChangeTracker.Entries<WorkoutCompletion>()
+            .Where(entry => entry.State == EntityState.Added)
+            .Select(entry => entry.Entity)
+            .ToList();
+
+        if (completions.Count > 0)
+        {
+            var daysIds = completions.Select(completion => completion.TrainingPlanDayId)
+                .Distinct()
+                .ToList();
+            var days = await (
+                from day in context.TrainingPlanDays.IgnoreQueryFilters().AsNoTracking()
+                join plan in context.TrainingPlans.IgnoreQueryFilters().AsNoTracking()
+                    on day.TrainingPlanId equals plan.Id
+                where daysIds.Contains(day.Id)
+                select new { day.Id, day.TrainingPlanId, plan.OwnerTrainerId, plan.ClientId, plan.IsDeleted })
+                .ToDictionaryAsync(item => item.Id, cancellationToken);
+
+            foreach (var completion in completions)
+            {
+                if (!days.TryGetValue(completion.TrainingPlanDayId, out var day) ||
+                    day.TrainingPlanId != completion.TrainingPlanId)
+                    throw new DomainException("Referenced training plan day does not exist.");
+
+                if (day.OwnerTrainerId != tenantId || day.IsDeleted || day.ClientId != completion.ClientId)
+                    throw new DomainException(
+                        "Workout completion does not match the training plan client.");
+            }
+        }
+
+        var intakes = context.ChangeTracker.Entries<ClientSupplementIntake>()
+            .Where(entry => entry.State == EntityState.Added)
+            .Select(entry => entry.Entity)
+            .ToList();
+
+        if (intakes.Count > 0)
+        {
+            var assignmentsIds = intakes
+                .Select(intake => intake.ClientSupplementAssignmentId)
+                .Distinct()
+                .ToList();
+            var assignments = await context.ClientSupplementAssignments
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(assignment => assignmentsIds.Contains(assignment.Id))
+                .Select(assignment => new
+                {
+                    assignment.Id,
+                    assignment.OwnerTrainerId,
+                    assignment.ClientId
+                })
+                .ToDictionaryAsync(item => item.Id, cancellationToken);
+
+            foreach (var intake in intakes)
+            {
+                if (!assignments.TryGetValue(intake.ClientSupplementAssignmentId, out var assignment))
+                    throw new DomainException("Referenced supplement assignment does not exist.");
+
+                if (assignment.OwnerTrainerId != tenantId || assignment.ClientId != intake.ClientId)
+                    throw new DomainException("Supplement intake does not match the assignment client.");
+            }
         }
     }
 
@@ -719,6 +796,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
 
     private static bool HasTenantScopedReferences(PtManagerDbContext context) =>
         context.ChangeTracker.Entries().Any(entry =>
+            (entry.State == EntityState.Deleted && entry.Entity is ClientExerciseSetLog) ||
             entry.State is EntityState.Added or EntityState.Modified &&
             entry.Entity is (
                 MealPlanMeal
@@ -729,5 +807,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 or ExerciseSet
                 or ClientExerciseSetLog
                 or ClientSupplementAssignment
+                or ClientSupplementIntake
+                or WorkoutCompletion
             ));
 }

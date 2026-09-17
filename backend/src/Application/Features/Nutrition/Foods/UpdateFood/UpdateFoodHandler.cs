@@ -51,6 +51,7 @@ public sealed class UpdateFoodHandler
             command.Carbs,
             command.Fats,
             command.Fiber,
+            command.DefaultServingGrams,
             _clock.UtcNow,
             cancellationToken
         );

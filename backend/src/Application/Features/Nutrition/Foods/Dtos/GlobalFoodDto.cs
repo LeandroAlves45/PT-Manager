@@ -10,6 +10,7 @@ public sealed record GlobalFoodDto(
     decimal Fats,
     decimal Kcal,
     decimal? Fiber,
+    decimal? DefaultServingGrams,
     bool IsActive,
     DateTime CreatedAt,
     DateTime UpdatedAt

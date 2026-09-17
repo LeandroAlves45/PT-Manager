@@ -89,6 +89,15 @@ public static class AssessmentErrors
     public static readonly Error CheckInNotAnswered = Error.Create(
         "check_in_not_answered",
         ErrorCategory.Conflict,
-        "Only an answered check-in can be corrected."
+        "Only an answered, non-cancelled check-in can be corrected or reviewed."
     );
+
+    public static readonly Error CheckInIdRequired = Error.Validation(
+    [
+        new ValidationError(
+            "CheckInId",
+            "check_in_id_required",
+            "Check-in ID is required."
+        )
+    ]);
 }

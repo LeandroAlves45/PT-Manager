@@ -372,6 +372,11 @@ public sealed class CheckInHandlersTests
             Task.FromResult(Outcome ?? CheckInStoreResult.For(
                 CheckInStoreResult.Status.Created,
                 CreateCheckIn()));
+
+        public Task<CheckInStoreResult> MarkReviewedAsync(Guid trainerId, Guid checkInId, DateTime now, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     private sealed class QueryStub : ICheckInQueries

@@ -5,6 +5,7 @@ using Application.Features.Training.Exercises.Dtos;
 using Application.Results;
 using Application.Validation;
 using Domain.Entities.Training;
+using Domain.ValueObjects;
 using FluentValidation;
 
 namespace Application.Features.Training.Exercises.CreateExercise;
@@ -48,7 +49,7 @@ public sealed class CreateExerciseHandler
             actor.Value.TrainerId,
             command.Name,
             command.Description,
-            command.MuscleGroups,
+            MuscleGroupCatalog.Normalize(command.MuscleGroups),
             command.Equipment,
             command.DifficultyLevel,
             command.VideoUrl,

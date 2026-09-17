@@ -9,14 +9,16 @@ public sealed record RegisterExerciseSetLogRequest(
     decimal WeightKg,
     int RepsDone,
     string? Notes,
-    DateTimeOffset PerformedAt);
+    DateTimeOffset PerformedAt,
+    decimal? Rpe = null);
 
 /// <summary>Corrige o registo de série já existente.</summary>
 public sealed record CorrectExerciseSetLogRequest(
     decimal WeightKg,
     int RepsDone,
     string? Notes,
-    DateTimeOffset PerformedAt);
+    DateTimeOffset PerformedAt,
+    decimal? Rpe = null);
 
 /// <summary>Registo de série executada por um cliente.</summary>
 public sealed record ExerciseSetLogResponse(
@@ -30,6 +32,7 @@ public sealed record ExerciseSetLogResponse(
     int SetNumber,
     decimal WeightKg,
     int RepsDone,
+    decimal? Rpe,
     string? Notes,
     DateTimeOffset PerformedAt,
     DateTime CreatedAt,
@@ -51,6 +54,7 @@ public sealed record ExerciseSetLogResponse(
             log.SetNumber,
             log.WeightKg,
             log.RepsDone,
+            log.Rpe,
             log.Notes,
             log.PerformedAt,
             log.CreatedAt,

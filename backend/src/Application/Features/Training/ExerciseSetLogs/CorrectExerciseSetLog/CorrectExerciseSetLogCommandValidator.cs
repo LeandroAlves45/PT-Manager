@@ -1,3 +1,4 @@
+using Application.Validation;
 using FluentValidation;
 
 namespace Application.Features.Training.ExerciseSetLogs.CorrectExerciseSetLog;
@@ -15,6 +16,9 @@ public sealed class CorrectExerciseSetLogCommandValidator : AbstractValidator<Co
 
         RuleFor(command => command.RepsDone)
             .InclusiveBetween(0, 100).WithErrorCode("training_reps_done_invalid");
+
+        RuleFor(command => command.Rpe)
+            .MustBeValidRpe("training_rpe_invalid");
 
         RuleFor(command => command.Notes)
             .MaximumLength(500).WithErrorCode("training_log_notes_too_long");

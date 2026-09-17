@@ -16,10 +16,8 @@ internal sealed class GlobalFoodQueries : IGlobalFoodQueries
 {
     private readonly PtManagerDbContext _dbContext;
 
-    public GlobalFoodQueries(PtManagerDbContext dbContext)
-    {
+    public GlobalFoodQueries(PtManagerDbContext dbContext) =>
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
 
     public Task<GlobalFoodDto?> GetAsync(
         Guid foodId,
@@ -80,6 +78,7 @@ internal sealed class GlobalFoodQueries : IGlobalFoodQueries
             food.Fats,
             food.Kcal,
             food.Fiber,
+            food.DefaultServingGrams,
             food.IsActive,
             food.CreatedAt,
             food.UpdatedAt);

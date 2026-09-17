@@ -1,6 +1,6 @@
-# Estado ativo: Sprint 5D implementada e validada no backend
+# Estado ativo: Sprint 6A com blueprints validados (por implementar)
 
-Atualizado: 2026-09-16 (Sprint 6 planeado — ver "Passo imediato")
+Atualizado: 2026-09-17 (blueprints da 6A validados — ver "Passo imediato")
 
 ## Estado em uma linha
 
@@ -56,6 +56,17 @@ Da 5C: `QG5C-PROVIDER-001`. Da 5B: `QG5B-STRIPE-001` e `QG5B-DEPLOY-001`.
 Transversal: `QG5-FRONTEND-001` (fecha na 6G).
 
 ## Passo imediato
+
+**2026-09-17 — Sprint 6A: blueprints de código real validados.** Pack
+`docs/backend-files/sprint_6/sprint_6A/` (00–13), 155 alvos extraídos por script de uma
+materialização descartável (worktree `C:\ptm6a`, removido, sem merge/commit): build 0/0,
+2755 testes verdes (+111), 6 mutações mortas, snapshot +8 operações, migration
+`AddSprint6AWriteSchema` (o timestamp muda ao gerar) com preflight no Down. Decisões D1–D8
+no `00`. Próximo: o utilizador implementa pela ordem do `00`, aplica a migration à dev e
+fecha `QG6A-IMPL-001`; depois planear a 6B (decisões 5–8 do relatório §8). Nota:
+`Sessions/2026-09-17-sprint6a-blueprints-validados.md`.
+
+### Histórico do passo anterior (2026-09-16)
 
 1. O Gate 5D do código está fechado (commit `8e0f8f0`).
 2. **Sprint 6 planeado em 2026-09-16 (backend-first):** 6A backend escrita/schema →

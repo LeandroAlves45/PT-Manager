@@ -15,6 +15,7 @@ using Application.Features.Supplements.Abstractions;
 using Application.Features.TrainerSettings.Abstractions;
 using Application.Features.Training.Exercises.Abstractions;
 using Application.Features.Training.ExerciseSetLogs.Abstractions;
+using Application.Features.Training.WorkoutCompletions.Abstractions;
 using Application.Features.Training.TrainingPlans.Abstractions;
 using Infrastructure.Data;
 using Infrastructure.Data.Interceptors;
@@ -121,6 +122,8 @@ public static class DependencyInjection
         // Exercise Set Logs
         services.AddScoped<IExerciseSetLogStore, ExerciseSetLogStore>();
         services.AddScoped<IExerciseSetLogQueries, ExerciseSetLogQueries>();
+        services.AddScoped<IMyExerciseSetLogStore, MyExerciseSetLogStore>();
+        services.AddScoped<IWorkoutCompletionStore, WorkoutCompletionStore>();
 
         // Training Plan Structure Coordinator
         services.AddScoped<TrainingPlanStructureCoordinator>();
@@ -130,6 +133,8 @@ public static class DependencyInjection
         services.AddScoped<ISupplementQueries, SupplementQueries>();
         services.AddScoped<IClientSupplementAssignmentStore, ClientSupplementAssignmentStore>();
         services.AddScoped<IClientSupplementAssignmentQueries, ClientSupplementAssignmentQueries>();
+        services.AddScoped<ISupplementIntakeStore, SupplementIntakeStore>();
+        services.AddScoped<ISupplementIntakeQueries, SupplementIntakeQueries>();
         services.AddScoped<IGlobalSupplementStore, GlobalSupplementStore>();
         services.AddScoped<IGlobalSupplementQueries, GlobalSupplementQueries>();
 

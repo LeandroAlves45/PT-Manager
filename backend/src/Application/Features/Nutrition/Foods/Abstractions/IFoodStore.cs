@@ -18,6 +18,7 @@ public interface IFoodStore
         decimal carbs,
         decimal fats,
         decimal? fiber,
+        decimal? defaultServingGrams,
         DateTime now,
         CancellationToken cancellationToken
     );

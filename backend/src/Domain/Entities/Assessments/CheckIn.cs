@@ -1,5 +1,6 @@
 using Domain.Exceptions;
 using Domain.ValueObjects;
+
 namespace Domain.Entities.Assessments;
 
 /// <summary>
@@ -22,6 +23,7 @@ public sealed class CheckIn
     public int? NutritionAdherenceScore { get; private set; }
     public DateTime? RespondedAt { get; private set; }
     public DateTime? CancelledAt { get; private set; }
+    public DateTime? ReviewedAt { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -183,6 +185,24 @@ public sealed class CheckIn
         TargetDate = targetDate;
         SetResponse(values);
         UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// Marca uma resposta como revista pelo personal trainer. Repetir não altera o instante
+    /// original; a marca não se remove e sobrevive a correções.
+    /// </summary>
+    public bool MarkReviewed(DateTime now)
+    {
+        EnsureNotDeleted();
+        if (!RespondedAt.HasValue || CancelledAt.HasValue)
+            throw new DomainException("Only an answered check-in can be reviewed.");
+
+        if (ReviewedAt.HasValue)
+            return false;
+
+        ReviewedAt = now;
+        UpdatedAt = now;
+        return true;
     }
 
     /// <summary>Soft delete.</summary>

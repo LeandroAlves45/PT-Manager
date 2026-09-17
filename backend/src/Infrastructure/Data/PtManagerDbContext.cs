@@ -38,7 +38,7 @@ public sealed class PtManagerDbContext : DbContext
         _tenantContext = tenantContext;
     }
 
-    // DbSet<T> para as 35 entidades de domínio e um modelo técnico de replay QStash.
+    // DbSet<T> para as 37 entidades de domínio e um modelo técnico de replay QStash.
     public DbSet<User> Users => Set<User>();
     public DbSet<AdministrativeAuditEntry> AdministrativeAuditEntries =>
         Set<AdministrativeAuditEntry>();
@@ -67,6 +67,7 @@ public sealed class PtManagerDbContext : DbContext
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<Supplement> Supplements => Set<Supplement>();
     public DbSet<ClientSupplementAssignment> ClientSupplementAssignments => Set<ClientSupplementAssignment>();
+    public DbSet<ClientSupplementIntake> ClientSupplementIntakes => Set<ClientSupplementIntake>();
     public DbSet<TrainerSettings> TrainerSettings => Set<TrainerSettings>();
     public DbSet<ClientExerciseSetLog> ClientExerciseSetLogs => Set<ClientExerciseSetLog>();
     public DbSet<ExerciseSet> ExerciseSets => Set<ExerciseSet>();
@@ -74,6 +75,8 @@ public sealed class PtManagerDbContext : DbContext
     public DbSet<TrainingPlanDay> TrainingPlanDays => Set<TrainingPlanDay>();
     public DbSet<TrainingPlanDayExercise> TrainingPlanDayExercises => Set<TrainingPlanDayExercise>();
     public DbSet<ExerciseVideo> ExerciseVideos => Set<ExerciseVideo>();
+    public DbSet<WorkoutCompletion> WorkoutCompletions => Set<WorkoutCompletion>();
+
 
     // O modelo é interno porque representa segurança do adapter, não domínio público.
     internal DbSet<QStashDispatchReceipt> QStashDispatchReceipts =>
@@ -164,6 +167,14 @@ public sealed class PtManagerDbContext : DbContext
         modelBuilder.Entity<ClientSupplementAssignment>().HasQueryFilter(assignment =>
             CurrentTrainerId.HasValue &&
             assignment.OwnerTrainerId == CurrentTrainerId);
+
+        modelBuilder.Entity<ClientSupplementIntake>().HasQueryFilter(intake =>
+            CurrentTrainerId.HasValue &&
+            intake.OwnerTrainerId == CurrentTrainerId);
+
+        modelBuilder.Entity<WorkoutCompletion>().HasQueryFilter(completion =>
+            CurrentTrainerId.HasValue &&
+            completion.OwnerTrainerId == CurrentTrainerId);
 
         // POLÍTICA A DERIVADA — filhas de agregado, SEM navegação POCO.
         modelBuilder.Entity<MealPlanMeal>().HasQueryFilter(mpm =>

@@ -159,6 +159,11 @@ Caminhos relativos a `backend/src/`. Veredicto à data de 2026-09-16, antes de 6
 
 ## 8. Decisões abertas (fechar nos blueprints 6A/6B, sem supor)
 
+> **Atualização 2026-09-17:** 1–4 fechadas na 6A (`docs/backend-files/sprint_6/sprint_6A/00`):
+> grupos musculares = 14 códigos EN validados só em escrita; tomas sem "em atraso", uma por
+> atribuição e dia local; RPE 1–10 em passos de 0,5, opcional (planeado e real); concluir treino
+> parcial permitido, idempotente, sem efeito em sessões/packs. 5–8 continuam para a 6B.
+
 1. Grupos musculares: lista fixa validada no backend mantendo a coluna string (sem
    migration de dados) — confirmar valores existentes na base dev.
 2. Tomas de suplementos: como definir "em atraso" se `Timing` é texto livre.

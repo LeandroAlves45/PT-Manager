@@ -15,6 +15,13 @@ using Application.Features.ClientPortal.UpdateMyProfile;
 using Application.Features.Clients.GetClientBranding;
 using Application.Features.Supplements.GetMySupplementAssignment;
 using Application.Features.Supplements.ListMySupplementAssignments;
+using Application.Features.Supplements.ListMyTodaySupplementIntakes;
+using Application.Features.Supplements.MarkMySupplementIntake;
+using Application.Features.Supplements.UnmarkMySupplementIntake;
+using Application.Features.Training.ExerciseSetLogs.CorrectMyExerciseSetLog;
+using Application.Features.Training.ExerciseSetLogs.DeleteMyExerciseSetLog;
+using Application.Features.Training.ExerciseSetLogs.RecordMyExerciseSetLog;
+using Application.Features.Training.WorkoutCompletions.CompleteMyWorkout;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -180,4 +187,102 @@ public sealed class ClientPortalController : ApiControllerBase
             handler.HandleAsync(
                 new GetMySupplementAssignmentQuery(assignmentId), cancellationToken),
             MySupplementAssignmentResponse.From);
+
+    /// <summary>Regista uma série de hoje no plano ativo do cliente.</summary>
+    [HttpPost("exercise-set-logs")]
+    public Task<IActionResult> RecordMyExerciseSetLogAsync(
+        [FromBody] RecordMyExerciseSetLogRequest request,
+        [FromServices] RecordMyExerciseSetLogHandler handler,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        return RespondAsync(
+            handler.HandleAsync(
+                new RecordMyExerciseSetLogCommand(
+                    request.TrainingPlanDayExerciseId,
+                    request.SetNumber,
+                    request.WeightKg,
+                    request.RepsDone,
+                    request.Rpe,
+                    request.Notes),
+                cancellationToken),
+            MyExerciseSetLogResponse.From);
+    }
+
+    /// <summary>Corrige uma série registada hoje.</summary>
+    [HttpPatch("exercise-set-logs/{exerciseSetLogId:guid}")]
+    public Task<IActionResult> CorrectMyExerciseSetLogAsync(
+        Guid exerciseSetLogId,
+        [FromBody] CorrectMyExerciseSetLogRequest request,
+        [FromServices] CorrectMyExerciseSetLogHandler handler,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        return RespondAsync(
+            handler.HandleAsync(
+                new CorrectMyExerciseSetLogCommand(
+                    exerciseSetLogId,
+                    request.WeightKg,
+                    request.RepsDone,
+                    request.Rpe,
+                    request.Notes),
+                cancellationToken),
+            MyExerciseSetLogResponse.From);
+    }
+
+    /// <summary>Desmarca uma série própria de hoje, antes de concluir o treino do dia.</summary>
+    [HttpDelete("exercise-set-logs/{exerciseSetLogId:guid}")]
+    public Task<IActionResult> DeleteMyExerciseSetLogAsync(
+        Guid exerciseSetLogId,
+        [FromServices] DeleteMyExerciseSetLogHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(
+            handler.HandleAsync(new DeleteMyExerciseSetLogCommand(
+                exerciseSetLogId), cancellationToken));
+
+    /// <summary>Conclui o treino de hoje para um dia do plano; repetir devolve a mesma conclusão.</summary>
+    [HttpPost("workout-completions")]
+    public Task<IActionResult> CompleteMyWorkoutAsync(
+        [FromBody] CompleteMyWorkoutRequest request,
+        [FromServices] CompleteMyWorkoutHandler handler,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        return RespondAsync(
+            handler.HandleAsync(
+                new CompleteMyWorkoutCommand(request.TrainingPlanDayId, request.Notes),
+                cancellationToken),
+            MyWorkoutCompletionResponse.From);
+    }
+
+    /// <summary>Devolve os suplementos ativos com o estado da toma de hoje.</summary>
+    [HttpGet("my-supplements/intakes/today")]
+    public Task<IActionResult> ListMyTodaySupplementIntakesAsync(
+        [FromServices] ListMyTodaySupplementIntakesHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(
+            handler.HandleAsync(cancellationToken),
+            MyTodaySupplementIntakesResponse.From);
+
+    /// <summary>Marca a toma de hoje; repetir devolve a mesma toma.</summary>
+    [HttpPut("my-supplements/{assignmentId:guid}/intakes/today")]
+    public Task<IActionResult> MarkMySupplementIntakeAsync(
+        Guid assignmentId,
+        [FromServices] MarkMySupplementIntakeHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(
+            handler.HandleAsync(new MarkMySupplementIntakeCommand(assignmentId), cancellationToken),
+            MySupplementIntakeResponse.From);
+
+    /// <summary>Desmarca a toma de hoje; sem toma registada responde 204 na mesma.</summary>
+    [HttpDelete("my-supplements/{assignmentId:guid}/intakes/today")]
+    public Task<IActionResult> UnmarkMySupplementIntakeAsync(
+        Guid assignmentId,
+        [FromServices] UnmarkMySupplementIntakeHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(
+            handler.HandleAsync(new UnmarkMySupplementIntakeCommand(assignmentId), cancellationToken));
 }

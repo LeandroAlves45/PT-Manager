@@ -4,6 +4,7 @@ using Application.Features.Training.Exercises.Abstractions;
 using Application.Features.Training.Exercises.Dtos;
 using Application.Results;
 using Application.Validation;
+using Domain.ValueObjects;
 using FluentValidation;
 
 namespace Application.Features.Training.Exercises.UpdateExercise;
@@ -48,7 +49,7 @@ public sealed class UpdateExerciseHandler
             actor.Value.TrainerId,
             command.Name,
             command.Description,
-            command.MuscleGroups,
+            MuscleGroupCatalog.Normalize(command.MuscleGroups),
             command.Equipment,
             command.DifficultyLevel,
             command.VideoUrl,

@@ -11,6 +11,7 @@ public sealed record FoodDto(
     decimal Fats,
     decimal Kcal,
     decimal? Fiber,
+    decimal? DefaultServingGrams,
     bool IsActive,
     string PlatformEnforcementStatus,
     string? PlatformEnforcementReason,

@@ -9,7 +9,8 @@ public sealed record CreateFoodRequest(
     decimal Protein,
     decimal Carbs,
     decimal Fats,
-    decimal? Fiber);
+    decimal? Fiber,
+    decimal? DefaultServingGrams = null);
 
 /// <summary>Substitui os campos editáveis de um alimento privado existente.</summary>
 public sealed record UpdateFoodRequest(
@@ -18,7 +19,8 @@ public sealed record UpdateFoodRequest(
     decimal Protein,
     decimal Carbs,
     decimal Fats,
-    decimal? Fiber);
+    decimal? Fiber,
+    decimal? DefaultServingGrams = null);
 
 /// <summary>Alimento visível ao personal trainer, global ou privado.</summary>
 public sealed record FoodResponse(
@@ -31,6 +33,7 @@ public sealed record FoodResponse(
     decimal Fats,
     decimal Kcal,
     decimal? Fiber,
+    decimal? DefaultServingGrams,
     bool IsActive,
     string PlatformEnforcementStatus,
     string? PlatformEnforcementReason,
@@ -52,6 +55,7 @@ public sealed record FoodResponse(
             food.Fats,
             food.Kcal,
             food.Fiber,
+            food.DefaultServingGrams,
             food.IsActive,
             food.PlatformEnforcementStatus,
             food.PlatformEnforcementReason,

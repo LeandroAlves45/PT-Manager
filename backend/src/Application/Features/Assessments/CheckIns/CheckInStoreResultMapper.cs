@@ -16,6 +16,7 @@ internal static class CheckInStoreResultMapper
             CheckInStoreResult.Status.Cancelled or
             CheckInStoreResult.Status.Answered or
             CheckInStoreResult.Status.Corrected or
+            CheckInStoreResult.Status.Reviewed or
             CheckInStoreResult.Status.AlreadyInRequestedState =>
                 Result<CheckInDto>.Success(outcome.CheckIn!.ToDto(localToday)),
 

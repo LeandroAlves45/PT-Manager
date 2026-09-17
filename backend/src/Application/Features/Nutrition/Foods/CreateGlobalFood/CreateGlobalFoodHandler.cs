@@ -50,6 +50,7 @@ public sealed class CreateGlobalFoodHandler
             command.Carbs,
             command.Fats,
             command.Fiber,
+            command.DefaultServingGrams,
             _clock.UtcNow,
             cancellationToken
         );

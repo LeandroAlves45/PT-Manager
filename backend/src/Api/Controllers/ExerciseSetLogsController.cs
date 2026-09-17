@@ -33,7 +33,8 @@ public sealed class ExerciseSetLogsController : ApiControllerBase
                     request.WeightKg,
                     request.RepsDone,
                     request.Notes,
-                    request.PerformedAt),
+                    request.PerformedAt,
+                    request.Rpe),
                 cancellationToken),
             ExerciseSetLogResponse.From,
             log => $"/api/v1/exercise-set-logs/{log.Id}");
@@ -56,7 +57,8 @@ public sealed class ExerciseSetLogsController : ApiControllerBase
                     request.WeightKg,
                     request.RepsDone,
                     request.Notes,
-                    request.PerformedAt),
+                    request.PerformedAt,
+                    request.Rpe),
                 cancellationToken),
             ExerciseSetLogResponse.From);
     }

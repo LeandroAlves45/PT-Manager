@@ -60,4 +60,11 @@ public interface ICheckInStore
         DateTime now,
         CancellationToken cancellationToken
     );
+
+    Task<CheckInStoreResult> MarkReviewedAsync(
+        Guid trainerId,
+        Guid checkInId,
+        DateTime now,
+        CancellationToken cancellationToken
+    );
 }

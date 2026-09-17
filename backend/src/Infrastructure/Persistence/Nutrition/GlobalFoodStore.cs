@@ -33,11 +33,12 @@ internal sealed class GlobalFoodStore : IGlobalFoodStore
         decimal carbs,
         decimal fats,
         decimal? fiber,
+        decimal? defaultServingGrams,
         DateTime now,
         CancellationToken cancellationToken)
     {
         // A mesma identidade tem de sobreviver a uma tentativa repetida após falha transitória.
-        var food = new Food(null, name, description, protein, carbs, fats, fiber, now);
+        var food = new Food(null, name, description, protein, carbs, fats, fiber, now, defaultServingGrams);
         var attempt = new MutationAttempt();
         return ExecuteAsync(
             token => CreateOnceAsync(actorUserId, food, now, attempt, token),
@@ -54,6 +55,7 @@ internal sealed class GlobalFoodStore : IGlobalFoodStore
         decimal carbs,
         decimal fats,
         decimal? fiber,
+        decimal? defaultServingGrams,
         DateTime now,
         CancellationToken cancellationToken)
     {
@@ -68,6 +70,7 @@ internal sealed class GlobalFoodStore : IGlobalFoodStore
                 carbs,
                 fats,
                 fiber,
+                defaultServingGrams,
                 now,
                 attempt,
                 token),
@@ -138,6 +141,7 @@ internal sealed class GlobalFoodStore : IGlobalFoodStore
         decimal carbs,
         decimal fats,
         decimal? fiber,
+        decimal? defaultServingGrams,
         DateTime now,
         MutationAttempt attempt,
         CancellationToken cancellationToken)
@@ -153,7 +157,7 @@ internal sealed class GlobalFoodStore : IGlobalFoodStore
             return GlobalFoodStoreResult.For(GlobalFoodStoreResult.Status.Referenced);
 
         var before = Snapshot(food);
-        food.Update(name, description, protein, carbs, fats, fiber, now);
+        food.Update(name, description, protein, carbs, fats, fiber, defaultServingGrams, now);
         attempt.AuditEntry = AddAudit(
             actorUserId, "update", food, before, Snapshot(food), now);
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -236,6 +240,7 @@ internal sealed class GlobalFoodStore : IGlobalFoodStore
         // para o snapshot guardar o valor correto sem separar a escrita atómica.
         kcal = food.Protein * 4 + food.Carbs * 4 + food.Fats * 9,
         fiber = food.Fiber,
+        default_serving_grams = food.DefaultServingGrams,
         is_active = food.IsActive,
         created_at = food.CreatedAt,
         updated_at = food.UpdatedAt

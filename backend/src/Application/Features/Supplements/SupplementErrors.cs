@@ -61,6 +61,11 @@ public static class SupplementErrors
         ErrorCategory.Conflict,
         "An archived client cannot receive or change a supplement assignment.");
 
+    public static readonly Error AssignmentInactive = Error.Create(
+        "supplement_assignment_inactive",
+        ErrorCategory.Conflict,
+        "An inactive supplement assignment cannot receive a new intake.");
+
     public static readonly Error GlobalSupplementHasReferences = Error.Create(
         "global_supplement_has_references",
         ErrorCategory.Conflict,

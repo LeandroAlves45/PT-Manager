@@ -19,10 +19,10 @@ public sealed class ApplicationRegistrationTests
             descriptor.ServiceType.IsGenericType
             && descriptor.ServiceType.GetGenericTypeDefinition() == typeof(IValidator<>));
 
-        // 135 anteriores + substituição de logo, substituição e remoção de avatar.
-        Assert.Equal(138, handlerCount);
-        // O validator de logo já existia. A substituição de avatar acrescenta um.
-        Assert.Equal(76, validatorCount);
+        // 138 anteriores + 8 handlers 6A (portal, revisão de check-in e tomas).
+        Assert.Equal(146, handlerCount);
+        // 76 anteriores + 3 validators 6A (revisão e tomas não têm validator).
+        Assert.Equal(79, validatorCount);
     }
 
     [Fact]

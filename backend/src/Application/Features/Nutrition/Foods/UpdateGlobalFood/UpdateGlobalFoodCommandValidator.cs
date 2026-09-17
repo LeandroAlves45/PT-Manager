@@ -1,3 +1,4 @@
+using Application.Validation;
 using FluentValidation;
 
 namespace Application.Features.Nutrition.Foods.UpdateGlobalFood;
@@ -12,6 +13,7 @@ public sealed class UpdateGlobalFoodCommandValidator : AbstractValidator<UpdateG
             .WithErrorCode("food_id_required");
 
         RuleFor(command => command.Name)
+            .Cascade(CascadeMode.Stop)
             .NotEmpty()
             .WithErrorCode("food_name_required")
             .MaximumLength(255)
@@ -38,5 +40,8 @@ public sealed class UpdateGlobalFoodCommandValidator : AbstractValidator<UpdateG
             .InclusiveBetween(0, 100)
             .When(command => command.Fiber.HasValue)
             .WithErrorCode("food_fiber_out_of_range");
+
+        RuleFor(command => command.DefaultServingGrams)
+            .MustBeValidDefaultServing("food_default_serving_out_of_range");
     }
 }
