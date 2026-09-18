@@ -191,6 +191,7 @@ public sealed class FoodHandlersTests
             decimal carbs,
             decimal fats,
             decimal? fiber,
+            decimal? defaultServingGrams,
             DateTime now,
             CancellationToken cancellationToken) => Task.FromResult(UpdateResult);
 

@@ -46,7 +46,7 @@ public sealed class TrainingAdjustmentsTests
         );
 
         // Act
-        log.Correct(55, 9, null, performedAt.AddDays(7), Now.AddDays(7));
+        log.Correct(55, 9, null, null, performedAt.AddDays(7), Now.AddDays(7));
 
         // Assert
         Assert.Equal((55m, 9), (log.WeightKg, log.RepsDone));

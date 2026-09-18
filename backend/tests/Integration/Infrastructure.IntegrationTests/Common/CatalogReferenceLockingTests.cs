@@ -31,7 +31,7 @@ public sealed class CatalogReferenceLockingTests
         {
             var globalStore = new GlobalFoodStore(admin, new PostgresConstraintTranslator());
             var created = await globalStore.CreateAsync(
-                tenant.TrainerId, "Rice", null, 2.7m, 28m, 0.3m, 0.4m, Now, cancellationToken);
+                tenant.TrainerId, "Rice", null, 2.7m, 28m, 0.3m, 0.4m, null, Now, cancellationToken);
             foodId = created.Food!.Id;
         }
 

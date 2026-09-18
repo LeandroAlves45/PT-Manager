@@ -254,7 +254,8 @@ public sealed class GlobalExercisesControllerTests
         };
 
     private static CreateGlobalExerciseRequest NewGlobalExercise(string name) =>
-        new(name, null, "costas", "barra", "advanced", null);
+        // Sprint 6A: grupos musculares só aceitam códigos da lista fechada.
+        new(name, null, "back", "barra", "advanced", null);
 
     private static async Task<JsonElement> ReadJsonAsync(HttpResponseMessage response)
     {

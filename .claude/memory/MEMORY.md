@@ -17,6 +17,10 @@ Ver `Sessions/2026-09-16-sprint5d-fecho-implementacao.md` e
 **2026-09-17 — Sprint 6A:** blueprints de código real validados (2755 testes, 6 mutações,
 migration `AddSprint6AWriteSchema`), por implementar (`QG6A-IMPL-001`). Pack
 `docs/backend-files/sprint_6/sprint_6A/`. Ver `Sessions/2026-09-17-sprint6a-blueprints-validados.md`.
+**Atualização 2026-09-17: 6A FECHADA no backend real** — 2760 testes, migration
+`20260917152023_AddSprint6AWriteSchema` aplicada à dev, defeito `MuscleGroupCatalog` corrigido,
+todos os `QG6A-*` fechados, sem commit. Ver `Sessions/2026-09-17-sprint6a-fecho-implementacao.md`
+e `sprint_6A/14_relatorio_implementacao_testes_fecho_6A.md`.
 
 **Decisão 2026-09-15:** Sprint 6 = **Frontend** (6A Fundações → 6B Admin → 6C Trainer
 → 6D Cliente → 6E Auth UX), só depois do Gate 5D. Renumeração: 7 Observabilidade +

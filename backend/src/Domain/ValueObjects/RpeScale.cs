@@ -17,6 +17,6 @@ public static class RpeScale
     public static void EnsureValid(decimal? value, string field)
     {
         if (value.HasValue && !IsValid(value.Value))
-            throw new DomainException($"{field} must be between 1  and 10 in steps of 0.5");
+            throw new DomainException($"{field} must be between 1 and 10 in steps of 0.5.");
     }
 }

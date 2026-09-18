@@ -56,6 +56,7 @@ public class ClientExerciseSetLogTests
             weightKg,
             repsDone,
             null,
+            null,
             performedAt,
             now
         ));

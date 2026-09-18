@@ -62,7 +62,7 @@ public sealed class FoodTests
         var food = CreateFood();
         food.SetActive(false, Now.AddMinutes(1));
 
-        food.Update("  Chicken thigh  ", null, 26m, 0m, 9m, null, Now.AddMinutes(2));
+        food.Update("  Chicken thigh  ", null, 26m, 0m, 9m, null, null, Now.AddMinutes(2));
 
         Assert.Equal("Chicken thigh", food.Name);
     }

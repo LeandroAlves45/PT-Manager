@@ -165,7 +165,7 @@ public sealed class Food
 
         if (defaultServingGrams.HasValue && defaultServingGrams.Value is <= 0 or > MaxDefaultServingGrams)
             throw new DomainException(
-                "Default serving must be greater than 0 and less than 1000 grams.");
+                "Default serving must be greater than 0 and at most 1000 grams.");
     }
 
     private static string? NormalizeOptional(string? value) =>

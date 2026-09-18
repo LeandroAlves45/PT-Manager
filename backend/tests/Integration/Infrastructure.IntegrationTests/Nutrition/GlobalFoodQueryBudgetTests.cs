@@ -70,6 +70,7 @@ public sealed class GlobalFoodQueryBudgetTests
             20m,
             1m,
             null,
+            null,
             DateTime.UtcNow,
             cancellationToken);
 
@@ -95,6 +96,7 @@ public sealed class GlobalFoodQueryBudgetTests
             3m,
             21m,
             2m,
+            null,
             null,
             DateTime.UtcNow,
             cancellationToken);
@@ -156,6 +158,7 @@ public sealed class GlobalFoodQueryBudgetTests
             2m,
             20m,
             1m,
+            null,
             null,
             DateTime.UtcNow,
             cancellationToken);

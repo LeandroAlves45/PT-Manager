@@ -31,7 +31,7 @@ public sealed class GlobalFoodPersistenceTests
         var store = new GlobalFoodStore(context, new PostgresConstraintTranslator());
 
         var outcome = await store.CreateAsync(
-            tenant.TrainerId, "Rice", null, 2.7m, 28m, 0.3m, 0.4m, Now, cancellationToken);
+            tenant.TrainerId, "Rice", null, 2.7m, 28m, 0.3m, 0.4m, null, Now, cancellationToken);
 
         Assert.Equal(GlobalFoodStoreResult.Status.Created, outcome.Kind);
         Assert.Equal(125.5m, outcome.Food!.Kcal);
@@ -53,7 +53,7 @@ public sealed class GlobalFoodPersistenceTests
         {
             var globalStore = new GlobalFoodStore(admin, new PostgresConstraintTranslator());
             var created = await globalStore.CreateAsync(
-                tenant.TrainerId, "Rice", null, 2.7m, 28m, 0.3m, 0.4m, Now, cancellationToken);
+                tenant.TrainerId, "Rice", null, 2.7m, 28m, 0.3m, 0.4m, null, Now, cancellationToken);
             foodId = created.Food!.Id;
         }
         await using (var trainer = _fixture.CreateContext(tenant.TrainerId))
@@ -65,7 +65,7 @@ public sealed class GlobalFoodPersistenceTests
         var store = new GlobalFoodStore(context, new PostgresConstraintTranslator());
 
         var outcome = await store.UpdateAsync(
-            tenant.TrainerId, foodId, "Basmati rice", null, 2.7m, 28m, 0.3m, 0.4m,
+            tenant.TrainerId, foodId, "Basmati rice", null, 2.7m, 28m, 0.3m, 0.4m, null,
             Now.AddMinutes(1), cancellationToken);
 
         Assert.Equal(GlobalFoodStoreResult.Status.Referenced, outcome.Kind);
@@ -84,7 +84,7 @@ public sealed class GlobalFoodPersistenceTests
         {
             var globalStore = new GlobalFoodStore(admin, new PostgresConstraintTranslator());
             var created = await globalStore.CreateAsync(
-                tenant.TrainerId, "Rice", null, 2.7m, 28m, 0.3m, 0.4m, Now, cancellationToken);
+                tenant.TrainerId, "Rice", null, 2.7m, 28m, 0.3m, 0.4m, null, Now, cancellationToken);
             foodId = created.Food!.Id;
         }
         await using (var trainer = _fixture.CreateContext(tenant.TrainerId))
@@ -112,7 +112,7 @@ public sealed class GlobalFoodPersistenceTests
         await using var context = CreateAdminContext(tenant.TrainerId);
         var store = new GlobalFoodStore(context, new PostgresConstraintTranslator());
         var created = await store.CreateAsync(
-            tenant.TrainerId, "Rice", null, 2.7m, 28m, 0.3m, 0.4m, Now, cancellationToken);
+            tenant.TrainerId, "Rice", null, 2.7m, 28m, 0.3m, 0.4m, null, Now, cancellationToken);
 
         var outcome = await store.DeleteAsync(
             tenant.TrainerId, created.Food!.Id, Now.AddMinutes(1), cancellationToken);
@@ -133,7 +133,7 @@ public sealed class GlobalFoodPersistenceTests
         await using var context = CreateAdminContext(tenant.TrainerId);
         var store = new GlobalFoodStore(context, new PostgresConstraintTranslator());
         var created = await store.CreateAsync(
-            tenant.TrainerId, "Rice", null, 2.7m, 28m, 0.3m, 0.4m, Now, cancellationToken);
+            tenant.TrainerId, "Rice", null, 2.7m, 28m, 0.3m, 0.4m, null, Now, cancellationToken);
         await store.SetActiveAsync(
             tenant.TrainerId, created.Food!.Id, false, Now.AddMinutes(1), cancellationToken);
 

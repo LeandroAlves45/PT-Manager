@@ -73,7 +73,7 @@ public sealed class TrainingPlanAggregateTests
         exercise.AddSet(2, 8, 40m, 60, 90, Now);
 
         Assert.Throws<DomainException>(() => exercise.UpdateSet(
-            first.Id, 2, 8, 40m, 60, 90, Now.AddMinutes(1)));
+            first.Id, 2, 8, 40m, 60, 90, null, Now.AddMinutes(1)));
     }
 
     [Fact]
@@ -119,6 +119,7 @@ public sealed class TrainingPlanAggregateTests
         log.Correct(
             55m,
             8,
+            null,
             "Technique corrected",
             performedAt.AddMinutes(2),
             Now.AddMinutes(3));

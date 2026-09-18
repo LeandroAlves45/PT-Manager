@@ -20,7 +20,10 @@ public sealed record MyTrainingPlanDto(
         string? Notes,
         IReadOnlyList<ExerciseDto> Exercises);
 
-    /// <summary>Exercício prescrito. IsUnavailable assinala conteúdo bloqueado.</summary>
+    /// <summary>
+    /// Exercício prescrito. IsUnavailable assinala conteúdo bloqueado. O Id é o da
+    /// prescrição (TrainingPlanDayExercise), usado pelo cliente para registar séries.
+    /// </summary>
     public sealed record ExerciseDto(
         Guid Id,
         int OrderNumber,
@@ -31,7 +34,7 @@ public sealed record MyTrainingPlanDto(
         string? Notes,
         IReadOnlyList<SetDto> Sets);
 
-    /// <summary>Série prescrita, sem identificadores internos.</summary>
+    /// <summary>Série prescrita; o cliente identifica-a por prescrição e SetNumber.</summary>
     public sealed record SetDto(
         Guid Id,
         int SetNumber,

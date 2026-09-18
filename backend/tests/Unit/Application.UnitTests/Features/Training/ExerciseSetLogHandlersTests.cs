@@ -141,7 +141,7 @@ public sealed class ExerciseSetLogHandlersTests
 
     private static ClientExerciseSetLogDto CreateDto() => new(
         Guid.NewGuid(), ClientId, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
-        Guid.NewGuid(), "Squat", 1, 50m, 10, null, new DateTimeOffset(Now), Now, Now);
+        Guid.NewGuid(), "Squat", 1, 50m, 10, null, null, new DateTimeOffset(Now), Now, Now);
 
     private sealed class FakeExerciseSetLogStore : IExerciseSetLogStore
     {

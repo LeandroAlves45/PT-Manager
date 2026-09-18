@@ -1,6 +1,6 @@
-# Estado ativo: Sprint 6A com blueprints validados (por implementar)
+# Estado ativo: Sprint 6A FECHADA no backend real (sem commit)
 
-Atualizado: 2026-09-17 (blueprints da 6A validados — ver "Passo imediato")
+Atualizado: 2026-09-17 (6A implementada, testada e migration aplicada à dev — ver "Passo imediato")
 
 ## Estado em uma linha
 
@@ -56,6 +56,14 @@ Da 5C: `QG5C-PROVIDER-001`. Da 5B: `QG5B-STRIPE-001` e `QG5B-DEPLOY-001`.
 Transversal: `QG5-FRONTEND-001` (fecha na 6G).
 
 ## Passo imediato
+
+**2026-09-17 (fim do dia) — Sprint 6A FECHADA no backend real.** Revisão 01–08 do utilizador
+por diff programático (70 desvios, 1 defeito real: `MuscleGroupCatalog.TryNormalize(null)`
+devolvia false → corrigido). Pack de testes aplicado + `QG6A-TEST-004` (4 testes) + teste do 2.º
+ramo do preflight; 5 mutações mortas. Migration `20260917152023_AddSprint6AWriteSchema` gerada,
+aplicada à dev. Suite 2760 verde, snapshot 154→162. Todos os `QG6A-*` fechados. Sem commit.
+Próximo: commit (utilizador) e planear 6B. Relatório `sprint_6A/14_relatorio_implementacao_testes_fecho_6A.md`;
+nota `Sessions/2026-09-17-sprint6a-fecho-implementacao.md`.
 
 **2026-09-17 — Sprint 6A: blueprints de código real validados.** Pack
 `docs/backend-files/sprint_6/sprint_6A/` (00–13), 155 alvos extraídos por script de uma

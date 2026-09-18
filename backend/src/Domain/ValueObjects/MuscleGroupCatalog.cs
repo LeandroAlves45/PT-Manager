@@ -34,7 +34,7 @@ public static class MuscleGroupCatalog
     {
         normalized = null;
         if (string.IsNullOrWhiteSpace(value))
-            return false;
+            return true;
 
         var requested = value
             .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)

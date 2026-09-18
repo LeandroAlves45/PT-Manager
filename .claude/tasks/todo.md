@@ -196,3 +196,19 @@ Relatório: `backlogs/Security_and_Review_audit/11_relatorio_implementacao_patch
 - [x] Patch 7 — PTM-SEC-06: teto `maxAttempts` no claim (outbox + durable) + docs 07/10 da 5D
 - [x] Build Release + suite completa (real: 5D sem migration → worktree isolado: 2372 ✓ · 1 ✗ ambiental · 1 skip)
 - [x] Relatório 11 + nota de sessão + memória
+
+---
+
+# Sprint 6A — testes, migration e fecho no backend real (2026-09-17)
+
+- [x] Diff programático 01–08 vs código real (70 desvios revistos, 1 defeito corrigido)
+- [x] Testes do doc 10 aplicados; QG6A-TEST-004 (4) + preflight 2.º ramo (1)
+- [x] Migration 20260917152023_AddSprint6AWriteSchema gerada, Up/Down analisados, preflight
+- [x] Suite integral 2760 verde; format/restore/pending limpos; snapshot 154→162
+- [x] Mutações MT1–MT5 mortas
+- [x] Migration aplicada à base dev e verificada por SQL
+- [x] Docs 00/09–12 + blocos sincronizados, doc 14, QualityGates.md, memória
+
+## Review
+
+Finalizado. Defeito real: MuscleGroupCatalog.TryNormalize(null) devolvia false. Sem commit.

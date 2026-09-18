@@ -38,6 +38,30 @@ public sealed class ExerciseSetLogsControllerTests
         Assert.Equal(60m, body.GetProperty("weight_kg").GetDecimal());
     }
 
+    /// <summary>
+    /// QG6A-TEST-004: o RPE válido enviado pelo trainer é aceite e lido de volta da base de dados.
+    /// </summary>
+    [Fact]
+    public async Task TrainerLog_WithValidRpe_RoundTrips()
+    {
+        var context = await SeedPrescriptionAsync();
+        var client = TrainerClient(context.TrainerId);
+
+        var created = await ApiJsonPayload.PostAsync(
+            client,
+            "/api/v1/exercise-set-logs",
+            NewLog(context.DayExerciseId, setNumber: 1) with { Rpe = 8.5m },
+            Token);
+        var listed = await client.GetAsync(
+            $"/api/v1/exercise-set-logs?client_id={context.ClientId}&page_number=1&page_size=50",
+            Token);
+
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        Assert.Equal(8.5m, (await ReadJsonAsync(created)).GetProperty("rpe").GetDecimal());
+        var stored = (await ReadJsonAsync(listed)).GetProperty("items").EnumerateArray().Single();
+        Assert.Equal(8.5m, stored.GetProperty("rpe").GetDecimal());
+    }
+
     [Fact]
     public async Task Record_WithoutToken_ReturnsUnauthorized()
     {
