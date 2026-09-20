@@ -162,6 +162,11 @@ internal sealed class FakeClientQueries : IClientQueries
         return Task.FromResult(PageResult);
     }
 
+    public Task<PageResult<ClientSummaryDto>> ListAsync(string? search, ClientActivityFilter activity, bool withoutTrainingPlan, PageRequest page, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<IReadOnlyList<UsableClientPackDto>> ListUsablePacksAsync(
         Guid clientId,
         CancellationToken cancellationToken

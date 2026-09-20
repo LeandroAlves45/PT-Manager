@@ -43,6 +43,8 @@ public sealed class ListTrainingPlansHandler
             query.ClientId,
             SearchTerm.Normalize(query.Search),
             query.Activity,
+            query.EndsFrom,
+            query.EndsTo,
             new PageRequest(query.PageNumber, query.PageSize),
             cancellationToken);
         return Result<PageResult<TrainingPlanSummaryDto>>.Success(result);

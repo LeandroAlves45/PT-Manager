@@ -6,5 +6,7 @@ public sealed record ListTrainingPlansQuery(
     string? Search = null,
     TrainingPlanActivityFilter Activity = TrainingPlanActivityFilter.Active,
     int PageNumber = 1,
-    int PageSize = 50
+    int PageSize = 50,
+    DateOnly? EndsFrom = null,
+    DateOnly? EndsTo = null
 );

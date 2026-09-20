@@ -703,8 +703,13 @@ OpenAPI actualizados; suite completa verde.
 5. **Portal "treino de hoje":** semana calculada no servidor a partir de `StartDate` e dia
    por `DayOfWeek`, no fuso do trainer.
 
-Decisões a fechar no blueprint: janela da adesão; limiares de "pack a terminar" e "plano a
-expirar"; top-N por bloco do dashboard; semântica de `TargetDate` para "responder até".
+Decisões fechadas em 2026-09-18 (blueprints validados, `docs/backend-files/sprint_6/sprint_6B/`):
+adesão em 28 dias locais cortados pelo plano ativo, contando só séries feitas no dia previsto;
+pack a terminar com ≤ 2 sessões ou fim previsto em 7 dias; plano a expirar com fim entre hoje e
+hoje + 7; revisão atrasada acima de 48 h; top-5 por bloco no fuso do trainer; `TargetDate` não é
+prazo (a resposta continua a ser no dia, com aviso em `GET /portal/my-check-ins/next`).
+Acrescentado: semana de treino cíclica, `GET /portal/home`, `GET /admin/overview`, vendas de
+packs do mês atual e anterior por moeda e uma migration só de índices justificada por EXPLAIN.
 
 Gate 6B: sem N+1 (queries verificadas); isolamento entre dois trainers; contagens corretas
 acima de 100 registos; suite completa verde.

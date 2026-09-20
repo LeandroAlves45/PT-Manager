@@ -6,5 +6,6 @@ public enum CheckInStatusFilter
     Scheduled,
     Answered,
     Missed,
-    Cancelled
+    Cancelled,
+    Unreviewed
 }

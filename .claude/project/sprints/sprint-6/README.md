@@ -1,9 +1,9 @@
 # Sprint Pack — Sprint 6 (backend do layout + frontend)
 
-Estado: **6A com blueprints validados (2026-09-17)**, por implementar no backend real
-(`QG6A-IMPL-001`); 6B–6G por planear. Pack 6A: `docs/backend-files/sprint_6/sprint_6A/` (00–13). Entrada
-permitida: Gate 5D do código fechado (gates de provider R2/Stripe/Cloudinary podem ficar
-abertos).
+Estado: **6A FECHADA no backend real (2026-09-17)**; **6B com blueprints validados
+(2026-09-18)**, por implementar (`QG6B-IMPL-001`); 6C–6G por planear. Packs:
+`docs/backend-files/sprint_6/sprint_6A/` (00–14) e `sprint_6B/` (00–12). Entrada permitida:
+Gate 5D do código fechado (gates de provider R2/Stripe/Cloudinary podem ficar abertos).
 
 ## Scope
 
@@ -43,8 +43,10 @@ são atribuídos no blueprint de cada fase e registados em `backlogs/QualityGate
 ## Decisões abertas
 
 Decisões 1–4 do `frontend/layout/01_RELATORIO_ANALISE.md` §8 **fechadas na 6A** (ver
-`sprint_6A/00`). Continuam abertas para a 6B: janela da adesão, limiares de alertas,
-semântica de `TargetDate`, top-N e fuso do dashboard, filtro "por rever" e "treino de hoje".
+`sprint_6A/00`); decisões 5–8 **fechadas na 6B** em 2026-09-18 (ver `sprint_6B/00`, D1–D15):
+adesão de 28 dias sobre o plano ativo, limiares de packs e planos, `TargetDate` fora do
+contrato de prazo, top-5 por bloco no fuso do trainer, filtro `status=unreviewed` e treino de
+hoje com semana cíclica. Nenhuma decisão de backend em aberto para o Sprint 6.
 
 ## Blockers
 

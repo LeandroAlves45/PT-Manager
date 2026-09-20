@@ -147,8 +147,10 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
         Guid? clientId,
         string? search,
         TrainingPlanActivityFilter activity,
+        DateOnly? endsFrom,
+        DateOnly? endsTo,
         PageRequest page,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var query = _dbContext.TrainingPlans.AsNoTracking();
         if (clientId.HasValue)
@@ -161,6 +163,12 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
             TrainingPlanActivityFilter.All => query,
             _ => throw new ArgumentOutOfRangeException(nameof(activity))
         };
+
+        if (endsFrom.HasValue)
+            query = query.Where(plan => plan.EndDate.HasValue && plan.EndDate.Value >= endsFrom.Value);
+
+        if (endsTo.HasValue)
+            query = query.Where(plan => plan.EndDate.HasValue && plan.EndDate.Value <= endsTo.Value);
 
         if (!string.IsNullOrWhiteSpace(search))
         {

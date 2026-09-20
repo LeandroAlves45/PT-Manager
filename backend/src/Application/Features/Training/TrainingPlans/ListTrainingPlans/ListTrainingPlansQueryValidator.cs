@@ -12,15 +12,24 @@ public sealed class ListTrainingPlansQueryValidator : AbstractValidator<ListTrai
             .NotEqual(Guid.Empty)
             .When(query => query.ClientId.HasValue)
             .WithErrorCode("training_client_id_required");
+
         RuleFor(query => query.Search)
             .MaximumLength(200)
             .WithErrorCode("training_search_too_long");
+
         RuleFor(query => query.Activity)
             .IsInEnum()
             .WithErrorCode("training_activity_invalid");
+
         this.ApplyPaginationRules(
             query => query.PageNumber,
             query => query.PageSize
         );
+
+        RuleFor(query => query.EndsFrom)
+            .LessThanOrEqualTo(query => query.EndsTo!.Value)
+            .When(query => query.EndsFrom.HasValue && query.EndsTo.HasValue)
+            .WithErrorCode("training_plan_ends_range_invalid")
+            .WithMessage("EndsFrom cannot be after EndsTo");
     }
 }

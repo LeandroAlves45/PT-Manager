@@ -1,6 +1,26 @@
-# Estado ativo: Sprint 6A FECHADA no backend real (sem commit)
+# Estado ativo: Sprint 6B com blueprints validados (por implementar)
 
-Atualizado: 2026-09-17 (6A implementada, testada e migration aplicada à dev — ver "Passo imediato")
+Atualizado: 2026-09-18 (6B planeada e materializada; 6A continua fechada no backend real)
+
+## Sprint 6B (2026-09-18) — leituras agregadas
+
+Pack `docs/backend-files/sprint_6/sprint_6B/` (00–12), validado numa materialização descartável
+(worktree `C:\ptm6b`, branch `plan/sprint-6b`, sem merge nem commit): 2849 testes verdes (+89),
+6 mutações mortas, 105 blocos sem divergências, snapshot 162 → 170.
+
+Entrega: `GET /dashboard`, `GET /clients/{id}/summary`, fila de moderação
+(`/admin/content-moderation/{foods,exercises}`), `GET /admin/overview`, `GET /portal/home`,
+`GET /portal/my-workout/today`, `GET /portal/my-check-ins/next`, filtros
+`status=unreviewed`, `ends_from`/`ends_to` e `without_training_plan`, e a migration
+`AddSprint6BReadIndexes` (só índices parciais, justificada por EXPLAIN: 13,4 → 0,15 ms e
+18,2 → 0,17 ms).
+
+Decisões D1–D15 no `sprint_6B/00`. Destaques: semana de treino **cíclica**; adesão em 28 dias
+sobre o plano ativo contando só séries feitas no dia previsto; `TargetDate` não é prazo;
+fila de moderação mostra id e nome do trainer, nunca o email.
+
+Falta: implementar no `backend/` real, gerar/aplicar a migration à dev, regenerar o snapshot e
+fechar `QG6B-IMPL-001`. Branch `plan/sprint-6b` fica local, sem merge.
 
 ## Estado em uma linha
 

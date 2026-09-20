@@ -51,6 +51,8 @@ public sealed class TrainingPlansController : ApiControllerBase
         [FromQuery(Name = "client_id")] Guid? clientId,
         [FromQuery(Name = "search")] string? search,
         [FromQuery(Name = "activity")] TrainingPlanActivityFilter activity,
+        [FromQuery(Name = "ends_from")] DateOnly? endsFrom,
+        [FromQuery(Name = "ends_to")] DateOnly? endsTo,
         [FromQuery] PageParameters pageParameters,
         [FromServices] ListTrainingPlansHandler handler,
         CancellationToken cancellationToken)
@@ -65,7 +67,9 @@ public sealed class TrainingPlansController : ApiControllerBase
                     search,
                     activity,
                     page,
-                    size),
+                    size,
+                    endsFrom,
+                    endsTo),
                 cancellationToken),
             result => PagedResponse<TrainingPlanSummaryResponse>.From(
                 result,

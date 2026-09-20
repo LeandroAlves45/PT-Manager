@@ -20,6 +20,12 @@ public sealed class ListMealPlansQueryValidator : AbstractValidator<ListMealPlan
             .IsInEnum()
             .WithErrorCode("meal_plan_activity_invalid");
 
+        RuleFor(query => query.EndsFrom)
+            .LessThanOrEqualTo(query => query.EndsTo!.Value)
+            .When(query => query.EndsFrom.HasValue && query.EndsTo.HasValue)
+            .WithErrorCode("meal_plan_ends_range_invalid")
+            .WithMessage("EndsFrom cannot be after EndsTo");
+
         this.ApplyPaginationRules(
             query => query.PageNumber,
             query => query.PageSize

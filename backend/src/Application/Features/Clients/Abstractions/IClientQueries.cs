@@ -19,6 +19,7 @@ public interface IClientQueries
     Task<PageResult<ClientSummaryDto>> ListAsync(
         string? search,
         ClientActivityFilter activity,
+        bool withoutTrainingPlan,
         PageRequest page,
         CancellationToken cancellationToken);
 

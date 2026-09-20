@@ -31,4 +31,11 @@ public interface ICheckInQueries
         DateOnly localToday,
         CancellationToken cancellationToken
     );
+
+    Task<MyNextCheckInDto?> GetMyNextAsync(
+        Guid trainerId,
+        Guid userId,
+        DateOnly localToday,
+        CancellationToken cancellationToken
+    );
 }

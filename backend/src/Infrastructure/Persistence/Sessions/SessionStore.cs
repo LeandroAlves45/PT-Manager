@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Time;
 using Application.Features.Sessions.Abstractions;
 using Domain.Entities.Billing;
 using Domain.Entities.Clients;
@@ -477,12 +478,8 @@ internal sealed class SessionStore : ISessionStore
         DateOnly localDate,
         TimeZoneInfo timezone)
     {
-        var localStart = localDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
-        var localEnd = localDate.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
-        return (
-            new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(localStart, timezone), TimeSpan.Zero),
-            new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(localEnd, timezone), TimeSpan.Zero)
-        );
+        var range = LocalDates.ToUtcRange(localDate, localDate.AddDays(1), timezone);
+        return (range.StartUtc, range.EndUtc);
     }
 
     private static SessionStatus TargetStatus(SessionTransition transition) =>

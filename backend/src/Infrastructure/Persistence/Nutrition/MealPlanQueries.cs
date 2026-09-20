@@ -14,15 +14,12 @@ internal sealed class MealPlanQueries : IMealPlanQueries
 {
     private readonly PtManagerDbContext _dbContext;
 
-    public MealPlanQueries(PtManagerDbContext dbContext)
-    {
+    public MealPlanQueries(PtManagerDbContext dbContext) =>
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
 
     public async Task<MealPlanDetailsDto?> GetDetailsAsync(
         Guid mealPlanId,
-        CancellationToken cancellationToken
-    )
+        CancellationToken cancellationToken)
     {
         var plan = await _dbContext.MealPlans
             .AsNoTracking()
@@ -171,6 +168,8 @@ internal sealed class MealPlanQueries : IMealPlanQueries
         Guid? clientId,
         string? search,
         MealPlanActivityFilter activity,
+        DateOnly? endsFrom,
+        DateOnly? endsTo,
         PageRequest page,
         CancellationToken cancellationToken
     )
@@ -186,6 +185,14 @@ internal sealed class MealPlanQueries : IMealPlanQueries
             MealPlanActivityFilter.All => query,
             _ => throw new ArgumentOutOfRangeException(nameof(activity))
         };
+
+        if (endsFrom.HasValue)
+            query = query.Where(
+                plan => plan.EndsDate.HasValue && plan.EndsDate.Value >= endsFrom.Value);
+
+        if (endsTo.HasValue)
+            query = query.Where(
+                plan => plan.EndsDate.HasValue && plan.EndsDate.Value <= endsTo.Value);
 
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -284,7 +291,8 @@ internal sealed class MealPlanQueries : IMealPlanQueries
         snapshot.KcalDifference
     );
 
-    private static decimal Round(decimal value) => decimal.Round(value, 2, MidpointRounding.AwayFromZero);
+    private static decimal Round(decimal value) => decimal
+        .Round(value, 2, MidpointRounding.AwayFromZero);
 
     private sealed record PlanRow(
         Guid Id,

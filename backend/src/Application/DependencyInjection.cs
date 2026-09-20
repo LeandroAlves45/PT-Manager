@@ -23,6 +23,7 @@ public static class DependencyInjection
         AddSupplements(services);
         AddTrainerSettings(services);
         AddTraining(services);
+        AddDashboard(services);
 
         return services;
     }
@@ -33,9 +34,21 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.Administration.ContentModeration.UnblockFood.UnblockFoodHandler>();
         services.AddScoped<Application.Features.Administration.ContentModeration.BlockExercise.BlockExerciseHandler>();
         services.AddScoped<Application.Features.Administration.ContentModeration.UnblockExercise.UnblockExerciseHandler>();
-
+        services.AddScoped<Application.Features.Administration.ContentModeration
+            .ListModerationQueue.ListModerationQueueHandler>();
+        services.AddScoped<Application.Features.Administration.Overview.GetAdminOverviewHandler>();
 
         // Validators
+        services.AddScoped<IValidator<Application.Features.Administration.ContentModeration
+            .BlockFood.BlockFoodCommand>,
+            Application.Features.Administration.ContentModeration.BlockFood.BlockFoodCommandValidator>();
+        services.AddScoped<IValidator<Application.Features.Administration.ContentModeration
+            .BlockExercise.BlockExerciseCommand>,
+            Application.Features.Administration.ContentModeration.BlockExercise.BlockExerciseCommandValidator>();
+        services.AddScoped<IValidator<Application.Features.Administration.ContentModeration
+            .ListModerationQueue.ListModerationQueueQuery>,
+            Application.Features.Administration.ContentModeration
+                .ListModerationQueue.ListModerationQueueQueryValidator>();
         services.AddScoped<IValidator<Application.Features.Administration.ContentModeration
             .BlockFood.BlockFoodCommand>,
             Application.Features.Administration.ContentModeration.BlockFood.BlockFoodCommandValidator>();
@@ -58,6 +71,8 @@ public static class DependencyInjection
             .CheckIns.GetMyDueCheckIn.GetMyDueCheckInHandler>();
         services.AddScoped<Application.Features.Assessments
             .CheckIns.ListCheckIns.ListCheckInsHandler>();
+        services.AddScoped<Application.Features.Assessments
+            .CheckIns.GetMyNextCheckIn.GetMyNextCheckInHandler>();
         services.AddScoped<Application.Features.Assessments
             .CheckIns.RescheduleCheckIn.RescheduleCheckInHandler>();
         services.AddScoped<Application.Features.Assessments
@@ -143,6 +158,10 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.ClientPortal.UpdateMyProfile.UpdateMyProfileHandler>();
         services.AddScoped<Application.Features.ClientPortal.ReplaceMyAvatar.ReplaceMyAvatarHandler>();
         services.AddScoped<Application.Features.ClientPortal.RemoveMyAvatar.RemoveMyAvatarHandler>();
+        services.AddScoped<Application.Features.ClientPortal.GetMyWorkoutToday.MyWorkoutTodayReader>();
+        services.AddScoped<Application.Features.ClientPortal
+            .GetMyWorkoutToday.GetMyWorkoutTodayHandler>();
+        services.AddScoped<Application.Features.ClientPortal.GetMyPortalHome.GetMyPortalHomeHandler>();
 
         // Validators
         services.AddScoped<IValidator<Application.Features.ClientPortal.UpdateMyProfile
@@ -173,6 +192,7 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.Clients.CreateClient.CreateClientHandler>();
         services.AddScoped<Application.Features.Clients.GetClient.GetClientHandler>();
         services.AddScoped<Application.Features.Clients.GetClientBranding.GetClientBrandingHandler>();
+        services.AddScoped<Application.Features.Clients.GetClientSummary.GetClientSummaryHandler>();
         services.AddScoped<Application.Features.Clients.ListClients.ListClientsHandler>();
         services.AddScoped<Application.Features.Clients.ReactivateClient.ReactivateClientHandler>();
         services.AddScoped<Application.Features.Clients.UpdateClient.UpdateClientHandler>();
@@ -184,6 +204,12 @@ public static class DependencyInjection
             .ListClients.ListClientsQuery>, Application.Features.Clients.ListClients.ListClientsQueryValidator>();
         services.AddScoped<IValidator<Application.Features.Clients
             .UpdateClient.UpdateClientCommand>, Application.Features.Clients.UpdateClient.UpdateClientCommandValidator>();
+    }
+
+    private static void AddDashboard(IServiceCollection services)
+    {
+        services.AddScoped<Application.Features.Dashboard
+            .GetTrainerDashboard.GetTrainerDashboardHandler>();
     }
 
     private static void AddMedia(IServiceCollection services)

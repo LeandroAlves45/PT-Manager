@@ -49,6 +49,8 @@ public sealed class MealPlansController : ApiControllerBase
         [FromQuery(Name = "client_id")] Guid? clientId,
         [FromQuery(Name = "search")] string? search,
         [FromQuery(Name = "activity")] MealPlanActivityFilter activity,
+        [FromQuery(Name = "ends_from")] DateOnly? endsFrom,
+        [FromQuery(Name = "ends_to")] DateOnly? endsTo,
         [FromQuery] PageParameters pageParameters,
         [FromServices] ListMealPlansHandler handler,
         CancellationToken cancellationToken)
@@ -63,7 +65,9 @@ public sealed class MealPlansController : ApiControllerBase
                     search,
                     activity,
                     page,
-                    size),
+                    size,
+                    endsFrom,
+                    endsTo),
                 cancellationToken),
             result => PagedResponse<MealPlanSummaryResponse>.From(
                 result,

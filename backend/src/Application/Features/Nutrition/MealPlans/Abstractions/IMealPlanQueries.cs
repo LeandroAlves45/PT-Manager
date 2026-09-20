@@ -16,6 +16,8 @@ public interface IMealPlanQueries
         Guid? clientId,
         string? search,
         MealPlanActivityFilter activity,
+        DateOnly? endsFrom,
+        DateOnly? endsTo,
         PageRequest page,
         CancellationToken cancellationToken
     );

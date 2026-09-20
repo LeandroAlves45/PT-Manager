@@ -16,6 +16,8 @@ public interface ITrainingPlanQueries
         Guid? clientId,
         string? search,
         TrainingPlanActivityFilter activity,
+        DateOnly? endsFrom,
+        DateOnly? endsTo,
         PageRequest page,
         CancellationToken cancellationToken
     );

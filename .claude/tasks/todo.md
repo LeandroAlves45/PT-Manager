@@ -1,214 +1,50 @@
-# Sprint 6A — blueprints de código real com validação (2026-09-16/17)
+# Sprint 6B — blueprints de código real com validação (2026-09-18)
 
-Plano: `C:\Users\Leandro Alves\.claude\plans\c-users-leandro-alves-desktop-projeto-p-sequential-cloud.md`.
-Âmbito: documentação + materialização descartável. `backend/` real intocado.
+Plano: `C:\Users\Leandro Alves\.claude\plans\c-users-leandro-alves-desktop-projeto-p-moonlit-pony.md`.
+Âmbito: documentação + materialização descartável em `C:\ptm6b` (branch `plan/sprint-6b`,
+nunca merge). `backend/` real intocado. Decisões D1–D15 no plano.
 
-- [x] 1. Bootstrap (ACTIVE, pack, relatório, padrão) e exploração do código com verificação direta
-- [x] 2. Decisões D1–D8 com o utilizador
-- [x] 3. Worktree `C:\ptm6a` e baseline Release
-- [x] 4. Domain, EF, Application, Infrastructure e Api na cópia
-- [x] 5. Migration gerada pelo EF + preflight
-- [x] 6. 111 testes novos e 16 testes existentes ajustados
-- [x] 7. Suite integral Release 2755/2755 (+1 skip), format, restore locked, pending model changes
-- [x] 8. Snapshot OpenAPI: +8, −0
-- [x] 9. Mutação dirigida 6/6 mortas
-- [x] 10. Docs 01–10 gerados por script; 00, 11, 12 e 13 escritos; validador (provado por mutação) com zero diferenças
-- [x] 11. Limpeza: worktree e branch removidos; git status real limpo
-- [x] 12. QualityGates, plano do sprint, pack, relatório §8, roadmap, 05_ECRAS_CLIENTE, ACTIVE, MEMORY e nota de sessão
+## Execução
 
-## Review
+- [x] 0a. Bootstrap (ACTIVE, pack, roadmap, relatório §8, PNG) e exploração do backend
+- [x] 0b. Decisões D1–D15 com o utilizador
+- [x] 0c. Pattern `blueprints_codigo_real_por_ficheiro.md`: modo excerto (> 200 linhas)
+- [x] 1. Worktree `C:\ptm6b` + baseline (build Debug/Release, contagem da suite)
+- [x] 2. Domain: `TrainingPlanSchedule`
+- [x] 3. Application: dashboard, resumo, portal (hoje, próximo check-in, home), filtros, moderação, overview, DI
+- [x] 4. Infrastructure: queries, helper de dia UTC, DI
+- [x] 5. Api: contratos e controllers
+- [x] 6. Testes: Domain, Application, Integration (PostgreSQL), Functional, Architecture
+- [x] 7. Budgets de queries (0 vs 120 registos) e EXPLAIN > 100 registos → decisão D4
+- [x] 8. Snapshot OpenAPI 162 → 170 (+8, −0, 3 linhas de filtros alteradas)
+- [x] 9. Suite integral Release verde + mutações dirigidas mortas
+- [x] 10. Extração por script para docs 01–09 (completo ≤ 200 linhas / excerto > 200) + validador
+- [x] 11. Docs 00, 10, 11, 12
+- [x] 12. QualityGates.md, plan_sprint_6, README sprint-6, roadmap §6B, ACTIVE, MEMORY, nota de sessão
+- [x] 13. Worktree removido; branch `plan/sprint-6b` local sem merge; `backend/` da main não foi
+  tocado por esta sessão (os ficheiros novos em `backend/src` são da implementação do utilizador)
 
-- Defeitos reais apanhados: código de erro da porção (FluentValidation encadeado), precisão dos
-  instantes idempotentes, conclusão sem séries fora do histórico, `Deleted` fora do interceptor,
-  referências de conclusão/toma sem validação do cliente.
-- Incidentes: Docker Desktop parou a meio (run repetido); hook bloqueou `Truncate` (falso positivo).
-- Pendente: `QG6A-IMPL-001` (implementação manual, migration na dev, snapshot real).
+## Quality Gates (QG6B-*)
 
----
-
-# Sprint 6 — análise do layout e plano backend-first (2026-09-16)
-
-Plano: `C:\Users\Leandro Alves\.claude\plans\claude-atua-como-um-humble-wreath.md`.
-Âmbito: só documentação. `backend/` e `frontend/` intocados.
-
-- [x] 1. Analisar 13 artboards do Claude Design e app-shell do v0
-- [x] 2. Verificar cada elemento do mockup contra `backend/src` (35 itens com evidência)
-- [x] 3. Decisões do utilizador: backend-first 6A/6B, entram/excluídos/futuro, só perfil do v0
-- [x] 4. Roadmap §Sprint 6 (6A–6G), 10C, DEF-PROD-004–006, DEF-PORTAL-001 → 6A, summary, milestones
-- [x] 5. Renumeração de letras 6A–6E → 6C–6G em frontend/, backend/02, README do project, sprints 7–8 e riscos
-- [x] 6. `frontend/layout/` (README, 01 relatório, 02–06 por ecrã, assets/)
-- [x] 7. `sprints/sprint-6/README.md` e `sprints/README.md`
-- [x] 8. `docs/backend-files/sprint_6/plan_sprint_6_por_atualizar.md`
-- [x] 9. README, 00, 03, 04 do frontend actualizados; links partidos `design-prompts/` removidos
-- [x] 10. ACTIVE, MEMORY, nota de sessão
-- [x] 11. Verificação: links, letras órfãs, git status, doc-reviewer
-- [x] 12. Screenshots em `layout/assets/` (6 PNG do utilizador) e docs a apontar para eles em vez do link/PDF — falta só o 08 ⌘K
+- [x] QG6B-DOC-001 Desenho e decisões D1–D15 fechadas
+- [x] QG6B-DOC-002 Pack validado por script contra a materialização
+- [x] QG6B-DOMAIN-001 Calendário cíclico
+- [x] QG6B-APP-001 Dashboard e resumo do cliente
+- [x] QG6B-APP-002 Portal: treino de hoje, próximo check-in, home
+- [x] QG6B-APP-003 Filtros, fila de moderação, visão geral admin
+- [x] QG6B-PERF-001 Budgets fixos (0 vs 120 registos), EXPLAIN, decisão D4
+- [x] QG6B-TENANT-001 Isolamento entre dois trainers e entre clientes
+- [x] QG6B-CONTRACT-001 Portal sem campos internos; fila sem email
+- [x] QG6B-OPENAPI-001 Snapshot +8, −0
+- [x] QG6B-TEST-001 Suite integral verde + mutações
+- [ ] QG6B-IMPL-001 Aplicação manual no backend real (utilizador)
 
 ## Review
 
-- Links relativos: todos resolvem, excepto os 14 `assets/*.png` (13 ficheiros) por exportar.
-- Letras órfãs (`6A–6E`, `6A Fundações`, `6B Admin`…): 0 ocorrências fora de `01_DATABASE_SCHEMA.md` (secções de tabelas, intocadas).
-- `git status`: só `.claude/` (12 modificados + `layout/` e `sprint-6/` novos); `docs/` gitignored.
-- doc-reviewer: 1 correção — avatar não tem estado "pendente" (moderação síncrona, `MediaPreparationErrorMapper.cs:31`); quota de vídeo 20 confirmada (`Api/appsettings.json:71`).
-- Achado: `design-prompts/` nunca existiu no git apesar do item 3b de 2026-09-15.
-
----
-
-# Documentação — Frontend no Sprint 6 e renumeração (2026-09-15)
-
-Plano: `C:\Users\Leandro Alves\.claude\plans\resilient-moseying-river.md`.
-Âmbito: só documentação. `backend/`, `frontend/` e `.claude/memory/ACTIVE.md` intocados.
-Entrada do Sprint 6 condicionada ao fecho do Gate 5D.
-
-- [x] 1. Roadmap: Sprint 6 Frontend (6A–6E) + renumeração 7/8/9/10A–D
-- [x] 1b. 00_ARCHITECTURE, README do project, 03_DEVELOPER_GUIDE alinhados
-- [x] 2. `.claude/project/backend/` (README, endpoints 142/142, contrato HTTP)
-- [x] 3. `.claude/project/frontend/` (arquitetura Mermaid, stack, convenções, design, benchmark)
-- [x] 3b. Prompts Claude Design e v0
-- [x] 4. sprints/README, MEMORY.md, nota de sessão, auto-memória
-- [x] 5. Skills alinhadas para shadcn/ui (sem Chakra)
-- [x] 6. Verificação: grep órfãos, 142/142, Mermaid, git status, doc review
-
-## Review
-
-- Endpoints: 142/142 iguais ao `api-surface.v1.txt` (diff por script, 0 em falta, 0 a mais).
-- Renumeração: sem `Sprint 9A–D`, `Gate 6A/6B` de observabilidade nem "8 sprints" órfãos;
-  números sem letra (Testes, Go-live) corrigidos à mão.
-- Mermaid: 5/5 blocos renderizados com mermaid 11.4.1.
-- Código confirmado: JWT 15 min (`JwtOptions.cs`), refresh 30 dias, CORS só HTTPS +
-  credentials, cookie `__Secure-ptm-refresh`, `CorrelationIdMiddleware` já existe, sem
-  health checks, OpenAPI só em Development.
-- `git status`: `ACTIVE.md` sem diff; `frontend/` intocado; o único ficheiro de `backend/`
-  modificado (`PostgresConstraintTranslator.cs`) já estava modificado antes desta sessão.
-- Achado: `api-surface.v1.txt` marca `POST /billing/webhook` como `auth=required`, mas o
-  controller é `[AllowAnonymous]`.
-
----
-
-# Sprint 5 — Fase 5D: upload técnico de vídeo privado
-
-Plano geral: `docs/backend-files/sprint_5/Plan_sprint_5.md` (Fase 5D).
-Blueprints: `docs/backend-files/sprint_5/sprint_5D/`.
-Materialização: `C:\ptm5d` (cópia de `backend/`, fora do repositório — `backend/src`,
-`backend/tests` e as migrations reais permanecem intocados).
-
-## Decisões fechadas com o utilizador (2026-09-13)
-
-1. Storage: Cloudflare R2 (presigned PUT/GET com expiração real, egress grátis).
-   Cloudinary recusado para vídeo: sem URL de leitura expirável no Free,
-   `resource_type` fora da assinatura, créditos partilhados com imagens.
-2. Formatos: container MP4 ou MOV; vídeo H.264 (`avc1`/`avc3`); áudio AAC (`mp4a`)
-   ou ausente. Máx 100 MB, 3 min, lado maior ≤ 1920 px, lado menor ≥ 240 px.
-   HEVC recusado (reprodução não garantida em todos os browsers).
-3. Modelo: tabela própria `exercise_videos`; um vídeo ativo por exercício;
-   substituição só troca quando o novo fica `Ready`; `exercises.video_url` externo
-   intacto (contrato Preserve).
-4. Quota: exercícios globais (superuser) sem quota — só limites por ficheiro e rate
-   limit. Trainer: 20 vídeos (`Pending`+`Processing`+`Ready`), igual para todos,
-   configurável, verificação atómica no store.
-5. Leitura (URL assinada): cliente — exercícios presentes no seu plano de treino;
-   trainer — globais e os seus privados; superuser — todos.
-   Upload: superuser para globais, trainer para os seus privados.
-6. TTL: presigned PUT 15 min; finalização até ao fim dessa janela; presigned GET
-   30 min. Abandono: job agendado por upload (`expires_at` + margem) apaga o objeto e
-   marca `Failed`; `Rejected`/`Failed`/substituídos apagados por outbox; lifecycle R2
-   no prefixo de pendentes como rede de segurança.
-7. Âmbito: só backend, `R2:Enabled=false` até existir bucket, CORS e secrets.
-   `QG5-FRONTEND-001` continua aberto. Moderação automática de vídeo fora (DEF-TRUST-002).
-
-## Decisões de arquitetura aprovadas (2026-09-13, 2.ª ronda)
-
-8. Jobs de vídeo global (tenant nulo): marker `IPlatformDurableJobHandler`; só os
-   handlers marcados (allowlist fechada) aceitam `TrainerId` nulo e correm com
-   `TenantOrigin.System`. Restantes jobs mantêm a recusa.
-9. Eliminação de objetos R2 (remover, substituído, rejeitado, abandonado): durable job
-   `exercise-video.delete-object` na mesma transação da mutação; outbox intacta.
-10. Eliminar exercício global com vídeo: 409 `global_exercise_has_video` (FK RESTRICT).
-11. Superuser a ler vídeo privado: sem auditoria administrativa, só log estruturado.
-    Escritas globais do superuser gravam `AdministrativeAuditEntry`.
-
-## Factos da pesquisa R2 (fontes no relatório da sessão)
-
-- `AWSSDK.S3` 4.0.103.2 / `AWSSDK.Core` 4.0.102.5, Apache-2.0, target net8.0.
-- Config: `ServiceURL=https://<account>.r2.cloudflarestorage.com`, `AuthenticationRegion=auto`,
-  `ForcePathStyle=true`, checksums `WHEN_REQUIRED`.
-- Presign é cálculo local; R2 aceita 1 s–7 dias; não funciona com custom domain.
-- Content-Type assinado é imposto pelo R2; Content-Length assinado NÃO garantido →
-  `HeadObject` na finalização é a autoridade do tamanho.
-- CORS do bucket obrigatório (PUT, GET, HEAD; `Content-Type`; expõe `ETag`).
-- Lifecycle por prefixo remove em até 24 h → só rede de segurança.
-- Class B (Head/GetObject) conta operações; DeleteObject gratuito.
-
-## Factos verificados que condicionam o desenho
-
-- `JobTenantValidator` recusa `TrainerId` nulo → vídeos globais exigem caminho de job
-  de plataforma explícito e fechado (não genérico).
-- Portal do cliente não expõe `video_url` hoje.
-- Não há cron interno; jobs com `ScheduledAt` futuro são reclamados na ativação QStash.
-- Media 5C é só imagem (rotas `image/*`, Skia, 6 MiB) — vídeo é slice separado.
-- Testes de allowlist fechada (`JobDispatchArchitectureTests`,
-  `JobDispatchCompositionTests`) têm de ser atualizados.
-
-## 0. Preparação
-
-- [x] Pesquisa R2 + AWSSDK.S3 (presign, HeadObject, Range, CORS, checksums)
-- [x] Pesquisa layout ISO BMFF (parser MP4/MOV próprio)
-- [x] Mapa: leitura do plano pelo cliente, leitura administrativa, tenant System
-- [x] Cópia do backend para `C:\ptm5d` sem `bin`/`obj`
-- [x] `dotnet restore --locked-mode` e build Release de baseline verdes na cópia
-
-## 1. Desenho
-
-- [x] Arquitetura (portas, entidade, estados, jobs, rotas, migration)
-- [x] Documento 00 com decisões, ordem, invariantes, budget de I/O e gates
-
-## 2. Materialização e validação na cópia
-
-- [x] Domain, Application, Infrastructure, Api, migration, testes
-- [x] Restore, build Release/Debug sem warnings, format, suites, has-pending-model-changes (não reexecutados nesta revisão)
-- [x] Ciclo da migration no filtro de testes (62 Integration, inclui AddExerciseVideos)
-- [x] Snapshot OpenAPI
-
-## 3. Blueprints (extraídos da cópia)
-
-- [x] Documentos 01..N por camada com blocos integrais (00–13)
-- [x] QA da fase e rastreabilidade
-- [x] `backlogs/QualityGates.md` com gates `QG5D-*`
-
-## 4. Fecho
-
-- [x] `git status`: nenhum ficheiro real de backend alterado
-- [x] Memória (ACTIVE.md, MEMORY.md, nota de sessão)
-
----
-
-# Correções da auditoria de segurança 2026-09-14 (patches 1–7)
-
-Plano: `C:\Users\Leandro Alves\.claude\plans\stateless-moseying-truffle.md`.
-Relatório: `backlogs/Security_and_Review_audit/11_relatorio_implementacao_patches.md`.
-
-- [x] Patch 1 — PTM-SEC-18: `User.ResetAccessFailedCount` preserva `LockoutEnd`
-- [x] Patch 2 — PTM-SEC-02: perfis 4096 px / 12 MP + semáforo de decode (sem rácio bytes/píxel)
-- [x] Patch 3 — PTM-SEC-01: SDK 10.0.401 + `global.json` + Dockerfile/.dockerignore
-- [x] Patch 4 — PTM-SEC-03: `ForwardedHeaders.None` sem proxies confiáveis
-- [x] Patch 5 — PTM-SEC-04: lockout no change-password e no link Google (email antes da password)
-- [x] Patch 6 — PTM-SEC-05: `IOutboxMessageHandler.RequiresActiveSubscription`
-- [x] Patch 7 — PTM-SEC-06: teto `maxAttempts` no claim (outbox + durable) + docs 07/10 da 5D
-- [x] Build Release + suite completa (real: 5D sem migration → worktree isolado: 2372 ✓ · 1 ✗ ambiental · 1 skip)
-- [x] Relatório 11 + nota de sessão + memória
-
----
-
-# Sprint 6A — testes, migration e fecho no backend real (2026-09-17)
-
-- [x] Diff programático 01–08 vs código real (70 desvios revistos, 1 defeito corrigido)
-- [x] Testes do doc 10 aplicados; QG6A-TEST-004 (4) + preflight 2.º ramo (1)
-- [x] Migration 20260917152023_AddSprint6AWriteSchema gerada, Up/Down analisados, preflight
-- [x] Suite integral 2760 verde; format/restore/pending limpos; snapshot 154→162
-- [x] Mutações MT1–MT5 mortas
-- [x] Migration aplicada à base dev e verificada por SQL
-- [x] Docs 00/09–12 + blocos sincronizados, doc 14, QualityGates.md, memória
-
-## Review
-
-Finalizado. Defeito real: MuscleGroupCatalog.TryNormalize(null) devolvia false. Sem commit.
+- Materialização em `C:\ptm6b` (branch `plan/sprint-6b`, sem merge): build 0/0, suite integral
+  Release **2849 aprovados, 0 falhas, 1 skip** (+89), 6 mutações mortas, 105 blocos documentais
+  sem divergências, snapshot 162 → 170.
+- Migration `AddSprint6BReadIndexes` (3 índices parciais) justificada por EXPLAIN: 13,4 → 0,15 ms
+  (fila de moderação) e 18,2 → 0,17 ms (check-ins por rever).
+- Pack `docs/backend-files/sprint_6/sprint_6B/` (00–12). Falta `QG6B-IMPL-001` (aplicação real
+  pelo utilizador). Worktree removido; branch mantida local para inspeção.

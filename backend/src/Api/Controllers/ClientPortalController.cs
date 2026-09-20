@@ -5,6 +5,9 @@ using Api.Contracts.Common;
 using Api.Contracts.Portal;
 using Api.Http;
 using Application.Features.Assessments.CheckIns.GetMyDueCheckIn;
+using Application.Features.Assessments.CheckIns.GetMyNextCheckIn;
+using Application.Features.ClientPortal.GetMyPortalHome;
+using Application.Features.ClientPortal.GetMyWorkoutToday;
 using Application.Features.Assessments.CheckIns.SubmitCheckInResponse;
 using Application.Features.ClientPortal.GetMyNutritionPlan;
 using Application.Features.ClientPortal.GetMyProfile;
@@ -42,6 +45,24 @@ public sealed class ClientPortalController : ApiControllerBase
         RespondAsync(
             handler.HandleAsync(cancellationToken),
             PortalBrandingResponse.From);
+
+    /// <summary>Devolve o resumo dos cartões da home do portal num só pedido.</summary>
+    [HttpGet("home")]
+    public Task<IActionResult> GetHomeAsync(
+        [FromServices] GetMyPortalHomeHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(
+            handler.HandleAsync(new GetMyPortalHomeQuery(), cancellationToken),
+            MyPortalHomeResponse.From);
+
+    /// <summary>Devolve o treino de hoje do cliente, com o que já registou.</summary>
+    [HttpGet("my-workout/today")]
+    public Task<IActionResult> GetMyWorkoutTodayAsync(
+        [FromServices] GetMyWorkoutTodayHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(
+            handler.HandleAsync(new GetMyWorkoutTodayQuery(), cancellationToken),
+            MyWorkoutTodayResponse.From);
 
     /// <summary>Devolve o plano de treino ativo do cliente.</summary>
     [HttpGet("my-plan")]
@@ -124,6 +145,15 @@ public sealed class ClientPortalController : ApiControllerBase
         RespondAsync(
             handler.HandleAsync(cancellationToken),
             MyProfileResponse.From);
+
+    /// <summary>Devolve o próximo check-in agendado do cliente, se existir.</summary>
+    [HttpGet("my-check-ins/next")]
+    public Task<IActionResult> GetMyNextCheckInAsync(
+        [FromServices] GetMyNextCheckInHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondOptionalAsync(
+            handler.HandleAsync(new GetMyNextCheckInQuery(), cancellationToken),
+            MyNextCheckInResponse.From);
 
     /// <summary>Devolve o check-in pendente de resposta, se existir.</summary>
     [HttpGet("my-check-ins/due")]

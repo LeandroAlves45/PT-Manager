@@ -1,5 +1,6 @@
 using Application.Common.Abstractions;
 using Application.Features.Administration.ContentModeration.Abstractions;
+using Application.Features.Administration.Overview;
 using Application.Features.Assessments.CheckIns.Abstractions;
 using Application.Features.Assessments.InitialAssessments.Abstractions;
 using Application.Features.ClientPortal.Abstractions;
@@ -40,6 +41,7 @@ using Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
+using Application.Features.Dashboard.Abstractions;
 
 namespace Infrastructure;
 
@@ -91,6 +93,7 @@ public static class DependencyInjection
 
         // Client Portal
         services.AddScoped<IMyTrainingPlanQueries, MyTrainingPlanQueries>();
+        services.AddScoped<IMyWorkoutTodayQueries, MyWorkoutTodayQueries>();
         services.AddScoped<IMyNutritionPlanQueries, MyNutritionPlanQueries>();
         services.AddScoped<IMyProfileQueries, MyProfileQueries>();
         services.AddScoped<IMyProfileStore, MyProfileStore>();
@@ -98,6 +101,8 @@ public static class DependencyInjection
 
         // Administrative content moderation
         services.AddScoped<IPrivateCatalogModerationStore, PrivateCatalogModerationStore>();
+        services.AddScoped<IModerationQueueQueries, ModerationQueueQueries>();
+        services.AddScoped<IAdminOverviewQueries, AdminOverviewQueries>();
 
         // Foods
         services.AddScoped<IFoodStore, FoodStore>();
@@ -118,6 +123,7 @@ public static class DependencyInjection
         // Training Plans
         services.AddScoped<ITrainingPlanStore, TrainingPlanStore>();
         services.AddScoped<ITrainingPlanQueries, TrainingPlanQueries>();
+        services.AddScoped<ITrainerDashboardQueries, Persistence.Dashboard.TrainerDashboardQueries>();
 
         // Exercise Set Logs
         services.AddScoped<IExerciseSetLogStore, ExerciseSetLogStore>();

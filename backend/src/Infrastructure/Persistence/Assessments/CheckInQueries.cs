@@ -14,10 +14,9 @@ internal sealed class CheckInQueries : ICheckInQueries
 {
     private readonly PtManagerDbContext _dbContext;
 
-    public CheckInQueries(PtManagerDbContext dbContext)
-    {
+    public CheckInQueries(PtManagerDbContext dbContext) =>
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
+
 
     public async Task<CheckInDto?> GetAsync(
         Guid trainerId,
@@ -72,6 +71,32 @@ internal sealed class CheckInQueries : ICheckInQueries
         return new PageResult<CheckInDto>(items, totalCount);
     }
 
+    public async Task<MyNextCheckInDto?> GetMyNextAsync(
+        Guid trainerId,
+        Guid userId,
+        DateOnly localToday,
+        CancellationToken cancellationToken
+    )
+    {
+        var next = await BaseQuery(trainerId)
+            .Where(item => item.CheckInDate >= localToday &&
+                !item.RespondedAt.HasValue &&
+                !item.CancelledAt.HasValue)
+            .Where(item => _dbContext.Clients.Any(client =>
+                client.Id == item.ClientId &&
+                client.OwnerTrainerId == trainerId &&
+                client.UserId == userId &&
+                client.IsActive))
+            .OrderBy(item => item.CheckInDate)
+            .ThenBy(item => item.Id)
+            .Select(item => new { item.Id, item.CheckInDate })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return next is null
+            ? null
+            : new MyNextCheckInDto(next.Id, next.CheckInDate, next.CheckInDate == localToday);
+    }
+
     public async Task<CheckInDto?> GetMyDueAsync(
         Guid trainerId,
         Guid userId,
@@ -117,6 +142,10 @@ internal sealed class CheckInQueries : ICheckInQueries
                 item => !item.CancelledAt.HasValue &&
                     !item.RespondedAt.HasValue &&
                     item.CheckInDate >= localToday),
+            CheckInStatusFilter.Unreviewed => query.Where(
+                item => !item.CancelledAt.HasValue &&
+                    item.RespondedAt.HasValue &&
+                    !item.ReviewedAt.HasValue),
             _ => throw new ArgumentOutOfRangeException(nameof(status))
         };
 }

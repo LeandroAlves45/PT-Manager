@@ -5,6 +5,7 @@ using Api.Contracts.Common;
 using Application.Features.Clients.ArchiveClient;
 using Application.Features.Clients.CreateClient;
 using Application.Features.Clients.GetClient;
+using Application.Features.Clients.GetClientSummary;
 using Application.Features.Clients.ListClients;
 using Application.Features.Clients.ReactivateClient;
 using Application.Features.Clients.UpdateClient;
@@ -50,6 +51,7 @@ public sealed class ClientsController : ApiControllerBase
     public Task<IActionResult> ListAsync(
         [FromQuery(Name = "search")] string? search,
         [FromQuery(Name = "activity")] ClientActivityFilter activity,
+        [FromQuery(Name = "without_training_plan")] bool withoutTrainingPlan,
         [FromQuery] PageParameters pageParameters,
         [FromServices] ListClientsHandler handler,
         CancellationToken cancellationToken)
@@ -63,7 +65,8 @@ public sealed class ClientsController : ApiControllerBase
                     search,
                     activity,
                     page,
-                    size
+                    size,
+                    withoutTrainingPlan
                 ),
                 cancellationToken
             ),
@@ -87,6 +90,19 @@ public sealed class ClientsController : ApiControllerBase
                 cancellationToken
             ),
             ClientDetailsResponse.From);
+
+    /// <summary>Devolve o resumo de progresso de um cliente do tenant.</summary>
+    [HttpGet("{clientId:guid}/summary")]
+    public Task<IActionResult> GetSummaryAsync(
+        Guid clientId,
+        [FromServices] GetClientSummaryHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(
+            handler.HandleAsync(
+                new GetClientSummaryQuery(clientId),
+                cancellationToken
+            ),
+            ClientSummaryOverviewResponse.From);
 
     /// <summary>Substitui o perfil editável da ficha do cliente.</summary>
     [HttpPatch("{clientId:guid}")]

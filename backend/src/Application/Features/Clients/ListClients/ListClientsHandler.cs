@@ -34,7 +34,6 @@ public sealed class ListClientsHandler
         CancellationToken cancellationToken)
     {
         var validation = await _validator.ValidateAsync(query, cancellationToken);
-
         if (!validation.IsValid)
             return Result<PageResult<ClientSummaryDto>>.Failure(validation.ToApplicationError());
 
@@ -45,6 +44,7 @@ public sealed class ListClientsHandler
         var result = await _clientQueries.ListAsync(
             SearchTerm.Normalize(query.Search),
             query.Activity,
+            query.WithoutTrainingPlan,
             new PageRequest(query.PageNumber, query.PageSize),
             cancellationToken);
 

@@ -13,15 +13,13 @@ internal sealed class ClientQueries : IClientQueries
 {
     private readonly PtManagerDbContext _dbContext;
 
-    public ClientQueries(PtManagerDbContext dbContext)
-    {
+    public ClientQueries(PtManagerDbContext dbContext) =>
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
 
     /// <inheritdoc/>
     public async Task<ClientDetailsDto?> GetDetailsAsync(
         Guid clientId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var client = await _dbContext.Clients
             .AsNoTracking()
@@ -74,8 +72,9 @@ internal sealed class ClientQueries : IClientQueries
     public async Task<PageResult<ClientSummaryDto>> ListAsync(
         string? search,
         ClientActivityFilter activity,
+        bool withoutTrainingPlan,
         PageRequest page,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var query = _dbContext.Clients.AsNoTracking();
         query = activity switch
@@ -85,6 +84,10 @@ internal sealed class ClientQueries : IClientQueries
             ClientActivityFilter.All => query,
             _ => throw new ArgumentOutOfRangeException(nameof(activity))
         };
+
+        if (withoutTrainingPlan)
+            query = query.Where(client => !_dbContext.TrainingPlans.Any(plan =>
+                plan.ClientId == client.Id && plan.IsActive));
 
         if (!string.IsNullOrWhiteSpace(search))
         {
