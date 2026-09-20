@@ -22,14 +22,15 @@ migration `AddSprint6AWriteSchema`), por implementar (`QG6A-IMPL-001`). Pack
 todos os `QG6A-*` fechados, sem commit. Ver `Sessions/2026-09-17-sprint6a-fecho-implementacao.md`
 e `sprint_6A/14_relatorio_implementacao_testes_fecho_6A.md`.
 
-**2026-09-18 — Sprint 6B:** blueprints de código real validados (2849 testes, 6 mutações,
-105 blocos sem divergências, snapshot 162 → 170, migration `AddSprint6BReadIndexes` só de
-índices justificada por EXPLAIN), por implementar (`QG6B-IMPL-001`). Entrega dashboard do
-trainer, resumo do cliente, fila de moderação, visão geral do admin, home do portal, treino de
-hoje e próximo check-in, mais os filtros `status=unreviewed`, `ends_from`/`ends_to` e
-`without_training_plan`. Decisões D1–D15 fecham as decisões 5–8 do relatório do layout. Pack
-`docs/backend-files/sprint_6/sprint_6B/`. Ver
-`Sessions/2026-09-18-sprint6b-blueprints-validados.md`.
+**2026-09-18 — Sprint 6B:** blueprints de código real validados; pack
+`docs/blueprints/backend-files/sprint_6/sprint_6B/` (00–14).
+**Atualização 2026-09-20: 6B FECHADA no backend real** — 2855 aprovados, 0 falhas, 1 skip;
+migration `20260920114705_AddModerationAndCheckInReadIndexes` (3 índices parciais) aplicada à
+base dev; snapshot OpenAPI 162 → 170; mutações M1–M6 mortas contra o código real; todos os
+`QG6B-*` fechados. 8 defeitos corrigidos, um crítico (`LocalDates.ToLocalDate` usava
+`ConvertTimeToUtc` e lançava para qualquer fuso não-UTC). Sem commit. Ver
+`Sessions/2026-09-20-sprint6b-fecho-implementacao.md` e
+`sprint_6B/14_relatorio_implementacao_testes_fecho_6B.md`.
 
 **Decisão 2026-09-15:** Sprint 6 = **Frontend** (6A Fundações → 6B Admin → 6C Trainer
 → 6D Cliente → 6E Auth UX), só depois do Gate 5D. Renumeração: 7 Observabilidade +

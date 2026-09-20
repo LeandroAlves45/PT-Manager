@@ -1,4 +1,5 @@
 using Application.Features.Clients.ListClients;
+using Domain.Entities.Training;
 using Application.Pagination;
 using Infrastructure.IntegrationTests.Support;
 using Infrastructure.Persistence.Clients;
@@ -33,6 +34,7 @@ public sealed class ClientQueriesTests
         var result = await queries.ListAsync(
             search: null,
             ClientActivityFilter.All,
+            withoutTrainingPlan: false,
             new PageRequest(1, 50),
             CancellationToken.None);
 
@@ -50,6 +52,7 @@ public sealed class ClientQueriesTests
         var result = await queries.ListAsync(
             null,
             ClientActivityFilter.Active,
+            withoutTrainingPlan: false,
             new PageRequest(1, 50),
             CancellationToken.None);
 
@@ -67,6 +70,7 @@ public sealed class ClientQueriesTests
         var result = await queries.ListAsync(
             null,
             ClientActivityFilter.Archived,
+            withoutTrainingPlan: false,
             new PageRequest(1, 50),
             CancellationToken.None);
 
@@ -84,6 +88,7 @@ public sealed class ClientQueriesTests
         var result = await queries.ListAsync(
             null,
             ClientActivityFilter.All,
+            withoutTrainingPlan: false,
             new PageRequest(1, 50),
             CancellationToken.None);
 
@@ -112,16 +117,19 @@ public sealed class ClientQueriesTests
         var firstPage = await queries.ListAsync(
             null,
             ClientActivityFilter.All,
+            withoutTrainingPlan: false,
             new PageRequest(1, 2),
             CancellationToken.None);
         var secondPage = await queries.ListAsync(
             null,
             ClientActivityFilter.All,
+            withoutTrainingPlan: false,
             new PageRequest(2, 2),
             CancellationToken.None);
         var repeatedFirstPage = await queries.ListAsync(
             null,
             ClientActivityFilter.All,
+            withoutTrainingPlan: false,
             new PageRequest(1, 2),
             CancellationToken.None);
         var combinedIds = firstPage.Items.Concat(secondPage.Items).Select(item => item.Id).ToArray();
@@ -162,6 +170,7 @@ public sealed class ClientQueriesTests
         var result = await queries.ListAsync(
             search,
             ClientActivityFilter.All,
+            withoutTrainingPlan: false,
             new PageRequest(1, 50),
             CancellationToken.None);
 
@@ -330,4 +339,32 @@ public sealed class ClientQueriesTests
         Guid TrainerId,
         Guid ActiveClientId,
         Guid ArchivedClientId);
+
+    // [6B] NOVO: filtro "clientes sem plano de treino activo" usado pelo dashboard.
+    [Fact]
+    public async Task ClientQueries_WithoutTrainingPlanFilter_ReturnsOnlyClientsWithoutActivePlan()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var withPlan = await _fixture.SeedTenantWithClientAsync(NewDiscriminator(), token);
+
+        await using (var context = _fixture.CreateContext(withPlan.TrainerId))
+        {
+            context.TrainingPlans.Add(new TrainingPlan(
+                withPlan.TrainerId, withPlan.ClientId, "Forca", null, null, null,
+                new DateOnly(2026, 8, 31), null,
+                new DateTime(2026, 9, 3, 12, 0, 0, DateTimeKind.Utc)));
+            await context.SaveChangesAsync(token);
+        }
+
+        await using var readContext = _fixture.CreateContext(withPlan.TrainerId);
+        var queries = new ClientQueries(readContext);
+
+        var filtered = await queries.ListAsync(
+            null, ClientActivityFilter.All, withoutTrainingPlan: true, new PageRequest(1, 50), token);
+        var unfiltered = await queries.ListAsync(
+            null, ClientActivityFilter.All, withoutTrainingPlan: false, new PageRequest(1, 50), token);
+
+        Assert.DoesNotContain(filtered.Items, item => item.Id == withPlan.ClientId);
+        Assert.Contains(unfiltered.Items, item => item.Id == withPlan.ClientId);
+    }
 }

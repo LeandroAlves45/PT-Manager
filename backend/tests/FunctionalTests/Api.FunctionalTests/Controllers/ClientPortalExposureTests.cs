@@ -18,6 +18,10 @@ public sealed class ClientPortalExposureTests
     [InlineData("/api/v1/portal/my-profile")]
     [InlineData("/api/v1/portal/my-check-ins/due")]
     [InlineData("/api/v1/portal/my-supplements/intakes/today")]
+    // [6B] NOVO: home agregada, treino de hoje e proximo check-in.
+    [InlineData("/api/v1/portal/home")]
+    [InlineData("/api/v1/portal/my-workout/today")]
+    [InlineData("/api/v1/portal/my-check-ins/next")]
     public async Task PortalResponses_NeverExposeTrainerInternalFields(string route)
     {
         var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(

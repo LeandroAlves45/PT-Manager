@@ -199,6 +199,8 @@ public sealed class TrainingHandlersTests
             string? search,
             Application.Features.Training.TrainingPlans.ListTrainingPlans
                 .TrainingPlanActivityFilter activity,
+            DateOnly? endsFrom,
+            DateOnly? endsTo,
             PageRequest page,
             CancellationToken cancellationToken) =>
             Task.FromResult(new PageResult<TrainingPlanSummaryDto>([], 0));

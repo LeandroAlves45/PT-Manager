@@ -401,6 +401,44 @@ internal static class PortalTestData
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    // [6B] NOVO: o resumo do cliente e lido pelo id da ficha, nao pelo do utilizador.
+    /// <summary>Devolve o id da ficha ligada ao utilizador autenticado do cliente.</summary>
+    internal static async Task<Guid> GetClientIdAsync(
+        ApiWebApplicationFactory factory,
+        Guid trainerId,
+        Guid clientUserId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(factory);
+
+        await using var scope = CreateTrainerScope(factory, trainerId);
+        var context = scope.ServiceProvider.GetRequiredService<PtManagerDbContext>();
+
+        return await context.Clients
+            .Where(client => client.UserId == clientUserId)
+            .Select(client => client.Id)
+            .SingleAsync(cancellationToken);
+    }
+
+    // [6B] NOVO: cenario 404 do proximo check-in precisa de cliente activo sem check-ins.
+    /// <summary>Semeia um cliente activo e remove os check-ins criados pelo seed normal.</summary>
+    internal static async Task<(Guid TrainerId, Guid ClientUserId)> SeedActiveClientWithoutCheckInAsync(
+        ApiWebApplicationFactory factory,
+        CancellationToken cancellationToken)
+    {
+        var (trainerId, clientUserId) = await SeedActiveClientAsync(factory, cancellationToken);
+        await using var scope = CreateTrainerScope(factory, trainerId);
+        var context = scope.ServiceProvider.GetRequiredService<PtManagerDbContext>();
+        var clientId = await GetClientIdAsync(factory, trainerId, clientUserId, cancellationToken);
+        var checkIns = await context.CheckIns
+            .Where(item => item.ClientId == clientId)
+            .ToListAsync(cancellationToken);
+
+        context.CheckIns.RemoveRange(checkIns);
+        await context.SaveChangesAsync(cancellationToken);
+        return (trainerId, clientUserId);
+    }
+
     private static AsyncServiceScope CreateTrainerScope(
         ApiWebApplicationFactory factory,
         Guid trainerId)

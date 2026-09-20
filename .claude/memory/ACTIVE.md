@@ -1,26 +1,52 @@
-# Estado ativo: Sprint 6B com blueprints validados (por implementar)
+# Estado ativo: Sprint 6B FECHADA no backend real
 
-Atualizado: 2026-09-18 (6B planeada e materializada; 6A continua fechada no backend real)
+Atualizado: 2026-09-20
 
-## Sprint 6B (2026-09-18) — leituras agregadas
+## Sprint 6B (2026-09-20) — leituras agregadas, FECHADA
 
-Pack `docs/backend-files/sprint_6/sprint_6B/` (00–12), validado numa materialização descartável
-(worktree `C:\ptm6b`, branch `plan/sprint-6b`, sem merge nem commit): 2849 testes verdes (+89),
-6 mutações mortas, 105 blocos sem divergências, snapshot 162 → 170.
+Pack `docs/blueprints/backend-files/sprint_6/sprint_6B/` (00–14). Implementada, testada e validada no
+`backend/` real:
 
-Entrega: `GET /dashboard`, `GET /clients/{id}/summary`, fila de moderação
-(`/admin/content-moderation/{foods,exercises}`), `GET /admin/overview`, `GET /portal/home`,
-`GET /portal/my-workout/today`, `GET /portal/my-check-ins/next`, filtros
-`status=unreviewed`, `ends_from`/`ends_to` e `without_training_plan`, e a migration
-`AddSprint6BReadIndexes` (só índices parciais, justificada por EXPLAIN: 13,4 → 0,15 ms e
-18,2 → 0,17 ms).
+- Build Release: 0 erros, 0 avisos.
+- Suite integral Release: **2855 aprovados, 0 falhas, 1 skip** (`RegenerateSnapshot`, por
+  desenho). Domain 522, Application 719, Architecture 91, Functional 674, Integration 849.
+- Migration `20260920114705_AddModerationAndCheckInReadIndexes` gerada pelo EF, só três
+  índices parciais, aplicada à base dev e confirmada por `pg_indexes`.
+- Snapshot OpenAPI `docs/api/api-surface.v1.txt`: 162 → 170 (8 operações novas, 3 linhas de
+  filtros alteradas, 0 remoções).
+- Mutações M1–M6 do documento 11 reaplicadas ao código real: todas mortas.
+- Todos os `QG6B-*` fechados, incluindo `QG6B-IMPL-001`.
 
-Decisões D1–D15 no `sprint_6B/00`. Destaques: semana de treino **cíclica**; adesão em 28 dias
-sobre o plano ativo contando só séries feitas no dia previsto; `TargetDate` não é prazo;
-fila de moderação mostra id e nome do trainer, nunca o email.
+- **Flakiness do rate limiter na suite funcional corrigida** (2026-09-20, pós-fecho): o
+  `TestServer` não preenche `RemoteIpAddress`, todos os pedidos anónimos caíam na partição
+  `ip:unknown` (60/min) e os testes `*_WithoutToken_ReturnsUnauthorized` davam 429. Resolvido
+  com um IP por `HttpClient` no `ApiWebApplicationFactory`; produção intocada. 3 corridas
+  seguidas a 674/674.
 
-Falta: implementar no `backend/` real, gerar/aplicar a migration à dev, regenerar o snapshot e
-fechar `QG6B-IMPL-001`. Branch `plan/sprint-6b` fica local, sem merge.
+**Sem commit.** O trabalho fica no working tree para revisão do utilizador.
+
+### Defeitos corrigidos nesta sessão
+
+1. **`LocalDates.ToLocalDate` usava `ConvertTimeToUtc` em vez de `ConvertTimeFromUtc`** —
+   crítico: como o método força `Kind=Utc`, lançava `ArgumentException` para qualquer fuso
+   que não fosse `TimeZoneInfo.Utc`, derrubando todos os endpoints 6B dependentes de data.
+2. `IClientProgressSummaryQueries` não estava registado na DI da Infrastructure —
+   `GET /clients/{id}/summary` rebentava em runtime.
+3. `BlockFoodCommandValidator` e `BlockExerciseCommandValidator` registados em duplicado
+   (82 validators em vez de 80).
+4. `using Microsoft.VisualBasic` e `using System.Runtime.CompilerServices` mortos.
+5. `GetMyCompletionAsync` com o parâmetro chamado `trainingPlanId` quando é o id do **dia**.
+6. `FakeClientQueries` com um overload `throw new NotImplementedException()` gerado pelo IDE.
+7. Seis defeitos nos próprios blueprints do documento 09 (usings em falta, `Model` em vez de
+   `_model`, `[Collection]` em falta, e `IssueClient(trainerId, clientUserId)` com os
+   argumentos trocados — a assinatura é `IssueClient(clientUserId, trainerId)`).
+
+Ver `Sessions/2026-09-20-sprint6b-fecho-implementacao.md` e
+`sprint_6B/14_relatorio_implementacao_testes_fecho_6B.md`.
+
+## Próximo passo
+
+Sprint 6C: frontend. O backend das leituras agregadas está pronto.
 
 ## Estado em uma linha
 

@@ -98,6 +98,12 @@ internal sealed class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
             .HasOperators("gin_trgm_ops", "gin_trgm_ops")
             .HasDatabaseName("idx_exercises_search_trgm");
 
+        // [6B] NOVO: fila de moderação do superuser, igual à dos alimentos.
+        builder.HasIndex(e => new { e.UpdatedAt, e.Id })
+            .IsDescending(true, false)
+            .HasFilter("owner_trainer_id IS NOT NULL")
+            .HasDatabaseName("idx_exercises_moderation_queue");
+
         builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(e => e.OwnerTrainerId)

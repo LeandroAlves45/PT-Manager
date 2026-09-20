@@ -21,7 +21,7 @@ public static class LocalDates
             ? utcInstant
             : DateTime.SpecifyKind(utcInstant, DateTimeKind.Utc);
 
-        return DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeToUtc(utc, timeZone));
+        return DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(utc, timeZone));
     }
 
     /// <summary>Dia local correspondente a um instante com offset.</summary>

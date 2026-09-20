@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using Application.Common.Abstractions;
 using Application.Common.Authorization;
 using Application.Common.Time;

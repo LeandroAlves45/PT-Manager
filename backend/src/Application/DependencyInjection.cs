@@ -49,12 +49,6 @@ public static class DependencyInjection
             .ListModerationQueue.ListModerationQueueQuery>,
             Application.Features.Administration.ContentModeration
                 .ListModerationQueue.ListModerationQueueQueryValidator>();
-        services.AddScoped<IValidator<Application.Features.Administration.ContentModeration
-            .BlockFood.BlockFoodCommand>,
-            Application.Features.Administration.ContentModeration.BlockFood.BlockFoodCommandValidator>();
-        services.AddScoped<IValidator<Application.Features.Administration.ContentModeration
-            .BlockExercise.BlockExerciseCommand>,
-            Application.Features.Administration.ContentModeration.BlockExercise.BlockExerciseCommandValidator>();
     }
 
     private static void AddAssessments(IServiceCollection services)

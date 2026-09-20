@@ -25,6 +25,8 @@ public sealed class ActorMatrixTests
         "/api/v1/pack-types",
         "/api/v1/client-session-packs",
         "/api/v1/check-ins",
+        // [6B] NOVO
+        "/api/v1/dashboard",
         "/api/v1/supplements",
         "/api/v1/supplement-assignments",
         "/api/v1/exercises/6f1c1f10-7b1f-4a31-9a8e-1a2b3c4d5e6f/video"
@@ -35,6 +37,10 @@ public sealed class ActorMatrixTests
         "/api/v1/global-foods",
         "/api/v1/global-exercises",
         "/api/v1/global-supplements",
+        // [6B] NOVO
+        "/api/v1/admin/overview",
+        "/api/v1/admin/content-moderation/foods",
+        "/api/v1/admin/content-moderation/exercises",
         "/api/v1/global-exercises/6f1c1f10-7b1f-4a31-9a8e-1a2b3c4d5e6f/video"
     ];
 
@@ -45,7 +51,11 @@ public sealed class ActorMatrixTests
         "/api/v1/portal/my-nutrition",
         "/api/v1/portal/my-profile",
         "/api/v1/portal/my-supplements",
-        "/api/v1/portal/my-plan/exercises/6f1c1f10-7b1f-4a31-9a8e-1a2b3c4d5e6f/video"
+        "/api/v1/portal/my-plan/exercises/6f1c1f10-7b1f-4a31-9a8e-1a2b3c4d5e6f/video",
+        // [6B] NOVO
+        "/api/v1/portal/home",
+        "/api/v1/portal/my-workout/today",
+        "/api/v1/portal/my-check-ins/next"
     ];
 
     [Theory]

@@ -90,6 +90,7 @@ public static class DependencyInjection
         services.AddScoped<IClientStore, ClientStore>();
         services.AddScoped<IClientQueries, ClientQueries>();
         services.AddScoped<IClientBrandingQueries, ClientBrandingQueries>();
+        services.AddScoped<IClientProgressSummaryQueries, ClientProgressSummaryQueries>();
 
         // Client Portal
         services.AddScoped<IMyTrainingPlanQueries, MyTrainingPlanQueries>();

@@ -36,6 +36,9 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
         "20260916115919_AddExerciseVideos";
     public const string AddSprint6AWriteSchemaMigration =
         "20260917152023_AddSprint6AWriteSchema";
+    // [6B] NOVO: migration só de índices das leituras agregadas.
+    public const string AddModerationAndCheckInReadIndexesMigration =
+        "AddModerationAndCheckInReadIndexes";
     private readonly PostgreSqlContainer _container =
         new PostgreSqlBuilder("postgres:17-alpine")
         .WithDatabase("ptmanager_tests")

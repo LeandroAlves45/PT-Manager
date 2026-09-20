@@ -227,7 +227,8 @@ public sealed class MealPlanHandlersTests
         public Task<MealPlanDetailsDto?> GetDetailsAsync(Guid id, CancellationToken token)
         { DetailsCalls++; return Task.FromResult(Details); }
         public Task<PageResult<MealPlanSummaryDto>> ListAsync(Guid? clientId, string? search,
-            MealPlanActivityFilter activity, PageRequest page, CancellationToken token) =>
+            MealPlanActivityFilter activity, DateOnly? endsFrom, DateOnly? endsTo,
+            PageRequest page, CancellationToken token) =>
             Task.FromResult(new PageResult<MealPlanSummaryDto>([], 0));
     }
 

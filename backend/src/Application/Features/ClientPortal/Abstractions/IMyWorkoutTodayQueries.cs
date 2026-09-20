@@ -28,7 +28,7 @@ public interface IMyWorkoutTodayQueries
     Task<DateTime?> GetMyCompletionAsync(
         Guid trainerId,
         Guid clientUserId,
-        Guid trainingPlanId,
+        Guid trainingPlanDayId,
         DateOnly localDate,
         CancellationToken cancellationToken);
 }

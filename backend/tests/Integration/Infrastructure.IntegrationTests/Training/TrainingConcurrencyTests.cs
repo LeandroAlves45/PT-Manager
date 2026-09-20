@@ -182,6 +182,8 @@ public sealed class TrainingConcurrencyTests
             seed.ClientId,
             null,
             TrainingPlanActivityFilter.All,
+            null,
+            null,
             new PageRequest(1, 20),
             token);
 

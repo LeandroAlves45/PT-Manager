@@ -134,6 +134,20 @@ public sealed class NutritionModelMetadataTests : IDisposable
 
     public void Dispose() => _context.Dispose();
 
+    // [6B] NOVO: indice parcial da fila de moderacao de alimentos.
+    [Fact]
+    public void FoodModerationQueueIndex_IsPartialAndOrderedByUpdatedAt()
+    {
+        var index = RequireEntity<Food>().GetIndexes()
+            .Single(item => item.GetDatabaseName() == "idx_foods_moderation_queue");
+
+        Assert.Equal(new[] { "UpdatedAt", "Id" },
+            index.Properties.Select(property => property.Name).ToArray());
+        Assert.Equal(new[] { true, false }, index.IsDescending!);
+        Assert.Equal("owner_trainer_id IS NOT NULL", index.GetFilter());
+        Assert.False(index.IsUnique);
+    }
+
     private IReadOnlyEntityType RequireEntity<TEntity>()
         where TEntity : class =>
         _context.GetService<IDesignTimeModel>().Model.FindEntityType(typeof(TEntity))

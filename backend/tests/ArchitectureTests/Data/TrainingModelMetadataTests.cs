@@ -100,6 +100,20 @@ public sealed class TrainingModelMetadataTests : IDisposable
 
     public void Dispose() => _context.Dispose();
 
+    // [6B] NOVO: indice parcial da fila de moderacao de exercicios.
+    [Fact]
+    public void ExerciseModerationQueueIndex_IsPartialAndOrderedByUpdatedAt()
+    {
+        var index = RequireEntity<Exercise>().GetIndexes()
+            .Single(item => item.GetDatabaseName() == "idx_exercises_moderation_queue");
+
+        Assert.Equal(new[] { "UpdatedAt", "Id" },
+            index.Properties.Select(property => property.Name).ToArray());
+        Assert.Equal(new[] { true, false }, index.IsDescending!);
+        Assert.Equal("owner_trainer_id IS NOT NULL", index.GetFilter());
+        Assert.False(index.IsUnique);
+    }
+
     private IReadOnlyEntityType RequireEntity<TEntity>()
         where TEntity : class =>
         _model.FindEntityType(typeof(TEntity))

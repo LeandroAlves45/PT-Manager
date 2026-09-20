@@ -147,9 +147,13 @@ internal sealed class FakeClientQueries : IClientQueries
         return Task.FromResult(DetailsResult);
     }
 
+    // [6B] NOVO: o filtro "sem plano de treino activo" fica observável no double.
+    public bool LastWithoutTrainingPlan { get; private set; }
+
     public Task<PageResult<ClientSummaryDto>> ListAsync(
         string? search,
         ClientActivityFilter activity,
+        bool withoutTrainingPlan,
         PageRequest page,
         CancellationToken cancellationToken
     )
@@ -157,14 +161,10 @@ internal sealed class FakeClientQueries : IClientQueries
         ListCalls++;
         LastSearch = search;
         LastActivity = activity;
+        LastWithoutTrainingPlan = withoutTrainingPlan;
         LastPage = page;
         LastCancellationToken = cancellationToken;
         return Task.FromResult(PageResult);
-    }
-
-    public Task<PageResult<ClientSummaryDto>> ListAsync(string? search, ClientActivityFilter activity, bool withoutTrainingPlan, PageRequest page, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
     }
 
     public Task<IReadOnlyList<UsableClientPackDto>> ListUsablePacksAsync(

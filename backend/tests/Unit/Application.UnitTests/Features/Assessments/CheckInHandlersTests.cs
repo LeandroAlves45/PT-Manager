@@ -425,5 +425,24 @@ public sealed class CheckInHandlersTests
             UserId = userId;
             return Task.FromResult<CheckInDto?>(null);
         }
+
+        // [6B] NOVO: próximo check-in agendado.
+        public MyNextCheckInDto? NextResult { get; set; }
+
+        public int NextCalls { get; private set; }
+
+        public DateOnly LastLocalToday { get; private set; }
+
+        public Task<MyNextCheckInDto?> GetMyNextAsync(
+            Guid trainerId,
+            Guid userId,
+            DateOnly localToday,
+            CancellationToken cancellationToken)
+        {
+            NextCalls++;
+            UserId = userId;
+            LastLocalToday = localToday;
+            return Task.FromResult(NextResult);
+        }
     }
 }

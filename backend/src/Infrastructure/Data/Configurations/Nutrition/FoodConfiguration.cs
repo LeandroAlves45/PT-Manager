@@ -105,6 +105,13 @@ internal sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
             .HasOperators("gin_trgm_ops", "gin_trgm_ops")
             .HasDatabaseName("idx_foods_search_trgm");
 
+        // [6B] NOVO: fila de moderação do superuser. Índice parcial só sobre conteúdo privado,
+        // na ordem exata da listagem. Medido com 26 667 alimentos privados: 13,4 ms -> 0,15 ms.
+        builder.HasIndex(food => new { food.UpdatedAt, food.Id })
+            .IsDescending(true, false)
+            .HasFilter("owner_trainer_id IS NOT NULL")
+            .HasDatabaseName("idx_foods_moderation_queue");
+
         builder.HasOne<User>().WithMany().HasForeignKey(food => food.OwnerTrainerId)
             .OnDelete(DeleteBehavior.Cascade).HasConstraintName("fk_foods_owner_trainer");
     }

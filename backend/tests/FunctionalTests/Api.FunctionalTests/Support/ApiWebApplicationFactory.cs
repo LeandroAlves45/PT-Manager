@@ -1,8 +1,11 @@
+using System.Net;
 using System.Security.Cryptography;
 using Application.Features.Authentication.Abstractions;
 using Infrastructure.Data;
 using Infrastructure.Data.Interceptors;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -135,6 +138,10 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
                     provider.GetRequiredService<CommandCountingInterceptor>());
             });
 
+            // Sem este filtro, RemoteIpAddress e null no TestServer e o limitador
+            // global mete todos os pedidos anonimos da suite na mesma particao.
+            services.AddSingleton<IStartupFilter, TestClientIpStartupFilter>();
+
             ConfigureServices?.Invoke(services);
         });
     }
@@ -155,5 +162,71 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
         });
         client.DefaultRequestHeaders.Add("Origin", AllowedOrigin);
         return client;
+    }
+
+    /// <summary>Header que o host de teste traduz para <c>RemoteIpAddress</c>.</summary>
+    /// <remarks>
+    /// Mesmo nome usado pelos testes do limitador sobre o pipeline minimo
+    /// (<c>ApiGlobalRateLimitingTests</c>), para haver uma so convencao.
+    /// </remarks>
+    internal const string TestClientIpHeader = "X-Test-Client-Ip";
+
+    private static int _clientIpCounter;
+
+    /// <summary>
+    /// Da a cada <see cref="HttpClient"/> um IP proprio.
+    /// </summary>
+    /// <remarks>
+    /// O <c>TestServer</c> nao preenche <c>RemoteIpAddress</c>, por isso o limitador
+    /// global caia todos os pedidos anonimos da suite na particao <c>ip:unknown</c>,
+    /// cujo orcamento e de 60 por minuto. Com centenas de testes a correr em paralelo
+    /// num minuto, pedidos sem token recebiam 429 em vez de 401 de forma nao
+    /// determinista. Um IP por cliente separa as particoes sem tocar na configuracao
+    /// de producao, que continua a ser a que os testes do limitador provam.
+    ///
+    /// E por cliente, nao por teste: os testes que provam o limitador no host completo
+    /// (login, Google sign-in, dispatch interno) fazem o ciclo todo sobre um unico
+    /// cliente, por isso continuam a partilhar particao e a receber o 429 esperado.
+    /// </remarks>
+    protected override void ConfigureClient(HttpClient client)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+
+        base.ConfigureClient(client);
+
+        var ordinal = Interlocked.Increment(ref _clientIpCounter);
+        var address = new IPAddress(
+        [
+            10,
+            (byte)(ordinal >> 16),
+            (byte)(ordinal >> 8),
+            (byte)ordinal
+        ]);
+
+        client.DefaultRequestHeaders.Add(TestClientIpHeader, address.ToString());
+    }
+
+    /// <summary>Traduz <see cref="TestClientIpHeader"/> em <c>RemoteIpAddress</c>.</summary>
+    /// <remarks>
+    /// Corre antes de tudo o resto. O processamento de <c>X-Forwarded-For</c> esta
+    /// desligado sem proxies confiaveis, por isso nada a jusante sobrepoe este valor —
+    /// o que mantem valido o <c>ForwardedHeadersTrustTests</c>.
+    /// </remarks>
+    private sealed class TestClientIpStartupFilter : IStartupFilter
+    {
+        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) =>
+            builder =>
+            {
+                builder.Use((context, continuation) =>
+                {
+                    var header = context.Request.Headers[TestClientIpHeader].ToString();
+                    if (IPAddress.TryParse(header, out var address))
+                        context.Connection.RemoteIpAddress = address;
+
+                    return continuation();
+                });
+
+                next(builder);
+            };
     }
 }

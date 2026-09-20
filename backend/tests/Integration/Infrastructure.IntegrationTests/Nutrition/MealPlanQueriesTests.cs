@@ -2,6 +2,8 @@
 using Application.Features.Nutrition.MealPlans.ListMealPlans;
 using Application.Pagination;
 using Domain.Entities.Nutrition;
+using Domain.Services;
+using Domain.ValueObjects;
 using Infrastructure.IntegrationTests.Support;
 using Infrastructure.Persistence.Nutrition;
 using Microsoft.EntityFrameworkCore;
@@ -151,6 +153,8 @@ public sealed class MealPlanQueriesTests
             seed.ClientId,
             "Nutrition plan",
             MealPlanActivityFilter.Active,
+            null,
+            null,
             new PageRequest(1, 2),
             token
         );
@@ -158,6 +162,8 @@ public sealed class MealPlanQueriesTests
             seed.ClientId,
             "Nutrition plan",
             MealPlanActivityFilter.Active,
+            null,
+            null,
             new PageRequest(1, 2),
             token
         );
@@ -186,11 +192,60 @@ public sealed class MealPlanQueriesTests
             foreign.ClientId,
             null,
             MealPlanActivityFilter.All,
+            null,
+            null,
             new PageRequest(),
             token
         );
 
         Assert.Empty(page.Items);
         Assert.Equal(0, page.TotalCount);
+    }
+
+    [Fact]
+    public async Task ListAsync_EndsRangeFilter_ExcludesOpenEndedPlans()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var seed = await _fixture.SeedTenantWithClientAsync(
+            $"meal-ends-{Guid.NewGuid():N}", token);
+        var rangeStart = new DateOnly(2026, 9, 3);
+
+        await using (var context = _fixture.CreateContext(seed.TrainerId))
+        {
+            context.MealPlans.Add(CreateMealPlan(seed, null));
+            context.MealPlans.Add(CreateMealPlan(seed, rangeStart.AddDays(5)));
+            await context.SaveChangesAsync(token);
+        }
+
+        await using var readContext = _fixture.CreateContext(seed.TrainerId);
+        var page = await new MealPlanQueries(readContext).ListAsync(
+            seed.ClientId,
+            null,
+            MealPlanActivityFilter.All,
+            rangeStart,
+            rangeStart.AddDays(7),
+            new PageRequest(1, 50),
+            token);
+
+        var item = Assert.Single(page.Items);
+        Assert.Equal(rangeStart.AddDays(5), item.EndsDate);
+    }
+
+    private static MealPlan CreateMealPlan(
+        PostgresContainerFixture.TestTenantSeed seed,
+        DateOnly? endsDate)
+    {
+        var macros = MacroTargetCalculator.CalculateFromManualGrams(
+            2_000m, new ManualMacroInput(150m, 200m, 66.67m));
+        var snapshot = NutritionCalculationSnapshot.FromManualEnergy(80m, macros, Now);
+        return new MealPlan(
+            seed.TrainerId,
+            seed.ClientId,
+            $"Plano {Guid.NewGuid():N}"[..20],
+            null,
+            new DateOnly(2026, 9, 1),
+            endsDate,
+            snapshot,
+            Now);
     }
 }

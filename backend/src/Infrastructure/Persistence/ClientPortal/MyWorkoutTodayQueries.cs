@@ -51,14 +51,14 @@ internal sealed class MyWorkoutTodayQueries : IMyWorkoutTodayQueries
     public async Task<DateTime?> GetMyCompletionAsync(
         Guid trainerId,
         Guid clientUserId,
-        Guid trainingPlanId,
+        Guid trainingPlanDayId,
         DateOnly localDate,
         CancellationToken cancellationToken) =>
         await _dbContext.WorkoutCompletions
             .AsNoTracking()
             .Where(completion =>
                 completion.OwnerTrainerId == trainerId &&
-                completion.TrainingPlanDayId == trainingPlanId &&
+                completion.TrainingPlanDayId == trainingPlanDayId &&
                 completion.LocalDate == localDate)
             .Where(completion => _dbContext.Clients.Any(client =>
                 client.Id == completion.ClientId &&
