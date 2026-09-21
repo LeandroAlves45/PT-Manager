@@ -20,7 +20,9 @@ find_project_root() {
   ROOT=$(find_project_root)
   
   echo "=== PT Manager ==="
-  echo "Stack: Python 3.12 / FastAPI / SQLModel / PostgreSQL + React 19 / Vite / Tailwind"
+  echo "Stack: .NET 10 / C# 14 (Domain/Application/Infrastructure/Api) / PostgreSQL + React 19 / Vite / Tailwind CSS 4"
+  echo "Regra permanente: nao agir por suposicoes; verificar factos antes de decidir."
+  echo "Indice de toda a documentacao: .claude/memory/NEST.md"
   
   # Trata git apenas se existir .git
   if [ -d "$ROOT/.git" ]; then
@@ -35,16 +37,16 @@ find_project_root() {
     fi
   fi
   
-  # Memory - verifica antes de tentar ler
+  # Memory - injeta so a seccao "Entrada rapida" (evita despejar o ficheiro inteiro de 400+ linhas)
   MEMORY_FILE="$ROOT/.claude/memory/MEMORY.md"
   if [ -f "$MEMORY_FILE" ]; then
     echo ""
-    echo "--- MEMORY.md ---"
-    cat "$MEMORY_FILE"
+    echo "--- MEMORY.md (Entrada rapida; historico completo em .claude/memory/MEMORY.md) ---"
+    awk '/^## Entrada rápida/{flag=1; print; next} flag && /^## /{exit} flag{print}' "$MEMORY_FILE"
   fi
   
   # Todo - verifica antes de tentar ler
-  TODO_FILE="$ROOT/tasks/todo.md"
+  TODO_FILE="$ROOT/.claude/tasks/todo.md"
   if [ -f "$TODO_FILE" ]; then
     echo ""
     echo "--- tasks/todo.md ---"

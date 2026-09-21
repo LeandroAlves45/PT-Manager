@@ -35,64 +35,30 @@ if [ -d "$ROOT/.git" ]; then
   fi
 fi
 
-cat <<'RULES'
+cat <<'HEADER'
 === CONTEXT RECOVERED AFTER COMPACTION ===
 
-CRITICAL PROJECT RULES (PT Manager)
-Backend: Python 3.12, FastAPI, SQLModel, PostgreSQL, JWT, Stripe, APScheduler
-Frontend: React 19, Vite, Tailwind, Chakra UI + shadcn/ui
-SaaS multi-tenant — roles: superuser, trainer, client
+REGRA PERMANENTE: nao agir por suposicoes; verificar factos e confirmar informacoes
+antes de tomar decisoes (ver CLAUDE.md).
 
-1. LAYERED ARCHITECTURE - MANDATORY
-   Ordem: api/routes -> services -> repositories -> db/models
-   Routes: HTTP, Depends(auth), delegacao para services
-   Services: logica de negocio, sem detalhes HTTP
-   Repositories: queries SQLModel, sempre filtrar por trainer_id
-   NUNCA colocar logica de negocio em routes
-   NUNCA queries directas em routes (usar repositories)
+Indice de toda a documentacao do projeto: .claude/memory/NEST.md
 
-2. MULTI-TENANT - NON-NEGOTIABLE
-   Todas as queries filtram por trainer_id do JWT
-   Nunca confiar em trainer_id do request body
-   Client role so acede aos proprios dados
-
-3. DATABASE MIGRATIONS - NON-NEGOTIABLE
-   Migrations SQL em backend/app/db/migrations/
-   Aplicar via: python -m app.db.migrate_runner
-   NUNCA editar ficheiro SQL ja aplicado
-   Nova alteracao = novo ficheiro numerado (NNN_descricao.sql)
-
-4. ERROR HANDLING
-   HTTPException nas routes com codigos corretos
-   Logging estruturado, Sentry em producao
-   Nunca expor stack traces ao cliente
-
-5. TESTING REQUIREMENTS
-   pytest no backend (unit + integration)
-   Vitest no frontend
-   Correr ficheiro especifico apos alteracoes
-   Correr antes de marcar tarefa concluida: pytest / npm run test
-
-6. SECURITY
-   Secrets em environment variables (API_KEY, SECRET_KEY, STRIPE_*)
-   JWT + API Key middleware em routes protegidos
-   Stripe webhook: verificar HMAC
-   Nunca logar senhas, tokens ou API keys
-
-7. GIT WORKFLOW
-   Feature branches, conventional commits
-   Testes tem de passar antes de commit
-
-COMMANDS:
-  uvicorn app.main:app --reload --port 8000          # Start backend (from backend/)
-  python -m app.db.migrate_runner                    # Apply migrations
-  pytest                                             # Run backend tests
-  ruff check app/ && ruff format app/                # Lint/format Python
-  npm run dev                                        # Start frontend (from frontend/)
-  npm run test                                       # Run frontend tests
-RULES
+Ordem de prioridade em caso de conflito de informacao (ver AGENTS.md, seccao
+"Prioridade de decisao"):
+  1. Pedido explicito do utilizador
+  2. AGENTS.md (regras tecnicas transversais, re-injetado a seguir)
+  3. Documentos canonicos em .claude/project/ (arquitetura, schema, roadmap, dev guide)
+  4. Codigo atual do repositorio
+  5. .claude/memory/MEMORY.md e notas de sessao (auxiliar, nunca substitui o resto)
+HEADER
 
 [ -n "$CONTEXT" ] && echo "" && echo "Current state: $CONTEXT"
+
+if [ -f "$ROOT/AGENTS.md" ]; then
+  echo ""
+  echo "=== AGENTS.md (re-injected) ==="
+  cat "$ROOT/AGENTS.md"
+fi
 
 if [ -f "$ROOT/.claude/CLAUDE.md" ]; then
   echo ""

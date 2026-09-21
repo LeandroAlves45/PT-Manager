@@ -1,6 +1,11 @@
 ---
 name: security-reviewer
-description: Reviews code changes for security vulnerabilities. Use for PR review, pre-deploy verification, or audit of recently changed files.
+description: >-
+  Fast, diff-scoped security pass: reviews only files changed in the current PR/commit
+  against a generic vulnerability checklist (SQLi, XSS, auth, crypto, ...). Use for a quick
+  pre-commit or pre-merge check on a small change. For a deep, PT Manager-specific audit
+  (ASP.NET Core, multi-tenant IDOR, Stripe webhooks, JWT, installed package versions), use
+  `security-audit` instead — this skill does not know the project's stack.
 tools:
   - Read
   - Grep

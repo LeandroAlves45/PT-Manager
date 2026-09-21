@@ -8,11 +8,17 @@ Graph location: C:\Users\Leandro Alves\Desktop\Projeto pt_manager\Projeto_pt_man
 
 Regenerar no fecho de cada Sprint — ver `.claude/project/sprints/GRAPHIFY.md`.
 
+## Regra permanente
+
+**Não agir por suposições.** Verificar sempre factos e confirmar informações antes de tomar decisões ou apresentar código. Na dúvida, perguntar em vez de assumir.
+
 ## Contexto de sprint (ler primeiro)
 
-1. `.claude/memory/ACTIVE.md` — fase activa e sub-lote
-2. Sprint Pack em `.claude/project/sprints/`
-3. Skill `sprint-context` para plan, blueprint ou review
+1. `.claude/memory/NEST.md` — índice de toda a documentação do projeto (produto, backend,
+   frontend, layout, blueprints, sprints); consultar antes de procurar um documento à mão
+2. `.claude/memory/ACTIVE.md` — fase activa e sub-lote
+3. Sprint Pack em `.claude/project/sprints/`
+4. Skill `sprint-context` para plan, blueprint ou review
 
 ## Memória
 
@@ -27,7 +33,6 @@ Rever `.claude/tasks/lessons.md` e a memória relevante no início da sessão.
 - Correr comandos no terminal é permitido, exceto comandos destrutivos mencionados em hooks.
 - Ao criar ficheiros md na pasta `docs` com código integral: incluir explicações detalhadas sobre o funcionamento do código e comentários relevantes. XML docs completos no backend, JSDoc no frontend.
 - Sempre que finalizarmos um sprint, ou for pedido, apresentar checklist e marcar "Finalizado" ao concluir.
-- Não agir por suposições; sempre verificar fatos e confirmar informações antes de tomar decisões.
 
 ## WORKFLOW ORCHESTRATION
 
@@ -49,8 +54,12 @@ Rever `.claude/tasks/lessons.md` e a memória relevante no início da sessão.
 
 - Ao final de cada sessão, captura erros, desafios e pontos de fricção encontrados e coloca-os
   em `.claude/memory/Sessions/` (ver secção Memória acima)
-- Depois de QUALQUER correção do utilizador: atualizar `.claude/tasks/correction.md`
-  com o padrão do erro
+- Correção que muda uma decisão em curso: registar de imediato em
+  `.claude/tasks/correction.md`, antes de continuar, para não se perder a meio da sessão
+- No fecho de cada sprint (parte do checklist de fecho, ver Comportamento de sessão acima):
+  revisar as correções da sprint e consolidar o padrão em `.claude/tasks/correction.md` e a
+  lição em `.claude/tasks/lessons.md` — não adiar para "a seguir", é neste checklist que a
+  revisão realmente acontece
 - Se o problema for da SKILL, ajusta a skill para o projeto
 - Escrever regras próprias que previnam o mesmo erro
 - Iterar sem piedade nas lições até a taxa de erro baixar
@@ -81,7 +90,7 @@ Rever `.claude/tasks/lessons.md` e a memória relevante no início da sessão.
 1. **Plan**: Escrever o plano em `.claude/tasks/todo.md` com items marcáveis (ver Plan Mode Default acima)
 2. **Track Progress**: Marcar items como concluídos à medida que avança
 3. **Explain Changes**: Resumo de alto nível a cada passo
-4. **Document Results**: Adicionar secção de review a `tasks/todo.md`
+4. **Document Results**: Adicionar secção de review a `.claude/tasks/todo.md`
 
 ## Core Principles
 

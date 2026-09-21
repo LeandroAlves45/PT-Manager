@@ -57,5 +57,8 @@ lerna-debug.log*
 .claude/project/frontend/layout/assets
 
 # Documentation and Backlog
-docs/
+docs/*
+!docs/api/
+docs/api/*
+!docs/api/api-surface.v1.txt
 backlogs/

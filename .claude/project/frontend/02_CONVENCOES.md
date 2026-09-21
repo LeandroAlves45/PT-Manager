@@ -25,6 +25,8 @@
 - Campos da API mantêm snake_case (`full_name`, `page_size`). Não converter para camelCase:
   evita uma camada de mapeamento e bugs de payload vazio.
 - Textos visíveis em PT-PT. Código, nomes de ficheiros e commits em inglês.
+- **Comentários e JSDoc em PT-PT** (decisão de 2026-09-20): o código fala inglês, as notas
+  explicativas falam a língua de quem as lê.
 
 ## 3. Acesso à API
 
@@ -104,6 +106,9 @@ botões só com ícone, estado nunca comunicado só por cor, `prefers-reduced-mo
 ## 8. Testes
 
 - Ficheiro de teste ao lado do código: `ClientForm.test.tsx`.
+- **Nomes de teste em inglês** (decisão de 2026-09-20): `describe('ClientForm')` e
+  `it('should show a field error when the server rejects the email')`. Só o texto que a UI
+  mostra — e que a asserção procura — está em PT-PT.
 - Testar comportamento visível (Testing Library por role/label), não implementação.
 - MSW com handlers por feature em `src/test/msw/`; respostas com a mesma forma do OpenAPI.
 - Cada feature fecha com: lista, detalhe, criação, erro de validação do servidor e 403.
@@ -111,11 +116,14 @@ botões só com ícone, estado nunca comunicado só por cor, `prefers-reduced-mo
 ## 9. Documentação
 
 - JSDoc em módulos de `shared/` e em hooks públicos de features.
-- Blueprints com código integral em `docs/frontend-files/sprint_6/` seguem a regra do
-  projeto: explicação detalhada do funcionamento e JSDoc completo.
+- Blueprints com código integral em `docs/blueprints/frontend-files/sprint_6/` seguem a regra
+  do projeto: explicação detalhada do funcionamento e JSDoc completo. Formato na skill
+  `blueprints-codigo-real`, referência `references/frontend-typescript.md`
+  (`.claude/skills/blueprints-codigo-real/references/frontend-typescript.md`).
 
 ## 10. Git
 
-- Branch por fase: `sprint-6/6a-fundacoes`, `sprint-6/6b-admin`, …
+- Branch por fase: `sprint-6/6c-fundacoes`, `sprint-6/6d-admin`, `sprint-6/6e-trainer`,
+  `sprint-6/6f-portal`, `sprint-6/6g-auth`. (As fases 6A e 6B são backend, não frontend.)
 - Commits convencionais: `feat(frontend): …`, `test(frontend): …`, `chore(frontend): …`.
 - CI mínimo (6C): `npm ci`, `npm run lint`, `npm run typecheck`, `npm run test:run`, `npm run build`.

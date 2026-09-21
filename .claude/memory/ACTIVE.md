@@ -1,6 +1,42 @@
-# Estado ativo: Sprint 6B FECHADA no backend real
+# Estado ativo: Sprint 6C com blueprints validados
 
 Atualizado: 2026-09-20
+
+## Sprint 6C (2026-09-20) — frontend, blueprints validados
+
+Pack `docs/blueprints/frontend-files/sprint_6/sprint_6C/` (00–18, 6523 linhas, 77 blocos).
+Materializado e validado numa worktree temporária já apagada; **nada implementado no
+repositório real**.
+
+- Backend na materialização: **3016 aprovados, 0 falhas, 1 skip**.
+- Frontend novo: lint, typecheck, 26 testes e build verdes; **8/8 mutações mortas**.
+- Contrato OpenAPI: 73 → **183 schemas**; 169 respostas sem corpo tipado → **0**.
+- Seed de desenvolvimento: base vazia → ambiente completo, idempotente, login real 200 OK.
+- 12 defeitos encontrados e corrigidos durante a validação (lista na nota de sessão).
+
+**Decisões:** D1 frontend do zero · D2 TypeScript 5.9.3 (o 6 e o 7 são recusados pelas
+ferramentas) · D3 materialização em pasta temporária apagada no fim · D4 seed, health e CI
+no mesmo pack · D5 testes em inglês, interface e comentários em PT-PT · D6 backend declara o
+tipo de todas as respostas · D7 do `.gitignore`, versiona-se só o snapshot do contrato.
+
+**Ordem de aplicação (não é a numérica):** 12 → 14 → 13 → 01 → 02 → 03 → 06 → 04 → 05 → 07
+→ 08 → 09 → 10 → 11 → 15 → 16 → 17. Detalhe no doc 18 §4.
+
+Ver `Sessions/2026-09-20-sprint6c-blueprints.md` e `sprint_6C/18_rastreabilidade_e_relatorio.md`.
+
+## Próximo passo
+
+Aplicar o pack e fechar `QG6C-IMPL-001`. Ficam a depender de verificação manual
+`QG6C-SESSAO-001`, `QG6C-SHELL-001` e `QG6C-HTTPS-001` (browser) e `QG6C-CI-001`
+(primeira corrida do GitHub Actions).
+
+## Onde está cada documento
+
+`.claude/memory/NEST.md` — índice único e método permanente de materialização.
+
+---
+
+# Histórico: Sprint 6B FECHADA no backend real
 
 ## Sprint 6B (2026-09-20) — leituras agregadas, FECHADA
 
@@ -44,9 +80,9 @@ Pack `docs/blueprints/backend-files/sprint_6/sprint_6B/` (00–14). Implementada
 Ver `Sessions/2026-09-20-sprint6b-fecho-implementacao.md` e
 `sprint_6B/14_relatorio_implementacao_testes_fecho_6B.md`.
 
-## Próximo passo
+### Próximo passo de então
 
-Sprint 6C: frontend. O backend das leituras agregadas está pronto.
+Sprint 6C: frontend. O backend das leituras agregadas estava pronto.
 
 ## Estado em uma linha
 

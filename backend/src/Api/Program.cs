@@ -7,6 +7,7 @@ using Application.Features.Training.ExerciseVideos;
 using Infrastructure;
 using Infrastructure.Identity;
 using Infrastructure.Jobs;
+using Infrastructure.Seeding;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,7 +15,11 @@ var builder = WebApplication.CreateBuilder(args);
 // A API escreve para stdout; Windows Event Log exige permissões que não pertencem ao processo.
 builder.Logging.ClearProviders();
 builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
-builder.Logging.AddConsole();
+builder.Logging.AddJsonConsole(options =>
+{
+    options.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
+    options.UseUtcTimestamp = true;
+});
 builder.Logging.AddDebug();
 
 builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
@@ -30,6 +35,8 @@ builder.Services.AddJobDispatchInfrastructure(builder.Configuration);
 builder.Services.AddApi(builder.Configuration, builder.Environment);
 builder.Services.AddGoogleAuthenticationApi();
 builder.Services.AddInternalJobDispatchApi(builder.Configuration);
+builder.Services.AddDevelopmentSeeding(builder.Configuration, builder.Environment);
+builder.Services.AddApiHealthChecks();
 
 var app = builder.Build();
 
@@ -65,6 +72,7 @@ if (app.Environment.IsDevelopment())
         .WithNonce());
 }
 
+app.MapApiHealthChecks();
 app.MapControllers();
 
 app.Run();

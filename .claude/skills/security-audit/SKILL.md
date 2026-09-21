@@ -1,6 +1,6 @@
 ---
 name: security-audit
-description: 'Auditoria de segurança PT Manager — ASP.NET Core (.NET 10) + React/Vite, multi-tenant, Stripe, PostgreSQL. Usa versões instaladas (packages.lock.json + npm lockfile), dotnet/npm audit, anti-falso-positivo. Use em "auditar segurança", IDOR, tenant, webhooks Stripe, JWT, ou "/security-audit [path]". backend-python fora de escopo.'
+description: 'Auditoria de segurança PT Manager — ASP.NET Core (.NET 10) + React/Vite, multi-tenant, Stripe, PostgreSQL. Usa versões instaladas (packages.lock.json + npm lockfile), dotnet/npm audit, anti-falso-positivo. Use em "auditar segurança", IDOR, tenant, webhooks Stripe, JWT, ou "/security-audit [path]". Mais profunda e mais lenta que a skill security-reviewer, que só olha para o diff com um checklist genérico; usar esta quando a superfície for maior do que um PR pequeno. backend-python fora de escopo.'
 ---
 
 # Security Audit — PT Manager

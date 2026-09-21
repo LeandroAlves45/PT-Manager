@@ -40,8 +40,10 @@ Só depois: documento concreto em `docs/backend-files/...` ou código nos paths 
 
 **Quando:** gerar ou rever blueprints (código integral em `docs/`).
 
-**Ler:** modo `plan` + `.claude/memory/Patterns/blueprints_codigo_real_por_ficheiro.md`
-(ou `blueprints_pseudocodigo_por_ficheiro.md` se pedido).  
+**Ler:** modo `plan` + skill `blueprints-codigo-real`
+(`.claude/skills/blueprints-codigo-real/`, com `references/backend-csharp.md` ou
+`references/frontend-typescript.md` conforme a stack; ou
+`.claude/memory/Patterns/blueprints_pseudocodigo_por_ficheiro.md` se pedido pseudocódigo).  
 **Evitar:** inventar tipos; confirmar assinaturas no código real dos paths listados.  
 **Skill complementar:** `graphify-pseudocode` para formato do output.
 
@@ -59,7 +61,9 @@ Só depois: documento concreto em `docs/backend-files/...` ou código nos paths 
 **Ler:** gate do sub-lote (`03`, `06`, `09`, `13`, `15`) + `backlogs/QualityGates.md`.  
 **Executar:** `dotnet test PTManager.sln --configuration Release` (e build se relevante).  
 **Evitar:** marcar gate fechado sem evidência de testes.  
-**Skills complementares:** `code-review-leandro`, `security-reviewer` se pedido.
+**Skills complementares:** `code-review-leandro`; `security-audit` para revisão de
+segurança da fase (profunda, PT Manager-specific) ou `security-reviewer` só para um diff
+pequeno e rápido.
 
 ## Ferramentas por propósito (convencção do projecto)
 

@@ -6,6 +6,19 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-09-20 — Sprint 6C: blueprints validados.** Pack
+`docs/blueprints/frontend-files/sprint_6/sprint_6C/` (00–18). Frontend do zero em React 19 +
+Vite 8 + TypeScript 5.9.3 + Tailwind 4 + shadcn/ui, com cliente gerado do OpenAPI e sessão em
+memória. Backend passou a declarar o tipo de todas as respostas (165 atributos + teste de
+arquitectura), ganhou seed de desenvolvimento e health checks. 3016 testes de backend, 26 de
+frontend, 8/8 mutações mortas, 12 defeitos corrigidos. Por implementar (`QG6C-IMPL-001`).
+Ver `Sessions/2026-09-20-sprint6c-blueprints.md`.
+
+**Onde está cada documento:** `.claude/memory/NEST.md` — índice único de toda a documentação
+(produto, backend, frontend, layout, blueprints, sprints) e o **método permanente de
+materialização de blueprints em pasta temporária apagada no fim**.
+
+
 **Estado ativo:** ler primeiro `.claude/memory/ACTIVE.md`. **Sprint 5A, 5B e 5C
 fechadas no backend (5B aguarda Stripe; 5C aguarda User Secrets Cloudinary/Vision).
 Sprint 5D implementada e validada no backend em 2026-09-16 (2644 testes, migration
@@ -381,7 +394,8 @@ alegações anteriores desatualizadas está em
 
 - Pseudocódigo alargado:
   `Patterns/blueprints_pseudocodigo_por_ficheiro.md`.
-- Código C# integral por ficheiro:
-  `Patterns/blueprints_codigo_real_por_ficheiro.md`.
+- Código real integral por ficheiro (backend C# e frontend TS/TSX): skill
+  `blueprints-codigo-real` (`.claude/skills/blueprints-codigo-real/`), com
+  `references/backend-csharp.md` e `references/frontend-typescript.md` por stack.
 - `docs/` é documentação local deliberadamente ignorada pelo Git. Nunca usar
   `git add -f` para a versionar.

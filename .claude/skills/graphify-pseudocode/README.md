@@ -7,8 +7,8 @@ Complementa `sprint-context` (modo `blueprint`).
 
 1. `.claude/memory/ACTIVE.md` e Sprint Pack activo
 2. Código real e `git status --short`
-3. `.claude/memory/Patterns/blueprints_pseudocodigo_por_ficheiro.md` (ou
-   `blueprints_codigo_real_por_ficheiro.md` se pedido código integral)
+3. `.claude/memory/Patterns/blueprints_pseudocodigo_por_ficheiro.md` (ou skill
+   `blueprints-codigo-real` se pedido código integral)
 4. `graphify-out/` **só se actualizado** (ver abaixo)
 
 ## Regenerar o grafo (graphify 0.9.x)

@@ -181,11 +181,40 @@ Sprint 0 e incluir sempre `--project` e `--startup-project`.
 - Falar e documentar em Português de Portugal.
 - Usar nomes de classes, métodos e propriedades em inglês.
 - Explicar decisões técnicas e trade-offs quando relevantes.
-- Adicionar comentários apenas quando ajudam à compreensão.
+- Adicionar comentários apenas quando justificam uma decisão não óbvia, nunca para
+  descrever o que o código já diz por si. Se um código precisa de um comentário a dizer
+  "o quê", o nome está mal escolhido — renomear em vez de comentar.
+- Três linhas semelhantes vencem sempre um helper usado uma única vez.
+- Sem código morto nem blocos comentados: o Git guarda o histórico.
 - Preferir soluções simples, legíveis e testáveis.
 - Ao criar ficheiros `docs` com pseudocódigo, manter comentários explicativos em XML Docs
   (backend) ou JSDoc (frontend), sem implementar código real sem pedido explícito.
 - Após qualquer tarefa, auto-avaliar se a solução está correta, coerente e dentro do escopo.
+
+### Nomenclatura
+
+- Ficheiros: PascalCase para componentes e classes (`UserProfile.tsx`), kebab-case para
+  utilitários e diretórios (`date-utils.ts`).
+- Booleanos: prefixo `is`/`has`/`should`/`can`. Funções: verbo primeiro (`getUser`).
+  Handlers: `handle*` quando internos, `on*` quando recebidos como props.
+- Fábricas: `create*`. Conversores: `to*`. Predicados: `is*`/`has*`. Constantes:
+  `SCREAMING_SNAKE_CASE`.
+- Abreviaturas só quando universalmente conhecidas (`id`, `url`, `api`, `db`, `auth`).
+  Acrónimos como palavras normais: `userId`, nunca `userID`.
+
+### Marcadores no código
+
+`TODO(autor): descrição (#issue)` para trabalho planeado. `FIXME(autor): descrição (#issue)`
+para bugs conhecidos. `HACK(autor): descrição (#issue)` para workarounds feios, explicando
+a correção correta. `NOTE: descrição` para contexto não óbvio. Autor e link do issue são
+obrigatórios. Nunca usar `XXX`, `TEMP` ou `REMOVEME`.
+
+### Organização de ficheiros
+
+- Imports por grupos, com linha em branco entre eles: bibliotecas base, externas, internas,
+  relativas, tipos.
+- Exports nomeados em vez de default. Um componente ou classe por ficheiro.
+- Ordem das funções: API pública primeiro, depois os helpers pela ordem em que são chamados.
 
 ## Critério de “done”
 
