@@ -1,6 +1,6 @@
 ---
 name: obsidian-ptmanager
-description: Memória persistente do PT Manager em `.claude/memory/`. Usar no início de cada sessão para carregar contexto, e no fim para registar decisões e sessões. Ativa em início de sessão, "carregar memória", "guardar notas da sessão", revisões e retrospetivas. `.codex/memory/MEMORY.md` é só um ponteiro de compatibilidade, sem histórico próprio.
+description: Gere a memória persistente do PT Manager em `.claude/memory/`. Usar quando o pedido depende de decisões históricas, quando o utilizador pede para carregar ou guardar memória, ou no fecho de um marco relevante. Não carregar `MEMORY.md` integralmente no início de cada sessão.
 ---
 
 # Memória persistente do PT Manager
@@ -32,9 +32,10 @@ Não inventar pastas que não existem no projeto (ex.: Gotchas/, Architecture/, 
 
 ## Início de sessão
 
-1. Ler `.claude/memory/MEMORY.md`.
-2. Ler apenas as notas de sessão e padrões relevantes para o pedido atual.
-3. Correr `git status --short` antes de planear alterações.
+1. Ler `.claude/memory/ACTIVE.md` para identificar o estado e as referências relevantes.
+2. Não ler `.claude/memory/MEMORY.md` integralmente por defeito.
+3. Ler apenas as secções, notas de sessão e padrões necessários para o pedido atual.
+4. Correr `git status --short` antes de planear alterações.
 
 Nunca ler ficheiros protegidos ao carregar contexto.
 

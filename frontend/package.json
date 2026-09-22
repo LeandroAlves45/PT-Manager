@@ -17,7 +17,7 @@
     "test:coverage": "vitest run --coverage",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "api:types": "openapi-typescript https://localhost:7186/openapi/v1.json --output src/shared/api.schema.d.ts",
+    "api:types": "node --use-system-ca ./node_modules/openapi-typescript/bin/cli.js https://localhost:7186/openapi/v1.json --output src/shared/api/schema.d.ts",
     "api:types:check": "node scripts/check-api-types.mjs"
   },
   "dependencies": {

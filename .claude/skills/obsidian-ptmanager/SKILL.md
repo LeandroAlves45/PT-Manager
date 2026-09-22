@@ -1,6 +1,6 @@
 ---
 name: obsidian-ptmanager
-description: Memória persistente do PT Manager em `.claude/memory/`. Usar no início de cada sessão para carregar contexto, e no fim para registar decisões e sessões. Ativa em início de sessão, "carregar memória", "guardar notas da sessão", revisões e retrospetivas. `.codex/memory/MEMORY.md` é só um ponteiro de compatibilidade, sem histórico próprio.
+description: Gere a memória persistente do PT Manager em `.claude/memory/`. Usar quando o pedido depende de decisões históricas, quando o utilizador pede para carregar ou guardar memória, ou no fecho de um marco relevante. Não carregar `MEMORY.md` integralmente no início de cada sessão.
 ---
 
 # Memória persistente do PT Manager
@@ -23,21 +23,18 @@ Registar a contradição e corrigir a memória desatualizada em vez de adaptar c
 
 ```
 .claude/memory/
-├── ACTIVE.md    # fase activa — ler antes de MEMORY.md em tarefas de sprint
-├── MEMORY.md    # índice, ponto de partida geral
+├── MEMORY.md    # índice, ponto de partida de cada sessão
 ├── Sessions/    # uma nota datada por sessão relevante (YYYY-MM-DD-topico.md)
 └── Patterns/    # padrões reutilizáveis documentados (blueprints, convenções)
-
-.claude/project/sprints/   # Sprint Packs versionados (índice por fase)
 ```
 
 Não inventar pastas que não existem no projeto (ex.: Gotchas/, Architecture/, Corrections/). Se um desses tipos de nota passar a fazer falta, criar a pasta só quando houver o primeiro conteúdo real para lá colocar.
 
 ## Início de sessão
 
-1. Ler `.claude/memory/MEMORY.md`.
-2. Ler `.claude/memory/ACTIVE.md` se a tarefa for sprint, fase, blueprint ou review.
-3. Ler apenas as notas de sessão e padrões relevantes para o pedido actual.
+1. Ler `.claude/memory/ACTIVE.md` para identificar o estado e as referências relevantes.
+2. Não ler `.claude/memory/MEMORY.md` integralmente por defeito.
+3. Ler apenas as secções, notas de sessão e padrões necessários para o pedido atual.
 4. Correr `git status --short` antes de planear alterações.
 
 Nunca ler ficheiros protegidos ao carregar contexto.

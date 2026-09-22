@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+package-lock.json
+src/shared/api/schema.d.ts
+.claude
+.cursor
+.vscode
+.codex
+public/mockServiceWorker.js

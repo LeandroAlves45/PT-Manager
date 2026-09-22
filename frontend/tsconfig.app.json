@@ -1,0 +1,46 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "useDefineForClassFields": true,
+    "types": ["vitest/globals", "@testing-library/jest-dom"],
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "allowImportingTsExtensions": false,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+
+    "paths": { "@/*": ["./src/*"] }
+  },
+  "include": ["src", "test"],
+  "exclude": [
+    "dist",
+    "build",
+    "node_modules",
+    ".codex",
+    ".agents",
+    ".claude",
+    ".cursor",
+    ".vscode",
+    ".git",
+    ".env*",
+    "*.log",
+    ".idea"
+  ]
+
+}
