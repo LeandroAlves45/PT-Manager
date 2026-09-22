@@ -18,6 +18,7 @@ public sealed class ExerciseSetLogsController : ApiControllerBase
 {
     /// <summary>Regista uma série efetivamente realizada contra uma prescrição existente.</summary>
     [HttpPost]
+    [ProducesResponseType<ExerciseSetLogResponse>(StatusCodes.Status201Created)]
     public Task<IActionResult> RecordAsync(
         [FromBody] RegisterExerciseSetLogRequest request,
         [FromServices] RecordExerciseSetLogHandler handler,
@@ -42,6 +43,7 @@ public sealed class ExerciseSetLogsController : ApiControllerBase
 
     /// <summary>Corrige os valores de um registo existente.</summary>
     [HttpPatch("{exerciseSetLogId:guid}")]
+    [ProducesResponseType<ExerciseSetLogResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> CorrectAsync(
         Guid exerciseSetLogId,
         [FromBody] CorrectExerciseSetLogRequest request,
@@ -65,6 +67,7 @@ public sealed class ExerciseSetLogsController : ApiControllerBase
 
     /// <summary>Lista os registos de um cliente, com filtro temporal opcional.</summary>
     [HttpGet]
+    [ProducesResponseType<PagedResponse<ExerciseSetLogResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListAsync(
         [FromQuery(Name = "client_id")] Guid clientId,
         [FromQuery(Name = "training_plan_id")] Guid? trainingPlanId,

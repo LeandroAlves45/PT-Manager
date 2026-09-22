@@ -1,3 +1,4 @@
+using Api.Contracts.Common;
 using Api.Http;
 using Application.Errors;
 using Application.Results;
@@ -11,6 +12,15 @@ namespace Api.Controllers;
 /// volte a decidir códigos de estado por si.
 /// </summary>
 [ApiController]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status402PaymentRequired)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status429TooManyRequests)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status500InternalServerError)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
 public abstract class ApiControllerBase : ControllerBase
 {
     /// <summary>Converte um resultado sem valor em 204 ou Problem Details.</summary>

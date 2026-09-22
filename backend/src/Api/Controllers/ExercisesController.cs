@@ -21,6 +21,7 @@ public sealed class ExercisesController : ApiControllerBase
 {
     /// <summary>Cria um exercício privado no tenant efetivo.</summary>
     [HttpPost]
+    [ProducesResponseType<ExerciseResponse>(StatusCodes.Status201Created)]
     public Task<IActionResult> CreateAsync(
         [FromBody] CreateExerciseRequest request,
         [FromServices] CreateExerciseHandler handler,
@@ -44,6 +45,7 @@ public sealed class ExercisesController : ApiControllerBase
 
     /// <summary>Lista uma página de exercícios globais ativos e privados do tenant.</summary>
     [HttpGet]
+    [ProducesResponseType<PagedResponse<ExerciseResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListAsync(
         [FromQuery(Name = "search")] string? search,
         [FromQuery(Name = "activity")] ExerciseActivityFilter activity,
@@ -71,6 +73,7 @@ public sealed class ExercisesController : ApiControllerBase
 
     /// <summary>Devolve um exercício visível ao tenant efetivo.</summary>
     [HttpGet("{exerciseId:guid}")]
+    [ProducesResponseType<ExerciseResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         Guid exerciseId,
         [FromServices] GetExerciseHandler handler,
@@ -83,6 +86,7 @@ public sealed class ExercisesController : ApiControllerBase
 
     /// <summary>Substitui os campos editáveis de um exercício privado.</summary>
     [HttpPatch("{exerciseId:guid}")]
+    [ProducesResponseType<ExerciseResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateAsync(
         Guid exerciseId,
         [FromBody] UpdateExerciseRequest request,
@@ -107,6 +111,7 @@ public sealed class ExercisesController : ApiControllerBase
 
     /// <summary>Arquiva um exercício privado sem o eliminar.</summary>
     [HttpPost("{exerciseId:guid}/archive")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ArchiveAsync(
         Guid exerciseId,
         [FromServices] ArchiveExerciseHandler handler,
@@ -118,6 +123,7 @@ public sealed class ExercisesController : ApiControllerBase
 
     /// <summary>Reativa um exercício privado arquivado.</summary>
     [HttpPost("{exerciseId:guid}/reactivate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ReactivateAsync(
         Guid exerciseId,
         [FromServices] ReactivateExerciseHandler handler,

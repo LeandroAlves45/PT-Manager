@@ -16,6 +16,7 @@ public sealed class NutritionController : ApiControllerBase
 {
     /// <summary>Calcula energia e macronutrientes sem persistência.</summary>
     [HttpPost("preview")]
+    [ProducesResponseType<NutritionCalculationResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> PreviewAsync(
         [FromBody] PreviewNutritionRequest request,
         [FromServices] PreviewNutritionHandler handler,

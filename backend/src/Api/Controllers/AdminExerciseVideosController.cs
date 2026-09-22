@@ -26,6 +26,7 @@ public sealed class AdminExerciseVideosController : ApiControllerBase
 {
     /// <summary>Emite uma URL assinada de curta duração para o vídeo Ready.</summary>
     [HttpGet]
+    [ProducesResponseType<ExerciseVideoPlaybackResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetPlaybackAsync(
         Guid exerciseId,
         [FromServices] GetExerciseVideoPlaybackHandler handler,

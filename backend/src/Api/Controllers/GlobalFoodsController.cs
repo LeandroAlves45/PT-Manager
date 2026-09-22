@@ -23,6 +23,7 @@ public sealed class GlobalFoodsController : ApiControllerBase
 {
     /// <summary>Cria um alimento no catálogo global.</summary>
     [HttpPost]
+    [ProducesResponseType<GlobalFoodResponse>(StatusCodes.Status201Created)]
     public Task<IActionResult> CreateAsync(
         [FromBody] CreateGlobalFoodRequest request,
         [FromServices] CreateGlobalFoodHandler handler,
@@ -47,6 +48,7 @@ public sealed class GlobalFoodsController : ApiControllerBase
 
     /// <summary>Lista uma página de alimentos globais.</summary>
     [HttpGet]
+    [ProducesResponseType<PagedResponse<GlobalFoodResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListAsync(
         [FromQuery(Name = "search")] string? search,
         [FromQuery(Name = "activity")] GlobalFoodActivityFilter activity,
@@ -75,6 +77,7 @@ public sealed class GlobalFoodsController : ApiControllerBase
 
     /// <summary>Devolve um alimento global.</summary>
     [HttpGet("{foodId:guid}")]
+    [ProducesResponseType<GlobalFoodResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         Guid foodId,
         [FromServices] GetGlobalFoodHandler handler,
@@ -87,6 +90,7 @@ public sealed class GlobalFoodsController : ApiControllerBase
 
     /// <summary>Substitui os campos editáveis de um alimento global.</summary>
     [HttpPatch("{foodId:guid}")]
+    [ProducesResponseType<GlobalFoodResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateAsync(
         Guid foodId,
         [FromBody] UpdateGlobalFoodRequest request,
@@ -112,6 +116,7 @@ public sealed class GlobalFoodsController : ApiControllerBase
 
     /// <summary>Arquiva um alimento global, retirando-o dos catálogos ativos.</summary>
     [HttpPost("{foodId:guid}/archive")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ArchiveAsync(
         Guid foodId,
         [FromServices] ArchiveGlobalFoodHandler handler,
@@ -123,6 +128,7 @@ public sealed class GlobalFoodsController : ApiControllerBase
 
     /// <summary>Reativa um alimento global arquivado.</summary>
     [HttpPost("{foodId:guid}/reactivate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ReactivateAsync(
         Guid foodId,
         [FromServices] ReactivateGlobalFoodHandler handler,
@@ -134,6 +140,7 @@ public sealed class GlobalFoodsController : ApiControllerBase
 
     /// <summary>Elimina definitivamente um alimento global sem referências.</summary>
     [HttpDelete("{foodId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> DeleteAsync(
         Guid foodId,
         [FromServices] DeleteGlobalFoodHandler handler,

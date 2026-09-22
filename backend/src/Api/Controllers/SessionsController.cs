@@ -25,6 +25,7 @@ public sealed class SessionsController : ApiControllerBase
 {
     /// <summary>Agenda uma sessão para um cliente de tenant.</summary>
     [HttpPost]
+    [ProducesResponseType<SessionResponse>(StatusCodes.Status201Created)]
     public Task<IActionResult> CreateAsync(
         [FromBody] CreateSessionRequest request,
         [FromServices] CreateSessionHandler handler,
@@ -49,6 +50,7 @@ public sealed class SessionsController : ApiControllerBase
 
     /// <summary>Lista uma página de sessões, com filtros de cliente, estado e janela.</summary>
     [HttpGet]
+    [ProducesResponseType<PagedResponse<SessionResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListAsync(
         [FromQuery(Name = "client_id")] Guid? clientId,
         [FromQuery(Name = "status")] SessionStatusFilter? status,
@@ -80,6 +82,7 @@ public sealed class SessionsController : ApiControllerBase
 
     /// <summary>Devolve uma sessão do tenant efetivo.</summary>
     [HttpGet("{sessionId:guid}")]
+    [ProducesResponseType<SessionResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         Guid sessionId,
         [FromServices] GetSessionHandler handler,
@@ -92,6 +95,7 @@ public sealed class SessionsController : ApiControllerBase
 
     /// <summary>Move uma sessão agendada para outro instante.</summary>
     [HttpPatch("{sessionId:guid}/reschedule")]
+    [ProducesResponseType<SessionResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> RescheduleAsync(
         Guid sessionId,
         [FromBody] RescheduleSessionRequest request,
@@ -113,6 +117,7 @@ public sealed class SessionsController : ApiControllerBase
 
     /// <summary>Marca a sessão como realizada, consumindo um pack associado.</summary>
     [HttpPost("{sessionId:guid}/complete")]
+    [ProducesResponseType<SessionResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> CompleteAsync(
         Guid sessionId,
         [FromServices] CompleteSessionHandler handler,
@@ -125,6 +130,7 @@ public sealed class SessionsController : ApiControllerBase
 
     /// <summary>Regista um cancelamento decidido pelo personal trainer.</summary>
     [HttpPost("{sessionId:guid}/cancel-by-trainer")]
+    [ProducesResponseType<SessionResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> CancelByTrainerAsync(
         Guid sessionId,
         [FromServices] CancelSessionByTrainerHandler handler,
@@ -137,6 +143,7 @@ public sealed class SessionsController : ApiControllerBase
 
     /// <summary>Regista um cancelamento iniciado pelo cliente.</summary>
     [HttpPost("{sessionId:guid}/cancel-by-client")]
+    [ProducesResponseType<SessionResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> CancelByClientAsync(
         Guid sessionId,
         [FromServices] CancelSessionByClientHandler handler,
@@ -149,6 +156,7 @@ public sealed class SessionsController : ApiControllerBase
 
     /// <summary>Marca uma sessão como falta do cliente.</summary>
     [HttpPost("{sessionId:guid}/no-show")]
+    [ProducesResponseType<SessionResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> MarkNoShowAsync(
         Guid sessionId,
         [FromServices] MarkSessionNoShowHandler handler,
@@ -161,6 +169,7 @@ public sealed class SessionsController : ApiControllerBase
 
     /// <summary>Devolve uma sessão cancelada ou marcada como falta ao estado agendado.</summary>
     [HttpPost("{sessionId:guid}/restore")]
+    [ProducesResponseType<SessionResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> RestoreAsync(
         Guid sessionId,
         [FromServices] RestoreSessionHandler handler,
@@ -173,6 +182,7 @@ public sealed class SessionsController : ApiControllerBase
 
     /// <summary>Associa a sessão a outro pack, ou a nenhum quando nulo.</summary>
     [HttpPatch("{sessionId:guid}/pack")]
+    [ProducesResponseType<SessionResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> ChangePackAsync(
         Guid sessionId,
         [FromBody] ChangeSessionPackRequest request,

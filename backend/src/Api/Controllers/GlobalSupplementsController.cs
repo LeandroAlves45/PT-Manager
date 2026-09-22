@@ -23,6 +23,7 @@ public sealed class GlobalSupplementsController : ApiControllerBase
 {
     /// <summary>Cria um suplemento no catálogo global.</summary>
     [HttpPost]
+    [ProducesResponseType<GlobalSupplementResponse>(StatusCodes.Status201Created)]
     public Task<IActionResult> CreateAsync(
         [FromBody] CreateGlobalSupplementRequest request,
         [FromServices] CreateGlobalSupplementHandler handler,
@@ -46,6 +47,7 @@ public sealed class GlobalSupplementsController : ApiControllerBase
 
     /// <summary>Lista uma página do catálogo global.</summary>
     [HttpGet]
+    [ProducesResponseType<PagedResponse<GlobalSupplementResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListAsync(
         [FromQuery(Name = "search")] string? search,
         [FromQuery(Name = "activity")] GlobalSupplementActivityFilter activity,
@@ -73,6 +75,7 @@ public sealed class GlobalSupplementsController : ApiControllerBase
 
     /// <summary>Devolve um suplemento global.</summary>
     [HttpGet("{supplementId:guid}")]
+    [ProducesResponseType<GlobalSupplementResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         Guid supplementId,
         [FromServices] GetGlobalSupplementHandler handler,
@@ -86,6 +89,7 @@ public sealed class GlobalSupplementsController : ApiControllerBase
 
     /// <summary>Substitui os campos editáveis de um suplemento global.</summary>
     [HttpPatch("{supplementId:guid}")]
+    [ProducesResponseType<GlobalSupplementResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateAsync(
         Guid supplementId,
         [FromBody] UpdateGlobalSupplementRequest request,
@@ -110,6 +114,7 @@ public sealed class GlobalSupplementsController : ApiControllerBase
 
     /// <summary>Arquiva um suplemento global.</summary>
     [HttpPost("{supplementId:guid}/archive")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ArchiveAsync(
         Guid supplementId,
         [FromServices] ArchiveGlobalSupplementHandler handler,
@@ -122,6 +127,7 @@ public sealed class GlobalSupplementsController : ApiControllerBase
 
     /// <summary>Reativa um suplemento global arquivado.</summary>
     [HttpPost("{supplementId:guid}/reactivate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ReactivateAsync(
         Guid supplementId,
         [FromServices] ReactivateGlobalSupplementHandler handler,
@@ -134,6 +140,7 @@ public sealed class GlobalSupplementsController : ApiControllerBase
 
     /// <summary>Elimina definitivamente um suplemento global sem referências.</summary>
     [HttpDelete("{supplementId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> DeleteAsync(
         Guid supplementId,
         [FromServices] DeleteGlobalSupplementHandler handler,

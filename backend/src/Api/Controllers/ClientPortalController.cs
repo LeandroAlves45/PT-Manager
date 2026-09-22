@@ -39,6 +39,7 @@ public sealed class ClientPortalController : ApiControllerBase
 {
     /// <summary>Devolve a identidade visual do personal trainer.</summary>
     [HttpGet("branding")]
+    [ProducesResponseType<PortalBrandingResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetBrandingAsync(
         [FromServices] GetClientBrandingHandler handler,
         CancellationToken cancellationToken) =>
@@ -48,6 +49,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Devolve o resumo dos cartões da home do portal num só pedido.</summary>
     [HttpGet("home")]
+    [ProducesResponseType<MyPortalHomeResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetHomeAsync(
         [FromServices] GetMyPortalHomeHandler handler,
         CancellationToken cancellationToken) =>
@@ -57,6 +59,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Devolve o treino de hoje do cliente, com o que já registou.</summary>
     [HttpGet("my-workout/today")]
+    [ProducesResponseType<MyWorkoutTodayResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetMyWorkoutTodayAsync(
         [FromServices] GetMyWorkoutTodayHandler handler,
         CancellationToken cancellationToken) =>
@@ -66,6 +69,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Devolve o plano de treino ativo do cliente.</summary>
     [HttpGet("my-plan")]
+    [ProducesResponseType<MyTrainingPlanResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetMyPlanAsync(
         [FromServices] GetMyTrainingPlanHandler handler,
         CancellationToken cancellationToken) =>
@@ -75,6 +79,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Devolve o plano alimentar ativo do cliente.</summary>
     [HttpGet("my-nutrition")]
+    [ProducesResponseType<MyNutritionPlanResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetMyNutritionAsync(
         [FromServices] GetMyNutritionPlanHandler handler,
         CancellationToken cancellationToken) =>
@@ -84,6 +89,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Devolve o perfil do cliente autenticado.</summary>
     [HttpGet("my-profile")]
+    [ProducesResponseType<MyProfileResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetMyProfileAsync(
         [FromServices] GetMyProfileHandler handler,
         CancellationToken cancellationToken) =>
@@ -93,6 +99,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Atualiza os contactos do cliente autenticado.</summary>
     [HttpPatch("my-profile")]
+    [ProducesResponseType<MyProfileResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateMyProfileAsync(
         [FromBody] UpdateMyProfileRequest request,
         [FromServices] UpdateMyProfileHandler handler,
@@ -116,6 +123,7 @@ public sealed class ClientPortalController : ApiControllerBase
     /// multipart única chamada "file".
     /// </summary>
     [HttpPut("my-profile/avatar")]
+    [ProducesResponseType<MyProfileResponse>(StatusCodes.Status200OK)]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(FormFileMediaUpload.MaxRequestBytes)]
     [RequestFormLimits(
@@ -139,6 +147,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Remove o avatar personalizado e agenda a eliminação depois do commit.</summary>
     [HttpDelete("my-profile/avatar")]
+    [ProducesResponseType<MyProfileResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> RemoveMyAvatarAsync(
         [FromServices] RemoveMyAvatarHandler handler,
         CancellationToken cancellationToken) =>
@@ -148,6 +157,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Devolve o próximo check-in agendado do cliente, se existir.</summary>
     [HttpGet("my-check-ins/next")]
+    [ProducesResponseType<MyNextCheckInResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetMyNextCheckInAsync(
         [FromServices] GetMyNextCheckInHandler handler,
         CancellationToken cancellationToken) =>
@@ -157,6 +167,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Devolve o check-in pendente de resposta, se existir.</summary>
     [HttpGet("my-check-ins/due")]
+    [ProducesResponseType<MyCheckInResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetMyDueCheckInAsync(
         [FromServices] GetMyDueCheckInHandler handler,
         CancellationToken cancellationToken) =>
@@ -166,6 +177,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Submete a resposta do cliente a um check-in agendado.</summary>
     [HttpPost("check-ins/{checkInId:guid}/respond")]
+    [ProducesResponseType<MyCheckInResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> SubmitCheckInAnswerAsync(
         Guid checkInId,
         [FromBody] CheckInAnswerRequest request,
@@ -191,6 +203,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Lista uma página dos suplementos atribuídos ao cliente.</summary>
     [HttpGet("my-supplements")]
+    [ProducesResponseType<PagedResponse<MySupplementAssignmentResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListMySupplementsAsync(
         [FromQuery] PageParameters pageParameters,
         [FromServices] ListMySupplementAssignmentsHandler handler,
@@ -209,6 +222,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Devolve um suplemento atribuído ao próprio cliente.</summary>
     [HttpGet("my-supplements/{assignmentId:guid}")]
+    [ProducesResponseType<MySupplementAssignmentResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetMySupplementAsync(
         Guid assignmentId,
         [FromServices] GetMySupplementAssignmentHandler handler,
@@ -220,6 +234,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Regista uma série de hoje no plano ativo do cliente.</summary>
     [HttpPost("exercise-set-logs")]
+    [ProducesResponseType<MyExerciseSetLogResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> RecordMyExerciseSetLogAsync(
         [FromBody] RecordMyExerciseSetLogRequest request,
         [FromServices] RecordMyExerciseSetLogHandler handler,
@@ -242,6 +257,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Corrige uma série registada hoje.</summary>
     [HttpPatch("exercise-set-logs/{exerciseSetLogId:guid}")]
+    [ProducesResponseType<MyExerciseSetLogResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> CorrectMyExerciseSetLogAsync(
         Guid exerciseSetLogId,
         [FromBody] CorrectMyExerciseSetLogRequest request,
@@ -264,6 +280,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Desmarca uma série própria de hoje, antes de concluir o treino do dia.</summary>
     [HttpDelete("exercise-set-logs/{exerciseSetLogId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> DeleteMyExerciseSetLogAsync(
         Guid exerciseSetLogId,
         [FromServices] DeleteMyExerciseSetLogHandler handler,
@@ -274,6 +291,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Conclui o treino de hoje para um dia do plano; repetir devolve a mesma conclusão.</summary>
     [HttpPost("workout-completions")]
+    [ProducesResponseType<MyWorkoutCompletionResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> CompleteMyWorkoutAsync(
         [FromBody] CompleteMyWorkoutRequest request,
         [FromServices] CompleteMyWorkoutHandler handler,
@@ -290,6 +308,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Devolve os suplementos ativos com o estado da toma de hoje.</summary>
     [HttpGet("my-supplements/intakes/today")]
+    [ProducesResponseType<MyTodaySupplementIntakesResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListMyTodaySupplementIntakesAsync(
         [FromServices] ListMyTodaySupplementIntakesHandler handler,
         CancellationToken cancellationToken) =>
@@ -299,6 +318,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Marca a toma de hoje; repetir devolve a mesma toma.</summary>
     [HttpPut("my-supplements/{assignmentId:guid}/intakes/today")]
+    [ProducesResponseType<MySupplementIntakeResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> MarkMySupplementIntakeAsync(
         Guid assignmentId,
         [FromServices] MarkMySupplementIntakeHandler handler,
@@ -309,6 +329,7 @@ public sealed class ClientPortalController : ApiControllerBase
 
     /// <summary>Desmarca a toma de hoje; sem toma registada responde 204 na mesma.</summary>
     [HttpDelete("my-supplements/{assignmentId:guid}/intakes/today")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> UnmarkMySupplementIntakeAsync(
         Guid assignmentId,
         [FromServices] UnmarkMySupplementIntakeHandler handler,

@@ -23,6 +23,7 @@ public sealed class TrainerSettingsController : ApiControllerBase
 {
     /// <summary>Devolve as definições completas do tenant efetivo.</summary>
     [HttpGet]
+    [ProducesResponseType<TrainerSettingsResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         [FromServices] GetTrainerSettingsHandler handler,
         CancellationToken cancellationToken) =>
@@ -32,6 +33,7 @@ public sealed class TrainerSettingsController : ApiControllerBase
 
     /// <summary>Atualiza o branding e devolve as definições resultantes.</summary>
     [HttpPatch("branding")]
+    [ProducesResponseType<TrainerSettingsResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateBrandingAsync(
         [FromBody] UpdateBrandingRequest request,
         [FromServices] UpdateBrandingHandler handler,
@@ -52,6 +54,7 @@ public sealed class TrainerSettingsController : ApiControllerBase
 
     /// <summary>Repõe as cores padrão do tema.</summary>
     [HttpPost("branding/reset-colors")]
+    [ProducesResponseType<TrainerSettingsResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> ResetBrandingColorsAsync(
         [FromServices] ResetBrandingColorsHandler handler,
         CancellationToken cancellationToken) =>
@@ -64,6 +67,7 @@ public sealed class TrainerSettingsController : ApiControllerBase
     /// devolve as definições resultantes.
     /// </summary>
     [HttpPut("logo")]
+    [ProducesResponseType<TrainerSettingsResponse>(StatusCodes.Status200OK)]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(FormFileMediaUpload.MaxRequestBytes)]
     [RequestFormLimits(
@@ -89,6 +93,7 @@ public sealed class TrainerSettingsController : ApiControllerBase
 
     /// <summary>Remove o logo atual e devolve as definições resultantes.</summary>
     [HttpDelete("logo")]
+    [ProducesResponseType<TrainerSettingsResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> RemoveLogoAsync(
         [FromServices] RemoveLogoHandler handler,
         CancellationToken cancellationToken) =>
@@ -98,6 +103,7 @@ public sealed class TrainerSettingsController : ApiControllerBase
 
     /// <summary>Atualiza os contactos opcionais.</summary>
     [HttpPatch("contacts")]
+    [ProducesResponseType<TrainerSettingsResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateContactsAsync(
         [FromBody] UpdateContactsRequest request,
         [FromServices] UpdateContactsHandler handler,
@@ -118,6 +124,7 @@ public sealed class TrainerSettingsController : ApiControllerBase
 
     /// <summary>Altera o timezone IANA do personal trainer.</summary>
     [HttpPatch("timezone")]
+    [ProducesResponseType<TrainerSettingsResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> ChangeTimezoneAsync(
         [FromBody] ChangeTimezoneRequest request,
         [FromServices] ChangeTimezoneHandler handler,

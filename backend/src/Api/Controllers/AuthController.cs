@@ -1,6 +1,7 @@
 using Api.Authorization;
 using Api.Configuration;
 using Api.Contracts.Authentication;
+using Api.Contracts.Common;
 using Api.Http;
 using Api.Security;
 using Application.Errors;
@@ -34,6 +35,14 @@ namespace Api.Controllers;
 [Route("api/v1/auth")]
 [SensitiveResponse]
 [RequireOrigin]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status429TooManyRequests)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status500InternalServerError)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
 public sealed class AuthController : ControllerBase
 {
     /// <summary>Nome do header que transporta o segredo anti-CSRF.</summary>
@@ -50,6 +59,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [ProducesResponseType<SessionResponse>(StatusCodes.Status200OK)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.Login)]
     public async Task<IActionResult> LoginAsync(
         [FromBody] LoginRequest request,
@@ -63,6 +73,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("signup")]
+    [ProducesResponseType<SignUpResponse>(StatusCodes.Status201Created)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.SignUp)]
     public async Task<IActionResult> SignUpAsync(
         [FromBody] SignUpRequest request,
@@ -81,6 +92,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("refresh")]
+    [ProducesResponseType<SessionResponse>(StatusCodes.Status200OK)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.Refresh)]
     public async Task<IActionResult> RefreshAsync(
         [FromServices] RefreshSessionHandler handler,
@@ -95,6 +107,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("logout")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.Logout)]
     public async Task<IActionResult> LogoutAsync(
         [FromServices] LogoutHandler handler,
@@ -117,6 +130,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("csrf")]
+    [ProducesResponseType<CsrfResponse>(StatusCodes.Status200OK)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.CsrfBootstrap)]
     public async Task<IActionResult> BootstrapCsrfAsync(
         [FromServices] BootstrapCsrfHandler handler,
@@ -132,6 +146,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("confirm-email")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.EmailConfirmation)]
     public async Task<IActionResult> ConfirmEmailAsync(
         [FromBody] ConfirmEmailRequest request,
@@ -146,6 +161,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("resend-confirmation")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [Authorize(ApiPolicyNames.Authenticated)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.EmailConfirmationResend)]
     public async Task<IActionResult> ResendConfirmationAsync(
@@ -154,6 +170,7 @@ public sealed class AuthController : ControllerBase
         Respond(await handler.HandleAsync(cancellationToken));
 
     [HttpPost("password-reset/request")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.PasswordResetRequest)]
     public async Task<IActionResult> RequestPasswordResetAsync(
         [FromBody] PasswordResetRequest request,
@@ -168,6 +185,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("password-reset/complete")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.PasswordResetComplete)]
     public async Task<IActionResult> CompletePasswordResetAsync(
         [FromBody] PasswordResetCompletionRequest request,
@@ -185,6 +203,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("change-password")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [Authorize(ApiPolicyNames.Authenticated)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.ChangePassword)]
     public async Task<IActionResult> ChangePasswordAsync(
@@ -203,6 +222,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("accept-invite")]
+    [ProducesResponseType<SessionResponse>(StatusCodes.Status200OK)]
     [Authorize(ApiPolicyNames.Client)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.InviteClient)]
     public async Task<IActionResult> AcceptInviteAsync(
@@ -218,6 +238,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("invite-client")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [Authorize(ApiPolicyNames.Trainer)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.InviteClient)]
     public async Task<IActionResult> InviteClientAsync(

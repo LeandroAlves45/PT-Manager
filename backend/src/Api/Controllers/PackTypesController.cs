@@ -21,6 +21,7 @@ public sealed class PackTypesController : ApiControllerBase
 {
     /// <summary>Cria um tipo de pack no tenant efetivo.</summary>
     [HttpPost]
+    [ProducesResponseType<PackTypeResponse>(StatusCodes.Status201Created)]
     public Task<IActionResult> CreateAsync(
         [FromBody] CreatePackTypeRequest request,
         [FromServices] CreatePackTypeHandler handler,
@@ -43,6 +44,7 @@ public sealed class PackTypesController : ApiControllerBase
 
     /// <summary>Lista uma página de tipos de pack do tenant.</summary>
     [HttpGet]
+    [ProducesResponseType<PagedResponse<PackTypeResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListAsync(
         [FromQuery(Name = "search")] string? search,
         [FromQuery(Name = "activity")] PackTypeActivityFilter activity,
@@ -70,6 +72,7 @@ public sealed class PackTypesController : ApiControllerBase
 
     /// <summary>Devolve um tipo de pack do tenant efetivo.</summary>
     [HttpGet("{packTypeId:guid}")]
+    [ProducesResponseType<PackTypeResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         Guid packTypeId,
         [FromServices] GetPackTypeHandler handler,
@@ -82,6 +85,7 @@ public sealed class PackTypesController : ApiControllerBase
 
     /// <summary>Substitui os campos editáveis de um tipo de pack.</summary>
     [HttpPatch("{packTypeId:guid}")]
+    [ProducesResponseType<PackTypeResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateAsync(
         Guid packTypeId,
         [FromBody] UpdatePackTypeRequest request,
@@ -105,6 +109,7 @@ public sealed class PackTypesController : ApiControllerBase
 
     /// <summary>Arquiva um tipo de pack, retirando-o da oferta.</summary>
     [HttpPost("{packTypeId:guid}/archive")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ArchiveAsync(
         Guid packTypeId,
         [FromServices] ArchivePackTypeHandler handler,
@@ -116,6 +121,7 @@ public sealed class PackTypesController : ApiControllerBase
 
     /// <summary>Reativa um tipo de pack que foi arquivado.</summary>
     [HttpPost("{packTypeId:guid}/reactivate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ReactivateAsync(
         Guid packTypeId,
         [FromServices] ReactivatePackTypeHandler handler,

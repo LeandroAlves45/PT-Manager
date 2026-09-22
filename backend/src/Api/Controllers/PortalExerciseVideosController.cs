@@ -19,6 +19,7 @@ public sealed class PortalExerciseVideosController : ApiControllerBase
     /// é indistinguível de um exercício sem vídeo.
     /// </summary>
     [HttpGet]
+    [ProducesResponseType<ExerciseVideoPlaybackResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetPlaybackAsync(
         Guid exerciseId,
         [FromServices] GetExerciseVideoPlaybackHandler handler,

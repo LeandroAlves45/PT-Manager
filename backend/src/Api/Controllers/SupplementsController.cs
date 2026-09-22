@@ -21,6 +21,7 @@ public sealed class SupplementsController : ApiControllerBase
 {
     /// <summary>Cria um suplemento privado no tenant efetivo.</summary>
     [HttpPost]
+    [ProducesResponseType<SupplementResponse>(StatusCodes.Status201Created)]
     public Task<IActionResult> CreateAsync(
         [FromBody] CreateSupplementRequest request,
         [FromServices] CreateSupplementHandler handler,
@@ -44,6 +45,7 @@ public sealed class SupplementsController : ApiControllerBase
 
     /// <summary>Lista uma página de suplementos globais ativos e privados do tenant.</summary>
     [HttpGet]
+    [ProducesResponseType<PagedResponse<SupplementResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListAsync(
         [FromQuery(Name = "search")] string? search,
         [FromQuery(Name = "activity")] SupplementActivityFilter activity,
@@ -64,6 +66,7 @@ public sealed class SupplementsController : ApiControllerBase
 
     /// <summary>Devolve um suplemento visível ao tenant efetivo.</summary>
     [HttpGet("{supplementId:guid}")]
+    [ProducesResponseType<SupplementResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         Guid supplementId,
         [FromServices] GetSupplementHandler handler,
@@ -74,6 +77,7 @@ public sealed class SupplementsController : ApiControllerBase
 
     /// <summary>Substitui os campos editáveis de um suplemento privado.</summary>
     [HttpPatch("{supplementId:guid}")]
+    [ProducesResponseType<SupplementResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateAsync(
         Guid supplementId,
         [FromBody] UpdateSupplementRequest request,
@@ -98,6 +102,7 @@ public sealed class SupplementsController : ApiControllerBase
 
     /// <summary>Arquiva um suplemento privado sem o eliminar.</summary>
     [HttpPost("{supplementId:guid}/archive")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ArchiveAsync(
         Guid supplementId,
         [FromServices] ArchiveSupplementHandler handler,
@@ -108,6 +113,7 @@ public sealed class SupplementsController : ApiControllerBase
 
     /// <summary>Reativa um suplemento privado arquivado.</summary>
     [HttpPost("{supplementId:guid}/reactivate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ReactivateAsync(
         Guid supplementId,
         [FromServices] ReactivateSupplementHandler handler,

@@ -1,4 +1,5 @@
 using Api.Configuration;
+using Api.Contracts.Common;
 using Api.Middlewares;
 using Application.Features.Jobs.Dispatching;
 using Microsoft.AspNetCore.Authorization;
@@ -48,10 +49,11 @@ public sealed class InternalJobsController : ControllerBase
     [EnableRateLimiting(InternalJobDispatchPolicyNames.Dispatch)]
     [RequestSizeLimit(AbsoluteMaximumBodySize)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status413PayloadTooLarge)]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests)]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status413PayloadTooLarge)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType<ApiProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> DispatchAsync(CancellationToken cancellationToken)
     {
         if (!TryReadSingleHeader(Request.Headers[SignatureHeaderName], out var signature))

@@ -22,6 +22,7 @@ public sealed class ClientsController : ApiControllerBase
 {
     /// <summary>Cria uma ficha de cliente e devolve o detalhe completo.</summary>
     [HttpPost]
+    [ProducesResponseType<ClientDetailsResponse>(StatusCodes.Status201Created)]
     public Task<IActionResult> CreateAsync(
         [FromBody] CreateClientRequest request,
         [FromServices] CreateClientHandler handler,
@@ -48,6 +49,7 @@ public sealed class ClientsController : ApiControllerBase
 
     /// <summary>Lista uma página determinística de fichas do tenant.</summary>
     [HttpGet]
+    [ProducesResponseType<PagedResponse<ClientSummaryResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListAsync(
         [FromQuery(Name = "search")] string? search,
         [FromQuery(Name = "activity")] ClientActivityFilter activity,
@@ -80,6 +82,7 @@ public sealed class ClientsController : ApiControllerBase
 
     /// <summary>Devolve o detalhe de uma ficha do tenant.</summary>
     [HttpGet("{clientId:guid}")]
+    [ProducesResponseType<ClientDetailsResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         Guid clientId,
         [FromServices] GetClientHandler handler,
@@ -93,6 +96,7 @@ public sealed class ClientsController : ApiControllerBase
 
     /// <summary>Devolve o resumo de progresso de um cliente do tenant.</summary>
     [HttpGet("{clientId:guid}/summary")]
+    [ProducesResponseType<ClientSummaryOverviewResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetSummaryAsync(
         Guid clientId,
         [FromServices] GetClientSummaryHandler handler,
@@ -106,6 +110,7 @@ public sealed class ClientsController : ApiControllerBase
 
     /// <summary>Substitui o perfil editável da ficha do cliente.</summary>
     [HttpPatch("{clientId:guid}")]
+    [ProducesResponseType<ClientDetailsResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateAsync(
         Guid clientId,
         [FromBody] UpdateClientRequest request,
@@ -135,6 +140,7 @@ public sealed class ClientsController : ApiControllerBase
 
     /// <summary>Arquiva o cliente sem a eliminar.</summary>
     [HttpPost("{clientId:guid}/archive")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ArchiveAsync(
         Guid clientId,
         [FromServices] ArchiveClientHandler handler,
@@ -147,6 +153,7 @@ public sealed class ClientsController : ApiControllerBase
 
     /// <summary>Reativa um cliente arquivado.</summary>
     [HttpPost("{clientId:guid}/reactivate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ReactivateAsync(
         Guid clientId,
         [FromServices] ReactivateClientHandler handler,

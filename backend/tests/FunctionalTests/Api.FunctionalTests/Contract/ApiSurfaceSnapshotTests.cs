@@ -196,23 +196,8 @@ public sealed class ApiSurfaceSnapshotTests : IDisposable
         return described.Count == 0 ? string.Empty : $" [{string.Join(",", described)}]";
     }
 
-    private static string ResolveSnapshotPath()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-
-        while (directory is not null &&
-               !Directory.Exists(Path.Combine(directory.FullName, ".git")))
-        {
-            directory = directory.Parent;
-        }
-
-        if (directory is null)
-            throw new InvalidOperationException(
-                "Repository root not found from "
-                + AppContext.BaseDirectory);
-
-        return Path.Combine(directory.FullName, SnapshotRelativePath);
-    }
+    private static string ResolveSnapshotPath() =>
+        Path.Combine(RepositoryRoot.Find(AppContext.BaseDirectory), SnapshotRelativePath);
 
     private static string Normalize(string value) =>
         value.Replace("\r\n", "\n", StringComparison.Ordinal).TrimEnd('\n');

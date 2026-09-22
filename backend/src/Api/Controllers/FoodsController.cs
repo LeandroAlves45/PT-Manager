@@ -21,6 +21,7 @@ public sealed class FoodsController : ApiControllerBase
 {
     /// <summary>Cria um alimento privado no tenant efetivo.</summary>
     [HttpPost]
+    [ProducesResponseType<FoodResponse>(StatusCodes.Status201Created)]
     public Task<IActionResult> CreateAsync(
         [FromBody] CreateFoodRequest request,
         [FromServices] CreateFoodHandler handler,
@@ -45,6 +46,7 @@ public sealed class FoodsController : ApiControllerBase
 
     /// <summary>Lista uma página de alimentos globais ativos e privados do tenant.</summary>
     [HttpGet]
+    [ProducesResponseType<PagedResponse<FoodResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListAsync(
         [FromQuery(Name = "search")] string? search,
         [FromQuery(Name = "activity")] FoodActivityFilter activity,
@@ -73,6 +75,7 @@ public sealed class FoodsController : ApiControllerBase
 
     /// <summary>Devolve um alimento visível ao tenant efetivo.</summary>
     [HttpGet("{foodId:guid}")]
+    [ProducesResponseType<FoodResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         Guid foodId,
         [FromServices] GetFoodHandler handler,
@@ -85,6 +88,7 @@ public sealed class FoodsController : ApiControllerBase
 
     /// <summary>Substitui os campos editáveis de um alimento privado.</summary>
     [HttpPatch("{foodId:guid}")]
+    [ProducesResponseType<FoodResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateAsync(
         Guid foodId,
         [FromBody] UpdateFoodRequest request,
@@ -110,6 +114,7 @@ public sealed class FoodsController : ApiControllerBase
 
     /// <summary>Arquiva um alimento privado sem o eliminar.</summary>
     [HttpPost("{foodId:guid}/archive")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ArchiveAsync(
         Guid foodId,
         [FromServices] ArchiveFoodHandler handler,
@@ -121,6 +126,7 @@ public sealed class FoodsController : ApiControllerBase
 
     /// <summary>Reativa um alimento privado arquivado.</summary>
     [HttpPost("{foodId:guid}/reactivate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ReactivateAsync(
         Guid foodId,
         [FromServices] ReactivateFoodHandler handler,

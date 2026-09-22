@@ -23,6 +23,7 @@ namespace Api.Controllers;
 public sealed class BillingController : ApiControllerBase
 {
     [HttpGet("subscription")]
+    [ProducesResponseType<SubscriptionResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetSubscriptionAsync(
         [FromServices] GetSubscriptionHandler handler,
         CancellationToken cancellationToken) =>
@@ -31,6 +32,7 @@ public sealed class BillingController : ApiControllerBase
             SubscriptionResponse.From);
 
     [HttpPost("checkout")]
+    [ProducesResponseType<CreateCheckoutResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> CreateCheckoutAsync(
         [FromBody] Api.Contracts.Billing.CreateCheckoutRequest request,
         [FromServices] CreateCheckoutHandler handler,
@@ -49,6 +51,7 @@ public sealed class BillingController : ApiControllerBase
     }
 
     [HttpPost("customer-portal")]
+    [ProducesResponseType<CreateCustomerPortalResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> CreateCustomerPortalAsync(
         [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)]
         Api.Contracts.Billing.CreateCustomerPortalRequest? _,
@@ -67,6 +70,7 @@ public sealed class BillingController : ApiControllerBase
     }
 
     [HttpPost("webhook")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [AllowAnonymous]
     [Consumes("application/json")]
     public async Task<IActionResult> ProcessWebhookAsync(

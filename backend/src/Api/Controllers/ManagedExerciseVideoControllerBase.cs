@@ -35,6 +35,7 @@ public abstract class ManagedExerciseVideoControllerBase : ApiControllerBase
     /// o storage privado.
     /// </summary>
     [HttpPost("uploads")]
+    [ProducesResponseType<ExerciseVideoUploadResponse>(StatusCodes.Status201Created)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.VideoUpload)]
     public Task<IActionResult> RequestUploadAsync(
         Guid exerciseId,
@@ -58,6 +59,7 @@ public abstract class ManagedExerciseVideoControllerBase : ApiControllerBase
 
     /// <summary>Devolve o estado técnico de um upload.</summary>
     [HttpGet("uploads/{videoId:guid}")]
+    [ProducesResponseType<ExerciseVideoResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetUploadAsync(
         Guid exerciseId,
         Guid videoId,
@@ -74,6 +76,7 @@ public abstract class ManagedExerciseVideoControllerBase : ApiControllerBase
     /// chamada devolve o estado atual.
     /// </summary>
     [HttpPost("uploads/{videoId:guid}/complete")]
+    [ProducesResponseType<ExerciseVideoResponse>(StatusCodes.Status200OK)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.VideoUpload)]
     public Task<IActionResult> CompleteUploadAsync(
         Guid exerciseId,
@@ -91,6 +94,7 @@ public abstract class ManagedExerciseVideoControllerBase : ApiControllerBase
 
     /// <summary>Emite uma URL assinada de curta duração para o vídeo Ready.</summary>
     [HttpGet]
+    [ProducesResponseType<ExerciseVideoPlaybackResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetPlaybackAsync(
         Guid exerciseId,
         [FromServices] GetExerciseVideoPlaybackHandler handler,
@@ -103,6 +107,7 @@ public abstract class ManagedExerciseVideoControllerBase : ApiControllerBase
 
     /// <summary>Remove o vídeo Ready; o objeto é eliminado depois do commit.</summary>
     [HttpDelete]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> RemoveAsync(
         Guid exerciseId,
         [FromServices] RemoveExerciseVideoHandler handler,

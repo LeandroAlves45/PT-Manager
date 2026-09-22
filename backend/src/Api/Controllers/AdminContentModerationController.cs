@@ -1,6 +1,7 @@
 using Api.Authorization;
 using Api.Configuration;
 using Api.Contracts.Administration;
+using Api.Contracts.Common;
 using Api.Http;
 using Api.Security;
 using Application.Features.Administration.ContentModeration.BlockExercise;
@@ -20,6 +21,13 @@ namespace Api.Controllers;
 [Authorize(ApiPolicyNames.AdministrativeContext)]
 [AdministrativeContext]
 [EnableRateLimiting(ApiRateLimitPolicyNames.Moderation)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status400BadRequest)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status401Unauthorized)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status403Forbidden)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status404NotFound)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status409Conflict)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status429TooManyRequests)]
+[ProducesResponseType<ApiProblemDetails>(StatusCodes.Status500InternalServerError)]
 public sealed class AdminContentModerationController : ControllerBase
 {
     private readonly ILogger<AdminContentModerationController> _logger;
@@ -28,6 +36,7 @@ public sealed class AdminContentModerationController : ControllerBase
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     [HttpPost("foods/{foodId:guid}/block")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> BlockFoodAsync(
         Guid foodId,
         [FromBody] BlockContentRequest request,
@@ -37,6 +46,7 @@ public sealed class AdminContentModerationController : ControllerBase
             new BlockFoodCommand(foodId, request.ReasonCode), cancellationToken));
 
     [HttpPost("foods/{foodId:guid}/unblock")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> UnblockFoodAsync(
         Guid foodId,
         [FromServices] UnblockFoodHandler handler,
@@ -45,6 +55,7 @@ public sealed class AdminContentModerationController : ControllerBase
             new UnblockFoodCommand(foodId), cancellationToken));
 
     [HttpPost("exercises/{exerciseId:guid}/block")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> BlockExerciseAsync(
         Guid exerciseId,
         [FromBody] BlockContentRequest request,
@@ -54,6 +65,7 @@ public sealed class AdminContentModerationController : ControllerBase
             new BlockExerciseCommand(exerciseId, request.ReasonCode), cancellationToken));
 
     [HttpPost("exercises/{exerciseId:guid}/unblock")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> UnblockExerciseAsync(
         Guid exerciseId,
         [FromServices] UnblockExerciseHandler handler,

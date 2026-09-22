@@ -106,6 +106,11 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
         builder.UseSetting("Resend:FrontendBaseUrl", AllowedOrigin);
         builder.UseSetting("Resend:BaseAddress", "https://resend.test/");
 
+        // Em Development o host lê os User Secrets do programador, que podem ligar o
+        // seed. Um teste nunca herda essa decisão: quem quer o seed liga-o explicitamente
+        // em AdditionalSettings.
+        builder.UseSetting("DevelopmentSeed:Enabled", "false");
+
         // Aplicadas no fim para poderem sobrepor-se às predefinições acima.
         if (AdditionalSettings is not null)
         {

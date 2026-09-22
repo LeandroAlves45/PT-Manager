@@ -22,6 +22,7 @@ public sealed class TrainingPlansController : ApiControllerBase
 {
     /// <summary>Cria um plano de treino e a respetiva estrutura inicial.</summary>
     [HttpPost]
+    [ProducesResponseType<TrainingPlanDetailsResponse>(StatusCodes.Status201Created)]
     public Task<IActionResult> CreateAsync(
         [FromBody] CreateTrainingPlanRequest request,
         [FromServices] CreateTrainingPlanHandler handler,
@@ -47,6 +48,7 @@ public sealed class TrainingPlansController : ApiControllerBase
 
     /// <summary>Lista uma página de planos do tenant, opcionalmente por cliente.</summary>
     [HttpGet]
+    [ProducesResponseType<PagedResponse<TrainingPlanSummaryResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListAsync(
         [FromQuery(Name = "client_id")] Guid? clientId,
         [FromQuery(Name = "search")] string? search,
@@ -80,6 +82,7 @@ public sealed class TrainingPlansController : ApiControllerBase
 
     /// <summary>Devolve um plano completo com dias, exercícios e séries.</summary>
     [HttpGet("{trainingPlanId:guid}")]
+    [ProducesResponseType<TrainingPlanDetailsResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         Guid trainingPlanId,
         [FromServices] GetTrainingPlanHandler handler,
@@ -92,6 +95,7 @@ public sealed class TrainingPlansController : ApiControllerBase
 
     /// <summary>Substitui cabeçalho e estrutura do plano numa só operação.</summary>
     [HttpPut("{trainingPlanId:guid}")]
+    [ProducesResponseType<TrainingPlanDetailsResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> ReplaceAsync(
         Guid trainingPlanId,
         [FromBody] ReplaceTrainingPlanRequest request,
@@ -117,6 +121,7 @@ public sealed class TrainingPlansController : ApiControllerBase
 
     /// <summary>Atualiza apenas o cabeçalho, sem tocar na estrutura.</summary>
     [HttpPatch("{trainingPlanId:guid}")]
+    [ProducesResponseType<TrainingPlanDetailsResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateMetadataAsync(
         Guid trainingPlanId,
         [FromBody] UpdateTrainingPlanMetadataRequest request,
@@ -141,6 +146,7 @@ public sealed class TrainingPlansController : ApiControllerBase
 
     /// <summary>Substitui apenas a estrutura, sem tocar no cabeçalho.</summary>
     [HttpPut("{trainingPlanId:guid}/structure")]
+    [ProducesResponseType<TrainingPlanDetailsResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateStructureAsync(
         Guid trainingPlanId,
         [FromBody] UpdateTrainingPlanStructureRequest request,
@@ -160,6 +166,7 @@ public sealed class TrainingPlansController : ApiControllerBase
 
     /// <summary>Arquiva um plano de treino sem o eliminar.</summary>
     [HttpPost("{trainingPlanId:guid}/archive")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ArchiveAsync(
         Guid trainingPlanId,
         [FromServices] ArchiveTrainingPlanHandler handler,

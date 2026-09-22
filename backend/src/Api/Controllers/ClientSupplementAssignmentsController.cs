@@ -21,6 +21,7 @@ public sealed class ClientSupplementAssignmentsController : ApiControllerBase
 {
     /// <summary>Atribui um suplemento a um cliente do tenant.</summary>
     [HttpPost]
+    [ProducesResponseType<ClientSupplementAssignmentResponse>(StatusCodes.Status201Created)]
     public Task<IActionResult> AssignAsync(
         [FromBody] AssignSupplementRequest request,
         [FromServices] AssignSupplementHandler handler,
@@ -43,6 +44,7 @@ public sealed class ClientSupplementAssignmentsController : ApiControllerBase
 
     /// <summary>Lista uma página de atribuições, opcionalmente por cliente.</summary>
     [HttpGet]
+    [ProducesResponseType<PagedResponse<ClientSupplementAssignmentResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListAsync(
         [FromQuery(Name = "client_id")] Guid? clientId,
         [FromQuery(Name = "activity")] SupplementAssignmentActivityFilter activity,
@@ -70,6 +72,7 @@ public sealed class ClientSupplementAssignmentsController : ApiControllerBase
 
     /// <summary>Devolve uma atribuição do tenant efetivo.</summary>
     [HttpGet("{assignmentId:guid}")]
+    [ProducesResponseType<ClientSupplementAssignmentResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         Guid assignmentId,
         [FromServices] GetSupplementAssignmentHandler handler,
@@ -83,6 +86,7 @@ public sealed class ClientSupplementAssignmentsController : ApiControllerBase
 
     /// <summary>Ajusta a prescrição de uma atribuição existente.</summary>
     [HttpPatch("{assignmentId:guid}")]
+    [ProducesResponseType<ClientSupplementAssignmentResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateAsync(
         Guid assignmentId,
         [FromBody] UpdateSupplementAssignmentRequest request,
@@ -104,6 +108,7 @@ public sealed class ClientSupplementAssignmentsController : ApiControllerBase
 
     /// <summary>Desativa uma atribuição sem a eliminar.</summary>
     [HttpPost("{assignmentId:guid}/deactivate")]
+    [ProducesResponseType<ClientSupplementAssignmentResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> DeactivateAsync(
         Guid assignmentId,
         [FromServices] DeactivateSupplementAssignmentHandler handler,
@@ -117,6 +122,7 @@ public sealed class ClientSupplementAssignmentsController : ApiControllerBase
 
     /// <summary>Reativa uma atribuição desativada.</summary>
     [HttpPost("{assignmentId:guid}/reactivate")]
+    [ProducesResponseType<ClientSupplementAssignmentResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> ReactivateAsync(
         Guid assignmentId,
         [FromServices] ReactivateSupplementAssignmentHandler handler,

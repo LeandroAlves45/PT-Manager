@@ -32,6 +32,22 @@ public static class ApiOpenApiRegistration
                 return Task.CompletedTask;
             });
 
+            // A tolerância de leitura de números em string não descreve a serialização
+            // das respostas, que escreve sempre JSON numérico.
+            options.AddSchemaTransformer((schema, _, _) =>
+            {
+                if (schema.Type is { } type
+                    && type.HasFlag(JsonSchemaType.String)
+                    && (type.HasFlag(JsonSchemaType.Integer)
+                        || type.HasFlag(JsonSchemaType.Number)))
+                {
+                    schema.Type = type & ~JsonSchemaType.String;
+                    schema.Pattern = null;
+                }
+
+                return Task.CompletedTask;
+            });
+
             options.AddDocumentTransformer((document, _, _) =>
             {
                 document.Info = new OpenApiInfo

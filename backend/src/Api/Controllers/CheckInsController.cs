@@ -22,6 +22,7 @@ public sealed class CheckInsController : ApiControllerBase
 {
     /// <summary>Agenda um check-in para um cliente do tenant.</summary>
     [HttpPost]
+    [ProducesResponseType<CheckInResponse>(StatusCodes.Status201Created)]
     public Task<IActionResult> CreateAsync(
         [FromBody] CreateCheckInRequest request,
         [FromServices] CreateCheckInHandler handler,
@@ -40,6 +41,7 @@ public sealed class CheckInsController : ApiControllerBase
 
     /// <summary>Lista uma página de check-ins, com filtros de cliente, estado e janela.</summary>
     [HttpGet]
+    [ProducesResponseType<PagedResponse<CheckInResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListAsync(
         [FromQuery(Name = "client_id")] Guid? clientId,
         [FromQuery(Name = "status")] CheckInStatusFilter? status,
@@ -62,6 +64,7 @@ public sealed class CheckInsController : ApiControllerBase
 
     /// <summary>Devolve um check-in do tenant efetivo.</summary>
     [HttpGet("{checkInId:guid}")]
+    [ProducesResponseType<CheckInResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         Guid checkInId,
         [FromServices] GetCheckInHandler handler,
@@ -72,6 +75,7 @@ public sealed class CheckInsController : ApiControllerBase
 
     /// <summary>Move um check-in agendado para outra data.</summary>
     [HttpPatch("{checkInId:guid}/reschedule")]
+    [ProducesResponseType<CheckInResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> RescheduleAsync(
         Guid checkInId,
         [FromBody] RescheduleCheckInRequest request,
@@ -90,6 +94,7 @@ public sealed class CheckInsController : ApiControllerBase
 
     /// <summary>Corrige os valores de um check-in já respondido.</summary>
     [HttpPut("{checkInId:guid}/answer")]
+    [ProducesResponseType<CheckInResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> CorrectAsync(
         Guid checkInId,
         [FromBody] CorrectCheckInRequest request,
@@ -116,6 +121,7 @@ public sealed class CheckInsController : ApiControllerBase
 
     /// <summary>Cancela um check-in agendado.</summary>
     [HttpPost("{checkInId:guid}/cancel")]
+    [ProducesResponseType<CheckInResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> CancelAsync(
         Guid checkInId,
         [FromServices] CancelCheckInHandler handler,
@@ -128,6 +134,7 @@ public sealed class CheckInsController : ApiControllerBase
     /// Marca a resposta como revista. Idempotente.
     /// </summary>
     [HttpPost("{checkInId:guid}/review")]
+    [ProducesResponseType<CheckInResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> MarkReviewedAsync(
         Guid checkInId,
         [FromServices] MarkCheckInReviewedHandler handler,

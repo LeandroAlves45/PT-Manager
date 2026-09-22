@@ -21,6 +21,7 @@ public sealed class ClientSessionPacksController : ApiControllerBase
 {
     /// <summary>Atribui um pack a um cliente do tenant.</summary>
     [HttpPost]
+    [ProducesResponseType<ClientSessionPackResponse>(StatusCodes.Status201Created)]
     public Task<IActionResult> AssignAsync(
         [FromBody] AssignClientSessionPackRequest request,
         [FromServices] AssignClientSessionPackHandler handler,
@@ -42,6 +43,7 @@ public sealed class ClientSessionPacksController : ApiControllerBase
 
     /// <summary>Lista uma página de packs atribuídos, opcionalmente por cliente.</summary>
     [HttpGet]
+    [ProducesResponseType<PagedResponse<ClientSessionPackResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListAsync(
         [FromQuery(Name = "client_id")] Guid? clientId,
         [FromQuery(Name = "activity")] ClientSessionPackActivityFilter activity,
@@ -66,6 +68,7 @@ public sealed class ClientSessionPacksController : ApiControllerBase
 
     /// <summary>Lista os packs de um cliente com saldo utilizável, sem paginação.</summary>
     [HttpGet("usable")]
+    [ProducesResponseType<ClientSessionPackResponse[]>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListUsableAsync(
         [FromQuery(Name = "client_id")] Guid clientId,
         [FromServices] ListUsableClientSessionPacksHandler handler,
@@ -80,6 +83,7 @@ public sealed class ClientSessionPacksController : ApiControllerBase
 
     /// <summary>Devolve um pack atribuído do tenant.</summary>
     [HttpGet("{clientSessionPackId:guid}")]
+    [ProducesResponseType<ClientSessionPackResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         Guid clientSessionPackId,
         [FromServices] GetClientSessionPackHandler handler,
@@ -93,6 +97,7 @@ public sealed class ClientSessionPacksController : ApiControllerBase
 
     /// <summary>Ajusta a data prevista de conclusão do pack.</summary>
     [HttpPatch("{clientSessionPackId:guid}/expected-end-date")]
+    [ProducesResponseType<ClientSessionPackResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateExpectedEndDateAsync(
         Guid clientSessionPackId,
         [FromBody] UpdateClientSessionPackExpectedEndDateRequest request,
@@ -112,6 +117,7 @@ public sealed class ClientSessionPacksController : ApiControllerBase
 
     /// <summary>Cancela um pack atribuído.</summary>
     [HttpPost("{clientSessionPackId:guid}/cancel")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> CancelAsync(
         Guid clientSessionPackId,
         [FromServices] CancelClientSessionPackHandler handler,

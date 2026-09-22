@@ -21,6 +21,7 @@ public sealed class MealPlansController : ApiControllerBase
 {
     /// <summary>Cria um plano alimentar e a respetiva árvore inicial.</summary>
     [HttpPost]
+    [ProducesResponseType<MealPlanDetailsResponse>(StatusCodes.Status201Created)]
     public Task<IActionResult> CreateAsync(
         [FromBody] CreateMealPlanRequest request,
         [FromServices] CreateMealPlanHandler handler,
@@ -45,6 +46,7 @@ public sealed class MealPlansController : ApiControllerBase
 
     /// <summary>Lista uma página de planos do tenant, opcionalmente por cliente.</summary>
     [HttpGet]
+    [ProducesResponseType<PagedResponse<MealPlanSummaryResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListAsync(
         [FromQuery(Name = "client_id")] Guid? clientId,
         [FromQuery(Name = "search")] string? search,
@@ -79,6 +81,7 @@ public sealed class MealPlansController : ApiControllerBase
 
     /// <summary>Devolve um plano completo com refeições, itens e totais.</summary>
     [HttpGet("{mealPlanId:guid}")]
+    [ProducesResponseType<MealPlanDetailsResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         Guid mealPlanId,
         [FromServices] GetMealPlanHandler handler,
@@ -91,6 +94,7 @@ public sealed class MealPlansController : ApiControllerBase
 
     /// <summary>Reconcilia um plano existente com a estrutura pedida.</summary>
     [HttpPut("{mealPlanId:guid}")]
+    [ProducesResponseType<MealPlanDetailsResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateAsync(
         Guid mealPlanId,
         [FromBody] UpdateMealPlanRequest request,
@@ -115,6 +119,7 @@ public sealed class MealPlansController : ApiControllerBase
 
     /// <summary>Arquiva um plano sem o eliminar.</summary>
     [HttpPost("{mealPlanId:guid}/archive")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ArchiveAsync(
         Guid mealPlanId,
         [FromServices] ArchiveMealPlanHandler handler,
@@ -126,6 +131,7 @@ public sealed class MealPlansController : ApiControllerBase
 
     /// <summary>Reativa um plano arquivado.</summary>
     [HttpPost("{mealPlanId:guid}/reactivate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ReactivateAsync(
         Guid mealPlanId,
         [FromServices] ReactivateMealPlanHandler handler,

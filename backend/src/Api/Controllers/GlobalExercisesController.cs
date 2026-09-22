@@ -23,6 +23,7 @@ public sealed class GlobalExercisesController : ApiControllerBase
 {
     /// <summary>Cria um exercício no catálogo global.</summary>
     [HttpPost]
+    [ProducesResponseType<GlobalExerciseResponse>(StatusCodes.Status201Created)]
     public Task<IActionResult> CreateAsync(
         [FromBody] CreateGlobalExerciseRequest request,
         [FromServices] CreateGlobalExerciseHandler handler,
@@ -46,6 +47,7 @@ public sealed class GlobalExercisesController : ApiControllerBase
 
     /// <summary>Lista uma página do catálogo global.</summary>
     [HttpGet]
+    [ProducesResponseType<PagedResponse<GlobalExerciseResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListAsync(
         [FromQuery(Name = "search")] string? search,
         [FromQuery(Name = "activity")] GlobalExerciseActivityFilter activity,
@@ -73,6 +75,7 @@ public sealed class GlobalExercisesController : ApiControllerBase
 
     /// <summary>Devolve um exercício global.</summary>
     [HttpGet("{exerciseId:guid}")]
+    [ProducesResponseType<GlobalExerciseResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         Guid exerciseId,
         [FromServices] GetGlobalExerciseHandler handler,
@@ -85,6 +88,7 @@ public sealed class GlobalExercisesController : ApiControllerBase
 
     /// <summary>Substitui os campos editáveis de um exercício global.</summary>
     [HttpPatch("{exerciseId:guid}")]
+    [ProducesResponseType<GlobalExerciseResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateAsync(
         Guid exerciseId,
         [FromBody] UpdateGlobalExerciseRequest request,
@@ -109,6 +113,7 @@ public sealed class GlobalExercisesController : ApiControllerBase
 
     /// <summary>Arquiva um exercício global, retirando-o dos catálogos ativos.</summary>
     [HttpPost("{exerciseId:guid}/archive")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ArchiveAsync(
         Guid exerciseId,
         [FromServices] ArchiveGlobalExerciseHandler handler,
@@ -120,6 +125,7 @@ public sealed class GlobalExercisesController : ApiControllerBase
 
     /// <summary>Reativa um exercício global arquivado.</summary>
     [HttpPost("{exerciseId:guid}/reactivate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> ReactivateAsync(
         Guid exerciseId,
         [FromServices] ReactivateGlobalExerciseHandler handler,
@@ -131,6 +137,7 @@ public sealed class GlobalExercisesController : ApiControllerBase
 
     /// <summary>Elimina definitivamente um exercício global sem referências.</summary>
     [HttpDelete("{exerciseId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public Task<IActionResult> DeleteAsync(
         Guid exerciseId,
         [FromServices] DeleteGlobalExerciseHandler handler,

@@ -17,6 +17,7 @@ public sealed class InitialAssessmentsController : ApiControllerBase
 {
     /// <summary>Cria a avaliação inicial de um cliente.</summary>
     [HttpPost("initial-assessments")]
+    [ProducesResponseType<InitialAssessmentResponse>(StatusCodes.Status201Created)]
     public Task<IActionResult> CreateAsync(
         [FromBody] CreateInitialAssessmentRequest request,
         [FromServices] CreateInitialAssessmentHandler handler,
@@ -45,6 +46,7 @@ public sealed class InitialAssessmentsController : ApiControllerBase
 
     /// <summary>Devolve a avaliação inicial de um cliente, ou 404 se ainda não existir.</summary>
     [HttpGet("clients/{clientId:guid}/initial-assessment")]
+    [ProducesResponseType<InitialAssessmentResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         Guid clientId,
         [FromServices] GetInitialAssessmentHandler handler,
@@ -58,6 +60,7 @@ public sealed class InitialAssessmentsController : ApiControllerBase
 
     /// <summary>Substitui os campos editáveis de uma avaliação inicial.</summary>
     [HttpPut("initial-assessments/{assessmentId:guid}")]
+    [ProducesResponseType<InitialAssessmentResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateAsync(
         Guid assessmentId,
         [FromBody] UpdateInitialAssessmentRequest request,

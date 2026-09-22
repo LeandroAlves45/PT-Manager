@@ -15,6 +15,7 @@ public sealed class DashboardController : ApiControllerBase
 {
     /// <summary>Devolve todos os blocos do painel num só pedido.</summary>
     [HttpGet]
+    [ProducesResponseType<TrainerDashboardResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         [FromServices] GetTrainerDashboardHandler handler,
         CancellationToken cancellationToken) =>

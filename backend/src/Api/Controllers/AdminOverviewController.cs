@@ -27,6 +27,7 @@ public sealed class AdminOverviewController : ApiControllerBase
 
     /// <summary>Devolve as contagens dos catálogos globais e das filas privadas.</summary>
     [HttpGet]
+    [ProducesResponseType<AdminOverviewResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(
         [FromServices] GetAdminOverviewHandler handler,
         CancellationToken cancellationToken)

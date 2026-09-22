@@ -30,6 +30,7 @@ public sealed class AdminModerationQueueController : ApiControllerBase
 
     /// <summary>Lista alimentos privados de todos os personal trainers.</summary>
     [HttpGet("foods")]
+    [ProducesResponseType<PagedResponse<ModerationQueueItemResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListFoodsAsync(
         [FromQuery(Name = "status")] ModerationStatusFilter status,
         [FromQuery(Name = "search")] string? search,
@@ -46,6 +47,7 @@ public sealed class AdminModerationQueueController : ApiControllerBase
 
     /// <summary>Lista exercícios privados de todos os personal trainers.</summary>
     [HttpGet("exercises")]
+    [ProducesResponseType<PagedResponse<ModerationQueueItemResponse>>(StatusCodes.Status200OK)]
     public Task<IActionResult> ListExercisesAsync(
         [FromQuery(Name = "status")] ModerationStatusFilter status,
         [FromQuery(Name = "search")] string? search,

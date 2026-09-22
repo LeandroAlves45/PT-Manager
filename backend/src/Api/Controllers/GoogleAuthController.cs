@@ -41,6 +41,7 @@ public sealed class GoogleAuthController : ApiControllerBase
     }
 
     [HttpPost("challenge")]
+    [ProducesResponseType<GoogleChallengeResponse>(StatusCodes.Status200OK)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.GoogleSignIn)]
     public async Task<IActionResult> ChallengeAsync(
         [FromServices] IssueGoogleSignInChallengeHandler handler,
@@ -55,6 +56,8 @@ public sealed class GoogleAuthController : ApiControllerBase
     }
 
     [HttpPost("sign-in")]
+    [ProducesResponseType<SessionResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<GooglePendingResponse>(StatusCodes.Status202Accepted)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.GoogleSignIn)]
     public async Task<IActionResult> SignInAsync(
         [FromBody] GoogleSignInRequest request,
@@ -102,6 +105,7 @@ public sealed class GoogleAuthController : ApiControllerBase
     }
 
     [HttpPost("link/challenge")]
+    [ProducesResponseType<GoogleChallengeResponse>(StatusCodes.Status200OK)]
     [Authorize(ApiPolicyNames.Authenticated)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.GoogleLink)]
     public async Task<IActionResult> LinkChallengeAsync(
@@ -118,6 +122,7 @@ public sealed class GoogleAuthController : ApiControllerBase
     }
 
     [HttpPost("link")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [Authorize(ApiPolicyNames.Authenticated)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.GoogleLink)]
     public async Task<IActionResult> LinkAsync(
