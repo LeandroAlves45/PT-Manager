@@ -1,11 +1,164 @@
-name: CI placeholder
+name: CI
 
 on:
+  push:
+    branches: [main, develop]
+  pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  placeholder:
+  backend:
+    name: Backend
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ptmanager
+          POSTGRES_PASSWORD: ptmanager
+          POSTGRES_DB: ptmanager_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U ptmanager"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
-      - name: Explain placeholder
-        run: echo "The real CI pipeline is implemented in the nexts sprints."
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore backend/PTManager.sln --locked-mode
+
+      - name: Build
+        run: dotnet build backend/PTManager.sln --configuration Release --no-restore
+
+      - name: Test
+        env:
+          ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=ptmanager_ci;Username=ptmanager;Password=ptmanager
+        run: dotnet test backend/PTManager.sln --configuration Release --no-build
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm run test:run
+
+      - name: Build
+        run: npm run build
+
+  contract:
+    name: Contrato OpenAPI
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ptmanager
+          POSTGRES_PASSWORD: ptmanager
+          POSTGRES_DB: ptmanager_contract
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U ptmanager"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=ptmanager_contract;Username=ptmanager;Password=ptmanager
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://localhost:5045
+      Cors__AllowedOrigins__0: https://frontend.test
+      Jwt__Issuer: https://api.test
+      Jwt__Audience: ptmanager-contract
+      Jwt__SigningKey: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      Jwt__ClockSkew: 00:00:30
+      AuthCookies__SameSite: Lax
+      Google__ClientId: ptmanager-contract.apps.googleusercontent.com
+      Resend__ApiKey: ci-resend-placeholder
+      Resend__FromAddress: no-reply@ptmanager.test
+      Resend__FrontendBaseUrl: https://frontend.test
+      Resend__BaseAddress: https://resend.test/
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build API
+        run: dotnet build backend/src/Api/Api.csproj --configuration Release
+
+      - name: Install EF Core CLI
+        run: dotnet tool install --global dotnet-ef --version 10.0.12
+
+      - name: Apply migrations explicitly
+        run: >-
+          dotnet ef database update
+          --project backend/src/Infrastructure/Infrastructure.csproj
+          --startup-project backend/src/Api/Api.csproj
+          --configuration Release
+          --no-build
+
+      - name: Start API and wait for readiness
+        run: |
+          dotnet run --project backend/src/Api/Api.csproj --configuration Release --no-build --no-launch-profile &
+          for attempt in $(seq 1 30); do
+            if curl -sf http://localhost:5045/health/ready > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "A API não ficou pronta a tempo."
+          exit 1
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Verify generated API types
+        working-directory: frontend
+        run: npm run api:types:check
