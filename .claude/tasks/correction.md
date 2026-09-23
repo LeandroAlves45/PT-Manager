@@ -28,3 +28,13 @@ limite. `NAO` registar como flakiness conhecida sem antes procurar o recurso par
 
 Nunca fechar uma sprint como "tudo verde" tendo visto falhas numa corrida integral, mesmo que
 outra corrida passe.
+
+## 2026-09-23 — Testes do frontend vivem em `frontend/src/test/`, não ao lado do código
+
+**O que aconteceu.** No fecho da 6C comecei a criar `session.test.ts` e `problem.test.ts` ao
+lado dos ficheiros de produção (`src/shared/api/`), como indica o doc 11. O utilizador corrigiu:
+os testes ficam todos em `frontend/src/test/`, sem misturar com o código.
+
+**A regra.** Testes frontend em `frontend/src/test/`, espelhando o caminho do ficheiro testado
+(ex.: `src/shared/api/client.ts` → `src/test/shared/api/client.test.ts`). Infra (MSW, setup,
+render) também em `src/test/`. Os caminhos do doc 11 ficam registados como desvio aprovado.
