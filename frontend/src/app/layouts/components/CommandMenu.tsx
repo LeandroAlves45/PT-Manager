@@ -34,7 +34,10 @@ export function CommandMenu() {
   const debouncedTerm = useDebounce(term, 300);
 
   const isTrainer = session?.role === 'trainer';
-  const { data: clients } = useClientSearchQuery(open && isTrainer ? debouncedTerm : '');
+  // Com o termo vazio não se pesquisa, mesmo que o valor com debounce ainda traga o termo
+  // anterior: sem isto, reabrir o menu mostrava durante 300 ms os resultados da última vez.
+  const searchTerm = open && isTrainer && term.trim() !== '' ? debouncedTerm : '';
+  const { data: clients } = useClientSearchQuery(searchTerm);
 
   function handleOpenChange(nextOpen: boolean): void {
     setOpen(nextOpen);
@@ -48,6 +51,8 @@ export function CommandMenu() {
       if (event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         setOpen((previous) => !previous);
+        // Abrir ou fechar pelo atalho começa sempre sem termo, como fechar pelo diálogo.
+        setTerm('');
       }
     }
 

@@ -26,13 +26,6 @@ export function ProfileMenu() {
 
   if (session === null) return null;
 
-  const profileRoute =
-    session.role === 'client'
-      ? '/portal/profile'
-      : session.role === 'trainer'
-        ? '/trainer/settings'
-        : null;
-
   async function handleSignOut(): Promise<void> {
     await signOut();
     void navigate('/auth/login', { replace: true });
@@ -59,8 +52,10 @@ export function ProfileMenu() {
 
         <DropdownMenuSeparator />
 
-        {profileRoute !== null && (
-          <DropdownMenuItem onSelect={() => void navigate(profileRoute)}>
+        {/* Só o cliente tem página de perfil; o personal trainer gere a conta em Definições e o
+            superuser não tem rota de perfil. */}
+        {session.role === 'client' && (
+          <DropdownMenuItem onSelect={() => void navigate('/portal/profile')}>
             <User aria-hidden />O meu perfil
           </DropdownMenuItem>
         )}

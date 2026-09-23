@@ -90,6 +90,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // manter o utilizador "dentro" da aplicação depois de ele pedir para sair é pior.
     try {
       await apiClient.POST('/api/v1/auth/logout');
+    } catch {
+      // Falha de rede: o cookie de refresh pode continuar válido no servidor até expirar,
+      // mas a sessão local é limpa na mesma e a falha não chega a quem chamou `signOut`.
     } finally {
       queryClient.clear();
       clearSession();

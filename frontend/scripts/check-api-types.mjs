@@ -19,9 +19,11 @@ const url = argv[2] ?? env.OPENAPI_URL ?? 'http://localhost:5045/openapi/v1.json
 
 const current = readFileSync(OUTPUT, 'utf-8');
 
+// O CLI corre pelo próprio Node em vez de `npx`: no Windows o Node >= 20 recusa lançar
+// `npx.cmd` sem shell (EINVAL), e assim o comando é igual em todos os sistemas.
 const generated = execFileSync(
-  process.platform === 'win32' ? 'npx.cmd' : 'npx',
-  ['openapi-typescript', url],
+  process.execPath,
+  ['./node_modules/openapi-typescript/bin/cli.js', url],
   { encoding: 'utf-8', maxBuffer: 64 * 1024 * 1024 }
 );
 

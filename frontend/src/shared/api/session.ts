@@ -29,6 +29,11 @@ export interface Session {
 }
 
 let current: Session | null = null;
+/**
+ * Muda a cada escrita da sessão. Um refresh que termina depois de um logout ou de um login
+ * mais recente compara a versão e descarta o resultado, em vez de ressuscitar uma sessão.
+ */
+let version = 0;
 const listeners = new Set<() => void>();
 
 /** Converte a resposta da API na sessão interna, validando o papel. */
@@ -78,6 +83,7 @@ export function setCsrfToken(token: string | null): void {
 /** Substitui a sessão ativa e avisa quem estiver a observar. */
 export function setSession(session: Session | null): void {
   current = session;
+  version += 1;
   if (session !== null) {
     bootstrapCsrfToken = session.csrfToken;
   }
@@ -87,8 +93,14 @@ export function setSession(session: Session | null): void {
 /** Limpa tudo o que identifica o utilizador. Usado no logout e no refresh falhado. */
 export function clearSession(): void {
   current = null;
+  version += 1;
   bootstrapCsrfToken = null;
   notify();
+}
+
+/** Versão atual da sessão; ver `version`. */
+export function getSessionVersion(): number {
+  return version;
 }
 
 /**

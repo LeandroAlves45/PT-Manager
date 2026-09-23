@@ -37,7 +37,7 @@ function readStoredPreference(): ThemePreference {
  * renders em cascata que o React desaconselha.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [preference, setPreferenceState] = useState<ThemePreference>(readStoredPreference());
+  const [preference, setPreferenceState] = useState<ThemePreference>(readStoredPreference);
   const systemPrefersDark = useMediaQuery('(prefers-color-scheme: dark)');
 
   const resolved: ResolvedTheme =

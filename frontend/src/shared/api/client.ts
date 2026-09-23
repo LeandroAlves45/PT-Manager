@@ -6,6 +6,8 @@ import {
   clearSession,
   getAccessToken,
   getCsrfToken,
+  getSession,
+  getSessionVersion,
   setSession,
   toSession,
 } from '@/shared/api/session';
@@ -55,12 +57,19 @@ const retryableRequests = new WeakMap<Request, Request>();
  */
 export function refreshSession(): Promise<boolean> {
   inFlightRefresh ??= runExclusive(async () => {
+    // Um logout ou login concluído durante o refresh torna este resultado obsoleto: nesse
+    // caso prevalece o estado mais recente, sem o apagar nem o substituir.
+    const startedAt = getSessionVersion();
+    const isStale = () => getSessionVersion() !== startedAt;
+
     // O CSRF é obtido já dentro do lock. Assim, outro separador não o consegue substituir
     // entre o bootstrap e a rotação do refresh cookie partilhado.
     const csrfResponse = await fetch(`${env.apiBaseUrl}${AUTH_PREFIX}/csrf`, {
       method: 'POST',
       credentials: 'include',
     });
+
+    if (isStale()) return getSession() !== null;
 
     if (csrfResponse.status === 401 || csrfResponse.status === 403) {
       clearSession();
@@ -77,6 +86,8 @@ export function refreshSession(): Promise<boolean> {
       credentials: 'include',
       headers: { 'X-CSRF-Token': csrf.csrf_token },
     });
+
+    if (isStale()) return getSession() !== null;
 
     if (response.status === 401 || response.status === 403) {
       clearSession();

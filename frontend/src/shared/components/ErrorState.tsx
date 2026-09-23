@@ -44,7 +44,7 @@ export function ErrorState({
 }: {
   title?: string;
   error: unknown;
-  onRetry: () => void;
+  onRetry?: () => void;
 }) {
   const [copied, setCopied] = useState(false);
   const correlationId = isApiProblem(error) ? error.correlationId : null;
@@ -53,8 +53,12 @@ export function ErrorState({
   async function copyCorrelationId(): Promise<void> {
     if (correlationId === null) return;
 
-    await navigator.clipboard.writeText(correlationId);
-    setCopied(true);
+    try {
+      await navigator.clipboard.writeText(correlationId);
+      setCopied(true);
+    } catch {
+      // Sem permissão ou fora de contexto seguro: o id continua visível para copiar à mão.
+    }
   }
 
   return (
