@@ -84,8 +84,7 @@ export function refreshSession(): Promise<boolean> {
       return false;
     }
 
-    if (!response.ok)
-      throw toApiProblem(response.status, await readResponseBody(response));
+    if (!response.ok) throw toApiProblem(response.status, await readResponseBody(response));
 
     setSession(toSession((await response.json()) as components['schemas']['SessionResponse']));
     return true;
@@ -137,14 +136,12 @@ const authMiddleware: Middleware = {
     // O CSRF só protege o que usa o cookie de refresh, e é aí que o backend o exige.
     if (request.url.includes(AUTH_PREFIX)) {
       const csrfToken = getCsrfToken();
-      if (csrfToken !== null)
-        request.headers.set('X-CSRF-Token', csrfToken);
+      if (csrfToken !== null) request.headers.set('X-CSRF-Token', csrfToken);
     }
 
     // O corpo de um Request só pode ser consumido uma vez. A cópia para uma eventual
     // repetição tem de existir antes do primeiro fetch, nunca dentro de onResponse.
-    if (!isSessionEndpoint(request.url))
-      retryableRequests.set(request, request.clone());
+    if (!isSessionEndpoint(request.url)) retryableRequests.set(request, request.clone());
 
     return request;
   },
@@ -165,8 +162,7 @@ const authMiddleware: Middleware = {
     if (!refreshed) return response;
 
     const accessToken = getAccessToken();
-    if (accessToken !== null)
-      retry.headers.set('Authorization', `Bearer ${accessToken}`);
+    if (accessToken !== null) retry.headers.set('Authorization', `Bearer ${accessToken}`);
 
     return fetch(retry);
   },

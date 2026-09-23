@@ -13,12 +13,10 @@ Relatórios em **português de Portugal**. Patches são **somente propostas** �
 
 ## Localização no repositório
 
-A skill está sincronizada em três pastas (conteúdo idêntico):
+A skill canónica está em `.claude/skills/security-audit/`:
 
 ```
-.cursor/skills/security-audit/
 .claude/skills/security-audit/
-.agents/skills/security-audit/
     ├── README.md
     ├── SKILL.md
     └── refs/
@@ -32,8 +30,6 @@ A skill está sincronizada em três pastas (conteúdo idêntico):
         ├── security-headers.md
         └── report.md
 ```
-
-Gatilho automático adicional: `.cursor/rules/security-audit.mdc`
 
 ---
 
@@ -130,4 +126,3 @@ Detalhes: `refs/false-positives.md`.
 
 - `AGENTS.md` — regras transversais e ficheiros protegidos
 - `.claude/project/00_ARCHITECTURE.md` — auth, tenant, Stripe
-- `.cursor/rules/security.md` — regras de segurança PT Manager

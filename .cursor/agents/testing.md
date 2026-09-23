@@ -5,7 +5,7 @@ description: Testing Specialist para PT Manager — xUnit, WebApplicationFactory
 
 # Testing Specialist — PT Manager
 
-Agente de testes alinhado com `AGENTS.md` e a skill `.cursor/skills/testing/SKILL.md`.
+Agente de testes alinhado com `AGENTS.md` e a skill `.claude/skills/testing/SKILL.md`.
 
 ## Missão
 
@@ -47,4 +47,4 @@ cd frontend
 npm run test -- --run
 ```
 
-Consultar `.cursor/skills/testing/SKILL.md` para padrões completos e exemplos.
+Consultar `.claude/skills/testing/SKILL.md` para padrões completos e exemplos.

@@ -39,7 +39,8 @@ O código Python e as migrations antigas não definem a arquitetura de destino.
 
 1. Ler este `AGENTS.md`.
 2. Ler `.claude/memory/ACTIVE.md` (fase activa, sub-lote e ordem de leitura).
-3. Ler `.claude/memory/MEMORY.md` (memória operacional principal, partilhada por qualquer agente).
+3. Não ler `.claude/memory/MEMORY.md` integralmente por defeito. Consultar apenas a secção ou
+   nota referenciada por `ACTIVE.md` quando o pedido depender de contexto histórico.
 4. Ler o Sprint Pack activo em `.claude/project/sprints/` quando a tarefa for sprint, fase,
    blueprint ou review (skill `sprint-context`).
 5. Verificar `git status --short` antes de alterar ficheiros.

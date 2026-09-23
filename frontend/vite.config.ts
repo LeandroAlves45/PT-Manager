@@ -43,7 +43,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reportsDirectory: './coverage',
-      exclude: ['src/shared/api/schema.d.ts', 'src/test/**', '**/*.config.'],
+      exclude: ['src/shared/api/schema.d.ts', 'src/test/**', '**/*.config.*'],
     },
   },
 });

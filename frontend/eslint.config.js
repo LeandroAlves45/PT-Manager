@@ -65,8 +65,8 @@ export default tseslint.config(
     // Os componentes do shadcn/ui exportam variantes (`buttonVariants`) a par do
     // componente. É o formato oficial da biblioteca e não vale a pena dividir ficheiros
     // vendorizados só para calar um aviso de fast refresh.
-    "files": ['src/shared/components/ui/**/*.tsx'],
-    "rules": { 'react-refresh/only-export-components': 'off' },
+    files: ['src/shared/components/ui/**/*.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
   },
 
   {

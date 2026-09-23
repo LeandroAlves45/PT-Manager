@@ -1,4 +1,4 @@
-import type { components } from "@/shared/api/schema";
+import type { components } from '@/shared/api/schema';
 
 /**
  * Sessão do utilizador em memória.
@@ -112,9 +112,11 @@ function notify(): void {
 /** Home de cada papel. Um utilizador nunca vê um ecrã de erro por estar na área errada. */
 export function homeRouteFor(role: AppRole): string {
   switch (role) {
-    case 'superuser': return '/admin';
-    case 'trainer': return '/trainer';
-    case 'client': return '/portal';
+    case 'superuser':
+      return '/admin';
+    case 'trainer':
+      return '/trainer';
+    case 'client':
+      return '/portal';
   }
 }
-

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
 /**
  * Devolve o valor só depois de ele estar estável durante `delayMs`.

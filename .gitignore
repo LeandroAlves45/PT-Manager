@@ -1,6 +1,17 @@
 # Old backend
 backend-python/
 
+# Frontend
+frontend/node_modules
+frontend/dist
+frontend/dist-ssr
+frontend/coverage
+frontend/*.local
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+frontend/.vite
+
 # Environment variables
 .env
 .env.local
@@ -62,3 +73,7 @@ docs/*
 docs/api/*
 !docs/api/api-surface.v1.txt
 backlogs/
+
+# Reversible local backups while validating the Cursor context cleanup
+.cursor/rules.disabled/
+.cursor/.cursorrules.disabled

@@ -21,7 +21,7 @@ const apiBaseUrl = required('VITE_API_BASE_URL', import.meta.env.VITE_API_BASE_U
 invariant(
   apiBaseUrl.startsWith('https://'),
   'VITE_API_BASE_URL tem de ser HTTPS: o cookie de refresh usa o prefixo __Secure- e o CORS do ' +
-  'backend recusa origens inseguras.'
+    'backend recusa origens inseguras.'
 );
 
 export const env = {

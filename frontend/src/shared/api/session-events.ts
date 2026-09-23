@@ -36,4 +36,4 @@ export function subscribeSessionInvalidated(listener: () => void): () => void {
 
   currentChannel.addEventListener('message', handleMessage);
   return () => currentChannel.removeEventListener('message', handleMessage);
-};
+}

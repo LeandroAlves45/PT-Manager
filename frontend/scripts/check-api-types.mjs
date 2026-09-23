@@ -32,7 +32,7 @@ const normalise = (value) => value.replace(/\r\n/g, '\n').trimEnd();
 if (normalise(current) !== normalise(generated)) {
   console.error(
     `${OUTPUT} está desatualizado do contrato em ${url}.\n` +
-    'Corre `npm run api:types` com o backend a correr em Development e revê o diff.'
+      'Corre `npm run api:types` com o backend a correr em Development e revê o diff.'
   );
   exit(1);
 }

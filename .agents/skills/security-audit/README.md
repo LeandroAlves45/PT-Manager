@@ -13,10 +13,9 @@ Relatórios em **português de Portugal**. Patches são **somente propostas** �
 
 ## Localização no repositório
 
-A skill está sincronizada em três pastas (conteúdo idêntico):
+A skill está sincronizada em duas pastas (conteúdo idêntico):
 
 ```
-.cursor/skills/security-audit/
 .claude/skills/security-audit/
 .agents/skills/security-audit/
     ├── README.md

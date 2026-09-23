@@ -7,8 +7,6 @@ emoji: ⚙️
 
 # Testing Specialist — PT Manager
 
-Ver `.cursor/skills/testing/SKILL.md` para a versão completa e actualizada.
-
 Especialista em estratégia de testes para o monólito modular .NET 10 + React 19.
 
 ## Resumo operacional

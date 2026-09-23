@@ -108,7 +108,7 @@ Se qualquer resposta for “não” ou “incerto” → **descartar** ou **LOW 
 - `node_modules/`, `dist/`, `bin/`, `obj/`, `coverage/`
 - `backend-python/` (fora de escopo por defeito)
 - `**/*Tests/**`, `*.Tests.cs`, `*.test.jsx`, `*.spec.*`
-- `.agents/skills/**`, `.claude/skills/**`, `.cursor/skills/**`
+- `.agents/skills/**`, `.claude/skills/**`
 - Migrations EF existentes (não editar — auditar apenas queries raw em código app)
 - Lockfiles linha a linha (usar `npm audit` / `dotnet list package --vulnerable`)
 

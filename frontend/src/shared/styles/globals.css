@@ -4,178 +4,178 @@
  * O tema escuro é o principal. `.dark` é aplicado pelo ThemeProvider na raiz do documento.
  */
 
- @import 'tailwindcss';
+@import 'tailwindcss';
 
- @import '@fontsource/saira-condensed/400.css';
- @import '@fontsource/saira-condensed/900.css';
- @import '@fontsource-variable/geist';
- @import '@fontsource-variable/geist-mono';
+@import '@fontsource/saira-condensed/400.css';
+@import '@fontsource/saira-condensed/900.css';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
 
- @custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
- :root {
-   --background: #f7f8fa;
-   --foreground: #0b1220;
+:root {
+  --background: #f7f8fa;
+  --foreground: #0b1220;
 
-   --card: #ffffff;
-   --card-foreground: #0b1220;
-   --popover: #ffffff;
-   --popover-foreground: #0b1220;
+  --card: #ffffff;
+  --card-foreground: #0b1220;
+  --popover: #ffffff;
+  --popover-foreground: #0b1220;
 
-   --primary: #0077b6;
-   --primary-foreground: #ffffff;
+  --primary: #0077b6;
+  --primary-foreground: #ffffff;
 
-   --secondary: #eef1f6;
-   --secondary-foreground: #0b1220;
+  --secondary: #eef1f6;
+  --secondary-foreground: #0b1220;
 
-   --muted: #eef1f6;
-   --muted-foreground: #4a5768;
+  --muted: #eef1f6;
+  --muted-foreground: #4a5768;
 
-   --accent: #e6f4fb;
-   --accent-foreground: #0b1220;
+  --accent: #e6f4fb;
+  --accent-foreground: #0b1220;
 
-   --destructive: #b42318;
-   --destructive-foreground: #ffffff;
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
 
-   --success: #027a48;
-   --warning: #b54708;
+  --success: #027a48;
+  --warning: #b54708;
 
-   --border: #e3e8ef;
-   --input: #e3e8ef;
-   --ring: #0077b6;
+  --border: #e3e8ef;
+  --input: #e3e8ef;
+  --ring: #0077b6;
 
-   --sidebar: #ffffff;
-   --sidebar-foreground: #0b1220;
-   --sidebar-primary: #0077b6;
-   --sidebar-primary-foreground: #ffffff;
-   --sidebar-accent: #eef1f6;
-   --sidebar-accent-foreground: #0b1220;
-   --sidebar-border: #e3e8ef;
-   --sidebar-ring: #0077b6;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0b1220;
+  --sidebar-primary: #0077b6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eef1f6;
+  --sidebar-accent-foreground: #0b1220;
+  --sidebar-border: #e3e8ef;
+  --sidebar-ring: #0077b6;
 
-   --radius: 0.75rem;
- }
+  --radius: 0.75rem;
+}
 
- .dark {
-   --background: #05080c;
-   --foreground: #f7f8fa;
+.dark {
+  --background: #05080c;
+  --foreground: #f7f8fa;
 
-   --card: #0a0f16;
-   --card-foreground: #f7f8fa;
-   --popover: #0a0f16;
-   --popover-foreground: #f7f8fa;
+  --card: #0a0f16;
+  --card-foreground: #f7f8fa;
+  --popover: #0a0f16;
+  --popover-foreground: #f7f8fa;
 
-   --primary: #00a3e9;
-   --primary-foreground: #03131c;
+  --primary: #00a3e9;
+  --primary-foreground: #03131c;
 
-   --secondary: #121a25;
-   --secondary-foreground: #f7f8fa;
+  --secondary: #121a25;
+  --secondary-foreground: #f7f8fa;
 
-   --muted: #121a25;
-   --muted-foreground: #94a3b8;
+  --muted: #121a25;
+  --muted-foreground: #94a3b8;
 
-   --accent: #10202c;
-   --accent-foreground: #f7f8fa;
+  --accent: #10202c;
+  --accent-foreground: #f7f8fa;
 
-   --destructive: #f97066;
-   --destructive-foreground: #05080c;
+  --destructive: #f97066;
+  --destructive-foreground: #05080c;
 
-   --success: #6ce9a6;
-   --warning: #fdb022;
+  --success: #6ce9a6;
+  --warning: #fdb022;
 
-   --border: #1a2230;
-   --input: #1a2230;
-   --ring: #00a3e9;
+  --border: #1a2230;
+  --input: #1a2230;
+  --ring: #00a3e9;
 
-   --sidebar: #0a0f16;
-   --sidebar-foreground: #f7f8fa;
-   --sidebar-primary: #00a3e9;
-   --sidebar-primary-foreground: #03131c;
-   --sidebar-accent: #10202c;
-   --sidebar-accent-foreground: #f7f8fa;
-   --sidebar-border: #1a2230;
-   --sidebar-ring: #00a3e9;
- }
+  --sidebar: #0a0f16;
+  --sidebar-foreground: #f7f8fa;
+  --sidebar-primary: #00a3e9;
+  --sidebar-primary-foreground: #03131c;
+  --sidebar-accent: #10202c;
+  --sidebar-accent-foreground: #f7f8fa;
+  --sidebar-border: #1a2230;
+  --sidebar-ring: #00a3e9;
+}
 
- @theme inline {
-   --color-background: var(--background);
-   --color-foreground: var(--foreground);
-   --color-card: var(--card);
-   --color-card-foreground: var(--card-foreground);
-   --color-popover: var(--popover);
-   --color-popover-foreground: var(--popover-foreground);
-   --color-primary: var(--primary);
-   --color-primary-foreground: var(--primary-foreground);
-   --color-secondary: var(--secondary);
-   --color-secondary-foreground: var(--secondary-foreground);
-   --color-muted: var(--muted);
-   --color-muted-foreground: var(--muted-foreground);
-   --color-accent: var(--accent);
-   --color-accent-foreground: var(--accent-foreground);
-   --color-destructive: var(--destructive);
-   --color-destructive-foreground: var(--destructive-foreground);
-   --color-success: var(--success);
-   --color-warning: var(--warning);
-   --color-border: var(--border);
-   --color-input: var(--input);
-   --color-ring: var(--ring);
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
-   --color-sidebar: var(--sidebar);
-   --color-sidebar-foreground: var(--sidebar-foreground);
-   --color-sidebar-primary: var(--sidebar-primary);
-   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-   --color-sidebar-accent: var(--sidebar-accent);
-   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-   --color-sidebar-border: var(--sidebar-border);
-   --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 
-   --font-display: 'Saira Condensed', 'Geist Variable', system-ui, sans-serif;
-   --font-sans: 'Geist Variable', system-ui, sans-serif;
-   --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
+  --font-display: 'Saira Condensed', 'Geist Variable', system-ui, sans-serif;
+  --font-sans: 'Geist Variable', system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
 
-   --radius-sm: calc(var(--radius) - 4px);
-   --radius-md: calc(var(--radius) - 2px);
-   --radius-lg: var(--radius);
-   --radius-xl: calc(var(--radius) + 4px);
- }
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
 
- @layer base {
-   * {
-     @apply border-border;
-   }
+@layer base {
+  * {
+    @apply border-border;
+  }
 
-   body {
-     @apply bg-background text-foreground font-sans antialiased;
-     font-size: 0.875rem;
-     line-height: 1.5;
-   }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
 
-   /* Títulos e KPIs usam a display condensada em itálico pesado, como no mockup. */
-   .font-display {
-     font-family: var(--font-display);
-     font-weight: 900;
-     font-style: italic;
-     letter-spacing: -0.01em;
-   }
+  /* Títulos e KPIs usam a display condensada em itálico pesado, como no mockup. */
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-style: italic;
+    letter-spacing: -0.01em;
+  }
 
-   /* Números alinhados em colunas (kcal, kg, contagens). */
-   .tabular {
-     font-family: var(--font-mono);
-     font-variant-numeric: tabular-nums;
-   }
+  /* Números alinhados em colunas (kcal, kg, contagens). */
+  .tabular {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
 
-   :focus-visible {
-     @apply ring-ring ring-[3px] ring-offset-0 outline-none;
-   }
+  :focus-visible {
+    @apply ring-ring ring-[3px] ring-offset-0 outline-none;
+  }
 
-   @media (prefers-reduced-motion: reduce) {
-     *,
-     *::before,
-     *::after {
-       animation-duration: 0.01ms !important;
-       animation-iteration-count: 1 !important;
-       transition-duration: 0.01ms !important;
-       scroll-behavior: auto !important;
-     }
-   }
- }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
