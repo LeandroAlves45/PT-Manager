@@ -60,3 +60,10 @@ Lições capturadas depois de correções do utilizador.
     descartado como flakiness pré-existente numa primeira análise; o conjunto de testes afetados
     mudar a cada corrida era precisamente a pista de que havia um recurso partilhado com
     orçamento. Vale a pena perseguir a causa em vez de a registar como conhecida.
+14. **Estado de módulo sobrevive entre testes do mesmo ficheiro.** No frontend, o
+    `inFlightRefresh` de `client.ts` e o canal de `session-events.ts` são singletons: um teste
+    que deixa um refresh pendurado bloqueia os seguintes. Todo o teste que suspende o arranque
+    tem de o libertar antes de terminar; para simular separadores usar `vi.resetModules()`.
+15. **`execFileSync('npx.cmd')` falha no Windows com Node ≥ 20 (EINVAL).** Scripts Node do
+    frontend chamam CLIs por `process.execPath` + caminho do `bin` em `node_modules`, nunca por
+    `npx`/`.cmd` sem shell. Um check que "falha" pode estar só a rebentar — confirmar a mensagem.

@@ -6,6 +6,12 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-09-23 — Sprint 6C FINALIZADA.** Frontend 01–11 revisto e testado (83 testes em
+`frontend/src/test/`, 13/13 mutações, 9 defeitos corrigidos), doc 16 aplicado e GitHub
+Actions run #6 verde nos 3 jobs. Commits `b6e4ed0`, `a9feff2`, `7ef6700`. Faltam só
+verificações manuais de browser (SHELL, HTTPS, dois separadores).
+Ver `Sessions/2026-09-23-sprint6c-fecho-frontend.md`.
+
 **2026-09-20 — Sprint 6C: blueprints validados.** Pack
 `docs/blueprints/frontend-files/sprint_6/sprint_6C/` (00–18). Frontend do zero em React 19 +
 Vite 8 + TypeScript 5.9.3 + Tailwind 4 + shadcn/ui, com cliente gerado do OpenAPI e sessão em

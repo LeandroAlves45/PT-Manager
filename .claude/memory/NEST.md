@@ -87,7 +87,7 @@ Raiz: `docs/blueprints/`.
 | `docs/blueprints/backend-files/sprint_6/sprint_6A/` | Pack 6A (00–14), fechado |
 | `docs/blueprints/backend-files/sprint_6/sprint_6B/` | Pack 6B (00–14), fechado |
 | `docs/blueprints/backend-files/sprint_concluidos/` | Sprints 4 e 5 |
-| `docs/blueprints/frontend-files/sprint_6/sprint_6C/` | **Pack 6C (frontend + backend de suporte)** |
+| `docs/blueprints/frontend-files/sprint_6/sprint_6C/` | **Pack 6C (frontend + backend de suporte)**; fecho em `19_relatorio_fecho_fase_6C.md` |
 
 Padrões de escrita:
 

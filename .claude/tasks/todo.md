@@ -100,3 +100,23 @@ Desvios ao plano aprovado, todos decididos com o utilizador durante a sessão:
 
 Por fazer: aplicar o pack (`QG6C-IMPL-001`), verificar três gates no browser e correr o CI
 pela primeira vez.
+---
+
+# TODO — Sessão 2026-09-23 · Fecho da Sprint 6C (frontend)
+
+Plano: `C:\Users\Leandro Alves\.claude\plans\goal-fechar-a-fase-serialized-feigenbaum.md`.
+
+- [x] Revisão docs 01–10 (diff programático + code-review-leandro)
+- [x] Infra de teste e testes do doc 11 em `frontend/src/test/`
+- [x] Correção dos defeitos encontrados (9)
+- [x] Cobertura de lacunas reais (RootRedirect, AppShell, ThemeToggle, ErrorState)
+- [x] 13 mutações, todas mortas
+- [x] Réplica local do job de contrato
+- [x] Doc 16 + commit + push para `main`; CI run #6 verde
+- [x] Gates (doc 17 e `backlogs/QualityGates.md`), relatório doc 19, memória
+- [ ] Verificação manual no browser (utilizador): SHELL, HTTPS, dois separadores
+
+## Review
+
+Fase 6C finalizada. 83 testes, 13/13 mutações, CI verde nos 3 jobs. Backend intocado.
+Detalhe em `docs/blueprints/frontend-files/sprint_6/sprint_6C/19_relatorio_fecho_fase_6C.md`.
