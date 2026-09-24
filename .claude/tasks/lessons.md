@@ -67,3 +67,12 @@ Lições capturadas depois de correções do utilizador.
 15. **`execFileSync('npx.cmd')` falha no Windows com Node ≥ 20 (EINVAL).** Scripts Node do
     frontend chamam CLIs por `process.execPath` + caminho do `bin` em `node_modules`, nunca por
     `npx`/`.cmd` sem shell. Um check que "falha" pode estar só a rebentar — confirmar a mensagem.
+
+## 2026-09-24 — Sprint 6D (fecho frontend admin)
+
+- Aplicação manual de blueprints introduz desvios silenciosos (limite 100 vs 1000, ramo de UI
+  apagado). O diff programático bloco ↔ ficheiro apanhou os dois em segundos; manter no fecho.
+- Antes de adiar uma feature, verificar se o backend já a expõe: a gestão de vídeo só faltava UI.
+- Testes frontend com upload a terceiros: XHR falso via `vi.stubGlobal`, não MSW (o `File` do
+  jsdom falha na ponte para `Request`); `<video>` do jsdom precisa de spies para metadados.
+- Validação nativa (`max`) chega antes do Zod: testar a mensagem Zod pelo caminho real.

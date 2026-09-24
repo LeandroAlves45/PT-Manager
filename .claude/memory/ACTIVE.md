@@ -1,18 +1,19 @@
-# Estado ativo: Sprint 6D, blueprints admin validados; implementação real pendente
+# Estado ativo: Sprint 6D FINALIZADA; próxima 6E (frontend trainer)
 
-Atualizado: 2026-09-23
+Atualizado: 2026-09-24
 
-## Sprint 6D — pack de código real
+## Sprint 6D — fechada no repositório real
 
-Pack `docs/blueprints/frontend-files/sprint_6/sprint_6D/` (00–05): visão geral,
-moderação, três catálogos e contrato aditivo de vídeo global. Validado em
-`sprint-6d-planning`, worktree descartável sem merge. O gate `QG6D-IMPL-001`
-continua aberto; Leandro aplica os blueprints manualmente no projeto principal.
-Não há dependências novas nem migration. A criação e remoção de vídeos pelo admin
-ficam para fase futura. Evidência e limites em `05_quality_gates.md` e na nota
-`Sessions/2026-09-24-sprint6d-blueprints-admin.md`.
+Pack `docs/blueprints/frontend-files/sprint_6/sprint_6D/` (00–07). Relatório:
+`07_relatorio_fecho_fase_6D.md`. Commit `9319c2f` em `main`.
 
-Próxima leitura: `.claude/memory/NEST.md`, Sprint Pack 6 e pack 6D.
+- 5 defeitos corrigidos na aplicação dos packs 02–03 (D1–D5).
+- Gestão de vídeo do admin acrescentada no fecho (doc 06), só frontend, endpoints 5D.
+- 112 testes em `frontend/src/test/`, 13/13 mutações, gates locais verdes; CI no relatório.
+- Pendentes externos: inspeção manual com login real (`QG6D-ADMIN-001`) e R2 real
+  (`QG6D-VIDEO-R2-001`, depende de `QG5D-PROVIDER-001`).
+
+Ver `Sessions/2026-09-24-sprint6d-fecho-frontend.md`.
 
 ## Sprint 6C — fechada no repositório real
 

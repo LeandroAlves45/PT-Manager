@@ -38,3 +38,15 @@ os testes ficam todos em `frontend/src/test/`, sem misturar com o código.
 **A regra.** Testes frontend em `frontend/src/test/`, espelhando o caminho do ficheiro testado
 (ex.: `src/shared/api/client.ts` → `src/test/shared/api/client.test.ts`). Infra (MSW, setup,
 render) também em `src/test/`. Os caminhos do doc 11 ficam registados como desvio aprovado.
+
+## 2026-09-24 — Gestão de vídeo do admin entra na 6D
+
+**O que aconteceu.** O pack 6D (planeado com o Codex) deixava upload e remoção de vídeo pelo
+admin para fase futura. No fecho, o utilizador decidiu fechar a página de admin já com essa
+feature. O backend 5D já expunha todos os endpoints (`/global-exercises/{id}/video`), por isso
+o trabalho é só frontend.
+
+**A regra.** Antes de adiar uma feature para "fase futura", verificar se o backend já a suporta;
+se só falta UI, apresentar ao utilizador o custo real antes de a empurrar. Upload com barra de
+progresso (XHR) foi a opção escolhida. O teste real com R2 continua dependente de
+`QG5D-PROVIDER-001` (credenciais + CORS PUT no bucket).

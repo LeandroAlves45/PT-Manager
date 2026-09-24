@@ -6,6 +6,11 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-09-24 — Sprint 6D FINALIZADA.** Frontend admin revisto no repo real: 5 defeitos
+corrigidos, gestão de vídeo do admin acrescentada (decisão do utilizador; doc 06), 112 testes,
+13/13 mutações, commit `9319c2f`. Faltam inspeção manual e R2 real.
+Ver `Sessions/2026-09-24-sprint6d-fecho-frontend.md` e o relatório `sprint_6D/07`.
+
 **2026-09-23 — Sprint 6D: blueprints admin validados.** Pack 00–05 em
 `docs/blueprints/frontend-files/sprint_6/sprint_6D/`. A materialização foi
 testada numa worktree descartável; implementação real pendente. Contrato de vídeo
