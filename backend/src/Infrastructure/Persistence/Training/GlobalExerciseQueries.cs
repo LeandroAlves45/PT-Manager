@@ -4,6 +4,7 @@ using Application.Features.Training.Exercises.Dtos;
 using Application.Features.Training.Exercises.ListGlobalExercises;
 using Application.Pagination;
 using Domain.Entities.Training;
+using Domain.ValueObjects;
 using Infrastructure.Data;
 using Infrastructure.Persistence.Common;
 using Microsoft.EntityFrameworkCore;
@@ -69,7 +70,7 @@ internal sealed class GlobalExerciseQueries : IGlobalExerciseQueries
             .AsNoTracking()
             .Where(exercise => exercise.OwnerTrainerId == null);
 
-    private static Expression<Func<Exercise, GlobalExerciseDto>> Projection =>
+    private Expression<Func<Exercise, GlobalExerciseDto>> Projection =>
         exercise => new GlobalExerciseDto(
             exercise.Id,
             exercise.Name,
@@ -78,6 +79,17 @@ internal sealed class GlobalExerciseQueries : IGlobalExerciseQueries
             exercise.Equipment,
             exercise.DifficultyLevel,
             exercise.VideoUrl,
+            _dbContext.ExerciseVideos
+                .IgnoreQueryFilters()
+                .Where(video => video.ExerciseId == exercise.Id && video.OwnerTrainerId == null)
+                .OrderByDescending(video => video.CreatedAt)
+                .ThenByDescending(video => video.Id)
+                .Select(video => video.Status)
+                .FirstOrDefault(),
+            _dbContext.ExerciseVideos
+                .IgnoreQueryFilters()
+                .Any(video => video.ExerciseId == exercise.Id &&
+                    video.OwnerTrainerId == null && video.Status == ExerciseVideoStatus.Ready),
             exercise.IsActive,
             exercise.CreatedAt,
             exercise.UpdatedAt);

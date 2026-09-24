@@ -88,6 +88,7 @@ Raiz: `docs/blueprints/`.
 | `docs/blueprints/backend-files/sprint_6/sprint_6B/` | Pack 6B (00–14), fechado |
 | `docs/blueprints/backend-files/sprint_concluidos/` | Sprints 4 e 5 |
 | `docs/blueprints/frontend-files/sprint_6/sprint_6C/` | **Pack 6C (frontend + backend de suporte)**; fecho em `19_relatorio_fecho_fase_6C.md` |
+| `docs/blueprints/frontend-files/sprint_6/sprint_6D/` | **Pack 6D admin (00–05)**; contrato de vídeo, catálogos, moderação, visão geral, testes e gates. Worktree descartável, implementação real pendente |
 
 Padrões de escrita:
 

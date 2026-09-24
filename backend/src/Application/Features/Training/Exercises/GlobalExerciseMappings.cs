@@ -20,6 +20,8 @@ public static class GlobalExerciseMappings
             exercise.Equipment,
             exercise.DifficultyLevel,
             exercise.VideoUrl,
+            null,
+            false,
             exercise.IsActive,
             exercise.CreatedAt,
             exercise.UpdatedAt

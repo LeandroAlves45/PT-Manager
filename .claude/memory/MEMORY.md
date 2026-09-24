@@ -6,6 +6,13 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-09-23 — Sprint 6D: blueprints admin validados.** Pack 00–05 em
+`docs/blueprints/frontend-files/sprint_6/sprint_6D/`. A materialização foi
+testada numa worktree descartável; implementação real pendente. Contrato de vídeo
+aditivo, sem migration; frontend usa o stack atual, sem dependências novas.
+Ver `Sessions/2026-09-24-sprint6d-blueprints-admin.md` e os gates do pack.
+
+
 **2026-09-23 — Sprint 6C FINALIZADA.** Frontend 01–11 revisto e testado (83 testes em
 `frontend/src/test/`, 13/13 mutações, 9 defeitos corrigidos), doc 16 aplicado e GitHub
 Actions run #6 verde nos 3 jobs. Commits `b6e4ed0`, `a9feff2`, `7ef6700`. Faltam só

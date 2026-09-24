@@ -7,15 +7,14 @@ import { AppShell } from '@/app/layouts/AppShell';
 import { AuthLayout } from '@/app/layouts/AuthLayout';
 import { PortalLayout } from '@/app/layouts/PortalLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { AdminOverviewPage } from '@/features/admin-overview/pages/AdminOverviewPage';
+import { CatalogPage } from '@/features/admin-catalog/pages/CatalogPage';
+import { ModerationPage } from '@/features/admin-moderation/pages/ModerationPage';
 import { RootRedirect } from '@/app/RootRedirect';
 import { PhasePlaceholderPage } from '@/shared/components/PhasePlaceholderPage';
 
 /**
  * Rotas da aplicação.
- *
- * Os espaços de nome por papel (`/admin`, `/trainer`, `/portal`, `/auth`) e os guards são
- * decisão de arquitectura e ficam fechados aqui. As
- * páginas concretas chegam nas fases 6D a 6G e substituem os espaços reservados.
  */
 
 function placeholder(title: string, phase: string): RouteObject['element'] {
@@ -44,11 +43,11 @@ const applicationRoutes: RouteObject[] = [
             path: '/admin',
             element: <AppShell />,
             children: [
-              { index: true, element: placeholder('Visão geral', '6D') },
-              { path: 'moderation', element: placeholder('Moderação', '6D') },
-              { path: 'catalog/foods', element: placeholder('Alimentos', '6D') },
-              { path: 'catalog/exercises', element: placeholder('Exercícios', '6D') },
-              { path: 'catalog/supplements', element: placeholder('Suplementos', '6D') },
+              { index: true, element: <AdminOverviewPage /> },
+              { path: 'moderation', element: <ModerationPage /> },
+              { path: 'catalog/foods', element: <CatalogPage kind="foods" /> },
+              { path: 'catalog/exercises', element: <CatalogPage kind="exercises" /> },
+              { path: 'catalog/supplements', element: <CatalogPage kind="supplements" /> },
             ],
           },
         ],

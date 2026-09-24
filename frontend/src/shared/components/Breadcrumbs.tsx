@@ -57,8 +57,16 @@ export function Breadcrumbs({ className }: { className?: string }) {
           const route = `/${segments.slice(0, index + 1).join('/')}`;
 
           return (
-            <li key={route} className="flex min-w-0 items-center gap-1">
-              {index > 0 && <ChevronRight aria-hidden className="size-3.5 shrink-0 opacity-60" />}
+            <li
+              key={route}
+              className={cn('min-w-0 items-center gap-1', isLast ? 'flex' : 'hidden lg:flex')}
+            >
+              {index > 0 && (
+                <ChevronRight
+                  aria-hidden
+                  className="hidden size-3.5 shrink-0 opacity-60 lg:block"
+                />
+              )}
               {isLast ? (
                 <span aria-current="page" className="text-foreground overflow-hidden font-medium">
                   {labelFor(segment)}

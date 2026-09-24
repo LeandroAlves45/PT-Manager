@@ -86,6 +86,8 @@ public sealed record GlobalExerciseResponse(
     string? Equipment,
     string? DifficultyLevel,
     string? VideoUrl,
+    string? ManagedVideoStatus,
+    bool HasReadyVideo,
     bool IsActive,
     DateTime CreatedAt,
     DateTime UpdatedAt)
@@ -103,6 +105,8 @@ public sealed record GlobalExerciseResponse(
             exercise.Equipment,
             exercise.DifficultyLevel,
             exercise.VideoUrl,
+            exercise.ManagedVideoStatus?.Value,
+            exercise.HasReadyVideo,
             exercise.IsActive,
             exercise.CreatedAt,
             exercise.UpdatedAt

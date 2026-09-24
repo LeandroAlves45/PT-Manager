@@ -1,6 +1,7 @@
 using System.Data.Common;
 using Application.Features.Training.Exercises.ListGlobalExercises;
 using Application.Pagination;
+using Domain.Entities.Training;
 using Infrastructure.Data;
 using Infrastructure.Data.Interceptors;
 using Infrastructure.IntegrationTests.Support;
@@ -48,6 +49,39 @@ public sealed class GlobalExerciseQueryBudgetTests
             new PageRequest(1, 20),
             cancellationToken);
 
+        Assert.Equal(2, counter.ReaderCommands);
+    }
+
+    [Fact]
+    public async Task List_ReturnsReplacementStatusAndReadyVideoInTwoCommands()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var tenant = await _fixture.SeedTenantWithClientAsync(
+            Guid.NewGuid().ToString("N"), cancellationToken);
+        var exerciseId = await SeedGlobalExerciseAsync(tenant.TrainerId, cancellationToken);
+        var now = DateTime.UtcNow;
+
+        await using (var seed = _fixture.CreateAdministrativeContext(tenant.TrainerId))
+        {
+            var ready = new ExerciseVideo(exerciseId, null, "video/mp4", 1024,
+                tenant.TrainerId, now.AddMinutes(15), now);
+            ready.MarkUploaded(1024, "etag-ready", now);
+            ready.MarkReady(1000, 1280, 720, "avc1", null, now);
+            var replacement = new ExerciseVideo(exerciseId, null, "video/mp4", 1024,
+                tenant.TrainerId, now.AddMinutes(16), now.AddMinutes(1));
+            seed.ExerciseVideos.AddRange(ready, replacement);
+            await seed.SaveChangesAsync(cancellationToken);
+        }
+
+        var counter = new CommandCounter();
+        await using var context = CreateMeasuredContext(tenant.TrainerId, counter);
+        var queries = new GlobalExerciseQueries(context);
+        var page = await queries.ListAsync(null, GlobalExerciseActivityFilter.All,
+            new PageRequest(1, 25), cancellationToken);
+        var item = Assert.Single(page.Items, candidate => candidate.Id == exerciseId);
+
+        Assert.Equal("pending", item.ManagedVideoStatus?.Value);
+        Assert.True(item.HasReadyVideo);
         Assert.Equal(2, counter.ReaderCommands);
     }
 

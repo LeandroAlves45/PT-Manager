@@ -23,7 +23,7 @@ const current = readFileSync(OUTPUT, 'utf-8');
 // `npx.cmd` sem shell (EINVAL), e assim o comando é igual em todos os sistemas.
 const generated = execFileSync(
   process.execPath,
-  ['./node_modules/openapi-typescript/bin/cli.js', url],
+  ['--use-system-ca', './node_modules/openapi-typescript/bin/cli.js', url],
   { encoding: 'utf-8', maxBuffer: 64 * 1024 * 1024 }
 );
 

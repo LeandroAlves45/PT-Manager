@@ -1,3 +1,5 @@
+using Domain.ValueObjects;
+
 namespace Application.Features.Training.Exercises.Dtos;
 
 /// <summary>Exercício global apresentado a um superuser autorizado.</summary>
@@ -9,6 +11,8 @@ public sealed record GlobalExerciseDto(
     string? Equipment,
     string? DifficultyLevel,
     string? VideoUrl,
+    ExerciseVideoStatus? ManagedVideoStatus,
+    bool HasReadyVideo,
     bool IsActive,
     DateTime CreatedAt,
     DateTime UpdatedAt

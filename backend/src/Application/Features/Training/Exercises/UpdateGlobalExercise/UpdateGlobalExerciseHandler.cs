@@ -16,17 +16,20 @@ public sealed class UpdateGlobalExerciseHandler
     private readonly ITenantContext _tenantContext;
     private readonly IClock _clock;
     private readonly IGlobalExerciseStore _store;
+    private readonly IGlobalExerciseQueries _queries;
 
     public UpdateGlobalExerciseHandler(
         IValidator<UpdateGlobalExerciseCommand> validator,
         ITenantContext tenantContext,
         IClock clock,
-        IGlobalExerciseStore store)
+        IGlobalExerciseStore store,
+        IGlobalExerciseQueries queries)
     {
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _store = store ?? throw new ArgumentNullException(nameof(store));
+        _queries = queries ?? throw new ArgumentNullException(nameof(queries));
     }
 
     public async Task<Result<GlobalExerciseDto>> HandleAsync(
@@ -54,6 +57,14 @@ public sealed class UpdateGlobalExerciseHandler
             _clock.UtcNow,
             cancellationToken);
 
-        return outcome.ToDtoResult();
+        var result = outcome.ToDtoResult();
+        if (!result.IsSuccess)
+            return result;
+
+        // A consulta devolve o estado atual do vídeo, que não faz parte da entidade Exercise.
+        var updated = await _queries.GetAsync(command.ExerciseId, cancellationToken);
+        return updated is null
+            ? Result<GlobalExerciseDto>.Failure(TrainingErrors.ExerciseNotFound)
+            : Result<GlobalExerciseDto>.Success(updated);
     }
 }

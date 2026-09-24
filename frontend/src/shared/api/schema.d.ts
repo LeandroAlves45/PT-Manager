@@ -23750,6 +23750,8 @@ export interface components {
             equipment: null | string;
             difficulty_level: null | string;
             video_url: null | string;
+            managed_video_status: null | string;
+            has_ready_video: boolean;
             is_active: boolean;
             /** Format: date-time */
             created_at: string;

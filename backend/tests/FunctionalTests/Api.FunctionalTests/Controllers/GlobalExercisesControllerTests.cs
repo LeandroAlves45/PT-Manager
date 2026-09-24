@@ -35,6 +35,8 @@ public sealed class GlobalExercisesControllerTests
 
         var body = await ReadJsonAsync(response);
         Assert.True(body.GetProperty("is_active").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, body.GetProperty("managed_video_status").ValueKind);
+        Assert.False(body.GetProperty("has_ready_video").GetBoolean());
     }
 
     [Theory]

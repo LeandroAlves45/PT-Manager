@@ -60,7 +60,7 @@ Contrato do backend consumido pelo frontend:
 
 ## Onde ficam os blueprints
 
-Os blueprints com código integral das fases de frontend (6C–6G) vão para
-`docs/frontend-files/sprint_6/` e os das fases de backend (6A–6B) para
-`docs/backend-files/sprint_6/` (ambos gitignored). O ponto de entrada para sessões futuras
-é `docs/backend-files/sprint_6/plan_sprint_6_por_atualizar.md`.
+Os blueprints com código real das fases de frontend (6C–6G) ficam em
+`docs/blueprints/frontend-files/sprint_6/` e os das fases de backend (6A–6B) em
+`docs/blueprints/backend-files/sprint_6/` (ambos ignorados pelo Git). O ponto de
+entrada para sessões futuras é `.claude/memory/NEST.md`.
