@@ -53,6 +53,11 @@ export function ModerationPage() {
   const action = useModerationAction();
   const total = query.data?.total_count ?? 0;
 
+  function close() {
+    setSelected(null);
+    setReason('');
+  }
+
   async function submit() {
     if (selected === null) return;
 
@@ -69,8 +74,7 @@ export function ModerationPage() {
       toast.success(
         isBlocked ? 'Conteúdo desbloqueado com sucesso.' : 'Conteúdo bloqueado com sucesso.'
       );
-      setSelected(null);
-      setReason('');
+      close();
     } catch {
       toast.error('Não foi possível guardar a decisão. Tenta novamente.');
     }
@@ -198,10 +202,7 @@ export function ModerationPage() {
       <Dialog
         open={selected !== null}
         onOpenChange={(open) => {
-          if (!open) {
-            setSelected(null);
-            setReason('');
-          }
+          if (!open) close();
         }}
       >
         <DialogContent>
@@ -233,7 +234,7 @@ export function ModerationPage() {
             </fieldset>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSelected(null)}>
+            <Button variant="outline" onClick={close}>
               Cancelar
             </Button>
             <Button

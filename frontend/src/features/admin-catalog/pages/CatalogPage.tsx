@@ -12,6 +12,7 @@ import {
 import { ExerciseForm } from '@/features/admin-catalog/components/ExerciseForm';
 import { FoodForm } from '@/features/admin-catalog/components/FoodForm';
 import { SupplementForm } from '@/features/admin-catalog/components/SupplementForm';
+import { describeExerciseVideo } from '@/features/admin-catalog/lib/exerciseVideo';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
 import { EmptyState } from '@/shared/components/EmptyState';
@@ -45,13 +46,6 @@ const TITLES: Record<CatalogKind, string> = {
 };
 const ACTIVITY = ['active', 'archived', 'all'] as const;
 const ACTIVITY_LABELS = { active: 'Ativos', archived: 'Arquivados', all: 'Todos' };
-const VIDEO_STATUS_LABELS: Record<string, string> = {
-  pending: 'pendente',
-  processing: 'em processamento',
-  ready: 'pronto',
-  rejected: 'recusado',
-  failed: 'falhado',
-};
 
 /** Estrutura comum dos três catálogos; campos e formulários permanecem específicos. */
 export function CatalogPage({ kind }: { kind: CatalogKind }) {
@@ -373,17 +367,7 @@ function FoodCells({ food }: { food: components['schemas']['GlobalFoodResponse']
 
 function detailFor(kind: CatalogKind, item: CatalogItem): string {
   if (kind === 'exercises') {
-    const exercise = item as components['schemas']['GlobalExerciseResponse'];
-    if (exercise.managed_video_status !== null) {
-      const status = VIDEO_STATUS_LABELS[exercise.managed_video_status] ?? 'estado indisponível';
-      if (
-        exercise.has_ready_video &&
-        ['failed', 'rejected'].includes(exercise.managed_video_status)
-      )
-        return `Vídeo disponível · última substituição ${status}`;
-      return `Vídeo ${status}`;
-    }
-    return exercise.video_url ? 'Ligação de vídeo externa' : 'Sem vídeo';
+    return describeExerciseVideo(item as components['schemas']['GlobalExerciseResponse']);
   }
 
   const supplement = item as components['schemas']['GlobalSupplementResponse'];

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { catalogKeys } from '@/features/admin-catalog/api/catalog';
+import { ExerciseVideoPanel } from '@/features/admin-catalog/components/ExerciseVideoPanel';
 import { apiClient, unwrap } from '@/shared/api/client';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
@@ -20,7 +21,7 @@ const exerciseSchema = z.object({
 type ExerciseValues = z.infer<typeof exerciseSchema>;
 type Exercise = components['schemas']['GlobalExerciseResponse'];
 
-/** Nesta fase o vídeo é apenas lido; a escrita não altera a ligação existente. */
+/** O formulário não altera a ligação externa; o vídeo gerido tem painel próprio. */
 export function ExerciseForm({ item, onSaved }: { item: Exercise | null; onSaved: () => void }) {
   const queryClient = useQueryClient();
   const form = useForm<ExerciseValues>({
@@ -119,11 +120,7 @@ export function ExerciseForm({ item, onSaved }: { item: Exercise | null; onSaved
           </label>
         )
       )}
-      {item && (
-        <p className="text-muted-foreground text-sm">
-          Vídeo: {item.managed_video_status ?? (item.video_url ? 'ligação externa' : 'sem vídeo')}
-        </p>
-      )}
+      {item && <ExerciseVideoPanel exercise={item} />}
       {form.formState.errors.root && (
         <p role="alert" className="text-destructive text-sm">
           {form.formState.errors.root.message}

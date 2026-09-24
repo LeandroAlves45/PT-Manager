@@ -10,16 +10,27 @@ import type { components } from '@/shared/api/schema';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 
+/** Grama por 100 g: obrigatório, entre 0 e 100, com mensagens pt-PT em vez das do Zod. */
+const gramsPer100 = z
+  .number({ error: 'Indica um valor entre 0 e 100.' })
+  .min(0, 'Indica um valor entre 0 e 100.')
+  .max(100, 'Indica um valor entre 0 e 100.');
+
 /** Validar formulário com Zod; verifica se o formulário é válido antes de enviar. */
 const foodSchema = z
   .object({
     name: z.string().trim().min(1, 'Indica o nome do alimento.').max(255),
     description: z.string(),
-    protein: z.number().min(0).max(100),
-    carbs: z.number().min(0).max(100),
-    fats: z.number().min(0).max(100),
-    fiber: z.number().min(0).max(100).nullable(),
-    default_serving_grams: z.number().positive().max(100).nullable(),
+    protein: gramsPer100,
+    carbs: gramsPer100,
+    fats: gramsPer100,
+    fiber: gramsPer100.nullable(),
+    // Limite do domínio (`Food.MaxDefaultServingGrams`): uma porção pode passar de 100 g.
+    default_serving_grams: z
+      .number()
+      .positive('A porção tem de ser maior que 0 g.')
+      .max(1000, 'A porção não pode exceder 1000 g.')
+      .nullable(),
   })
   .refine((food) => food.protein + food.carbs + food.fats <= 100, {
     path: ['protein'],
