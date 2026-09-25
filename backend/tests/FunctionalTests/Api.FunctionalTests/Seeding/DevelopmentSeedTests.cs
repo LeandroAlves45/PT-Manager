@@ -29,16 +29,17 @@ public sealed class DevelopmentSeedTests : IClassFixture<ScratchPostgresFixture>
     private const string SuperuserEmail = "admin@seed.test";
     private const string TrainerEmail = "trainer@seed.test";
     private const string ClientEmail = "cliente@seed.test";
+    private const string SecondTrainerEmail = "trainer2@seed.test";
 
     /// <summary>Contagens exatas de uma base vazia depois do seed (doc 13).</summary>
     private static readonly IReadOnlyDictionary<string, long> ExpectedCounts =
         new Dictionary<string, long>(StringComparer.Ordinal)
         {
-            ["users"] = 3,
-            ["clients"] = 2,
+            ["users"] = 4,
+            ["clients"] = 3,
             ["initial_assessments"] = 1,
-            ["trainer_subscriptions"] = 1,
-            ["trainer_settings"] = 1,
+            ["trainer_subscriptions"] = 2,
+            ["trainer_settings"] = 2,
             ["exercises"] = 3,
             ["foods"] = 3,
             ["supplements"] = 2,
@@ -75,14 +76,14 @@ public sealed class DevelopmentSeedTests : IClassFixture<ScratchPostgresFixture>
     }
 
     [Fact]
-    public async Task Enabled_SeedsCompleteEnvironment_AndAllThreeAccountsLogIn()
+    public async Task Enabled_SeedsCompleteEnvironment_AndAllFourAccountsLogIn()
     {
         var connectionString = await CreateMigratedDatabaseAsync();
         using var factory = CreateDevelopmentHost(connectionString, enabled: true);
 
         Assert.True(ReadEffectiveOptions(factory).Enabled);
         Assert.Equal(ExpectedCounts, await ReadCountsAsync(connectionString));
-        Assert.Equal(3, await ScratchPostgresFixture.ScalarAsync(
+        Assert.Equal(4, await ScratchPostgresFixture.ScalarAsync(
             connectionString,
             "SELECT count(*) FROM users WHERE email_confirmed",
             Cancellation));
@@ -92,6 +93,22 @@ public sealed class DevelopmentSeedTests : IClassFixture<ScratchPostgresFixture>
         Assert.Equal("superuser", await LoginAndReadRoleAsync(client, SuperuserEmail));
         Assert.Equal("trainer", await LoginAndReadRoleAsync(client, TrainerEmail));
         Assert.Equal("client", await LoginAndReadRoleAsync(client, ClientEmail));
+        Assert.Equal("trainer", await LoginAndReadRoleAsync(client, SecondTrainerEmail));
+    }
+
+    [Fact]
+    public async Task SeededTrainers_SeeOnlyTheirOwnClients()
+    {
+        var connectionString = await CreateMigratedDatabaseAsync();
+        using var factory = CreateDevelopmentHost(connectionString, enabled: true);
+        var client = factory.CreateOriginClient();
+
+        Assert.Equal(
+            ["Ana Costa", "João Pereira"],
+            await ListClientNamesAsync(client, TrainerEmail));
+        Assert.Equal(
+            ["Marta Figueiredo"],
+            await ListClientNamesAsync(client, SecondTrainerEmail));
     }
 
     [Fact]
@@ -177,7 +194,8 @@ public sealed class DevelopmentSeedTests : IClassFixture<ScratchPostgresFixture>
         ["DevelopmentSeed:Password"] = password,
         ["DevelopmentSeed:SuperuserEmail"] = SuperuserEmail,
         ["DevelopmentSeed:TrainerEmail"] = TrainerEmail,
-        ["DevelopmentSeed:ClientEmail"] = ClientEmail
+        ["DevelopmentSeed:ClientEmail"] = ClientEmail,
+        ["DevelopmentSeed:SecondTrainerEmail"] = SecondTrainerEmail
     };
 
     private static DevelopmentSeedOptions ReadEffectiveOptions(ApiWebApplicationFactory factory) =>
@@ -192,6 +210,28 @@ public sealed class DevelopmentSeedTests : IClassFixture<ScratchPostgresFixture>
 
         using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Cancellation));
         return body.RootElement.GetProperty("role").GetString();
+    }
+
+    private static async Task<string[]> ListClientNamesAsync(HttpClient client, string email)
+    {
+        using var login = await client.PostAsJsonAsync(
+            "/api/v1/auth/login", new { email, password = Password }, Cancellation);
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        using var session = JsonDocument.Parse(await login.Content.ReadAsStringAsync(Cancellation));
+        var accessToken = session.RootElement.GetProperty("access_token").GetString();
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get, "/api/v1/clients?page_number=1&page_size=50");
+        request.Headers.Authorization = new("Bearer", accessToken);
+        using var response = await client.SendAsync(request, Cancellation);
+        var body = await response.Content.ReadAsStringAsync(Cancellation);
+        Assert.True(response.StatusCode == HttpStatusCode.OK, body);
+
+        using var page = JsonDocument.Parse(body);
+        return page.RootElement.GetProperty("items").EnumerateArray()
+            .Select(item => item.GetProperty("name").GetString()!)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
     }
 
     private static async Task<Dictionary<string, long>> ReadCountsAsync(string connectionString)

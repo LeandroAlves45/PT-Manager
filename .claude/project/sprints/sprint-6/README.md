@@ -20,7 +20,7 @@ começa na 6C.
 | 6D | Frontend — Admin | Visão geral, fila de moderação, catálogos globais e estado de vídeo de exercício | 6C |
 | 6E | Frontend — Trainer | Dashboard, clientes, sessões/packs, planos, biblioteca, check-ins, definições, billing, vídeo 5D | 6C |
 | 6F | Frontend — Cliente | Treino de hoje com registo, nutrição, suplementos com tomas, check-ins, perfil, white-label | 6C |
-| 6G | Frontend — Auth UX | Login final, signup, email, password, convite, Google | 6C |
+| 6G | Frontend — Auth UX | Login final, signup, email, password, convite, Google, Page 404 Not Found personalizada| 6C |
 
 Fora: categoria de alimento e notas de moderação (excluídos); CSV, notificações in-app e
 pesquisa transversal (DEF-PROD-004 a 006).

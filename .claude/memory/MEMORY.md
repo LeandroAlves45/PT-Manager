@@ -6,6 +6,17 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-09-25 — Site de marketing `site/` criado.** O export do Claude Design foi reconstruído como
+app React 19 + TS por camadas, pré-renderizada, com CSP estrita e 44 testes; `landing-page-site/`
+apagada. A copy falsa de pagamentos Stripe foi removida. O CTA leva ao login até à 6G. design-is
+18/30, com handoff. Falta o projeto Vercel. Ver `Sessions/2026-09-25-site-marketing.md`.
+
+**2026-09-24 — Sprint 6E planeada; blueprints da fatia 6E-1 validados.** 6E dividida em 5
+fatias (decisão do utilizador). Pack `docs/blueprints/frontend-files/sprint_6/sprint_6E/`: 00 =
+plano da fase inteira (reutilizar nas 6E-2..5), 01–08 = 6E-1 (painel, clientes, detalhe, avaliação,
+2.º trainer no seed). 141 testes, 14/14 + 1 mutações na worktree descartável. Implementação real e
+**reset da BD dev** pendentes. Ver `Sessions/2026-09-24-sprint6e-planeamento-blueprints-6e1.md`.
+
 **2026-09-24 — Sprint 6D FINALIZADA.** Frontend admin revisto no repo real: 5 defeitos
 corrigidos, gestão de vídeo do admin acrescentada (decisão do utilizador; doc 06), 112 testes,
 13/13 mutações, commit `9319c2f`. Faltam inspeção manual e R2 real.

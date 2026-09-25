@@ -76,6 +76,14 @@ Copiados para `frontend/public/` na 6C. `favicon.ico` e `apple-touch-icon.png` s
 
 `docs/design-prompts/`: prompts usados para gerar o layout (`claude-design.md`, `v0.md`).
 
+### Site de marketing (`site/`)
+
+App própria (React 19 + Vite + TS + Tailwind v4, pré-renderizada, deploy Vercel próprio), separada
+da app `frontend/`. Camadas `domain ← content/config/seo ← sections ← app` (+ `ui`), impostas por
+eslint. Conteúdo em `site/src/content/`; CSP/headers em `site/vercel.json`; auditoria de design em
+`site/DESIGN-IS-2026-09-25/` (18/30, handoff em `04`). Sessão:
+`memory/Sessions/2026-09-25-site-marketing.md`.
+
 ## 5. Blueprints
 
 Raiz: `docs/blueprints/`.
@@ -88,6 +96,7 @@ Raiz: `docs/blueprints/`.
 | `docs/blueprints/backend-files/sprint_6/sprint_6B/` | Pack 6B (00–14), fechado |
 | `docs/blueprints/backend-files/sprint_concluidos/` | Sprints 4 e 5 |
 | `docs/blueprints/frontend-files/sprint_6/sprint_6C/` | **Pack 6C (frontend + backend de suporte)**; fecho em `19_relatorio_fecho_fase_6C.md` |
+| `docs/blueprints/frontend-files/sprint_6/sprint_6E/` | **Pack 6E trainer**: `00` plano da fase completa (5 fatias, contratos/limites/erros de todos os endpoints do trainer, inventário do frontend, armadilhas) — **ler antes de qualquer fatia 6E**; `01–08` fatia 6E-1 (blueprints validados 2026-09-24, implementação pendente) |
 | `docs/blueprints/frontend-files/sprint_6/sprint_6D/` | **Pack 6D admin (00–07)**; contrato de vídeo, catálogos, moderação, visão geral, testes, gates, gestão de vídeo (06) e relatório de fecho (07). **Finalizada 2026-09-24** |
 
 Padrões de escrita:

@@ -19,4 +19,6 @@ public sealed class DevelopmentSeedOptions
     public string SuperuserEmail { get; set; } = "admin@ptmanager.local";
     public string TrainerEmail { get; set; } = "trainer@ptmanager.local";
     public string ClientEmail { get; set; } = "cliente@ptmanager.local";
+
+    public string SecondTrainerEmail { get; set; } = "trainer2@ptmanager.local";
 }

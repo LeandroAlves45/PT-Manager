@@ -76,3 +76,21 @@ Lições capturadas depois de correções do utilizador.
 - Testes frontend com upload a terceiros: XHR falso via `vi.stubGlobal`, não MSW (o `File` do
   jsdom falha na ponte para `Request`); `<video>` do jsdom precisa de spies para metadados.
 - Validação nativa (`max`) chega antes do Zod: testar a mensagem Zod pelo caminho real.
+
+## 2026-09-24 — Sprint 6E-1 (blueprints frontend trainer)
+
+- **nuqs lê `window.location`, não o router em memória.** Com `createMemoryRouter`, filtros e
+  flags na query string (`?new=true`) nunca chegavam ao ecrã e o URL escrito por um teste
+  contaminava o seguinte. `renderApp` sincroniza `window.history` com a entrada inicial.
+- **Nada além do texto do rótulo dentro de `<label>`.** Erros e `<option>` entram no nome
+  acessível; ligar por `htmlFor` e o erro por `aria-describedby` (`FormField`).
+- **Substituir um placeholder de rota parte testes antigos** que dependiam do título ou de
+  regexes largas; procurar o texto do placeholder em `src/test` antes de trocar a rota.
+- **Falha que passa isolada = estado partilhado até prova em contrário**: timestamps fixos em
+  dados de teste + ordenação por GUID tornam a paginação não determinista.
+
+
+## 2026-09-25 — Site de marketing
+
+- Copy de marketing gerada (Claude Design) promete funcionalidades que não existem: verificar cada frase contra o backend antes de publicar e proteger com um teste de conteúdo.
+- Barras invertidas em strings escritas via Bash heredoc ou Edit podem ser interpretadas (`\u003c` virou `<` e anulou um escape de XSS). Em código de segurança, testar o escape e, se preciso, construir o carácter com `String.fromCharCode`.

@@ -12,6 +12,17 @@ frontend/.env.*
 !frontend/.env.example
 frontend/.vite
 
+# Site de marketing (site/)
+site/node_modules
+site/dist
+site/dist-ssr
+site/coverage
+site/*.local
+site/.env
+site/.env.*
+!site/.env.example
+site/DESIGN-IS-2026-09-25
+
 # Environment variables
 .env
 .env.local

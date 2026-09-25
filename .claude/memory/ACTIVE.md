@@ -1,6 +1,20 @@
-# Estado ativo: Sprint 6D FINALIZADA; próxima 6E (frontend trainer)
+# Estado ativo: Sprint 6E planeada (5 fatias); 6E-1 com blueprints validados
 
 Atualizado: 2026-09-24
+
+## Sprint 6E — frontend trainer
+
+Pack `docs/blueprints/frontend-files/sprint_6/sprint_6E/`. **Ler o `00` antes de qualquer fatia**
+(plano da fase inteira: fatias, contratos/limites/erros confirmados, inventário, armadilhas).
+
+- 6E-1 (painel, clientes, detalhe/Resumo, avaliação inicial, 2.º trainer no seed): docs 01–08,
+  validados numa worktree descartável (141 testes, 14/14 + 1 mutações). **Implementação real
+  pendente** (`QG6E1-IMPL-001`).
+- Depois de aplicar o doc 02: **reset da BD dev** (comandos no doc 02) — a BD atual falha o
+  arranque até ter `trainer2@ptmanager.local`.
+- Próxima fatia a planear: 6E-2 (sessões e packs), doc 00 §5.2.
+
+Ver `Sessions/2026-09-24-sprint6e-planeamento-blueprints-6e1.md`.
 
 ## Sprint 6D — fechada no repositório real
 

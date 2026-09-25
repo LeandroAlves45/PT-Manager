@@ -81,6 +81,44 @@ jobs:
       - name: Build
         run: npm run build
 
+  site:
+    name: Site de marketing
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Audit (dependências de produção)
+        run: npm audit --omit=dev --audit-level=moderate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Format
+        run: npm run format:check
+
+      # Os testes leem frontend/…/globals.css e backend/…/SubscriptionTier.cs (checkout completo).
+      - name: Test
+        run: npm run test:run
+
+      - name: Build (SSR + pré-render)
+        run: npm run build
+
   contract:
     name: Contrato OpenAPI
     runs-on: ubuntu-latest

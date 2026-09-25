@@ -61,12 +61,14 @@ public sealed class DevelopmentDataSeeder
 
         var catalog = await SeedGlobalCatalogAsync(superuserId.Value, now, cancellationToken);
         await SeedTrainerTenantAsync(catalog, now, cancellationToken);
+        await SeedSecondTrainerTenantAsync(now, cancellationToken);
 
         _logger.LogInformation(
-            "Development seed completed successfully. Accounts: {Superuser}, {Trainer}, {Client}",
+            "Development seed completed successfully. Accounts: {Superuser}, {Trainer}, {Client}, {SecondTrainer}",
             _options.SuperuserEmail,
             _options.TrainerEmail,
-            _options.ClientEmail);
+            _options.ClientEmail,
+            _options.SecondTrainerEmail);
     }
 
     /// <summary>
@@ -90,6 +92,7 @@ public sealed class DevelopmentDataSeeder
             new EmailAddress(_options.SuperuserEmail).Normalized,
             new EmailAddress(_options.TrainerEmail).Normalized,
             new EmailAddress(_options.ClientEmail).Normalized,
+            new EmailAddress(_options.SecondTrainerEmail).Normalized,
         };
 
         var users = await context.Users
@@ -108,6 +111,7 @@ public sealed class DevelopmentDataSeeder
         RequireUser(expectedEmails[0], "superuser");
         RequireUser(expectedEmails[1], "trainer");
         RequireUser(expectedEmails[2], "client");
+        RequireUser(expectedEmails[3], "trainer");
 
         var trainerId = users
             .Where(user => user.NormalizedEmail == expectedEmails[1])
@@ -280,6 +284,32 @@ public sealed class DevelopmentDataSeeder
                 "workout completion",
                 context.WorkoutCompletions.IgnoreQueryFilters()
                     .Where(entity => entity.OwnerTrainerId == trainerId.Value),
+                minimum: 1);
+        }
+
+        var secondTrainerId = users
+            .Where(user => user.NormalizedEmail == expectedEmails[3])
+            .Select(user => (Guid?)user.Id)
+            .SingleOrDefault();
+
+        if (secondTrainerId.HasValue)
+        {
+            await RequireCountAsync(
+                "second trainer client",
+                context.Clients.IgnoreQueryFilters()
+                    .Where(entity =>
+                        entity.OwnerTrainerId == secondTrainerId.Value
+                        && entity.Name == "Marta Figueiredo"),
+                minimum: 1);
+            await RequireCountAsync(
+                "second trainer subscription",
+                context.TrainerSubscriptions.IgnoreQueryFilters()
+                    .Where(entity => entity.TrainerId == secondTrainerId.Value),
+                minimum: 1);
+            await RequireCountAsync(
+                "second trainer settings",
+                context.TrainerSettings.IgnoreQueryFilters()
+                    .Where(entity => entity.TrainerId == secondTrainerId.Value),
                 minimum: 1);
         }
 
@@ -733,6 +763,66 @@ public sealed class DevelopmentDataSeeder
 
         db.ClientSupplementIntakes.Add(new ClientSupplementIntake(
             trainerId, joao.Id, assignment.Id, today, now));
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Semeia um segundo tenant mínimo -> conta, subscrição, definições e um cliente sem conta.
+    /// </summary>
+    /// <remarks>
+    /// Serve essencialmente para testar a UI no frontend e validar que um personal trainer
+    /// não consegue ver o catálogo privado do outro.
+    /// </remarks>
+    private async Task SeedSecondTrainerTenantAsync(DateTime now, CancellationToken cancellationToken)
+    {
+        var today = DateOnly.FromDateTime(now);
+
+        Guid trainerId;
+        await using (var bootstrap = _scopeFactory.CreateAsyncScope())
+        {
+            Establish(
+                bootstrap,
+                trainerId: null,
+                userId: null,
+                role: "superuser",
+                isAdministrative: true);
+            var context = bootstrap.ServiceProvider.GetRequiredService<PtManagerDbContext>();
+
+            var trainer = CreateAccount(
+                bootstrap,
+                new EmailAddress(_options.SecondTrainerEmail),
+                "trainer",
+                "Rita Sousa",
+                now);
+            trainer.ConfirmEmail(now);
+            context.Users.Add(trainer);
+            await context.SaveChangesAsync(cancellationToken);
+
+            trainerId = trainer.Id;
+        }
+
+        await using var scope = _scopeFactory.CreateAsyncScope();
+        Establish(
+            scope,
+            trainerId,
+            trainerId,
+            "trainer",
+            isAdministrative: false);
+        var db = scope.ServiceProvider.GetRequiredService<PtManagerDbContext>();
+
+        var subscription = new TrainerSubscription(trainerId, now.AddDays(30), now);
+        db.TrainerSubscriptions.Add(subscription);
+        db.TrainerSettings.Add(new Domain.Entities.TrainerSettings.TrainerSettings(trainerId, now));
+
+        db.Clients.Add(NewClient(
+            trainerId,
+            "Marta Figueiredo",
+            "marta@ptmanager.local",
+            "+351912345680",
+            today,
+            now));
+        subscription.RegisterClientAdded(now);
 
         await db.SaveChangesAsync(cancellationToken);
     }

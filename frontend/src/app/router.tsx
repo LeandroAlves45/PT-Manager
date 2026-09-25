@@ -10,6 +10,9 @@ import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { AdminOverviewPage } from '@/features/admin-overview/pages/AdminOverviewPage';
 import { CatalogPage } from '@/features/admin-catalog/pages/CatalogPage';
 import { ModerationPage } from '@/features/admin-moderation/pages/ModerationPage';
+import { ClientDetailPage } from '@/features/clients/pages/ClientDetailPage';
+import { ClientsPage } from '@/features/clients/pages/ClientsPage';
+import { TrainerDashboardPage } from '@/features/trainer-dashboard/pages/TrainerDashboardPage';
 import { RootRedirect } from '@/app/RootRedirect';
 import { PhasePlaceholderPage } from '@/shared/components/PhasePlaceholderPage';
 
@@ -60,9 +63,9 @@ const applicationRoutes: RouteObject[] = [
             path: '/trainer',
             element: <AppShell />,
             children: [
-              { index: true, element: placeholder('Painel', '6E') },
-              { path: 'clients', element: placeholder('Clientes', '6E') },
-              { path: 'clients/:clientId', element: placeholder('Cliente', '6E') },
+              { index: true, element: <TrainerDashboardPage /> },
+              { path: 'clients', element: <ClientsPage /> },
+              { path: 'clients/:clientId', element: <ClientDetailPage /> },
               { path: 'sessions', element: placeholder('Sessões e packs', '6E') },
               { path: 'check-ins', element: placeholder('Check-ins', '6E') },
               { path: 'training-plans', element: placeholder('Planos de treino', '6E') },
