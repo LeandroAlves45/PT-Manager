@@ -50,3 +50,12 @@ o trabalho é só frontend.
 se só falta UI, apresentar ao utilizador o custo real antes de a empurrar. Upload com barra de
 progresso (XHR) foi a opção escolhida. O teste real com R2 continua dependente de
 `QG5D-PROVIDER-001` (credenciais + CORS PUT no bucket).
+
+## 2026-09-25 — Sexo do cliente deixa de vir pré-escolhido (6E-1)
+
+**O que aconteceu.** O blueprint 05 (`ClientForm`) definia `sex: … ?? 'female'` para clientes
+novos. Na revisão de fecho viu-se que isso grava "Feminino" sem o trainer escolher e torna
+inalcançável a mensagem "Escolhe o sexo biológico.".
+
+**A regra.** Campos que alimentam cálculos (sexo, nível de atividade) não têm valor por omissão
+em criação: opção vazia desativada "Escolhe…" e validação Zod. Mutação M17 protege-o.

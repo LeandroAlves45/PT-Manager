@@ -6,6 +6,12 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-09-25 — Sprint 6E-1 FINALIZADA.** O CI vermelho de `49c3d13` vinha do doc 07 (testes) não
+aplicado. Aplicado; 4 defeitos de revisão (paginação vazia → onboarding, "há 1 dias", sexo
+pré-escolhido, loadings não anunciados) + 3 de copy corrigidos; 143 testes, 17/17 mutações,
+design-is 21/30. Faltam verificações manuais com login. Ver
+`Sessions/2026-09-25-sprint6e1-fecho-frontend.md` e o relatório `sprint_6E1/09`.
+
 **2026-09-25 — Site de marketing `site/` criado.** O export do Claude Design foi reconstruído como
 app React 19 + TS por camadas, pré-renderizada, com CSP estrita e 44 testes; `landing-page-site/`
 apagada. A copy falsa de pagamentos Stripe foi removida. O CTA leva ao login até à 6G. design-is

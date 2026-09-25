@@ -94,3 +94,14 @@ Lições capturadas depois de correções do utilizador.
 
 - Copy de marketing gerada (Claude Design) promete funcionalidades que não existem: verificar cada frase contra o backend antes de publicar e proteger com um teste de conteúdo.
 - Barras invertidas em strings escritas via Bash heredoc ou Edit podem ser interpretadas (`\u003c` virou `<` e anulou um escape de XSS). Em código de segurança, testar o escape e, se preciso, construir o carácter com `String.fromCharCode`.
+
+## 2026-09-25 — Fecho da 6E-1
+
+- **Um pack de blueprints só está aplicado quando o doc de testes também está.** Aplicar o doc 07
+  por último e correr a suite antes do push: uma rota nova que faz pedidos parte testes antigos
+  que a visitam (MSW `onUnhandledRequest: 'error'` → timeout).
+- **Valor por omissão num `<select>` de dado clínico é uma decisão, não um detalhe**: um
+  "Feminino" pré-escolhido gravava-se sem escolha. Opção vazia desativada + Zod a recusar.
+- **Estados vazios dependem da página**: com paginação, "lista vazia" ≠ "não há dados"; testar a
+  página além da última.
+- **Contagens vindas do backend podem ser 0 ou 1**: nunca fixar o plural.
