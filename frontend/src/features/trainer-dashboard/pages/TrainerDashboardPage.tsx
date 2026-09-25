@@ -7,6 +7,7 @@ import { useTrainerDashboardQuery } from '@/features/trainer-dashboard/api/dashb
 import { BentoCard } from '@/features/trainer-dashboard/components/BentoCard';
 import { PackSalesBlock } from '@/features/trainer-dashboard/components/PackSalesBlock';
 import { SessionsTodayBlock } from '@/features/trainer-dashboard/components/SessionsTodayBlock';
+import type { components } from '@/shared/api/schema';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState';
 import { Button } from '@/shared/components/ui/button';
@@ -22,6 +23,20 @@ function eyebrowDate(localToday: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+type ClientWithoutPlan = components['schemas']['ClientWithoutTrainingPlanResponse'];
+
+/**
+ * Contexto de um cliente sem plano de treino.
+ *
+ * `days_without_plan` pode ser 0 ou 1 (o backend faz `Math.Max(0, hoje − desde)`), por isso
+ * o plural não pode ser fixo; "ficha nova" evita presumir o género do cliente.
+ */
+function withoutPlanLabel(client: ClientWithoutPlan): string {
+  if (!client.has_had_plan) return `ficha nova · ${formatDate(client.without_plan_since)}`;
+  if (client.days_without_plan === 0) return 'sem plano desde hoje';
+  return `sem plano há ${client.days_without_plan} ${client.days_without_plan === 1 ? 'dia' : 'dias'}`;
+}
+
 /** Larguras dos seis blocos no bento de 12 colunas, pela ordem de apresentação. */
 const SKELETON_SPANS = [
   'lg:col-span-4',
@@ -31,10 +46,6 @@ const SKELETON_SPANS = [
   'lg:col-span-4',
   'lg:col-span-3',
 ] as const;
-
-/** Classe dos links-botão das ações dos blocos. */
-const ACTION_CLASS =
-  'border-border hover:bg-accent focus-visible:outline-ring inline-flex min-h-11 w-full items-center justify-center rounded-md border px-3 text-sm font-medium transition-colors focus-visible:outline-2 md:min-h-9';
 
 /**
  * Painel do personal trainer: bento de alertas, cada um com uma só ação.
@@ -65,7 +76,7 @@ export function TrainerDashboardPage() {
     return (
       <section className="space-y-6">
         {header()}
-        <div aria-label="A carregar painel..." className="grid gap-4 lg:grid-cols-12">
+        <div role="status" aria-label="A carregar painel…" className="grid gap-4 lg:grid-cols-12">
           {/* Classes completas: o Tailwind não gera `lg:col-span-${n}` construído em runtime. */}
           {SKELETON_SPANS.map((span, index) => (
             <Skeleton key={index} className={`h-48 ${span}`} />
@@ -140,9 +151,9 @@ export function TrainerDashboardPage() {
           icon={AlertTriangle}
           className="lg:col-span-5"
           action={
-            <Link to="/trainer/sessions" className={ACTION_CLASS}>
-              Renovar packs
-            </Link>
+            <Button asChild variant="outline" className="min-h-11 w-full md:min-h-9">
+              <Link to="/trainer/sessions">Renovar packs</Link>
+            </Button>
           }
         >
           {data.packs_ending.items.length === 0 ? (
@@ -179,9 +190,9 @@ export function TrainerDashboardPage() {
           icon={CalendarRange}
           className="lg:col-span-3"
           action={
-            <Link to="/trainer/training-plans" className={ACTION_CLASS}>
-              Prolongar
-            </Link>
+            <Button asChild variant="outline" className="min-h-11 w-full md:min-h-9">
+              <Link to="/trainer/training-plans">Prolongar</Link>
+            </Button>
           }
         >
           <p className="font-display text-5xl leading-none tabular-nums">
@@ -211,11 +222,7 @@ export function TrainerDashboardPage() {
                     >
                       {client.client_name}
                     </Link>
-                    <p className="text-muted-foreground text-xs">
-                      {client.has_had_plan
-                        ? `sem plano há ${client.days_without_plan} dias`
-                        : `nova · ${formatDate(client.without_plan_since)}`}
-                    </p>
+                    <p className="text-muted-foreground text-xs">{withoutPlanLabel(client)}</p>
                   </div>
                   <Link
                     to={`/trainer/training-plans?client_id=${client.client_id}`}

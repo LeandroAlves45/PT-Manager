@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import type { components } from '@/shared/api/schema';
+import { dashboardResponse } from '@/test/msw/trainer-fixtures';
 
 /**
  * Handlers base do MSW: o caminho feliz da API usada pelas fundações da 6C.
@@ -60,6 +61,11 @@ export const handlers = [
   ),
   http.get(`${API}/clients`, () =>
     HttpResponse.json({ items: [], page_number: 1, page_size: 5, total_count: 0 })
+  ),
+  // [6E] NOVO: `/trainer` deixou de ser um placeholder; qualquer teste que entre como
+  // trainer carrega o painel. Sem clientes, para o ecrã ficar no estado mais leve.
+  http.get(`${API}/dashboard`, () =>
+    HttpResponse.json(dashboardResponse({ active_client_count: 0 }))
   ),
 ];
 

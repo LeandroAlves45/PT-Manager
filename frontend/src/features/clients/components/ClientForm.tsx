@@ -29,11 +29,11 @@ const clientSchema = z.object({
     .string()
     .trim()
     .min(1, 'Indica o nome do cliente.')
-    .max(255, 'O nome não pode ter exceder 255 caracteres.'),
+    .max(255, 'O nome não pode exceder 255 caracteres.'),
   contact_email: z
     .string()
     .trim()
-    .max(255, 'O email não pode ter exceder 255 caracteres.')
+    .max(255, 'O email não pode exceder 255 caracteres.')
     .refine(
       (value) => value === '' || z.email().safeParse(value).success,
       'Indica um email válido.'
@@ -42,7 +42,7 @@ const clientSchema = z.object({
     .string()
     .trim()
     .min(1, 'Indica um número de telefone.')
-    .max(32, 'O número de telefone não pode ter exceder 32 caracteres.'),
+    .max(32, 'O número de telefone não pode exceder 32 caracteres.'),
   birth_date: z
     .string()
     .min(1, 'Indica a data de nascimento.')
@@ -110,7 +110,9 @@ export function ClientForm({
       contact_email: client?.contact_email ?? '',
       phone: client?.phone ?? '',
       birth_date: client?.birth_date ?? '',
-      sex: (client?.sex as ClientValues['sex'] | undefined) ?? 'female',
+      // Sem valor por omissão num cliente novo: o sexo entra no cálculo energético e um
+      // "Feminino" pré-escolhido gravava-se sem o trainer decidir. O Zod recusa o vazio.
+      sex: (client?.sex ?? '') as ClientValues['sex'],
       objective: client?.objective ?? '',
       notes: client?.notes ?? '',
       emergency_contact_name: client?.emergency_contact_name ?? '',
@@ -189,6 +191,9 @@ export function ClientForm({
         <FormField label="Sexo biológico" error={errors.sex?.message}>
           {(control) => (
             <NativeSelect {...control} {...form.register('sex')}>
+              <option value="" disabled>
+                Escolhe…
+              </option>
               {Object.entries(SEX_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}

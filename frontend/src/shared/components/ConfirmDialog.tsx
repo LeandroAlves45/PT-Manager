@@ -26,7 +26,7 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel,
-  pendingLabel = 'A guardar...',
+  pendingLabel = 'A guardar…',
   destructive = false,
   pending,
   onConfirm,

@@ -80,7 +80,7 @@ const assessmentSchema = z.object({
     sleep_quality: scale,
     mood: scale,
     stress_level: scale,
-    avg_water_liters_per_day: positiveOrNull('A água tem de ser maior que 0L.'),
+    avg_water_liters_per_day: positiveOrNull('A água tem de ser maior que 0 L.'),
     hungriest_time_of_day: longText,
     uses_supplements: z.enum(['', 'yes', 'no']),
     current_supplements: longText,

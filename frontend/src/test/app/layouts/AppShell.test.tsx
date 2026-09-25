@@ -75,7 +75,9 @@ describe('AppShell on desktop', () => {
     const { nav } = await openAs('trainer', '/trainer');
 
     await waitFor(() => expect(requests).toBeGreaterThan(0));
-    await waitFor(() => expect(screen.queryByText(/clientes/)).not.toBeInTheDocument());
+    // [6E] ALTERADO: só o texto do cartão ("3 de 10 clientes"); o onboarding do painel real
+    // também diz "clientes" e fazia a regex antiga falhar sem o cartão estar visível.
+    await waitFor(() => expect(screen.queryByText(/de \d+ clientes/)).not.toBeInTheDocument());
     expect(within(nav).getByRole('link', { name: 'Clientes' })).toBeInTheDocument();
   });
 

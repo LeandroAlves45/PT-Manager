@@ -59,7 +59,9 @@ export function ClientsPage() {
   const items = query.data?.items ?? [];
   const total = query.data?.total_count ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / CLIENT_PAGE_SIZE));
-  const filtered = search !== '' || activity !== 'active';
+  // Uma página vazia além da primeira (último cliente arquivado, `?page=` antigo) não é
+  // onboarding: mostra "Sem resultados" e "Limpar filtros" volta à página 1.
+  const filtered = search !== '' || activity !== 'active' || page > 1;
 
   async function toggleActivity() {
     if (confirm === null) return;
@@ -114,7 +116,7 @@ export function ClientsPage() {
       </div>
 
       {query.isPending ? (
-        <div aria-label="A carregar clientes..." className="space-y-2">
+        <div role="status" aria-label="A carregar clientes…" className="space-y-2">
           {Array.from({ length: 5 }, (_, index) => (
             <Skeleton key={index} className="h-12 w-full" />
           ))}

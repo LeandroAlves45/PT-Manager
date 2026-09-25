@@ -32,6 +32,16 @@ export function renderApp({
   routes?: RouteObject[];
   queryClient?: QueryClient;
 } = {}) {
+  // [6E] NOVO: o adapter do nuqs lê a query string de `window.location`, não do router em
+  // memória. Sem isto, `?new=true` ou `?activity=all` nunca chegavam ao ecrã, e o URL de um
+  // teste anterior (escrito pelo nuqs com `history.replaceState`) contaminava o seguinte.
+  const current = initialEntries[initialEntries.length - 1] ?? '/';
+  window.history.replaceState(
+    null,
+    '',
+    typeof current === 'string' ? current : `${current.pathname}${current.search ?? ''}`
+  );
+
   const router = createMemoryRouter(routes, { initialEntries });
 
   const result = render(

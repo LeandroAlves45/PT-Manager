@@ -68,7 +68,7 @@ export function ClientDetailPage() {
 
   if (client.isPending)
     return (
-      <section aria-label="A carregar cliente..." className="space-y-6">
+      <section role="status" aria-label="A carregar cliente…" className="space-y-6">
         <Skeleton className="h-16 w-full" />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }, (_, index) => (
@@ -153,7 +153,11 @@ export function ClientDetailPage() {
 
       <h2 className="border-primary w-fit border-b-2 pb-2 text-sm font-medium">Resumo</h2>
       {summary.isPending ? (
-        <div aria-label="A carregar resumo..." className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div
+          role="status"
+          aria-label="A carregar resumo…"
+          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+        >
           {Array.from({ length: 4 }, (_, index) => (
             <Skeleton key={index} className="h-28" />
           ))}
@@ -179,7 +183,11 @@ export function ClientDetailPage() {
             {panel === 'edit' && <ClientForm client={data} onSaved={() => setPanel(null)} />}
             {panel === 'assessment' &&
               (assessment.isPending ? (
-                <Skeleton aria-label="A carregar avaliação..." className="h-64 w-full" />
+                <Skeleton
+                  role="status"
+                  aria-label="A carregar avaliação…"
+                  className="h-64 w-full"
+                />
               ) : assessment.isError ? (
                 <ErrorState error={assessment.error} onRetry={() => void assessment.refetch()} />
               ) : (
@@ -298,7 +306,7 @@ function SummaryOverview({ summary, client }: { summary: Summary; client: Client
 
   const weightDetail =
     weight === null
-      ? 'Sem registos de peso.'
+      ? 'Sem registos de peso'
       : weight.change_kg !== null && weight.change_since !== null
         ? `${weight.change_kg > 0 ? '+' : ''}${formatNumber(weight.change_kg, 1)} kg desde ${formatDate(weight.change_since)}`
         : weight.source === 'initial_assessment'
