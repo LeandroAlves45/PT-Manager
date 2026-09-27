@@ -63,6 +63,7 @@ public sealed record UpdateClientSessionPackExpectedEndDateRequest(DateOnly? Exp
 public sealed record ClientSessionPackResponse(
     Guid Id,
     Guid ClientId,
+    string ClientName,
     Guid PackTypeId,
     string PackName,
     int SessionsTotal,
@@ -85,6 +86,7 @@ public sealed record ClientSessionPackResponse(
         return new(
             pack.Id,
             pack.ClientId,
+            pack.ClientName,
             pack.PackTypeId,
             pack.PackName,
             pack.SessionsTotal,

@@ -140,7 +140,7 @@ public sealed class SessionTransitionHandlersTests
                 now);
 
             return Task.FromResult(
-                Outcome ?? SessionStoreResult.ForUpdated(session));
+                Outcome ?? SessionStoreResult.ForUpdated(session, "Ana Silva"));
         }
 
         public Task<SessionStoreResult> CreateAsync(

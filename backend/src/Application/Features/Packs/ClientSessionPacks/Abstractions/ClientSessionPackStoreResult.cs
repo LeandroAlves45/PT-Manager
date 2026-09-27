@@ -24,30 +24,38 @@ public sealed class ClientSessionPackStoreResult
     public Status Kind { get; }
     public ClientSessionPack? Pack { get; }
 
-    private ClientSessionPackStoreResult(Status kind, ClientSessionPack? pack)
+    /// <summary>Nome do cliente do pack; presente sempre que <see cref="Pack"/> está.</summary>
+    public string? ClientName { get; }
+
+    private ClientSessionPackStoreResult(Status kind, ClientSessionPack? pack, string? clientName)
     {
         Kind = kind;
         Pack = pack;
+        ClientName = clientName;
     }
 
-    public static ClientSessionPackStoreResult ForAssigned(ClientSessionPack pack) =>
-        WithPack(Status.Assigned, pack);
+    public static ClientSessionPackStoreResult ForAssigned(ClientSessionPack pack, string clientName) =>
+        WithPack(Status.Assigned, pack, clientName);
 
-    public static ClientSessionPackStoreResult ForUpdated(ClientSessionPack pack) =>
-        WithPack(Status.Updated, pack);
+    public static ClientSessionPackStoreResult ForUpdated(ClientSessionPack pack, string clientName) =>
+        WithPack(Status.Updated, pack, clientName);
 
-    public static ClientSessionPackStoreResult ForAlreadyInRequested(ClientSessionPack pack) =>
-        WithPack(Status.AlreadyInRequestedState, pack);
+    public static ClientSessionPackStoreResult ForAlreadyInRequested(
+        ClientSessionPack pack,
+        string clientName) =>
+        WithPack(Status.AlreadyInRequestedState, pack, clientName);
 
     public static ClientSessionPackStoreResult For(Status status) =>
-        new(status, null);
+        new(status, null, null);
 
     private static ClientSessionPackStoreResult WithPack(
         Status status,
-        ClientSessionPack pack
+        ClientSessionPack pack,
+        string clientName
     )
     {
         ArgumentNullException.ThrowIfNull(pack);
-        return new ClientSessionPackStoreResult(status, pack);
+        ArgumentException.ThrowIfNullOrWhiteSpace(clientName);
+        return new ClientSessionPackStoreResult(status, pack, clientName);
     }
 }

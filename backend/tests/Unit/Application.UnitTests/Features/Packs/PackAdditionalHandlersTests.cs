@@ -212,7 +212,7 @@ public sealed class PackAdditionalHandlersTests
         var pack = CreateClientPack();
         var store = new FakeClientSessionPackStore
         {
-            UpdateOutcome = ClientSessionPackStoreResult.ForAlreadyInRequested(pack)
+            UpdateOutcome = ClientSessionPackStoreResult.ForAlreadyInRequested(pack, "Ana Silva")
         };
         var handler = CreateUpdateExpectedEndDateHandler(store);
 
@@ -226,6 +226,7 @@ public sealed class PackAdditionalHandlersTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal(pack.Id, result.Value.Id);
+        Assert.Equal("Ana Silva", result.Value.ClientName);
     }
 
     private static UpdateClientSessionPackExpectedEndDateHandler
@@ -252,6 +253,7 @@ public sealed class PackAdditionalHandlersTests
     private static ClientSessionPackDto CreateClientPackDto() => new(
         PackId,
         ClientId,
+        "Ana Silva",
         Guid.NewGuid(),
         "Pack",
         10,

@@ -1,4 +1,5 @@
 using Application.Features.Sessions.Abstractions;
+using Application.Pagination;
 using TrainerSettingsEntity = global::Domain.Entities.TrainerSettings.TrainerSettings;
 using Domain.ValueObjects;
 using Infrastructure.IntegrationTests.Clients;
@@ -650,6 +651,49 @@ public sealed class SessionPersistenceTests
             TestContext.Current.CancellationToken);
 
         Assert.Equal(SessionStoreResult.Status.SessionNotFound, result.Kind);
+    }
+
+    // [6E2] NOVO: o nome do cliente chega no resultado do store e na listagem, também depois
+    // de o cliente ser arquivado (arquivar não é apagar: o histórico continua visível).
+    [Fact]
+    public async Task ClientName_IsReturnedByStoreAndList_EvenAfterArchive()
+    {
+        var seed = await SeedAsync();
+        await using var context = _fixture.CreateContext(seed.TrainerId);
+        var expectedName = await context.Clients
+            .Where(client => client.Id == seed.ClientId)
+            .Select(client => client.Name)
+            .SingleAsync(TestContext.Current.CancellationToken);
+        var created = await CreateStore(context).CreateAsync(
+            seed.TrainerId,
+            seed.ClientId,
+            null,
+            Start(1),
+            60,
+            null,
+            null,
+            null,
+            Now,
+            TestContext.Current.CancellationToken);
+        Assert.Equal(expectedName, created.ClientName);
+
+        var client = await context.Clients
+            .SingleAsync(item => item.Id == seed.ClientId, TestContext.Current.CancellationToken);
+        client.Deactivate(Now.AddMinutes(1));
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        await using var readContext = _fixture.CreateContext(seed.TrainerId);
+        var page = await new SessionQueries(readContext).ListAsync(
+            seed.TrainerId,
+            seed.ClientId,
+            null,
+            null,
+            null,
+            new PageRequest(1, 10),
+            TestContext.Current.CancellationToken);
+
+        var item = Assert.Single(page.Items);
+        Assert.Equal(expectedName, item.ClientName);
     }
 
     private async Task<SessionStoreResult> CompleteAsync(

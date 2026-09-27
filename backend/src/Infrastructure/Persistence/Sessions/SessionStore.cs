@@ -173,7 +173,7 @@ internal sealed class SessionStore : ISessionStore
         {
             return SessionStoreResult.For(SessionStoreResult.Status.TrainerScheduleConflict);
         }
-        return SessionStoreResult.ForCreated(session);
+        return SessionStoreResult.ForCreated(session, client.Name);
     }
 
     private async Task<SessionStoreResult> RescheduleOnceAsync(
@@ -200,7 +200,9 @@ internal sealed class SessionStore : ISessionStore
         if (session.StartsAt == startsAt &&
             session.DurationMinutes == durationMinutes &&
             session.Location == normalizedLocation)
-            return SessionStoreResult.ForAlreadyRequested(session);
+            return SessionStoreResult.ForAlreadyRequested(
+                session,
+                await ClientNameAsync(trainerId, session.ClientId, cancellationToken));
 
         var scheduleFailure = await ValidateScheduleAsync(
             trainerId,
@@ -225,7 +227,9 @@ internal sealed class SessionStore : ISessionStore
             return SessionStoreResult.For(SessionStoreResult.Status.TrainerScheduleConflict);
         }
 
-        return SessionStoreResult.ForUpdated(session);
+        return SessionStoreResult.ForUpdated(
+            session,
+            await ClientNameAsync(trainerId, session.ClientId, cancellationToken));
     }
 
     private async Task<SessionStoreResult> ChangePackOnceAsync(
@@ -241,7 +245,9 @@ internal sealed class SessionStore : ISessionStore
         if (session.Status != SessionStatus.Scheduled)
             return SessionStoreResult.For(SessionStoreResult.Status.InvalidState);
         if (session.ClientSessionPackId == packId)
-            return SessionStoreResult.ForAlreadyRequested(session);
+            return SessionStoreResult.ForAlreadyRequested(
+                session,
+                await ClientNameAsync(trainerId, session.ClientId, cancellationToken));
 
         if (packId.HasValue && await LockUsablePackAsync(
             trainerId,
@@ -252,7 +258,9 @@ internal sealed class SessionStore : ISessionStore
 
         session.ChangePack(packId, now);
         await _dbContext.SaveChangesAsync(cancellationToken);
-        return SessionStoreResult.ForUpdated(session);
+        return SessionStoreResult.ForUpdated(
+            session,
+            await ClientNameAsync(trainerId, session.ClientId, cancellationToken));
     }
 
     private async Task<SessionStoreResult> TransitionOnceAsync(
@@ -272,7 +280,9 @@ internal sealed class SessionStore : ISessionStore
 
         var targetStatus = TargetStatus(transition);
         if (session.Status == targetStatus)
-            return SessionStoreResult.ForAlreadyRequested(session);
+            return SessionStoreResult.ForAlreadyRequested(
+                session,
+                await ClientNameAsync(trainerId, session.ClientId, cancellationToken));
 
         if (transition != SessionTransition.Restore &&
             session.Status != SessionStatus.Scheduled)
@@ -304,7 +314,9 @@ internal sealed class SessionStore : ISessionStore
 
         ApplyTransition(session, transition, now);
         await _dbContext.SaveChangesAsync(cancellationToken);
-        return SessionStoreResult.ForUpdated(session);
+        return SessionStoreResult.ForUpdated(
+            session,
+            await ClientNameAsync(trainerId, session.ClientId, cancellationToken));
     }
 
     private async Task<SessionStoreResult> RestoreAsync(
@@ -361,8 +373,24 @@ internal sealed class SessionStore : ISessionStore
             return SessionStoreResult.For(SessionStoreResult.Status.TrainerScheduleConflict);
         }
 
-        return SessionStoreResult.ForUpdated(session);
+        return SessionStoreResult.ForUpdated(
+            session,
+            await ClientNameAsync(trainerId, session.ClientId, cancellationToken));
     }
+
+    /// <summary>
+    /// O nome vai na resposta para a agenda e a tabela não pedirem clientes à parte.
+    /// Filtro global ativo, como nas queries: nenhum fluxo apaga (soft delete) clientes.
+    /// </summary>
+    private Task<string> ClientNameAsync(
+        Guid trainerId,
+        Guid clientId,
+        CancellationToken cancellationToken) =>
+        _dbContext.Clients
+            .AsNoTracking()
+            .Where(client => client.OwnerTrainerId == trainerId && client.Id == clientId)
+            .Select(client => client.Name)
+            .SingleAsync(cancellationToken);
 
     private bool IsScheduleConflict(
         DbUpdateException exception,

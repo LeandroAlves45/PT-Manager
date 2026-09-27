@@ -4,6 +4,7 @@ namespace Application.Features.Sessions.Dtos;
 public sealed record SessionDto(
     Guid Id,
     Guid ClientId,
+    string ClientName,
     Guid? ClientSessionPackId,
     DateTimeOffset StartsAt,
     int DurationMinutes,

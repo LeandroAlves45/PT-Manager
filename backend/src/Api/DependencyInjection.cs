@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Api.Authorization;
 using Api.Configuration;
+using Api.Http;
 using Api.Security;
 
 namespace Api;
@@ -17,6 +18,9 @@ public static class DependencyInjection
         services.AddControllers(options =>
             {
                 options.Filters.Add<RequireOriginFilter>();
+                // Antes dos providers por omissão: enums da query aceitam o nome snake_case
+                // que o OpenAPI publica, além do nome do membro.
+                options.ModelBinderProviders.Insert(0, new QueryEnumModelBinderProvider());
             })
             .AddJsonOptions(options => ConfigureJson(options.JsonSerializerOptions));
 

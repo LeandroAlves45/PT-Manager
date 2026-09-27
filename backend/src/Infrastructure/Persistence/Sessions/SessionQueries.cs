@@ -26,7 +26,7 @@ internal sealed class SessionQueries : ISessionQueries
         CancellationToken cancellationToken) =>
         BaseQuery(trainerId)
             .Where(session => session.Id == sessionId)
-            .Select(Projection)
+            .Select(Projection())
             .SingleOrDefaultAsync(cancellationToken);
 
     public async Task<PageResult<SessionDto>> ListAsync(
@@ -67,7 +67,7 @@ internal sealed class SessionQueries : ISessionQueries
             .ThenBy(session => session.Id)
             .Skip((page.PageNumber - 1) * page.PageSize)
             .Take(page.PageSize)
-            .Select(Projection)
+            .Select(Projection())
             .ToListAsync(cancellationToken);
 
         return new PageResult<SessionDto>(items, totalCount);
@@ -89,10 +89,15 @@ internal sealed class SessionQueries : ISessionQueries
             _ => throw new ArgumentOutOfRangeException(nameof(status))
         };
 
-    private static Expression<Func<Session, SessionDto>> Projection =>
+    private Expression<Func<Session, SessionDto>> Projection() =>
         session => new SessionDto(
             session.Id,
             session.ClientId,
+            _dbContext.Clients
+                .Where(client => client.OwnerTrainerId == session.OwnerTrainerId &&
+                    client.Id == session.ClientId)
+                .Select(client => client.Name)
+                .First(),
             session.ClientSessionPackId,
             session.StartsAt,
             session.DurationMinutes,

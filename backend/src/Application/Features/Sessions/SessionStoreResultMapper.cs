@@ -14,7 +14,7 @@ internal static class SessionStoreResultMapper
             SessionStoreResult.Status.Created or
             SessionStoreResult.Status.Updated or
             SessionStoreResult.Status.AlreadyInRequestedState =>
-                Result<SessionDto>.Success(outcome.Session!.ToDto()),
+                Result<SessionDto>.Success(outcome.Session!.ToDto(outcome.ClientName!)),
 
             SessionStoreResult.Status.SessionNotFound =>
                 Result<SessionDto>.Failure(SessionErrors.SessionNotFound),

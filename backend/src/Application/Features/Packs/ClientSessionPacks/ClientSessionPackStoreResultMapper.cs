@@ -13,7 +13,7 @@ internal static class ClientSessionPackStoreResultMapper
         outcome.Kind switch
         {
             ClientSessionPackStoreResult.Status.Assigned =>
-                Result<ClientSessionPackDto>.Success(outcome.Pack!.ToDto()),
+                Result<ClientSessionPackDto>.Success(outcome.Pack!.ToDto(outcome.ClientName!)),
             ClientSessionPackStoreResult.Status.ClientNotFound =>
                 Result<ClientSessionPackDto>.Failure(ClientErrors.ClientNotFound),
             ClientSessionPackStoreResult.Status.ClientInactive =>
@@ -45,7 +45,7 @@ internal static class ClientSessionPackStoreResultMapper
         {
             ClientSessionPackStoreResult.Status.Updated or
             ClientSessionPackStoreResult.Status.AlreadyInRequestedState =>
-                Result<ClientSessionPackDto>.Success(outcome.Pack!.ToDto()),
+                Result<ClientSessionPackDto>.Success(outcome.Pack!.ToDto(outcome.ClientName!)),
             ClientSessionPackStoreResult.Status.PackNotFound =>
                 Result<ClientSessionPackDto>.Failure(PackErrors.ClientSessionPackNotFound),
             ClientSessionPackStoreResult.Status.ExpectedEndDateBeforePurchase =>

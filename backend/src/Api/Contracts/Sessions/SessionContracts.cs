@@ -22,9 +22,16 @@ public sealed record RescheduleSessionRequest(
 public sealed record ChangeSessionPackRequest(Guid? ClientSessionPackId);
 
 /// <summary>Sessão agendada e o seu estado atual.</summary>
-public sealed record SessionResponse(
+/// <remarks>
+/// Chama-se <c>TrainingSessionResponse</c> e não <c>SessionResponse</c> porque o OpenAPI
+/// identifica os schemas pelo nome curto do tipo: com dois <c>SessionResponse</c> (este e o da
+/// autenticação) o documento fundia-os num só e o frontend recebia os campos do token aqui.
+/// O JSON serializado é o mesmo; só o nome do schema muda.
+/// </remarks>
+public sealed record TrainingSessionResponse(
     Guid Id,
     Guid ClientId,
+    string ClientName,
     Guid? ClientSessionPackId,
     DateTimeOffset StartsAt,
     int DurationMinutes,
@@ -37,13 +44,14 @@ public sealed record SessionResponse(
     DateTime UpdatedAt)
 {
     /// <summary>Projeta o DTO da Application.</summary>
-    public static SessionResponse From(SessionDto session)
+    public static TrainingSessionResponse From(SessionDto session)
     {
         ArgumentNullException.ThrowIfNull(session);
 
         return new(
             session.Id,
             session.ClientId,
+            session.ClientName,
             session.ClientSessionPackId,
             session.StartsAt,
             session.DurationMinutes,

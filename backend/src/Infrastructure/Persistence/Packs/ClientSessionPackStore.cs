@@ -10,10 +10,8 @@ public sealed class ClientSessionPackStore : IClientSessionPackStore
 {
     private readonly PtManagerDbContext _dbContext;
 
-    public ClientSessionPackStore(PtManagerDbContext dbContext)
-    {
+    public ClientSessionPackStore(PtManagerDbContext dbContext) =>
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
 
     public Task<ClientSessionPackStoreResult> AssignAsync(
         Guid trainerId,
@@ -144,7 +142,7 @@ public sealed class ClientSessionPackStore : IClientSessionPackStore
             _dbContext.ClientSessionPacks.Add(pack);
             await _dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
-            return ClientSessionPackStoreResult.ForAssigned(pack);
+            return ClientSessionPackStoreResult.ForAssigned(pack, client.Name);
         }
         catch
         {
@@ -255,14 +253,16 @@ public sealed class ClientSessionPackStore : IClientSessionPackStore
                 );
             if (pack.ExpectedEndDate == expectedEndDate)
             {
+                var unchangedName = await ClientNameAsync(trainerId, pack.ClientId, cancellationToken);
                 await transaction.RollbackAsync(CancellationToken.None);
-                return ClientSessionPackStoreResult.ForAlreadyInRequested(pack);
+                return ClientSessionPackStoreResult.ForAlreadyInRequested(pack, unchangedName);
             }
 
             pack.ChangeExpectedEndDate(expectedEndDate, now);
             await _dbContext.SaveChangesAsync(cancellationToken);
+            var clientName = await ClientNameAsync(trainerId, pack.ClientId, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
-            return ClientSessionPackStoreResult.ForUpdated(pack);
+            return ClientSessionPackStoreResult.ForUpdated(pack, clientName);
         }
         catch
         {
@@ -270,6 +270,17 @@ public sealed class ClientSessionPackStore : IClientSessionPackStore
             throw;
         }
     }
+
+    // [6E2] NOVO: nome do cliente para a resposta, como em SessionStore.
+    private Task<string> ClientNameAsync(
+        Guid trainerId,
+        Guid clientId,
+        CancellationToken cancellationToken) =>
+        _dbContext.Clients
+            .AsNoTracking()
+            .Where(client => client.OwnerTrainerId == trainerId && client.Id == clientId)
+            .Select(client => client.Name)
+            .SingleAsync(cancellationToken);
 
     private static async Task<ClientSessionPackStoreResult> RollbackAsync(
         Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction,

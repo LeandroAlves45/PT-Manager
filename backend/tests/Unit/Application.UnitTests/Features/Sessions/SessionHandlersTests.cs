@@ -200,7 +200,8 @@ public sealed class SessionHandlersTests
                     location,
                     sessionType,
                     notes,
-                    now)));
+                    now),
+                "Ana Silva"));
         }
 
         public Task<SessionStoreResult> TransitionAsync(

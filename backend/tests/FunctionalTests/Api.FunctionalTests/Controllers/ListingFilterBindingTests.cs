@@ -53,4 +53,69 @@ public sealed class ListingFilterBindingTests : ApiReadEndpointsTestContext
         Assert.Contains("training_plan_ends_range_invalid", problem, StringComparison.Ordinal);
     }
 
+    // [6E2] NOVO: enums da query aceitam o nome snake_case publicado no OpenAPI e o nome do
+    // membro, sem distinguir maiúsculas; números e nomes desconhecidos dão 400.
+    [Theory]
+    [InlineData("cancelled_by_client", HttpStatusCode.OK)]
+    [InlineData("CancelledByClient", HttpStatusCode.OK)]
+    [InlineData("CANCELLED_BY_CLIENT", HttpStatusCode.OK)]
+    [InlineData("no_show", HttpStatusCode.OK)]
+    [InlineData("NoShow", HttpStatusCode.OK)]
+    [InlineData("scheduled", HttpStatusCode.OK)]
+    [InlineData("", HttpStatusCode.OK)]
+    [InlineData("1", HttpStatusCode.BadRequest)]
+    [InlineData("99", HttpStatusCode.BadRequest)]
+    [InlineData("cancelled-by-client", HttpStatusCode.BadRequest)]
+    public async Task SessionsListing_BindsStatusByContractOrMemberName(
+        string status,
+        HttpStatusCode expected)
+    {
+        var token = TestContext.Current.CancellationToken;
+        var trainer = await TrainerTenantSeeder.SeedTrainerAsync(
+            _fixture.Factory, $"sst-{Guid.NewGuid():N}", token);
+
+        var client = _fixture.Factory.CreateOriginClient()
+            .WithBearer(TestJwtFactory.IssueTrainer(trainer.TrainerId));
+
+        var response = await client.GetAsync($"/api/v1/sessions?status={status}", token);
+
+        Assert.Equal(expected, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("allowed", HttpStatusCode.OK)]
+    [InlineData("Blocked", HttpStatusCode.OK)]
+    [InlineData("ALL", HttpStatusCode.OK)]
+    [InlineData("pending_review", HttpStatusCode.BadRequest)]
+    [InlineData("2", HttpStatusCode.BadRequest)]
+    public async Task ModerationQueue_BindsStatusByContractOrMemberName(
+        string status,
+        HttpStatusCode expected)
+    {
+        var token = TestContext.Current.CancellationToken;
+        var client = _fixture.Factory.CreateOriginClient()
+            .WithBearer(TestJwtFactory.IssueSuperuser(Guid.NewGuid()));
+
+        var response = await client.GetAsync(
+            $"/api/v1/admin/content-moderation/foods?status={status}&page_size=5", token);
+
+        Assert.Equal(expected, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task EnumQueryFilter_RejectsAnEmptyRequiredValue()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var trainer = await TrainerTenantSeeder.SeedTrainerAsync(
+            _fixture.Factory, $"act-{Guid.NewGuid():N}", token);
+
+        var client = _fixture.Factory.CreateOriginClient()
+            .WithBearer(TestJwtFactory.IssueTrainer(trainer.TrainerId));
+
+        var empty = await client.GetAsync("/api/v1/clients?activity=", token);
+        var archived = await client.GetAsync("/api/v1/clients?activity=archived", token);
+
+        Assert.Equal(HttpStatusCode.BadRequest, empty.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, archived.StatusCode);
+    }
 }

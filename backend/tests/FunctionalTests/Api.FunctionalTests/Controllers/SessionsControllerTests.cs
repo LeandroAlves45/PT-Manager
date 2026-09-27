@@ -36,6 +36,8 @@ public sealed class SessionsControllerTests
 
         var body = await ReadJsonAsync(response);
         Assert.Equal("scheduled", body.GetProperty("status").GetString());
+        // [6E2] NOVO: a agenda mostra o nome sem pedir o cliente à parte.
+        Assert.Equal("Training client", body.GetProperty("client_name").GetString());
     }
 
     [Fact]
@@ -146,6 +148,7 @@ public sealed class SessionsControllerTests
         var body = await ReadJsonAsync(response);
         Assert.Equal("scheduled", body.GetProperty("status").GetString());
         Assert.Equal(45, body.GetProperty("duration_minutes").GetInt32());
+        Assert.Equal("Training client", body.GetProperty("client_name").GetString());
     }
 
     [Theory]
@@ -452,11 +455,13 @@ public sealed class SessionsControllerTests
         var body = await ReadJsonAsync(
             await client.GetAsync("/api/v1/sessions?page_number=1&page_size=50", Token));
 
-        var clientIds = body.GetProperty("items").EnumerateArray()
-            .Select(item => item.GetProperty("client_id").GetGuid())
-            .ToArray();
+        var items = body.GetProperty("items").EnumerateArray().ToArray();
 
-        Assert.All(clientIds, id => Assert.Equal(owner.ClientId, id));
+        Assert.All(items, item =>
+        {
+            Assert.Equal(owner.ClientId, item.GetProperty("client_id").GetGuid());
+            Assert.Equal("Training client", item.GetProperty("client_name").GetString());
+        });
     }
 
     [Theory]

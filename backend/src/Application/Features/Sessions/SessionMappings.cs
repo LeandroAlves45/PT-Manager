@@ -7,13 +7,17 @@ namespace Application.Features.Sessions;
 public static class SessionMappings
 {
     /// <summary>Mapeia uma sessão sem expor o tenant.</summary>
-    public static SessionDto ToDto(this Session session)
+    /// <param name="session">Sessão persistida.</param>
+    /// <param name="clientName">Nome do cliente, lido pelo store na mesma transação.</param>
+    public static SessionDto ToDto(this Session session, string clientName)
     {
         ArgumentNullException.ThrowIfNull(session);
+        ArgumentException.ThrowIfNullOrWhiteSpace(clientName);
 
         return new SessionDto(
             session.Id,
             session.ClientId,
+            clientName,
             session.ClientSessionPackId,
             session.StartsAt,
             session.DurationMinutes,

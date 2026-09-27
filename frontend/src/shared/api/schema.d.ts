@@ -18792,9 +18792,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["PagedResponseOfSessionResponse"];
-                        "application/json": components["schemas"]["PagedResponseOfSessionResponse"];
-                        "text/json": components["schemas"]["PagedResponseOfSessionResponse"];
+                        "text/plain": components["schemas"]["PagedResponseOfTrainingSessionResponse"];
+                        "application/json": components["schemas"]["PagedResponseOfTrainingSessionResponse"];
+                        "text/json": components["schemas"]["PagedResponseOfTrainingSessionResponse"];
                     };
                 };
                 /** @description Bad Request */
@@ -18921,9 +18921,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["SessionResponse"];
-                        "application/json": components["schemas"]["SessionResponse"];
-                        "text/json": components["schemas"]["SessionResponse"];
+                        "text/plain": components["schemas"]["TrainingSessionResponse"];
+                        "application/json": components["schemas"]["TrainingSessionResponse"];
+                        "text/json": components["schemas"]["TrainingSessionResponse"];
                     };
                 };
                 /** @description Bad Request */
@@ -19058,9 +19058,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["SessionResponse"];
-                        "application/json": components["schemas"]["SessionResponse"];
-                        "text/json": components["schemas"]["SessionResponse"];
+                        "text/plain": components["schemas"]["TrainingSessionResponse"];
+                        "application/json": components["schemas"]["TrainingSessionResponse"];
+                        "text/json": components["schemas"]["TrainingSessionResponse"];
                     };
                 };
                 /** @description Bad Request */
@@ -19209,9 +19209,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["SessionResponse"];
-                        "application/json": components["schemas"]["SessionResponse"];
-                        "text/json": components["schemas"]["SessionResponse"];
+                        "text/plain": components["schemas"]["TrainingSessionResponse"];
+                        "application/json": components["schemas"]["TrainingSessionResponse"];
+                        "text/json": components["schemas"]["TrainingSessionResponse"];
                     };
                 };
                 /** @description Bad Request */
@@ -19344,9 +19344,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["SessionResponse"];
-                        "application/json": components["schemas"]["SessionResponse"];
-                        "text/json": components["schemas"]["SessionResponse"];
+                        "text/plain": components["schemas"]["TrainingSessionResponse"];
+                        "application/json": components["schemas"]["TrainingSessionResponse"];
+                        "text/json": components["schemas"]["TrainingSessionResponse"];
                     };
                 };
                 /** @description Bad Request */
@@ -19483,9 +19483,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["SessionResponse"];
-                        "application/json": components["schemas"]["SessionResponse"];
-                        "text/json": components["schemas"]["SessionResponse"];
+                        "text/plain": components["schemas"]["TrainingSessionResponse"];
+                        "application/json": components["schemas"]["TrainingSessionResponse"];
+                        "text/json": components["schemas"]["TrainingSessionResponse"];
                     };
                 };
                 /** @description Bad Request */
@@ -19622,9 +19622,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["SessionResponse"];
-                        "application/json": components["schemas"]["SessionResponse"];
-                        "text/json": components["schemas"]["SessionResponse"];
+                        "text/plain": components["schemas"]["TrainingSessionResponse"];
+                        "application/json": components["schemas"]["TrainingSessionResponse"];
+                        "text/json": components["schemas"]["TrainingSessionResponse"];
                     };
                 };
                 /** @description Bad Request */
@@ -19761,9 +19761,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["SessionResponse"];
-                        "application/json": components["schemas"]["SessionResponse"];
-                        "text/json": components["schemas"]["SessionResponse"];
+                        "text/plain": components["schemas"]["TrainingSessionResponse"];
+                        "application/json": components["schemas"]["TrainingSessionResponse"];
+                        "text/json": components["schemas"]["TrainingSessionResponse"];
                     };
                 };
                 /** @description Bad Request */
@@ -19900,9 +19900,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["SessionResponse"];
-                        "application/json": components["schemas"]["SessionResponse"];
-                        "text/json": components["schemas"]["SessionResponse"];
+                        "text/plain": components["schemas"]["TrainingSessionResponse"];
+                        "application/json": components["schemas"]["TrainingSessionResponse"];
+                        "text/json": components["schemas"]["TrainingSessionResponse"];
                     };
                 };
                 /** @description Bad Request */
@@ -20049,9 +20049,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["SessionResponse"];
-                        "application/json": components["schemas"]["SessionResponse"];
-                        "text/json": components["schemas"]["SessionResponse"];
+                        "text/plain": components["schemas"]["TrainingSessionResponse"];
+                        "application/json": components["schemas"]["TrainingSessionResponse"];
+                        "text/json": components["schemas"]["TrainingSessionResponse"];
                     };
                 };
                 /** @description Bad Request */
@@ -23142,6 +23142,7 @@ export interface components {
             id: string;
             /** Format: uuid */
             client_id: string;
+            client_name: string;
             /** Format: uuid */
             pack_type_id: string;
             pack_name: string;
@@ -24789,19 +24790,6 @@ export interface components {
          * @description Envelope estável das listagens paginadas. Serializa como
          *         items, total_count, page_number, page_size.
          */
-        PagedResponseOfSessionResponse: {
-            items: components["schemas"]["SessionResponse"][];
-            /** Format: int32 */
-            total_count: number;
-            /** Format: int32 */
-            page_number: number;
-            /** Format: int32 */
-            page_size: number;
-        };
-        /**
-         * @description Envelope estável das listagens paginadas. Serializa como
-         *         items, total_count, page_number, page_size.
-         */
         PagedResponseOfSupplementResponse: {
             items: components["schemas"]["SupplementResponse"][];
             /** Format: int32 */
@@ -24817,6 +24805,19 @@ export interface components {
          */
         PagedResponseOfTrainingPlanSummaryResponse: {
             items: components["schemas"]["TrainingPlanSummaryResponse"][];
+            /** Format: int32 */
+            total_count: number;
+            /** Format: int32 */
+            page_number: number;
+            /** Format: int32 */
+            page_size: number;
+        };
+        /**
+         * @description Envelope estável das listagens paginadas. Serializa como
+         *         items, total_count, page_number, page_size.
+         */
+        PagedResponseOfTrainingSessionResponse: {
+            items: components["schemas"]["TrainingSessionResponse"][];
             /** Format: int32 */
             total_count: number;
             /** Format: int32 */
@@ -25114,6 +25115,30 @@ export interface components {
             is_active: boolean;
             is_archived: boolean;
             needs_review: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        /** @description Sessão agendada e o seu estado atual. */
+        TrainingSessionResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            client_id: string;
+            client_name: string;
+            /** Format: uuid */
+            client_session_pack_id: null | string;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: int32 */
+            duration_minutes: number;
+            location: null | string;
+            session_type: null | string;
+            notes: null | string;
+            status: string;
+            /** Format: date-time */
+            status_changed_at: string;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */

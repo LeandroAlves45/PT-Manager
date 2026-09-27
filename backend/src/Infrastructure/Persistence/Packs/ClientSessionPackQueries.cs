@@ -25,7 +25,7 @@ public sealed class ClientSessionPackQueries : IClientSessionPackQueries
         CancellationToken cancellationToken
     ) => BaseQuery(trainerId)
         .Where(pack => pack.Id == packId)
-        .Select(Projection)
+        .Select(Projection())
         .SingleOrDefaultAsync(cancellationToken);
 
     public async Task<PageResult<ClientSessionPackDto>> ListAsync(
@@ -53,7 +53,7 @@ public sealed class ClientSessionPackQueries : IClientSessionPackQueries
         var items = await ApplyStableOrder(query)
             .Skip((page.PageNumber - 1) * page.PageSize)
             .Take(page.PageSize)
-            .Select(Projection)
+            .Select(Projection())
             .ToListAsync(cancellationToken);
 
         return new PageResult<ClientSessionPackDto>(items, totalCount);
@@ -68,7 +68,7 @@ public sealed class ClientSessionPackQueries : IClientSessionPackQueries
                 .Where(pack => pack.ClientId == clientId)
                 .Where(pack => pack.SessionsRemaining > 0)
         )
-        .Select(Projection)
+        .Select(Projection())
         .ToListAsync(cancellationToken);
 
     private IQueryable<ClientSessionPack> BaseQuery(Guid trainerId) =>
@@ -84,10 +84,18 @@ public sealed class ClientSessionPackQueries : IClientSessionPackQueries
         .ThenBy(pack => pack.CreatedAt)
         .ThenBy(pack => pack.Id);
 
-    private static Expression<Func<ClientSessionPack, ClientSessionPackDto>> Projection =>
+    // [6E2] ALTERADO: deixou de ser estática para ler o nome do cliente numa subquery
+    // correlacionada (um só SELECT). Nunca IgnoreQueryFilters aqui: no EF Core desliga os
+    // filtros globais da query inteira e os packs cancelados voltavam à lista.
+    private Expression<Func<ClientSessionPack, ClientSessionPackDto>> Projection() =>
         pack => new ClientSessionPackDto(
             pack.Id,
             pack.ClientId,
+            _dbContext.Clients
+                .Where(client => client.OwnerTrainerId == pack.OwnerTrainerId &&
+                    client.Id == pack.ClientId)
+                .Select(client => client.Name)
+                .First(),
             pack.PackTypeId,
             pack.PackName,
             pack.SessionsTotal,

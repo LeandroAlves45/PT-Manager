@@ -4,6 +4,7 @@ namespace Application.Features.Packs.ClientSessionPacks.Dtos;
 public sealed record ClientSessionPackDto(
     Guid Id,
     Guid ClientId,
+    string ClientName,
     Guid PackTypeId,
     string PackName,
     int SessionsTotal,

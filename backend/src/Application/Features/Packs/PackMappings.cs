@@ -26,13 +26,17 @@ public static class PackMappings
     }
 
     /// <summary>Mapeia um pack atribuído sem expor o tenant.</summary>
-    public static ClientSessionPackDto ToDto(this ClientSessionPack pack)
+    /// <param name="pack">Pack persistido.</param>
+    /// <param name="clientName">Nome do cliente, lido pelo store na mesma transação.</param>
+    public static ClientSessionPackDto ToDto(this ClientSessionPack pack, string clientName)
     {
         ArgumentNullException.ThrowIfNull(pack);
+        ArgumentException.ThrowIfNullOrWhiteSpace(clientName);
 
         return new ClientSessionPackDto(
             pack.Id,
             pack.ClientId,
+            clientName,
             pack.PackTypeId,
             pack.PackName,
             pack.SessionsTotal,

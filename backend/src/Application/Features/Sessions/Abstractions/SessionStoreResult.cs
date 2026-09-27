@@ -25,23 +25,28 @@ public sealed class SessionStoreResult
     public Status Kind { get; }
     public Session? Session { get; }
 
-    private SessionStoreResult(Status kind, Session? session)
+    /// <summary>Nome do cliente da sessão; presente sempre que <see cref="Session"/> está.</summary>
+    public string? ClientName { get; }
+
+    private SessionStoreResult(Status kind, Session? session, string? clientName)
     {
         Kind = kind;
         Session = session;
+        ClientName = clientName;
     }
 
-    public static SessionStoreResult ForCreated(Session session) =>
-        WithSession(Status.Created, session);
-    public static SessionStoreResult ForUpdated(Session session) =>
-        WithSession(Status.Updated, session);
-    public static SessionStoreResult ForAlreadyRequested(Session session) =>
-        WithSession(Status.AlreadyInRequestedState, session);
-    public static SessionStoreResult For(Status status) => new(status, null);
+    public static SessionStoreResult ForCreated(Session session, string clientName) =>
+        WithSession(Status.Created, session, clientName);
+    public static SessionStoreResult ForUpdated(Session session, string clientName) =>
+        WithSession(Status.Updated, session, clientName);
+    public static SessionStoreResult ForAlreadyRequested(Session session, string clientName) =>
+        WithSession(Status.AlreadyInRequestedState, session, clientName);
+    public static SessionStoreResult For(Status status) => new(status, null, null);
 
-    private static SessionStoreResult WithSession(Status status, Session session)
+    private static SessionStoreResult WithSession(Status status, Session session, string clientName)
     {
         ArgumentNullException.ThrowIfNull(session);
-        return new SessionStoreResult(status, session);
+        ArgumentException.ThrowIfNullOrWhiteSpace(clientName);
+        return new SessionStoreResult(status, session, clientName);
     }
 }

@@ -37,6 +37,8 @@ public sealed class ClientSessionPacksControllerTests
         var body = await ReadJsonAsync(response);
         Assert.Equal(10, body.GetProperty("sessions_total").GetInt32());
         Assert.Equal(10, body.GetProperty("sessions_remaining").GetInt32());
+        // [6E2] NOVO: a tabela de packs mostra o nome sem pedir o cliente à parte.
+        Assert.Equal("Training client", body.GetProperty("client_name").GetString());
     }
 
     [Fact]
@@ -157,6 +159,7 @@ public sealed class ClientSessionPacksControllerTests
 
         var body = await ReadJsonAsync(response);
         Assert.Equal("2027-01-01", body.GetProperty("expected_end_date").GetString());
+        Assert.Equal("Training client", body.GetProperty("client_name").GetString());
     }
 
     [Fact]
@@ -217,7 +220,8 @@ public sealed class ClientSessionPacksControllerTests
         Assert.Equal(JsonValueKind.Array, body.ValueKind);
         Assert.Contains(
             body.EnumerateArray(),
-            item => item.GetProperty("id").GetGuid() == packId);
+            item => item.GetProperty("id").GetGuid() == packId &&
+                item.GetProperty("client_name").GetString() == "Training client");
 
         var raw = body.GetRawText();
         Assert.DoesNotContain("total_count", raw, StringComparison.Ordinal);
