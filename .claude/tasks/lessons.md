@@ -105,3 +105,25 @@ Lições capturadas depois de correções do utilizador.
 - **Estados vazios dependem da página**: com paginação, "lista vazia" ≠ "não há dados"; testar a
   página além da última.
 - **Contagens vindas do backend podem ser 0 ou 1**: nunca fixar o plural.
+
+## 2026-09-27 — Blueprints da 6E-2
+
+- **`IgnoreQueryFilters()` numa subquery desliga os filtros globais da query inteira** (EF Core).
+  Numa projeção com subquery para ler um nome, nunca o usar: packs cancelados voltaram a aparecer.
+  Se for preciso ignorar filtros, fazê-lo numa query separada.
+- **Dois records com o mesmo nome curto em namespaces diferentes colidem no OpenAPI**
+  (`SessionResponse` de auth e de sessões): o documento funde-os sem aviso. Ao criar contratos,
+  procurar o nome em `Api/Contracts/**` antes.
+- **Enums em query string**: resolvido globalmente no blueprint 6E-2 (`QueryEnumModelBinderProvider`);
+  até ser aplicado, a lição 1 continua válida no repo real.
+- **Mutações sobre refetch do TanStack**: o structural sharing mantém a referência de `data`
+  quando o conteúdo é igual; um teste de "refetch" só prova algo se a 2.ª resposta for diferente.
+- **Excertos de ficheiros gerados/repetitivos**: âncoras únicas no ficheiro inteiro nem sempre
+  existem; aplicar por ordem, com a âncora procurada a partir do excerto anterior.
+
+## 2026-09-27 — comandos `dotnet ef` com ambiente descartável
+- Nunca encadear `docker run ... && cat > env` antes de um `dotnet ef`: se o primeiro passo
+  falha, o `ef` corre sem as variáveis e cai na BD dev (user secrets). Usar `set -e`, fazer
+  `echo` da connection string e só depois o `ef`.
+- Harness de mutações repõe ficheiros inteiros: avisar o utilizador antes, para não sobrescrever
+  edições feitas em paralelo no IDE.

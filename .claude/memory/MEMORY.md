@@ -6,6 +6,13 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-09-27 — Sprint 6E-2: blueprints validados (sessões e packs).** Pack `sprint_6E/sprint_6E2/`
+(01–08), worktree descartável apagada. Decisões: `client_name` no backend, Combobox partilhado,
+3 separadores em `?tab=`, pré-escolha do pack que acaba primeiro. Backend também ganha
+`TrainingSessionResponse` (colisão OpenAPI) e binder global de enums da query (snake_case aceite).
+5 defeitos apanhados (incl. `IgnoreQueryFilters` em subquery). Implementação real pendente. Ver
+`Sessions/2026-09-27-sprint6e2-blueprints.md`.
+
 **2026-09-25 — Sprint 6E-1 FINALIZADA.** O CI vermelho de `49c3d13` vinha do doc 07 (testes) não
 aplicado. Aplicado; 4 defeitos de revisão (paginação vazia → onboarding, "há 1 dias", sexo
 pré-escolhido, loadings não anunciados) + 3 de copy corrigidos; 143 testes, 17/17 mutações,

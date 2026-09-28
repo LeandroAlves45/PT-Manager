@@ -271,7 +271,7 @@ public sealed class ClientSessionPackStore : IClientSessionPackStore
         }
     }
 
-    // [6E2] NOVO: nome do cliente para a resposta, como em SessionStore.
+    // Nome do cliente para a resposta, como em SessionStore.
     private Task<string> ClientNameAsync(
         Guid trainerId,
         Guid clientId,
