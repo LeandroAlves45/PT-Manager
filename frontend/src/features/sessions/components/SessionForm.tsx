@@ -255,7 +255,9 @@ export function SessionForm({
         </p>
       )}
       <div className="border-border mt-auto flex justify-end gap-2 border-t pt-4">
-        <Button type="submit" disabled={mutation.isPending}>
+        {/* Com os packs do cliente por chegar, o campo Pack ainda está vazio (ou traz o pack
+            do cliente anterior): submeter marcaria a sessão sem pack, ou com um pack alheio. */}
+        <Button type="submit" disabled={mutation.isPending || (chosen !== null && packs.isPending)}>
           {mutation.isPending ? 'A guardar…' : 'Marcar sessão'}
         </Button>
       </div>

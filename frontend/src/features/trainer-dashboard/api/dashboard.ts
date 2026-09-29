@@ -16,8 +16,7 @@ export const trainerDashboardKeys = {
  * Painel agregado do personal trainer.
  *
  * Orçamento de pedidos: um único `GET /api/v1/dashboard` ao montar; todos os blocos saem
- * desta resposta. Invalidado por qualquer escrita
- * de clientes e pela ação "Registar presença".
+ * desta resposta. Invalidado por qualquer escrita de clientes, sessões e packs.
  */
 export function useTrainerDashboardQuery() {
   return useQuery({

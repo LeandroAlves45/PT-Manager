@@ -29,7 +29,7 @@ export function balanceLabel(pack: Pick<ClientPack, 'sessions_remaining' | 'sess
   }`;
 }
 
-/** Preço de um tipo de pack: "300,00€". */
+/** Preço de um tipo de pack ou de um pack vendido: "300,00 €". */
 export function priceLabel(item: { price_cents: number; currency: string }) {
   return formatCurrency(item.price_cents, item.currency);
 }

@@ -1,4 +1,5 @@
 import { addDays, format, parseISO } from 'date-fns';
+import { useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -71,11 +72,26 @@ export function AssignPackForm({
   });
   const errors = form.formState.errors;
 
-  /** Sugere o fim previsto a partir da duração do tipo e da data de compra. */
+  // Última data sugerida: distingue a sugestão (que se pode apagar) de uma data escrita à mão.
+  const suggestedEndDate = useRef<string | null>(null);
+
+  /**
+   * Sugere o fim previsto a partir da duração do tipo e da data de compra. Com um tipo sem
+   * duração, apaga a sugestão anterior (senão seguia a data de outro tipo), mas nunca uma
+   * data que o trainer escreveu.
+   */
   function suggestEndDate(packTypeId: string, purchaseDate: string) {
     const days = types.data?.find((type) => type.id === packTypeId)?.expected_duration_days;
-    if (days == null || purchaseDate === '') return;
-    form.setValue('expected_end_date', format(addDays(parseISO(purchaseDate), days), 'yyyy-MM-dd'));
+    if (days == null || purchaseDate === '') {
+      if (form.getValues('expected_end_date') === suggestedEndDate.current) {
+        form.setValue('expected_end_date', '');
+      }
+      suggestedEndDate.current = null;
+      return;
+    }
+    const suggestion = format(addDays(parseISO(purchaseDate), days), 'yyyy-MM-dd');
+    suggestedEndDate.current = suggestion;
+    form.setValue('expected_end_date', suggestion);
   }
 
   async function submit(values: AssignValues) {

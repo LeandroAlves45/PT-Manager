@@ -25,7 +25,7 @@ export const SESSION_STATUS_LABELS: Readonly<Record<string, string>> = {
   scheduled: 'Agendada',
   completed: 'Realizada',
   cancelled_by_client: 'Cancelada pelo cliente',
-  cancelled_by_trainer: 'Cancelada por ti.',
+  cancelled_by_trainer: 'Cancelada por ti',
   no_show: 'Faltou',
 };
 

@@ -45,6 +45,11 @@ describe('TrainerDashboardPage', () => {
     );
     expect(screen.getByText('Quarta-feira, 16/09/2026')).toBeInTheDocument();
     expect(screen.getByText('1 restante')).toBeInTheDocument();
+    // [6E2] NOVO: "Renovar packs" abre diretamente o separador dos packs dos clientes.
+    expect(screen.getByRole('link', { name: 'Renovar packs' })).toHaveAttribute(
+      'href',
+      '/trainer/sessions?tab=packs'
+    );
     expect(screen.getByRole('link', { name: 'Atribuir plano a Rita Sá' })).toHaveAttribute(
       'href',
       `/trainer/training-plans?client_id=33333333-3333-3333-3333-333333333333`
@@ -154,7 +159,7 @@ describe('TrainerDashboardPage', () => {
 
     await waitFor(() =>
       expect(toastMock.error).toHaveBeenCalledWith(
-        'Só podes registar a presença depois da hora de início.'
+        'Só podes registar a presença ou a falta depois da hora de início.'
       )
     );
   }, 15000);

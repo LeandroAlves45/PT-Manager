@@ -220,3 +220,97 @@ export function clientSummaryOverview(
     ...overrides,
   };
 }
+
+// [6E2] NOVO: sessões, packs e tipos de pack.
+
+export const PACK_ID = '66666666-6666-6666-6666-666666666666';
+export const PACK_TYPE_ID = '77777777-7777-7777-7777-777777777777';
+
+/** Sessão agendada da Marta, com pack. */
+export function trainingSession(
+  overrides: Partial<Schemas['TrainingSessionResponse']> = {}
+): Schemas['TrainingSessionResponse'] {
+  return {
+    id: SESSION_ID,
+    client_id: CLIENT_ID,
+    client_name: 'Marta Figueiredo',
+    client_session_pack_id: PACK_ID,
+    starts_at: '2026-09-16T11:00:00Z',
+    duration_minutes: 60,
+    location: 'Estúdio A',
+    session_type: 'PT individual',
+    notes: null,
+    status: 'scheduled',
+    status_changed_at: '2026-09-01T10:00:00Z',
+    created_at: '2026-09-01T10:00:00Z',
+    updated_at: '2026-09-01T10:00:00Z',
+    ...overrides,
+  };
+}
+
+/** Página de sessões no envelope `PagedResponse`. */
+export function sessionPage(
+  items: Schemas['TrainingSessionResponse'][],
+  total = items.length
+): Schemas['PagedResponseOfTrainingSessionResponse'] {
+  return { items, total_count: total, page_number: 1, page_size: 25 };
+}
+
+/** Pack vendido à Marta: 3 de 10 restantes. */
+export function clientPack(
+  overrides: Partial<Schemas['ClientSessionPackResponse']> = {}
+): Schemas['ClientSessionPackResponse'] {
+  return {
+    id: PACK_ID,
+    client_id: CLIENT_ID,
+    client_name: 'Marta Figueiredo',
+    pack_type_id: PACK_TYPE_ID,
+    pack_name: 'Pack 10 sessões',
+    sessions_total: 10,
+    sessions_remaining: 3,
+    price_cents: 30000,
+    currency: 'EUR',
+    purchase_date: '2026-09-01',
+    expected_end_date: '2026-09-30',
+    is_completed: false,
+    completed_at: null,
+    is_deleted: false,
+    created_at: '2026-09-01T10:00:00Z',
+    updated_at: '2026-09-01T10:00:00Z',
+    ...overrides,
+  };
+}
+
+/** Página de packs vendidos no envelope `PagedResponse`. */
+export function clientPackPage(
+  items: Schemas['ClientSessionPackResponse'][],
+  total = items.length
+): Schemas['PagedResponseOfClientSessionPackResponse'] {
+  return { items, total_count: total, page_number: 1, page_size: 25 };
+}
+
+/** Tipo de pack ativo: 10 sessões, 300 €, 90 dias. */
+export function packType(
+  overrides: Partial<Schemas['PackTypeResponse']> = {}
+): Schemas['PackTypeResponse'] {
+  return {
+    id: PACK_TYPE_ID,
+    name: 'Pack 10 sessões',
+    session_count: 10,
+    price_cents: 30000,
+    currency: 'EUR',
+    expected_duration_days: 90,
+    is_active: true,
+    created_at: '2026-08-01T10:00:00Z',
+    updated_at: '2026-08-01T10:00:00Z',
+    ...overrides,
+  };
+}
+
+/** Página de tipos de pack no envelope `PagedResponse`. */
+export function packTypePage(
+  items: Schemas['PackTypeResponse'][],
+  total = items.length
+): Schemas['PagedResponseOfPackTypeResponse'] {
+  return { items, total_count: total, page_number: 1, page_size: 25 };
+}

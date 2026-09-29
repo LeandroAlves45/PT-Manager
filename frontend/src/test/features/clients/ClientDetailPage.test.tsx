@@ -6,7 +6,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { API, problem, restorableSession } from '@/test/msw/handlers';
 import { server } from '@/test/msw/server';
-import { CLIENT_ID, clientDetails, clientSummaryOverview } from '@/test/msw/trainer-fixtures';
+import {
+  CLIENT_ID,
+  clientDetails,
+  clientPack,
+  clientPackPage,
+  clientSummaryOverview,
+  sessionPage,
+  trainingSession,
+} from '@/test/msw/trainer-fixtures';
 import { renderApp } from '@/test/render';
 
 const toastMock = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
@@ -291,4 +299,70 @@ describe('ClientDetailPage', () => {
     expect(await screen.findByText('Peso inválido.')).toBeInTheDocument();
     expect(method).toBe('PUT');
   }, 20000);
+
+  // [6E2] NOVO: separador "Sessões" (packs e sessões do cliente), sincronizado com `?tab=`.
+  describe('Sessões tab', () => {
+    /** Sessões e packs do cliente; devolve os URLs pedidos a cada lista. */
+    function sessionsTabHandlers(): { sessionUrls: URL[]; packUrls: URL[] } {
+      const sessionUrls: URL[] = [];
+      const packUrls: URL[] = [];
+      server.use(
+        http.get(`${API}/sessions`, ({ request }) => {
+          sessionUrls.push(new URL(request.url));
+          return HttpResponse.json(sessionPage([trainingSession()]));
+        }),
+        http.get(`${API}/client-session-packs`, ({ request }) => {
+          packUrls.push(new URL(request.url));
+          return HttpResponse.json(clientPackPage([clientPack()]));
+        })
+      );
+      return { sessionUrls, packUrls };
+    }
+
+    it('does not load sessions or packs while the summary tab is open', async () => {
+      detailHandlers();
+      const { sessionUrls, packUrls } = sessionsTabHandlers();
+      renderApp({ initialEntries: [ROUTE] });
+
+      expect(await screen.findByText('86 %')).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: 'Resumo' })).toHaveAttribute('aria-selected', 'true');
+      expect(sessionUrls).toEqual([]);
+      expect(packUrls).toEqual([]);
+    }, 15000);
+
+    it("opens from the URL and lists only this client's sessions and packs", async () => {
+      detailHandlers();
+      const { sessionUrls, packUrls } = sessionsTabHandlers();
+      renderApp({ initialEntries: [`${ROUTE}?tab=sessions`] });
+
+      expect(await screen.findByText('3 de 10 restantes')).toBeInTheDocument();
+      expect(await screen.findByText('PT individual · Estúdio A · 60 min')).toBeInTheDocument();
+      expect(sessionUrls[0]?.searchParams.get('client_id')).toBe(CLIENT_ID);
+      expect(packUrls[0]?.searchParams.get('client_id')).toBe(CLIENT_ID);
+      // A coluna Cliente seria redundante no próprio cliente.
+      expect(screen.queryByRole('columnheader', { name: 'Cliente' })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Marcar sessão/ })).toBeInTheDocument();
+    }, 15000);
+
+    it('writes the selected tab to the URL', async () => {
+      detailHandlers();
+      sessionsTabHandlers();
+      const user = userEvent.setup();
+      renderApp({ initialEntries: [ROUTE] });
+
+      await user.click(await screen.findByRole('tab', { name: 'Sessões' }));
+
+      await waitFor(() => expect(window.location.search).toBe('?tab=sessions'));
+      expect(await screen.findByText('3 de 10 restantes')).toBeInTheDocument();
+    }, 15000);
+
+    it('hides "Marcar sessão" for an archived client', async () => {
+      detailHandlers(clientDetails({ is_active: false }));
+      sessionsTabHandlers();
+      renderApp({ initialEntries: [`${ROUTE}?tab=sessions`] });
+
+      expect(await screen.findByText('3 de 10 restantes')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Marcar sessão/ })).not.toBeInTheDocument();
+    }, 15000);
+  });
 });

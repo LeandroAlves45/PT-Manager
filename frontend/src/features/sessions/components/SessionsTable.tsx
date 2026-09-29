@@ -64,7 +64,7 @@ const CONFIRM_COPY: Record<
   },
 };
 
-/** Horal local de um instante ISO. */
+/** Hora local de um instante ISO. */
 function hourOf(value: string): string {
   return format(parseISO(value), 'HH:mm');
 }

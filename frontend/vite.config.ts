@@ -36,7 +36,9 @@ export default defineConfig({
     globals: true,
     // Fixa a origem da API nos testes para os handlers do MSW não dependerem do `.env`
     // da máquina de quem corre a suite.
-    env: { VITE_API_BASE_URL: 'https://localhost:7186' },
+    // O fuso também é fixo: o CI corre em UTC, onde "offset local" e "Z" coincidem e um
+    // instante enviado sem o offset do browser passaria nos testes. Lisboa tem +01:00 no verão.
+    env: { VITE_API_BASE_URL: 'https://localhost:7186', TZ: 'Europe/Lisbon' },
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     css: false,
