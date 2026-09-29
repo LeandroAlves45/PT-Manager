@@ -393,9 +393,10 @@ function Invoke-BuildTypecheck {
 
 function Invoke-CorrectionReminder {
   $projectDir = Get-ProjectDir
-  $correctionFile = Join-Path $projectDir ".claude\tasks\correction.md"
+  $backendFile = Join-Path $projectDir ".claude\tasks\GOTCHAS_BACKEND.md"
+  $frontendFile = Join-Path $projectDir ".claude\tasks\GOTCHAS_FRONTEND.md"
   $lessonsFile = Join-Path $projectDir ".claude\tasks\lessons.md"
-  Write-Output "Lembrete: se nesta sessao houve correcoes do utilizador ao teu trabalho, regista o padrao em $correctionFile e a licao em $lessonsFile (ver CLAUDE.md, seccao Self-improvement Loop)."
+  Write-Output "Lembrete: se nesta sessao houve correcoes do utilizador ao teu trabalho, regista o padrao em $backendFile ou $frontendFile (conforme a camada) e a licao em $lessonsFile (ver CLAUDE.md, seccao Self-improvement Loop)."
   exit 0
 }
 

@@ -11,9 +11,13 @@ Se um caminho aqui deixar de existir, corrige-o aqui em vez de procurar de novo.
 | 2 | `.claude/memory/MEMORY.md` | Índice das notas de sessão em `Sessions/` |
 | 3 | `.claude/tasks/todo.md` | Checklist da sessão em curso |
 | 4 | `.claude/tasks/lessons.md` | Armadilhas já pagas (ler sempre antes de gerar blueprints) |
-| 5 | `.claude/tasks/correction.md` | Padrões de erro corrigidos pelo utilizador |
-| 6 | `AGENTS.md` (raiz) | Regras técnicas transversais, válidas para qualquer agente |
-| 7 | `.claude/CLAUDE.md` | Comportamento específico do Claude Code |
+| 5 | `.claude/tasks/GOTCHAS_BACKEND.md` | Erros corrigidos pelo utilizador no backend — ler quando a sessão toca no backend |
+| 6 | `.claude/tasks/GOTCHAS_FRONTEND.md` | Erros corrigidos pelo utilizador no frontend — ler quando a sessão toca no frontend |
+| 7 | `AGENTS.md` (raiz) | Regras técnicas transversais, válidas para qualquer agente |
+| 8 | `.claude/CLAUDE.md` | Comportamento específico do Claude Code |
+
+*O antigo `.claude/tasks/correction.md` foi migrado para os dois GOTCHAS acima e apagado em
+2026-09-29 (histórico no git).*
 
 ## 2. Produto e roadmap
 
@@ -96,7 +100,7 @@ Raiz: `docs/blueprints/`.
 | `docs/blueprints/backend-files/sprint_6/sprint_6B/` | Pack 6B (00–14), fechado |
 | `docs/blueprints/backend-files/sprint_concluidos/` | Sprints 4 e 5 |
 | `docs/blueprints/frontend-files/sprint_6/sprint_6C/` | **Pack 6C (frontend + backend de suporte)**; fecho em `19_relatorio_fecho_fase_6C.md` |
-| `docs/blueprints/frontend-files/sprint_6/sprint_6E/` | **Pack 6E trainer**: `00` plano da fase completa (5 fatias, contratos/limites/erros de todos os endpoints do trainer, inventário do frontend, armadilhas) — **ler antes de qualquer fatia 6E**; `sprint_6E1/01–09` fatia 6E-1 (FINALIZADA 2026-09-25; `09` = relatório de fecho); `sprint_6E2/01–08` fatia 6E-2 sessões e packs (blueprints validados 2026-09-27; implementação pendente) |
+| `docs/blueprints/frontend-files/sprint_6/sprint_6E/` | **Pack 6E trainer**: `00` plano da fase completa (5 fatias, contratos/limites/erros de todos os endpoints do trainer, inventário do frontend, armadilhas) — **ler antes de qualquer fatia 6E**; `sprint_6E1/01–09` fatia 6E-1 (FINALIZADA 2026-09-25; `09` = relatório de fecho); `sprint_6E2/01–09` fatia 6E-2 sessões e packs (FINALIZADA 2026-09-29; `09` = relatório de fecho) |
 | `docs/blueprints/frontend-files/sprint_6/sprint_6D/` | **Pack 6D admin (00–07)**; contrato de vídeo, catálogos, moderação, visão geral, testes, gates, gestão de vídeo (06) e relatório de fecho (07). **Finalizada 2026-09-24** |
 
 Padrões de escrita:

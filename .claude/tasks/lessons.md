@@ -127,3 +127,14 @@ Lições capturadas depois de correções do utilizador.
   `echo` da connection string e só depois o `ef`.
 - Harness de mutações repõe ficheiros inteiros: avisar o utilizador antes, para não sobrescrever
   edições feitas em paralelo no IDE.
+
+## 2026-09-29 — Fecho da 6E-2
+
+- **Doc de testes fora do commit de implementação, segunda vez**: a regra do doc 01 ("mesmo
+  commit") não chega; antes do push, `npm run test:run` localmente é obrigatório.
+- **Pré-escolha vinda de query dependente**: bloquear o submit enquanto a query está pendente,
+  senão o formulário envia o valor vazio em silêncio.
+- **Fuso dos testes fixo** (`Europe/Lisbon`) e datas de verão nos testes de offset; em UTC um
+  `Z` passa por offset local.
+- **Mutação equivalente**: antes de escrever um teste para uma sobrevivente, confirmar na lib
+  (ex.: nuqs `clearOnDefault`) se o comportamento é mesmo diferente.

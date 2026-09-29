@@ -6,6 +6,12 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-09-29 — Sprint 6E-2 FINALIZADA.** O CI #15 vermelho vinha de novo do doc 07 (testes) por
+aplicar. Aplicado; 4 defeitos corrigidos (rótulo com ponto, submit de "Marcar sessão" antes dos
+packs, fim previsto sugerido que sobrevivia à troca de tipo, fuso dos testes fixo em Lisboa);
+184 testes, 29/29 mutações (+1 equivalente), backend 2900. Commit `597eb19`. Faltam verificações
+manuais com login. Ver `Sessions/2026-09-29-sprint6e2-fecho-frontend.md` e o relatório `sprint_6E2/09`.
+
 **2026-09-27 — Sprint 6E-2: blueprints validados (sessões e packs).** Pack `sprint_6E/sprint_6E2/`
 (01–08), worktree descartável apagada. Decisões: `client_name` no backend, Combobox partilhado,
 3 separadores em `?tab=`, pré-escolha do pack que acaba primeiro. Backend também ganha

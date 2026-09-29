@@ -1,6 +1,6 @@
-# Estado ativo: Sprint 6E — 6E-2 com blueprints validados; implementação real pendente
+# Estado ativo: Sprint 6E — 6E-2 FINALIZADA; próxima fatia 6E-3 (biblioteca)
 
-Atualizado: 2026-09-27
+Atualizado: 2026-09-29
 
 ## Sprint 6E — frontend trainer
 
@@ -11,16 +11,17 @@ Pack `docs/blueprints/frontend-files/sprint_6/sprint_6E/`. **Ler o `00` antes de
   CI), 7 defeitos corrigidos, 143 testes, 17/17 mutações, design-is 21/30 REFINE; BD dev com as
   4 contas. Relatório `sprint_6E1/09`. Faltam só `QG6E1-ISOLAMENTO-UI-001` e `QG6E1-UI-001`
   (login manual).
-- **6E-2 blueprints validados (2026-09-27)**: pack `sprint_6E/sprint_6E2/` (01–08). Backend:
-  `client_name` em sessões/packs, `TrainingSessionResponse` (colisão OpenAPI) e
-  `QueryEnumModelBinderProvider` (enums da query aceitam snake_case). Frontend: features
-  `sessions` e `packs`, Combobox/Tabs/Popover/Pagination, tab Sessões no detalhe. 2900 testes
-  backend, 171 frontend, 21/21 + B1 mutações. **Aplicar 02–07 num só commit** (Leandro).
-  Ver `Sessions/2026-09-27-sprint6e2-blueprints.md`.
+- **6E-2 FINALIZADA (2026-09-29)** no repo real: docs 02–06 do Leandro (`4eb1831`, `d33d68e`) e
+  doc 07 + correções no fecho (`597eb19`). 4 defeitos corrigidos (rótulo, submit antes dos packs,
+  fim previsto sugerido, fuso dos testes fixo em `Europe/Lisbon`), 184 testes frontend, 29/29
+  mutações (+1 equivalente), backend 2900. Relatório `sprint_6E2/09`. Faltam
+  `QG6E2-ISOLAMENTO-UI-001` e `QG6E2-UI-001` (login manual) e o `design-is`.
+  Ver `Sessions/2026-09-29-sprint6e2-fecho-frontend.md`.
 - Próxima fatia a planear: 6E-3 (biblioteca), doc 00 §5.3 — o `Combobox` já existe (6E-2).
-- Tarefa transversal sugerida: rotas lazy por papel (bundle único de 254 kB gzip).
+- Tarefa transversal sugerida: rotas lazy por papel (bundle único de 266 kB gzip em 2026-09-29).
 
-Ver `Sessions/2026-09-25-sprint6e1-fecho-frontend.md`.
+Ver `Sessions/2026-09-29-sprint6e2-fecho-frontend.md` (6E-2) e
+`Sessions/2026-09-25-sprint6e1-fecho-frontend.md` (6E-1).
 
 ## Sprint 6D — fechada no repositório real
 

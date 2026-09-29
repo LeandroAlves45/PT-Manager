@@ -55,10 +55,12 @@ Rever `.claude/tasks/lessons.md` e a memória relevante no início da sessão.
 - Ao final de cada sessão, captura erros, desafios e pontos de fricção encontrados e coloca-os
   em `.claude/memory/Sessions/` (ver secção Memória acima)
 - Correção que muda uma decisão em curso: registar de imediato em
-  `.claude/tasks/correction.md`, antes de continuar, para não se perder a meio da sessão
+  `.claude/tasks/GOTCHAS_BACKEND.md` (correção no backend) ou
+  `.claude/tasks/GOTCHAS_FRONTEND.md` (correção no frontend), antes de continuar, para não se
+  perder a meio da sessão. O antigo `correction.md` foi migrado e apagado
 - No fecho de cada sprint (parte do checklist de fecho, ver Comportamento de sessão acima):
-  revisar as correções da sprint e consolidar o padrão em `.claude/tasks/correction.md` e a
-  lição em `.claude/tasks/lessons.md` — não adiar para "a seguir", é neste checklist que a
+  revisar as correções da sprint e consolidar o padrão no `GOTCHAS_BACKEND.md` ou
+  `GOTCHAS_FRONTEND.md` (conforme a camada) e a lição em `.claude/tasks/lessons.md` — não adiar para "a seguir", é neste checklist que a
   revisão realmente acontece
 - Se o problema for da SKILL, ajusta a skill para o projeto
 - Escrever regras próprias que previnam o mesmo erro
