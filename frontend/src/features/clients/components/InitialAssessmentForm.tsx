@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { useSaveInitialAssessmentMutation } from '@/features/clients/api/mutations';
-import { FormField } from '@/features/clients/components/FormField';
+import { FormField } from '@/shared/components/FormField';
 import { ACTIVITY_LEVEL_LABELS, fitnessLevelOptions } from '@/features/clients/lib/labels';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';

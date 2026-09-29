@@ -6,3 +6,4 @@
  */
 export { clientKeys } from '@/features/clients/api/keys';
 export { useClientSearchQuery } from '@/features/clients/api/queries';
+export { ClientCombobox, type ClientChoice } from '@/features/clients/components/ClientCombobox';

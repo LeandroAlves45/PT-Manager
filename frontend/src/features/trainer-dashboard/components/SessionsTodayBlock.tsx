@@ -2,12 +2,12 @@ import { format, parseISO } from 'date-fns';
 import { CalendarClock } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { useCompleteSessionMutation } from '@/features/trainer-dashboard/api/dashboard';
-import { BentoCard } from '@/features/trainer-dashboard/components/BentoCard';
 import {
-  COMPLETE_SESSION_ERRORS,
+  SESSION_ERRORS,
   SESSION_STATUS_LABELS,
-} from '@/features/trainer-dashboard/lib/sessionStatus';
+  useSessionTransitionMutation,
+} from '@/features/sessions';
+import { BentoCard } from '@/features/trainer-dashboard/components/BentoCard';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
 import { Button } from '@/shared/components/ui/button';
@@ -32,14 +32,14 @@ export function SessionsTodayBlock({
   data: SessionsToday;
   className?: string;
 }) {
-  const complete = useCompleteSessionMutation();
+  const complete = useSessionTransitionMutation();
 
   async function registerAttendance(sessionId: string, clientName: string) {
     try {
-      await complete.mutateAsync(sessionId);
+      await complete.mutateAsync({ sessionId, transition: 'complete' });
       toast.success(`Presença de ${clientName} registada com sucesso.`);
     } catch (error) {
-      const message = isApiProblem(error) ? COMPLETE_SESSION_ERRORS[error.code] : undefined;
+      const message = isApiProblem(error) ? SESSION_ERRORS[error.code] : undefined;
       toast.error(message ?? 'Não foi possível registar a presença. Tenta novamente.');
     }
   }
@@ -65,7 +65,8 @@ export function SessionsTodayBlock({
             const details = [session.session_type, session.location].filter(
               (value): value is string => value !== null && value.trim() !== ''
             );
-            const pending = complete.isPending && complete.variables === session.session_id;
+            const pending =
+              complete.isPending && complete.variables?.sessionId === session.session_id;
 
             return (
               <li key={session.session_id} className="flex items-center gap-3 py-2">

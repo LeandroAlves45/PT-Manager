@@ -12,6 +12,7 @@ import { CatalogPage } from '@/features/admin-catalog/pages/CatalogPage';
 import { ModerationPage } from '@/features/admin-moderation/pages/ModerationPage';
 import { ClientDetailPage } from '@/features/clients/pages/ClientDetailPage';
 import { ClientsPage } from '@/features/clients/pages/ClientsPage';
+import { SessionsPage } from '@/features/sessions/pages/SessionsPage';
 import { TrainerDashboardPage } from '@/features/trainer-dashboard/pages/TrainerDashboardPage';
 import { RootRedirect } from '@/app/RootRedirect';
 import { PhasePlaceholderPage } from '@/shared/components/PhasePlaceholderPage';
@@ -66,7 +67,7 @@ const applicationRoutes: RouteObject[] = [
               { index: true, element: <TrainerDashboardPage /> },
               { path: 'clients', element: <ClientsPage /> },
               { path: 'clients/:clientId', element: <ClientDetailPage /> },
-              { path: 'sessions', element: placeholder('Sessões e packs', '6E') },
+              { path: 'sessions', element: <SessionsPage /> },
               { path: 'check-ins', element: placeholder('Check-ins', '6E') },
               { path: 'training-plans', element: placeholder('Planos de treino', '6E') },
               { path: 'meal-plans', element: placeholder('Planos alimentares', '6E') },

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 import { apiClient, unwrap } from '@/shared/api/client';
 
@@ -23,25 +23,5 @@ export function useTrainerDashboardQuery() {
   return useQuery({
     queryKey: trainerDashboardKeys.all,
     queryFn: ({ signal }) => apiClient.GET('/api/v1/dashboard', { signal }).then(unwrap),
-  });
-}
-
-/**
- * "Registar presença": marca a sessão de hoje como realizada.
- *
- * O backend consome o pack associado e recusa a transição antes da hora de início
- * (`session_transition_too_early`); quem chama traduz esse código.
- */
-export function useCompleteSessionMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (sessionId: string) =>
-      unwrap(
-        await apiClient.POST('/api/v1/sessions/{sessionId}/complete', {
-          params: { path: { sessionId } },
-        })
-      ),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: trainerDashboardKeys.all }),
   });
 }

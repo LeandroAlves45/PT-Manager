@@ -152,7 +152,7 @@ export function TrainerDashboardPage() {
           className="lg:col-span-5"
           action={
             <Button asChild variant="outline" className="min-h-11 w-full md:min-h-9">
-              <Link to="/trainer/sessions">Renovar packs</Link>
+              <Link to="/trainer/sessions?tab=packs">Renovar packs</Link>
             </Button>
           }
         >

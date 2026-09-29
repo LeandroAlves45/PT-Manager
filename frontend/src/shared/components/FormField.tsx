@@ -10,7 +10,7 @@ export interface FieldControlProps {
 }
 
 /**
- * Rótulo, controlo e mensagem de erro de um campo dos formulários de clientes.
+ * Rótulo, controlo e mensagem de erro de um campo de formulário.
  *
  * O rótulo liga-se por `htmlFor` e o erro por `aria-describedby`, fora do `<label>`: se o
  * erro (ou as `<option>` de um `<select>`) ficassem dentro do rótulo, entravam no nome

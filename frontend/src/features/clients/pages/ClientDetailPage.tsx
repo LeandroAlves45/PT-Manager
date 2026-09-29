@@ -1,4 +1,5 @@
 import { Archive, ClipboardList, Mail, Pencil, RotateCcw } from 'lucide-react';
+import { parseAsStringLiteral, useQueryState } from 'nuqs';
 import { useState, type ReactNode } from 'react';
 import { useParams } from 'react-router';
 import { toast } from 'sonner';
@@ -15,6 +16,7 @@ import {
 import { ClientForm } from '@/features/clients/components/ClientForm';
 import { InitialAssessmentForm } from '@/features/clients/components/InitialAssessmentForm';
 import { activityErrorMessage, ageFrom, initialsOf } from '@/features/clients/lib/labels';
+import { ClientSessionsTab } from '@/features/sessions';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
@@ -29,6 +31,7 @@ import {
   SheetTitle,
 } from '@/shared/components/ui/sheet';
 import { Skeleton } from '@/shared/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { formatDate, formatNumber, formatPercent } from '@/shared/lib/format';
 
 type ClientDetails = components['schemas']['ClientDetailsResponse'];
@@ -48,13 +51,16 @@ const INVITE_ERRORS: Readonly<Record<string, string>> = {
 type Panel = 'edit' | 'assessment' | null;
 type Confirm = 'invite' | 'activity' | null;
 
+/** Separadores do detalhe; Treino, Nutrição, Suplementos e Check-ins. */
+const TABS = ['summary', 'sessions'] as const;
+
 /**
- * Detalhe do cliente — nesta fatia, cabeçalho e separador "Resumo".
+ * Detalhe do cliente — cabeçalho e separadores "Resumo" e "Sessões" (`?tab=`).
  *
  * Orçamento de pedidos: `GET /clients/{id}` e `GET /clients/{id}/summary` em paralelo ao
- * montar; a avaliação inicial só é pedida quando o trainer abre o painel dela. Os
- * separadores Treino, Nutrição, Suplementos, Check-ins e Sessões entram nas fatias
- * seguintes, cada um com o seu pedido.
+ * montar; a avaliação inicial só é pedida quando o trainer abre o painel dela; sessões e
+ * packs só com o separador "Sessões" aberto (o Radix não monta separadores inativos). Os
+ * separadores Treino, Nutrição, Suplementos e Check-ins entram nas fatias seguintes.
  */
 export function ClientDetailPage() {
   const { clientId = '' } = useParams();
@@ -62,6 +68,7 @@ export function ClientDetailPage() {
   const summary = useClientSummaryQuery(clientId);
   const [panel, setPanel] = useState<Panel>(null);
   const [confirm, setConfirm] = useState<Confirm>(null);
+  const [tab, setTab] = useQueryState('tab', parseAsStringLiteral(TABS).withDefault('summary'));
   const assessment = useInitialAssessmentQuery(clientId, panel === 'assessment');
   const invite = useInviteClientMutation();
   const activity = useClientActivityMutation();
@@ -151,22 +158,41 @@ export function ClientDetailPage() {
         }
       />
 
-      <h2 className="border-primary w-fit border-b-2 pb-2 text-sm font-medium">Resumo</h2>
-      {summary.isPending ? (
-        <div
-          role="status"
-          aria-label="A carregar resumo…"
-          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
-        >
-          {Array.from({ length: 4 }, (_, index) => (
-            <Skeleton key={index} className="h-28" />
-          ))}
-        </div>
-      ) : summary.isError ? (
-        <ErrorState error={summary.error} onRetry={() => void summary.refetch()} />
-      ) : (
-        <SummaryOverview summary={summary.data} client={data} />
-      )}
+      <Tabs
+        value={tab}
+        onValueChange={(value) => {
+          const next = TABS.find((item) => item === value) ?? 'summary';
+          void setTab(next === 'summary' ? null : next);
+        }}
+      >
+        <TabsList>
+          <TabsTrigger value="summary">Resumo</TabsTrigger>
+          <TabsTrigger value="sessions">Sessões</TabsTrigger>
+        </TabsList>
+        <TabsContent value="summary">
+          {summary.isPending ? (
+            <div
+              role="status"
+              aria-label="A carregar resumo…"
+              className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+            >
+              {Array.from({ length: 4 }, (_, index) => (
+                <Skeleton key={index} className="h-28" />
+              ))}
+            </div>
+          ) : summary.isError ? (
+            <ErrorState error={summary.error} onRetry={() => void summary.refetch()} />
+          ) : (
+            <SummaryOverview summary={summary.data} client={data} />
+          )}
+        </TabsContent>
+        <TabsContent value="sessions">
+          <ClientSessionsTab
+            client={{ id: data.id, name: data.name }}
+            canSchedule={data.is_active}
+          />
+        </TabsContent>
+      </Tabs>
 
       <Sheet
         open={panel !== null}
