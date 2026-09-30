@@ -22,7 +22,7 @@ Plano aprovado: `~/.claude/plans/6e-3-fecho-moonlit-shamir.md`.
 - [x] Doc 08 + `backlogs/QualityGates.md`
 - [x] Relatório `sprint_6E3/09`, GOTCHAS, lessons
 - [x] Memória (ACTIVE, MEMORY, NEST, sessão)
-- [ ] Commit, push, CI verde
+- [x] Commit `2ccddb8`, push, CI run #19 verde (4/4)
 
 ## Review
 
