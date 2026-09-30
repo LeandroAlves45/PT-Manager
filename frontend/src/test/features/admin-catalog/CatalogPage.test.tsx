@@ -191,4 +191,43 @@ describe('CatalogPage', () => {
     expect(await screen.findByText('Indica um valor entre 0 e 100.')).toBeInTheDocument();
     expect(writes).toBe(0);
   }, 15000);
+
+  // [6E-3] NOVO: grupos musculares em chips (lista fechada), enviados na ordem canónica.
+  it('edits the muscle groups of a global exercise with chips from the closed list', async () => {
+    let body: Record<string, unknown> | null = null;
+    const exercise = {
+      id: '22222222-2222-2222-2222-222222222222',
+      name: 'Agachamento',
+      description: null,
+      muscle_groups: 'quadriceps',
+      equipment: null,
+      difficulty_level: null,
+      video_url: null,
+      managed_video_status: null,
+      has_ready_video: false,
+      is_active: true,
+      created_at: '2026-09-23T10:00:00Z',
+      updated_at: '2026-09-23T10:00:00Z',
+    };
+    server.use(
+      ...restorableSession({ role: 'superuser', trainer_id: null }),
+      http.get(`${API}/global-exercises`, () =>
+        HttpResponse.json({ items: [exercise], total_count: 1, page_number: 1, page_size: 25 })
+      ),
+      http.patch(`${API}/global-exercises/:exerciseId`, async ({ request }) => {
+        body = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(exercise);
+      })
+    );
+    const user = userEvent.setup();
+    renderApp({ initialEntries: ['/admin/catalog/exercises'] });
+    await user.click(await screen.findByRole('button', { name: 'Editar Agachamento' }));
+    expect(screen.getByRole('button', { name: 'Remover Quadríceps' })).toBeVisible();
+    await user.click(screen.getByRole('combobox', { name: 'Grupos musculares' }));
+    await user.click(await screen.findByRole('option', { name: 'Glúteos' }));
+    await user.keyboard('{Escape}');
+    await user.click(screen.getByRole('button', { name: 'Guardar alterações' }));
+    await waitFor(() => expect(body).not.toBeNull());
+    expect(body).toMatchObject({ muscle_groups: 'glutes,quadriceps' });
+  }, 15000);
 });

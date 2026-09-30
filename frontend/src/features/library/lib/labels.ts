@@ -55,7 +55,7 @@ export const LIBRARY_TEXTS: Readonly<
 export const ACTIVITY_OPTIONS = ['active', 'archived', 'all'] as const;
 export const ACTIVITY_LABELS = { active: 'Ativos', archived: 'Arquivados', all: 'Todos' } as const;
 
-/** Número com até duas casas, á portuguesa: 31 -> "31", 2.5 -> "2,5". */
+/** Número com até duas casas, à portuguesa: 31 -> "31", 2.5 -> "2,5". */
 export function gramsLabel(value: number): string {
   return value.toLocaleString('pt-PT', { maximumFractionDigits: 2 });
 }

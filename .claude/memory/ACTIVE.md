@@ -1,6 +1,6 @@
-# Estado ativo: Sprint 6E — 6E-3 blueprints validados (implementação pendente)
+# Estado ativo: Sprint 6E — 6E-3 FINALIZADA; próxima fatia 6E-4 (planos)
 
-Atualizado: 2026-09-29
+Atualizado: 2026-09-30
 
 ## Sprint 6E — frontend trainer
 
@@ -17,12 +17,16 @@ Pack `docs/blueprints/frontend-files/sprint_6/sprint_6E/`. **Ler o `00` antes de
   mutações (+1 equivalente), backend 2900. Relatório `sprint_6E2/09`. Faltam
   `QG6E2-ISOLAMENTO-UI-001` e `QG6E2-UI-001` (login manual) e o `design-is`.
   Ver `Sessions/2026-09-29-sprint6e2-fecho-frontend.md`.
-- **6E-3 blueprints validados (2026-09-29)**: pack `sprint_6E3/` (01–08), biblioteca do trainer
-  (exercícios com vídeo, alimentos, suplementos), 49 caminhos, 2902 testes backend, 215 frontend,
-  31/31 mutações. Backend: `has_ready_video` no `ExerciseResponse` (sem migration). Vídeo passa a
-  `features/exercise-video`. **Implementação real pendente (Leandro)**: aplicar 02–07 num só commit.
-  Ver `Sessions/2026-09-29-sprint6e3-blueprints.md`.
-- Próxima fatia a planear: 6E-4 (planos), depois de a 6E-3 estar no repo real.
+- **6E-3 FINALIZADA (2026-09-30)** no repo real: docs 02–06 do Leandro (`5cd1d7f`) e doc 07 +
+  6 correções no fecho (D1 "Com vídeo" só ícone, D2 `wrap-break-words` inexistente, D3 copy "!",
+  D4 soma dos macros em vírgula flutuante, D5 lista não acompanhava o vídeo com o painel fechado →
+  polling enquanto houver vídeo em processamento, D6 `Object.hasOwn`). 222 testes frontend,
+  M1–M27 27/27 + 6/6 novas, backend 2902. Relatório `sprint_6E3/09`. Faltam
+  `QG6E3-ISOLAMENTO-UI-001`, `QG6E3-UI-001`, `QG6E3-VIDEO-R2-001`, `QG6E3-DESIGN-001`.
+  Ver `Sessions/2026-09-30-sprint6e3-fecho-frontend.md`.
+- Próxima fatia a planear: 6E-4 (planos; consome as query keys de `features/library`).
+- Tarefa transversal registada: pesquisa na página N faz um pedido intermédio (termo antigo,
+  página 1) — biblioteca e `ModerationPage`.
 - Tarefa transversal sugerida: rotas lazy por papel (bundle único de 266 kB gzip em 2026-09-29).
 
 Ver `Sessions/2026-09-29-sprint6e2-fecho-frontend.md` (6E-2) e

@@ -140,3 +140,22 @@ termo antigo; o debounce passou para dentro de cada separador (o Radix desmonta 
 **A regra.** Validações de objeto só correm quando os campos de que dependem são válidos. Um
 recurso que muda (vídeo substituído) invalida as caches derivadas dele (URL de reprodução), não
 só a lista. Estado com atraso (debounce) vive no componente que desmonta com o contexto.
+
+## 2026-09-30 — Fecho da 6E-3: classe Tailwind inexistente, soma em vírgula flutuante, polling que morre com o painel
+
+**O que aconteceu.** (1) `wrap-break-words` (não existe; o Tailwind 4 tem `wrap-break-word`) passou
+lint, typecheck, testes e build: uma classe inválida é ignorada em silêncio. (2) A regra "macros
+≤ 100 g" somava `Number`s: 0,15 + 65,01 + 34,84 = 100,00000000000001 e recusava um alimento que o
+backend (`decimal`) aceita. (3) A única invalidação da lista depois de um vídeo ficar pronto era
+um efeito do `queryFn` do polling do painel; fechar o painel (o texto convida a isso) parava o
+polling e a lista ficava desatualizada. (4) Texto de estado removido de uma célula ficou só com
+ícone `aria-hidden` — célula vazia para leitores de ecrã. (5) `reason in OBJ` aceitava
+`"constructor"`.
+
+**A regra.** Classe Tailwind nova ou alterada: confirmar que existe (`node_modules/tailwindcss/dist`
+ou o CSS do build). Somas/limites de valores decimais comparam-se em inteiros (centésimas), como o
+`decimal` do servidor. Um estado que continua depois de o utilizador fechar o ecrã não pode
+depender de um componente montado: a lista acompanha-o sozinha (`refetchInterval` enquanto houver
+linhas não terminais). Ícone de estado leva sempre texto (ou `sr-only`). Lookup em objeto por valor
+externo: `Object.hasOwn`. `refetchInterval` inline com `keepPreviousData` parte a inferência do
+`useQuery` — extrair para função tipada com `Query<T>`.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { describeExerciseVideo } from '@/features/exercise-video/lib/exerciseVideo';
+import { describeExerciseVideo } from '@/features/exercise-video';
 
 describe('describeExerciseVideo', () => {
   it.each([

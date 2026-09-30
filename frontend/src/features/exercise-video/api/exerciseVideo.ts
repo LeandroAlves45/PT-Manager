@@ -84,8 +84,10 @@ export function uploadToStorage(
         : reject(new StorageUploadError(xhr.status));
     xhr.onerror = () => reject(new StorageUploadError(0));
     xhr.onabort = () => reject(new DOMException('Upload cancelado', 'AbortError'));
+    // Já cancelado: `abort()` entre `open()` e `send()` não dispara eventos e a Promise
+    // ficaria pendurada.
     if (signal.aborted) {
-      xhr.abort();
+      reject(new DOMException('Upload cancelado', 'AbortError'));
       return;
     }
     signal.addEventListener('abort', () => xhr.abort(), { once: true });
@@ -104,13 +106,13 @@ export async function completeVideoUpload(
   return unwrap(
     audience === 'superuser'
       ? await apiClient.POST(
-        '/api/v1/global-exercises/{exerciseId}/video/uploads/{videoId}/complete',
-        init
-      )
+          '/api/v1/global-exercises/{exerciseId}/video/uploads/{videoId}/complete',
+          init
+        )
       : await apiClient.POST(
-        '/api/v1/exercises/{exerciseId}/video/uploads/{videoId}/complete',
-        init
-      )
+          '/api/v1/exercises/{exerciseId}/video/uploads/{videoId}/complete',
+          init
+        )
   );
 }
 
@@ -135,7 +137,10 @@ export function useVideoUploadStatus(
 
       const video = unwrap(
         audience === 'superuser'
-          ? await apiClient.GET('/api/v1/global-exercises/{exerciseId}/video/uploads/{videoId}', init)
+          ? await apiClient.GET(
+              '/api/v1/global-exercises/{exerciseId}/video/uploads/{videoId}',
+              init
+            )
           : await apiClient.GET('/api/v1/exercises/{exerciseId}/video/uploads/{videoId}', init)
       );
 
@@ -155,7 +160,7 @@ export function useVideoUploadStatus(
   });
 }
 
-/** URL de reprodução assinado; só é pedido quando o admin carrega em "Ver vídeo". */
+/** URL de reprodução assinado; só é pedido quando o utilizador carrega em "Ver vídeo". */
 export function useVideoPlayback(
   audience: ExerciseVideoAudience,
   exerciseId: string,

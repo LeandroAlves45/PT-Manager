@@ -34,8 +34,7 @@ type Phase =
   | { kind: 'error'; message: string };
 
 function uploadErrorMessage(error: unknown): string {
-  if (error instanceof DOMException && error.name === 'AbortError')
-    return 'Envio cancelado.';
+  if (error instanceof DOMException && error.name === 'AbortError') return 'Envio cancelado.';
   if (error instanceof StorageUploadError)
     return 'O envio para o armazenamento falhou. Tenta novamente.';
   if (isApiProblem(error) && error.status === 429)
@@ -102,10 +101,10 @@ export function ExerciseVideoPanel({
         ? 'Vídeo disponível'
         : 'Sem vídeo'
       : describeExerciseVideo({
-        managed_video_status: trackedStatus ?? (removed ? null : exercise.managed_video_status),
-        has_ready_video: hasReadyVideo,
-        video_url: exercise.video_url,
-      });
+          managed_video_status: trackedStatus ?? (removed ? null : exercise.managed_video_status),
+          has_ready_video: hasReadyVideo,
+          video_url: exercise.video_url,
+        });
 
   async function upload(file: File) {
     setConfirmRemove(false);

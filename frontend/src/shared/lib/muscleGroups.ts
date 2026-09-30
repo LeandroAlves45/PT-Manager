@@ -47,8 +47,8 @@ export function parseMuscleGroups(value: string | null): MuscleGroupCode[] {
   return MUSCLE_GROUPS.map((group) => group.code).filter((code) => requested.has(code));
 }
 
-/** Valor a enviar para a API: códigos pela ordem canónica separados por vírgulas, ou 'null'. */
-export function serializeMuscleGroups(codes: MuscleGroupCode[]): string | null {
+/** Valor a enviar para a API: códigos pela ordem canónica separados por vírgulas, ou `null`. */
+export function serializeMuscleGroups(codes: readonly MuscleGroupCode[]): string | null {
   const chosen = new Set(codes);
   const ordered = MUSCLE_GROUPS.map((group) => group.code).filter((code) => chosen.has(code));
 
@@ -60,7 +60,7 @@ export function muscleGroupLabel(code: string): string {
   return LABELS.get(code) ?? code;
 }
 
-/** Texto para listas: `"chest,triceps"` -> `"Peito,Tríceps"`; vazio -> `"—"`. */
+/** Texto para listas: `"chest,triceps"` -> `"Peito, Tríceps"`; vazio -> `"—"`. */
 export function formatMuscleGroups(value: string | null): string {
   const codes = splitCodes(value);
   return codes.length === 0 ? '—' : codes.map(muscleGroupLabel).join(', ');

@@ -65,7 +65,10 @@ const foodSchema = z
       const macros = [values.protein, values.carbs, values.fats].map((value) => value.trim());
       // Um macro inválido já tem o seu erro; a soma só se verifica com os três válidos.
       if (macros.some((value) => !DECIMAL.test(value))) return true;
-      return macros.map(toNumber).reduce((total, value) => total + value, 0) <= 100;
+      // Em centésimas inteiras: 0,15 + 65,01 + 34,84 em vírgula flutuante dá 100,00000000000001
+      // e o backend (decimal) aceita-o.
+      const hundredths = macros.map((value) => Math.round(toNumber(value) * 100));
+      return hundredths.reduce((total, value) => total + value, 0) <= 10_000;
     },
     {
       path: ['protein'],
@@ -102,8 +105,7 @@ function toText(value: number | null | undefined): string {
 /** Mesma fórmula da coluna gerada 'kcal' (4/4/9), só para pré-visualização. */
 function kcalPreview(macros: readonly string[]): number | null {
   const parts = macros.map((value) => value.trim());
-  if (parts.some((value) => !DECIMAL.test(value)))
-    return null;
+  if (parts.some((value) => !DECIMAL.test(value))) return null;
 
   const [protein = 0, carbs = 0, fats = 0] = parts.map(toNumber);
   return protein * 4 + carbs * 4 + fats * 9;
@@ -115,13 +117,7 @@ function kcalPreview(macros: readonly string[]): number | null {
  *
  * @param food Alimento a editar, ou `null` para criar.
  */
-export function FoodForm({
-  food,
-  onSaved,
-}: {
-  food: Food | null;
-  onSaved: () => void;
-}) {
+export function FoodForm({ food, onSaved }: { food: Food | null; onSaved: () => void }) {
   const mutation = useSaveFoodMutation(food?.id ?? null);
   const form = useForm<FoodValues>({
     defaultValues: {
@@ -157,7 +153,7 @@ export function FoodForm({
           data.default_serving_grams === '' ? null : toNumber(data.default_serving_grams),
       });
       toast.success(
-        food === null ? 'Alimento criado com sucesso.' : 'Alimento atualizado com sucesso.',
+        food === null ? 'Alimento criado com sucesso.' : 'Alimento atualizado com sucesso.'
       );
       onSaved();
     } catch (error) {
@@ -233,4 +229,3 @@ export function FoodForm({
     </form>
   );
 }
-

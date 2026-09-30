@@ -22,11 +22,11 @@ export function useSaveExerciseMutation(exerciseId: string | null) {
       exerciseId === null
         ? unwrap(await apiClient.POST('/api/v1/exercises', { body }))
         : unwrap(
-          await apiClient.PATCH('/api/v1/exercises/{exerciseId}', {
-            params: { path: { exerciseId } },
-            body,
-          })
-        ),
+            await apiClient.PATCH('/api/v1/exercises/{exerciseId}', {
+              params: { path: { exerciseId } },
+              body,
+            })
+          ),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: libraryKeys.kind('exercises') }),
   });
 }
@@ -40,11 +40,11 @@ export function useSaveFoodMutation(foodId: string | null) {
       foodId === null
         ? unwrap(await apiClient.POST('/api/v1/foods', { body }))
         : unwrap(
-          await apiClient.PATCH('/api/v1/foods/{foodId}', {
-            params: { path: { foodId } },
-            body,
-          })
-        ),
+            await apiClient.PATCH('/api/v1/foods/{foodId}', {
+              params: { path: { foodId } },
+              body,
+            })
+          ),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: libraryKeys.kind('foods') }),
   });
 }
@@ -58,11 +58,11 @@ export function useSaveSupplementMutation(supplementId: string | null) {
       supplementId === null
         ? unwrap(await apiClient.POST('/api/v1/supplements', { body }))
         : unwrap(
-          await apiClient.PATCH('/api/v1/supplements/{supplementId}', {
-            params: { path: { supplementId } },
-            body,
-          })
-        ),
+            await apiClient.PATCH('/api/v1/supplements/{supplementId}', {
+              params: { path: { supplementId } },
+              body,
+            })
+          ),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: libraryKeys.kind('supplements') }),
   });
 }

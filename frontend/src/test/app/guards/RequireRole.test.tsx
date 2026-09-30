@@ -18,6 +18,8 @@ describe('RequireRole', () => {
 
   it.each([
     ['client', '/trainer/clients', '/portal/today'],
+    // [6E-3] NOVO: a biblioteca é só do trainer.
+    ['client', '/trainer/library', '/portal/today'],
     ['superuser', '/portal/today', '/admin'],
     ['trainer', '/admin/moderation', '/trainer'],
   ] as const)('sends a %s outside its area back to its own home', async (role, entry, home) => {

@@ -20,7 +20,7 @@ const COLUMNS: readonly LibraryColumn<Exercise>[] = [
     cell: (exercise) =>
       exercise.has_ready_video ? (
         <span className="text-foreground inline-flex items-center gap-1">
-          <Video aria-hidden className="size-4" />
+          <Video aria-hidden className="size-4" /> Com vídeo
         </span>
       ) : (
         '—'
@@ -29,7 +29,7 @@ const COLUMNS: readonly LibraryColumn<Exercise>[] = [
 ];
 
 /** Separador "Exercícios": globais e privados, com vídeo. */
-export function ExercisesPanel({ controls}: { controls: LibraryControls }) {
+export function ExercisesPanel({ controls }: { controls: LibraryControls }) {
   const { filters, filtered } = useLibraryFilters(controls);
   const query = useExerciseListQuery(filters);
 

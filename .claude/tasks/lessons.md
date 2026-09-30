@@ -155,3 +155,20 @@ Lições capturadas depois de correções do utilizador.
   formatar só os ficheiros alterados (lista do `git status`) e repor os que só mudaram EOL.
 - **Confirmar no código o que um agente de exploração resume**: o exemplo de ordem canónica
   ("quadriceps,glutes") estava errado; o teste apanhou-o.
+
+## 2026-09-30 — Fecho da 6E-3
+
+- **SHA-256 normalizado + diff de blocos** encontrou em minutos os 5 desvios com efeito entre ~30
+  ficheiros só com formatação/comentários; classificar cada um (defeito / copy aprovado /
+  comentário) antes de tocar.
+- **Desvio de copy do utilizador que parte um teste do blueprint**: perguntar (repor vs. adaptar),
+  não decidir sozinho.
+- **Mutação que sobrevive por acaso dos dados do teste** (N3): procurar por força bruta valores que
+  distingam o mutante (script Node) em vez de declarar equivalente.
+- **Mutação corrida contra o ficheiro de teste errado** parece "viva" (M24): confirmar primeiro que
+  teste a mata no doc 08.
+- **Harness de mutações no Windows**: a escrita de restauro pode falhar com `Errno 22` (ficheiro
+  bloqueado pelo Vitest); tentar de novo e **verificar** o conteúdo restaurado; nunca editar
+  ficheiros enquanto o harness corre.
+- **Mutações não correm o typecheck**: depois de refatorar o código de uma correção, repetir as
+  mutações dessa correção e o `typecheck`.

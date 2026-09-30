@@ -314,3 +314,79 @@ export function packTypePage(
 ): Schemas['PagedResponseOfPackTypeResponse'] {
   return { items, total_count: total, page_number: 1, page_size: 25 };
 }
+
+export const EXERCISE_ID = '66666666-6666-6666-6666-666666666661';
+export const GLOBAL_EXERCISE_ID = '66666666-6666-6666-6666-666666666662';
+export const FOOD_ID = '77777777-7777-7777-7777-777777777771';
+export const SUPPLEMENT_ID = '88888888-8888-8888-8888-888888888881';
+
+/** Exercício privado ativo, sem vídeo; `scope: 'global'` num override faz dele um global. */
+export function exercise(
+  overrides: Partial<Schemas['ExerciseResponse']> = {}
+): Schemas['ExerciseResponse'] {
+  return {
+    id: EXERCISE_ID,
+    scope: 'private',
+    name: 'Remada curvada',
+    description: 'Tronco inclinado, costas neutras.',
+    muscle_groups: 'back,biceps',
+    equipment: 'Barra',
+    difficulty_level: 'intermediate',
+    video_url: null,
+    managed_video_status: null,
+    has_ready_video: false,
+    is_active: true,
+    platform_enforcement_status: 'allowed',
+    platform_enforcement_reason: null,
+    created_at: '2026-09-01T10:00:00Z',
+    updated_at: '2026-09-01T10:00:00Z',
+    ...overrides,
+  };
+}
+
+/** Alimento privado ativo: 31 g P · 0 g HC · 3,6 g G por 100 g. */
+export function food(overrides: Partial<Schemas['FoodResponse']> = {}): Schemas['FoodResponse'] {
+  return {
+    id: FOOD_ID,
+    scope: 'private',
+    name: 'Batido pós-treino',
+    description: null,
+    protein: 31,
+    carbs: 0,
+    fats: 3.6,
+    kcal: 156.4,
+    fiber: null,
+    default_serving_grams: 250,
+    is_active: true,
+    platform_enforcement_status: 'allowed',
+    platform_enforcement_reason: null,
+    created_at: '2026-09-01T10:00:00Z',
+    updated_at: '2026-09-01T10:00:00Z',
+    ...overrides,
+  };
+}
+
+/** Suplemento privado ativo (sem campos de moderação: o contrato não os tem). */
+export function supplement(
+  overrides: Partial<Schemas['SupplementResponse']> = {}
+): Schemas['SupplementResponse'] {
+  return {
+    id: SUPPLEMENT_ID,
+    scope: 'private',
+    name: 'Multivitamínico',
+    description: null,
+    unit_of_measure: 'cápsula',
+    serving_size: '1',
+    timing: 'Ao pequeno-almoço',
+    trainer_notes: null,
+    is_active: true,
+    created_at: '2026-09-01T10:00:00Z',
+    updated_at: '2026-09-01T10:00:00Z',
+    ...overrides,
+  };
+}
+
+/** Qualquer página da biblioteca no envelope `PagedResponse`. */
+export function libraryPage<T>(items: T[], total = items.length, pageNumber = 1) {
+  return { items, total_count: total, page_number: pageNumber, page_size: 25 };
+}

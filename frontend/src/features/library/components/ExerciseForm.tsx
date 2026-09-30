@@ -93,7 +93,7 @@ export function ExerciseForm({
         video_url: exercise?.video_url ?? null,
       });
       toast.success(
-        exercise === null ? 'Exercício criado com sucesso.' : 'Exercício atualizado com sucesso.',
+        exercise === null ? 'Exercício criado com sucesso.' : 'Exercício atualizado com sucesso.'
       );
       onSaved();
     } catch (error) {

@@ -6,6 +6,13 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-09-30 — Sprint 6E-3 FINALIZADA.** Docs 02–06 do Leandro em `5cd1d7f`, doc 07 e 6 correções
+no fecho: "Com vídeo" reposto (só ícone `aria-hidden`), `wrap-break-words` inexistente no Tailwind
+4.3, copy "!", soma dos macros em centésimas (vírgula flutuante recusava 100 g exatos), lista de
+exercícios em polling enquanto um vídeo processa (o painel fechado deixava-a desatualizada),
+`Object.hasOwn`. 222 testes, 27/27 + 6/6 mutações, backend 2902. Ver
+`Sessions/2026-09-30-sprint6e3-fecho-frontend.md` e o relatório `sprint_6E3/09`.
+
 **2026-09-29 — Sprint 6E-3: blueprints validados (biblioteca privada).** Pack `sprint_6E/sprint_6E3/`
 (01–08), worktree descartável apagada. Decisões F1–F11 (URL com tab/pesquisa/página, globais e
 arquivados só leitura, bloqueados com motivo, chips de músculos também no admin, vídeo em

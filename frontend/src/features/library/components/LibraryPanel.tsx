@@ -42,7 +42,7 @@ export interface LibraryColumn<T> {
   readonly cell: (item: T) => ReactNode;
 }
 
-/** Origem e estado do item: cor + icone + texto (design system, badges de estado). */
+/** Origem e estado do item: cor + ícone + texto (design system, badges de estado). */
 export function LibraryItemBadges({ item }: { item: LibraryItem }) {
   return (
     <span className="flex flex-wrap gap-1">
@@ -117,7 +117,7 @@ export function LibraryPanel<T extends LibraryItem>({
       toast.success(
         confirm.is_active
           ? `${confirm.name} foi arquivado com sucesso.`
-          : `${confirm.name} foi reativado com sucesso.`,
+          : `${confirm.name} foi reativado com sucesso.`
       );
       setConfirm(null);
     } catch {

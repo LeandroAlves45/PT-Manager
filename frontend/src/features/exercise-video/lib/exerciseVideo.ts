@@ -14,6 +14,11 @@ const MIN_SHORT_SIDE = 240;
 /** Estados que já não mudam sem uma nova ação de quem gere o vídeo. */
 export const TERMINAL_VIDEO_STATUSES = ['ready', 'failed', 'rejected'];
 
+/** Envio ou processamento ainda a decorrer (estado não terminal) — a lista deve acompanhá-lo. */
+export function isVideoInProgress(status: string | null | undefined): boolean {
+  return status === 'pending' || status === 'processing';
+}
+
 const VIDEO_STATUS_LABELS: Record<string, string> = {
   pending: 'pendente',
   processing: 'em processamento',
@@ -44,8 +49,7 @@ export function describeExerciseVideo(
   exercise: Pick<ExerciseVideoSubject, 'managed_video_status' | 'has_ready_video' | 'video_url'>
 ): string {
   const { managed_video_status: status, has_ready_video: hasReadyVideo } = exercise;
-  if (status === null)
-    return exercise.video_url ? 'Ligação de vídeo externa' : 'Sem vídeo';
+  if (status === null) return exercise.video_url ? 'Ligação de vídeo externa' : 'Sem vídeo';
 
   const label = VIDEO_STATUS_LABELS[status] ?? 'estado indisponível';
 
@@ -60,8 +64,7 @@ export function describeExerciseVideo(
 export function validateVideoFile(file: File): string | null {
   if (!(ACCEPTED_VIDEO_TYPES as readonly string[]).includes(file.type))
     return 'Formato não suportado. Usa um vídeo MP4 ou MOV.';
-  if (file.size <= 0 || file.size > MAX_VIDEO_BYTES)
-    return 'O vídeo tem de ter até 100 MB.';
+  if (file.size <= 0 || file.size > MAX_VIDEO_BYTES) return 'O vídeo tem de ter até 100 MB.';
 
   return null;
 }
@@ -114,8 +117,7 @@ export function validateVideoMetadata(metadata: VideoMetadata): string | null {
   const longSide = Math.max(metadata.width, metadata.height);
   const shortSide = Math.min(metadata.width, metadata.height);
 
-  if (longSide > MAX_LONG_SIDE)
-    return videoErrorMessage('exercise_video_resolution_exceeded');
+  if (longSide > MAX_LONG_SIDE) return videoErrorMessage('exercise_video_resolution_exceeded');
   if (shortSide > 0 && shortSide < MIN_SHORT_SIDE)
     return videoErrorMessage('exercise_video_resolution_too_small');
   return null;

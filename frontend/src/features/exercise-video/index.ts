@@ -8,5 +8,6 @@ export type { ExerciseVideoAudience } from '@/features/exercise-video/api/exerci
 export { ExerciseVideoPanel } from '@/features/exercise-video/components/ExerciseVideoPanel';
 export {
   describeExerciseVideo,
+  isVideoInProgress,
   type ExerciseVideoSubject,
 } from '@/features/exercise-video/lib/exerciseVideo';

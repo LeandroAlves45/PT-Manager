@@ -25,7 +25,7 @@ export function LibraryItemDetails({
       <LibraryItemBadges item={item} />
       {item.scope === 'global' ? (
         <p className="text-muted-foreground text-sm">
-          Item global da plataforma! Podes usá-lo nos planos, mas não o podes editar.
+          Item global da plataforma: podes usá-lo nos planos, mas não o podes editar.
         </p>
       ) : item.platform_enforcement_status === 'blocked' ? (
         <p role="note" className="text-destructive text-sm">
@@ -36,7 +36,7 @@ export function LibraryItemDetails({
       ) : (
         !item.is_active && (
           <p className="text-muted-foreground text-sm">
-            Arquivado! Reativa-o na lista para o voltares a editar e a usar em planos novos.
+            Arquivado: reativa-o na lista para o voltares a editar e a usar em planos novos.
           </p>
         )
       )}
@@ -44,7 +44,7 @@ export function LibraryItemDetails({
         {rows.map((row) => (
           <div key={row.label} className="contents">
             <dt className="text-muted-foreground">{row.label}</dt>
-            <dd className="wrap-break-words whitespace-pre-line">
+            <dd className="wrap-break-word whitespace-pre-line">
               {row.value === null || row.value === '' ? '—' : row.value}
             </dd>
           </div>

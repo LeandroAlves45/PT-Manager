@@ -1,4 +1,4 @@
-/** Campos comuns ás três respostas (`ExerciseResponse`, `FoodResponse`, `SupplementResponse`). */
+/** Campos comuns às três respostas (`ExerciseResponse`, `FoodResponse`, `SupplementResponse`). */
 export interface LibraryItem {
   readonly id: string;
   readonly name: string;

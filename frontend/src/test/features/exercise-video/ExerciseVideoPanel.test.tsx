@@ -1,11 +1,12 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { API, problem, restorableSession } from '@/test/msw/handlers';
 import { server } from '@/test/msw/server';
 import { renderApp } from '@/test/render';
+import { stubStorage, stubVideoMetadata } from '@/test/video-fakes';
 
 const EXERCISE_ID = '22222222-2222-2222-2222-222222222222';
 const VIDEO_ID = '44444444-4444-4444-4444-444444444444';
@@ -60,68 +61,6 @@ const uploadResponse = {
 };
 
 const mp4 = () => new File(['video-bytes'], 'agachamento.mp4', { type: 'video/mp4' });
-
-interface StorageRequest {
-  method: string;
-  url: string;
-  headers: Record<string, string>;
-  body: unknown;
-}
-
-/**
- * Storage de terceiros (R2) visto pelo browser: um XHR falso que regista o pedido, emite
- * progresso e responde com `status`. A API continua no MSW; só o PUT assinado sai daqui.
- */
-function stubStorage(status = 200): StorageRequest[] {
-  const requests: StorageRequest[] = [];
-  class FakeStorageXhr {
-    upload: { onprogress: ((event: ProgressEvent) => void) | null } = { onprogress: null };
-    onload: (() => void) | null = null;
-    onerror: (() => void) | null = null;
-    onabort: (() => void) | null = null;
-    status = 0;
-    private request: StorageRequest = { method: '', url: '', headers: {}, body: null };
-
-    open(method: string, url: string) {
-      this.request = { method, url, headers: {}, body: null };
-    }
-    setRequestHeader(name: string, value: string) {
-      this.request.headers[name.toLowerCase()] = value;
-    }
-    send(body: unknown) {
-      requests.push({ ...this.request, body });
-      queueMicrotask(() => {
-        this.upload.onprogress?.(
-          new ProgressEvent('progress', { lengthComputable: true, loaded: 11, total: 11 })
-        );
-        this.status = status;
-        this.onload?.();
-      });
-    }
-    abort() {
-      this.onabort?.();
-    }
-  }
-  vi.stubGlobal('XMLHttpRequest', FakeStorageXhr);
-  return requests;
-}
-
-/**
- * O `<video>` do jsdom não carrega media: simula o browser a ler os metadados do ficheiro.
- * `setup.ts` repõe os spies no fim de cada teste.
- */
-function stubVideoMetadata({ duration = 30, width = 1280, height = 720 } = {}) {
-  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:video');
-  vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
-  vi.spyOn(HTMLMediaElement.prototype, 'duration', 'get').mockReturnValue(duration);
-  vi.spyOn(HTMLVideoElement.prototype, 'videoWidth', 'get').mockReturnValue(width);
-  vi.spyOn(HTMLVideoElement.prototype, 'videoHeight', 'get').mockReturnValue(height);
-  vi.spyOn(HTMLMediaElement.prototype, 'src', 'set').mockImplementation(function (
-    this: HTMLMediaElement
-  ) {
-    queueMicrotask(() => this.dispatchEvent(new Event('loadedmetadata')));
-  });
-}
 
 /** Abre o exercício no catálogo com o estado de vídeo pedido. */
 async function openExercise(overrides: Partial<typeof exercise> = {}) {

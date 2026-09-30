@@ -2,7 +2,7 @@
  * Motivos de bloqueio de conteúdo privado pela moderação da plataforma
  * (`PlatformEnforcementReason` no backend), com o rótulo PT-PT de cada código.
  *
- * Fonte única : a fila de moderação do admin escolhe o motivo e a biblioteca do personal trainer
+ * Fonte única: a fila de moderação do admin escolhe o motivo e a biblioteca do personal trainer
  * mostra-o no item bloqueado.
  */
 export const PLATFORM_ENFORCEMENT_REASONS = {
@@ -14,9 +14,9 @@ export const PLATFORM_ENFORCEMENT_REASONS = {
 
 export type PlatformEnforcementReason = keyof typeof PLATFORM_ENFORCEMENT_REASONS;
 
-/** Rótulo de um motivo vindo da API; 'null' ou desconhecido -> "—" */
+/** Rótulo de um motivo vindo da API; `null` ou desconhecido -> "—". */
 export function platformEnforcementReasonLabel(reason: string | null): string {
-  return reason !== null && reason in PLATFORM_ENFORCEMENT_REASONS
+  return reason !== null && Object.hasOwn(PLATFORM_ENFORCEMENT_REASONS, reason)
     ? PLATFORM_ENFORCEMENT_REASONS[reason as PlatformEnforcementReason]
     : '—';
 }
