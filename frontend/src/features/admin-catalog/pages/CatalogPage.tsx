@@ -12,7 +12,7 @@ import {
 import { ExerciseForm } from '@/features/admin-catalog/components/ExerciseForm';
 import { FoodForm } from '@/features/admin-catalog/components/FoodForm';
 import { SupplementForm } from '@/features/admin-catalog/components/SupplementForm';
-import { describeExerciseVideo } from '@/features/admin-catalog/lib/exerciseVideo';
+import { describeExerciseVideo } from '@/features/exercise-video';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
 import { EmptyState } from '@/shared/components/EmptyState';

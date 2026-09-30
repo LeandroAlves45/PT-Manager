@@ -26,14 +26,13 @@ import { Input } from '@/shared/components/ui/input';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { formatDateTime, formatNumber } from '@/shared/lib/format';
+import {
+  PLATFORM_ENFORCEMENT_REASONS,
+  platformEnforcementReasonLabel,
+  type PlatformEnforcementReason,
+} from '@/shared/lib/platformEnforcement';
 
 type QueueItem = components['schemas']['ModerationQueueItemResponse'];
-const REASONS = {
-  malicious_content: 'Conteúdo malicioso',
-  dangerous_information: 'Informação perigosa',
-  deliberately_false_information: 'Informação deliberadamente falsa',
-  prohibited_content: 'Conteúdo proibido',
-} as const;
 const STATUS = ['all', 'allowed', 'blocked'] as const;
 
 /** Fila administrativa de conteúdos privados, sem expor dados de outro tenant fora desta rota. */
@@ -45,7 +44,7 @@ export function ModerationPage() {
     page: parseAsInteger.withDefault(1),
   });
   const [selected, setSelected] = useState<QueueItem | null>(null);
-  const [reason, setReason] = useState<keyof typeof REASONS | ''>('');
+  const [reason, setReason] = useState<PlatformEnforcementReason | ''>('');
   const kind: ModerationKind = url.kind === 'exercises' ? 'exercises' : 'foods';
   const status: ModerationStatus = STATUS.find((value) => value === url.status) ?? 'all';
   const page = Math.max(1, url.page);
@@ -162,7 +161,7 @@ export function ModerationPage() {
                     {item.platform_enforcement_status === 'blocked' ? 'Bloqueado' : 'Permitido'}
                   </td>
                   <td className="p-3">
-                    {REASONS[item.platform_enforcement_reason as keyof typeof REASONS] ?? '—'}
+                    {platformEnforcementReasonLabel(item.platform_enforcement_reason)}
                   </td>
                   <td className="p-3">
                     {item.platform_enforced_at ? formatDateTime(item.platform_enforced_at) : '—'}
@@ -219,14 +218,14 @@ export function ModerationPage() {
           {selected?.platform_enforcement_status !== 'blocked' && (
             <fieldset className="space-y-2">
               <legend className="text-sm font-medium">Motivo obrigatório</legend>
-              {Object.entries(REASONS).map(([code, label]) => (
+              {Object.entries(PLATFORM_ENFORCEMENT_REASONS).map(([code, label]) => (
                 <label key={code} className="flex items-center gap-2 text-sm">
                   <input
                     type="radio"
                     name="reason"
                     value={code}
                     checked={reason === code}
-                    onChange={() => setReason(code as keyof typeof REASONS)}
+                    onChange={() => setReason(code as PlatformEnforcementReason)}
                   />
                   {label}
                 </label>

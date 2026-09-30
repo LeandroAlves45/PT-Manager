@@ -138,3 +138,20 @@ Lições capturadas depois de correções do utilizador.
   `Z` passa por offset local.
 - **Mutação equivalente**: antes de escrever um teste para uma sobrevivente, confirmar na lib
   (ex.: nuqs `clearOnDefault`) se o comportamento é mesmo diferente.
+
+## 2026-09-29 — Blueprints da 6E-3
+
+- **Debounce só para escrever**: apagar a pesquisa (trocar de tab, "Limpar filtros") tem de ser
+  imediato, e o debounce vive no componente que desmonta com o contexto (cada tab), não na página.
+  Testar os parâmetros do **primeiro** pedido do ecrã novo.
+- **Validação de objeto (`.refine`) só com os campos válidos**: `Number("abc")` é NaN e a regra da
+  soma escrevia por cima do erro do campo.
+- **Recurso substituído invalida as caches derivadas** (URL assinado de reprodução), não só a lista.
+- **`role="combobox"` e opções cmdk**: nome pelo `<label>`; estado da opção por `aria-label`, nunca
+  `aria-selected` (é o foco do cmdk).
+- **Mutações de backend com a API da worktree a correr**: a DLL fica bloqueada, o build falha e o
+  harness conta "morte" sem nome de teste. Parar a API antes; morte sem nome não conta.
+- **Prettier numa pasta inteira no Windows** reescreve fins de linha de ficheiros não tocados;
+  formatar só os ficheiros alterados (lista do `git status`) e repor os que só mudaram EOL.
+- **Confirmar no código o que um agente de exploração resume**: o exemplo de ordem canónica
+  ("quadriceps,glutes") estava errado; o teste apanhou-o.

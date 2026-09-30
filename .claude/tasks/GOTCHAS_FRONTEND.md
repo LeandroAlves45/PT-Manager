@@ -106,3 +106,37 @@ máquina conseguia distinguir "offset local" de "UTC".
 **A regra.** Testes do frontend correm com `TZ: 'Europe/Lisbon'` fixo em `vite.config.ts`
 (`test.env`); testes de instantes com offset usam uma data de **verão** (+01:00) e o valor
 literal esperado (`'2099-07-15T12:15:00+01:00'`), não o mesmo `formatISO` que a produção usa.
+
+## 2026-09-29 — Pesquisa com debounce atrasa a limpeza (6E-3, materialização)
+
+**O que aconteceu.** Na biblioteca (`?tab=`), trocar de separador apaga `search` do URL, mas o
+valor com `useDebounce` só muda 300 ms depois: o separador novo era pedido com a pesquisa do
+anterior (`GET /supplements?search=batido`) e mostrava "Sem resultados" por instantes. O mesmo
+em "Limpar filtros". Apanhado pelo teste de URL, que compara os parâmetros do primeiro pedido.
+
+**A regra.** O debounce serve para escrever, não para apagar: `const search = term === '' ? '' :
+debounced`. Testes de troca de separador/limpeza verificam os parâmetros do **primeiro** pedido
+do ecrã novo, não só o último.
+
+## 2026-09-29 — `role="combobox"` e opções cmdk não tiram o nome do conteúdo
+
+**O que aconteceu.** No `MuscleGroupPicker`, o botão `role="combobox"` com o texto "Escolher grupos
+musculares" não tinha nome acessível (o combobox não herda o nome do conteúdo; só do `<label>`), e
+a opção escolhida anunciava "Bícepsselecionado" (dois `<span>` colados).
+
+**A regra.** Um combobox leva sempre rótulo por `htmlFor`/`FormField` (ou `aria-labelledby`); numa
+opção com estado, dar `aria-label` explícito (`"Bíceps, selecionado"`) e não usar `aria-selected`,
+que no cmdk é o item em foco.
+
+## 2026-09-29 — Revisão sonnet da 6E-3: refine sobre NaN e URL assinado em cache
+
+**O que aconteceu.** (1) O `.refine` da soma dos macros usava `Number("abc")` = NaN, `NaN <= 100`
+é falso, e o erro da soma escrevia por cima do erro do campo ("abc" na proteína mostrava "não
+podem somar mais de 100 g"). (2) Painel de vídeo (vindo da 6D): depois de uma substituição
+ficar pronta, "Ver vídeo" reutilizava o URL assinado do vídeo anterior (cache de 10 min).
+(3) Com o debounce na página, trocar de separador e escrever logo pedia o separador novo com o
+termo antigo; o debounce passou para dentro de cada separador (o Radix desmonta os inativos).
+
+**A regra.** Validações de objeto só correm quando os campos de que dependem são válidos. Um
+recurso que muda (vídeo substituído) invalida as caches derivadas dele (URL de reprodução), não
+só a lista. Estado com atraso (debounce) vive no componente que desmonta com o contexto.

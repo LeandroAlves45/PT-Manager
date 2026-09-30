@@ -29,3 +29,15 @@ limite. `NAO` registar como flakiness conhecida sem antes procurar o recurso par
 
 Nunca fechar uma sprint como "tudo verde" tendo visto falhas numa corrida integral, mesmo que
 outra corrida passe.
+
+## Mutação restaurada na fonte, mas viva no bin dos testes (Sprint 6E-3, 2026-09-29)
+
+**O que aconteceu.** Validei as mutações B1/B2/B4 recompilando só
+`Api.FunctionalTests` e restaurei cada ficheiro com `cp`. Depois compilei apenas
+`src/Api/Api.csproj` (para o contrato) e corri `dotnet test PTManager.sln --no-build`: o
+teste novo falhou com `managed_video_status = null` — era o `Api.dll` da mutação B4,
+copiado para `tests/.../bin/Release`, que nenhum build posterior tinha substituído.
+
+**A regra.** Depois de restaurar uma mutação, `dotnet build PTManager.sln -c Release`
+completo antes de qualquer `dotnet test --no-build`. Uma falha que só aparece na corrida
+integral logo após mutações é primeiro suspeita de binário obsoleto.

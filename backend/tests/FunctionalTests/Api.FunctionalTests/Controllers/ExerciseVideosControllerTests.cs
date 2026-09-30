@@ -212,6 +212,56 @@ public sealed class ExerciseVideosControllerTests : IDisposable
         Assert.Contains("global_exercise_has_video", await response.Content.ReadAsStringAsync(Token), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task TrainerReads_ReportTheReadyVideoOnListGetAndUpdate()
+    {
+        var trainer = await TrainerTenantSeeder.SeedTrainerAsync(_factory, $"video-{Guid.NewGuid():N}", Token);
+        var name = $"Squat {Guid.NewGuid():N}";
+        var exerciseId = await TrainingTestData.SeedPrivateExerciseAsync(_factory, trainer.TrainerId, name, Token);
+        await SeedReadyVideoAsync(trainer.TrainerId, exerciseId);
+        var client = TrainerClient(trainer.TrainerId);
+
+        var list = await ReadJsonAsync(await client.GetAsync($"/api/v1/exercises?search={name}", Token));
+        var listed = Assert.Single(list.GetProperty("items").EnumerateArray());
+        var single = await ReadJsonAsync(await client.GetAsync($"/api/v1/exercises/{exerciseId}", Token));
+        var updated = await client.PatchAsync(
+            $"/api/v1/exercises/{exerciseId}",
+            new StringContent($$"""{"name":"{{name}} v2","muscle_groups":"chest"}""", Encoding.UTF8, "application/json"),
+            Token);
+        var updatedBody = await ReadJsonAsync(updated);
+
+        Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
+        foreach (var exercise in new[] { listed, single, updatedBody })
+        {
+            Assert.True(exercise.GetProperty("has_ready_video").GetBoolean(), exercise.ToString());
+            Assert.Equal("ready", exercise.GetProperty("managed_video_status").GetString());
+        }
+    }
+
+    [Fact]
+    public async Task TrainerList_ReportsGlobalVideosAndNeverAnotherTenantsVideo()
+    {
+        var owner = await TrainerTenantSeeder.SeedTrainerAsync(_factory, $"video-{Guid.NewGuid():N}", Token);
+        var reader = await TrainerTenantSeeder.SeedTrainerAsync(_factory, $"video-{Guid.NewGuid():N}", Token);
+        var superuserId = await TrainingTestData.SeedSuperuserAsync(_factory, Token);
+        var marker = Guid.NewGuid().ToString("N");
+        var globalId = await TrainingTestData.SeedGlobalExerciseAsync(_factory, $"Global {marker}", Token);
+        await SeedReadyVideoAsync(null, globalId, superuserId);
+        var foreignId = await TrainingTestData.SeedPrivateExerciseAsync(_factory, owner.TrainerId, $"Foreign {marker}", Token);
+        await SeedReadyVideoAsync(owner.TrainerId, foreignId);
+        await TrainingTestData.SeedPrivateExerciseAsync(_factory, reader.TrainerId, $"Own {marker}", Token);
+
+        var list = await ReadJsonAsync(await TrainerClient(reader.TrainerId)
+            .GetAsync($"/api/v1/exercises?activity=all&search={marker}", Token));
+        var items = list.GetProperty("items").EnumerateArray()
+            .ToDictionary(item => item.GetProperty("name").GetString()!, item => item);
+
+        Assert.Equal([$"Global {marker}", $"Own {marker}"], items.Keys.Order());
+        Assert.True(items[$"Global {marker}"].GetProperty("has_ready_video").GetBoolean());
+        Assert.False(items[$"Own {marker}"].GetProperty("has_ready_video").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, items[$"Own {marker}"].GetProperty("managed_video_status").ValueKind);
+    }
+
     private HttpClient TrainerClient(Guid trainerId) =>
         _factory.CreateOriginClient().WithBearer(TestJwtFactory.IssueTrainer(trainerId));
 

@@ -1,9 +1,5 @@
-import type { components } from '@/shared/api/schema';
-
-type GlobalExercise = components['schemas']['GlobalExerciseResponse'];
-
 /**
- * Regras e textos do vídeo gerido de um exercício global.
+ * Regras e textos do vídeo gerido de um exercício (global ou privado).
  *
  * Os limites espelham `ExerciseVideoPolicy` do backend. A validação local só serve para
  * falhar cedo, sem gastar um upload de 100 MB; a decisão final é sempre do servidor.
@@ -15,7 +11,7 @@ const MAX_VIDEO_SECONDS = 180;
 const MAX_LONG_SIDE = 1920;
 const MIN_SHORT_SIDE = 240;
 
-/** Estados que já não mudam sem uma nova ação do admin. */
+/** Estados que já não mudam sem uma nova ação de quem gere o vídeo. */
 export const TERMINAL_VIDEO_STATUSES = ['ready', 'failed', 'rejected'];
 
 const VIDEO_STATUS_LABELS: Record<string, string> = {
@@ -27,18 +23,32 @@ const VIDEO_STATUS_LABELS: Record<string, string> = {
 };
 
 /**
+ * Campos de vídeo comuns a `GlobalExerciseResponse` (admin) e `ExerciseResponse` (trainer),
+ * suficientes para o painel e para o texto das listas.
+ */
+export interface ExerciseVideoSubject {
+  readonly id: string;
+  readonly name: string;
+  readonly video_url: string | null;
+  readonly managed_video_status: string | null;
+  readonly has_ready_video: boolean;
+}
+
+/**
  * Texto curto do vídeo de um exercício, partilhado pela lista e pelo formulário.
  *
  * `has_ready_video` distingue o vídeo que continua visível do registo mais recente: durante
  * uma substituição, ou depois de uma substituição falhada, o vídeo anterior ainda se vê.
  */
 export function describeExerciseVideo(
-  exercise: Pick<GlobalExercise, 'managed_video_status' | 'has_ready_video' | 'video_url'>
+  exercise: Pick<ExerciseVideoSubject, 'managed_video_status' | 'has_ready_video' | 'video_url'>
 ): string {
   const { managed_video_status: status, has_ready_video: hasReadyVideo } = exercise;
-  if (status === null) return exercise.video_url ? 'Ligação de vídeo externa' : 'Sem vídeo';
+  if (status === null)
+    return exercise.video_url ? 'Ligação de vídeo externa' : 'Sem vídeo';
 
   const label = VIDEO_STATUS_LABELS[status] ?? 'estado indisponível';
+
   if (hasReadyVideo && (status === 'pending' || status === 'processing'))
     return `Vídeo disponível · substituição ${label}`;
   if (hasReadyVideo && (status === 'failed' || status === 'rejected'))
@@ -50,7 +60,9 @@ export function describeExerciseVideo(
 export function validateVideoFile(file: File): string | null {
   if (!(ACCEPTED_VIDEO_TYPES as readonly string[]).includes(file.type))
     return 'Formato não suportado. Usa um vídeo MP4 ou MOV.';
-  if (file.size <= 0 || file.size > MAX_VIDEO_BYTES) return 'O vídeo tem de ter até 100 MB.';
+  if (file.size <= 0 || file.size > MAX_VIDEO_BYTES)
+    return 'O vídeo tem de ter até 100 MB.';
+
   return null;
 }
 
@@ -76,6 +88,7 @@ export function readVideoMetadata(file: File, timeoutMs = 5000): Promise<VideoMe
   return new Promise((resolve) => {
     const video = document.createElement('video');
     const timer = setTimeout(() => finish(null), timeoutMs);
+
     function finish(metadata: VideoMetadata | null) {
       clearTimeout(timer);
       video.onloadedmetadata = null;
@@ -84,6 +97,7 @@ export function readVideoMetadata(file: File, timeoutMs = 5000): Promise<VideoMe
       URL.revokeObjectURL(url);
       resolve(metadata);
     }
+
     video.preload = 'metadata';
     video.onloadedmetadata = () =>
       finish({ duration: video.duration, width: video.videoWidth, height: video.videoHeight });
@@ -96,9 +110,12 @@ export function readVideoMetadata(file: File, timeoutMs = 5000): Promise<VideoMe
 export function validateVideoMetadata(metadata: VideoMetadata): string | null {
   if (Number.isFinite(metadata.duration) && metadata.duration > MAX_VIDEO_SECONDS)
     return videoErrorMessage('exercise_video_duration_exceeded');
+
   const longSide = Math.max(metadata.width, metadata.height);
   const shortSide = Math.min(metadata.width, metadata.height);
-  if (longSide > MAX_LONG_SIDE) return videoErrorMessage('exercise_video_resolution_exceeded');
+
+  if (longSide > MAX_LONG_SIDE)
+    return videoErrorMessage('exercise_video_resolution_exceeded');
   if (shortSide > 0 && shortSide < MIN_SHORT_SIDE)
     return videoErrorMessage('exercise_video_resolution_too_small');
   return null;

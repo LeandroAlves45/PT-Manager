@@ -3,6 +3,7 @@ using Application.Features.Training.Exercises.Dtos;
 using Application.Features.Training.Exercises.ListExercises;
 using Application.Pagination;
 using Domain.Entities.Training;
+using Domain.ValueObjects;
 using Infrastructure.Data;
 using Infrastructure.Persistence.Common;
 using Microsoft.EntityFrameworkCore;
@@ -15,10 +16,8 @@ internal sealed class ExerciseQueries : IExerciseQueries
 {
     private readonly PtManagerDbContext _dbContext;
 
-    public ExerciseQueries(PtManagerDbContext dbContext)
-    {
+    public ExerciseQueries(PtManagerDbContext dbContext) =>
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
 
     public Task<ExerciseDto?> GetAsync(
         Guid exerciseId,
@@ -74,7 +73,10 @@ internal sealed class ExerciseQueries : IExerciseQueries
             .AsNoTracking()
             .Where(exercise => exercise.OwnerTrainerId != null || exercise.IsActive);
 
-    private static Expression<Func<Exercise, ExerciseDto>> Projection =>
+    // O estado do vídeo vem de subqueries correlacionadas (mesmo comando SQL). Sem
+    // IgnoreQueryFilters(): o filtro global de ExerciseVideo já limita a vídeos globais ou do
+    // personal trainer atual, e ignorá-lo numa subquery desligaria os filtros da query inteira.
+    private Expression<Func<Exercise, ExerciseDto>> Projection =>
         exercise => new ExerciseDto(
             exercise.Id,
             exercise.OwnerTrainerId == null ? "global" : "private",
@@ -84,6 +86,15 @@ internal sealed class ExerciseQueries : IExerciseQueries
             exercise.Equipment,
             exercise.DifficultyLevel,
             exercise.VideoUrl,
+            _dbContext.ExerciseVideos
+                .Where(video => video.ExerciseId == exercise.Id)
+                .OrderByDescending(video => video.CreatedAt)
+                .ThenByDescending(video => video.Id)
+                .Select(video => video.Status)
+                .FirstOrDefault(),
+            _dbContext.ExerciseVideos
+                .Any(video => video.ExerciseId == exercise.Id &&
+                    video.Status == ExerciseVideoStatus.Ready),
             exercise.IsActive,
             exercise.PlatformEnforcementStatus.Value,
             exercise.PlatformEnforcementReason == null ? null : exercise.PlatformEnforcementReason.Value,

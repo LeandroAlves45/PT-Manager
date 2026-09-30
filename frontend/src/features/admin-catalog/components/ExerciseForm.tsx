@@ -1,20 +1,26 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { catalogKeys } from '@/features/admin-catalog/api/catalog';
-import { ExerciseVideoPanel } from '@/features/admin-catalog/components/ExerciseVideoPanel';
+import { ExerciseVideoPanel } from '@/features/exercise-video';
 import { apiClient, unwrap } from '@/shared/api/client';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
+import { MuscleGroupPicker } from '@/shared/components/MuscleGroupPicker';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import {
+  parseMuscleGroups,
+  serializeMuscleGroups,
+  type MuscleGroupCode,
+} from '@/shared/lib/muscleGroups';
 
 const exerciseSchema = z.object({
   name: z.string().trim().min(1, 'Indica o nome do exercício.').max(255),
   description: z.string(),
-  muscle_groups: z.string().max(500),
+  muscle_groups: z.array(z.custom<MuscleGroupCode>()),
   equipment: z.string().max(255),
   difficulty_level: z.string().max(50),
 });
@@ -28,7 +34,7 @@ export function ExerciseForm({ item, onSaved }: { item: Exercise | null; onSaved
     defaultValues: {
       name: item?.name ?? '',
       description: item?.description ?? '',
-      muscle_groups: item?.muscle_groups ?? '',
+      muscle_groups: parseMuscleGroups(item?.muscle_groups ?? null),
       equipment: item?.equipment ?? '',
       difficulty_level: item?.difficulty_level ?? '',
     },
@@ -39,7 +45,7 @@ export function ExerciseForm({ item, onSaved }: { item: Exercise | null; onSaved
       const body = {
         name: values.name,
         description: values.description || null,
-        muscle_groups: values.muscle_groups || null,
+        muscle_groups: serializeMuscleGroups(values.muscle_groups),
         equipment: values.equipment || null,
         difficulty_level: values.difficulty_level || null,
         video_url: item?.video_url ?? null,
@@ -99,28 +105,48 @@ export function ExerciseForm({ item, onSaved }: { item: Exercise | null; onSaved
       onSubmit={form.handleSubmit((values) => void submit(values))}
       className="flex h-full flex-col gap-4 pb-4"
     >
-      {(['name', 'description', 'muscle_groups', 'equipment', 'difficulty_level'] as const).map(
-        (field) => (
-          <label key={field} className="space-y-1 text-sm">
+      {(['name', 'description', 'equipment', 'difficulty_level'] as const).map((field) => (
+        <label key={field} className="space-y-1 text-sm">
+          {
             {
-              {
-                name: 'Nome',
-                description: 'Descrição',
-                muscle_groups: 'Grupos musculares',
-                equipment: 'Equipamento',
-                difficulty_level: 'Dificuldade',
-              }[field]
-            }
-            <Input {...form.register(field)} aria-invalid={!!form.formState.errors[field]} />
-            {form.formState.errors[field] && (
-              <span role="alert" className="text-destructive">
-                {form.formState.errors[field]?.message}
-              </span>
-            )}
-          </label>
-        )
+              name: 'Nome',
+              description: 'Descrição',
+              equipment: 'Equipamento',
+              difficulty_level: 'Dificuldade',
+            }[field]
+          }
+          <Input {...form.register(field)} aria-invalid={!!form.formState.errors[field]} />
+          {form.formState.errors[field] && (
+            <span role="alert" className="text-destructive">
+              {form.formState.errors[field]?.message}
+            </span>
+          )}
+        </label>
+      ))}
+      {/* [6E-3] Lista fechada do MuscleGroupCatalog: texto livre dava 400 com códigos desconhecidos. */}
+      <div className="space-y-1 text-sm">
+        <label htmlFor="global-exercise-muscle-groups">Grupos musculares</label>
+        <Controller
+          control={form.control}
+          name="muscle_groups"
+          render={({ field }) => (
+            <MuscleGroupPicker
+              id="global-exercise-muscle-groups"
+              value={field.value}
+              onChange={field.onChange}
+              aria-invalid={!!form.formState.errors.muscle_groups}
+            />
+          )}
+        />
+        {form.formState.errors.muscle_groups && (
+          <span role="alert" className="text-destructive">
+            {form.formState.errors.muscle_groups.message}
+          </span>
+        )}
+      </div>
+      {item && (
+        <ExerciseVideoPanel exercise={item} audience="superuser" listKey={catalogKeys.all} />
       )}
-      {item && <ExerciseVideoPanel exercise={item} />}
       {form.formState.errors.root && (
         <p role="alert" className="text-destructive text-sm">
           {form.formState.errors.root.message}

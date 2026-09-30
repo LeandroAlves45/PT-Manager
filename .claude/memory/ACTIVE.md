@@ -1,4 +1,4 @@
-# Estado ativo: Sprint 6E — 6E-2 FINALIZADA; próxima fatia 6E-3 (biblioteca)
+# Estado ativo: Sprint 6E — 6E-3 blueprints validados (implementação pendente)
 
 Atualizado: 2026-09-29
 
@@ -17,7 +17,12 @@ Pack `docs/blueprints/frontend-files/sprint_6/sprint_6E/`. **Ler o `00` antes de
   mutações (+1 equivalente), backend 2900. Relatório `sprint_6E2/09`. Faltam
   `QG6E2-ISOLAMENTO-UI-001` e `QG6E2-UI-001` (login manual) e o `design-is`.
   Ver `Sessions/2026-09-29-sprint6e2-fecho-frontend.md`.
-- Próxima fatia a planear: 6E-3 (biblioteca), doc 00 §5.3 — o `Combobox` já existe (6E-2).
+- **6E-3 blueprints validados (2026-09-29)**: pack `sprint_6E3/` (01–08), biblioteca do trainer
+  (exercícios com vídeo, alimentos, suplementos), 49 caminhos, 2902 testes backend, 215 frontend,
+  31/31 mutações. Backend: `has_ready_video` no `ExerciseResponse` (sem migration). Vídeo passa a
+  `features/exercise-video`. **Implementação real pendente (Leandro)**: aplicar 02–07 num só commit.
+  Ver `Sessions/2026-09-29-sprint6e3-blueprints.md`.
+- Próxima fatia a planear: 6E-4 (planos), depois de a 6E-3 estar no repo real.
 - Tarefa transversal sugerida: rotas lazy por papel (bundle único de 266 kB gzip em 2026-09-29).
 
 Ver `Sessions/2026-09-29-sprint6e2-fecho-frontend.md` (6E-2) e

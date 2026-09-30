@@ -12,6 +12,7 @@ import { CatalogPage } from '@/features/admin-catalog/pages/CatalogPage';
 import { ModerationPage } from '@/features/admin-moderation/pages/ModerationPage';
 import { ClientDetailPage } from '@/features/clients/pages/ClientDetailPage';
 import { ClientsPage } from '@/features/clients/pages/ClientsPage';
+import { LibraryPage } from '@/features/library/pages/LibraryPage';
 import { SessionsPage } from '@/features/sessions/pages/SessionsPage';
 import { TrainerDashboardPage } from '@/features/trainer-dashboard/pages/TrainerDashboardPage';
 import { RootRedirect } from '@/app/RootRedirect';
@@ -71,7 +72,7 @@ const applicationRoutes: RouteObject[] = [
               { path: 'check-ins', element: placeholder('Check-ins', '6E') },
               { path: 'training-plans', element: placeholder('Planos de treino', '6E') },
               { path: 'meal-plans', element: placeholder('Planos alimentares', '6E') },
-              { path: 'library', element: placeholder('Biblioteca', '6E') },
+              { path: 'library', element: <LibraryPage /> },
               { path: 'settings', element: placeholder('Marca própria', '6E') },
               { path: 'billing', element: placeholder('Subscrição', '6E') },
             ],

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import type { QueryKey } from '@tanstack/react-query';
+import { useEffect, useId, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import {
@@ -9,7 +10,8 @@ import {
   useRemoveVideo,
   useVideoPlayback,
   useVideoUploadStatus,
-} from '@/features/admin-catalog/api/exerciseVideo';
+  type ExerciseVideoAudience,
+} from '@/features/exercise-video/api/exerciseVideo';
 import {
   ACCEPTED_VIDEO_TYPES,
   describeExerciseVideo,
@@ -18,12 +20,10 @@ import {
   validateVideoFile,
   validateVideoMetadata,
   videoErrorMessage,
-} from '@/features/admin-catalog/lib/exerciseVideo';
+  type ExerciseVideoSubject,
+} from '@/features/exercise-video/lib/exerciseVideo';
 import { isApiProblem } from '@/shared/api/problem';
-import type { components } from '@/shared/api/schema';
 import { Button } from '@/shared/components/ui/button';
-
-type Exercise = components['schemas']['GlobalExerciseResponse'];
 
 type Phase =
   | { kind: 'idle' }
@@ -34,21 +34,39 @@ type Phase =
   | { kind: 'error'; message: string };
 
 function uploadErrorMessage(error: unknown): string {
-  if (error instanceof DOMException && error.name === 'AbortError') return 'Envio cancelado.';
+  if (error instanceof DOMException && error.name === 'AbortError')
+    return 'Envio cancelado.';
   if (error instanceof StorageUploadError)
     return 'O envio para o armazenamento falhou. Tenta novamente.';
   if (isApiProblem(error) && error.status === 429)
     return 'Demasiados envios seguidos. Aguarda um pouco e tenta novamente.';
+
   return videoErrorMessage(isApiProblem(error) ? error.code : null);
 }
 
 /**
- * Vídeo gerido de um exercício global: estado, envio com progresso, reprodução e remoção.
+ * Vídeo gerido de um exercício: estado, envio com progresso, reprodução e remoção.
  *
  * O ficheiro nunca passa pela API: a API emite um URL assinado, o browser envia para o
  * storage e a API confirma e processa em segundo plano. Fechar o painel cancela o envio.
+ *
+ * @param audience Família de rotas (`superuser` no catálogo global, `trainer` na biblioteca).
+ * @param listKey Query key da lista a invalidar quando o vídeo muda de estado ou é removido.
+ * @param mode `manage` envia, substitui e remove; `view` só reproduz (exercício global visto
+ *   pelo personal trainer, arquivado ou bloqueado — o servidor recusaria o envio).
  */
-export function ExerciseVideoPanel({ exercise }: { exercise: Exercise }) {
+export function ExerciseVideoPanel({
+  exercise,
+  audience,
+  listKey,
+  mode = 'manage',
+}: {
+  exercise: ExerciseVideoSubject;
+  audience: ExerciseVideoAudience;
+  listKey: QueryKey;
+  mode?: 'manage' | 'view';
+}) {
+  const headingId = useId();
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' });
   const [showPlayer, setShowPlayer] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
@@ -56,14 +74,16 @@ export function ExerciseVideoPanel({ exercise }: { exercise: Exercise }) {
   const abortRef = useRef<AbortController | null>(null);
 
   const tracking = useVideoUploadStatus(
+    audience,
     exercise.id,
-    phase.kind === 'tracking' ? phase.videoId : null
+    phase.kind === 'tracking' ? phase.videoId : null,
+    listKey
   );
   const trackedVideo = phase.kind === 'tracking' ? tracking.data : undefined;
   const trackedStatus = trackedVideo?.status;
   const hasReadyVideo = trackedStatus === 'ready' || (!removed && exercise.has_ready_video);
-  const playback = useVideoPlayback(exercise.id, showPlayer && hasReadyVideo);
-  const remove = useRemoveVideo(exercise.id);
+  const playback = useVideoPlayback(audience, exercise.id, showPlayer && hasReadyVideo);
+  const remove = useRemoveVideo(audience, exercise.id, listKey);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -75,11 +95,17 @@ export function ExerciseVideoPanel({ exercise }: { exercise: Exercise }) {
     phase.kind === 'uploading' ||
     phase.kind === 'completing' ||
     processing;
-  const summary = describeExerciseVideo({
-    managed_video_status: trackedStatus ?? (removed ? null : exercise.managed_video_status),
-    has_ready_video: hasReadyVideo,
-    video_url: exercise.video_url,
-  });
+  // Em modo de leitura não interessa o estado de uma substituição em curso de outra pessoa.
+  const summary =
+    mode === 'view'
+      ? hasReadyVideo
+        ? 'Vídeo disponível'
+        : 'Sem vídeo'
+      : describeExerciseVideo({
+        managed_video_status: trackedStatus ?? (removed ? null : exercise.managed_video_status),
+        has_ready_video: hasReadyVideo,
+        video_url: exercise.video_url,
+      });
 
   async function upload(file: File) {
     setConfirmRemove(false);
@@ -100,14 +126,14 @@ export function ExerciseVideoPanel({ exercise }: { exercise: Exercise }) {
     const controller = new AbortController();
     abortRef.current = controller;
     try {
-      const created = await requestVideoUpload(exercise.id, file);
+      const created = await requestVideoUpload(audience, exercise.id, file);
       setPhase({ kind: 'uploading', progress: 0 });
       await uploadToStorage(created.upload, file, {
         signal: controller.signal,
         onProgress: (progress) => setPhase({ kind: 'uploading', progress }),
       });
       setPhase({ kind: 'completing' });
-      await completeVideoUpload(exercise.id, created.video.id);
+      await completeVideoUpload(audience, exercise.id, created.video.id);
       setShowPlayer(false);
       setPhase({ kind: 'tracking', videoId: created.video.id });
     } catch (error) {
@@ -135,11 +161,8 @@ export function ExerciseVideoPanel({ exercise }: { exercise: Exercise }) {
   }
 
   return (
-    <section
-      aria-labelledby="exercise-video-heading"
-      className="border-border space-y-3 rounded-lg border p-3"
-    >
-      <h3 id="exercise-video-heading" className="text-sm font-medium">
+    <section aria-labelledby={headingId} className="border-border space-y-3 rounded-lg border p-3">
+      <h3 id={headingId} className="text-sm font-medium">
         Vídeo
       </h3>
       <p className="text-muted-foreground text-sm">{summary}</p>
@@ -208,7 +231,14 @@ export function ExerciseVideoPanel({ exercise }: { exercise: Exercise }) {
         </>
       )}
 
-      {confirmRemove ? (
+      {mode === 'view' ? (
+        hasReadyVideo &&
+        !showPlayer && (
+          <Button type="button" size="sm" variant="outline" onClick={() => setShowPlayer(true)}>
+            Ver vídeo
+          </Button>
+        )
+      ) : confirmRemove ? (
         <div className="space-y-2">
           <p className="text-sm">
             O vídeo deixa de estar disponível. Esta ação não pode ser desfeita.
@@ -273,7 +303,9 @@ export function ExerciseVideoPanel({ exercise }: { exercise: Exercise }) {
           )}
         </div>
       )}
-      <p className="text-muted-foreground text-xs">MP4 ou MOV, H.264, até 100 MB e 3 minutos.</p>
+      {mode === 'manage' && (
+        <p className="text-muted-foreground text-xs">MP4 ou MOV, H.264, até 100 MB e 3 minutos.</p>
+      )}
     </section>
   );
 }

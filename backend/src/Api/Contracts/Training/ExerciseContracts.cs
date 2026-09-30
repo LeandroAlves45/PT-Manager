@@ -21,6 +21,11 @@ public sealed record UpdateExerciseRequest(
     string? VideoUrl);
 
 /// <summary>Exercício visível ao personal trainer, global ou privado.</summary>
+/// <remarks>
+/// <c>managed_video_status</c> é o estado do vídeo gerido mais recente (<c>pending</c>,
+/// <c>processing</c>, <c>ready</c>, <c>rejected</c>, <c>failed</c>) e <c>has_ready_video</c> diz se
+/// há vídeo pronto a reproduzir por <c>GET /exercises/{id}/video</c>.
+/// </remarks>
 public sealed record ExerciseResponse(
     Guid Id,
     string Scope,
@@ -30,6 +35,8 @@ public sealed record ExerciseResponse(
     string? Equipment,
     string? DifficultyLevel,
     string? VideoUrl,
+    string? ManagedVideoStatus,
+    bool HasReadyVideo,
     bool IsActive,
     string PlatformEnforcementStatus,
     string? PlatformEnforcementReason,
@@ -50,6 +57,8 @@ public sealed record ExerciseResponse(
             exercise.Equipment,
             exercise.DifficultyLevel,
             exercise.VideoUrl,
+            exercise.ManagedVideoStatus?.Value,
+            exercise.HasReadyVideo,
             exercise.IsActive,
             exercise.PlatformEnforcementStatus,
             exercise.PlatformEnforcementReason,

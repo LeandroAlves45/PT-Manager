@@ -16,18 +16,21 @@ public sealed class UpdateExerciseHandler
     private readonly ITenantContext _tenantContext;
     private readonly IClock _clock;
     private readonly IExerciseStore _exerciseStore;
+    private readonly IExerciseQueries _exerciseQueries;
 
     public UpdateExerciseHandler(
         IValidator<UpdateExerciseCommand> validator,
         ITenantContext tenantContext,
         IClock clock,
-        IExerciseStore exerciseStore
+        IExerciseStore exerciseStore,
+        IExerciseQueries exerciseQueries
     )
     {
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _exerciseStore = exerciseStore ?? throw new ArgumentNullException(nameof(exerciseStore));
+        _exerciseQueries = exerciseQueries ?? throw new ArgumentNullException(nameof(exerciseQueries));
     }
 
     /// <summary>Valida, atualiza e persiste um exercício privado.</summary>
@@ -57,6 +60,13 @@ public sealed class UpdateExerciseHandler
             cancellationToken
         );
 
-        return outcome.ToUpdateResult();
+        var result = outcome.ToUpdateResult();
+        if (!result.IsSuccess)
+            return result;
+
+        // A entidade atualizada não conhece os vídeos: relê pela query para devolver o mesmo
+        // estado de vídeo que GET /exercises/{id} (1 comando extra só no sucesso).
+        var refreshed = await _exerciseQueries.GetAsync(command.ExerciseId, cancellationToken);
+        return refreshed is null ? result : Result<ExerciseDto>.Success(refreshed);
     }
 }

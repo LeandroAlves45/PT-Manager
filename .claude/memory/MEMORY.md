@@ -6,6 +6,14 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-09-29 — Sprint 6E-3: blueprints validados (biblioteca privada).** Pack `sprint_6E/sprint_6E3/`
+(01–08), worktree descartável apagada. Decisões F1–F11 (URL com tab/pesquisa/página, globais e
+arquivados só leitura, bloqueados com motivo, chips de músculos também no admin, vídeo em
+`features/exercise-video` com `audience`). Backend: `has_ready_video`/`managed_video_status` no
+`ExerciseResponse`. 6 defeitos apanhados (debounce na limpeza, URL de vídeo em cache, NaN no refine…).
+2902 backend, 215 frontend, 31/31 mutações. Implementação real pendente. Ver
+`Sessions/2026-09-29-sprint6e3-blueprints.md`.
+
 **2026-09-29 — Sprint 6E-2 FINALIZADA.** O CI #15 vermelho vinha de novo do doc 07 (testes) por
 aplicar. Aplicado; 4 defeitos corrigidos (rótulo com ponto, submit de "Marcar sessão" antes dos
 packs, fim previsto sugerido que sobrevivia à troca de tipo, fuso dos testes fixo em Lisboa);

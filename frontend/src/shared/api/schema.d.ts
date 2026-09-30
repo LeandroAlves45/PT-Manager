@@ -23551,6 +23551,8 @@ export interface components {
             equipment: null | string;
             difficulty_level: null | string;
             video_url: null | string;
+            managed_video_status: null | string;
+            has_ready_video: boolean;
             is_active: boolean;
             platform_enforcement_status: string;
             platform_enforcement_reason: null | string;
