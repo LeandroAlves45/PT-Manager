@@ -17,6 +17,11 @@ import { ClientForm } from '@/features/clients/components/ClientForm';
 import { InitialAssessmentForm } from '@/features/clients/components/InitialAssessmentForm';
 import { activityErrorMessage, ageFrom, initialsOf } from '@/features/clients/lib/labels';
 import { ClientSessionsTab } from '@/features/sessions';
+import {
+  MealPlansPage,
+  SupplementAssignmentsPage,
+  TrainingPlansPage,
+} from '@/features/prescriptions';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
@@ -52,7 +57,7 @@ type Panel = 'edit' | 'assessment' | null;
 type Confirm = 'invite' | 'activity' | null;
 
 /** Separadores do detalhe; Treino, Nutrição, Suplementos e Check-ins. */
-const TABS = ['summary', 'sessions'] as const;
+const TABS = ['summary', 'sessions', 'training', 'nutrition', 'supplements'] as const;
 
 /**
  * Detalhe do cliente — cabeçalho e separadores "Resumo" e "Sessões" (`?tab=`).
@@ -168,6 +173,9 @@ export function ClientDetailPage() {
         <TabsList>
           <TabsTrigger value="summary">Resumo</TabsTrigger>
           <TabsTrigger value="sessions">Sessões</TabsTrigger>
+          <TabsTrigger value="training">Treino</TabsTrigger>
+          <TabsTrigger value="nutrition">Nutrição</TabsTrigger>
+          <TabsTrigger value="supplements">Suplementos</TabsTrigger>
         </TabsList>
         <TabsContent value="summary">
           {summary.isPending ? (
@@ -191,6 +199,15 @@ export function ClientDetailPage() {
             client={{ id: data.id, name: data.name }}
             canSchedule={data.is_active}
           />
+        </TabsContent>
+        <TabsContent value="training">
+          <TrainingPlansPage client={{ id: data.id, name: data.name }} />
+        </TabsContent>
+        <TabsContent value="nutrition">
+          <MealPlansPage client={{ id: data.id, name: data.name }} />
+        </TabsContent>
+        <TabsContent value="supplements">
+          <SupplementAssignmentsPage client={{ id: data.id, name: data.name }} />
         </TabsContent>
       </Tabs>
 

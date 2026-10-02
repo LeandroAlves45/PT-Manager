@@ -14,5 +14,5 @@ public sealed record ClientSupplementAssignmentDto(
     bool IsActive,
     bool IsSupplementArchived,
     DateTime CreatedAt,
-    DateTime UpdatedAt
-);
+    DateTime UpdatedAt,
+    string? ClientName);

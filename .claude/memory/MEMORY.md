@@ -6,6 +6,20 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-01 — Sprint 6E-4: backend com testes e contrato, pack revisto.** O backend do doc 02
+está no checkout, com as melhorias M1 (`TrainingPlanHistory` como fonte única), M2 (`client_name`
+das atribuições obrigatório e anulável) e M3 (tenant explícito). Resultados: 2911 testes verdes,
+MU1–MU6 mortas, `schema.d.ts` regenerado. Os blueprints frontend foram corrigidos (A1: o refetch
+apagava o rascunho; B3 e B5–B8) e validados numa worktree com 234 testes, 46/46 hashes. Falta
+aplicar o frontend e fazer o CI. Ver `Sessions/2026-10-01-sprint6e4-revisao-backend-testes.md`.
+
+**2026-10-01 — Sprint 6E-4: blueprints validados.** Pack `sprint_6E/sprint_6E4/01–09` para
+planos de treino, registo de séries, nutrição com preview e suplementos. Worktree descartável,
+sem código de produção aplicado no checkout principal. `has_history` inclui treinos concluídos
+sem séries; `client_name` nas listas evita pedidos por linha; conflito de atribuição distingue
+registo ativo do inativo. Aplicação real, CI e login visual pendentes. Ver
+`Sessions/2026-10-01-sprint6e4-blueprints.md`.
+
 **2026-09-30 — Sprint 6E-3 FINALIZADA.** Docs 02–06 do Leandro em `5cd1d7f`, doc 07 e 6 correções
 no fecho: "Com vídeo" reposto (só ícone `aria-hidden`), `wrap-break-words` inexistente no Tailwind
 4.3, copy "!", soma dos macros em centésimas (vírgula flutuante recusava 100 g exatos), lista de

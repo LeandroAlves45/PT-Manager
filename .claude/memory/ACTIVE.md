@@ -1,6 +1,6 @@
-# Estado ativo: Sprint 6E — 6E-3 FINALIZADA; próxima fatia 6E-4 (planos)
+# Estado ativo: Sprint 6E — 6E-4 backend testado; frontend por aplicar
 
-Atualizado: 2026-09-30
+Atualizado: 2026-10-01
 
 ## Sprint 6E — frontend trainer
 
@@ -24,7 +24,8 @@ Pack `docs/blueprints/frontend-files/sprint_6/sprint_6E/`. **Ler o `00` antes de
   M1–M27 27/27 + 6/6 novas, backend 2902. Relatório `sprint_6E3/09`. Faltam
   `QG6E3-ISOLAMENTO-UI-001`, `QG6E3-UI-001`, `QG6E3-VIDEO-R2-001`, `QG6E3-DESIGN-001`.
   Ver `Sessions/2026-09-30-sprint6e3-fecho-frontend.md`.
-- Próxima fatia a planear: 6E-4 (planos; consome as query keys de `features/library`).
+- **6E-4 BLUEPRINTS VALIDADOS (2026-10-01)**: pack `sprint_6E/sprint_6E4/01–09` cobre planos de treino, séries, planos alimentares com preview e suplementos. A implementação foi testada numa worktree descartável, sem integração no projeto principal. O backend requer adições `Preserve`: `has_history`, `client_name` em listas e campos do cálculo para repor o editor. Ver `Sessions/2026-10-01-sprint6e4-blueprints.md`. Aplicação real, CI e verificação visual com login continuam pendentes.
+- **6E-4 BACKEND APLICADO E TESTADO (2026-10-01)**: o backend do doc 02 foi aplicado, com M1–M3. São 2911 testes, MU1–MU6 6/6 e o contrato foi regenerado. Os blueprints frontend 03–08 foram corrigidos (A1, B3, B5–B8) e validados numa worktree (234 testes, FM1–FM3 3/3, 46/46 hashes). Próximo passo: o Leandro aplica o frontend e fecha a fase. Os patches do pack exigem `git apply --recount`. Ver `Sessions/2026-10-01-sprint6e4-revisao-backend-testes.md`.
 - Tarefa transversal registada: pesquisa na página N faz um pedido intermédio (termo antigo,
   página 1) — biblioteca e `ModerationPage`.
 - Tarefa transversal sugerida: rotas lazy por papel (bundle único de 266 kB gzip em 2026-09-29).

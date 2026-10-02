@@ -4,6 +4,7 @@ namespace Application.Features.Training.TrainingPlans.Dtos;
 public sealed record TrainingPlanSummaryDto(
     Guid Id,
     Guid ClientId,
+    string ClientName,
     string Name,
     string? Description,
     string? TrainingModality,
@@ -13,5 +14,4 @@ public sealed record TrainingPlanSummaryDto(
     bool IsArchived,
     bool NeedsReview,
     DateTime CreatedAt,
-    DateTime UpdatedAt
-);
+    DateTime UpdatedAt);

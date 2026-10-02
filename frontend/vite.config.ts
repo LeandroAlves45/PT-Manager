@@ -41,6 +41,12 @@ export default defineConfig({
     env: { VITE_API_BASE_URL: 'https://localhost:7186', TZ: 'Europe/Lisbon' },
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // Igual ao gate 6E-4 (`--maxWorkers=4 --testTimeout=15000`). O setup espera até
+    // 5000 ms; o teste tem de viver mais do que isso, senão o Vitest esconde o erro
+    // da Testing Library. Um worker por ficheiro, nesta máquina, nem chega a arrancar.
+    testTimeout: 15_000,
+    hookTimeout: 15_000,
+    maxWorkers: 4,
     css: false,
     coverage: {
       provider: 'v8',

@@ -13,6 +13,7 @@ public sealed record TrainingPlanDetailsDto(
     bool IsActive,
     bool IsArchived,
     bool NeedsReview,
+    bool HasHistory,
     IReadOnlyList<TrainingPlanDetailsDto.TrainingDayDto> Days,
     DateTime CreatedAt,
     DateTime UpdatedAt)

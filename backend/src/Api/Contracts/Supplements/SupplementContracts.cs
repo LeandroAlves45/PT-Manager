@@ -134,7 +134,8 @@ public sealed record ClientSupplementAssignmentResponse(
     bool IsActive,
     bool IsSupplementArchived,
     DateTime CreatedAt,
-    DateTime UpdatedAt)
+    DateTime UpdatedAt,
+    string? ClientName)
 {
     /// <summary>Projeta o DTO da Application no contrato da Api.</summary>
     public static ClientSupplementAssignmentResponse From(
@@ -155,6 +156,7 @@ public sealed record ClientSupplementAssignmentResponse(
             assignment.IsActive,
             assignment.IsSupplementArchived,
             assignment.CreatedAt,
-            assignment.UpdatedAt);
+            assignment.UpdatedAt,
+            assignment.ClientName);
     }
 }

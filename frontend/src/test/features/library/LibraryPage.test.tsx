@@ -545,11 +545,15 @@ describe('Trainer library', () => {
     await user.click(screen.getByRole('tab', { name: 'Suplementos' }));
     await user.type(screen.getByRole('searchbox', { name: 'Pesquisar suplementos' }), 'mu');
 
-    await waitFor(() =>
-      expect(urls.supplements.some((url) => url.searchParams.get('search') === 'mu')).toBe(true)
+    // O debounce da pesquisa é 300 ms. Com vários ficheiros em paralelo o `waitFor`
+    // por omissão (5000 ms) desiste antes do pedido, embora a asserção esteja certa.
+    await waitFor(
+      () =>
+        expect(urls.supplements.some((url) => url.searchParams.get('search') === 'mu')).toBe(true),
+      { timeout: 12_000 }
     );
     expect(urls.supplements.map((url) => url.searchParams.get('search'))).not.toContain('batido');
-  }, 15000);
+  }, 30_000);
 
   it('shows the error of an invalid macro instead of the sum error', async () => {
     libraryHandlers({ foods: libraryPage([]) });

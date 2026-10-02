@@ -68,7 +68,8 @@ public static class SupplementMappings
             assignment.IsActive,
             !supplement.IsActive,
             assignment.CreatedAt,
-            assignment.UpdatedAt
+            assignment.UpdatedAt,
+            ClientName: null
         );
     }
 }

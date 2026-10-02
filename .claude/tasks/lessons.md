@@ -172,3 +172,17 @@ Lições capturadas depois de correções do utilizador.
   ficheiros enquanto o harness corre.
 - **Mutações não correm o typecheck**: depois de refatorar o código de uma correção, repetir as
   mutações dessa correção e o `typecheck`.
+
+## 2026-10-01 — Revisão do pack 6E-4 (codex) e testes do backend
+
+- **Rever um pack de outro agente contra o código real**, não contra o próprio pack: o pack 6E-4
+  estava coerente consigo mesmo e ainda assim duplicava uma regra do servidor (M1) e tinha um
+  bug de UI que os seus testes não viam (A1).
+- **Um teste de "refetch não apaga o rascunho" tem de devolver dados diferentes.** O TanStack
+  Query mantém a referência quando o refetch traz JSON igual (*structural sharing*), e assim o
+  `useEffect([data])` nem corre. A mutação FM1 sobreviveu até o mock passar a responder
+  `has_history: true` depois do 409, que é o caso realista.
+- **Patches em Markdown perdem o espaço das linhas de contexto vazias.** Materializar com
+  `git apply --recount` e repor o espaço, ou gerar os patches a partir de `git diff` real.
+- **Restaurar mutações com mtime novo** (ver `GOTCHAS_BACKEND.md`): uma falha integral logo após
+  mutações é primeiro suspeita de binário obsoleto.

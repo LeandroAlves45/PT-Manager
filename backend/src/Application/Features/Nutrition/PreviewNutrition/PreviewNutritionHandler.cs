@@ -15,8 +15,7 @@ public sealed class PreviewNutritionHandler
     /// <summary>Inicializa validação e relógio determinístico.</summary>
     public PreviewNutritionHandler(
         IValidator<PreviewNutritionCommand> validator,
-        IClock clock
-    )
+        IClock clock)
     {
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
@@ -55,6 +54,11 @@ public sealed class PreviewNutritionHandler
             snapshot.TotalDailyEnergyExpenditureKcal,
             snapshot.TargetKcal,
             snapshot.MacroDistributionMode,
+            snapshot.ProteinPercentageInput,
+            snapshot.CarbsPercentageInput,
+            snapshot.FatsPercentageInput,
+            snapshot.ProteinGramsPerKgInput,
+            snapshot.FatsGramsPerKgInput,
             snapshot.ProteinTargetGrams,
             snapshot.CarbsTargetGrams,
             snapshot.FatsTargetGrams,

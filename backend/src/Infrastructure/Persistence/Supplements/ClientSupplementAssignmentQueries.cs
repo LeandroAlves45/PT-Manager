@@ -13,10 +13,8 @@ internal sealed class ClientSupplementAssignmentQueries : IClientSupplementAssig
 {
     private readonly PtManagerDbContext _dbContext;
 
-    public ClientSupplementAssignmentQueries(PtManagerDbContext dbContext)
-    {
+    public ClientSupplementAssignmentQueries(PtManagerDbContext dbContext) =>
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
 
     public async Task<ClientSupplementAssignmentDto?> GetAsync(
         Guid trainerId,
@@ -46,7 +44,9 @@ internal sealed class ClientSupplementAssignmentQueries : IClientSupplementAssig
             where assignment.OwnerTrainerId == trainerId
             join supplement in _dbContext.Supplements.AsNoTracking()
                 on assignment.SupplementId equals supplement.Id
-            select new { assignment, supplement };
+            join client in _dbContext.Clients.AsNoTracking()
+                on assignment.ClientId equals client.Id
+            select new { assignment, supplement, client };
 
         query = activity switch
         {
@@ -70,7 +70,7 @@ internal sealed class ClientSupplementAssignmentQueries : IClientSupplementAssig
             .ToListAsync(cancellationToken);
 
         var items = rows
-            .Select(item => item.assignment.ToDto(item.supplement))
+            .Select(item => item.assignment.ToDto(item.supplement) with { ClientName = item.client.Name })
             .ToList();
 
         return new PageResult<ClientSupplementAssignmentDto>(items, totalCount);

@@ -142,6 +142,47 @@ public sealed class ClientSupplementAssignmentsControllerTests
         var response = await client.GetAsync("/api/v1/supplement-assignments", Token);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await ReadJsonAsync(response);
+        var item = Assert.Single(body.GetProperty("items").EnumerateArray());
+        Assert.Equal("Training client", item.GetProperty("client_name").GetString());
+    }
+
+    [Fact]
+    public async Task List_ExcludesAssignmentsFromAnotherTenant()
+    {
+        var owner = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        var supplementId = await SeedSupplementAsync(owner.TrainerId);
+        await ApiJsonPayload.PostAsync(
+            TrainerClient(owner.TrainerId),
+            "/api/v1/supplement-assignments",
+            new AssignSupplementRequest(owner.ClientId, supplementId, "5 g", "Daily", null),
+            Token);
+        var intruder = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+
+        var response = await TrainerClient(intruder.TrainerId)
+            .GetAsync("/api/v1/supplement-assignments", Token);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await ReadJsonAsync(response);
+        Assert.Empty(body.GetProperty("items").EnumerateArray());
+    }
+
+    [Fact]
+    public async Task Assign_ReturnsClientNameAsExplicitNull()
+    {
+        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        var supplementId = await SeedSupplementAsync(tenant.TrainerId);
+
+        var response = await ApiJsonPayload.PostAsync(
+            TrainerClient(tenant.TrainerId),
+            "/api/v1/supplement-assignments",
+            new AssignSupplementRequest(tenant.ClientId, supplementId, "5 g", "Daily", null),
+            Token);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var body = await ReadJsonAsync(response);
+        // A escrita isolada não resolve o cliente; o campo existe e é null.
+        Assert.Equal(JsonValueKind.Null, body.GetProperty("client_name").ValueKind);
     }
 
     [Fact]

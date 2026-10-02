@@ -31,6 +31,28 @@ public sealed class NutritionPreviewControllerTests
         var body = await ReadJsonAsync(response);
         Assert.Equal(2400m, body.GetProperty("target_kcal").GetDecimal());
         Assert.Equal(160m, body.GetProperty("protein_target_grams").GetDecimal());
+        Assert.Equal(2m, body.GetProperty("protein_grams_per_kg_input").GetDecimal());
+        Assert.Equal(1m, body.GetProperty("fats_grams_per_kg_input").GetDecimal());
+    }
+
+    [Fact]
+    public async Task Preview_InPercentageMode_ReturnsPercentageInputs()
+    {
+        var client = _fixture.Factory.CreateOriginClient()
+            .WithBearer(TestJwtFactory.IssueTrainer(Guid.NewGuid()));
+
+        var response = await client.PostAsJsonAsync(
+            "/api/v1/nutrition/preview",
+            new { calculation = NutritionHttpPayloads.PercentageCalculation() },
+            Token);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await ReadJsonAsync(response);
+        Assert.Equal(30m, body.GetProperty("protein_percentage_input").GetDecimal());
+        Assert.Equal(40m, body.GetProperty("carbs_percentage_input").GetDecimal());
+        Assert.Equal(30m, body.GetProperty("fats_percentage_input").GetDecimal());
+        Assert.Equal(JsonValueKind.Null, body.GetProperty("fats_grams_per_kg_input").ValueKind);
     }
 
     [Fact]

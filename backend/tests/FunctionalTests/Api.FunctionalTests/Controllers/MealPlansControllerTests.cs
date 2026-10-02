@@ -207,6 +207,54 @@ public sealed class MealPlansControllerTests
     }
 
     [Fact]
+    public async Task List_IncludesClientNameAndExcludesAnotherTenant()
+    {
+        var owner = await NutritionTestData.SeedMealPlanAsync(_fixture.Factory, Token);
+        var intruder = await NutritionTestData.SeedTrainerAsync(_fixture.Factory, Token);
+
+        var ownerResponse = await TrainerClient(owner.TrainerId)
+            .GetAsync("/api/v1/meal-plans", Token);
+        Assert.Equal(HttpStatusCode.OK, ownerResponse.StatusCode);
+        var ownerBody = await ReadJsonAsync(ownerResponse);
+        var item = Assert.Single(ownerBody.GetProperty("items").EnumerateArray());
+        Assert.Equal("Cliente Meal Plan", item.GetProperty("client_name").GetString());
+
+        var intruderResponse = await TrainerClient(intruder.TrainerId)
+            .GetAsync("/api/v1/meal-plans", Token);
+        Assert.Equal(HttpStatusCode.OK, intruderResponse.StatusCode);
+        var intruderBody = await ReadJsonAsync(intruderResponse);
+        Assert.Empty(intruderBody.GetProperty("items").EnumerateArray());
+    }
+
+    [Fact]
+    public async Task Get_ReturnsPersistedMacroInputsForReopeningTheEditor()
+    {
+        var catalog = await NutritionTestData.SeedMealPlanCatalogAsync(_fixture.Factory, Token);
+        var client = TrainerClient(catalog.TrainerId);
+        var created = await client.PostAsJsonAsync(
+            "/api/v1/meal-plans",
+            NutritionHttpPayloads.CreateMealPlan(
+                catalog.ClientId,
+                catalog.FoodId,
+                catalog.SupplementId,
+                calculation: NutritionHttpPayloads.PercentageCalculation()),
+            Token);
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var planId = (await ReadJsonAsync(created)).GetProperty("id").GetGuid();
+
+        var detail = await ReadJsonAsync(
+            await client.GetAsync($"/api/v1/meal-plans/{planId}", Token));
+
+        var calculation = detail.GetProperty("calculation");
+        Assert.Equal(30m, calculation.GetProperty("protein_percentage_input").GetDecimal());
+        Assert.Equal(40m, calculation.GetProperty("carbs_percentage_input").GetDecimal());
+        Assert.Equal(30m, calculation.GetProperty("fats_percentage_input").GetDecimal());
+        Assert.Equal(
+            JsonValueKind.Null,
+            calculation.GetProperty("protein_grams_per_kg_input").ValueKind);
+    }
+
+    [Fact]
     public async Task List_StaysWithinQueryBudget()
     {
         var seed = await NutritionTestData.SeedMealPlanAsync(_fixture.Factory, Token);

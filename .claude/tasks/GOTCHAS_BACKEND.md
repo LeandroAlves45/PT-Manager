@@ -41,3 +41,37 @@ copiado para `tests/.../bin/Release`, que nenhum build posterior tinha substitu�
 **A regra.** Depois de restaurar uma mutação, `dotnet build PTManager.sln -c Release`
 completo antes de qualquer `dotnet test --no-build`. Uma falha que só aparece na corrida
 integral logo após mutações é primeiro suspeita de binário obsoleto.
+
+## Restaurar uma mutação com o mtime antigo engana o build incremental (Sprint 6E-4, 2026-10-01)
+
+**O que aconteceu.** O harness guardou o ficheiro com `shutil.copy`, aplicou a mutação, compilou
+`Api.FunctionalTests` em Release e depois restaurou o original com `shutil.move` da cópia. A
+cópia tinha um mtime anterior ao `Infrastructure.dll` mutado, e por isso o
+`dotnet build PTManager.sln -c Release` completo seguinte considerou o projeto atualizado. A
+corrida integral falhou com `client_name = "x"`, que era a mutação MU6. A fonte estava correta e
+o binário não.
+
+**A regra.** A regra de 6E-3 (build completo depois de mutações) não chega: depois de restaurar
+mutações, `dotnet build ... --no-incremental` (ou `touch` nos ficheiros restaurados) antes de
+`dotnet test --no-build`. Restaurar escrevendo o conteúdo original (novo mtime) em vez de mover
+uma cópia antiga.
+
+## Uma regra de negócio lida pela UI e imposta pelo servidor vive num só sítio (Sprint 6E-4, 2026-10-01)
+
+**O que aconteceu.** O blueprint calculava `has_history` em `TrainingPlanQueries` com uma cópia
+literal do predicado de `TrainingPlanStore.HasLogsAsync`, que devolve o 409
+`training_structure_has_history`. As duas cópias eram iguais nesse dia, mas uma alteração a uma
+só faria a UI anunciar como editável um plano que o servidor recusaria.
+
+**A regra.** Quando a UI pré-anuncia o resultado de um guard (flag `has_*`, `can_*`), a leitura
+e o guard compõem a mesma consulta (`TrainingPlanHistory.PlanIdsWithHistory`, um `IQueryable`
+que o EF inlina). Cada ramo do predicado tem um teste funcional que o mata.
+
+## Parâmetro opcional num record de resposta torna o campo opcional no OpenAPI (Sprint 6E-4, 2026-10-01)
+
+**O que aconteceu.** `string? ClientName = null` no fim de `ClientSupplementAssignmentResponse`
+gerou `client_name?: null | string` no `schema.d.ts`, o que obriga o frontend a tratar
+`undefined` e `null`.
+
+**A regra.** Records de resposta não têm parâmetros com valor por omissão. Campo anulável é
+passado explicitamente (`ClientName: null`), e o contrato fica `client_name: null | string`.

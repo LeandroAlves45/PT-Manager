@@ -1,31 +1,37 @@
-# TODO — Sessão 2026-09-30 · Fecho da fatia 6E-3 (biblioteca privada)
+# TODO — Sessão 2026-10-01 · Revisão do pack 6E-4, testes backend e contrato
 
-Objetivo: fechar a 6E-3 no repositório real — rever 01–06 (aplicados pelo Leandro em `5cd1d7f`),
-aplicar o doc 07 (testes), atualizar o doc 08 e `backlogs/QualityGates.md`, CI verde.
-Plano aprovado: `~/.claude/plans/6e-3-fecho-moonlit-shamir.md`.
+Objetivo: rever o plano do codex contra o código real, implementar os testes backend do doc 08, aplicar melhorias, regenerar `schema.d.ts` e corrigir os blueprints frontend. Não tocar no frontend, exceto no contrato.
 
-## Decisões (Leandro, 2026-09-30)
+- [x] Agentes sonnet: análise do plano (01–09) e do backend aplicado pelo Leandro.
+- [x] Testes do doc 08 aplicados, mais lacunas: histórico por série, isolamento das listas, `client_name` null na escrita, `*_input` no preview `percentage` e no detalhe.
+- [x] M1 `TrainingPlanHistory` (fonte única), M2 `client_name` obrigatório e anulável, M3 tenant explícito na subquery.
+- [x] Mutações backend MU1–MU6 6/6 mortas.
+- [x] Backend: build Release com 0 avisos; 2911 testes, 1 skip, 0 falhas; `dotnet format` limpo.
+- [x] Contrato: `npm run api:types` e `api:types:check` verdes, 14 linhas aditivas.
+- [x] Blueprints frontend: A1, B3, B5–B8, testes de regressão, worktree descartável verde, mutações FM1–FM3 3/3.
+- [x] Docs 01/02/08/09 e manifest (46 caminhos) atualizados; round-trip verificado.
+- [ ] Leandro: aplicar o frontend (docs 03–08) ao checkout real e fechar os gates manuais (login, 1440/768/375, claro/escuro).
+- [ ] CI real depois do commit.
 
-- Repor ":" e minúscula em "Item global da plataforma: podes…" e "Arquivado: reativa-o…".
-- Repor o texto "Com vídeo" junto ao ícone (acessibilidade).
+# TODO — Sessão 2026-09-30 · Blueprints da fase 6E-4
 
-## Checklist
+Objetivo: materializar e validar na worktree descartável `sprint-6e4-blueprints` o código de planos de treino, séries, nutrição e suplementos. Extrair o pack documental para `docs/blueprints/frontend-files/sprint_6/sprint_6E/sprint_6E4/`. Não aplicar código de produção no repositório principal.
 
-- [x] Diff programático 01–06 (SHA-256 do doc 01 + diff de blocos)
-- [x] Corrigir defeitos: "Com vídeo", `wrap-break-words`, copy "!", JSDoc "admin", `readonly`
-- [x] Prettier nos ficheiros tocados + gralhas de comentário
-- [x] Aplicar doc 07 (6 criados, 2 substituídos, 2 apagados, excerto em `trainer-fixtures.ts`)
-- [x] `npm run test:run` verde; lacunas de cobertura
-- [x] Mutações de verificação
-- [x] Revisão `code-review-leandro`
-- [x] lint, typecheck, test:run, build, Prettier; backend `dotnet test -c Release`; contrato
-- [x] Doc 08 + `backlogs/QualityGates.md`
-- [x] Relatório `sprint_6E3/09`, GOTCHAS, lessons
-- [x] Memória (ACTIVE, MEMORY, NEST, sessão)
-- [x] Commit `2ccddb8`, push, CI run #19 verde (4/4)
+## Decisões confirmadas
 
-## Review
+- Histórico de treino bloqueia a estrutura e as datas logo ao abrir.
+- Preview nutricional explícito e obrigatório após alterar o cálculo.
+- Suplementos por refeição e atribuições ao cliente na mesma fatia.
+- Atribuições na ficha do cliente e em página geral com filtro.
+- Dados clínicos disponíveis são sugestões editáveis.
 
-6 defeitos corrigidos (D1–D6), 222 testes, M1–M27 27/27 + 6/6, backend 2902; relatório
-`sprint_6E3/09`. Registados: pesquisa na página N, metadados antes do AbortController, `video_url`
-legado inválido, duplicação do form do admin.
+## Trabalho
+
+- [x] Confirmar base Git limpa e criar worktree temporária.
+- [x] Verificar contratos e identificar campos aditivos necessários.
+- [x] Concluir materialização temporária e testes backend/frontend.
+- [x] Gerar e comparar `schema.d.ts` a partir do OpenAPI.
+- [x] Extrair blueprints completos e comparar blocos/excertos programaticamente.
+- [x] Correr gates, mutações dirigidas e registar evidência.
+- [x] Atualizar QualityGates e memória.
+- [x] Verificar checkout principal e descartar worktree e branch.

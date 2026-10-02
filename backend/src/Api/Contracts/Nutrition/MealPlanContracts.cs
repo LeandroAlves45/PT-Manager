@@ -232,6 +232,7 @@ public sealed record MealPlanDetailsResponse(
 public sealed record MealPlanSummaryResponse(
     Guid Id,
     Guid ClientId,
+    string ClientName,
     string Name,
     string? Description,
     DateOnly StartsDate,
@@ -254,6 +255,7 @@ public sealed record MealPlanSummaryResponse(
         return new(
             plan.Id,
             plan.ClientId,
+            plan.ClientName,
             plan.Name,
             plan.Description,
             plan.StartsDate,

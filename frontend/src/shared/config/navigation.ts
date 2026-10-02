@@ -53,6 +53,7 @@ const TRAINER_NAVIGATION: readonly NavigationGroup[] = [
     items: [
       { label: 'Planos de treino', route: '/trainer/training-plans', icon: Dumbbell },
       { label: 'Planos alimentares', route: '/trainer/meal-plans', icon: UtensilsCrossed },
+      { label: 'Suplementos atribuídos', route: '/trainer/supplement-assignments', icon: Pill },
       { label: 'Biblioteca', route: '/trainer/library', icon: Library },
     ],
   },

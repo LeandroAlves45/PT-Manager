@@ -216,6 +216,11 @@ internal sealed class MealPlanQueries : IMealPlanQueries
             .Select(plan => new MealPlanSummaryDto(
                 plan.Id,
                 plan.ClientId,
+                _dbContext.Clients
+                    .Where(client => client.OwnerTrainerId == plan.OwnerTrainerId &&
+                        client.Id == plan.ClientId)
+                    .Select(client => client.Name)
+                    .First(),
                 plan.Name,
                 plan.Description,
                 plan.StartsDate,
@@ -281,6 +286,11 @@ internal sealed class MealPlanQueries : IMealPlanQueries
         snapshot.TotalDailyEnergyExpenditureKcal,
         snapshot.TargetKcal,
         snapshot.MacroDistributionMode,
+        snapshot.ProteinPercentageInput,
+        snapshot.CarbsPercentageInput,
+        snapshot.FatsPercentageInput,
+        snapshot.ProteinGramsPerKgInput,
+        snapshot.FatsGramsPerKgInput,
         snapshot.ProteinTargetGrams,
         snapshot.CarbsTargetGrams,
         snapshot.FatsTargetGrams,

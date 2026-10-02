@@ -254,23 +254,12 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
             .SingleOrDefaultAsync(cancellationToken);
     }
 
-    // Histórico = séries registadas ou treinos concluídos. Uma conclusão sem séries (treino
-    // parcial) também congela a estrutura, porque referencia o dia com FK Restrict.
-    private async Task<bool> HasLogsAsync(
+    // A regra vive em TrainingPlanHistory, partilhada com o has_history da leitura.
+    private Task<bool> HasLogsAsync(
         Guid trainingPlanId,
         CancellationToken cancellationToken) =>
-        await _dbContext.ClientExerciseSetLogs
-            .AsNoTracking()
-            .AnyAsync(log => _dbContext.TrainingPlanDayExercises
-                .Any(exercise => exercise.Id == log.TrainingPlanDayExerciseId &&
-                    _dbContext.TrainingPlanDays
-                        .Any(day => day.Id == exercise.TrainingPlanDayId &&
-                            day.TrainingPlanId == trainingPlanId)),
-                cancellationToken) ||
-        await _dbContext.WorkoutCompletions
-            .AsNoTracking()
-            .AnyAsync(completion => completion.TrainingPlanId == trainingPlanId,
-                cancellationToken);
+        TrainingPlanHistory.PlanIdsWithHistory(_dbContext)
+            .AnyAsync(planId => planId == trainingPlanId, cancellationToken);
 
     private Task<bool> ActiveClientExistsAsync(
         Guid clientId,

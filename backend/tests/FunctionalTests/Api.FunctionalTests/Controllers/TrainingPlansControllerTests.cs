@@ -41,6 +41,90 @@ public sealed class TrainingPlansControllerTests
     }
 
     [Fact]
+    public async Task Get_CompletedWorkoutWithoutSets_ReportsHistory()
+    {
+        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        var planId = await CreatePlanAsync(tenant, "Plano histórico", 1, 1);
+        var client = TrainerClient(tenant.TrainerId);
+
+        var before = await ReadJsonAsync(await client.GetAsync(
+            $"/api/v1/training-plans/{planId}", Token));
+        Assert.False(before.GetProperty("has_history").GetBoolean());
+
+        await TrainingTestData.SeedWorkoutCompletionAsync(
+            _fixture.Factory, tenant.TrainerId, tenant.ClientId, planId, Token);
+
+        var after = await ReadJsonAsync(await client.GetAsync(
+            $"/api/v1/training-plans/{planId}", Token));
+        Assert.True(after.GetProperty("has_history").GetBoolean());
+    }
+
+    [Fact]
+    public async Task Get_RecordedSetWithoutCompletion_ReportsHistoryOnlyForThatPlan()
+    {
+        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        var client = TrainerClient(tenant.TrainerId);
+        var loggedPlan = await ReadJsonAsync(await ApiJsonPayload.PostAsync(
+            client,
+            "/api/v1/training-plans",
+            NewPlan(tenant, "Plano com série", days: 1, setsPerExercise: 1),
+            Token));
+        // Um cliente só tem um plano ativo; o plano de controlo pertence a outro cliente do tenant.
+        var otherClientId = await TrainerTenantSeeder.SeedClientAsync(
+            _fixture.Factory, tenant.TrainerId, "Other client", Token);
+        var untouchedPlanId = await CreatePlanAsync(
+            tenant with { ClientId = otherClientId }, "Plano sem série", 1, 1);
+        var dayExerciseId = loggedPlan.GetProperty("days")[0]
+            .GetProperty("exercises")[0].GetProperty("id").GetGuid();
+
+        var recorded = await ApiJsonPayload.PostAsync(
+            client,
+            "/api/v1/exercise-set-logs",
+            new RegisterExerciseSetLogRequest(
+                dayExerciseId, 1, 60m, 10, null, DateTimeOffset.UtcNow),
+            Token);
+        Assert.Equal(HttpStatusCode.Created, recorded.StatusCode);
+
+        var logged = await ReadJsonAsync(await client.GetAsync(
+            $"/api/v1/training-plans/{loggedPlan.GetProperty("id").GetGuid()}", Token));
+        var untouched = await ReadJsonAsync(await client.GetAsync(
+            $"/api/v1/training-plans/{untouchedPlanId}", Token));
+        Assert.True(logged.GetProperty("has_history").GetBoolean());
+        Assert.False(untouched.GetProperty("has_history").GetBoolean());
+    }
+
+    [Fact]
+    public async Task List_IncludesClientNameWithoutFetchingEachClient()
+    {
+        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        await CreatePlanAsync(tenant, "Plano A", 1, 1);
+        var client = TrainerClient(tenant.TrainerId);
+
+        using var scope = CommandCountingInterceptor.BeginScope();
+        var response = await client.GetAsync("/api/v1/training-plans?page_size=25", Token);
+        var body = await ReadJsonAsync(response);
+
+        Assert.Equal("Training client", body.GetProperty("items")[0]
+            .GetProperty("client_name").GetString());
+        Assert.True(scope.Count <= 2);
+    }
+
+    [Fact]
+    public async Task List_ExcludesPlansFromAnotherTenant()
+    {
+        var owner = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        await CreatePlanAsync(owner, "Plano do dono", 1, 1);
+        var intruder = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+
+        var response = await TrainerClient(intruder.TrainerId)
+            .GetAsync("/api/v1/training-plans", Token);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await ReadJsonAsync(response);
+        Assert.Empty(body.GetProperty("items").EnumerateArray());
+    }
+
+    [Fact]
     public async Task Create_WithoutToken_ReturnsUnauthorized()
     {
         var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);

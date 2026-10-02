@@ -23217,6 +23217,7 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             updated_at: string;
+            client_name: null | string;
         };
         /** @description Bloco "clientes sem plano activo". */
         ClientsWithoutTrainingPlanResponse: {
@@ -23940,6 +23941,7 @@ export interface components {
             id: string;
             /** Format: uuid */
             client_id: string;
+            client_name: string;
             name: string;
             description: null | string;
             /** Format: date */
@@ -24505,6 +24507,16 @@ export interface components {
             /** Format: double */
             target_kcal: number;
             macro_distribution_mode: string;
+            /** Format: double */
+            protein_percentage_input: null | number;
+            /** Format: double */
+            carbs_percentage_input: null | number;
+            /** Format: double */
+            fats_percentage_input: null | number;
+            /** Format: double */
+            protein_grams_per_kg_input: null | number;
+            /** Format: double */
+            fats_grams_per_kg_input: null | number;
             /** Format: double */
             protein_target_grams: number;
             /** Format: double */
@@ -25091,6 +25103,7 @@ export interface components {
             is_active: boolean;
             is_archived: boolean;
             needs_review: boolean;
+            has_history: boolean;
             days: components["schemas"]["TrainingDayResponse"][];
             /** Format: date-time */
             created_at: string;
@@ -25107,6 +25120,7 @@ export interface components {
             id: string;
             /** Format: uuid */
             client_id: string;
+            client_name: string;
             name: string;
             description: null | string;
             training_modality: null | string;

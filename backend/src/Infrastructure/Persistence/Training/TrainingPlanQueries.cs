@@ -20,6 +20,7 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
         Guid trainingPlanId,
         CancellationToken cancellationToken = default)
     {
+        var plansWithHistory = TrainingPlanHistory.PlanIdsWithHistory(_dbContext);
         var plan = await _dbContext.TrainingPlans
             .AsNoTracking()
             .Where(value => value.Id == trainingPlanId)
@@ -35,6 +36,7 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
                 value.EndDate,
                 value.IsActive,
                 value.IsArchived,
+                HasHistory = plansWithHistory.Contains(value.Id),
                 value.CreatedAt,
                 value.UpdatedAt
             })
@@ -138,6 +140,7 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
             plan.IsActive,
             plan.IsArchived,
             exercises.Any(item => item.IsPlatformBlocked),
+            plan.HasHistory,
             daysDtos,
             plan.CreatedAt,
             plan.UpdatedAt);
@@ -191,6 +194,11 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
             .Select(plan => new TrainingPlanSummaryDto(
                 plan.Id,
                 plan.ClientId,
+                _dbContext.Clients
+                    .Where(client => client.OwnerTrainerId == plan.OwnerTrainerId &&
+                        client.Id == plan.ClientId)
+                    .Select(client => client.Name)
+                    .First(),
                 plan.Name,
                 plan.Description,
                 plan.TrainingModality,

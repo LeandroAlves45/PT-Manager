@@ -51,18 +51,43 @@ internal static class NutritionHttpPayloads
         fats_grams = (decimal?)null
     };
 
+    internal static object PercentageCalculation() => new
+    {
+        calculation_origin = "manual_energy",
+        energy_formula = (string?)null,
+        weight_kg = 80m,
+        height_cm = (decimal?)null,
+        age = (int?)null,
+        sex = (string?)null,
+        body_fat_percentage = (decimal?)null,
+        activity_level = (string?)null,
+        goal_type = (string?)null,
+        goal_adjustment_kcal = (decimal?)null,
+        manual_target_kcal = 2000m,
+        macro_mode = "percentage",
+        protein_percentage = 30m,
+        carbs_percentage = 40m,
+        fats_percentage = 30m,
+        protein_grams_per_kg = (decimal?)null,
+        fats_grams_per_kg = (decimal?)null,
+        protein_grams = (decimal?)null,
+        carbs_grams = (decimal?)null,
+        fats_grams = (decimal?)null
+    };
+
     internal static object CreateMealPlan(
         Guid clientId,
         Guid foodId,
         Guid supplementId,
-        int mealCount = 2) => new
+        int mealCount = 2,
+        object? calculation = null) => new
         {
             client_id = clientId,
             name = "Plano funcional",
             description = (string?)null,
             starts_date = "2026-08-10",
             ends_date = (string?)null,
-            calculation = ManualEnergyCalculation(),
+            calculation = calculation ?? ManualEnergyCalculation(),
             structure = new
             {
                 meals = Enumerable.Range(1, mealCount)

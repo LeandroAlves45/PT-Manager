@@ -188,7 +188,7 @@ public sealed class MealPlanHandlersTests
     private static MealPlanDetailsDto CreateDetails(Guid id) => new(
         id, Guid.NewGuid(), "Plan", null, new DateOnly(2026, 8, 10), null,
         new(1, "manual_energy", Now, null, 80m, null, null, null, null, null, null,
-            null, null, null, null, 2000m, "percentage", 150m, 200m, 66.67m,
+            null, null, null, null, 2000m, "percentage", 30m, 40m, 30m, null, null, 150m, 200m, 66.67m,
             30m, 40m, 30m, 2000m, 0m),
         NutritionTotalsDto.Zero, true, false, false, [], Now, Now
     );

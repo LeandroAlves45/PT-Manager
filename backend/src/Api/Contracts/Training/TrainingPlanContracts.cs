@@ -194,6 +194,7 @@ public sealed record TrainingPlanDetailsResponse(
     bool IsActive,
     bool IsArchived,
     bool NeedsReview,
+    bool HasHistory,
     IReadOnlyList<TrainingDayResponse> Days,
     DateTime CreatedAt,
     DateTime UpdatedAt)
@@ -215,6 +216,7 @@ public sealed record TrainingPlanDetailsResponse(
             plan.IsActive,
             plan.IsArchived,
             plan.NeedsReview,
+            plan.HasHistory,
             plan.Days.Select(TrainingDayResponse.From).ToArray(),
             plan.CreatedAt,
             plan.UpdatedAt);
@@ -225,6 +227,7 @@ public sealed record TrainingPlanDetailsResponse(
 public sealed record TrainingPlanSummaryResponse(
     Guid Id,
     Guid ClientId,
+    string ClientName,
     string Name,
     string? Description,
     string? TrainingModality,
@@ -244,6 +247,7 @@ public sealed record TrainingPlanSummaryResponse(
         return new(
             plan.Id,
             plan.ClientId,
+            plan.ClientName,
             plan.Name,
             plan.Description,
             plan.TrainingModality,

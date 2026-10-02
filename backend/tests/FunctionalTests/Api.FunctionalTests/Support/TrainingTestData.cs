@@ -6,6 +6,7 @@ using Domain.Entities.Sessions;
 using Domain.Entities.Training;
 using Domain.ValueObjects;
 using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Api.FunctionalTests.Support;
@@ -52,6 +53,26 @@ internal static class TrainingTestData
             cancellationToken);
 
         return new TrainingTenant(trainer.TrainerId, clientId, exerciseId, packTypeId);
+    }
+
+    /// <summary>Conclui um treino sem séries para provar o bloqueio histórico.</summary>
+    internal static async Task SeedWorkoutCompletionAsync(
+        ApiWebApplicationFactory factory,
+        Guid trainerId,
+        Guid clientId,
+        Guid trainingPlanId,
+        CancellationToken cancellationToken)
+    {
+        await using var scope = CreateTrainerScope(factory, trainerId);
+        var context = scope.ServiceProvider.GetRequiredService<PtManagerDbContext>();
+        var dayId = await context.TrainingPlanDays
+            .Where(day => day.TrainingPlanId == trainingPlanId)
+            .Select(day => day.Id)
+            .FirstAsync(cancellationToken);
+        context.WorkoutCompletions.Add(new WorkoutCompletion(
+            trainerId, clientId, trainingPlanId, dayId,
+            new DateOnly(2026, 9, 1), null, TrainerTenantSeeder.SeedInstant));
+        await context.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>Cria um exercício privado pertencente ao tenant indicado.</summary>

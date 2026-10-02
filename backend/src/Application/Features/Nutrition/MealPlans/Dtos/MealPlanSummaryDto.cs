@@ -4,6 +4,7 @@ namespace Application.Features.Nutrition.MealPlans.Dtos;
 public sealed record MealPlanSummaryDto(
     Guid Id,
     Guid ClientId,
+    string ClientName,
     string Name,
     string? Description,
     DateOnly StartsDate,
@@ -16,5 +17,4 @@ public sealed record MealPlanSummaryDto(
     bool IsArchived,
     bool NeedsReview,
     DateTime CreatedAt,
-    DateTime UpdatedAt
-);
+    DateTime UpdatedAt);
