@@ -4,15 +4,18 @@ Objetivo: rever docs 03–08 aplicados pelo Leandro (`88d3dfa`), cobrir lacunas 
 
 - [x] Diff programático blueprint ↔ código: 10 iguais, 13 com desvios pequenos (renomeação `mealsList`/`mealsDetail`, JSDoc, copy "com sucesso", typo "reconcializa", timeouts de teste).
 - [x] Baseline: `npm ci`, lint, typecheck, format limpos; 234/234 testes (315 s, 71 % import+environment).
-- [ ] Revisão funcional vs doc 01 (A1, B3, B5–B8, conflito 409, orçamento HTTP).
-- [ ] `code-review-leandro` + `performance-reviewer` (agente sonnet).
-- [ ] Correções confirmadas (D1…) com teste a falhar antes.
-- [ ] Lacunas: A1 no editor alimentar, B3, `calculation: null` no PUT, conflito ativo.
-- [ ] Mutações dirigidas aos testes novos.
-- [ ] JSDoc dos ficheiros novos + typo.
-- [ ] Gates verdes, commit, push, CI verde.
-- [ ] Docs: 09, QualityGates, relatório 10, doc 01.
-- [ ] Memória (obsidian-ptmanager) e checklist de fecho.
+- [x] Revisão funcional vs doc 01 (A1, B3, B5–B8, conflito 409, orçamento HTTP).
+- [x] `code-review-leandro` + `performance-reviewer` (agente sonnet): 0 HIGH.
+- [x] Correções D1 (histórico a meio da edição), D2 (`isPending` eterno), D3 (reativação sem saída), cada uma com teste vermelho antes.
+- [x] Lacunas: A1 no editor alimentar, B3, `calculation: null` no PUT (conflito ativo já coberto).
+- [x] Mutações FM4–FM9 6/6 mortas.
+- [x] JSDoc dos ficheiros novos + typo.
+- [x] Gates verdes (236 testes), commit `e6c5c4e`, push, CI #22 verde (4 jobs).
+- [x] Docs: 09, QualityGates, relatório 10, doc 01.
+- [x] Memória (obsidian-ptmanager) e checklist de fecho.
+
+## Review
+Fase 6E-4 FINALIZADA. Pendentes só os gates manuais `QG6E4-ISOLAMENTO-UI-001` e `QG6E4-UI-001`.
 
 # TODO — Sessão 2026-10-01 · Revisão do pack 6E-4, testes backend e contrato
 

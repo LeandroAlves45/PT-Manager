@@ -186,3 +186,15 @@ Lições capturadas depois de correções do utilizador.
   `git apply --recount` e repor o espaço, ou gerar os patches a partir de `git diff` real.
 - **Restaurar mutações com mtime novo** (ver `GOTCHAS_BACKEND.md`): uma falha integral logo após
   mutações é primeiro suspeita de binário obsoleto.
+
+## 2026-10-02 — Fecho da 6E-4
+
+- **Proteger o rascunho não chega quando o modo muda.** O A1 impedia o refetch de apagar edições,
+  mas o histórico tornava datas/estrutura só de consulta e o ecrã continuava a mostrar (e a
+  enviar) valores que o servidor recusa. Ao bloquear campos, repô-los a partir do servidor.
+- **`isPending` não é "a carregar"** numa query com `enabled` condicional: fica verdadeiro para
+  sempre. Indicadores de carregamento usam `isLoading`.
+- **Testar o passo depois da recuperação**: o teste do 409 parava no clique "Reativar" e não via
+  que gravar a seguir repetia o conflito.
+- **Antes de `npm ci`, verificar watchers do utilizador** (`Get-CimInstance Win32_Process`):
+  um Vitest em watch prende binários nativos e o `npm ci` deixa `node_modules` partido.

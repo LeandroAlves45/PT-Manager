@@ -6,6 +6,12 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-02 — Sprint 6E-4 FINALIZADA.** Docs 03–08 do Leandro em `88d3dfa`, revisão de fecho em
+`e6c5c4e`: D1 histórico a meio da edição repõe datas/estrutura do servidor (o PATCH levava outro
+409), D2 aviso de carregamento eterno (query desativada fica `pending`; usar `isLoading`), D3
+reativação após 409 passa a editar a atribuição. 236 testes, FM4–FM9 6/6. Faltam os gates
+manuais de login/UI. Ver `Sessions/2026-10-02-sprint6e4-fecho-frontend.md` e `sprint_6E4/10`.
+
 **2026-10-01 — Sprint 6E-4: backend com testes e contrato, pack revisto.** O backend do doc 02
 está no checkout, com as melhorias M1 (`TrainingPlanHistory` como fonte única), M2 (`client_name`
 das atribuições obrigatório e anulável) e M3 (tenant explícito). Resultados: 2911 testes verdes,
