@@ -35,7 +35,22 @@ function ageOnDate(birthDate: string, today: Date): number {
   return age;
 }
 
-/** Editor alimentar com preview explícito e reconcialização de refeições. */
+/**
+ * Editor de um plano alimentar novo (`planId === null`) ou existente.
+ *
+ * Cálculo: num plano novo, a ficha e a avaliação inicial do cliente escolhido sugerem
+ * peso, altura, sexo, idade e atividade, sem pisar valores já editados. Qualquer mudança
+ * no cálculo anula o preview e gravar exige novo `Calcular`. Respostas de preview de uma
+ * revisão antiga (sucesso ou erro) são ignoradas. Um `PUT` sem mudança no cálculo envia
+ * `calculation: null`, e o servidor mantém o snapshot.
+ *
+ * Estrutura: o `PUT` reconcilia refeições, itens e suplementos por ID. O rascunho
+ * inicializa uma vez por plano: refetches não apagam edições nem o preview.
+ *
+ * @param planId Plano a editar, ou `null` para criar.
+ * @param fixedClient Cliente da ficha; `null` mostra o seletor de cliente num plano novo.
+ * @param onClose Volta à lista; chamado também depois de gravar.
+ */
 export function MealPlanEditor({
   planId,
   fixedClient,
@@ -318,8 +333,12 @@ export function MealPlanEditor({
             )}
           </FormField>
         </div>
-        {assessment.isPending && effectiveClientId !== '' && (
+        {/* isLoading e não isPending: uma query desativada (plano existente) fica pending para sempre. */}
+        {(clientDetails.isLoading || assessment.isLoading) && (
           <p role="status">A carregar dados do cliente…</p>
+        )}
+        {clientDetails.isError && (
+          <ErrorState error={clientDetails.error} onRetry={() => void clientDetails.refetch()} />
         )}
         {assessment.isError && (
           <ErrorState error={assessment.error} onRetry={() => void assessment.refetch()} />

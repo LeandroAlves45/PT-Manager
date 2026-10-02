@@ -84,7 +84,22 @@ function nullableNumber(value: string): number | null {
   return value.trim() === '' ? null : Number(value);
 }
 
-/** Editor do plano de treino, IDs antigos mantêm-se na reconcialização. */
+/**
+ * Editor de um plano de treino novo (`planId === null`) ou existente.
+ *
+ * Gravação: plano novo faz `POST`; plano sem histórico faz `PUT` com a estrutura inteira,
+ * conservando os IDs de dias, exercícios e séries (nós novos levam `id: null`); plano com
+ * histórico faz `PATCH` só dos metadados. O histórico (`has_history`, ou um 409
+ * `training_structure_has_history`) bloqueia estrutura e datas e repõe-nas a partir do
+ * servidor; nome, descrição, modalidade e notas por gravar mantêm-se.
+ *
+ * O rascunho inicializa uma vez por plano: refetches não apagam edições. Plano arquivado
+ * fica só de consulta. Com um plano aberto, mostra o `SetLogPanel`.
+ *
+ * @param planId Plano a editar, ou `null` para criar.
+ * @param fixedClient Cliente da ficha; `null` mostra o seletor de cliente num plano novo.
+ * @param onClose Volta à lista; chamado também depois de gravar.
+ */
 export function TrainingPlanEditor({
   planId,
   fixedClient,
@@ -118,29 +133,39 @@ export function TrainingPlanEditor({
   const [error, setError] = useState('');
   const [historyConflict, setHistoryConflict] = useState(false);
   const initializedFor = useRef<string | null>(null);
+  const lockedFor = useRef<string | null>(null);
 
   useEffect(() => {
     // O detalhe inicializa o rascunho uma única vez por plano. Um refetch (409 de
     // histórico, série registada, foco da janela) não pode apagar edições por guardar;
     // has_history e is_archived continuam a ler-se do servidor em cada render.
-    if (detail.data === undefined || initializedFor.current === detail.data.id) return;
-
     const plan = detail.data;
-    initializedFor.current = plan.id;
-    setName(plan.name);
-    setDescription(plan.description ?? '');
-    setModality(plan.training_modality ?? '');
-    setNotes(plan.notes ?? '');
+    if (plan === undefined) return;
+    const firstLoad = initializedFor.current !== plan.id;
+    const becameLocked = plan.has_history && lockedFor.current !== plan.id;
+    if (!firstLoad && !becameLocked) return;
+
+    if (firstLoad) {
+      initializedFor.current = plan.id;
+      setName(plan.name);
+      setDescription(plan.description ?? '');
+      setModality(plan.training_modality ?? '');
+      setNotes(plan.notes ?? '');
+    }
+    if (plan.has_history) lockedFor.current = plan.id;
+    // Estrutura e datas vêm do servidor no arranque e quando o histórico as torna só de
+    // consulta a meio da edição: o PATCH envia as datas e o servidor recusa-as se mudarem.
     setStartDate(plan.start_date);
     setEndDate(plan.end_date ?? '');
     setStructure(fromDetails(plan));
-    setExerciseNames(
-      Object.fromEntries(
+    setExerciseNames((previous) => ({
+      ...previous,
+      ...Object.fromEntries(
         plan.days.flatMap((day) =>
           day.exercises.map((exercise) => [exercise.exercise_id, exercise.exercise_name])
         )
-      )
-    );
+      ),
+    }));
   }, [detail.data]);
 
   const hasHistory = detail.data?.has_history === true || historyConflict;
@@ -175,13 +200,14 @@ export function TrainingPlanEditor({
           })
         );
       }
-      if (hasHistory)
+      if (hasHistory) {
         return unwrap(
           await apiClient.PATCH('/api/v1/training-plans/{trainingPlanId}', {
             params: { path: { trainingPlanId: planId } },
             body: metadata,
           })
         );
+      }
 
       return unwrap(
         await apiClient.PUT('/api/v1/training-plans/{trainingPlanId}', {

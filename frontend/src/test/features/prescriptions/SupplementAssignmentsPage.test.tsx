@@ -16,6 +16,7 @@ describe('Supplement assignments', () => {
     'reports existing assignment with active=%s after a 409',
     async (isActive) => {
       const activityChanges: string[] = [];
+      const patches: Array<Record<string, unknown>> = [];
       server.use(
         ...restorableSession(),
         http.get(API + '/supplement-assignments', ({ request }) => {
@@ -73,6 +74,10 @@ describe('Supplement assignments', () => {
         http.post(API + '/supplement-assignments/:assignmentId/reactivate', ({ params }) => {
           activityChanges.push(String(params.assignmentId));
           return HttpResponse.json({ id: ASSIGNMENT_ID, is_active: true });
+        }),
+        http.patch(API + '/supplement-assignments/:assignmentId', async ({ params, request }) => {
+          patches.push({ id: params.assignmentId, ...((await request.json()) as object) });
+          return HttpResponse.json({ id: ASSIGNMENT_ID, is_active: true });
         })
       );
 
@@ -84,6 +89,8 @@ describe('Supplement assignments', () => {
       await userEvent.click(screen.getByRole('combobox', { name: 'Suplemento' }));
       await userEvent.type(screen.getByPlaceholderText(/Pesquisar no cat/), 'Cre');
       await userEvent.click(await screen.findByText('Creatina'));
+      await userEvent.clear(screen.getByLabelText('Dose'));
+      await userEvent.type(screen.getByLabelText('Dose'), '10 g');
       await userEvent.click(screen.getByRole('button', { name: 'Guardar atribuição' }));
       await screen.findByText(/Esta atribui/);
       expect(screen.queryByRole('button', { name: /Reativar atribui/ }) !== null).toBe(!isActive);
@@ -95,6 +102,18 @@ describe('Supplement assignments', () => {
       );
       await userEvent.click(screen.getByRole('button', { name: 'Reativar' }));
       await waitFor(() => expect(activityChanges).toEqual([ASSIGNMENT_ID]));
+
+      // Depois de reativar, o formulário edita a atribuição reativada com a dose escrita:
+      // repetir o POST daria outro 409.
+      expect(await screen.findByRole('heading', { name: 'Editar atribuição' })).toBeInTheDocument();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: 'Guardar atribuição' }));
+      await waitFor(() => expect(patches).toHaveLength(1));
+      expect(patches[0]).toMatchObject({
+        id: ASSIGNMENT_ID,
+        serving_size: '10 g',
+        timing: 'Manhã',
+      });
     },
     // O caso inativo ainda abre o diálogo de reativação. Com a suite em paralelo
     // isto passa dos 15 s nesta máquina; sozinho termina em cerca de 2 s.

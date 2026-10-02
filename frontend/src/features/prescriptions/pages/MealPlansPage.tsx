@@ -20,11 +20,19 @@ import { useDebounce } from '@/shared/hooks/useDebounce';
 
 const PAGE_SIZE = 25;
 
-/** Planos alimentares do tenant ou do cliente selecionado. */
+/**
+ * Lista de planos alimentares: página de todos os clientes, ou separador de um cliente.
+ *
+ * `client === null` é a lista global (cada cartão mostra `client_name`). `editor`:
+ * `undefined` mostra a lista, `null` abre um plano novo, `string` abre esse plano.
+ * Pesquisa e estado voltam à página 1; os cartões anteriores ficam visíveis até chegar a
+ * página nova. Arquivar e reativar confirmam no ecrã e invalidam `meal-plans`.
+ */
 export function MealPlansPage({ client = null }: { client?: ClientChoice | null }) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const debounced = useDebounce(search.trim(), 300);
+  // O debounce serve para escrever, não para apagar.
   const term = search.trim() === '' ? '' : debounced;
   const [activity, setActivity] = useState<'active' | 'archived' | 'all'>('active');
   const [page, setPage] = useState(1);

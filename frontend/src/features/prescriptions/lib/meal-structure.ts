@@ -2,6 +2,7 @@ import type { components } from '@/shared/api/schema';
 
 type Structure = components['schemas']['MealPlanStructureRequest'];
 
+/** Converte o detalhe do servidor no pedido do `PUT`, mantendo os IDs para a reconciliação. */
 export function mealStructureFromDetails(
   details: components['schemas']['MealPlanDetailsResponse']
 ): Structure {

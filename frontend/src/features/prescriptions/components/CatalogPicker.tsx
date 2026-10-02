@@ -6,8 +6,10 @@ import { apiClient, unwrap } from '@/shared/api/client';
 import { Combobox, type ComboboxOption } from '@/shared/components/Combobox';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 
+/** Catálogo pesquisado; cada um corresponde a um endpoint de listagem da biblioteca. */
 export type CatalogKind = 'exercises' | 'foods' | 'supplements';
 
+/** Opção escolhida, com os valores do catálogo que o pai usa como sugestão editável. */
 export interface CatalogChoice extends ComboboxOption {
   /** Porção habitual do alimento, em gramas. Ausente nos outros catálogos. */
   readonly defaultServingGrams?: number | null;

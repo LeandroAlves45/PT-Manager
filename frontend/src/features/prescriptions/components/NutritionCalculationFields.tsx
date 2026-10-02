@@ -6,7 +6,11 @@ function toNumber(value: string): number | null {
   return value.trim() === '' ? null : Number(value);
 }
 
-/** Campos do cálculo; cada mudança invalida o preview que o personal trainer viu. */
+/**
+ * Campos do cálculo nutricional, conforme a origem da energia e o modo dos macros. Só
+ * mostra os campos que o modo usa; `normalizeCalculation` anula os restantes antes de
+ * enviar. Cada mudança passa por `onChange`, e o editor anula o preview que o trainer viu.
+ */
 export function NutritionCalculationFields({
   value,
   onChange,

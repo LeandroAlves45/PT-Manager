@@ -19,7 +19,15 @@ type Log = components['schemas']['ExerciseSetLogResponse'];
 
 const PAGE_SIZE = 25;
 
-/** Registo e correção de séries efetuadas no contexto de um plano de treino. */
+/**
+ * Séries realizadas de um plano: lista paginada (25 por página), registo e correção.
+ *
+ * Peso e repetições começam vazios e são obrigatórios, para não gravar um 0 acidental.
+ * Gravar invalida as páginas de séries e o detalhe do plano, que passa a reportar
+ * `has_history`. Plano arquivado: só consulta.
+ *
+ * @param plan Detalhe do plano; fornece o cliente, o ID e os exercícios prescritos.
+ */
 export function SetLogPanel({ plan }: { plan: Plan }) {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);

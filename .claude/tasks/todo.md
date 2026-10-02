@@ -1,3 +1,19 @@
+# TODO — Sessão 2026-10-02 · Fecho 6E-4 frontend
+
+Objetivo: rever docs 03–08 aplicados pelo Leandro (`88d3dfa`), cobrir lacunas reais, code review + performance, JSDoc, gates, CI, docs e fecho. Backend fechado: não tocar.
+
+- [x] Diff programático blueprint ↔ código: 10 iguais, 13 com desvios pequenos (renomeação `mealsList`/`mealsDetail`, JSDoc, copy "com sucesso", typo "reconcializa", timeouts de teste).
+- [x] Baseline: `npm ci`, lint, typecheck, format limpos; 234/234 testes (315 s, 71 % import+environment).
+- [ ] Revisão funcional vs doc 01 (A1, B3, B5–B8, conflito 409, orçamento HTTP).
+- [ ] `code-review-leandro` + `performance-reviewer` (agente sonnet).
+- [ ] Correções confirmadas (D1…) com teste a falhar antes.
+- [ ] Lacunas: A1 no editor alimentar, B3, `calculation: null` no PUT, conflito ativo.
+- [ ] Mutações dirigidas aos testes novos.
+- [ ] JSDoc dos ficheiros novos + typo.
+- [ ] Gates verdes, commit, push, CI verde.
+- [ ] Docs: 09, QualityGates, relatório 10, doc 01.
+- [ ] Memória (obsidian-ptmanager) e checklist de fecho.
+
 # TODO — Sessão 2026-10-01 · Revisão do pack 6E-4, testes backend e contrato
 
 Objetivo: rever o plano do codex contra o código real, implementar os testes backend do doc 08, aplicar melhorias, regenerar `schema.d.ts` e corrigir os blueprints frontend. Não tocar no frontend, exceto no contrato.

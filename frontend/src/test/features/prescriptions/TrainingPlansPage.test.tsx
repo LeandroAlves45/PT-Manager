@@ -94,6 +94,7 @@ describe('Training plans', () => {
 
   it('keeps existing IDs, sends null for a new set, and locks after history conflict', async () => {
     const saves: unknown[] = [];
+    const patches: Array<Record<string, unknown>> = [];
     let detailRequests = 0;
     server.use(
       ...restorableSession(),
@@ -111,6 +112,10 @@ describe('Training plans', () => {
       http.put(API + '/training-plans/:id', async ({ request }) => {
         saves.push(await request.json());
         return HttpResponse.json(problem('training_structure_has_history'), { status: 409 });
+      }),
+      http.patch(API + '/training-plans/:id', async ({ request }) => {
+        patches.push((await request.json()) as Record<string, unknown>);
+        return HttpResponse.json({ ...details, name: 'Plano editado' });
       })
     );
 
@@ -119,6 +124,8 @@ describe('Training plans', () => {
     await userEvent.click(await screen.findByRole('button', { name: /Adicionar s/ }));
     await userEvent.clear(screen.getByLabelText('Nome'));
     await userEvent.type(screen.getByLabelText('Nome'), 'Plano editado');
+    await userEvent.clear(screen.getByLabelText('Data de início'));
+    await userEvent.type(screen.getByLabelText('Data de início'), '2026-09-05');
     await userEvent.click(screen.getByRole('button', { name: 'Guardar plano de treino' }));
     await waitFor(() => expect(saves).toHaveLength(1));
 
@@ -141,6 +148,15 @@ describe('Training plans', () => {
     // O refetch depois do 409 não repõe o rascunho: o nome escrito sobrevive.
     await waitFor(() => expect(detailRequests).toBe(2));
     expect(screen.getByLabelText('Nome')).toHaveValue('Plano editado');
+    // Estrutura e datas ficaram só de consulta: o ecrã volta a mostrar as do servidor,
+    // senão o PATCH seguinte reenviava a data alterada e recebia outro 409.
+    await waitFor(() => expect(screen.getByLabelText('Data de início')).toHaveValue('2026-09-01'));
+    expect(screen.getAllByLabelText('Série')).toHaveLength(1);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar plano de treino' }));
+    await waitFor(() => expect(patches).toHaveLength(1));
+    expect(patches[0]).toMatchObject({ name: 'Plano editado', start_date: '2026-09-01' });
+    expect(patches[0]).not.toHaveProperty('structure');
   });
 
   it.each(['/trainer/training-plans', '/trainer/meal-plans', '/trainer/supplement-assignments'])(

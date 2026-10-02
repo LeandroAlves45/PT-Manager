@@ -36,6 +36,7 @@ export function TrainingPlansPage({ client = null }: { client?: ClientChoice | n
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const debounced = useDebounce(search.trim(), 300);
+  // O debounce serve para escrever, não para apagar.
   const term = search.trim() === '' ? '' : debounced;
   const [activity, setActivity] = useState<'active' | 'archived' | 'all'>('active');
   const [page, setPage] = useState(1);

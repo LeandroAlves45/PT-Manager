@@ -26,6 +26,10 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 type Assignment = components['schemas']['ClientSupplementAssignmentResponse'];
 const PAGE_SIZE = 25;
 
+/**
+ * Procura a atribuição que causou o 409 `supplement_assignment_already_exists`, em páginas
+ * de 100 (ativas e inativas) do cliente, até a encontrar ou esgotar o total.
+ */
 async function findExisting(clientId: string, supplementId: string): Promise<Assignment | null> {
   let page = 1;
   while (true) {
@@ -48,7 +52,14 @@ async function findExisting(clientId: string, supplementId: string): Promise<Ass
   }
 }
 
-/** Atribuições do tenant ou de um cliente, com recuperação do conflito por reativação. */
+/**
+ * Atribuições diretas de suplementos: página global com filtro de cliente, ou separador
+ * de um cliente (`client`).
+ *
+ * Um 409 de duplicado mostra a atribuição existente: se ativa, só informa; se inativa,
+ * oferece reativação, e o formulário passa a editar a atribuição reativada com a dose e o
+ * momento escritos. Atribuições inativas ou de suplemento arquivado não se editam.
+ */
 export function SupplementAssignmentsPage({
   client: fixedClient = null,
 }: {
@@ -154,10 +165,15 @@ export function SupplementAssignmentsPage({
               params: { path: { assignmentId: id } },
             })
           ),
-    onSuccess: async () => {
+    onSuccess: async (updated, { action }) => {
       await queryClient.invalidateQueries({ queryKey: prescriptionKeys.assignments });
+      // Reativação vinda do 409: o formulário passa a editar a atribuição reativada, com a
+      // dose e o momento já escritos. Repetir o POST daria outro conflito.
+      if (action === 'reactivate' && editing === null && existingAssignment?.id === updated.id)
+        setEditing(updated);
       setConfirm(null);
       setExistingAssignment(null);
+      setError('');
       toast.success('Estado da atribuição atualizado com sucesso.');
     },
     onError: (failure) => setError(prescriptionError(failure)),

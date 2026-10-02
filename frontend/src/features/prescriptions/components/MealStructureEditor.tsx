@@ -14,7 +14,15 @@ type Meal = components['schemas']['MealRequest'];
 type Item = components['schemas']['MealItemRequest'];
 type Supplement = components['schemas']['MealSupplementRequest'];
 
-/** Editor da árvore inteira usada pelo PUT reconciliador. */
+/**
+ * Editor controlado das refeições, alimentos e suplementos por refeição. Devolve sempre a
+ * árvore inteira, que o `PUT` reconcilia por ID (nós novos com `id: null`).
+ *
+ * @param value Estrutura atual do rascunho.
+ * @param onChange Recebe uma cópia nova da estrutura a cada alteração.
+ * @param disabled Plano arquivado: só consulta, sem botões de adicionar ou remover.
+ * @param initialNames Nomes de alimentos e suplementos do detalhe, por ID do catálogo.
+ */
 export function MealStructureEditor({
   value,
   onChange,

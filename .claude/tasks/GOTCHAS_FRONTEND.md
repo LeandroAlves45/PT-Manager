@@ -159,3 +159,28 @@ depender de um componente montado: a lista acompanha-o sozinha (`refetchInterval
 linhas não terminais). Ícone de estado leva sempre texto (ou `sr-only`). Lookup em objeto por valor
 externo: `Object.hasOwn`. `refetchInterval` inline com `keepPreviousData` parte a inferência do
 `useQuery` — extrair para função tipada com `Query<T>`.
+
+## 2026-10-02 — Fecho da 6E-4: rascunho preso ao modo antigo, query desativada "pending", fluxo de conflito sem saída
+
+**O que aconteceu.** Três defeitos reais no código aplicado dos docs 03–06, todos fora do que
+os testes do blueprint exercitavam:
+
+- **D1 (treino).** O A1 (`initializedFor`) protegia o rascunho de refetches, mas quando
+  `has_history` passava a verdadeiro a meio da edição (409 ou série registada no painel), datas
+  e estrutura ficavam desativadas com os valores editados. O `PATCH` seguinte reenviava a data
+  alterada e o servidor (`TrainingPlanStore.cs:81`) devolvia outro 409: o trainer ficava preso.
+- **D2 (nutrição).** `assessment.isPending` mostrava "A carregar dados do cliente…" para sempre
+  em qualquer plano existente: no TanStack Query v5, uma query desativada sem dados fica
+  `pending`. E um erro na ficha do cliente não era mostrado.
+- **D3 (suplementos).** Depois de reativar a atribuição existente após o 409, o formulário
+  continuava em "Nova atribuição" com o erro visível; gravar de novo dava outro 409 e a dose
+  escrita nunca chegava à atribuição.
+
+**A regra.**
+- Proteger o rascunho de refetches não chega: quando o servidor torna campos só de consulta,
+  repor esses campos a partir do servidor (só esses) para o ecrã e o pedido seguinte não
+  mentirem.
+- Indicador de carregamento de uma query com `enabled` condicional usa `isLoading`
+  (`isPending && isFetching`), nunca `isPending`.
+- Um fluxo de recuperação de conflito tem de terminar num estado gravável: testar o passo
+  seguinte ao "Reativar", não só o diálogo.

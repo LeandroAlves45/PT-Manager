@@ -1,8 +1,11 @@
 import type { components } from '@/shared/api/schema';
 
+/** Pedido de cálculo, igual no preview, na criação e no `PUT`. */
 export type Calculation = components['schemas']['NutritionCalculationRequest'];
+/** Snapshot do cálculo devolvido pelo servidor, com os valores de entrada usados. */
 export type CalculationResult = components['schemas']['NutritionCalculationResponse'];
 
+/** Cálculo vazio de um plano novo, antes das sugestões da ficha e da avaliação. */
 export const EMPTY_CALCULATION: Calculation = {
   calculation_origin: '',
   energy_formula: null,
