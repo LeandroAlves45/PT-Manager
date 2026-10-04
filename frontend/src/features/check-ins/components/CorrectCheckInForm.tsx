@@ -22,7 +22,7 @@ const toNumber = (value: string | number | null) =>
   value == null || value === '' ? null : Number(value);
 
 const MEASUREMENT = 'A medida tem de ser maior que 0 cm.';
-const ADHERENCE = 'Indica uma valor inteiro de 0 a 100.';
+const ADHERENCE = 'Indica um valor inteiro de 0 a 100.';
 const measurement = z.number(MEASUREMENT).positive(MEASUREMENT).nullable();
 const adherence = z
   .number(ADHERENCE)

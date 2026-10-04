@@ -94,7 +94,7 @@ export function BrandingSection({ settings }: { settings: Settings }) {
       await reset.mutateAsync();
       // Só as cores: o nome que esteja escrito mantém-se.
       form.reset({ ...form.getValues(), primary_color: '', body_color: '' });
-      toast.success('Cores do tema respostas.');
+      toast.success('Cores do tema repostas.');
     } catch (error) {
       toast.error(settingsErrorMessage(error, 'Não foi possível repor as cores do tema.'));
     }

@@ -35,15 +35,16 @@ export function LogoSection({ settings }: { settings: Settings }) {
     const invalid = logoFileError(file);
     if (invalid !== null) {
       setError(invalid);
+      if (inputRef.current !== null) inputRef.current.value = '';
       return;
     }
     setError(null);
 
     try {
       await replace.mutateAsync(file);
-      toast.success('Logo atualizada com sucesso.');
+      toast.success('Logo atualizado com sucesso.');
     } catch (failure) {
-      setError(settingsErrorMessage(failure, 'Não foi possível atualizar a logo.'));
+      setError(settingsErrorMessage(failure, 'Não foi possível atualizar o logo.'));
     } finally {
       // Permite voltar a escolher o mesmo ficheiro depois de uma recusa.
       if (inputRef.current !== null) inputRef.current.value = '';
@@ -53,6 +54,7 @@ export function LogoSection({ settings }: { settings: Settings }) {
   async function removeLogo() {
     try {
       await remove.mutateAsync();
+      setConfirmRemove(false);
       toast.success('Logo removido com sucesso.');
     } catch (failure) {
       toast.error(settingsErrorMessage(failure, 'Não foi possível remover o logo.'));
@@ -65,7 +67,7 @@ export function LogoSection({ settings }: { settings: Settings }) {
         <h2 id="logo-title" className="font-display text-xl">
           Logo
         </h2>
-        <p className="text-muted-foreground text-sm">PNG, JPEG ou WEBP, até 5 MB.</p>
+        <p className="text-muted-foreground text-sm">PNG, JPEG ou WebP, até 5 MB.</p>
       </div>
       <div className="flex flex-wrap items-center gap-4">
         <div className="border-border bg-muted flex size-20 items-center justify-center overflow-hidden rounded-xl border">

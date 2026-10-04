@@ -6,6 +6,21 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-04: Sprint 6E-5 FINALIZADA e Sprint 6E FECHADO.**
+- O CI #24 (`3c5382f`) falhou: 12/277 testes do frontend.
+- A causa foram três defeitos da aplicação manual que o typecheck deixou passar:
+  - `page` em vez de `page_number`;
+  - link `?tab=checkins` contra a tab `check-ins`;
+  - o diálogo do logo que não fechava.
+- Corrigido também:
+  - a copy (C1–C4);
+  - CR1, a página vazia depois de rever;
+  - CR2, o erro do cliente num campo escondido;
+  - P1, o polling do Checkout sem limite quando as leituras falham.
+- 282 testes, 19/19 mutações.
+- O sprint está em `sprint_6E/10_fecho_sprint_6E.md`.
+- Ver `Sessions/2026-10-04-sprint6e5-fecho-sprint6e.md`.
+
 **2026-10-02 — Sprint 6E-5: blueprints validados (última fatia da 6E).** Pack
 `sprint_6E/sprint_6E5/01–08` + manifest: check-ins completos, definições, subscrição e tab
 Check-ins. Backend: `client_name` nos check-ins e retoma do Checkout aberto do mesmo plano (U5).

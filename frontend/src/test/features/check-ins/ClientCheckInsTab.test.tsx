@@ -16,7 +16,7 @@ vi.mock('sonner', async (importOriginal) => ({
   toast: toastMock,
 }));
 
-const ROUTE = `/trainer/clients/${CLIENT_ID}?tab=checkins`;
+const ROUTE = `/trainer/clients/${CLIENT_ID}?tab=check-ins`;
 
 /** Detalhe do cliente e a tab Check-ins; devolve as queries de `GET /check-ins`. */
 function handlers(details = clientDetails()) {
@@ -74,6 +74,26 @@ describe('ClientCheckInsTab', () => {
         target_date: dayFromToday(30),
       })
     );
+  });
+
+  it('shows a refusal about this client in the form, where the trainer can see it', async () => {
+    handlers();
+    server.use(
+      http.post(`${API}/check-ins`, () =>
+        HttpResponse.json(problem('assessment_client_inactive'), { status: 409 })
+      )
+    );
+    const user = userEvent.setup();
+    renderApp({ initialEntries: [ROUTE] });
+
+    await user.click(await screen.findByRole('button', { name: 'Agendar check-in' }));
+    const sheet = await screen.findByRole('dialog');
+    await user.type(within(sheet).getByLabelText('Dia do check-in'), dayFromToday(0));
+    await user.click(within(sheet).getByRole('button', { name: 'Agendar' }));
+
+    expect(
+      await within(sheet).findByText('Reativa o cliente antes de agendar check-ins.')
+    ).toBeInTheDocument();
   });
 
   it('does not offer scheduling for an archived client', async () => {

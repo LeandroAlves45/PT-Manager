@@ -15,6 +15,27 @@ export const CHECKOUT_POLL_MS = 3000;
 /** Leituras no máximo (~30 s): só depois disso o personal trainer atualiza a página se precisar. */
 export const CHECKOUT_POLL_LIMIT = 10;
 
+/** Estado da query que decide o polling: o que já se leu e quantas leituras acabaram. */
+interface CheckoutPollState {
+  data?: { tier: string; status: string };
+  dataUpdateCount: number;
+  errorUpdateCount: number;
+}
+
+/**
+ * Intervalo da próxima leitura no regresso do Checkout, ou `false` para parar.
+ *
+ * Pára com o plano pago e ativo ou ao fim de `CHECKOUT_POLL_LIMIT` leituras. Contam também as
+ * que falharam: com o servidor em baixo, o polling não fica a correr para sempre.
+ */
+export function checkoutPollInterval(state: CheckoutPollState): number | false {
+  const paid =
+    state.data !== undefined && state.data.tier !== 'FREE' && state.data.status === 'ACTIVE';
+  const reads = state.dataUpdateCount + state.errorUpdateCount;
+
+  return paid || reads >= CHECKOUT_POLL_LIMIT ? false : CHECKOUT_POLL_MS;
+}
+
 /**
  * Estado da subscrição do personal trainer (`GET /billing/subscription`).
  *
@@ -27,14 +48,7 @@ export function useSubscriptionQuery({ awaitingCheckout = false } = {}) {
     queryKey: billingKeys.subscription(),
     queryFn: async ({ signal }) =>
       unwrap(await apiClient.GET('/api/v1/billing/subscription', { signal })),
-    refetchInterval: (query) => {
-      if (!awaitingCheckout) return false;
-
-      const data = query.state.data;
-      const paid = data !== undefined && data.tier !== 'FREE' && data.status === 'ACTIVE';
-
-      return paid || query.state.dataUpdateCount >= CHECKOUT_POLL_LIMIT ? false : CHECKOUT_POLL_MS;
-    },
+    refetchInterval: (query) => (awaitingCheckout ? checkoutPollInterval(query.state) : false),
   });
 }
 

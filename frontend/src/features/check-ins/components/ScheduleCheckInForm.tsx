@@ -87,6 +87,8 @@ export function ScheduleCheckInForm({
   const create = useCreateCheckInMutation();
   const reschedule = useRescheduleCheckInMutation();
   const pending = create.isPending || reschedule.isPending;
+  // Só se escolhe o cliente ao agendar a partir da página global.
+  const pickClient = client === null && checkIn === undefined;
   const form = useForm<ScheduleValues>({
     defaultValues: {
       client: checkIn !== undefined ? { id: checkIn.client_id, name: checkIn.client_name } : client,
@@ -136,9 +138,16 @@ export function ScheduleCheckInForm({
         form.setError('root', { message: fallback });
         return;
       }
+      // Com o cliente fixo (tab do cliente ou reagendar) o campo não existe: o erro vai para o
+      // formulário, senão ficava num campo que ninguém vê.
+      const shown = (field: keyof ScheduleValues) =>
+        field === 'client' && !pickClient ? 'root' : field;
+
       const conflictField = CONFLICT_FIELDS[error.code];
       if (conflictField !== undefined) {
-        form.setError(conflictField, { message: checkInErrorMessage(error.code, fallback) });
+        form.setError(shown(conflictField), {
+          message: checkInErrorMessage(error.code, fallback),
+        });
         return;
       }
 
@@ -146,7 +155,7 @@ export function ScheduleCheckInForm({
       for (const fieldError of error.fieldErrors) {
         const field = SERVER_FIELDS[fieldError.field];
         if (field !== undefined) {
-          form.setError(field, { message: checkInErrorMessage(fieldError.code, fallback) });
+          form.setError(shown(field), { message: checkInErrorMessage(fieldError.code, fallback) });
           mapped = true;
         }
       }
@@ -160,7 +169,7 @@ export function ScheduleCheckInForm({
       onSubmit={form.handleSubmit((values) => void submit(values))}
       className="flex h-full flex-col gap-4 pb-4"
     >
-      {client === null && checkIn === undefined && (
+      {pickClient && (
         <FormField label="Cliente" error={errors.client?.message}>
           {(control) => (
             <Controller

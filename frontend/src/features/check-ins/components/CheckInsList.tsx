@@ -1,5 +1,5 @@
 import { ClipboardCheck, MoreHorizontal } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 
@@ -86,6 +86,15 @@ export function CheckInsList({
     page,
     pageSize: CHECK_IN_PAGE_SIZE,
   });
+
+  // Rever ou cancelar o último check-in de uma página tira-o do filtro e a página fica vazia
+  // e sem paginação: volta-se à última página que ainda existe.
+  const total = list.data?.total_count;
+  useEffect(() => {
+    if (total === undefined || list.isPlaceholderData) return;
+    const lastPage = Math.max(1, Math.ceil(total / CHECK_IN_PAGE_SIZE));
+    if (page > lastPage) onPageChange(lastPage);
+  }, [total, list.isPlaceholderData, page, onPageChange]);
 
   const today = todayKey();
   const showClient = client === null;
@@ -226,7 +235,7 @@ export function CheckInsList({
                       {showClient && (
                         <td className="p-3">
                           <Link
-                            to={`/trainer/clients/${checkIn.client_id}?tab=checkins`}
+                            to={`/trainer/clients/${checkIn.client_id}?tab=check-ins`}
                             className="hover:underline"
                           >
                             {checkIn.client_name}

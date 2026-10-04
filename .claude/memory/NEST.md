@@ -100,7 +100,7 @@ Raiz: `docs/blueprints/`.
 | `docs/blueprints/backend-files/sprint_6/sprint_6B/` | Pack 6B (00–14), fechado |
 | `docs/blueprints/backend-files/sprint_concluidos/` | Sprints 4 e 5 |
 | `docs/blueprints/frontend-files/sprint_6/sprint_6C/` | **Pack 6C (frontend + backend de suporte)**; fecho em `19_relatorio_fecho_fase_6C.md` |
-| `docs/blueprints/frontend-files/sprint_6/sprint_6E/` | **Pack 6E trainer**: `00` plano da fase completa (ler primeiro); `sprint_6E1/01–09` painel e clientes (FINALIZADA); `sprint_6E2/01–09` sessões e packs (FINALIZADA); `sprint_6E3/01–09` biblioteca privada (FINALIZADA); `sprint_6E4/01–10` planos de treino, séries, nutrição e suplementos (FINALIZADA; relatório `10`); `sprint_6E5/01–08` check-ins, definições e subscrição (blueprints validados 2026-10-02, por aplicar); `manifest.json` em cada fatia com hashes e estado dos ficheiros |
+| `docs/blueprints/frontend-files/sprint_6/sprint_6E/` | **Pack 6E trainer**: `00` plano da fase completa (ler primeiro); `sprint_6E1/01–09` painel e clientes (FINALIZADA); `sprint_6E2/01–09` sessões e packs (FINALIZADA); `sprint_6E3/01–09` biblioteca privada (FINALIZADA); `sprint_6E4/01–10` planos de treino, séries, nutrição e suplementos (FINALIZADA; relatório `10`); `sprint_6E5/01–09` check-ins, definições e subscrição (FINALIZADA; relatório `09`); `10_fecho_sprint_6E.md` fecho do sprint inteiro (FINALIZADO 2026-10-04); `manifest.json` em cada fatia com hashes e estado dos ficheiros |
 | `docs/blueprints/frontend-files/sprint_6/sprint_6D/` | **Pack 6D admin (00–07)**; contrato de vídeo, catálogos, moderação, visão geral, testes, gates, gestão de vídeo (06) e relatório de fecho (07). **Finalizada 2026-09-24** |
 
 Padrões de escrita:

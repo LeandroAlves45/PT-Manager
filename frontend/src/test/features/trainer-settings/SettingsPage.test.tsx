@@ -87,7 +87,7 @@ describe('SettingsPage', () => {
     await waitFor(() =>
       expect(body).toEqual({ app_name: 'Marta Coach', primary_color: null, body_color: '#112233' })
     );
-    expect(toastMock.success).toHaveBeenCalledWith('Marca guardada.');
+    expect(toastMock.success).toHaveBeenCalledWith('Marca guardada com sucesso.');
   });
 
   it('refuses an invalid colour and a short name without calling the API', async () => {
@@ -112,7 +112,7 @@ describe('SettingsPage', () => {
       await screen.findByText('O nome da app tem de ter entre 2 e 50 caracteres.')
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Usa uma cor no formato #RRGGBB, ou deixa vazio para a cor do tema.')
+      screen.getByText('Usa uma cor no formato #RRGGBB ou deixa vazio para a cor do tema.')
     ).toBeInTheDocument();
     // Uma cor inválida nunca chega ao `style` da pré-visualização.
     expect(screen.getByText('Treino de hoje')).not.toHaveAttribute('style');
@@ -186,7 +186,7 @@ describe('SettingsPage', () => {
       new File(['gif'], 'logo.gif', { type: 'image/gif' })
     );
 
-    expect(await screen.findByText('Escolhe uma imagem PNG, JPEG ou WEBP.')).toBeInTheDocument();
+    expect(await screen.findByText('Escolhe uma imagem PNG, JPEG ou WebP.')).toBeInTheDocument();
     expect(uploads).toBe(0);
   });
 
@@ -218,7 +218,7 @@ describe('SettingsPage', () => {
     expect(body).toContain('name="file"; filename="logo.png"');
     expect(body).toContain('Content-Type: image/png');
     expect(body).toContain('image-bytes');
-    expect(toastMock.success).toHaveBeenCalledWith('Logo atualizado.');
+    expect(toastMock.success).toHaveBeenCalledWith('Logo atualizado com sucesso.');
   });
 
   it('explains a server refusal of the image', async () => {
@@ -270,6 +270,8 @@ describe('SettingsPage', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Remover logo' }));
 
     await waitFor(() => expect(deletes).toBe(1));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+    expect(toastMock.success).toHaveBeenCalledWith('Logo removido com sucesso.');
     expect(await screen.findByRole('button', { name: 'Enviar logo' })).toBeInTheDocument();
   });
 
@@ -306,7 +308,7 @@ describe('SettingsPage', () => {
     await user.click(screen.getByRole('button', { name: 'Guardar contactos' }));
     await waitFor(() => expect(bodies).toHaveLength(2));
     expect(bodies[1]).toEqual({ phone: '912345678', address: null, city: null });
-    expect(toastMock.success).toHaveBeenCalledWith('Contactos guardados.');
+    expect(toastMock.success).toHaveBeenCalledWith('Contactos guardados com sucesso.');
   });
 
   it('explains a timezone conflict and refreshes date-based data after a change', async () => {
@@ -350,7 +352,7 @@ describe('SettingsPage', () => {
 
     await waitFor(() => expect(bodies[1]).toEqual({ timezone: 'America/New_York' }));
     await waitFor(() => expect(subscriptionRequests).toBe(2));
-    expect(toastMock.success).toHaveBeenCalledWith('Fuso horário guardado.');
+    expect(toastMock.success).toHaveBeenCalledWith('Fuso horário guardado com sucesso.');
   });
 
   it('shows an error state with retry when the settings fail to load', async () => {

@@ -61,7 +61,7 @@ describe('CheckInsPage', () => {
 
     expect(await screen.findByRole('link', { name: 'Marta Figueiredo' })).toHaveAttribute(
       'href',
-      `/trainer/clients/${CLIENT_ID}?tab=checkins`
+      `/trainer/clients/${CLIENT_ID}?tab=check-ins`
     );
     const table = screen.getByRole('table');
     expect(within(table).getByText('Respondido')).toBeInTheDocument();
@@ -79,10 +79,44 @@ describe('CheckInsPage', () => {
     renderApp({ initialEntries: [`${ROUTE}?page=2`] });
 
     await screen.findByText('Agendado');
+    expect(queries[0]?.get('page_number')).toBe('2');
     await user.selectOptions(screen.getByLabelText('Estado'), 'missed');
 
     await waitFor(() => expect(queries.at(-1)?.get('status')).toBe('missed'));
     expect(queries.at(-1)?.get('page_number')).toBe('1');
+  });
+
+  it('goes back to the last page that exists after reviewing the only item of a page', async () => {
+    let reviewed = false;
+    const pages: string[] = [];
+    server.use(
+      ...restorableSession(),
+      http.get(`${API}/check-ins`, ({ request }) => {
+        const page = new URL(request.url).searchParams.get('page_number') ?? '';
+        pages.push(page);
+        if (page === '2')
+          return HttpResponse.json(
+            reviewed ? checkInPage([], 25, 2) : checkInPage([answeredCheckIn()], 26, 2)
+          );
+        return HttpResponse.json(checkInPage([checkIn()], 25));
+      }),
+      http.post(`${API}/check-ins/:checkInId/review`, () => {
+        reviewed = true;
+        return HttpResponse.json(answeredCheckIn({ reviewed_at: '2026-10-02T10:00:00Z' }));
+      })
+    );
+    const user = userEvent.setup();
+    renderApp({ initialEntries: [`${ROUTE}?status=unreviewed&page=2`] });
+
+    await user.click(
+      await screen.findByRole('button', { name: /Marcar como revisto o check-in de Marta/ })
+    );
+
+    await waitFor(() => expect(pages.at(-1)).toBe('1'));
+    await waitFor(() =>
+      expect(within(screen.getByRole('table')).getByText('Agendado')).toBeInTheDocument()
+    );
+    expect(window.location.search).not.toContain('page=');
   });
 
   it('does not send an inverted date range', async () => {

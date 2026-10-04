@@ -213,3 +213,17 @@ Lições capturadas depois de correções do utilizador.
 - **Mutação sobrevivente = teste fraco até prova em contrário.** FM3 e FM8 sobreviveram por
   testes que passavam pelo motivo errado; nenhuma era equivalente.
 
+
+## 2026-10-04 — Fecho 6E-5 e do Sprint 6E
+
+- **Os testes do blueprint são a rede da aplicação manual.** Os três defeitos da 6E-5
+  (`page`, valor da tab, diálogo do logo) passaram typecheck e lint e só os testes do
+  blueprint 07 os apanharam, no CI. Correr `vitest` antes do push, sempre.
+- **Diff programático primeiro, leitura depois.** Comparar o SHA do manifest e os blocos dos
+  docs com o disco separou 20 ficheiros divergentes em "copy do Leandro" (fica) e em três
+  defeitos, em minutos.
+- **Copy reescrita pelo utilizador fica, mas os erros de português corrigem-se** ("uma valor",
+  "respostas" por "repostas", género de "logo", WebP/WEBP).
+- **Polling limitado conta tentativas, não sucessos.** `dataUpdateCount` não sobe com o
+  servidor em baixo. Somar `errorUpdateCount` e extrair a decisão para uma função pura
+  testável, sem esperas reais de 30 s.

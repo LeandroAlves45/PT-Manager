@@ -207,3 +207,28 @@ os testes do blueprint exercitavam:
 - Um teste de "rascunho sobrevive ao refetch" tem de fazer a segunda leitura trazer valores
   diferentes nos campos da própria secção.
 
+
+## 2026-10-04 — Fecho 6E-5: nome do parâmetro, valor da tab, diálogo que não fecha
+
+**O que aconteceu.** Na aplicação manual do pack 6E-5 entraram três defeitos que o
+typecheck e o lint deixaram passar. O CI #24 apanhou-os pelos testes do blueprint 07.
+- `useCheckInListQuery` passou a enviar `page` em vez de `page_number`. O `tsc -b`
+  ficou verde. O servidor ignora parâmetros desconhecidos e devolvia sempre a página 1.
+- O valor da tab mudou para `check-ins` no `ClientDetailPage`, mas o link da lista global
+  continuou com `?tab=checkins`, o que abria o Resumo.
+- `removeLogo` perdeu o `setConfirmRemove(false)`. O `ConfirmDialog` é controlado de fora e
+  não fecha sozinho, por isso ficou aberto depois do sucesso.
+
+**A regra.**
+- Não confiar no `tsc` para os nomes da query string do `openapi-fetch`. O teste da lista
+  tem de ler o parâmetro do pedido no handler MSW (`searchParams.get('page_number')`), já
+  na primeira página e não só depois de mudar o filtro.
+- Um valor de `?tab=` vive em dois sítios: no `TABS` do detalhe e em cada link. Mudar um
+  obriga a procurar `tab=<valor>` em `src/` e nos testes.
+- Com `ConfirmDialog`, cada caminho de sucesso fecha o diálogo explicitamente. O teste
+  confirma que `alertdialog` desapareceu.
+- `setError` num campo que não está renderizado (o cliente fixo na tab ou ao reagendar)
+  engole o erro. Quando o campo está escondido, mandar a mensagem para `root`.
+- Numa lista filtrada em que a própria ação tira o item do filtro ("Por rever" → rever),
+  esvaziar a última página deixa o ecrã vazio e sem paginação. Repor a última página que
+  existe a partir do `total_count`.

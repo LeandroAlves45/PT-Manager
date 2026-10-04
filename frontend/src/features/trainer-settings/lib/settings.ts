@@ -46,11 +46,11 @@ const SETTINGS_ERRORS: Readonly<Record<string, string>> = {
   trainer_settings_schedule_conflict:
     'Com este fuso, um cliente ficaria com duas sessões agendadas no mesmo dia. Reagenda uma delas primeiro.',
   trainer_settings_logo_required: 'Escolhe uma imagem.',
-  trainer_settings_unsupported_media_type: 'Escolhe uma imagem PNG, JPEG ou WEBP.',
+  trainer_settings_unsupported_media_type: 'Escolhe uma imagem PNG, JPEG ou WebP.',
   trainer_settings_media_too_large: 'O logo não pode exceder 5 MB.',
   trainer_settings_logo_empty: 'O ficheiro está vazio.',
   trainer_settings_logo_too_large: 'O logo não pode exceder 5 MB.',
-  trainer_settings_logo_unsupported_format: 'Escolhe uma imagem PNG, JPEG ou WEBP.',
+  trainer_settings_logo_unsupported_format: 'Escolhe uma imagem PNG, JPEG ou WebP.',
   trainer_settings_logo_content_type_mismatch:
     'O conteúdo do ficheiro não corresponde ao formato indicado.',
   trainer_settings_logo_not_decodable: 'Não foi possível ler esta imagem.',

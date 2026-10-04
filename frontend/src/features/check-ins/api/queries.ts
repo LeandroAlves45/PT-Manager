@@ -26,7 +26,7 @@ export function useCheckInListQuery(filters: CheckInListFilter) {
               status: filters.status ?? undefined,
               from_date: filters.fromDate ?? undefined,
               to_date: filters.toDate ?? undefined,
-              page: filters.page,
+              page_number: filters.page,
               page_size: filters.pageSize,
             },
           },
