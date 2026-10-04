@@ -1,4 +1,4 @@
-# Estado ativo: Sprint 6E — 6E-4 FINALIZADA
+# Estado ativo: Sprint 6E — 6E-5 BLUEPRINTS VALIDADOS
 
 Atualizado: 2026-10-02
 
@@ -27,6 +27,7 @@ Pack `docs/blueprints/frontend-files/sprint_6/sprint_6E/`. **Ler o `00` antes de
 - **6E-4 BLUEPRINTS VALIDADOS (2026-10-01)**: pack `sprint_6E/sprint_6E4/01–09` cobre planos de treino, séries, planos alimentares com preview e suplementos. A implementação foi testada numa worktree descartável, sem integração no projeto principal. O backend requer adições `Preserve`: `has_history`, `client_name` em listas e campos do cálculo para repor o editor. Ver `Sessions/2026-10-01-sprint6e4-blueprints.md`. Aplicação real, CI e verificação visual com login continuam pendentes.
 - **6E-4 BACKEND APLICADO E TESTADO (2026-10-01)**: o backend do doc 02 foi aplicado, com M1–M3. São 2911 testes, MU1–MU6 6/6 e o contrato foi regenerado. Os blueprints frontend 03–08 foram corrigidos (A1, B3, B5–B8) e validados numa worktree (234 testes, FM1–FM3 3/3, 46/46 hashes). Próximo passo: o Leandro aplica o frontend e fecha a fase. Os patches do pack exigem `git apply --recount`. Ver `Sessions/2026-10-01-sprint6e4-revisao-backend-testes.md`.
 - **6E-4 FINALIZADA (2026-10-02)**: docs 03–08 do Leandro em `88d3dfa`; revisão de fecho em `e6c5c4e` com D1 (histórico a meio da edição repõe datas/estrutura), D2 (aviso de carregamento eterno), D3 (reativação após 409 passa a edição). 236 testes frontend, FM4–FM9 6/6. Relatório `sprint_6E4/10`. Faltam `QG6E4-ISOLAMENTO-UI-001` e `QG6E4-UI-001`. Ver `Sessions/2026-10-02-sprint6e4-fecho-frontend.md`.
+- **6E-5 BLUEPRINTS VALIDADOS (2026-10-02)**: pack `sprint_6E/sprint_6E5/01–08` + `manifest.json` (55 caminhos, 47 integrais, 8 patches `git apply --recount`). Check-ins (agendar, reagendar, cancelar, rever, corrigir), definições (marca com pré-visualização, logo multipart, contactos, fuso), subscrição (Checkout/portal com `Idempotency-Key`, aviso de regresso e polling) e tab Check-ins. Backend: `client_name` em `CheckInResponse` e retoma do Checkout aberto do mesmo plano (U5). D1: `SubscriptionCard` mostrava sempre "Pagamento por regularizar". Worktree: 2917 testes backend, 277 frontend, 15/15 mutações, round-trip 55/55. **Próximo passo:** o Leandro aplica o pack (ordem no doc 01), configura as URLs de retorno Stripe e faz os gates manuais do doc 08 (incluindo o gate global da 6E). Ver `Sessions/2026-10-02-sprint6e5-blueprints.md`.
 - Tarefa transversal registada: pesquisa na página N faz um pedido intermédio (termo antigo,
   página 1) — biblioteca e `ModerationPage`.
 - Tarefa transversal sugerida: rotas lazy por papel (bundle único de 266 kB gzip em 2026-09-29).

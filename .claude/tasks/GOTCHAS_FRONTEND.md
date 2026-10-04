@@ -184,3 +184,26 @@ os testes do blueprint exercitavam:
   (`isPending && isFetching`), nunca `isPending`.
 - Um fluxo de recuperação de conflito tem de terminar num estado gravável: testar o passo
   seguinte ao "Reativar", não só o diálogo.
+
+## 2026-10-02 — Validação 6E-5: upload em testes, texto do filtro, `values` do RHF
+
+**O que aconteceu.**
+- O upload multipart do logo rebentava nos testes antes de chegar ao MSW
+  (`Cannot read properties of undefined (reading '_buffer')`): o `openapi-fetch` cria um
+  `Request` do Node (undici) e o `FormData`/`File` do jsdom não são compatíveis com ele. Num
+  browser real é a mesma implementação.
+- `await screen.findByText('Em falta')` resolvia com a `<option>` do filtro de estado antes de
+  a tabela carregar; a mutação FM3 sobreviveu por isso.
+- O teste do rascunho da marca relia dados iguais; `useForm({ values })` só repõe quando os
+  valores mudam, por isso `values` e `defaultValues` comportavam-se igual (FM8 sobreviveu).
+
+**A regra.**
+- Testes de upload: `File` de `node:buffer` (import dinâmico `import('node:' + 'buffer')`,
+  porque o tsconfig da app não tem tipos do Node) e `FormData` obtido de
+  `await new Response('', { headers: { 'content-type': 'application/x-www-form-urlencoded' } }).formData()`,
+  instalado com `vi.stubGlobal`. No handler MSW, ler o corpo com `request.text()`.
+- Esperar por dados dentro do contentor certo (`within(await screen.findByRole('table'))`)
+  quando o mesmo texto existe num filtro.
+- Um teste de "rascunho sobrevive ao refetch" tem de fazer a segunda leitura trazer valores
+  diferentes nos campos da própria secção.
+

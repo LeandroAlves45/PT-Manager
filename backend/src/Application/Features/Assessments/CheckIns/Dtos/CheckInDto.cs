@@ -4,6 +4,7 @@ namespace Application.Features.Assessments.CheckIns.Dtos;
 public sealed record CheckInDto(
     Guid Id,
     Guid ClientId,
+    string ClientName,
     DateOnly CheckInDate,
     DateOnly? TargetDate,
     decimal? WeightKg,

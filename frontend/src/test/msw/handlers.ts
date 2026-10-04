@@ -51,12 +51,15 @@ export const handlers = [
   ),
   http.post(`${API}/auth/login`, () => HttpResponse.json(sessionResponse())),
   http.post(`${API}/auth/logout`, () => new HttpResponse(null, { status: 204 })),
+  // [6E-5] ALTERADO: valores reais do contrato (tier e estado em maiúsculas). 'BASIC'/'active'
+  // nunca existiram no backend e escondiam o defeito do cartão da sidebar.
   http.get(`${API}/billing/subscription`, () =>
     HttpResponse.json({
-      tier: 'BASIC',
-      status: 'active',
-      client_limit: 10,
+      tier: 'STARTER',
+      status: 'ACTIVE',
+      client_limit: 25,
       current_client_count: 3,
+      trial_ends_at: null,
     })
   ),
   http.get(`${API}/clients`, () =>

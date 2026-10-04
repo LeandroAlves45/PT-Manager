@@ -175,4 +175,127 @@ public sealed class BillingCheckoutStoreTests(PostgresContainerFixture database)
         Assert.Equal(first.OperationId, retry.OperationId);
         Assert.NotEqual(first.LeaseOwnerId, retry.LeaseOwnerId);
     }
+
+    [Fact]
+    public async Task Reserve_NewKeyForSameTierWithOpenSession_ResumesThatSession()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var support = new BillingTestSupport(database);
+        var trainer = await support.SeedTrainerAsync("checkout-new-key-same-tier", cancellationToken: token);
+        await using var context = support.CreateRetryingTrainerContext(trainer.TrainerId);
+        var store = new BillingCheckoutStore(context);
+        var opened = await OpenSessionAsync(store, trainer.TrainerId, SubscriptionTier.Starter, token);
+
+        var resumed = await store.ReserveAsync(
+            trainer.TrainerId,
+            Guid.NewGuid(),
+            SubscriptionTier.Starter,
+            BillingTestSupport.Now.AddMinutes(5),
+            TimeSpan.FromMinutes(2),
+            token);
+
+        Assert.Equal(CheckoutReservationStatus.ResumeCreated, resumed.Status);
+        Assert.Equal(opened.OperationId, resumed.OperationId);
+        Assert.Equal("cs_test_open_session", resumed.ProviderSessionId);
+    }
+
+    [Fact]
+    public async Task Reserve_NewKeyForOtherTierWithOpenSession_ReturnsAnotherOperationActive()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var support = new BillingTestSupport(database);
+        var trainer = await support.SeedTrainerAsync("checkout-new-key-other-tier", cancellationToken: token);
+        await using var context = support.CreateRetryingTrainerContext(trainer.TrainerId);
+        var store = new BillingCheckoutStore(context);
+        await OpenSessionAsync(store, trainer.TrainerId, SubscriptionTier.Starter, token);
+
+        var other = await store.ReserveAsync(
+            trainer.TrainerId,
+            Guid.NewGuid(),
+            SubscriptionTier.Pro,
+            BillingTestSupport.Now.AddMinutes(5),
+            TimeSpan.FromMinutes(2),
+            token);
+
+        Assert.Equal(CheckoutReservationStatus.AnotherOperationActive, other.Status);
+    }
+
+    [Fact]
+    public async Task Reserve_NewKeyForSameTierWhileOtherKeyPending_ReturnsAnotherOperationActive()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var support = new BillingTestSupport(database);
+        var trainer = await support.SeedTrainerAsync("checkout-new-key-pending", cancellationToken: token);
+        await using var context = support.CreateRetryingTrainerContext(trainer.TrainerId);
+        var store = new BillingCheckoutStore(context);
+        var pending = await store.ReserveAsync(
+            trainer.TrainerId,
+            Guid.NewGuid(),
+            SubscriptionTier.Starter,
+            BillingTestSupport.Now,
+            TimeSpan.FromMinutes(2),
+            token);
+        Assert.Equal(CheckoutReservationStatus.Acquired, pending.Status);
+
+        // Lease ainda ativo e sem sessão Stripe: não há nada para retomar.
+        var other = await store.ReserveAsync(
+            trainer.TrainerId,
+            Guid.NewGuid(),
+            SubscriptionTier.Starter,
+            BillingTestSupport.Now.AddMinutes(1),
+            TimeSpan.FromMinutes(2),
+            token);
+
+        Assert.Equal(CheckoutReservationStatus.AnotherOperationActive, other.Status);
+    }
+
+    [Fact]
+    public async Task Reserve_NewKeyForSameTierAfterSessionExpired_StartsNewOperation()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var support = new BillingTestSupport(database);
+        var trainer = await support.SeedTrainerAsync("checkout-new-key-expired", cancellationToken: token);
+        await using var context = support.CreateRetryingTrainerContext(trainer.TrainerId);
+        var store = new BillingCheckoutStore(context);
+        var opened = await OpenSessionAsync(store, trainer.TrainerId, SubscriptionTier.Starter, token);
+
+        var fresh = await store.ReserveAsync(
+            trainer.TrainerId,
+            Guid.NewGuid(),
+            SubscriptionTier.Starter,
+            BillingTestSupport.Now.AddMinutes(31),
+            TimeSpan.FromMinutes(2),
+            token);
+
+        Assert.Equal(CheckoutReservationStatus.Acquired, fresh.Status);
+        Assert.NotEqual(opened.OperationId, fresh.OperationId);
+    }
+
+    /// <summary>Reserva e marca a sessão Stripe como criada, válida durante 30 minutos.</summary>
+    private static async Task<CheckoutReservationResult> OpenSessionAsync(
+        BillingCheckoutStore store,
+        Guid trainerId,
+        SubscriptionTier tier,
+        CancellationToken token)
+    {
+        var reserved = await store.ReserveAsync(
+            trainerId,
+            Guid.NewGuid(),
+            tier,
+            BillingTestSupport.Now,
+            TimeSpan.FromMinutes(2),
+            token);
+        Assert.Equal(CheckoutReservationStatus.Acquired, reserved.Status);
+
+        var created = await store.MarkSessionCreatedAsync(
+            reserved.OperationId,
+            reserved.LeaseOwnerId,
+            "cs_test_open_session",
+            BillingTestSupport.Now.AddMinutes(30),
+            BillingTestSupport.Now.AddMinutes(1),
+            token);
+        Assert.Equal(CheckoutMutationStatus.Applied, created);
+
+        return reserved;
+    }
 }

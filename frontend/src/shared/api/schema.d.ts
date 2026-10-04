@@ -23029,6 +23029,7 @@ export interface components {
             id: string;
             /** Format: uuid */
             client_id: string;
+            client_name: string;
             /** Format: date */
             check_in_date: string;
             /** Format: date */

@@ -6,6 +6,13 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-02 — Sprint 6E-5: blueprints validados (última fatia da 6E).** Pack
+`sprint_6E/sprint_6E5/01–08` + manifest: check-ins completos, definições, subscrição e tab
+Check-ins. Backend: `client_name` nos check-ins e retoma do Checkout aberto do mesmo plano (U5).
+Defeito D1 pré-existente: cartão da sidebar mostrava sempre "Pagamento por regularizar"
+(`ACTIVE` vs `active`). Worktree: 2917 testes backend, 277 frontend, 15/15 mutações, round-trip
+55/55. Aplicação pelo Leandro pendente. Ver `Sessions/2026-10-02-sprint6e5-blueprints.md`.
+
 **2026-10-02 — Sprint 6E-4 FINALIZADA.** Docs 03–08 do Leandro em `88d3dfa`, revisão de fecho em
 `e6c5c4e`: D1 histórico a meio da edição repõe datas/estrutura do servidor (o PATCH levava outro
 409), D2 aviso de carregamento eterno (query desativada fica `pending`; usar `isLoading`), D3

@@ -25,10 +25,11 @@ internal sealed class CheckInQueries : ICheckInQueries
         CancellationToken cancellationToken
     )
     {
-        var checkIn = await BaseQuery(trainerId)
-            .SingleOrDefaultAsync(item => item.Id == checkInId, cancellationToken);
+        var row = await WithClientName(
+            BaseQuery(trainerId).Where(item => item.Id == checkInId))
+            .SingleOrDefaultAsync(cancellationToken);
 
-        return checkIn?.ToDto(localToday);
+        return row?.CheckIn.ToDto(row.ClientName, localToday);
     }
 
     public async Task<PageResult<CheckInDto>> ListAsync(
@@ -57,15 +58,16 @@ internal sealed class CheckInQueries : ICheckInQueries
             query = ApplyStatus(query, status.Value, localToday);
 
         var totalCount = await query.CountAsync(cancellationToken);
-        var entities = await query
+        var rows = await WithClientName(query
             .OrderByDescending(item => item.CheckInDate)
             .ThenBy(item => item.Id)
             .Skip((page.PageNumber - 1) * page.PageSize)
-            .Take(page.PageSize)
+            .Take(page.PageSize))
             .ToListAsync(cancellationToken);
 
-        var items = entities
-            .Select(item => item.ToDto(localToday))
+        // O estado depende do dia local: o DTO constrói-se em memória, depois da ordenação SQL.
+        var items = rows
+            .Select(row => row.CheckIn.ToDto(row.ClientName, localToday))
             .ToList();
 
         return new PageResult<CheckInDto>(items, totalCount);
@@ -114,10 +116,10 @@ internal sealed class CheckInQueries : ICheckInQueries
                         client.UserId == userId && client.IsActive),
                 item => item.ClientId,
                 client => client.Id,
-                (item, client) => item)
+                (item, client) => new { CheckIn = item, ClientName = client.Name })
             .SingleOrDefaultAsync(cancellationToken);
 
-        return checkIn?.ToDto(localToday);
+        return checkIn?.CheckIn.ToDto(checkIn.ClientName, localToday);
     }
 
     private IQueryable<CheckIn> BaseQuery(Guid trainerId) =>
@@ -148,4 +150,19 @@ internal sealed class CheckInQueries : ICheckInQueries
                     !item.ReviewedAt.HasValue),
             _ => throw new ArgumentOutOfRangeException(nameof(status))
         };
+
+    /// <summary>
+    /// Junta o nome do cliente com o predicado de tenant explícito, além do filtro global
+    /// (defesa em profundidade, como nas listas de planos e packs).
+    /// </summary>
+    private IQueryable<CheckInWithClientName> WithClientName(IQueryable<CheckIn> query) =>
+        query.Select(item => new CheckInWithClientName(
+            item,
+            _dbContext.Clients
+                .Where(client => client.OwnerTrainerId == item.OwnerTrainerId &&
+                    client.Id == item.ClientId)
+                .Select(client => client.Name)
+                .First()));
+
+    private sealed record CheckInWithClientName(CheckIn CheckIn, string ClientName);
 }

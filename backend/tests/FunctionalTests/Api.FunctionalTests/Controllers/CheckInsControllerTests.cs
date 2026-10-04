@@ -37,6 +37,61 @@ public sealed class CheckInsControllerTests
 
         var body = await ReadJsonAsync(response);
         Assert.Equal("scheduled", body.GetProperty("status").GetString());
+        Assert.Equal("Training client", body.GetProperty("client_name").GetString());
+    }
+
+    [Fact]
+    public async Task List_ReturnsClientNameOfEachRow_WithoutOtherTenantRows()
+    {
+        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        var secondClientId = await TrainerTenantSeeder.SeedClientAsync(
+            _fixture.Factory, tenant.TrainerId, "Segunda Cliente", Token);
+        var intruder = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+
+        await SeedCheckInAsync(
+            tenant.TrainerId,
+            tenant.ClientId,
+            DateOnly.FromDateTime(DateTime.UtcNow.AddDays(6)));
+        await SeedCheckInAsync(
+            tenant.TrainerId,
+            secondClientId,
+            DateOnly.FromDateTime(DateTime.UtcNow.AddDays(9)));
+
+        var foreignCheckInId = await SeedCheckInAsync(
+            intruder.TrainerId,
+            intruder.ClientId,
+            DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)));
+
+        var response = await TrainerClient(tenant.TrainerId)
+            .GetAsync("/api/v1/check-ins?page_size=100", Token);
+
+        var body = await response.Content.ReadAsStringAsync(Token);
+
+        Assert.True(response.StatusCode == HttpStatusCode.OK, body);
+        var items = JsonDocument.Parse(body).RootElement.GetProperty("items").EnumerateArray()
+            .ToDictionary(
+                item => item.GetProperty("client_id").GetGuid(),
+                item => item.GetProperty("client_name").GetString());
+
+        Assert.Equal(2, items.Count);
+        Assert.Equal("Training client", items[tenant.ClientId]);
+        Assert.Equal("Segunda Cliente", items[secondClientId]);
+        Assert.DoesNotContain(foreignCheckInId.ToString(), body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Get_ReturnsClientName()
+    {
+        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        var checkInId = await SeedCheckInAsync(
+            tenant.TrainerId, tenant.ClientId, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(8)));
+
+        var response = await TrainerClient(tenant.TrainerId)
+            .GetAsync($"/api/v1/check-ins/{checkInId}", Token);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await ReadJsonAsync(response);
+        Assert.Equal("Training client", body.GetProperty("client_name").GetString());
     }
 
     [Fact]
@@ -136,6 +191,9 @@ public sealed class CheckInsControllerTests
             Token);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await ReadJsonAsync(response);
+        Assert.Equal("Training client", body.GetProperty("client_name").GetString());
     }
 
     [Fact]
@@ -187,6 +245,7 @@ public sealed class CheckInsControllerTests
 
         var body = await ReadJsonAsync(response);
         Assert.Equal("cancelled", body.GetProperty("status").GetString());
+        Assert.Equal("Training client", body.GetProperty("client_name").GetString());
     }
 
     private static CreateCheckInRequest NewCheckIn(Guid clientId, DateOnly checkInDate) =>

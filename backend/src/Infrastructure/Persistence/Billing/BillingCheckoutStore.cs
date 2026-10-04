@@ -92,6 +92,24 @@ internal sealed class BillingCheckoutStore : IBillingCheckoutStore
                     activeOther.MarkAbandoned(now);
                     activeOther = null;
                 }
+
+                // Uma chave nova para o mesmo plano, com um Checkout já criado e por expirar, é o
+                // mesmo pagamento: acontece quando o personal trainer volta do Stripe sem pagar e a chave
+                // em memória do browser se perdeu. Retoma-se essa sessão em vez de recusar até
+                // ela expirar. Outro plano continua recusado: só há um pagamento aberto.
+                if (activeOther is not null &&
+                    activeOther.Status == BillingCheckoutOperationStatus.Created &&
+                    activeOther.Tier == tier)
+                {
+                    result = new(
+                        CheckoutReservationStatus.ResumeCreated,
+                        activeOther.Id,
+                        ProviderCustomerId: subscription.StripeCustomerId,
+                        Tier: activeOther.Tier,
+                        EffectiveTrialEndsAt: activeOther.EffectiveTrialEndsAt,
+                        ProviderSessionId: activeOther.StripeCheckoutSessionId);
+                    return;
+                }
                 if (activeOther is not null)
                 {
                     result = new(CheckoutReservationStatus.AnotherOperationActive);

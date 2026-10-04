@@ -197,7 +197,7 @@ internal sealed class CheckInStore : ICheckInStore
             return CheckInStoreResult.For(CheckInStoreResult.Status.DateConflict);
         }
 
-        return CheckInStoreResult.For(CheckInStoreResult.Status.Created, checkIn);
+        return CheckInStoreResult.For(CheckInStoreResult.Status.Created, checkIn, client.Name);
     }
 
     private async Task<CheckInStoreResult> RescheduleOnceAsync(
@@ -219,7 +219,9 @@ internal sealed class CheckInStore : ICheckInStore
             return CheckInStoreResult.For(CheckInStoreResult.Status.CannotReschedule);
         if (checkInDate == checkIn.CheckInDate && targetDate == checkIn.TargetDate)
             return CheckInStoreResult.For(
-                CheckInStoreResult.Status.AlreadyInRequestedState, checkIn);
+                CheckInStoreResult.Status.AlreadyInRequestedState,
+                checkIn,
+                locked.Value.Client.Name);
 
         checkIn.Reschedule(checkInDate, targetDate, localToday, now);
         try
@@ -232,7 +234,10 @@ internal sealed class CheckInStore : ICheckInStore
             return CheckInStoreResult.For(CheckInStoreResult.Status.DateConflict);
         }
 
-        return CheckInStoreResult.For(CheckInStoreResult.Status.Rescheduled, checkIn);
+        return CheckInStoreResult.For(
+            CheckInStoreResult.Status.Rescheduled,
+            checkIn,
+            locked.Value.Client.Name);
     }
 
     private async Task<CheckInStoreResult> CancelOnceAsync(
@@ -249,13 +254,16 @@ internal sealed class CheckInStore : ICheckInStore
         var checkIn = locked.Value.CheckIn;
         if (checkIn.CancelledAt.HasValue)
             return CheckInStoreResult.For(
-                CheckInStoreResult.Status.AlreadyInRequestedState, checkIn);
+                CheckInStoreResult.Status.AlreadyInRequestedState,
+                checkIn,
+                locked.Value.Client.Name);
         if (checkIn.RespondedAt.HasValue || checkIn.CheckInDate <= localToday)
             return CheckInStoreResult.For(CheckInStoreResult.Status.CannotCancel);
 
         checkIn.Cancel(localToday, now);
         await _dbContext.SaveChangesAsync(cancellationToken);
-        return CheckInStoreResult.For(CheckInStoreResult.Status.Cancelled, checkIn);
+        return CheckInStoreResult.For(
+            CheckInStoreResult.Status.Cancelled, checkIn, locked.Value.Client.Name);
     }
 
     private async Task<CheckInStoreResult> SubmitResponseOnceAsync(
@@ -295,7 +303,9 @@ internal sealed class CheckInStore : ICheckInStore
                 nutritionAdherenceScore
             )
                 ? CheckInStoreResult.For(
-                    CheckInStoreResult.Status.AlreadyInRequestedState, checkIn)
+                    CheckInStoreResult.Status.AlreadyInRequestedState,
+                    checkIn,
+                    client.Name)
                 : CheckInStoreResult.For(CheckInStoreResult.Status.AlreadyAnswered);
 
         if (checkIn.CheckInDate != localToday)
@@ -313,7 +323,7 @@ internal sealed class CheckInStore : ICheckInStore
             now
         );
         await _dbContext.SaveChangesAsync(cancellationToken);
-        return CheckInStoreResult.For(CheckInStoreResult.Status.Answered, checkIn);
+        return CheckInStoreResult.For(CheckInStoreResult.Status.Answered, checkIn, client.Name);
     }
 
     private async Task<CheckInStoreResult> CorrectOnceAsync(
@@ -351,7 +361,9 @@ internal sealed class CheckInStore : ICheckInStore
             trainingAdherenceScore,
             nutritionAdherenceScore))
             return CheckInStoreResult.For(
-                CheckInStoreResult.Status.AlreadyInRequestedState, checkIn);
+                CheckInStoreResult.Status.AlreadyInRequestedState,
+                checkIn,
+                locked.Value.Client.Name);
 
         checkIn.Correct(
             targetDate,
@@ -365,7 +377,10 @@ internal sealed class CheckInStore : ICheckInStore
             now
         );
         await _dbContext.SaveChangesAsync(cancellationToken);
-        return CheckInStoreResult.For(CheckInStoreResult.Status.Corrected, checkIn);
+        return CheckInStoreResult.For(
+            CheckInStoreResult.Status.Corrected,
+            checkIn,
+            locked.Value.Client.Name);
     }
 
     private async Task<CheckInStoreResult> MarkReviewedOnceAsync(
@@ -386,12 +401,17 @@ internal sealed class CheckInStore : ICheckInStore
             return CheckInStoreResult.For(CheckInStoreResult.Status.NotAnswered);
         if (checkIn.ReviewedAt.HasValue)
             return CheckInStoreResult.For(
-                CheckInStoreResult.Status.AlreadyInRequestedState, checkIn);
+                CheckInStoreResult.Status.AlreadyInRequestedState,
+                checkIn,
+                locked.Value.Client.Name);
 
         // Alinhado com a DB para a repetição idempotente devolver exatamente o mesmo reviewed_at.
         checkIn.MarkReviewed(PostgresTimestamps.Truncate(now));
         await _dbContext.SaveChangesAsync(cancellationToken);
-        return CheckInStoreResult.For(CheckInStoreResult.Status.Reviewed, checkIn);
+        return CheckInStoreResult.For(
+            CheckInStoreResult.Status.Reviewed,
+            checkIn,
+            locked.Value.Client.Name);
     }
 
     private async Task<DateOnly> GetLocalTodayAsync(

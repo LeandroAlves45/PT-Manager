@@ -4,7 +4,11 @@ import { z } from 'zod';
 
 import { useSaveInitialAssessmentMutation } from '@/features/clients/api/mutations';
 import { FormField } from '@/shared/components/FormField';
-import { ACTIVITY_LEVEL_LABELS, fitnessLevelOptions } from '@/features/clients/lib/labels';
+import {
+  ACTIVITY_LEVEL_LABELS,
+  fitnessLevelOptions,
+  MEASUREMENT_LABELS,
+} from '@/features/clients/lib/labels';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
 import { Button } from '@/shared/components/ui/button';
@@ -95,18 +99,6 @@ const assessmentSchema = z.object({
 type AssessmentValues = Omit<z.input<typeof assessmentSchema>, 'weight_kg' | 'height_cm'> & {
   weight_kg: number | null;
   height_cm: number | null;
-};
-
-const MEASUREMENT_LABELS: Record<keyof Measurements, string> = {
-  waist_cm: 'Cintura (cm)',
-  hip_cm: 'Anca (cm)',
-  chest_cm: 'Peito (cm)',
-  right_arm_cm: 'Braço direito (cm)',
-  left_arm_cm: 'Braço esquerdo (cm)',
-  right_thigh_cm: 'Coxa direita (cm)',
-  left_thigh_cm: 'Coxa esquerda (cm)',
-  right_calf_cm: 'Gémeo direito (cm)',
-  left_calf_cm: 'Gémeo esquerdo (cm)',
 };
 
 const INTAKE_TEXT_LABELS = {

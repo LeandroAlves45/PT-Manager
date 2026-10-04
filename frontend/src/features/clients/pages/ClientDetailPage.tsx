@@ -16,6 +16,7 @@ import {
 import { ClientForm } from '@/features/clients/components/ClientForm';
 import { InitialAssessmentForm } from '@/features/clients/components/InitialAssessmentForm';
 import { activityErrorMessage, ageFrom, initialsOf } from '@/features/clients/lib/labels';
+import { ClientCheckInsTab } from '@/features/check-ins';
 import { ClientSessionsTab } from '@/features/sessions';
 import {
   MealPlansPage,
@@ -56,16 +57,17 @@ const INVITE_ERRORS: Readonly<Record<string, string>> = {
 type Panel = 'edit' | 'assessment' | null;
 type Confirm = 'invite' | 'activity' | null;
 
-/** Separadores do detalhe; Treino, Nutrição, Suplementos e Check-ins. */
-const TABS = ['summary', 'sessions', 'training', 'nutrition', 'supplements'] as const;
+/** Separadores do detalhe; pela ordem do layout com Sessões a seguir ao Resumo */
+const TABS = ['summary', 'sessions', 'training', 'nutrition', 'supplements', 'check-ins'] as const;
 
 /**
- * Detalhe do cliente — cabeçalho e separadores "Resumo" e "Sessões" (`?tab=`).
+ * Detalhe do cliente — cabeçalho e separadores Resumo, Sessões, Treino, Nutrição,
+ * Suplementos e Check-ins (`?tab=`).
  *
  * Orçamento de pedidos: `GET /clients/{id}` e `GET /clients/{id}/summary` em paralelo ao
- * montar; a avaliação inicial só é pedida quando o trainer abre o painel dela; sessões e
- * packs só com o separador "Sessões" aberto (o Radix não monta separadores inativos). Os
- * separadores Treino, Nutrição, Suplementos e Check-ins entram nas fatias seguintes.
+ * montar; a avaliação inicial só é pedida quando o personal trainer abre o painel dela; cada
+ * separador só pede os seus dados quando está aberto (o Radix não monta separadores
+ * inativos).
  */
 export function ClientDetailPage() {
   const { clientId = '' } = useParams();
@@ -176,6 +178,7 @@ export function ClientDetailPage() {
           <TabsTrigger value="training">Treino</TabsTrigger>
           <TabsTrigger value="nutrition">Nutrição</TabsTrigger>
           <TabsTrigger value="supplements">Suplementos</TabsTrigger>
+          <TabsTrigger value="check-ins">Check-ins</TabsTrigger>
         </TabsList>
         <TabsContent value="summary">
           {summary.isPending ? (
@@ -208,6 +211,12 @@ export function ClientDetailPage() {
         </TabsContent>
         <TabsContent value="supplements">
           <SupplementAssignmentsPage client={{ id: data.id, name: data.name }} />
+        </TabsContent>
+        <TabsContent value="check-ins">
+          <ClientCheckInsTab
+            client={{ id: data.id, name: data.name }}
+            canSchedule={data.is_active}
+          />
         </TabsContent>
       </Tabs>
 

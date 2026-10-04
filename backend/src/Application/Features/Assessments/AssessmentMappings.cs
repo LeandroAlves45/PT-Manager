@@ -25,9 +25,14 @@ public static class AssessmentMappings
         assessment.UpdatedAt
     );
 
-    public static CheckInDto ToDto(this CheckIn checkIn, DateOnly localToday) => new(
+    public static CheckInDto ToDto(
+        this CheckIn checkIn,
+        string clientName,
+        DateOnly localToday
+    ) => new(
         checkIn.Id,
         checkIn.ClientId,
+        clientName,
         checkIn.CheckInDate,
         checkIn.TargetDate,
         checkIn.WeightKg,

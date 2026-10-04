@@ -203,7 +203,8 @@ public sealed class CheckInHandlersTests
         {
             Outcome = CheckInStoreResult.For(
                 CheckInStoreResult.Status.AlreadyInRequestedState,
-                checkIn)
+                checkIn,
+                "Ana Silva")
         };
         var handler = new SubmitCheckInResponseHandler(
             new SubmitCheckInResponseCommandValidator(),
@@ -381,7 +382,8 @@ public sealed class CheckInHandlersTests
         private Task<CheckInStoreResult> ResultOrCreated() =>
             Task.FromResult(Outcome ?? CheckInStoreResult.For(
                 CheckInStoreResult.Status.Created,
-                CreateCheckIn()));
+                CreateCheckIn(),
+                "Ana Silva"));
     }
 
     private sealed class QueryStub : ICheckInQueries

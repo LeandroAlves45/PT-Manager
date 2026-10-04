@@ -12,9 +12,9 @@ import { server } from '@/test/msw/server';
 
 const SUBSCRIPTION = `${API}/billing/subscription`;
 const SUBSCRIPTION_BODY = {
-  tier: 'BASIC',
-  status: 'active',
-  client_limit: 10,
+  tier: 'STARTER',
+  status: 'ACTIVE',
+  client_limit: 25,
   current_client_count: 3,
   trial_ends_at: null,
 };

@@ -89,9 +89,10 @@ public sealed class AssessmentOutcomeMapperTests
             null,
             Now);
 
-        var result = CheckInStoreResult.For(status, checkIn).ToResult(Today);
+        var result = CheckInStoreResult.For(status, checkIn, "Ana Silva").ToResult(Today);
 
         Assert.Equal(checkIn.Id, result.Value.Id);
+        Assert.Equal("Ana Silva", result.Value.ClientName);
     }
 
     private static InitialAssessment CreateInitialAssessment() => new(

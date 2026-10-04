@@ -7,6 +7,8 @@ import { AppShell } from '@/app/layouts/AppShell';
 import { AuthLayout } from '@/app/layouts/AuthLayout';
 import { PortalLayout } from '@/app/layouts/PortalLayout';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { BillingPage } from '@/features/billing/pages/BillingPage';
+import { CheckInsPage } from '@/features/check-ins/pages/CheckInsPage';
 import { AdminOverviewPage } from '@/features/admin-overview/pages/AdminOverviewPage';
 import { CatalogPage } from '@/features/admin-catalog/pages/CatalogPage';
 import { ModerationPage } from '@/features/admin-moderation/pages/ModerationPage';
@@ -19,6 +21,7 @@ import {
   TrainingPlansPage,
 } from '@/features/prescriptions';
 import { SessionsPage } from '@/features/sessions/pages/SessionsPage';
+import { SettingsPage } from '@/features/trainer-settings/pages/SettingsPage';
 import { TrainerDashboardPage } from '@/features/trainer-dashboard/pages/TrainerDashboardPage';
 import { RootRedirect } from '@/app/RootRedirect';
 import { PhasePlaceholderPage } from '@/shared/components/PhasePlaceholderPage';
@@ -74,13 +77,13 @@ const applicationRoutes: RouteObject[] = [
               { path: 'clients', element: <ClientsPage /> },
               { path: 'clients/:clientId', element: <ClientDetailPage /> },
               { path: 'sessions', element: <SessionsPage /> },
-              { path: 'check-ins', element: placeholder('Check-ins', '6E') },
+              { path: 'check-ins', element: <CheckInsPage /> },
               { path: 'training-plans', element: <TrainingPlansPage /> },
               { path: 'meal-plans', element: <MealPlansPage /> },
               { path: 'supplement-assignments', element: <SupplementAssignmentsPage /> },
               { path: 'library', element: <LibraryPage /> },
-              { path: 'settings', element: placeholder('Marca própria', '6E') },
-              { path: 'billing', element: placeholder('Subscrição', '6E') },
+              { path: 'settings', element: <SettingsPage /> },
+              { path: 'billing', element: <BillingPage /> },
             ],
           },
         ],

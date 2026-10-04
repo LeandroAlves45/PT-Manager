@@ -18,7 +18,7 @@ internal static class CheckInStoreResultMapper
             CheckInStoreResult.Status.Corrected or
             CheckInStoreResult.Status.Reviewed or
             CheckInStoreResult.Status.AlreadyInRequestedState =>
-                Result<CheckInDto>.Success(outcome.CheckIn!.ToDto(localToday)),
+                Result<CheckInDto>.Success(outcome.CheckIn!.ToDto(outcome.ClientName!, localToday)),
 
             CheckInStoreResult.Status.ClientNotFound =>
                 Result<CheckInDto>.Failure(ClientErrors.ClientNotFound),

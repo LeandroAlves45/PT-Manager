@@ -40,6 +40,7 @@ public sealed record CorrectCheckInRequest(
 public sealed record CheckInResponse(
     Guid Id,
     Guid ClientId,
+    string ClientName,
     DateOnly CheckInDate,
     DateOnly? TargetDate,
     decimal? WeightKg,
@@ -64,6 +65,7 @@ public sealed record CheckInResponse(
         return new(
             checkIn.Id,
             checkIn.ClientId,
+            checkIn.ClientName,
             checkIn.CheckInDate,
             checkIn.TargetDate,
             checkIn.WeightKg,

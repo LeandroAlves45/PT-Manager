@@ -23,7 +23,12 @@ describe('AppShell on desktop', () => {
   beforeEach(() => setViewport(1440));
 
   it('shows the trainer navigation and the client usage of a limited plan', async () => {
-    useSubscription({ tier: 'BASIC', status: 'active', client_limit: 10, current_client_count: 3 });
+    useSubscription({
+      tier: 'STARTER',
+      status: 'ACTIVE',
+      client_limit: 25,
+      current_client_count: 3,
+    });
 
     const { nav } = await openAs('trainer', '/trainer');
 
@@ -31,15 +36,17 @@ describe('AppShell on desktop', () => {
       'href',
       '/trainer/clients'
     );
-    expect(await screen.findByText('3 de 10 clientes')).toBeInTheDocument();
+    expect(await screen.findByText('3 de 25 clientes')).toBeInTheDocument();
+    expect(screen.getByText('Plano Starter')).toBeInTheDocument();
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    // [6E-5] Regressão D1: `ACTIVE` (o valor real) não é um problema de pagamento.
     expect(screen.queryByText('Pagamento por regularizar')).not.toBeInTheDocument();
   });
 
   it('shows an unlimited plan without a progress bar', async () => {
     useSubscription({
       tier: 'PRO',
-      status: 'trialing',
+      status: 'ACTIVE',
       client_limit: null,
       current_client_count: 42,
     });
@@ -52,9 +59,9 @@ describe('AppShell on desktop', () => {
 
   it('flags a subscription with a payment problem', async () => {
     useSubscription({
-      tier: 'BASIC',
-      status: 'past_due',
-      client_limit: 10,
+      tier: 'STARTER',
+      status: 'SUSPENDED',
+      client_limit: 25,
       current_client_count: 3,
     });
 
@@ -82,14 +89,19 @@ describe('AppShell on desktop', () => {
   });
 
   it('collapses the sidebar and hides the subscription card', async () => {
-    useSubscription({ tier: 'BASIC', status: 'active', client_limit: 10, current_client_count: 3 });
+    useSubscription({
+      tier: 'STARTER',
+      status: 'ACTIVE',
+      client_limit: 25,
+      current_client_count: 3,
+    });
     await openAs('trainer', '/trainer');
-    await screen.findByText('3 de 10 clientes');
+    await screen.findByText('3 de 25 clientes');
 
     await userEvent.click(screen.getByRole('button', { name: 'Recolher navegação' }));
 
     expect(screen.getByRole('button', { name: 'Expandir navegação' })).toBeInTheDocument();
-    expect(screen.queryByText('3 de 10 clientes')).not.toBeInTheDocument();
+    expect(screen.queryByText('3 de 25 clientes')).not.toBeInTheDocument();
   });
 
   it('does not load a subscription for the superuser', async () => {

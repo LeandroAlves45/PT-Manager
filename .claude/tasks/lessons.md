@@ -198,3 +198,18 @@ Lições capturadas depois de correções do utilizador.
   que gravar a seguir repetia o conflito.
 - **Antes de `npm ci`, verificar watchers do utilizador** (`Get-CimInstance Win32_Process`):
   um Vitest em watch prende binários nativos e o `npm ci` deixa `node_modules` partido.
+
+## 2026-10-02 — Sprint 6E-5 (blueprints)
+
+- **Fixtures com valores inventados escondem defeitos.** `tier: 'BASIC'`/`status: 'active'`
+  nunca existiram no backend (`FREE/STARTER/PRO`, `ACTIVE/...`) e o `SubscriptionCard`
+  passou três fases a mostrar "Pagamento por regularizar" sempre. Fixtures tipadas pelo
+  `schema.d.ts` não chegam quando o campo é `string`: copiar os valores dos value objects do
+  domínio e ter um teste com o valor real.
+- **Idempotência que depende de estado do browser parte no redirect.** Uma chave em memória
+  perde-se ao voltar de uma página alojada (Stripe). Antes de pensar em storage, ver se o
+  servidor consegue reconhecer a mesma operação por outra chave natural (trainer + plano + sessão
+  aberta).
+- **Mutação sobrevivente = teste fraco até prova em contrário.** FM3 e FM8 sobreviveram por
+  testes que passavam pelo motivo errado; nenhuma era equivalente.
+

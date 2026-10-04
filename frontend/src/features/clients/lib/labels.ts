@@ -1,12 +1,31 @@
 import { differenceInYears, parseISO } from 'date-fns';
 
 import { isApiProblem } from '@/shared/api/problem';
+import type { components } from '@/shared/api/schema';
 
 /**
  * Rótulos PT-PT dos valores que a API devolve em inglês, numa só fonte.
  *
  * Lista, detalhe e formulários importam daqui.
  */
+
+/**
+ * Rótulos dos perímetros corporais (`BodyMeasurementsPayload`), partilhados pela avaliação
+ * inicial e pela correção de check-ins.
+ */
+export const MEASUREMENT_LABELS: Readonly<
+  Record<keyof components['schemas']['BodyMeasurementsPayload'], string>
+> = {
+  waist_cm: 'Cintura (cm)',
+  hip_cm: 'Anca (cm)',
+  chest_cm: 'Peito (cm)',
+  right_arm_cm: 'Braço direito (cm)',
+  left_arm_cm: 'Braço esquerdo (cm)',
+  right_thigh_cm: 'Coxa direita (cm)',
+  left_thigh_cm: 'Coxa esquerda (cm)',
+  right_calf_cm: 'Gémeo direito (cm)',
+  left_calf_cm: 'Gémeo esquerdo (cm)',
+};
 
 /** Sexo biológico aceite pelo backend (`client_sex_invalid` para outro valor). */
 export const SEX_LABELS = { male: 'Masculino', female: 'Feminino' } as const;
