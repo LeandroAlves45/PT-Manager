@@ -35,8 +35,7 @@ function useBrandVariables(primary: BrandPair | null): void {
     style.setProperty('--ring', background);
 
     return () => {
-      for (const name of BRAND_VARIABLES)
-        style.removeProperty(name);
+      for (const name of BRAND_VARIABLES) style.removeProperty(name);
     };
   }, [background, foreground]);
 }

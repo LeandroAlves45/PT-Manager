@@ -1,5 +1,5 @@
-import type { components } from "@/shared/api/schema";
-import { brandInitial, DEFAULT_APP_NAME } from "@/shared/lib/brandTheme";
+import type { components } from '@/shared/api/schema';
+import { brandInitial, DEFAULT_APP_NAME } from '@/shared/lib/brandTheme';
 
 type PortalBranding = components['schemas']['PortalBrandingResponse'];
 

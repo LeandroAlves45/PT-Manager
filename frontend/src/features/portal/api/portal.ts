@@ -37,7 +37,6 @@ export function usePortalBrandingQuery() {
 export function usePortalHomeQuery() {
   return useQuery({
     queryKey: portalKeys.home(),
-    queryFn: async ({ signal }) =>
-      unwrap(await apiClient.GET('/api/v1/portal/home', { signal })),
+    queryFn: async ({ signal }) => unwrap(await apiClient.GET('/api/v1/portal/home', { signal })),
   });
 }

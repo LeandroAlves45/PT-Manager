@@ -71,9 +71,9 @@ export function pickForeground(background: string, minimum = AA_TEXT_CONTRAST): 
 
 function mix(color: Rgb, target: Rgb, amount: number): Rgb {
   return [
-    color[0] * (target[0] - color[0]) * amount,
-    color[1] * (target[1] - color[1]) * amount,
-    color[2] * (target[2] - color[2]) * amount,
+    color[0] + (target[0] - color[0]) * amount,
+    color[1] + (target[1] - color[1]) * amount,
+    color[2] + (target[2] - color[2]) * amount,
   ];
 }
 
@@ -94,8 +94,7 @@ export function adjustToContrast(
   const passes = (candidate: string) =>
     backgrounds.every((background) => contrastRatio(candidate, background) >= minimum);
 
-  if (passes(color))
-    return color.toLowerCase();
+  if (passes(color)) return color.toLowerCase();
 
   const lightest = Math.max(...backgrounds.map(relativeLuminance));
   const target = parseHex(lightest > 0.18 ? BLACK : WHITE);
@@ -103,8 +102,7 @@ export function adjustToContrast(
 
   for (let step = 1; step * MIX_STEP <= 1 + Number.EPSILON; step++) {
     const candidate = toHex(mix(source, target, Math.min(step * MIX_STEP, 1)));
-    if (passes(candidate))
-      return candidate;
+    if (passes(candidate)) return candidate;
   }
 
   return null;

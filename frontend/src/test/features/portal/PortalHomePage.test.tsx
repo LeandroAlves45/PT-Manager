@@ -85,11 +85,13 @@ describe('PortalHomePage', () => {
     await openHome();
 
     expect(
-      within(card('O meu treino de hoje')).getByText('O teu treinador ainda não atribuiu um plano.')
+      within(card('O meu treino de hoje')).getByText(
+        'O teu personal trainer ainda não atribuiu um plano de treino.'
+      )
     ).toBeInTheDocument();
     expect(
       within(card('Plano alimentar')).getByText(
-        'O teu treinador ainda não atribuiu um plano alimentar.'
+        'O teu personal trainer ainda não te atribuiu um plano alimentar.'
       )
     ).toBeInTheDocument();
     expect(
@@ -122,7 +124,9 @@ describe('PortalHomePage', () => {
     await openHome();
 
     const workout = card('O meu treino de hoje');
-    expect(within(workout).getByText('Hoje é dia de descanso.')).toBeInTheDocument();
+    expect(
+      within(workout).getByText('Hoje é dia de descanso. Aproveita para descansar e relaxar.')
+    ).toBeInTheDocument();
     expect(
       within(workout).getByText('Próximo treino: terça-feira, 06/10 · Semana 1 · Terça')
     ).toBeInTheDocument();
@@ -227,5 +231,21 @@ describe('PortalHomePage', () => {
     await screen.findByRole('heading', { name: 'Bom treino' });
     expect(router.state.location.pathname).toBe('/trainer');
     expect(requests).toBe(0);
+  });
+
+  // Uma rota desconhecida volta à raiz e daí ao Início, sem erro: só seguir o link prova que
+  // a ação do cartão abre um ecrã registado no router.
+  it.each([
+    ['Abrir treino', 'Treino de hoje', '/portal/today'],
+    ['Ver plano', 'Nutrição', '/portal/nutrition'],
+    ['Registar tomas', 'Suplementos', '/portal/supplements'],
+    ['Responder', 'Check-ins', '/portal/check-ins'],
+  ])('opens the portal page behind the "%s" action', async (action, heading, pathname) => {
+    const { router } = await openHome();
+
+    await userEvent.click(screen.getByRole('link', { name: action }));
+
+    expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(pathname);
   });
 });

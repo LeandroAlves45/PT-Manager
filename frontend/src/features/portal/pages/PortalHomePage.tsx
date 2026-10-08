@@ -216,7 +216,7 @@ function CheckInCard({ checkIn }: { checkIn: PortalHome['next_check_in'] }) {
       <HomeCard
         title="Check-in"
         icon={ClipboardCheck}
-        action={{ label: 'Responder', to: '/portal/check-in' }}
+        action={{ label: 'Responder', to: '/portal/check-ins' }}
       >
         <p className="font-display text-xl leading-tight">Tens um check-in para hoje.</p>
         <p className="text-muted-foreground text-sm">Só podes responder hoje.</p>

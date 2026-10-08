@@ -232,3 +232,23 @@ typecheck e o lint deixaram passar. O CI #24 apanhou-os pelos testes do blueprin
 - Numa lista filtrada em que a própria ação tira o item do filtro ("Por rever" → rever),
   esvaziar a última página deixa o ecrã vazio e sem paginação. Repor a última página que
   existe a partir do `total_count`.
+
+## 2026-10-08 — Fecho 6F-1: operador da mistura, rota do cartão, `testid` do patch
+
+**O que aconteceu.** Na aplicação manual do pack 6F-1 (`3111e98`):
+- `mix()` em `contrast.ts` ficou com `color * (target - color) * amount` em vez de `+`. O
+  `tsc` não vê nada (continua `number`) e saem hex inválidos como `#-a83-1f4-58`; 11 testes
+  caíram em cascata (contrast, brandTheme, PortalLayout, SettingsPage).
+- A ação "Responder" do Início apontava para `/portal/check-in`. O router só tem
+  `check-ins` e o `*` faz `Navigate to="/"`, por isso o cliente voltava ao Início sem erro.
+- O patch do `SettingsPage.test.tsx` ficou com `brand-preview-${theme}` onde o blueprint tem
+  `brand-preview-header-${theme}`: o cartão inteiro não tem a cor do cabeçalho.
+- Aspas duplas, `if` partido e JSX desalinhado em 9 ficheiros: o Prettier falhava.
+
+**A regra.**
+- Depois de aplicar um pack, correr o diff programático contra o `manifest.json` ignorando
+  comentários: qualquer linha de código diferente é defeito ou desvio a justificar.
+- Um link interno só fica provado seguindo-o até ao ecrã de destino (o `*` engole rotas
+  erradas). Os cartões do Início têm agora um teste que clica cada ação.
+- `npx prettier --write` nos ficheiros do pack antes do commit; o `--check` local dá falsos
+  avisos de CRLF (usar `--end-of-line auto` para confirmar).

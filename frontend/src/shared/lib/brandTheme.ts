@@ -81,21 +81,18 @@ export function resolveBrand(
 }
 
 function resolvePrimary(color: string | null, theme: BrandSurfaceTheme): BrandPair | null {
-  if (color === null || !isHexColor(color))
-    return null;
+  if (color === null || !isHexColor(color)) return null;
 
   const surface = BRAND_SURFACES[theme];
   const background = adjustToContrast(color, [surface.background, surface.card]);
-  if (background === null)
-    return null;
+  if (background === null) return null;
 
   const foreground = pickForeground(background);
   return foreground === null ? null : { background, foreground };
 }
 
 function resolveHeader(color: string | null): BrandPair | null {
-  if (color === null || !isHexColor(color))
-    return null;
+  if (color === null || !isHexColor(color)) return null;
 
   const foreground = pickForeground(color);
   return foreground === null ? null : { background: color.toLowerCase(), foreground };

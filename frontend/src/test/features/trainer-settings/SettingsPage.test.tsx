@@ -78,7 +78,7 @@ describe('SettingsPage', () => {
     await user.type(within(section('Marca')).getByLabelText('Cor de fundo'), '#112233');
 
     for (const theme of ['light', 'dark']) {
-      expect(screen.getByTestId(`brand-preview-${theme}`)).toHaveStyle({
+      expect(screen.getByTestId(`brand-preview-header-${theme}`)).toHaveStyle({
         backgroundColor: '#112233',
         color: '#ffffff',
       });
