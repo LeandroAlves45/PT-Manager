@@ -6,6 +6,16 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-08: Sprint 6F-1 FINALIZADA (frontend).**
+- A aplicação manual (`3111e98`) tinha 11 testes vermelhos. Corrigido:
+  - D1: `mix()` em `contrast.ts` com `*` em vez de `+`;
+  - D2: "Responder" ia para `/portal/check-in` e o `*` devolvia o cliente ao Início;
+  - D3: `testid` errado no patch do `SettingsPage.test`;
+  - D4: Prettier.
+- Teste novo de navegação dos cartões (FM20 e FM21 mortas).
+- 319 testes. Commit `37e9acd`, CI #27 verde. Faltam os gates manuais de UI.
+- Ver `Sessions/2026-10-08-sprint6f1-fecho-frontend.md`.
+
 **2026-10-04: Sprint 6F planeado (4 fases) e blueprints 6F-1 validados.**
 - Plano em `sprint_6F/00_plano_fase_6F_completa.md`:
   - 6F-1 casa e marca;

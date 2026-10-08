@@ -1,13 +1,20 @@
-# Estado ativo: Sprint 6F (portal do cliente). 6F-1 com blueprints validados
+# Estado ativo: Sprint 6F (portal do cliente). 6F-1 FINALIZADA, 6F-2 por planear
 
-Atualizado: 2026-10-04
+Atualizado: 2026-10-08
 
 ## Sprint 6F: portal do cliente
 
 **Ler primeiro** `docs/blueprints/frontend-files/sprint_6/sprint_6F/00_plano_fase_6F_completa.md`.
 Tem as fases, as decisões U1–U10, os contratos de todas as fases e as armadilhas.
 
-- **6F-1 BLUEPRINTS VALIDADOS (2026-10-04).**
+- **6F-1 FINALIZADA (2026-10-08).**
+  - Fecho do frontend em `37e9acd` (CI #27 verde): D1 mistura de cores, D2 rota do "Responder", D3
+    `testid` do patch, D4 Prettier.
+  - 319 testes e teste novo de navegação dos cartões.
+  - Relatório `sprint_6F1/09_relatorio_fecho_fase_6F1.md`.
+  - Ver `Sessions/2026-10-08-sprint6f1-fecho-frontend.md`.
+  - Faltam `QG6F1-UI-001` e `QG6F1-ISOLAMENTO-UI-001` (login manual).
+- **6F-1 blueprints (2026-10-04, histórico).**
   - Pack: `sprint_6F/sprint_6F1/01–08` + `manifest.json`, com 31 caminhos (24 integrais e 7
     patches `git apply --recount`).
   - Âmbito:
@@ -23,8 +30,7 @@ Tem as fases, as decisões U1–U10, os contratos de todas as fases e as armadil
     - round-trip 31/31.
   - Ver `Sessions/2026-10-04-sprint6f-plano-6f1-blueprints.md`.
 - **Próximo passo:**
-  1. O Leandro aplica o pack pela ordem do doc 01 (o doc 07 vai no mesmo commit), faz o reset
-     da BD dev (`QG6F1-RESET-001`) e corre os gates manuais do doc 08.
+  1. O Leandro corre os gates manuais do doc 08 (o reset já foi feito a 2026-10-07).
   2. Depois, os blueprints da 6F-2 (treino, plano, vídeo, backend `exercise_id` e
      `has_ready_video`).
 - 6F-2, 6F-3 e 6F-4 estão por gerar. O fecho do sprint fica em

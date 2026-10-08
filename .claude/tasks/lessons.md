@@ -241,3 +241,11 @@ Lições capturadas depois de correções do utilizador.
   ficam com a última mutação aplicada.
 - **O hook `PreToolUse` bloqueia comandos de shell com palavras SQL** (`truncate` é também
   classe Tailwind). Escrever ficheiros com Write e correr scripts a partir de ficheiro.
+
+## 2026-10-08: fecho da 6F-1
+
+- **Depois da aplicação manual de um pack, o primeiro passo é o diff programático contra o
+  `manifest.json`, ignorando os comentários.** Encontrou os 3 defeitos lógicos (`*` por `+`,
+  rota, `testid`) antes de qualquer leitura.
+- **O catch-all `*` → `/` esconde links internos errados.** Testar um `href` não chega:
+  seguir o link no router real e confirmar o ecrã de destino.
