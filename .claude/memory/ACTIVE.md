@@ -1,6 +1,34 @@
-# Estado ativo: Sprint 6E FINALIZADO (6E-1 a 6E-5)
+# Estado ativo: Sprint 6F (portal do cliente). 6F-1 com blueprints validados
 
 Atualizado: 2026-10-04
+
+## Sprint 6F: portal do cliente
+
+**Ler primeiro** `docs/blueprints/frontend-files/sprint_6/sprint_6F/00_plano_fase_6F_completa.md`.
+Tem as fases, as decisões U1–U10, os contratos de todas as fases e as armadilhas.
+
+- **6F-1 BLUEPRINTS VALIDADOS (2026-10-04).**
+  - Pack: `sprint_6F/sprint_6F1/01–08` + `manifest.json`, com 31 caminhos (24 integrais e 7
+    patches `git apply --recount`).
+  - Âmbito:
+    - marca com tom AA por tema;
+    - `body_color` só no cabeçalho;
+    - monograma e logo PT Manager;
+    - 5 itens na barra e Início com 4 cartões;
+    - pré-visualização da 6E-5 alinhada;
+    - seed (João, marca, `cliente2@`).
+  - Evidência na worktree `C:\ptm-tmp-6f` (apagada):
+    - 2920 testes backend e 315 frontend;
+    - 24/24 mutações mortas;
+    - round-trip 31/31.
+  - Ver `Sessions/2026-10-04-sprint6f-plano-6f1-blueprints.md`.
+- **Próximo passo:**
+  1. O Leandro aplica o pack pela ordem do doc 01 (o doc 07 vai no mesmo commit), faz o reset
+     da BD dev (`QG6F1-RESET-001`) e corre os gates manuais do doc 08.
+  2. Depois, os blueprints da 6F-2 (treino, plano, vídeo, backend `exercise_id` e
+     `has_ready_video`).
+- 6F-2, 6F-3 e 6F-4 estão por gerar. O fecho do sprint fica em
+  `sprint_6F/10_fecho_sprint_6F.md` (esqueleto).
 
 ## Sprint 6E — frontend trainer
 

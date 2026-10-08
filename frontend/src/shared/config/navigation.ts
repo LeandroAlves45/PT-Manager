@@ -6,6 +6,7 @@ import {
   ClipboardCheck,
   CreditCard,
   Dumbbell,
+  House,
   LayoutDashboard,
   Library,
   Palette,
@@ -85,15 +86,17 @@ const ADMIN_NAVIGATION: readonly NavigationGroup[] = [
 ];
 
 /**
- * Portal do cliente: barra inferior de quatro itens.
+ * Portal do cliente: barra inferior de cinco itens.
  *
- * Os check-ins pendentes aparecem como cartão na home e têm rota própria
- * (`/portal/check-ins`), mas não ocupam um item da barra.
+ * O Início (`/portal`) passou a ter item próprio (decisão U3): é a primeira coisa que
+ * o cliente vê e é lá que estão os cartões de suplementos e check-in. Os check-ins têm rota
+ * própria (`/portal/check-ins`), aberta a partir do cartão, sem item na barra.
  */
 const PORTAL_NAVIGATION: readonly NavigationGroup[] = [
   {
     label: 'Portal',
     items: [
+      { label: 'Início', route: '/portal', icon: House },
       { label: 'Treino', route: '/portal/today', icon: Dumbbell },
       { label: 'Nutrição', route: '/portal/nutrition', icon: UtensilsCrossed },
       { label: 'Suplementos', route: '/portal/supplements', icon: Boxes },

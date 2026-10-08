@@ -14,6 +14,7 @@ import { CatalogPage } from '@/features/admin-catalog/pages/CatalogPage';
 import { ModerationPage } from '@/features/admin-moderation/pages/ModerationPage';
 import { ClientDetailPage } from '@/features/clients/pages/ClientDetailPage';
 import { ClientsPage } from '@/features/clients/pages/ClientsPage';
+import { PortalHomePage } from '@/features/portal';
 import { LibraryPage } from '@/features/library/pages/LibraryPage';
 import {
   MealPlansPage,
@@ -96,7 +97,7 @@ const applicationRoutes: RouteObject[] = [
             path: '/portal',
             element: <PortalLayout />,
             children: [
-              { index: true, element: <Navigate to="/portal/today" replace /> },
+              { index: true, element: <PortalHomePage /> },
               { path: 'today', element: placeholder('Treino de hoje', '6F') },
               { path: 'nutrition', element: placeholder('Nutrição', '6F') },
               { path: 'supplements', element: placeholder('Suplementos', '6F') },

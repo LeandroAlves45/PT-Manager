@@ -6,6 +6,25 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-04: Sprint 6F planeado (4 fases) e blueprints 6F-1 validados.**
+- Plano em `sprint_6F/00_plano_fase_6F_completa.md`:
+  - 6F-1 casa e marca;
+  - 6F-2 treino com vídeo e backend aditivo;
+  - 6F-3 nutrição e suplementos;
+  - 6F-4 check-ins e perfil.
+- Pack `sprint_6F/sprint_6F1/01–08` + manifest (31 caminhos). Inclui:
+  - marca do trainer com tom ajustado ao AA nos dois temas;
+  - `body_color` só no cabeçalho;
+  - barra com 5 itens e Início novo;
+  - seed com o check-in do João, a marca do trainer 1 e a conta `cliente2@` da Marta (exige
+    reset da BD dev).
+- Evidência:
+  - 2920 testes backend e 315 frontend;
+  - 24/24 mutações mortas;
+  - round-trip 31/31.
+- Aplicação pelo Leandro pendente.
+- Ver `Sessions/2026-10-04-sprint6f-plano-6f1-blueprints.md`.
+
 **2026-10-04: Sprint 6E-5 FINALIZADA e Sprint 6E FECHADO.**
 - O CI #24 (`3c5382f`) falhou: 12/277 testes do frontend.
 - A causa foram três defeitos da aplicação manual que o typecheck deixou passar:

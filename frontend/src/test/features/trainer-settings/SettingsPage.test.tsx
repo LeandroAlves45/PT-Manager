@@ -77,10 +77,15 @@ describe('SettingsPage', () => {
     await user.type(name, '  Marta Coach ');
     await user.type(within(section('Marca')).getByLabelText('Cor de fundo'), '#112233');
 
-    expect(screen.getByTestId('brand-preview')).toHaveStyle({ backgroundColor: '#112233' });
-    expect(
-      within(screen.getByTestId('brand-preview')).getByText('Marta Coach')
-    ).toBeInTheDocument();
+    for (const theme of ['light', 'dark']) {
+      expect(screen.getByTestId(`brand-preview-${theme}`)).toHaveStyle({
+        backgroundColor: '#112233',
+        color: '#ffffff',
+      });
+      expect(
+        within(screen.getByTestId(`brand-preview-${theme}`)).getByText('Marta Coach')
+      ).toBeInTheDocument();
+    }
 
     await user.click(screen.getByRole('button', { name: 'Guardar marca' }));
 
@@ -114,9 +119,28 @@ describe('SettingsPage', () => {
     expect(
       screen.getByText('Usa uma cor no formato #RRGGBB ou deixa vazio para a cor do tema.')
     ).toBeInTheDocument();
-    // Uma cor inválida nunca chega ao `style` da pré-visualização.
-    expect(screen.getByText('Treino de hoje')).not.toHaveAttribute('style');
+    // Uma cor inválida nunca chega ao `style`; o botão fica com a cor PT
+    // Manager de cada tema e o cabeçalho sem cor própria.
+    const [light, dark] = screen.getAllByText('Treino de hoje');
+    expect(light).toHaveStyle({ backgroundColor: '#0077b6', color: '#ffffff' });
+    expect(dark).toHaveStyle({ backgroundColor: '#00a3e9', color: '#03131c' });
+    expect(screen.getByTestId('brand-preview-header-light')).not.toHaveAttribute('style');
     expect(patches).toBe(0);
+  });
+
+  it('previews the brand colour adjusted to each theme, as the portal shows it', async () => {
+    settingsHandler();
+    const user = userEvent.setup();
+    renderApp({ initialEntries: [ROUTE] });
+
+    await user.type(
+      within(await screen.findByRole('region', { name: 'Marca' })).getByLabelText('Cor principal'),
+      '#E8642A'
+    );
+
+    const [light, dark] = screen.getAllByText('Treino de hoje');
+    expect(light).toHaveStyle({ backgroundColor: '#ba5022', color: '#ffffff' });
+    expect(dark).toHaveStyle({ backgroundColor: '#e8642a', color: '#000000' });
   });
 
   it('keeps an unsaved draft when the settings are fetched again with a different name', async () => {

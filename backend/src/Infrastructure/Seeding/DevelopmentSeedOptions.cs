@@ -21,4 +21,10 @@ public sealed class DevelopmentSeedOptions
     public string ClientEmail { get; set; } = "cliente@ptmanager.local";
 
     public string SecondTrainerEmail { get; set; } = "trainer2@ptmanager.local";
+
+    /// <summary>
+    /// Conta do portal ligada à cliente do segundo personal trainer. Com duas contas de cliente em
+    /// tenants diferentes, o isolamento do portal e a marca de cada personal trainer verificam-se na UI.
+    /// </summary>
+    public string SecondClientEmail { get; set; } = "cliente2@ptmanager.local";
 }

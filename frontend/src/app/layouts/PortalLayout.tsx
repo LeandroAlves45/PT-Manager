@@ -1,30 +1,91 @@
+import { useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router';
 
 import { ProfileMenu } from '@/app/layouts/components/ProfileMenu';
 import { useAuth } from '@/app/providers/useAuth';
+import { useTheme } from '@/app/providers/useTheme';
 import { ThemeToggle } from '@/app/components/ThemeToggle';
+import { BrandMark, usePortalBrandingQuery } from '@/features/portal';
 import { navigationFor } from '@/shared/config/navigation';
+import { Skeleton } from '@/shared/components/ui/skeleton';
+import { DEFAULT_APP_NAME, resolveBrand, type BrandPair } from '@/shared/lib/brandTheme';
 import { cn } from '@/shared/lib/utils';
 
+/** Variavéis de `global.css` que a cor principal do personal trainer substitui no portal. */
+const BRAND_VARIABLES = ['--primary', '--primary-foreground', '--ring'] as const;
+
 /**
- * Moldura do portal do cliente: mobile-first, com barra inferior de quatro itens.
+ * Aplica a cor principal do personal trainer ao documento inteiro enquanto o portal está montado.
  *
- * Medidas: barra de 64 px mais a safe-area do
- * iOS, alvos de toque de pelo menos 44 px, e o item activo assinalado por ícone, texto e
- * barra superior — nunca só por cor, que é o que exige a WCAG 2.2.
+ * Vai para `document.documentElement` e não para um `div`: diálogos, menus e toasts são
+ * renderizados em portais fora da árvore do layout e têm de herdar a mesma cor. O estilo
+ * inline ganha a `:root` e a `.dark`; ao sair do portal (logout, troca de papel) as
+ * propriedades são removidas e os tokens PT Manager voltam.
+ */
+function useBrandVariables(primary: BrandPair | null): void {
+  const background = primary?.background ?? null;
+  const foreground = primary?.foreground ?? null;
+
+  useEffect(() => {
+    if (background === null || foreground === null) return;
+
+    const style = document.documentElement.style;
+    style.setProperty('--primary', background);
+    style.setProperty('--primary-foreground', foreground);
+    style.setProperty('--ring', background);
+
+    return () => {
+      for (const name of BRAND_VARIABLES)
+        style.removeProperty(name);
+    };
+  }, [background, foreground]);
+}
+
+/**
+ * Moldura do portal do cliente: mobile-first, cabeçalho com a marca do personal trainer e barra
+ * inferior de cinco itens.
+ *
+ * Medidas: barra de 64 px mais a safe-area do iOS, alvos de toque de pelo menos 44 px, e o
+ * item activo assinalado por ícone, texto e barra superior — nunca só por cor, que é o que
+ * exige a WCAG 2.2.
+ *
+ * Marca: a cor principal é ajustada ao tema e aplicada aos tokens; a cor de fundo só pinta o
+ * cabeçalho. Se a marca falhar a carregar, o portal continua com a marca PT Manager: a
+ * marca é decoração e não pode bloquear o treino do cliente.
  */
 export function PortalLayout() {
   const { session } = useAuth();
+  const { resolved } = useTheme();
+  const branding = usePortalBrandingQuery();
+
+  const brand = branding.data === undefined ? null : resolveBrand(branding.data, resolved);
+  useBrandVariables(brand?.primary ?? null);
 
   if (session === null) return null;
 
   const items = navigationFor(session.role).flatMap((group) => group.items);
+  const header = brand?.header ?? null;
 
   return (
     <div className="bg-background flex min-h-dvh flex-col">
-      <header className="border-border bg-background/72 sticky top-0 z-10 flex h-14 items-center justify-between border-b px-4 backdrop-blur-[14px]">
-        <span className="font-display text-lg">PT Manager</span>
-        <div className="flex items-center gap-1">
+      <header
+        data-testid="portal-header"
+        className={cn(
+          'border-border sticky top-0 z-10 flex h-14 items-center justify-between gap-2 border-b px-4',
+          header === null && 'bg-background/72 backdrop-blur-[14px]'
+        )}
+        style={
+          header === null
+            ? undefined
+            : { backgroundColor: header.background, color: header.foreground }
+        }
+      >
+        {branding.isPending ? (
+          <Skeleton className="h-8 w-40" aria-label="A carregar a marca…" />
+        ) : (
+          <BrandMark branding={branding.data ?? { app_name: DEFAULT_APP_NAME, logo_url: null }} />
+        )}
+        <div className="flex shrink-0 items-center gap-1">
           <ThemeToggle />
           <ProfileMenu />
         </div>
@@ -43,6 +104,8 @@ export function PortalLayout() {
             <li key={item.route} className="flex-1">
               <NavLink
                 to={item.route}
+                // O Início é a rota-pai: sem `end` ficaria ativo em todas as páginas do portal.
+                end={item.route === '/portal'}
                 className={({ isActive }) =>
                   cn(
                     'relative flex h-full min-h-11 flex-col items-center justify-center gap-1 text-xs',

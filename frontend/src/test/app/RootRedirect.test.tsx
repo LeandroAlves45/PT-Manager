@@ -15,7 +15,7 @@ describe('RootRedirect', () => {
   it.each([
     ['superuser', '/admin'],
     ['trainer', '/trainer'],
-    ['client', '/portal/today'],
+    ['client', '/portal'],
   ] as const)('sends a %s from the root to %s', async (role, home) => {
     server.use(...restorableSession({ role, trainer_id: role === 'trainer' ? 't-1' : null }));
 

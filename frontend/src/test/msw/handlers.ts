@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import type { components } from '@/shared/api/schema';
+import { portalBranding, portalHome } from '@/test/msw/portal-fixtures';
 import { dashboardResponse } from '@/test/msw/trainer-fixtures';
 
 /**
@@ -70,6 +71,8 @@ export const handlers = [
   http.get(`${API}/dashboard`, () =>
     HttpResponse.json(dashboardResponse({ active_client_count: 0 }))
   ),
+  http.get(`${API}/portal/branding`, () => HttpResponse.json(portalBranding())),
+  http.get(`${API}/portal/home`, () => HttpResponse.json(portalHome())),
 ];
 
 /** Arranque com cookie de refresh válido: a sessão é restaurada com os dados indicados. */

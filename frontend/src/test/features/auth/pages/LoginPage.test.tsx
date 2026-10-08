@@ -64,7 +64,7 @@ describe('LoginPage', () => {
 
     await submit();
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/portal/today'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/portal'));
   });
 
   it.each(['//evil.example', 'https://evil.example/phish', '/\\evil.example', 'trainer'])(

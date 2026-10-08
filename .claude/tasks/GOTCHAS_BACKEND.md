@@ -75,3 +75,16 @@ gerou `client_name?: null | string` no `schema.d.ts`, o que obriga o frontend a 
 
 **A regra.** Records de resposta não têm parâmetros com valor por omissão. Campo anulável é
 passado explicitamente (`ClientName: null`), e o contrato fica `client_name: null | string`.
+
+## Patch de testes aplicado só em parte: o teste falha por configuração, não por código (Sprint 6F-1, 2026-10-07)
+
+**O que aconteceu.** Na aplicação do doc 02 da 6F-1, o seeder e as options entraram inteiros, mas
+o patch de `DevelopmentSeedTests` só entrou nos primeiros hunks: faltava
+`DevelopmentSeed:SecondClientEmail` em `SeedSettings`, os helpers e três testes. O seed criava
+`cliente2@ptmanager.local` (valor por omissão) e o teste fazia login com `cliente2@seed.test`,
+o que dava 401.
+
+**A regra.** Uma nova propriedade em `*Options` com valor por omissão exige a chave
+correspondente nos settings explícitos dos testes. Depois de aplicar um patch, comparar
+`git diff --stat` com o tamanho do bloco do blueprint: uma diferença grande nas linhas `+`
+denuncia hunks em falta antes de correr qualquer teste.

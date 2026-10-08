@@ -47,9 +47,7 @@ describe('AdminOverviewPage', () => {
       );
       const { router } = renderApp({ initialEntries: ['/admin'] });
       await waitFor(() =>
-        expect(router.state.location.pathname).toBe(
-          role === 'trainer' ? '/trainer' : '/portal/today'
-        )
+        expect(router.state.location.pathname).toBe(role === 'trainer' ? '/trainer' : '/portal')
       );
       expect(requests).toBe(0);
     }

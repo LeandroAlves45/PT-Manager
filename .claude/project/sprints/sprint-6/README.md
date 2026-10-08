@@ -1,8 +1,8 @@
 # Sprint Pack — Sprint 6 (backend do layout + frontend)
 
-Estado em 2026-09-23: 6A e 6B fechadas no backend real; 6C fechada no frontend real.
-O pack de blueprints da 6D foi validado numa worktree temporária; a aplicação manual
-no projeto principal continua pendente (`QG6D-IMPL-001`). Packs em
+Estado em 2026-10-04: 6A e 6B fechadas no backend; 6C, 6D e 6E fechadas no frontend
+(6E em `134139c`, CI #25 verde). 6F planeada em 4 fases (`sprint_6F/00`), com a 6F-1
+validada em blueprints e a aplicação pendente. Packs em
 `docs/blueprints/backend-files/sprint_6/` e
 `docs/blueprints/frontend-files/sprint_6/`.
 
@@ -19,7 +19,7 @@ começa na 6C.
 | 6C | Frontend — Fundações | Vite + TS strict, tokens, AppShell com dropdown de perfil, cliente OpenAPI, sessão, seed, health, CI | 6B |
 | 6D | Frontend — Admin | Visão geral, fila de moderação, catálogos globais e estado de vídeo de exercício | 6C |
 | 6E | Frontend — Trainer | Dashboard, clientes, sessões/packs, planos, biblioteca, check-ins, definições, billing, vídeo 5D | 6C |
-| 6F | Frontend — Cliente | Treino de hoje com registo, nutrição, suplementos com tomas, check-ins, perfil, white-label | 6C |
+| 6F | Frontend — Cliente | 4 fases: 6F-1 casa e marca (white-label AA, Início), 6F-2 treino (+ vídeo, backend aditivo), 6F-3 nutrição e suplementos, 6F-4 check-ins e perfil | 6C |
 | 6G | Frontend — Auth UX | Login final, signup, email, password, convite, Google, Page 404 Not Found personalizada| 6C |
 
 Fora: categoria de alimento e notas de moderação (excluídos); CSV, notificações in-app e
@@ -29,7 +29,8 @@ pesquisa transversal (DEF-PROD-004 a 006).
 
 1. `.claude/memory/ACTIVE.md`
 2. Este README
-3. `docs/blueprints/plan_sprint_6_por_atualizar.md` (ponto de entrada local)
+3. `docs/blueprints/frontend-files/sprint_6/plan_sprint_6_por_atualizar.md` (ponto de entrada local)
+   e o `00` da fase ativa (`sprint_6F/00_plano_fase_6F_completa.md`)
 4. `.claude/project/frontend/layout/01_RELATORIO_ANALISE.md`
 5. Documento de layout do ecrã da fase (`layout/02`–`06`) e a imagem correspondente em
    `layout/assets/` (PNG; não abrir o Claude Design nem PDF)

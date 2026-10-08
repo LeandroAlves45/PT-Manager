@@ -164,8 +164,8 @@ describe('Training plans', () => {
     async (path) => {
       server.use(...restorableSession({ role: 'client' }));
       const { router } = renderApp({ initialEntries: [path] });
-      await screen.findByText(/Treino de hoje/);
-      expect(router.state.location.pathname).toBe('/portal/today');
+      await screen.findByRole('heading', { name: 'Hoje' });
+      expect(router.state.location.pathname).toBe('/portal');
     }
   );
 });

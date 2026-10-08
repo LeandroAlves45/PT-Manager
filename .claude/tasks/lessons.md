@@ -227,3 +227,17 @@ Lições capturadas depois de correções do utilizador.
 - **Polling limitado conta tentativas, não sucessos.** `dataUpdateCount` não sobe com o
   servidor em baixo. Somar `errorUpdateCount` e extrair a decisão para uma função pura
   testável, sem esperas reais de 30 s.
+
+## 2026-10-04: planeamento da 6F e blueprints da 6F-1
+
+- **Mudar a home de um papel parte os testes de redirect das outras features.** Antes de
+  trocar o destino de `homeRouteFor` ou o index de uma área, procurar a rota antiga em
+  `src/test`. Acrescentar handlers MSW por omissão para os pedidos da nova home.
+- **O "hoje" do seed de desenvolvimento é UTC; o do portal é o fuso do trainer.** Dados que o
+  portal filtra por "hoje" usam `LocalDates.Today` com o fuso das definições.
+- **No Vitest com `css: false`, um `import '….css?raw'` devolve vazio.** Para ler CSS num
+  teste: `import('node:' + 'fs')` e um caminho relativo a `frontend/`.
+- **Depois de mutações no backend, reconstruir** antes do gate final: os binários Release
+  ficam com a última mutação aplicada.
+- **O hook `PreToolUse` bloqueia comandos de shell com palavras SQL** (`truncate` é também
+  classe Tailwind). Escrever ficheiros com Write e correr scripts a partir de ficheiro.

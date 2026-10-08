@@ -375,7 +375,7 @@ describe('SessionsPage', () => {
     );
     const { router } = renderApp({ initialEntries: [ROUTE] });
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/portal/today'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/portal'));
     expect(requests).toBe(0);
   }, 15000);
 

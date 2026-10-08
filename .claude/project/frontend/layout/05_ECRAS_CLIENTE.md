@@ -11,7 +11,7 @@ treinador") a partir de `GET /portal/branding` (`app_name`, `logo_url`).
 
 | Cartão | Texto do mockup | Origem | Estado |
 |---|---|---|---|
-| O meu treino de hoje | "Empurrar A · 5 exercícios" | Treino de hoje (6B) | ⚠️ hoje só `GET /portal/my-plan` sem noção de "hoje". "Empurrar A" não existe no modelo (o dia só tem `WeekNumber`, `DayOfWeek` e `Notes` opcional): título "Semana 3 · Terça", notas do dia como subtítulo se existirem |
+| O meu treino de hoje | "Empurrar A · 5 exercícios" | Treino de hoje (6B) | ✅ `GET /portal/home` (cartão) e `GET /portal/my-workout/today` existem desde a 6B (nota 2026-10-04; antes só havia `my-plan`). "Empurrar A" não existe no modelo (o dia só tem `WeekNumber`, `DayOfWeek` e `Notes` opcional): título "Semana 3 · Terça", notas do dia como subtítulo se existirem |
 | Plano alimentar | "2 340 kcal · 4 refeições" | `GET /portal/my-nutrition` (`target_kcal`, `meals[]`) | ✅ |
 | Suplementos | "3 tomas · 1 em atraso" | `GET /portal/my-supplements/intakes/today` (6A) | ⚠️ ajuste: "X de Y tomadas" / "1 por tomar" — sem "em atraso" (decisão 6A D3) |
 | Check-in semanal | "responder até 21/09/2026" | `GET /portal/my-check-ins/due` | ⚠️ `due` só devolve check-ins com data de hoje; "responder até" depende da semântica de `TargetDate` (6B) |
@@ -46,6 +46,14 @@ treinador") a partir de `GET /portal/branding` (`app_name`, `logo_url`).
 | "Empurrar A" | Não existe nome de treino A/B; ver §1 |
 | "~55 min" | Não existe duração estimada no backend: remover ou calcular no blueprint 6B e documentar a fórmula |
 | Cor `primary_color` do trainer | `GET /portal/branding` devolve `primary_color` e `body_color` (opcionais); sem cor → marca PT Manager |
+
+### Atualização 2026-10-04 (plano 6F)
+
+Decisões e contratos atuais em `docs/blueprints/frontend-files/sprint_6/sprint_6F/00_plano_fase_6F_completa.md`:
+- Início com item próprio na barra (5 itens);
+- "~55 min" removido;
+- vídeo do exercício na 6F-2 (o backend passa a expor `exercise_id`/`has_ready_video`);
+- a cor principal tem o tom ajustado ao AA por tema, e `body_color` pinta só o cabeçalho.
 
 ### Estados a desenhar na 6F
 

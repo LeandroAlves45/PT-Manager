@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Time;
 using Domain.Entities.Administration;
 using Domain.Entities.Assessments;
 using Domain.Entities.Billing;
@@ -64,11 +65,12 @@ public sealed class DevelopmentDataSeeder
         await SeedSecondTrainerTenantAsync(now, cancellationToken);
 
         _logger.LogInformation(
-            "Development seed completed successfully. Accounts: {Superuser}, {Trainer}, {Client}, {SecondTrainer}",
+            "Development seed completed successfully. Accounts: {Superuser}, {Trainer}, {Client}, {SecondTrainer}, {SecondClient}",
             _options.SuperuserEmail,
             _options.TrainerEmail,
             _options.ClientEmail,
-            _options.SecondTrainerEmail);
+            _options.SecondTrainerEmail,
+            _options.SecondClientEmail);
     }
 
     /// <summary>
@@ -93,6 +95,7 @@ public sealed class DevelopmentDataSeeder
             new EmailAddress(_options.TrainerEmail).Normalized,
             new EmailAddress(_options.ClientEmail).Normalized,
             new EmailAddress(_options.SecondTrainerEmail).Normalized,
+            new EmailAddress(_options.SecondClientEmail).Normalized,
         };
 
         var users = await context.Users
@@ -112,6 +115,7 @@ public sealed class DevelopmentDataSeeder
         RequireUser(expectedEmails[1], "trainer");
         RequireUser(expectedEmails[2], "client");
         RequireUser(expectedEmails[3], "trainer");
+        RequireUser(expectedEmails[4], "client");
 
         var trainerId = users
             .Where(user => user.NormalizedEmail == expectedEmails[1])
@@ -243,7 +247,7 @@ public sealed class DevelopmentDataSeeder
                 "check-ins",
                 context.CheckIns.IgnoreQueryFilters()
                     .Where(entity => entity.OwnerTrainerId == trainerId.Value),
-                minimum: 2);
+                minimum: 3);
             await RequireCountAsync(
                 "pack type",
                 context.PackTypes.IgnoreQueryFilters()
@@ -542,6 +546,9 @@ public sealed class DevelopmentDataSeeder
 
         var subscription = new TrainerSubscription(trainerId, now.AddDays(30), now);
         var settings = new Domain.Entities.TrainerSettings.TrainerSettings(trainerId, now);
+        // Marca própria sem logo: o portal do João mostra o white-label (cor ajustada ao
+        // contraste e monograma), e o da Marta, sem marca, mostra o PT Manager.
+        settings.UpdateBranding("Salgado Performance", "#E8642A", "#1F1A17", now);
         db.TrainerSubscriptions.Add(subscription);
         db.TrainerSettings.Add(settings);
 
@@ -727,7 +734,9 @@ public sealed class DevelopmentDataSeeder
                 trainerId, ana.Id, null, new DateTimeOffset(now.Date.AddDays(1).AddHours(18), TimeSpan.Zero),
                 45, "Estúdio", "avaliação", null, now));
 
-        // 8. Check-ins: um respondido por rever e um por responder hoje.
+        // 8. Check-ins: um respondido por rever e dois por responder hoje. O do João usa o
+        // dia local do trainer, o mesmo que o portal usa para aceitar a resposta; com a data
+        // UTC, entre a meia-noite UTC e a de Lisboa o check-in seria de ontem.
         var answered = new CheckIn(trainerId, joao.Id, today.AddDays(-3), today.AddDays(-3), now);
         answered.SubmitResponse(
             weightKg: 78.4m, bodyFatPercentage: 18m, notes: "Semana estável.",
@@ -737,7 +746,9 @@ public sealed class DevelopmentDataSeeder
             localToday: today.AddDays(-3), now);
 
         var pending = new CheckIn(trainerId, ana.Id, today, today, now);
-        db.CheckIns.AddRange(answered, pending);
+        var localToday = LocalDates.Today(now, TimeZoneInfo.FindSystemTimeZoneById(settings.Timezone));
+        var joaoDue = new CheckIn(trainerId, joao.Id, localToday, localToday, now);
+        db.CheckIns.AddRange(answered, pending, joaoDue);
 
         // 9. Suplemento atribuído, com a toma de hoje registada.
         var assignment = new ClientSupplementAssignment(
@@ -768,7 +779,8 @@ public sealed class DevelopmentDataSeeder
     }
 
     /// <summary>
-    /// Semeia um segundo tenant mínimo -> conta, subscrição, definições e um cliente sem conta.
+    /// Semeia um segundo tenant mínimo -> conta, subscrição, definições e uma cliente com
+    /// conta no portal.
     /// </summary>
     /// <remarks>
     /// Serve essencialmente para testar a UI no frontend e validar que um personal trainer
@@ -815,13 +827,25 @@ public sealed class DevelopmentDataSeeder
         db.TrainerSubscriptions.Add(subscription);
         db.TrainerSettings.Add(new Domain.Entities.TrainerSettings.TrainerSettings(trainerId, now));
 
-        db.Clients.Add(NewClient(
+        var clientUser = CreateAccount(
+            scope,
+            new EmailAddress(_options.SecondClientEmail),
+            "client",
+            "Marta Figueiredo",
+            now);
+        clientUser.ConfirmEmail(now);
+        db.Users.Add(clientUser);
+
+        var marta = NewClient(
             trainerId,
             "Marta Figueiredo",
             "marta@ptmanager.local",
             "+351912345680",
             today,
-            now));
+            now);
+        marta.AttachUser(clientUser.Id, now);
+        db.Clients.Add(marta);
+
         subscription.RegisterClientAdded(now);
 
         await db.SaveChangesAsync(cancellationToken);

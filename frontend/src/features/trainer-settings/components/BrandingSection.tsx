@@ -12,6 +12,7 @@ import type { components } from '@/shared/api/schema';
 import { FormField } from '@/shared/components/FormField';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import { BRAND_SURFACES, resolveBrand } from '@/shared/lib/brandTheme';
 
 type Settings = components['schemas']['TrainerSettingsResponse'];
 
@@ -183,8 +184,12 @@ function mappedField(error: unknown): keyof BrandingValues | undefined {
 }
 
 /**
- * Pré-visualização do cabeçalho do portal. Só aplica uma cor quando é um hexadecimal
- * válido: o valor vai para um `style`, nunca texto livre.
+ * Pré-visualização do portal nos dois temas, com o mesmo algoritmo que o portal usa
+ * (`resolveBrand`): a cor principal sai com o tom ajustado ao AA e a cor de fundo pinta só
+ * o cabeçalho, com texto preto ou branco. Assim o personal trainer vê o que o cliente vai ver, e
+ * porque é que um laranja claro aparece mais escuro no tema claro.
+ *
+ * Só chega ao `style` uma cor que passou em `isHexColor`; texto livre nunca.
  */
 function BrandPreview({
   appName,
@@ -197,32 +202,54 @@ function BrandPreview({
   bodyColor: string;
   logoUrl: string | null;
 }) {
-  const primary = HEX_COLOR.test(primaryColor.trim()) ? primaryColor.trim() : undefined;
-  const body = HEX_COLOR.test(bodyColor.trim()) ? bodyColor.trim() : undefined;
+  const branding = {
+    primary_color: primaryColor.trim() === '' ? null : primaryColor.trim(),
+    body_color: bodyColor.trim() === '' ? null : bodyColor.trim(),
+  };
+  const name = appName.trim() === '' ? 'Nome da app' : appName.trim();
 
   return (
     <figure className="space-y-2">
       <figcaption className="text-muted-foreground text-xs">Pré-visualização do portal</figcaption>
-      <div
-        data-testid="brand-preview"
-        className="border-border bg-card space-y-4 rounded-xl border p-4"
-        style={body === undefined ? undefined : { backgroundColor: body }}
-      >
-        <div className="flex items-center gap-2">
-          {logoUrl !== null && (
-            <img src={logoUrl} alt="" className="size-8 rounded object-contain" />
-          )}
-          <span className="font-display truncate text-lg">
-            {appName.trim() === '' ? 'Nome da app' : appName.trim()}
-          </span>
-        </div>
-        <span
-          className="bg-primary text-primary-foreground inline-flex rounded-md px-3 py-1.5 text-sm"
-          style={primary === undefined ? undefined : { backgroundColor: primary }}
-        >
-          Treino de hoje
-        </span>
-      </div>
+      {(['light', 'dark'] as const).map((theme) => {
+        const surface = BRAND_SURFACES[theme];
+        const brand = resolveBrand(branding, theme);
+        return (
+          <div
+            key={theme}
+            data-testid={`brand-preview-${theme}`}
+            className="border-border overflow-hidden rounded-xl border"
+            style={{ backgroundColor: surface.card, color: surface.foreground }}
+          >
+            <div
+              data-testid={`brand-preview-header-${theme}`}
+              className="flex items-center gap-2 border-b border-current/10 px-3 py-2"
+              style={
+                brand.header === null
+                  ? undefined
+                  : { backgroundColor: brand.header.background, color: brand.header.foreground }
+              }
+            >
+              {logoUrl !== null && (
+                <img src={logoUrl} alt="" className="size-8 rounded object-contain" />
+              )}
+              <span className="font-display truncate text-lg">{name}</span>
+            </div>
+            <div className="flex items-center justify-between gap-2 p-3">
+              <span className="text-xs">{theme === 'light' ? 'Tema claro' : 'Tema escuro'}</span>
+              <span
+                className="inline-flex rounded-md px-3 py-1.5 text-sm"
+                style={{
+                  backgroundColor: brand.primary?.background ?? surface.primary,
+                  color: brand.primary?.foreground ?? surface.primaryForeground,
+                }}
+              >
+                Treino de hoje
+              </span>
+            </div>
+          </div>
+        );
+      })}
     </figure>
   );
 }

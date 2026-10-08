@@ -8,9 +8,9 @@ import { renderApp } from '@/test/render';
 
 describe('Trainer routes of the 6E-5', () => {
   it.each([
-    ['client', '/trainer/check-ins', '/portal/today'],
-    ['client', '/trainer/settings', '/portal/today'],
-    ['client', '/trainer/billing', '/portal/today'],
+    ['client', '/trainer/check-ins', '/portal'],
+    ['client', '/trainer/settings', '/portal'],
+    ['client', '/trainer/billing', '/portal'],
     ['superuser', '/trainer/check-ins', '/admin'],
   ] as const)('sends a %s away from %s without loading trainer data', async (role, entry, home) => {
     const requests: string[] = [];

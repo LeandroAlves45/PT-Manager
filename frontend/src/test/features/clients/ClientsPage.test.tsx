@@ -262,7 +262,7 @@ describe('ClientsPage', () => {
     );
     const { router } = renderApp({ initialEntries: ['/trainer/clients'] });
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/portal/today'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/portal'));
     expect(requests).toBe(0);
   });
 });

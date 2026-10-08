@@ -227,7 +227,7 @@ describe('TrainerDashboardPage', () => {
 
       await waitFor(() =>
         expect(router.state.location.pathname).toBe(
-          role === 'superuser' ? '/admin' : '/portal/today'
+          role === 'superuser' ? '/admin' : '/portal'
         )
       );
       expect(requests).toBe(0);
