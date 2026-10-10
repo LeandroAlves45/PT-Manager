@@ -6,6 +6,16 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-10: Sprint 6F-2 FINALIZADA (frontend).**
+- A aplicação manual (`41c02a9`) tinha 12 testes vermelhos. Corrigido em `5310809`:
+  - D1: peso e RPE planeados sem casas decimais;
+  - D2: `formatDecimal` com casa fixa partia as repetições ("8,0");
+  - D3 (defeito do pack): código de validação em `errors[]`, novo `workoutFailureMessage`;
+  - D4–D7: repetir o vídeo, erro antigo no diálogo, `aria-valuenow`, copy.
+- 10 testes novos, 382 no total; 33/33 mutações mortas. CI #31 verde.
+- Blueprints 04–07 e manifest realinhados. Faltam os gates manuais e `QG6F2-AUDIT-001`.
+- Ver `Sessions/2026-10-10-sprint6f2-fecho-frontend.md`.
+
 **2026-10-09: Sprint 6F-2 blueprints validados (treino do portal).**
 - Pack `sprint_6F/sprint_6F2/01–08` + manifest, com 38 caminhos (32 integrais e 6 patches).
   Âmbito:
@@ -19,7 +29,7 @@ notas de `.claude/memory/Sessions/`.
   - 27 mutações mortas e 1 equivalente (BM2, Global Query Filter);
   - round-trip 38/38.
 - `npm audit`: `source-map-js` (só em desenvolvimento) fica em `QG6F2-AUDIT-001`.
-- Aplicação pelo Leandro pendente. Ver `Sessions/2026-10-09-sprint6f2-blueprints.md`.
+- Histórico: aplicado e fechado em 2026-10-10. Ver `Sessions/2026-10-09-sprint6f2-blueprints.md`.
 
 **2026-10-08: Sprint 6F-1 FINALIZADA (frontend).**
 - A aplicação manual (`3111e98`) tinha 11 testes vermelhos. Corrigido:

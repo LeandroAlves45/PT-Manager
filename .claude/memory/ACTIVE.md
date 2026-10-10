@@ -1,13 +1,24 @@
-# Estado ativo: Sprint 6F (portal do cliente). 6F-1 FINALIZADA, 6F-2 com blueprints validados
+# Estado ativo: Sprint 6F (portal do cliente). 6F-1 e 6F-2 FINALIZADAS, 6F-3 por gerar
 
-Atualizado: 2026-10-09
+Atualizado: 2026-10-10
 
 ## Sprint 6F: portal do cliente
 
 **Ler primeiro** `docs/blueprints/frontend-files/sprint_6/sprint_6F/00_plano_fase_6F_completa.md`.
 Tem as fases, as decisões U1–U15, os contratos de todas as fases e as armadilhas.
 
-- **6F-2 blueprints validados (2026-10-09).**
+- **6F-2 FINALIZADA (2026-10-10).**
+  - Aplicação do Leandro em `f0c827b` (backend) e `41c02a9` (frontend, 12 testes vermelhos).
+  - Fecho em `5310809` (CI #31 verde): D1 decimais do plano, D2 `formatDecimal` partia as
+    repetições, D3 códigos de validação em `errors[]`, D4–D7 (vídeo, diálogo, `aria-valuenow`,
+    copy).
+  - 382 testes, 33/33 mutações, blueprints realinhados.
+  - Relatório `sprint_6F2/09_relatorio_fecho_fase_6F2.md`.
+  - Ver `Sessions/2026-10-10-sprint6f2-fecho-frontend.md`.
+  - Faltam os gates manuais `QG6F2-UI-001`, `QG6F2-ISOLAMENTO-UI-001`, `QG6F2-VIDEO-001`,
+    `QG6F2-PESO-001` e o `QG6F2-AUDIT-001`.
+  - **Próximo passo:** blueprints da 6F-3 (nutrição, suplementos e tomas de hoje).
+- **6F-2 blueprints validados (2026-10-09, histórico).**
   - Pack: `sprint_6F/sprint_6F2/01–08` + `manifest.json`, com 38 caminhos (32 integrais e 6
     patches).
   - Âmbito:
@@ -21,8 +32,6 @@ Tem as fases, as decisões U1–U15, os contratos de todas as fases e as armadil
     - Vitest 372;
     - 27 mutações mortas e 1 equivalente;
     - round-trip 38/38.
-  - **Próximo passo:** o Leandro aplica os docs 02–07 (o 07 no mesmo commit que o 04–06),
-    regenera o `schema.d.ts` e corre os gates do doc 08. Depois, os blueprints da 6F-3.
   - Ver `Sessions/2026-10-09-sprint6f2-blueprints.md`.
 
 - **6F-1 FINALIZADA (2026-10-08).**
