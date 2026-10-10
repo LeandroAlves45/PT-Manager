@@ -44,7 +44,7 @@ export function PortalTodayPage() {
     return (
       <section className="space-y-4">
         <Skeleton className="h-10 w-48" />
-        <div role="status" aria-label="A carregar o treino..." className="space-y-3">
+        <div role="status" aria-label="A carregar o treino…" className="space-y-3">
           <Skeleton className="h-24" />
           <Skeleton className="h-40" />
           <Skeleton className="h-40" />

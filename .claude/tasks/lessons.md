@@ -263,3 +263,20 @@ Lições capturadas depois de correções do utilizador.
 - **Todo o `decimal` de entrada precisa de máximo abaixo do limite da coluna** (ver
   `GOTCHAS_BACKEND.md`, 2026-10-09). Provar o 500 com um teste temporário antes de propor a
   correção.
+
+## 2026-10-10: fecho da 6F-2
+
+- **Um formatador que pré-preenche um campo tem de ser lido de volta pelo parser desse campo.**
+  `formatDecimal` com casa fixa escrevia "8,0" nas repetições e o `parseReps` recusava-o. Os
+  testes unitários de cada função passavam sozinhos; só o ecrã junta as duas. Teste de ida e
+  volta: registar sem editar.
+- **O código de um erro de validação não está no `title`.** O backend responde
+  `validation_failed` e põe o código por campo em `errors[]`. Um mapa de mensagens por
+  `ApiProblem.code` nunca vê `training_weight_invalid`. Testar com o corpo real do 400.
+- **Nunca correr uma ferramenta do projeto (Prettier com plugins) sobre ficheiros fora do
+  projeto.** No `%TEMP%` bloqueou a máquina três vezes. À segunda falha igual, mudar de
+  abordagem em vez de repetir com mais um `timeout`.
+- **Fallback de mensagem partilhado tem de servir todos os chamadores.** "Não foi possível
+  guardar a série" também aparecia ao desmarcar e ao concluir o treino.
+- **Comando longo em segundo plano com o harness de mutações:** guardar antes o `git diff` num
+  patch, para provar no fim que a working tree voltou ao estado de partida.

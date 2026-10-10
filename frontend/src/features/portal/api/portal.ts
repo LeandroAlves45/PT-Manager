@@ -69,9 +69,10 @@ export function usePortalPlanQuery() {
 }
 
 /**
- * Treino de hoje: estado do dia, prescrição e o registo mais recente de cada série.
+ * Volta a ler o treino de hoje e o cartão do Início depois de uma escrita.
  *
- * O "hoje" é o `local_date` da API (fuso do personal trainer), nunca o relógio do browser.
+ * Usa-se em `onSettled`: também corre quando a escrita falha, porque um 409 quer dizer que o
+ * ecrã estava desatualizado. Devolve a promessa para a mutation só terminar com os dados novos.
  */
 function useRefreshWorkout() {
   const queryClient = useQueryClient();

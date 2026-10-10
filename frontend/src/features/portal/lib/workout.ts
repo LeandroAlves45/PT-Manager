@@ -1,3 +1,4 @@
+import { isApiProblem } from '@/shared/api/problem';
 import { formatNumber } from '@/shared/lib/format';
 
 /**
@@ -64,8 +65,8 @@ export function plannedSetLabel(set: PlannedSet): string {
   const parts = [`Série ${formatNumber(set.set_number)}`];
 
   if (set.planned_reps !== null) parts.push(`${formatNumber(set.planned_reps)} reps`);
-  if (set.planned_weight_kg !== null) parts.push(`${formatNumber(set.planned_weight_kg)} kg`);
-  if (set.planned_rpe !== null) parts.push(`RPE ${formatNumber(set.planned_rpe)}`);
+  if (set.planned_weight_kg !== null) parts.push(`${formatDecimal(set.planned_weight_kg)} kg`);
+  if (set.planned_rpe !== null) parts.push(`RPE ${formatDecimal(set.planned_rpe)}`);
 
   const rest = [set.rest_seconds_min, set.rest_seconds_max].filter((value) => value !== null);
   if (rest.length > 0) parts.push(`${range(Math.min(...rest), Math.max(...rest))} s`);
@@ -89,9 +90,14 @@ export function progressPercent(logged: number, planned: number): number {
   return planned === 0 ? 0 : Math.round((logged / planned) * 100);
 }
 
-/** Decimal em PT sem casas fixas nem separador de milhares: 62.5 -> "62,5" */
+/**
+ * Decimal em PT sem casas fixas nem separador de milhares: 62.5 -> "62,5" e 8 -> "8".
+ *
+ * Sem casas fixas de propósito: o resultado pré-preenche os campos da série, e "8,0" nas
+ * repetições seria recusado por {@link parseReps}.
+ */
 export function formatDecimal(value: number): string {
-  return new Intl.NumberFormat('pt-PT', { minimumFractionDigits: 1, useGrouping: false }).format(
+  return new Intl.NumberFormat('pt-PT', { maximumFractionDigits: 2, useGrouping: false }).format(
     value
   );
 }
@@ -136,6 +142,18 @@ const WORKOUT_ERROR_MESSAGES: Record<string, string> = {
 export function workoutErrorMessage(code: string | null): string {
   return (
     (code === null ? undefined : WORKOUT_ERROR_MESSAGES[code]) ??
-    'Não foi possível guardar a série. Tenta novamente.'
+    'Não foi possível guardar. Tenta novamente.'
   );
+}
+
+/**
+ * Mensagem PT para a falha de uma escrita do treino (registar, corrigir, desmarcar, concluir).
+ *
+ * Numa falha de validação o `title` do ProblemDetails é sempre `validation_failed`; o código
+ * que interessa (`training_weight_invalid`, ...) vem no primeiro item de `errors[]`.
+ */
+export function workoutFailureMessage(failure: unknown): string {
+  if (!isApiProblem(failure)) return workoutErrorMessage(null);
+
+  return workoutErrorMessage(failure.fieldErrors[0]?.code ?? failure.code);
 }

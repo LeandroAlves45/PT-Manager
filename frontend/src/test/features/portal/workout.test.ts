@@ -9,9 +9,11 @@ import {
   prescriptionSummary,
   progressPercent,
   workoutErrorMessage,
+  workoutFailureMessage,
   workoutSize,
   type PlannedSet,
 } from '@/features/portal/lib/workout';
+import { toApiProblem } from '@/shared/api/problem';
 
 function planned(overrides: Partial<PlannedSet> = {}): PlannedSet {
   return {
@@ -137,7 +139,7 @@ describe('parseReps', () => {
 describe('workoutErrorMessage', () => {
   it('translates known codes and falls back for unknown ones', () => {
     expect(workoutErrorMessage('workout_already_completed')).toBe(
-      'O treino já foi concluído: já não podes desmarcar séries.'
+      'O treino já foi concluído. Já não podes desmarcar séries.'
     );
     expect(workoutErrorMessage('training_weight_invalid')).toBe(
       'O peso tem de estar entre 0 e 1000 kg.'
@@ -146,6 +148,26 @@ describe('workoutErrorMessage', () => {
       'Não foi possível guardar. Tenta novamente.'
     );
     expect(workoutErrorMessage(null)).toBe('Não foi possível guardar. Tenta novamente.');
+  });
+});
+
+describe('workoutFailureMessage', () => {
+  it('reads the field code of a validation failure, whose title is always validation_failed', () => {
+    const failure = toApiProblem(400, {
+      title: 'validation_failed',
+      errors: [{ field: 'reps_done', code: 'training_reps_done_invalid', message: 'x' }],
+    });
+
+    expect(workoutFailureMessage(failure)).toBe('As repetições têm de estar entre 0 e 100.');
+  });
+
+  it('uses the problem code of a conflict and falls back for a network failure', () => {
+    expect(workoutFailureMessage(toApiProblem(409, { title: 'training_plan_inactive' }))).toBe(
+      'O teu plano mudou. Atualiza o treino.'
+    );
+    expect(workoutFailureMessage(new TypeError('Failed to fetch'))).toBe(
+      'Não foi possível guardar. Tenta novamente.'
+    );
   });
 });
 

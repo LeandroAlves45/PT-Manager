@@ -252,3 +252,26 @@ typecheck e o lint deixaram passar. O CI #24 apanhou-os pelos testes do blueprin
   erradas). Os cartões do Início têm agora um teste que clica cada ação.
 - `npx prettier --write` nos ficheiros do pack antes do commit; o `--check` local dá falsos
   avisos de CRLF (usar `--end-of-line auto` para confirmar).
+
+## 2026-10-10 — Fecho 6F-2: formatador que alimenta um campo, validação em `errors[]`, Prettier fora do projeto
+
+**O que aconteceu.** Na aplicação manual do pack 6F-2 (`41c02a9`):
+- `formatDecimal` ficou com `minimumFractionDigits: 1` em vez de `maximumFractionDigits: 2`.
+  O mesmo formatador pré-preenche os campos da série: as repetições apareciam "8,0", que o
+  `parseReps` recusa. Resultado: não se registava uma série sem reescrever as repetições, e uma
+  série registada ficava sempre em "Guardar" (nunca "Desmarcar"). 12 testes vermelhos.
+- `plannedSetLabel` passou a usar `formatNumber` (0 casas): 62,5 kg aparecia "63 kg".
+- Defeito do próprio pack: numa falha de validação o `title` do ProblemDetails é sempre
+  `validation_failed` e o código real (`training_weight_invalid`) vem em `errors[0].code`. As
+  mensagens mapeadas por `ApiProblem.code` nunca apareciam.
+- Correr o Prettier do projeto sobre cópias no `%TEMP%` bloqueou a máquina três vezes
+  (o `prettier-plugin-tailwindcss` não encontra a configuração fora de `frontend/`).
+
+**A regra.**
+- Um formatador cujo resultado volta a ser lido por um parser precisa de um teste de ida e
+  volta pelo ecrã: registar a série **sem editar** os campos pré-preenchidos.
+- Mensagens por código de erro: ler `fieldErrors[0]?.code ?? code` (`workoutFailureMessage`),
+  e testar com o corpo real de um 400 (`validation_failed` + `errors[]`).
+- Prettier só dentro de `frontend/`. Para comparar blueprint ↔ disco, normalizar com Node
+  (tirar comentários, colapsar espaços) e usar `git diff --no-index`; nomes de ficheiro curtos,
+  porque o caminho do scratchpad passa o limite de 260 caracteres.

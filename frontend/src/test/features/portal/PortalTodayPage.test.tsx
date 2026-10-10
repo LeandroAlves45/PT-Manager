@@ -130,6 +130,10 @@ describe('PortalTodayPage', () => {
       },
     ]);
     expect(screen.getByText('1 de 2 séries · 50 %')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: 'Séries registadas' })).toHaveAttribute(
+      'aria-valuenow',
+      '50'
+    );
     expect(queryClient.getQueryState(portalKeys.home())?.isInvalidated).toBe(true);
   });
 
@@ -183,6 +187,82 @@ describe('PortalTodayPage', () => {
       await screen.findByRole('button', { name: 'Registar série 1 de Agachamento' })
     ).toBeInTheDocument();
     expect(deleted).toEqual([loggedSet().log_id]);
+  });
+
+  it('records the prescribed values in one tap, without editing the prefilled fields', async () => {
+    useToday(
+      workoutToday({
+        day: {
+          id: TRAINING_DAY_ID,
+          notes: null,
+          exercises: [workoutExercise({ sets: [workoutSet({ planned_weight_kg: 62.5 })] })],
+        },
+      })
+    );
+    const bodies: unknown[] = [];
+    server.use(
+      http.post(`${API}/portal/exercise-set-logs`, async ({ request }) => {
+        bodies.push(await request.json());
+        return HttpResponse.json({});
+      })
+    );
+    const user = userEvent.setup();
+    await openToday();
+
+    expect(weightOf(1)).toHaveValue('62,5');
+    expect(screen.getByLabelText('Repetições da série 1 de Agachamento')).toHaveValue('8');
+    await user.click(screen.getByRole('button', { name: 'Registar série 1 de Agachamento' }));
+
+    await waitFor(() => expect(bodies).toHaveLength(1));
+    expect(bodies[0]).toMatchObject({ weight_kg: 62.5, reps_done: 8 });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('translates a validation failure of the server, whose code comes in errors[]', async () => {
+    server.use(
+      http.post(`${API}/portal/exercise-set-logs`, () =>
+        HttpResponse.json(
+          problem('validation_failed', {
+            errors: [
+              { field: 'weight_kg', code: 'training_weight_invalid', message: 'Invalid weight.' },
+            ],
+          }),
+          { status: 400 }
+        )
+      )
+    );
+    const user = userEvent.setup();
+    await openToday();
+
+    await user.click(screen.getByRole('button', { name: 'Registar série 1 de Agachamento' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'O peso tem de estar entre 0 e 1000 kg.'
+    );
+  });
+
+  it('explains a refused unmark when the workout was completed on another device', async () => {
+    let state = todayWithFirstSetLogged();
+    server.use(
+      http.get(`${API}/portal/my-workout/today`, () => HttpResponse.json(state)),
+      http.delete(`${API}/portal/exercise-set-logs/:logId`, () => {
+        state = todayWithFirstSetLogged({ completed_at: '2026-10-06T10:00:00Z' });
+        return HttpResponse.json(problem('workout_already_completed'), { status: 409 });
+      })
+    );
+    const user = userEvent.setup();
+    await openToday();
+
+    await user.click(screen.getByRole('button', { name: 'Desmarcar série 1 de Agachamento' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'O treino já foi concluído. Já não podes desmarcar séries.'
+    );
+    // O refetch depois da falha mostra o estado real: concluído, série ainda registada.
+    expect(
+      await screen.findByText(/Treino concluído · 1 de 2 séries registadas/)
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Desmarcar série 1 de Agachamento' })).toBeDisabled();
   });
 
   it('sends a single POST when the set is tapped twice while saving', async () => {
@@ -277,6 +357,40 @@ describe('PortalTodayPage', () => {
     expect(screen.queryByRole('button', { name: 'Concluir treino' })).not.toBeInTheDocument();
   });
 
+  it('keeps the dialog open when completing fails and drops the old error on reopening', async () => {
+    useToday(
+      todayWithFirstSetLogged({
+        progress: { planned_sets: 2, logged_sets: 2, planned_exercises: 1, completed_exercises: 1 },
+      })
+    );
+    const bodies: unknown[] = [];
+    server.use(
+      http.post(`${API}/portal/workout-completions`, async ({ request }) => {
+        bodies.push(await request.json());
+        return HttpResponse.json(problem('training_plan_inactive'), { status: 409 });
+      })
+    );
+    const user = userEvent.setup();
+    await openToday();
+
+    await user.click(screen.getByRole('button', { name: 'Concluir treino' }));
+    let dialog = await screen.findByRole('dialog', { name: 'Concluir treino' });
+    expect(within(dialog).getByText(/Registaste todas as séries\./)).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Concluir treino' }));
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+      'O teu plano mudou. Atualiza o treino.'
+    );
+    // Sem notas escritas, o pedido leva `null` e não uma string vazia.
+    expect(bodies).toEqual([{ training_plan_day_id: TRAINING_DAY_ID, notes: null }]);
+
+    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Concluir treino' }));
+    dialog = await screen.findByRole('dialog', { name: 'Concluir treino' });
+    expect(within(dialog).queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('blocks unmarking after completion but still allows corrections', async () => {
     useToday(todayWithFirstSetLogged({ completed_at: '2026-10-06T10:00:00Z' }));
     const user = userEvent.setup();
@@ -337,8 +451,44 @@ describe('PortalTodayPage', () => {
     renderApp({ initialEntries: ['/portal/today'] });
 
     expect(await screen.findByRole('heading', { name: 'Sem plano de treino' })).toBeInTheDocument();
-    expect(screen.getByText('O teu treinador ainda não atribuiu um plano.')).toBeInTheDocument();
+    expect(
+      screen.getByText('O teu personal trainer ainda não atribuiu um plano.')
+    ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument();
+  });
+
+  it('tells an inactive client profile apart from a missing plan', async () => {
+    server.use(
+      http.get(`${API}/portal/my-workout/today`, () =>
+        HttpResponse.json(problem('portal_profile_not_available'), { status: 404 })
+      ),
+      ...restorableSession({ role: 'client' })
+    );
+
+    renderApp({ initialEntries: ['/portal/today'] });
+
+    expect(await screen.findByRole('heading', { name: 'Portal indisponível' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument();
+  });
+
+  it('offers a retry after a technical failure and recovers the workout', async () => {
+    let failing = true;
+    server.use(
+      http.get(`${API}/portal/my-workout/today`, () =>
+        failing
+          ? HttpResponse.json(problem('internal_error'), { status: 500 })
+          : HttpResponse.json(workoutToday())
+      ),
+      ...restorableSession({ role: 'client' })
+    );
+    const user = userEvent.setup();
+    renderApp({ initialEntries: ['/portal/today'] });
+
+    const retry = await screen.findByRole('button', { name: 'Tentar novamente' });
+    failing = false;
+    await user.click(retry);
+
+    expect(await screen.findByRole('region', { name: 'Agachamento' })).toBeInTheDocument();
   });
 
   it('plays the video with the catalog id, not the prescription id', async () => {
@@ -402,6 +552,8 @@ describe('PortalTodayPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'O vídeo deixou de estar disponível.'
     );
+    // Um vídeo removido não volta: não se oferece repetir.
+    expect(screen.queryByRole('button', { name: /Tentar novamente/ })).not.toBeInTheDocument();
   });
 
   it('collapses completed exercises and shows a blocked one in Portuguese', async () => {

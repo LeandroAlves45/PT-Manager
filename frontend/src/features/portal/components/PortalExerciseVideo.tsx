@@ -52,9 +52,23 @@ export function PortalExerciseVideo({
 
   if (playback.isError)
     return (
-      <p role="alert" className="text-destructive text-sm">
-        {playbackErrorMessage(playback.error)}
-      </p>
+      <div className="space-y-2">
+        <p role="alert" className="text-destructive text-sm">
+          {playbackErrorMessage(playback.error)}
+        </p>
+        {/* Um vídeo removido não volta; as outras falhas (armazenamento, rede) são passageiras. */}
+        {!(isApiProblem(playback.error) && playback.error.code === 'exercise_video_not_found') && (
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-11"
+            aria-label={`Tentar novamente o vídeo de ${exerciseName}`}
+            onClick={() => void playback.refetch()}
+          >
+            Tentar novamente
+          </Button>
+        )}
+      </div>
     );
 
   return (

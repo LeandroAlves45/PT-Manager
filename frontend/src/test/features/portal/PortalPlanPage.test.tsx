@@ -59,10 +59,22 @@ describe('PortalPlanPage', () => {
       )
     );
     const requested: unknown[] = [];
+    let storageDown = true;
     server.use(
       http.get(`${API}/portal/my-plan/exercises/:exerciseId/video`, ({ params }) => {
         requested.push(params.exerciseId);
-        return HttpResponse.json(problem('exercise_video_storage_unavailable'), { status: 503 });
+        return storageDown
+          ? HttpResponse.json(problem('exercise_video_storage_unavailable'), { status: 503 })
+          : HttpResponse.json({
+              video_id: '0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c3d',
+              exercise_id: CATALOG_EXERCISE_ID,
+              content_type: 'video/mp4',
+              duration_milliseconds: 42000,
+              width: 1280,
+              height: 720,
+              playback_url: 'https://media.test/agachamento.mp4?signature=1',
+              expires_at: '2026-10-06T10:30:00Z',
+            });
       })
     );
     const user = userEvent.setup();
@@ -72,9 +84,65 @@ describe('PortalPlanPage', () => {
     await user.click(screen.getByRole('button', { name: 'Ver vídeo de Agachamento' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'O vídeo não está disponível de momento. Tenta mais tarde.'
+      'O vídeo não está disponível de momento. Tenta novamente mais tarde.'
     );
     expect(requested).toEqual([CATALOG_EXERCISE_ID]);
+
+    // Falha passageira: o cliente repete sem sair do ecrã.
+    storageDown = false;
+    await user.click(
+      screen.getByRole('button', { name: 'Tentar novamente o vídeo de Agachamento' })
+    );
+    expect(await screen.findByLabelText('Vídeo de Agachamento')).toBeInTheDocument();
+    expect(requested).toHaveLength(2);
+  });
+
+  it('groups the days by week and shows the period and decimal loads of the plan', async () => {
+    const plan = trainingPlan();
+    const [tuesday, thursday] = plan.days;
+    const first = tuesday!.exercises[0]!;
+    server.use(
+      http.get(`${API}/portal/my-plan`, () =>
+        HttpResponse.json({
+          ...plan,
+          end_date: '2026-11-01',
+          days: [
+            {
+              ...tuesday!,
+              exercises: [
+                {
+                  ...first,
+                  sets: [{ ...first.sets[0]!, planned_weight_kg: 62.5, planned_rpe: 8.5 }],
+                },
+              ],
+            },
+            { ...thursday!, week_number: 2 },
+          ],
+        })
+      )
+    );
+
+    await openPlan();
+
+    expect(screen.getByText('05/10/2026 a 01/11/2026')).toBeInTheDocument();
+    const firstWeek = screen.getByRole('region', { name: 'Semana 1' });
+    expect(within(firstWeek).getAllByRole('article')).toHaveLength(1);
+    expect(
+      within(firstWeek).getByText('Série 1 · 8 reps · 62,5 kg · RPE 8,5 · 90–120 s')
+    ).toBeInTheDocument();
+    const secondWeek = screen.getByRole('region', { name: 'Semana 2' });
+    expect(within(secondWeek).getByRole('heading', { name: 'Quinta' })).toBeInTheDocument();
+  });
+
+  it('says so when the plan has no training days yet', async () => {
+    server.use(
+      http.get(`${API}/portal/my-plan`, () => HttpResponse.json({ ...trainingPlan(), days: [] }))
+    );
+
+    await openPlan();
+
+    expect(screen.getByText('O plano ainda não tem dias de treino.')).toBeInTheDocument();
+    expect(screen.queryByRole('region')).not.toBeInTheDocument();
   });
 
   it('shows an empty state when there is no active plan', async () => {

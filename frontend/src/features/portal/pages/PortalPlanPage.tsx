@@ -39,7 +39,7 @@ export function PortalPlanPage() {
     return (
       <section className="space-y-4">
         <Skeleton className="h-10 w-48" />
-        <div role="status" aria-label="A carregar o plano..." className="space-y-3">
+        <div role="status" aria-label="A carregar o plano…" className="space-y-3">
           <Skeleton className="h-32" />
           <Skeleton className="h-32" />
         </div>

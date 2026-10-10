@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { useCompleteWorkoutMutation } from '@/features/portal/api/portal';
-import { countLabel, workoutErrorMessage } from '@/features/portal/lib/workout';
-import { isApiProblem } from '@/shared/api/problem';
+import { countLabel, workoutFailureMessage } from '@/features/portal/lib/workout';
 import { FormField } from '@/shared/components/FormField';
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -45,6 +44,12 @@ export function CompleteWorkoutDialog({
   const [error, setError] = useState<string | null>(null);
   const complete = useCompleteWorkoutMutation();
 
+  /** Fecha sem perder as notas; o erro de uma tentativa anterior não volta a aparecer. */
+  function close() {
+    setError(null);
+    onOpenChange(false);
+  }
+
   function confirm() {
     setError(null);
     complete.mutate(
@@ -54,8 +59,7 @@ export function CompleteWorkoutDialog({
           toast.success('Treino concluído. Bom trabalho!');
           onOpenChange(false);
         },
-        onError: (failure) =>
-          setError(workoutErrorMessage(isApiProblem(failure) ? failure.code : null)),
+        onError: (failure) => setError(workoutFailureMessage(failure)),
       }
     );
   }
@@ -64,7 +68,9 @@ export function CompleteWorkoutDialog({
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        if (!complete.isPending) onOpenChange(next);
+        if (complete.isPending) return;
+        if (next) onOpenChange(true);
+        else close();
       }}
     >
       <DialogContent>
@@ -98,12 +104,7 @@ export function CompleteWorkoutDialog({
         )}
 
         <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={complete.isPending}
-            onClick={() => onOpenChange(false)}
-          >
+          <Button type="button" variant="outline" disabled={complete.isPending} onClick={close}>
             Cancelar
           </Button>
           <Button type="button" disabled={complete.isPending} onClick={confirm}>

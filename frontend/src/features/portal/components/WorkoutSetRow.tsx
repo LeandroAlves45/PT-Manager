@@ -8,10 +8,9 @@ import {
   MAX_WEIGHT_KG,
   parseReps,
   parseWeight,
-  workoutErrorMessage,
+  workoutFailureMessage,
 } from '@/features/portal/lib/workout';
 import type { components } from '@/shared/api/schema';
-import { isApiProblem } from '@/shared/api/problem';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { formatNumber } from '@/shared/lib/format';
@@ -71,8 +70,7 @@ export function WorkoutSetRow({
 
     if (logged !== null && !dirty) {
       unlog.mutate(logged.log_id, {
-        onError: (failure) =>
-          setError(workoutErrorMessage(isApiProblem(failure) ? failure.code : null)),
+        onError: (failure) => setError(workoutFailureMessage(failure)),
       });
       return;
     }
@@ -86,10 +84,7 @@ export function WorkoutSetRow({
 
     save.mutate(
       { prescriptionId, setNumber: set.set_number, logged, weightKg, repsDone },
-      {
-        onError: (failure) =>
-          setError(workoutErrorMessage(isApiProblem(failure) ? failure.code : null)),
-      }
+      { onError: (failure) => setError(workoutFailureMessage(failure)) }
     );
   }
 
