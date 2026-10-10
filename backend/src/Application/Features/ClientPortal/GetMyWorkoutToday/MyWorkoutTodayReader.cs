@@ -118,9 +118,11 @@ public sealed class MyWorkoutTodayReader
 
                 return new MyWorkoutTodayDto.ExerciseDto(
                     exercise.Id,
+                    exercise.ExerciseId,
                     exercise.OrderNumber,
                     exercise.ExerciseName,
                     exercise.IsUnavailable,
+                    exercise.HasReadyVideo,
                     exercise.ExerciseGroupId,
                     exercise.GroupPosition,
                     exercise.Notes,

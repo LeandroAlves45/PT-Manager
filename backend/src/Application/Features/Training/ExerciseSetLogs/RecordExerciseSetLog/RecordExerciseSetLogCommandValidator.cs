@@ -1,4 +1,5 @@
 using Application.Validation;
+using Domain.Entities.Training;
 using FluentValidation;
 
 namespace Application.Features.Training.ExerciseSetLogs.RecordExerciseSetLog;
@@ -17,7 +18,7 @@ public sealed class RecordExerciseSetLogCommandValidator : AbstractValidator<Rec
             .WithErrorCode("training_set_number_invalid");
 
         RuleFor(command => command.WeightKg)
-            .GreaterThanOrEqualTo(0)
+            .InclusiveBetween(0m, ClientExerciseSetLog.MaxWeightKg)
             .WithErrorCode("training_weight_invalid");
 
         RuleFor(command => command.RepsDone)

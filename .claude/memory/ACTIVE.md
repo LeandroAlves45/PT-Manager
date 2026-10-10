@@ -1,11 +1,29 @@
-# Estado ativo: Sprint 6F (portal do cliente). 6F-1 FINALIZADA, 6F-2 por planear
+# Estado ativo: Sprint 6F (portal do cliente). 6F-1 FINALIZADA, 6F-2 com blueprints validados
 
-Atualizado: 2026-10-08
+Atualizado: 2026-10-09
 
 ## Sprint 6F: portal do cliente
 
 **Ler primeiro** `docs/blueprints/frontend-files/sprint_6/sprint_6F/00_plano_fase_6F_completa.md`.
-Tem as fases, as decisões U1–U10, os contratos de todas as fases e as armadilhas.
+Tem as fases, as decisões U1–U15, os contratos de todas as fases e as armadilhas.
+
+- **6F-2 blueprints validados (2026-10-09).**
+  - Pack: `sprint_6F/sprint_6F2/01–08` + `manifest.json`, com 38 caminhos (32 integrais e 6
+    patches).
+  - Âmbito:
+    - treino de hoje (registar, corrigir, desmarcar, concluir com notas);
+    - plano só de leitura;
+    - vídeo pelo `exercise_id`;
+    - backend `exercise_id` + `has_ready_video`;
+    - peso máximo de 1000 kg (U15, corrigia um 500).
+  - Evidência na worktree `C:\ptm-tmp-6f2` (apagada):
+    - backend 2932 + 1 skip;
+    - Vitest 372;
+    - 27 mutações mortas e 1 equivalente;
+    - round-trip 38/38.
+  - **Próximo passo:** o Leandro aplica os docs 02–07 (o 07 no mesmo commit que o 04–06),
+    regenera o `schema.d.ts` e corre os gates do doc 08. Depois, os blueprints da 6F-3.
+  - Ver `Sessions/2026-10-09-sprint6f2-blueprints.md`.
 
 - **6F-1 FINALIZADA (2026-10-08).**
   - Fecho do frontend em `37e9acd` (CI #27 verde): D1 mistura de cores, D2 rota do "Responder", D3
@@ -29,12 +47,8 @@ Tem as fases, as decisões U1–U10, os contratos de todas as fases e as armadil
     - 24/24 mutações mortas;
     - round-trip 31/31.
   - Ver `Sessions/2026-10-04-sprint6f-plano-6f1-blueprints.md`.
-- **Próximo passo:**
-  1. O Leandro corre os gates manuais do doc 08 (o reset já foi feito a 2026-10-07).
-  2. Depois, os blueprints da 6F-2 (treino, plano, vídeo, backend `exercise_id` e
-     `has_ready_video`).
-- 6F-2, 6F-3 e 6F-4 estão por gerar. O fecho do sprint fica em
-  `sprint_6F/10_fecho_sprint_6F.md` (esqueleto).
+- Gates manuais da 6F-1 (doc 08) continuam com o Leandro (o reset foi feito a 2026-10-07).
+- 6F-3 e 6F-4 estão por gerar. O fecho do sprint fica em `sprint_6F/10_fecho_sprint_6F.md`.
 
 ## Sprint 6E — frontend trainer
 

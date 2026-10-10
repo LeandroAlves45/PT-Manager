@@ -44,12 +44,17 @@ public sealed record MyWorkoutSetResponse(
     }
 }
 
-/// <summary>Exercício do treino de hoje.</summary>
+/// <summary>
+/// Exercício do treino de hoje. O <c>exercise_id</c> é o do catálogo, usado para pedir o
+/// vídeo quando <c>has_ready_video</c> é verdadeiro.
+/// </summary>
 public sealed record MyWorkoutExerciseResponse(
     Guid Id,
+    Guid ExerciseId,
     int OrderNumber,
     string ExerciseName,
     bool IsUnavailable,
+    bool HasReadyVideo,
     Guid? ExerciseGroupId,
     int? GroupPosition,
     string? Notes,
@@ -61,9 +66,11 @@ public sealed record MyWorkoutExerciseResponse(
         ArgumentNullException.ThrowIfNull(dto);
         return new MyWorkoutExerciseResponse(
             dto.Id,
+            dto.ExerciseId,
             dto.OrderNumber,
             dto.ExerciseName,
             dto.IsUnavailable,
+            dto.HasReadyVideo,
             dto.ExerciseGroupId,
             dto.GroupPosition,
             dto.Notes,

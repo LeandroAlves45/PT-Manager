@@ -88,3 +88,15 @@ o que dava 401.
 correspondente nos settings explícitos dos testes. Depois de aplicar um patch, comparar
 `git diff --stat` com o tamanho do bloco do blueprint: uma diferença grande nas linhas `+`
 denuncia hunks em falta antes de correr qualquer teste.
+
+## Decimal sem máximo no validador: um valor fora da coluna dá 500 (Sprint 6F-2, 2026-10-09)
+
+**O que aconteceu.** Na validação dos blueprints da 6F-2, um `weight_kg` de `123456789012` no
+`POST /portal/exercise-set-logs` devolveu 500. O validador só exigia `≥ 0` e a coluna é
+`numeric(10,2)`: o overflow rebentava no `SaveChanges`. Os quatro validadores de séries
+(trainer e cliente, registar e corrigir) tinham o mesmo buraco.
+
+**A regra.** Todo o `decimal` de entrada tem mínimo **e** máximo no validador, abaixo do limite
+da coluna. O máximo vive como constante no Domain (`ClientExerciseSetLog.MaxWeightKg = 1000`),
+o Domain também o impõe e os validadores referem a constante. Ficam por rever no mesmo padrão
+os pesos planeados e os das avaliações (backlog).

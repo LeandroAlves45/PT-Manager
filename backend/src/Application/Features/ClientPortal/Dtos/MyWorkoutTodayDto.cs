@@ -30,12 +30,17 @@ public sealed record MyWorkoutTodayDto(
         string? Notes,
         IReadOnlyList<ExerciseDto> Exercises);
 
-    /// <summary>Exercício prescrito; o Id é o da prescrição usada para registar séries.</summary>
+    /// <summary>
+    /// Exercício prescrito; o Id é o da prescrição usada para registar séries e o ExerciseId
+    /// é o do catálogo, usado para pedir o vídeo.
+    /// </summary>
     public sealed record ExerciseDto(
         Guid Id,
+        Guid ExerciseId,
         int OrderNumber,
         string ExerciseName,
         bool IsUnavailable,
+        bool HasReadyVideo,
         Guid? ExerciseGroupId,
         int? GroupPosition,
         string? Notes,

@@ -56,13 +56,17 @@ public sealed record MyExerciseSetResponse(
 
 /// <summary>
 /// Exercício prescrito, com marcador de indisponibilidade. O <c>id</c> é o da prescrição e
-/// é o valor a enviar em <c>training_plan_day_exercise_id</c> ao registar uma série.
+/// é o valor a enviar em <c>training_plan_day_exercise_id</c> ao registar uma série. O
+/// <c>exercise_id</c> é o do catálogo, usado em <c>my-plan/exercises/{exerciseId}/video</c>
+/// quando <c>has_ready_video</c> é verdadeiro.
 /// </summary>
 public sealed record MyDayExerciseResponse(
     Guid Id,
+    Guid ExerciseId,
     int OrderNumber,
     string ExerciseName,
     bool IsUnavailable,
+    bool HasReadyVideo,
     Guid? ExerciseGroupId,
     int? GroupPosition,
     string? Notes,
@@ -75,9 +79,11 @@ public sealed record MyDayExerciseResponse(
 
         return new(
             exercise.Id,
+            exercise.ExerciseId,
             exercise.OrderNumber,
             exercise.ExerciseName,
             exercise.IsUnavailable,
+            exercise.HasReadyVideo,
             exercise.ExerciseGroupId,
             exercise.GroupPosition,
             exercise.Notes,

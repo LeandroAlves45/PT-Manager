@@ -136,6 +136,12 @@ public sealed class ClientPortalExposureTests
         Assert.Equal(
             "Unavailable exercise",
             exercise.GetProperty("exercise_name").GetString());
+        // O id do catálogo continua presente (U11), mas sem vídeo reproduzível.
+        Assert.NotEqual(Guid.Empty, exercise.GetProperty("exercise_id").GetGuid());
+        Assert.NotEqual(
+            exercise.GetProperty("id").GetGuid(),
+            exercise.GetProperty("exercise_id").GetGuid());
+        Assert.False(exercise.GetProperty("has_ready_video").GetBoolean());
         Assert.False(
             ContainsProperty(document.RootElement, "platform_enforcement_reason"),
             "Portal response exposed the administrative moderation reason.");

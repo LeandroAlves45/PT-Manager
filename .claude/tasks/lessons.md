@@ -249,3 +249,17 @@ Lições capturadas depois de correções do utilizador.
   rota, `testid`) antes de qualquer leitura.
 - **O catch-all `*` → `/` esconde links internos errados.** Testar um `href` não chega:
   seguir o link no router real e confirmar o ecrã de destino.
+
+## 2026-10-09: blueprints da 6F-2
+
+- **Gerar o pack por script, a partir do código testado.** Modelos com `@@FILE caminho |
+  camada@@` e um gerador que decide integral/patch pela regra das 200 linhas dão round-trip
+  38/38 por construção. À mão revê-se só o texto.
+- **Os códigos de erro mapeados no frontend confirmam-se nos handlers e mappers do backend, não
+  no plano.** O plano previa `resource_not_found`; as escritas do treino devolvem outros dois.
+- **Uma mutação de filtro de tenant que sobrevive pode ser equivalente.** O Global Query Filter
+  já aplica a mesma restrição: confirmar no `PtManagerDbContext` antes de escrever um teste
+  impossível.
+- **Todo o `decimal` de entrada precisa de máximo abaixo do limite da coluna** (ver
+  `GOTCHAS_BACKEND.md`, 2026-10-09). Provar o 500 com um teste temporário antes de propor a
+  correção.

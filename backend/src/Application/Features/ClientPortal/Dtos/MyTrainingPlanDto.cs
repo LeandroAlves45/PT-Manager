@@ -22,13 +22,17 @@ public sealed record MyTrainingPlanDto(
 
     /// <summary>
     /// Exercício prescrito. IsUnavailable assinala conteúdo bloqueado. O Id é o da
-    /// prescrição (TrainingPlanDayExercise), usado pelo cliente para registar séries.
+    /// prescrição (TrainingPlanDayExercise), usado pelo cliente para registar séries;
+    /// ExerciseId é o do catálogo, usado para pedir o vídeo. HasReadyVideo só é verdadeiro
+    /// quando esse pedido devolveria um URL (vídeo Ready visível e exercício não bloqueado).
     /// </summary>
     public sealed record ExerciseDto(
         Guid Id,
+        Guid ExerciseId,
         int OrderNumber,
         string ExerciseName,
         bool IsUnavailable,
+        bool HasReadyVideo,
         Guid? ExerciseGroupId,
         int? GroupPosition,
         string? Notes,

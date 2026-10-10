@@ -7,8 +7,8 @@ using Api.FunctionalTests.Support;
 namespace Api.FunctionalTests.Controllers;
 
 /// <summary>
-/// Prova o contrato HTTP das séries registadas pelo cliente e da conclusão de treino
-/// (DEF-PORTAL-001, Sprint 6A): identidade só do token, titularidade e ausência de dados internos.
+/// Prova o contrato HTTP das séries registadas pelo cliente e da conclusão de treino:
+/// identidade só do token, titularidade e ausência de dados internos.
 /// </summary>
 [Collection(ApiTestCollection.Name)]
 public sealed class ClientPortalTrainingWritesTests
@@ -70,6 +70,22 @@ public sealed class ClientPortalTrainingWritesTests
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Contains("training_rpe_invalid", await response.Content.ReadAsStringAsync(Token));
+    }
+
+    // [6F-2] NOVO: um peso fora da coluna numeric(10,2) dava 500; agora é um 400 estável.
+    [Fact]
+    public async Task RecordSet_AboveMaximumWeight_ReturnsValidationProblem()
+    {
+        var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(_fixture.Factory, Token);
+        var client = PortalClient(trainerId, clientUserId);
+        var plan = await ReadPlanAsync(client);
+
+        var response = await ApiJsonPayload.PostAsync(
+            client, "/api/v1/portal/exercise-set-logs",
+            new RecordMyExerciseSetLogRequest(plan.DayExerciseId, 1, 123456789012m, 8, null, null), Token);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("training_weight_invalid", await response.Content.ReadAsStringAsync(Token));
     }
 
     [Fact]

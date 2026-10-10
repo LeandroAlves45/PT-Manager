@@ -78,7 +78,12 @@ public sealed class MyWorkoutTodayReaderTests : ReadHandlerTestContext
         Assert.Equal(1, result.Value.Progress.PlannedExercises);
         Assert.Equal(0, result.Value.Progress.CompletedExercises);
         Assert.NotNull(result.Value.CompletedAt);
-        var sets = Assert.Single(result.Value.Day!.Exercises).Sets;
+        var exercise = Assert.Single(result.Value.Day!.Exercises);
+        // [6F-2] NOVO: o id do catálogo e o vídeo passam do plano para o treino de hoje.
+        Assert.Equal(PrescriptionId, exercise.Id);
+        Assert.Equal(CatalogExerciseId, exercise.ExerciseId);
+        Assert.True(exercise.HasReadyVideo);
+        var sets = exercise.Sets;
         Assert.NotNull(sets[0].Logged);
         Assert.Null(sets[1].Logged);
         // A janela de registos é o dia local, convertido para UTC.

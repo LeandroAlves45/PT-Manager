@@ -24073,15 +24073,20 @@ export interface components {
         };
         /**
          * @description Exercício prescrito, com marcador de indisponibilidade. O `id` é o da prescrição e
-         *     é o valor a enviar em `training_plan_day_exercise_id` ao registar uma série.
+         *     é o valor a enviar em `training_plan_day_exercise_id` ao registar uma série. O
+         *     `exercise_id` é o do catálogo, usado em `my-plan/exercises/{exerciseId}/video`
+         *     quando `has_ready_video` é verdadeiro.
          */
         MyDayExerciseResponse: {
             /** Format: uuid */
             id: string;
+            /** Format: uuid */
+            exercise_id: string;
             /** Format: int32 */
             order_number: number;
             exercise_name: string;
             is_unavailable: boolean;
+            has_ready_video: boolean;
             /** Format: uuid */
             exercise_group_id: null | string;
             /** Format: int32 */
@@ -24373,14 +24378,20 @@ export interface components {
             notes: null | string;
             exercises: components["schemas"]["MyWorkoutExerciseResponse"][];
         };
-        /** @description Exercício do treino de hoje. */
+        /**
+         * @description Exercício do treino de hoje. O `exercise_id` é o do catálogo, usado para pedir o
+         *     vídeo quando `has_ready_video` é verdadeiro.
+         */
         MyWorkoutExerciseResponse: {
             /** Format: uuid */
             id: string;
+            /** Format: uuid */
+            exercise_id: string;
             /** Format: int32 */
             order_number: number;
             exercise_name: string;
             is_unavailable: boolean;
+            has_ready_video: boolean;
             /** Format: uuid */
             exercise_group_id: null | string;
             /** Format: int32 */

@@ -12,6 +12,7 @@ public class ClientExerciseSetLogTests
     [InlineData(10, -1, 10)]
     [InlineData(10, 10, -1)]
     [InlineData(10, 10, 101)]
+    [InlineData(10, 1001, 10)]
     public void Constructor_OutOfRangeValues_ThrowsDomainException(
         int setNumber, int weightKg, int repsDone)
     {
@@ -34,6 +35,7 @@ public class ClientExerciseSetLogTests
     [InlineData(-1, 10)]
     [InlineData(10, -1)]
     [InlineData(10, 101)]
+    [InlineData(1001, 10)]
     public void Correct_OutOfRangeValues_ThrowsDomainException(
         int weightKg,
         int repsDone
@@ -60,5 +62,23 @@ public class ClientExerciseSetLogTests
             performedAt,
             now
         ));
+    }
+
+    [Fact]
+    public void Constructor_AtMaximumWeight_IsAccepted()
+    {
+        var now = new DateTime(2026, 7, 25, 12, 0, 0, DateTimeKind.Utc);
+
+        var log = new ClientExerciseSetLog(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            1,
+            ClientExerciseSetLog.MaxWeightKg,
+            10,
+            null,
+            new DateTimeOffset(now),
+            now);
+
+        Assert.Equal(1000m, log.WeightKg);
     }
 }

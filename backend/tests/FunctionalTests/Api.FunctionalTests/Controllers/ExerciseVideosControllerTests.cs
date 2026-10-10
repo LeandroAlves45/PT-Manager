@@ -182,6 +182,30 @@ public sealed class ExerciseVideosControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task ClientPlan_ExposesTheCatalogIdThatPlaysTheVideo()
+    {
+        var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(_factory, Token);
+        var planExerciseId = await FindPlanExerciseAsync(trainerId, clientUserId);
+        var client = _factory.CreateOriginClient().WithBearer(TestJwtFactory.IssueClient(clientUserId, trainerId));
+
+        var before = await ReadFirstPlanExerciseAsync(client);
+        await SeedReadyVideoAsync(trainerId, planExerciseId);
+        var after = await ReadFirstPlanExerciseAsync(client);
+        var playback = await client.GetAsync(
+            $"/api/v1/portal/my-plan/exercises/{after.ExerciseId}/video", Token);
+        Assert.Equal((planExerciseId, false), before);
+        Assert.Equal((planExerciseId, true), after);
+        Assert.Equal(HttpStatusCode.OK, playback.StatusCode);
+    }
+
+    private async Task<(Guid ExerciseId, bool HasReadyVideo)> ReadFirstPlanExerciseAsync(HttpClient client)
+    {
+        using var document = JsonDocument.Parse(await client.GetStringAsync("/api/v1/portal/my-plan", Token));
+        var exercise = document.RootElement.GetProperty("days")[0].GetProperty("exercises")[0];
+        return (exercise.GetProperty("exercise_id").GetGuid(), exercise.GetProperty("has_ready_video").GetBoolean());
+    }
+
+    [Fact]
     public async Task AdministrativeRoute_PlaysPrivateVideosButRejectsTrainers()
     {
         var trainer = await TrainerTenantSeeder.SeedTrainerAsync(_factory, $"video-{Guid.NewGuid():N}", Token);

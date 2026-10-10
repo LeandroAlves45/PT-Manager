@@ -6,6 +6,21 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-09: Sprint 6F-2 blueprints validados (treino do portal).**
+- Pack `sprint_6F/sprint_6F2/01–08` + manifest, com 38 caminhos (32 integrais e 6 patches).
+  Âmbito:
+  - treino de hoje e plano só de leitura;
+  - vídeo pelo `exercise_id`;
+  - backend `exercise_id` e `has_ready_video` (aditivo, sem migration).
+- Decisões U11–U15. A U15 corrige um 500 real: peso sem máximo; agora o máximo é 1000 kg no
+  Domain e nos 4 validadores.
+- Evidência:
+  - backend 2932 + 1 skip, Vitest 372;
+  - 27 mutações mortas e 1 equivalente (BM2, Global Query Filter);
+  - round-trip 38/38.
+- `npm audit`: `source-map-js` (só em desenvolvimento) fica em `QG6F2-AUDIT-001`.
+- Aplicação pelo Leandro pendente. Ver `Sessions/2026-10-09-sprint6f2-blueprints.md`.
+
 **2026-10-08: Sprint 6F-1 FINALIZADA (frontend).**
 - A aplicação manual (`3111e98`) tinha 11 testes vermelhos. Corrigido:
   - D1: `mix()` em `contrast.ts` com `*` em vez de `+`;

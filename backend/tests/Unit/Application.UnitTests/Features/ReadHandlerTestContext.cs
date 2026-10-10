@@ -30,6 +30,8 @@ public abstract class ReadHandlerTestContext
     // A fronteira UTC prova que os handlers resolvem o dia no fuso do trainer.
     protected static readonly DateTime NowUtc = new(2026, 9, 2, 23, 30, 0, DateTimeKind.Utc);
     protected static readonly TimeZoneInfo Lisbon = TimeZoneInfo.FindSystemTimeZoneById("Europe/Lisbon");
+    // Id do catálogo, distinto do da prescrição, para provar que não se trocam.
+    protected static readonly Guid CatalogExerciseId = Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
 
     protected static GetMyPortalHomeHandler CreateHomeHandler(
         IntakeQueriesFake intakes,
@@ -63,9 +65,11 @@ public abstract class ReadHandlerTestContext
                     [
                         new MyTrainingPlanDto.ExerciseDto(
                             PrescriptionId,
+                            CatalogExerciseId,
                             1,
                             "Supino",
                             false,
+                            true,
                             null,
                             null,
                             null,

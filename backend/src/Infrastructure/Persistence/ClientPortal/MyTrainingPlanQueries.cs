@@ -65,6 +65,7 @@ internal sealed class MyTrainingPlanQueries : IMyTrainingPlanQueries
                             .ThenBy(row => row.item.Id)
                             .Select(row => new MyTrainingPlanDto.ExerciseDto(
                                 row.item.Id,
+                                row.catalog.Id,
                                 row.item.OrderNumber,
                                 row.catalog.PlatformEnforcementStatus ==
                                     PlatformEnforcementStatus.Blocked
@@ -72,6 +73,17 @@ internal sealed class MyTrainingPlanQueries : IMyTrainingPlanQueries
                                     : row.catalog.Name,
                                 row.catalog.PlatformEnforcementStatus ==
                                     PlatformEnforcementStatus.Blocked,
+                                // Mesma regra do pedido de vídeo do cliente
+                                // (ExerciseVideoQueries.ForClient e o handler de playback):
+                                // vídeo Ready global ou do próprio trainer, e exercício não
+                                // bloqueado. Assim has_ready_video nunca promete um 404.
+                                row.catalog.PlatformEnforcementStatus !=
+                                    PlatformEnforcementStatus.Blocked &&
+                                _dbContext.ExerciseVideos.Any(video =>
+                                    video.ExerciseId == row.catalog.Id &&
+                                    video.Status == ExerciseVideoStatus.Ready &&
+                                    (video.OwnerTrainerId == null ||
+                                        video.OwnerTrainerId == trainerId)),
                                 row.item.ExerciseGroupId,
                                 row.item.GroupPosition,
                                 row.item.Notes,

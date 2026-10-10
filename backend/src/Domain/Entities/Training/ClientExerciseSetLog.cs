@@ -9,6 +9,12 @@ namespace Domain.Entities.Training;
 /// </summary>
 public sealed class ClientExerciseSetLog
 {
+    /// <summary>
+    /// Carga máxima por série. A coluna (numeric 10,2) aceitaria muito mais, mas um valor
+    /// acima disto é um erro de digitação; sem limite, um valor fora da coluna dava 500.
+    /// </summary>
+    public const decimal MaxWeightKg = 1000m;
+
     public Guid Id { get; private set; }
     public Guid ClientId { get; private set; }
     public Guid TrainingPlanDayExerciseId { get; private set; }
@@ -94,8 +100,8 @@ public sealed class ClientExerciseSetLog
     {
         if (setNumber is < 1 or > 15)
             throw new DomainException("Set number must be between 1 and 15.");
-        if (weightKg < 0)
-            throw new DomainException("Weight cannot be negative.");
+        if (weightKg is < 0 or > MaxWeightKg)
+            throw new DomainException($"Weight must be between 0 and {MaxWeightKg} kg.");
         if (repsDone is < 0 or > 100)
             throw new DomainException("Reps done must be between 0 and 100.");
         RpeScale.EnsureValid(rpe, "RPE");
