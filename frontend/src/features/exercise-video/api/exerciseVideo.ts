@@ -15,6 +15,14 @@ type UploadInstructions = components['schemas']['ExerciseVideoUploadInstructions
  */
 export type ExerciseVideoAudience = 'superuser' | 'trainer';
 
+/**
+ * Quem pode ver o vídeo pronto. Às audiências que gerem vídeos junta-se `client`
+ * (`/portal/my-plan/exercises/{id}/video`, só exercícios do plano ativo), que nunca envia nem
+ * remove: por isso só a leitura aceita este tipo, e as funções de escrita continuam fechadas
+ * em `ExerciseVideoAudience`.
+ */
+export type ExerciseVideoReader = ExerciseVideoAudience | 'client';
+
 /** Intervalo e limite do acompanhamento: 100 × 3 s cobre o timeout de processamento do servidor. */
 const STATUS_POLL_MS = 3000;
 const MAX_STATUS_POLLS = 100;
@@ -26,7 +34,7 @@ const MAX_STATUS_POLLS = 100;
 const videoKeys = {
   upload: (audience: ExerciseVideoAudience, exerciseId: string, videoId: string) =>
     ['exercise-video', audience, exerciseId, 'upload', videoId] as const,
-  playback: (audience: ExerciseVideoAudience, exerciseId: string) =>
+  playback: (audience: ExerciseVideoReader, exerciseId: string) =>
     ['exercise-video', audience, exerciseId, 'playback'] as const,
 };
 
@@ -162,7 +170,7 @@ export function useVideoUploadStatus(
 
 /** URL de reprodução assinado; só é pedido quando o utilizador carrega em "Ver vídeo". */
 export function useVideoPlayback(
-  audience: ExerciseVideoAudience,
+  audience: ExerciseVideoReader,
   exerciseId: string,
   enabled: boolean
 ) {
@@ -173,6 +181,11 @@ export function useVideoPlayback(
     staleTime: 10 * 60 * 1000,
     queryFn: async ({ signal }) => {
       const init = { params: { path: { exerciseId } }, signal };
+      if (audience === 'client')
+        return unwrap(
+          await apiClient.GET('/api/v1/portal/my-plan/exercises/{exerciseId}/video', init)
+        );
+
       return unwrap(
         audience === 'superuser'
           ? await apiClient.GET('/api/v1/global-exercises/{exerciseId}/video', init)

@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import type { components } from '@/shared/api/schema';
-import { portalBranding, portalHome } from '@/test/msw/portal-fixtures';
+import { portalBranding, portalHome, trainingPlan, workoutToday } from '@/test/msw/portal-fixtures';
 import { dashboardResponse } from '@/test/msw/trainer-fixtures';
 
 /**
@@ -73,6 +73,10 @@ export const handlers = [
   ),
   http.get(`${API}/portal/branding`, () => HttpResponse.json(portalBranding())),
   http.get(`${API}/portal/home`, () => HttpResponse.json(portalHome())),
+  // [6F-2] NOVO: `/portal/today` deixou de ser um placeholder; qualquer teste que abra o
+  // treino (navegação do Início, menu do perfil) faz estes pedidos.
+  http.get(`${API}/portal/my-workout/today`, () => HttpResponse.json(workoutToday())),
+  http.get(`${API}/portal/my-plan`, () => HttpResponse.json(trainingPlan())),
 ];
 
 /** Arranque com cookie de refresh válido: a sessão é restaurada com os dados indicados. */
