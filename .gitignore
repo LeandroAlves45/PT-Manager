@@ -23,6 +23,7 @@ site/.env.*
 !site/.env.example
 site/DESIGN-IS-2026-09-25
 frontend/DESIGN-IS-2026-09-25
+frontend/DESIGN-IS-2026-10-11
 
 # Environment variables
 .env

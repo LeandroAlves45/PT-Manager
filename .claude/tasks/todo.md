@@ -47,7 +47,8 @@ tocado. Um processo pesado de cada vez, 2 workers.
   não se acrescentaram testes.
 - Gates: lint, typecheck, Vitest 419/419, build e Prettier verdes; round-trip 13/13.
 - CI: #33 verde em `8ae93a4`; CI #34 verde em `858e7f4`.
-- Ficam com o Leandro: `QG6F3-UI-001`, `QG6F3-ISOLAMENTO-UI-001` e a auditoria `design-is`.
+- `design-is` dos dois ecrãs: 20/30, REFINE; artefactos em `frontend/DESIGN-IS-2026-10-11/`.
+- Ficam com o Leandro: `QG6F3-UI-001` e `QG6F3-ISOLAMENTO-UI-001` (login no browser).
 - Por decidir no fecho do sprint: A4 (`isError` antes dos dados nos três ecrãs do portal).
 
 **Fase 6F-3: Finalizado.**

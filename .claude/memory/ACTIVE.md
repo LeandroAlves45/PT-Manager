@@ -20,7 +20,9 @@ Tem as fases, as decisões U1–U19, os contratos de todas as fases e as armadil
     13/13.
   - Relatório `sprint_6F3/07_relatorio_fecho_fase_6F3.md`.
   - Ver `Sessions/2026-10-11-sprint6f3-fecho-frontend.md`.
-  - Faltam os gates manuais `QG6F3-UI-001`, `QG6F3-ISOLAMENTO-UI-001` e a auditoria `design-is`.
+  - `design-is` dos dois ecrãs: 20/30, REFINE (`frontend/DESIGN-IS-2026-10-11/`, fora do git);
+    5 movimentos por decidir.
+  - Faltam os gates manuais `QG6F3-UI-001` e `QG6F3-ISOLAMENTO-UI-001` (login).
   - **Próximo passo:** blueprints da 6F-4 (check-ins, perfil, avatar moderado).
 - **6F-3 blueprints validados (2026-10-11, histórico).**
   - Pack: `sprint_6F/sprint_6F3/01–06` + `manifest.json`, com 13 caminhos (12 integrais e 1

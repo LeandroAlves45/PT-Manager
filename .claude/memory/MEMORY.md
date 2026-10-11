@@ -12,7 +12,8 @@ notas de `.claude/memory/Sessions/`.
   corpo, ramo morto). A4 por decidir no fecho do sprint: `isError` antes dos dados nos três
   ecrãs do portal.
 - 419 testes, 50/50 mutações, zero testes novos. Blueprints realinhados 13/13.
-- Faltam `QG6F3-UI-001`, `QG6F3-ISOLAMENTO-UI-001` e o `design-is`. Próximo: blueprints 6F-4.
+- `design-is` 20/30 REFINE (`frontend/DESIGN-IS-2026-10-11/`). Faltam `QG6F3-UI-001` e
+  `QG6F3-ISOLAMENTO-UI-001` (login). Próximo: blueprints 6F-4.
 - Ver `Sessions/2026-10-11-sprint6f3-fecho-frontend.md`.
 
 **2026-10-11: Sprint 6F-3 blueprints validados (histórico).**
