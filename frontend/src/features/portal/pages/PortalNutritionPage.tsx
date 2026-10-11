@@ -78,7 +78,7 @@ export function PortalNutritionPage() {
 }
 
 /**
- * Objetivo diário ao lado do que o plano dá
+ * Objetivo diário ao lado do que o plano dá.
  *
  * `actual_totals` é a soma dos alimentos prescritos, não o que o cliente comeu: o backend não
  * regista refeições. Por isso a coluna chama-se "Este plano dá". A fibra não tem objetivo e só

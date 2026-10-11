@@ -299,3 +299,19 @@ Lições capturadas depois de correções do utilizador.
   HTTPS auto-assinado e o service worker não regista). Receita na nota de sessão de 2026-10-11.
 - **`docs/` está no `.gitignore`:** um pack novo não aparece no `git status`; confirmar com
   `ls`, não com o git.
+
+## 2026-10-11: fecho da 6F-3
+
+- **Uma regra aprendida numa fase não se copia sem ver se a condição se aplica.** O
+  `fieldErrors[0]?.code` da 6F-2 foi para um `PUT`/`DELETE` sem corpo, onde é ramo morto. Ver a
+  `ErrorCategory` no backend antes (detalhe em `GOTCHAS_FRONTEND.md`).
+- **Aplicação manual verde não dispensa o diff programático.** 8 de 13 ficheiros divergiam do
+  manifest; o diff bloco a bloco mostrou em dois minutos que eram só comentários e uma frase.
+- **Mutações novas no fecho procuram lacunas; se todas morrem, não se acrescentam testes.**
+  16 mutações novas, 16 mortas pelos 37 testes do pack: zero testes novos.
+- **Harness de mutações com alterações por commitar:** repor o ficheiro a partir do conteúdo
+  lido em memória e comparar o SHA, não com `git checkout` (apagaria as correções em curso).
+- **Lotes de 7 a 8 min:** cada mutação demorou cerca de 38 s com `--bail=1 --maxWorkers=2`; um
+  log JSON por mutação permite retomar sem repetir.
+- **CI sem `gh`:** a API pública (`api.github.com/repos/<dono>/<repo>/actions/runs`) devolve o
+  número, o commit e a conclusão de cada run.

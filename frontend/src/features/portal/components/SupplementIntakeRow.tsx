@@ -10,15 +10,19 @@ import { Button } from '@/shared/components/ui/button';
 type IntakeItem = components['schemas']['MyTodaySupplementIntakeItemResponse'];
 type Assignment = components['schemas']['MySupplementAssignmentResponse'];
 
-/** Códigos confirmados em `MarkMySupplementIntakeHandler` e `UnmarkMySupplementIntakeHandler`. */
+/**
+ * Códigos confirmados em `MarkMySupplementIntakeHandler` e `UnmarkMySupplementIntakeHandler`.
+ * São 404 e 409 de negócio: chegam no `title` do ProblemDetails, nunca em `errors[]` (os dois
+ * pedidos não têm corpo para validar).
+ */
 const INTAKE_ERROR_MESSAGES: Record<string, string> = {
   supplement_assignment_inactive: 'Este suplemento já não te está atribuído.',
   supplement_assignment_not_found: 'Este suplemento já não existe na tua lista.',
 };
 
-/** Mensagem PT para a falha marcar ou desmarcar uma toma; genérica quando desconhecida. */
+/** Mensagem PT para a falha de marcar ou desmarcar uma toma; genérica quando desconhecida. */
 function intakeFailureMessage(failure: unknown): string {
-  const code = isApiProblem(failure) ? (failure.fieldErrors[0]?.code ?? failure.code) : null;
+  const code = isApiProblem(failure) ? failure.code : null;
 
   return (
     (code !== null && Object.hasOwn(INTAKE_ERROR_MESSAGES, code)

@@ -275,3 +275,18 @@ typecheck e o lint deixaram passar. O CI #24 apanhou-os pelos testes do blueprin
 - Prettier só dentro de `frontend/`. Para comparar blueprint ↔ disco, normalizar com Node
   (tirar comentários, colapsar espaços) e usar `git diff --no-index`; nomes de ficheiro curtos,
   porque o caminho do scratchpad passa o limite de 260 caracteres.
+
+## 2026-10-11 — Fecho 6F-3: `fieldErrors[0]?.code` num pedido sem corpo é ramo morto
+
+**O que aconteceu.** O pack da 6F-3 copiou para `SupplementIntakeRow` a regra da 6F-2
+(`fieldErrors[0]?.code ?? code`). O `PUT` e o `DELETE` da toma não têm corpo e os códigos
+tratados (`supplement_assignment_not_found`, `supplement_assignment_inactive`) são `NotFound`
+e `Conflict`, que chegam no `title`. O primeiro ramo nunca corria e nenhum teste o podia cobrir
+com um corpo real.
+
+**A regra.**
+- `errors[]` só traz o código quando o backend devolve `Error.Validation` (400
+  `validation_failed`), o que exige um corpo ou parâmetros validados. Antes de escrever
+  `fieldErrors[0]?.code`, ver a `ErrorCategory` de cada código em `*Errors.cs`.
+- Pedido sem corpo e só com erros `NotFound`/`Conflict`: ler `failure.code` e mais nada.
+- Um ramo que nenhuma resposta real atinge não se testa com dados inventados: retira-se.
