@@ -280,3 +280,22 @@ Lições capturadas depois de correções do utilizador.
   guardar a série" também aparecia ao desmarcar e ao concluir o treino.
 - **Comando longo em segundo plano com o harness de mutações:** guardar antes o `git diff` num
   patch, para provar no fim que a working tree voltou ao estado de partida.
+
+## 2026-10-11: blueprints da 6F-3
+
+- **Um nome de campo do contrato não diz o que ele mede.** `actual_totals` parecia "o que o
+  cliente comeu"; a query soma a prescrição. Ler a query antes de escrever a copy do ecrã.
+- **Antes de usar um campo como chave React, procurar o índice único na configuração EF.** Só
+  as refeições têm `order_number` único; alimentos e suplementos da refeição não.
+- **Um erro mostrado dentro de uma linha morre com a linha.** Se a releitura depois da falha
+  pode tirar a linha da lista (409 de atribuição inativa), o aviso vai para um toast.
+- **Mutações numa máquina lenta:** `--bail=1` e `--experimental.fsModuleCache` baixaram cada
+  corrida de 3–5 min para menos de 1 min. Os comandos em fundo morrem aos 10 min: correr em
+  lotes e nunca começar uma mutação que não caiba, senão o ficheiro fica mutado.
+- **Scripts Node com caminhos do utilizador:** `fileURLToPath(import.meta.url)`; o `pathname`
+  de um `URL` devolve `%20` no espaço de "Leandro Alves".
+- **Ver ecrãs sem backend nem login:** MSW no browser com os handlers dos testes e
+  `restorableSession`, numa configuração Vite em HTTP só na worktree (o `vite dev` do projeto é
+  HTTPS auto-assinado e o service worker não regista). Receita na nota de sessão de 2026-10-11.
+- **`docs/` está no `.gitignore`:** um pack novo não aparece no `git status`; confirmar com
+  `ls`, não com o git.

@@ -1,11 +1,28 @@
-# Estado ativo: Sprint 6F (portal do cliente). 6F-1 e 6F-2 FINALIZADAS, 6F-3 por gerar
+# Estado ativo: Sprint 6F (portal do cliente). 6F-1 e 6F-2 FINALIZADAS, 6F-3 com blueprints validados (por aplicar)
 
-Atualizado: 2026-10-10
+Atualizado: 2026-10-11
 
 ## Sprint 6F: portal do cliente
 
 **Ler primeiro** `docs/blueprints/frontend-files/sprint_6/sprint_6F/00_plano_fase_6F_completa.md`.
-Tem as fases, as decisões U1–U15, os contratos de todas as fases e as armadilhas.
+Tem as fases, as decisões U1–U19, os contratos de todas as fases e as armadilhas.
+
+- **6F-3 blueprints validados (2026-10-11).**
+  - Pack: `sprint_6F/sprint_6F3/01–06` + `manifest.json`, com 13 caminhos (12 integrais e 1
+    patch). Só frontend; sem backend, contrato ou reset da BD.
+  - Âmbito:
+    - `/portal/nutrition`: "Objetivo" ao lado de "Este plano dá", refeições com gramas e kcal;
+    - `/portal/supplements`: tomas de hoje (marcar e desmarcar) com as notas do trainer.
+  - Decisões U16–U19 (doc 01). Desvios V1–V9, entre eles: o "real" da nutrição é a soma da
+    prescrição; erro da toma em toast; chaves React com índice.
+  - Evidência na worktree `C:\ptm-tmp-6f3` (apagada):
+    - Vitest 419 (382 + 37), lint, typecheck e build verdes;
+    - 34/34 mutações mortas;
+    - round-trip 13/13;
+    - verificação visual no browser com a API simulada (375 px, claro e escuro).
+  - **Próximo passo:** o Leandro aplica o pack (ordem no doc 01, testes no mesmo commit) e
+    faz `QG6F3-UI-001` e `QG6F3-ISOLAMENTO-UI-001`. Depois, fecho da 6F-3 e blueprints da 6F-4.
+  - Ver `Sessions/2026-10-11-sprint6f3-blueprints.md`.
 
 - **6F-2 FINALIZADA (2026-10-10).**
   - Aplicação do Leandro em `f0c827b` (backend) e `41c02a9` (frontend, 12 testes vermelhos).
@@ -17,7 +34,7 @@ Tem as fases, as decisões U1–U15, os contratos de todas as fases e as armadil
   - Ver `Sessions/2026-10-10-sprint6f2-fecho-frontend.md`.
   - Faltam os gates manuais `QG6F2-UI-001`, `QG6F2-ISOLAMENTO-UI-001`, `QG6F2-VIDEO-001`,
     `QG6F2-PESO-001` e o `QG6F2-AUDIT-001`.
-  - **Próximo passo:** blueprints da 6F-3 (nutrição, suplementos e tomas de hoje).
+  - Os blueprints da 6F-3 foram gerados a 2026-10-11 (ver acima).
 - **6F-2 blueprints validados (2026-10-09, histórico).**
   - Pack: `sprint_6F/sprint_6F2/01–08` + `manifest.json`, com 38 caminhos (32 integrais e 6
     patches).
@@ -57,7 +74,7 @@ Tem as fases, as decisões U1–U15, os contratos de todas as fases e as armadil
     - round-trip 31/31.
   - Ver `Sessions/2026-10-04-sprint6f-plano-6f1-blueprints.md`.
 - Gates manuais da 6F-1 (doc 08) continuam com o Leandro (o reset foi feito a 2026-10-07).
-- 6F-3 e 6F-4 estão por gerar. O fecho do sprint fica em `sprint_6F/10_fecho_sprint_6F.md`.
+- A 6F-4 está por gerar. O fecho do sprint fica em `sprint_6F/10_fecho_sprint_6F.md`.
 
 ## Sprint 6E — frontend trainer
 

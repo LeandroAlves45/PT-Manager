@@ -222,3 +222,198 @@ export function trainingPlan(
     ...overrides,
   };
 }
+
+/** Nutrição e suplementos. Os macros por alimento são valores reais por 100 g; as
+ * contribuições e os totais seguem a conta do backend (`MyNutritionPlanQueries`): gramas a
+ * dividir por 100, arredondado a duas casas.
+ */
+
+/** Atribuição da creatina, já tomada hoje nas fixtures. */
+export const CREATINE_ASSIGNMENT_ID = 'a1b2c3d4-0001-4a5b-8c6d-7e8f9a0b1c2d';
+/** Atribuição do ómega 3, por tomar. */
+export const OMEGA_ASSIGNMENT_ID = 'a1b2c3d4-0002-4a5b-8c6d-7e8f9a0b1c2d';
+
+/** Plano alimentar ativo com duas refeições; a primeira tem um suplemento associado. */
+export function nutritionPlan(
+  overrides: Partial<Schemas['MyNutritionPlanResponse']> = {}
+): Schemas['MyNutritionPlanResponse'] {
+  return {
+    id: '6b4f8f5e-4d3c-4f1d-9d8e-0a1b2c3d4e5f',
+    name: 'Manutenção - 2400 kcal',
+    description: 'Bebe pelo menos 2 litros de água por dia.',
+    starts_date: '2026-10-05',
+    ends_date: null,
+    target_kcal: 2400,
+    protein_target_grams: 180,
+    carbs_target_grams: 270,
+    fats_target_grams: 67,
+    actual_totals: {
+      protein_grams: 79.25,
+      carbs_grams: 99.36,
+      fats_grams: 19.13,
+      kcal: 925.6,
+      fiber_grams: 9.08,
+    },
+    meals: [
+      {
+        meal_type: 'Pequeno-almoço',
+        order_number: 1,
+        totals: {
+          protein_grams: 19.4,
+          carbs_grams: 57.36,
+          fats_grams: 12.2,
+          kcal: 433.6,
+          fiber_grams: 8.48,
+        },
+        items: [
+          {
+            order_number: 1,
+            food_name: 'Aveia',
+            is_unavailable: false,
+            quantity_in_grams: 80,
+            contribution: {
+              protein_grams: 10.8,
+              carbs_grams: 46.96,
+              fats_grams: 5.6,
+              kcal: 297.6,
+              fiber_grams: 8.48,
+            },
+          },
+          {
+            order_number: 2,
+            food_name: 'Iogurte natural',
+            is_unavailable: false,
+            quantity_in_grams: 200,
+            contribution: {
+              protein_grams: 8.6,
+              carbs_grams: 10.4,
+              fats_grams: 6.6,
+              kcal: 136,
+              fiber_grams: 0,
+            },
+          },
+        ],
+        supplements: [
+          {
+            order_number: 1,
+            supplement_name: 'Creatina',
+            is_unavailable: false,
+            unit_of_measure: 'g',
+            quantity: 5,
+            notes: 'Com água.',
+          },
+        ],
+      },
+      {
+        meal_type: 'Almoço',
+        order_number: 2,
+        totals: {
+          protein_grams: 59.85,
+          carbs_grams: 42,
+          fats_grams: 6.93,
+          kcal: 492,
+          fiber_grams: 0.6,
+        },
+        items: [
+          {
+            order_number: 1,
+            food_name: 'Arroz basmati cozido',
+            is_unavailable: false,
+            quantity_in_grams: 150,
+            contribution: {
+              protein_grams: 4.05,
+              carbs_grams: 42,
+              fats_grams: 0.45,
+              kcal: 195,
+              fiber_grams: 0.6,
+            },
+          },
+          {
+            order_number: 2,
+            food_name: 'Peito de frango',
+            is_unavailable: false,
+            quantity_in_grams: 180,
+            contribution: {
+              protein_grams: 55.8,
+              carbs_grams: 0,
+              fats_grams: 6.48,
+              kcal: 297,
+              fiber_grams: 0,
+            },
+          },
+        ],
+        supplements: [],
+      },
+    ],
+    updated_at: '2026-10-05T10:00:00Z',
+    ...overrides,
+  };
+}
+
+/** Tomas de terça, 6 de outubro de 2026: creatina tomada, ómega 3 por tomar (ordem por nome). */
+export function supplementIntakesToday(
+  overrides: Partial<Schemas['MyTodaySupplementIntakesResponse']> = {}
+): Schemas['MyTodaySupplementIntakesResponse'] {
+  return {
+    local_date: '2026-10-06',
+    taken_count: 1,
+    total_count: 2,
+    items: [
+      {
+        assignment_id: CREATINE_ASSIGNMENT_ID,
+        supplement_name: 'Creatina',
+        serving_size: '5 g',
+        timing: 'Depois do treino',
+        is_taken: true,
+        taken_at: '2026-10-06T09:30:00Z',
+      },
+      {
+        assignment_id: OMEGA_ASSIGNMENT_ID,
+        supplement_name: 'Ómega 3',
+        serving_size: '2 cápsulas',
+        timing: 'Ao pequeno-almoço',
+        is_taken: false,
+        taken_at: null,
+      },
+    ],
+    ...overrides,
+  };
+}
+
+/** Atribuição ativa tal como a lista paginada a devolve; por omissão, a da creatina. */
+export function supplementAssignment(
+  overrides: Partial<Schemas['MySupplementAssignmentResponse']> = {}
+): Schemas['MySupplementAssignmentResponse'] {
+  return {
+    id: CREATINE_ASSIGNMENT_ID,
+    supplement_id: 'b2c3d4e5-0001-4b6c-9d7e-8f9a0b1c2d3e',
+    supplement_name: 'Creatina',
+    supplement_description: 'Creatina monohidratada.',
+    unit_of_measure: 'g',
+    serving_size: '5 g',
+    timing: 'Depois do treino',
+    trainer_notes: 'Toma todos os dias, também nos de descanso.',
+    is_supplement_archived: false,
+    updated_at: '2026-10-05T10:00:00Z',
+    ...overrides,
+  };
+}
+
+/** Página única com as duas atribuições das tomas de hoje. */
+export function supplementAssignmentsPage(
+  items: Schemas['MySupplementAssignmentResponse'][] = [
+    supplementAssignment(),
+    supplementAssignment({
+      id: OMEGA_ASSIGNMENT_ID,
+      supplement_id: 'b2c3d4e5-0002-4b6c-9d7e-8f9a0b1c2d3e',
+      supplement_name: 'Ómega 3',
+      supplement_description: null,
+      unit_of_measure: 'cápsula',
+      serving_size: '2 cápsulas',
+      timing: 'Ao pequeno-almoço',
+      trainer_notes: null,
+    }),
+  ]
+): Schemas['PagedResponseOfMySupplementAssignmentResponse'] {
+  return { items, total_count: items.length, page_number: 1, page_size: 100 };
+}

@@ -1,7 +1,15 @@
 import { http, HttpResponse } from 'msw';
 
 import type { components } from '@/shared/api/schema';
-import { portalBranding, portalHome, trainingPlan, workoutToday } from '@/test/msw/portal-fixtures';
+import {
+  nutritionPlan,
+  portalBranding,
+  portalHome,
+  supplementAssignmentsPage,
+  supplementIntakesToday,
+  trainingPlan,
+  workoutToday,
+} from '@/test/msw/portal-fixtures';
 import { dashboardResponse } from '@/test/msw/trainer-fixtures';
 
 /**
@@ -52,8 +60,6 @@ export const handlers = [
   ),
   http.post(`${API}/auth/login`, () => HttpResponse.json(sessionResponse())),
   http.post(`${API}/auth/logout`, () => new HttpResponse(null, { status: 204 })),
-  // [6E-5] ALTERADO: valores reais do contrato (tier e estado em maiúsculas). 'BASIC'/'active'
-  // nunca existiram no backend e escondiam o defeito do cartão da sidebar.
   http.get(`${API}/billing/subscription`, () =>
     HttpResponse.json({
       tier: 'STARTER',
@@ -66,17 +72,18 @@ export const handlers = [
   http.get(`${API}/clients`, () =>
     HttpResponse.json({ items: [], page_number: 1, page_size: 5, total_count: 0 })
   ),
-  // [6E] NOVO: `/trainer` deixou de ser um placeholder; qualquer teste que entre como
-  // trainer carrega o painel. Sem clientes, para o ecrã ficar no estado mais leve.
   http.get(`${API}/dashboard`, () =>
     HttpResponse.json(dashboardResponse({ active_client_count: 0 }))
   ),
   http.get(`${API}/portal/branding`, () => HttpResponse.json(portalBranding())),
   http.get(`${API}/portal/home`, () => HttpResponse.json(portalHome())),
-  // [6F-2] NOVO: `/portal/today` deixou de ser um placeholder; qualquer teste que abra o
-  // treino (navegação do Início, menu do perfil) faz estes pedidos.
   http.get(`${API}/portal/my-workout/today`, () => HttpResponse.json(workoutToday())),
   http.get(`${API}/portal/my-plan`, () => HttpResponse.json(trainingPlan())),
+  http.get(`${API}/portal/my-nutrition`, () => HttpResponse.json(nutritionPlan())),
+  http.get(`${API}/portal/my-supplements/intakes/today`, () =>
+    HttpResponse.json(supplementIntakesToday())
+  ),
+  http.get(`${API}/portal/my-supplements`, () => HttpResponse.json(supplementAssignmentsPage())),
 ];
 
 /** Arranque com cookie de refresh válido: a sessão é restaurada com os dados indicados. */

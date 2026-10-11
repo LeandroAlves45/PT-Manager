@@ -17,6 +17,9 @@ export const portalKeys = {
   home: () => [...portalKeys.all, 'home'] as const,
   workoutToday: () => [...portalKeys.all, 'workoutToday'] as const,
   plan: () => [...portalKeys.all, 'plan'] as const,
+  nutrition: () => [...portalKeys.all, 'nutrition'] as const,
+  supplementIntakes: () => [...portalKeys.all, 'supplementIntakes'] as const,
+  supplements: () => [...portalKeys.all, 'supplements'] as const,
 };
 
 /**
@@ -157,5 +160,98 @@ export function useCompleteWorkoutMutation() {
         })
       ),
     onSettled: refresh,
+  });
+}
+
+/**
+ * Plano alimentar ativo do cliente, só de leitura.
+ *
+ * Orçamento: um `GET /api/v1/portal/my-nutrition` ao abrir o ecrã; refeições, alimentos e
+ * totais vêm no mesmo pedido.
+ */
+export function usePortalNutritionQuery() {
+  return useQuery({
+    queryKey: portalKeys.nutrition(),
+    queryFn: async ({ signal }) =>
+      unwrap(await apiClient.GET('/api/v1/portal/my-nutrition', { signal })),
+  });
+}
+
+/**
+ * Suplementos ativos com o estado da toma de hoje ("X de Y tomadas").
+ *
+ * O "hoje" é o `local_date` da resposta (fuso do personal trainer). Sem paginação: há no máximo
+ * uma atribuição ativa por suplemento.
+ */
+export function usePortalSupplementIntakesQuery() {
+  return useQuery({
+    queryKey: portalKeys.supplementIntakes(),
+    queryFn: async ({ signal }) =>
+      unwrap(await apiClient.GET('/api/v1/portal/my-supplements/intakes/today', { signal })),
+  });
+}
+
+/** Tamanho máximo de página do backend; chega para todas as atribuições ativas de um cliente. */
+const SUPPLEMENTS_PAGE_SIZE = 100;
+
+/**
+ * Atribuições ativas com o que as tomas de hoje não trazem: notas do personal trainer e
+ * descrição do suplemento.
+ *
+ * Uma só página de 100, sem paginação no ecrã: as linhas juntam-se às tomas pelo
+ * `id` da atribuição. É um complemento; o ecrã das tomas funciona sem ele.
+ */
+export function usePortalSupplementsQuery() {
+  return useQuery({
+    queryKey: portalKeys.supplements(),
+    queryFn: async ({ signal }) =>
+      unwrap(
+        await apiClient.GET('/api/v1/portal/my-supplements', {
+          params: { query: { page_number: 1, page_size: SUPPLEMENTS_PAGE_SIZE } },
+          signal,
+        })
+      ),
+  });
+}
+
+/** Toma de hoje a marcar (`taken: true`) ou a desmarcar. */
+export interface ToggleIntakeInput {
+  assignmentId: string;
+  taken: boolean;
+}
+
+/**
+ * Marca (`PUT`) ou desmarca (`DELETE`) a toma de hoje de uma atribuição.
+ *
+ * Os dois pedidos são idempotentes no backend. Em `onSettled` voltam a ler-se as tomas e o
+ * cartão do Início, também quando a escrita falha: um 409 `supplement_assignment_inactive`
+ * quer dizer que a lista do ecrã estava desatualizada.
+ */
+export function useToggleIntakeMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ assignmentId, taken }: ToggleIntakeInput) => {
+      const options = { params: { path: { assignmentId } } };
+
+      if (taken) {
+        unwrap(
+          await apiClient.PUT('/api/v1/portal/my-supplements/{assignmentId}/intakes/today', options)
+        );
+        return;
+      }
+
+      unwrap(
+        await apiClient.DELETE(
+          '/api/v1/portal/my-supplements/{assignmentId}/intakes/today',
+          options
+        )
+      );
+    },
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: portalKeys.supplementIntakes() }),
+        queryClient.invalidateQueries({ queryKey: portalKeys.home() }),
+      ]),
   });
 }

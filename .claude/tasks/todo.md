@@ -1,55 +1,51 @@
-# TODO: sessão de 2026-10-10 · Sprint 6F-2 (Treino do portal), fecho do frontend
+# TODO: sessão de 2026-10-11 · Sprint 6F-3 (Nutrição e suplementos do portal), blueprints
 
-Plano aprovado em `~/.claude/plans/mighty-sparking-bumblebee.md`. Aplicação do Leandro em
-`f0c827b` (backend, CI #29 verde) e `41c02a9` (frontend, CI #30 vermelho). Backend não se toca.
+Plano aprovado em `~/.claude/plans/c-users-leandro-alves-desktop-projeto-p-wise-melody.md`.
+Só documentação: `frontend/` e `backend/` do repo real não mudaram. Worktree `C:\ptm-tmp-6f3`
+(branch `tmp/blueprints-6f3`), apagada no fim. Um processo pesado de cada vez.
 
-## 1. Diff programático
-- [x] SHA-256 dos 38 caminhos contra o `manifest.json`: 21 iguais, 17 divergentes
-- [x] Diff sem comentários nem formatação: 7 ficheiros com diferença real
-- [x] Classificação: D1 e D2 (defeitos), copy do Leandro (fica), reticências, chave de cache
+## 1. Preparação
+- [x] Ler NEST, ACTIVE, lessons, GOTCHAS_FRONTEND, pack 6F-2 (formato), layout 05
+- [x] Confirmar contratos no backend (nutrição, tomas, códigos de erro)
+- [x] Decisões U16–U19 com o Leandro
+- [x] `git status` + criar worktree
+- [x] `npm ci` na worktree + `npm audit` (só o `source-map-js` já conhecido)
 
-## 2. Estado recebido
-- [x] Lint e typecheck verdes; 12 testes vermelhos nos 3 ficheiros do portal
+## 2. Implementação na worktree
+- [x] Fixtures e handlers MSW
+- [x] `api/portal.ts` (keys, queries, toggle da toma)
+- [x] `lib/nutrition.ts` + teste
+- [x] Componentes (`MealCard`, `SupplementIntakeRow`)
+- [x] `PortalNutritionPage` + teste
+- [x] `PortalSupplementsPage` + teste
+- [x] `index.ts` e `router.tsx`
 
-## 3. Correções
-- [x] D1: `plannedSetLabel` perdia as casas decimais do peso e do RPE
-- [x] D2: `formatDecimal` com casa decimal fixa partia as repetições
-- [x] D3: códigos de validação dentro de `errors[]` nunca traduzidos (`workoutFailureMessage`)
-- [x] D4: repetir o vídeo depois de uma falha passageira
-- [x] D5: erro antigo no diálogo de concluir
-- [x] D6: `aria-valuenow` na barra de progresso
-- [x] D7: mensagem genérica, reticências, JSDoc
+## 3. Validação
+- [x] Vitest por ficheiro (14 + 10 + 13), typecheck, lint
+- [x] Suite completa 419/419 (`--maxWorkers=2`) e build
+- [x] Verificação visual no browser (arnês MSW descartável; 375 px, claro/escuro)
+- [x] Mutações M01–M34: 34 mortas
+- [x] Greps de proibição e Prettier dos 13 ficheiros
 
-## 4. Revisão
-- [x] `code-review-leandro` nos ficheiros de produção da fase
-- [x] `security-reviewer` (sonnet) no diff do frontend: sem vulnerabilidades exploráveis
+## 4. Pack
+- [x] Docs `sprint_6F3/01–06` + `manifest.json`
+- [x] Round-trip programático 13/13
+- [x] `00_plano_fase_6F_completa.md`, `10_fecho_sprint_6F.md`, layout 05, NEST, QualityGates
 
-## 5. Testes
-- [x] Testes do pack alinhados com a copy final
-- [x] 10 testes novos de caminhos reais
-- [x] Mutações FM1–FM21 repetidas e FM22–FM33 novas: 33/33 mortas
-
-## 6. Gates e documentação
-- [x] Lint, typecheck, Prettier, Vitest 382/382 e build (301,15 kB gzip) verdes
-- [x] Doc 08, relatório 09, blueprints 04–07 e manifest realinhados
-- [x] `backlogs/QualityGates.md`, `10_fecho_sprint_6F.md`, `00` da 6F
-- [x] Memória (`obsidian-ptmanager`), `lessons.md`, `GOTCHAS_FRONTEND.md`
-
-## 7. Commit e CI
-- [x] Commit de fecho `5310809` e push
-- [x] CI #31 verde em `5310809` (4/4 jobs); `QG6F2-CI-001` marcado
+## 5. Fecho
+- [x] Entrada temporária do `launch.json` removida; worktree e branch apagados
+- [x] `git status` final: só `.claude/` (o `docs/` e o `backlogs/` estão no `.gitignore`)
+- [x] Memória: ACTIVE, MEMORY, nota de sessão, lessons
 
 ## Review
 
-**Finalizado.**
-
-- **O que mudou:** 8 ficheiros de produção do frontend e 3 de teste. Backend sem alterações.
-- **Defeitos:** D1 e D2 vieram de duas trocas de uma palavra na aplicação manual; D3 era do
-  próprio pack; D4–D7 são melhorias pequenas encontradas na revisão.
-- **Copy do Leandro:** mantida, exceto a mensagem genérica "guardar a série", que também
-  aparecia ao desmarcar e ao concluir.
-- **Evidência:** Vitest 382/382, 33/33 mutações, build 301,15 kB gzip, CI no commit de fecho.
-- **Incidente:** o Prettier corrido sobre cópias no `%TEMP%` bloqueou a máquina três vezes;
-  regra nova em `GOTCHAS_FRONTEND.md`.
-- **Em aberto (Leandro):** gates manuais `QG6F2-UI-001`, `QG6F2-ISOLAMENTO-UI-001`,
-  `QG6F2-VIDEO-001`, `QG6F2-PESO-001`; `QG6F2-AUDIT-001`; CSP da SPA; blueprints da 6F-3.
+- Entregue: pack 6F-3 com 13 caminhos (12 integrais, 1 patch), validado e reproduzível por
+  SHA-256. Sem commit.
+- Decisões: U16–U19. Desvios V1–V9 no doc 01.
+- Não feito: auditoria `design-is` formal (ficaram as observações V7 e V8); pesquisa web de
+  dependências (não foi precisa: zero pacotes novos e `npm audit` sem achados novos); o MCP
+  Playwright não ligou, usou-se o browser integrado.
+- Por fazer pelo Leandro: aplicar o pack, `npm run test:run` antes do push, gates manuais
+  `QG6F3-UI-001` e `QG6F3-ISOLAMENTO-UI-001`.
+- Para a 6F-4: largura máxima do portal em ecrãs largos (V8) e extrair o estado "Portal
+  indisponível" (4.º uso).

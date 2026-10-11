@@ -14,7 +14,13 @@ import { CatalogPage } from '@/features/admin-catalog/pages/CatalogPage';
 import { ModerationPage } from '@/features/admin-moderation/pages/ModerationPage';
 import { ClientDetailPage } from '@/features/clients/pages/ClientDetailPage';
 import { ClientsPage } from '@/features/clients/pages/ClientsPage';
-import { PortalHomePage, PortalPlanPage, PortalTodayPage } from '@/features/portal';
+import {
+  PortalHomePage,
+  PortalNutritionPage,
+  PortalPlanPage,
+  PortalSupplementsPage,
+  PortalTodayPage,
+} from '@/features/portal';
 import { LibraryPage } from '@/features/library/pages/LibraryPage';
 import {
   MealPlansPage,
@@ -100,8 +106,8 @@ const applicationRoutes: RouteObject[] = [
               { index: true, element: <PortalHomePage /> },
               { path: 'today', element: <PortalTodayPage /> },
               { path: 'plan', element: <PortalPlanPage /> },
-              { path: 'nutrition', element: placeholder('Nutrição', '6F') },
-              { path: 'supplements', element: placeholder('Suplementos', '6F') },
+              { path: 'nutrition', element: <PortalNutritionPage /> },
+              { path: 'supplements', element: <PortalSupplementsPage /> },
               { path: 'check-ins', element: placeholder('Check-ins', '6F') },
               { path: 'profile', element: placeholder('Perfil', '6F') },
             ],

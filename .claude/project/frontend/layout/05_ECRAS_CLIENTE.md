@@ -70,3 +70,12 @@ Decisões e contratos atuais em `docs/blueprints/frontend-files/sprint_6/sprint_
 | Suplementos | `GET /portal/my-supplements`, `/{assignmentId}` + tomas (6A) | `ServingSize` e `Timing` como texto do trainer |
 | Check-ins | `GET /portal/my-check-ins/due`, `POST /portal/check-ins/{checkInId}/respond` | Formulário com peso, medidas e feedback |
 | Perfil | `GET/PATCH /portal/my-profile`, `PUT/DELETE /portal/my-profile/avatar` | Avatar moderado de forma síncrona: recusa chega como erro de validação no upload (sem estado pendente) |
+
+### Atualização 2026-10-11 (6F-3, nutrição e suplementos)
+
+Decisões U16–U19 em `docs/blueprints/frontend-files/sprint_6/sprint_6F/sprint_6F3/01_6F3_indice_decisoes.md`:
+- os "totais actuais" da nutrição são a soma dos alimentos prescritos, não consumo: o ecrã
+  mostra "Objetivo" ao lado de "Este plano dá";
+- cada alimento mostra gramas e kcal; os macros ficam no total da refeição;
+- os suplementos ficam num só ecrã (tomas de hoje com as notas do trainer), sem paginação;
+- marcar a toma espera pelo servidor; `GET /portal/my-supplements/{assignmentId}` não é usado.

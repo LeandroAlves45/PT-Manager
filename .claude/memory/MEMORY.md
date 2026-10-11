@@ -6,6 +6,17 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-11: Sprint 6F-3 blueprints validados (nutrição e suplementos do portal).**
+- Pack `sprint_6F/sprint_6F3/01–06` + manifest, com 13 caminhos (12 integrais e 1 patch). Só
+  frontend, sem contrato novo.
+- Decisões U16–U19: "Objetivo" ao lado de "Este plano dá" (o `actual_totals` é a soma da
+  prescrição, não consumo), suplementos num só ecrã com as notas do trainer (2 pedidos), a toma
+  espera pelo servidor, alimento com gramas + kcal.
+- Evidência na worktree `C:\ptm-tmp-6f3` (apagada): Vitest 419 (382 + 37), 34/34 mutações,
+  round-trip 13/13, verificação visual no browser com a API simulada (MSW).
+- Por fazer: o Leandro aplica o pack; gates manuais no doc 06.
+- Ver `Sessions/2026-10-11-sprint6f3-blueprints.md`.
+
 **2026-10-10: Sprint 6F-2 FINALIZADA (frontend).**
 - A aplicação manual (`41c02a9`) tinha 12 testes vermelhos. Corrigido em `5310809`:
   - D1: peso e RPE planeados sem casas decimais;
