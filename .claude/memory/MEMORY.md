@@ -6,7 +6,16 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
-**2026-10-11: Sprint 6F-3 blueprints validados (nutrição e suplementos do portal).**
+**2026-10-11: Sprint 6F-3 FINALIZADA (frontend).**
+- Aplicação manual (`8ae93a4`) verde à primeira; fecho em `858e7f4` (CI #34 verde).
+- Sem defeitos de comportamento. A3: `fieldErrors[0]?.code` retirado da toma (pedido sem
+  corpo, ramo morto). A4 por decidir no fecho do sprint: `isError` antes dos dados nos três
+  ecrãs do portal.
+- 419 testes, 50/50 mutações, zero testes novos. Blueprints realinhados 13/13.
+- Faltam `QG6F3-UI-001`, `QG6F3-ISOLAMENTO-UI-001` e o `design-is`. Próximo: blueprints 6F-4.
+- Ver `Sessions/2026-10-11-sprint6f3-fecho-frontend.md`.
+
+**2026-10-11: Sprint 6F-3 blueprints validados (histórico).**
 - Pack `sprint_6F/sprint_6F3/01–06` + manifest, com 13 caminhos (12 integrais e 1 patch). Só
   frontend, sem contrato novo.
 - Decisões U16–U19: "Objetivo" ao lado de "Este plano dá" (o `actual_totals` é a soma da
@@ -14,7 +23,6 @@ notas de `.claude/memory/Sessions/`.
   espera pelo servidor, alimento com gramas + kcal.
 - Evidência na worktree `C:\ptm-tmp-6f3` (apagada): Vitest 419 (382 + 37), 34/34 mutações,
   round-trip 13/13, verificação visual no browser com a API simulada (MSW).
-- Por fazer: o Leandro aplica o pack; gates manuais no doc 06.
 - Ver `Sessions/2026-10-11-sprint6f3-blueprints.md`.
 
 **2026-10-10: Sprint 6F-2 FINALIZADA (frontend).**

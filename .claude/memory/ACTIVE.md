@@ -1,4 +1,4 @@
-# Estado ativo: Sprint 6F (portal do cliente). 6F-1 e 6F-2 FINALIZADAS, 6F-3 com blueprints validados (por aplicar)
+# Estado ativo: Sprint 6F (portal do cliente). 6F-1, 6F-2 e 6F-3 FINALIZADAS; 6F-4 por gerar
 
 Atualizado: 2026-10-11
 
@@ -7,7 +7,22 @@ Atualizado: 2026-10-11
 **Ler primeiro** `docs/blueprints/frontend-files/sprint_6/sprint_6F/00_plano_fase_6F_completa.md`.
 Tem as fases, as decisões U1–U19, os contratos de todas as fases e as armadilhas.
 
-- **6F-3 blueprints validados (2026-10-11).**
+- **6F-3 FINALIZADA (2026-10-11).**
+  - Aplicação do Leandro em `8ae93a4` (CI #33 verde, sem testes vermelhos). Fecho em `858e7f4`
+    (CI #34 verde).
+  - Diff contra o manifest: 5 iguais, 8 divergentes só em comentários e na copy do toast
+    genérico. Nenhum defeito de comportamento.
+  - Correções: A1 e A2 (typos de JSDoc), A3 (`intakeFailureMessage` lê só `failure.code`: o
+    `fieldErrors[0]?.code` copiado da 6F-2 é ramo morto num pedido sem corpo).
+  - A4 registado, sem alteração: `isError` antes dos dados troca o ecrã pelo de erro quando a
+    releitura falha; é o padrão dos três ecrãs do portal, decidir no fecho do sprint.
+  - 419 testes (sem novos), 50/50 mutações (M01–M34 do pack + M35–M50), blueprints realinhados
+    13/13.
+  - Relatório `sprint_6F3/07_relatorio_fecho_fase_6F3.md`.
+  - Ver `Sessions/2026-10-11-sprint6f3-fecho-frontend.md`.
+  - Faltam os gates manuais `QG6F3-UI-001`, `QG6F3-ISOLAMENTO-UI-001` e a auditoria `design-is`.
+  - **Próximo passo:** blueprints da 6F-4 (check-ins, perfil, avatar moderado).
+- **6F-3 blueprints validados (2026-10-11, histórico).**
   - Pack: `sprint_6F/sprint_6F3/01–06` + `manifest.json`, com 13 caminhos (12 integrais e 1
     patch). Só frontend; sem backend, contrato ou reset da BD.
   - Âmbito:
@@ -20,8 +35,6 @@ Tem as fases, as decisões U1–U19, os contratos de todas as fases e as armadil
     - 34/34 mutações mortas;
     - round-trip 13/13;
     - verificação visual no browser com a API simulada (375 px, claro e escuro).
-  - **Próximo passo:** o Leandro aplica o pack (ordem no doc 01, testes no mesmo commit) e
-    faz `QG6F3-UI-001` e `QG6F3-ISOLAMENTO-UI-001`. Depois, fecho da 6F-3 e blueprints da 6F-4.
   - Ver `Sessions/2026-10-11-sprint6f3-blueprints.md`.
 
 - **6F-2 FINALIZADA (2026-10-10).**

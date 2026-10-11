@@ -1,51 +1,53 @@
-# TODO: sessão de 2026-10-11 · Sprint 6F-3 (Nutrição e suplementos do portal), blueprints
+# TODO: sessão de 2026-10-11 · Sprint 6F-3 (Nutrição e suplementos do portal), fecho
 
-Plano aprovado em `~/.claude/plans/c-users-leandro-alves-desktop-projeto-p-wise-melody.md`.
-Só documentação: `frontend/` e `backend/` do repo real não mudaram. Worktree `C:\ptm-tmp-6f3`
-(branch `tmp/blueprints-6f3`), apagada no fim. Um processo pesado de cada vez.
+Plano aprovado em `~/.claude/plans/cryptic-wondering-hellman.md`. Só frontend: `backend/` não é
+tocado. Um processo pesado de cada vez, 2 workers.
 
-## 1. Preparação
-- [x] Ler NEST, ACTIVE, lessons, GOTCHAS_FRONTEND, pack 6F-2 (formato), layout 05
-- [x] Confirmar contratos no backend (nutrição, tomas, códigos de erro)
-- [x] Decisões U16–U19 com o Leandro
-- [x] `git status` + criar worktree
-- [x] `npm ci` na worktree + `npm audit` (só o `source-map-js` já conhecido)
+## 1. Comparação com o pack
+- [x] SHA-256 dos 13 caminhos contra o `manifest.json` (5 iguais, 8 divergentes)
+- [x] Diff bloco a bloco dos 8 divergentes: só comentários e uma frase de copy
+- [x] Patch de `portal-fixtures.ts`: só o comentário de abertura mudou de forma
 
-## 2. Implementação na worktree
-- [x] Fixtures e handlers MSW
-- [x] `api/portal.ts` (keys, queries, toggle da toma)
-- [x] `lib/nutrition.ts` + teste
-- [x] Componentes (`MealCard`, `SupplementIntakeRow`)
-- [x] `PortalNutritionPage` + teste
-- [x] `PortalSupplementsPage` + teste
-- [x] `index.ts` e `router.tsx`
+## 2. Baseline no checkout real
+- [x] `npm run lint` e `npm run typecheck`
+- [x] Vitest dos 3 ficheiros da fase (37/37)
 
-## 3. Validação
-- [x] Vitest por ficheiro (14 + 10 + 13), typecheck, lint
-- [x] Suite completa 419/419 (`--maxWorkers=2`) e build
-- [x] Verificação visual no browser (arnês MSW descartável; 375 px, claro/escuro)
-- [x] Mutações M01–M34: 34 mortas
-- [x] Greps de proibição e Prettier dos 13 ficheiros
+## 3. Revisão e correções
+- [x] `code-review-leandro` aos 8 ficheiros de produção
+- [x] A1: JSDoc "falha de marcar" (`SupplementIntakeRow`)
+- [x] A2: ponto final no JSDoc de `TargetsTable`
+- [x] A3: `intakeFailureMessage` lê só `failure.code` (ramo `errors[]` morto nestes endpoints)
+- [x] A4: `isError` com dados em cache igual ao padrão da 6F-2; registado, sem alteração
 
-## 4. Pack
-- [x] Docs `sprint_6F3/01–06` + `manifest.json`
-- [x] Round-trip programático 13/13
-- [x] `00_plano_fase_6F_completa.md`, `10_fecho_sprint_6F.md`, layout 05, NEST, QualityGates
+## 4. Mutações no código real
+- [x] M01–M34 do pack repetidas
+- [x] M35–M50 novas
+- [x] Sobreviventes tratadas (teste novo ou equivalente justificada)
 
-## 5. Fecho
-- [x] Entrada temporária do `launch.json` removida; worktree e branch apagados
-- [x] `git status` final: só `.claude/` (o `docs/` e o `backlogs/` estão no `.gitignore`)
-- [x] Memória: ACTIVE, MEMORY, nota de sessão, lessons
+## 5. Gates finais
+- [x] lint, typecheck, Vitest completo, build, Prettier, `npm audit`
+
+## 6. Documentação
+- [x] Blueprints 02–05 e manifest realinhados (round-trip 13/13)
+- [x] `06_6F3_quality_gates.md` e `backlogs/QualityGates.md`
+- [x] `07_relatorio_fecho_fase_6F3.md`, `01` (estado), `10_fecho_sprint_6F.md`
+- [x] Memória: ACTIVE, MEMORY, NEST, nota de sessão, lessons, GOTCHAS_FRONTEND
+
+## 7. Fecho
+- [x] Commit e push
+- [x] CI do GitHub Actions verde no commit de fecho
 
 ## Review
 
-- Entregue: pack 6F-3 com 13 caminhos (12 integrais, 1 patch), validado e reproduzível por
-  SHA-256. Sem commit.
-- Decisões: U16–U19. Desvios V1–V9 no doc 01.
-- Não feito: auditoria `design-is` formal (ficaram as observações V7 e V8); pesquisa web de
-  dependências (não foi precisa: zero pacotes novos e `npm audit` sem achados novos); o MCP
-  Playwright não ligou, usou-se o browser integrado.
-- Por fazer pelo Leandro: aplicar o pack, `npm run test:run` antes do push, gates manuais
-  `QG6F3-UI-001` e `QG6F3-ISOLAMENTO-UI-001`.
-- Para a 6F-4: largura máxima do portal em ecrãs largos (V8) e extrair o estado "Portal
-  indisponível" (4.º uso).
+- A aplicação do Leandro (`8ae93a4`) chegou verde e fiel ao pack: 8 de 13 ficheiros divergiam do
+  manifest só em comentários e numa frase de copy.
+- Três correções pequenas em `858e7f4`: dois typos de JSDoc e o ramo morto
+  `fieldErrors[0]?.code` em `intakeFailureMessage`.
+- 50 mutações no código real (34 do pack e 16 novas), todas mortas pelos 37 testes existentes:
+  não se acrescentaram testes.
+- Gates: lint, typecheck, Vitest 419/419, build e Prettier verdes; round-trip 13/13.
+- CI: #33 verde em `8ae93a4`; CI #34 verde em `858e7f4`.
+- Ficam com o Leandro: `QG6F3-UI-001`, `QG6F3-ISOLAMENTO-UI-001` e a auditoria `design-is`.
+- Por decidir no fecho do sprint: A4 (`isError` antes dos dados nos três ecrãs do portal).
+
+**Fase 6F-3: Finalizado.**
