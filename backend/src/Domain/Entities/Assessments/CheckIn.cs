@@ -224,8 +224,9 @@ public sealed class CheckIn
         int? nutritionAdherenceScore
     )
     {
-        if (weightKg <= 0)
-            throw new DomainException("Weight must be greater than zero.");
+        if (weightKg is <= 0 or > AssessmentLimits.MaxWeightKg)
+            throw new DomainException(
+                $"Weight must be greater than zero and at most {AssessmentLimits.MaxWeightKg} kg.");
         if (bodyFatPercentage is <= 0 or >= 100)
             throw new DomainException("Body fat percentage must be greater than zero and less than one hundred.");
 

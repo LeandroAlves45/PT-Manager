@@ -1,8 +1,8 @@
 # Sprint Pack — Sprint 6 (backend do layout + frontend)
 
-Estado em 2026-10-04: 6A e 6B fechadas no backend; 6C, 6D e 6E fechadas no frontend
-(6E em `134139c`, CI #25 verde). 6F planeada em 4 fases (`sprint_6F/00`), com a 6F-1
-validada em blueprints e a aplicação pendente. Packs em
+Estado em 2026-10-11: 6A e 6B fechadas no backend; 6C, 6D e 6E fechadas no frontend
+(6E em `134139c`, CI #25 verde). 6F em 4 fases (`sprint_6F/00`): 6F-1, 6F-2 e 6F-3
+fechadas; 6F-4 com blueprints validados (`sprint_6F4/01–08`) e a aplicação pendente. Packs em
 `docs/blueprints/backend-files/sprint_6/` e
 `docs/blueprints/frontend-files/sprint_6/`.
 

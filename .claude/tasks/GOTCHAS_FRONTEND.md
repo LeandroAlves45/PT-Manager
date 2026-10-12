@@ -290,3 +290,24 @@ com um corpo real.
   `fieldErrors[0]?.code`, ver a `ErrorCategory` de cada código em `*Errors.cs`.
 - Pedido sem corpo e só com erros `NotFound`/`Conflict`: ler `failure.code` e mais nada.
 - Um ramo que nenhuma resposta real atinge não se testa com dados inventados: retira-se.
+
+## 2026-10-11 — Blueprints 6F-4: código que o backend não emite, `key` que apaga o rascunho, avatar do Radix nos testes
+
+**O que aconteceu.** Na validação da 6F-4 (worktree):
+- O plano previa ler o limite de envios pelo código `rate_limit_exceeded`, copiado dos mapas do
+  trainer. O backend responde 429 com `title: "Too many requests"`: o código nunca chega.
+- A primeira versão do perfil dava `key={profile.updated_at}` ao formulário de contactos. Enviar
+  a fotografia muda o perfil e apagava o que o cliente estava a escrever.
+- O `AvatarImage` do Radix só entra no DOM depois de a imagem carregar; no jsdom nunca carrega,
+  e nenhum teste conseguia provar o URL da fotografia.
+- O aviso de saída do check-in tinha uma exceção para `/auth`. A mutação que a retirava
+  sobreviveu: o portal desmonta antes da navegação.
+
+**A regra.**
+- O 429 lê-se por `error.status === 429`. Antes de mapear um código, procurá-lo em
+  `backend/src`.
+- Um formulário não leva `key` derivada de um recurso que outras ações do mesmo ecrã alteram.
+  O teste escreve num campo, faz a outra ação e confirma que o texto ficou.
+- Imagem que um teste tem de ver: `<img>` com `onError`, e `fireEvent.error` no teste.
+- Uma mutação sobrevivente num ramo defensivo: confirmar primeiro se o ramo corre; se não
+  corre, retirar o ramo e deixar o teste do comportamento.

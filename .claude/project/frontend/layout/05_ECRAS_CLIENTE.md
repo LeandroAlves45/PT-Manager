@@ -79,3 +79,20 @@ Decisões U16–U19 em `docs/blueprints/frontend-files/sprint_6/sprint_6F/sprint
 - cada alimento mostra gramas e kcal; os macros ficam no total da refeição;
 - os suplementos ficam num só ecrã (tomas de hoje com as notas do trainer), sem paginação;
 - marcar a toma espera pelo servidor; `GET /portal/my-supplements/{assignmentId}` não é usado.
+
+### Atualização 2026-10-11 (6F-4, check-ins e perfil)
+
+Decisões U20–U26 em `docs/blueprints/frontend-files/sprint_6/sprint_6F/sprint_6F4/01_6F4_indice_decisoes.md`:
+- o check-in responde-se em três passos (Peso → Medidas → Como correu), num só formulário; só
+  o peso é obrigatório, e a adesão é uma caixa de número de 0 a 100;
+- `due` e `next` respondem 404 `resource_not_found` quando não há: é estado vazio, não erro;
+- depois de enviar aparece a confirmação e o próximo check-in; não há histórico para o cliente;
+- o rascunho vive só em memória e sair com dados escritos pede confirmação;
+- o perfil mostra fotografia, dados da ficha (só de leitura) e contactos; o `PATCH` substitui
+  os quatro campos;
+- a fotografia não tem pré-visualização local nem estado "em análise"; em desenvolvimento o
+  envio responde 503 (Cloudinary e Vision desligados);
+- o menu do topo mostra a fotografia (ou as iniciais) e o nome do cliente;
+- uma releitura falhada com dados em cache mostra um aviso e mantém os dados, em todas as
+  páginas do portal;
+- o conteúdo do portal fica numa coluna de 576 px centrada em ecrãs largos.

@@ -1,3 +1,4 @@
+using Domain.Entities.Assessments;
 using FluentValidation;
 
 namespace Application.Features.Assessments.CheckIns.CorrectCheckIn;
@@ -12,7 +13,7 @@ public sealed class CorrectCheckInCommandValidator : AbstractValidator<CorrectCh
             .WithErrorCode("check_in_id_required");
 
         RuleFor(command => command.WeightKg)
-            .GreaterThan(0)
+            .Must(value => value is > 0 and <= AssessmentLimits.MaxWeightKg)
             .WithErrorCode("weight_invalid");
 
         RuleFor(command => command.BodyFatPercentage)

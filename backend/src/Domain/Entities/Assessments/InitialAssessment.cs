@@ -180,8 +180,9 @@ public sealed class InitialAssessment
         string? profession
     )
     {
-        if (weightKg <= 0)
-            throw new DomainException("Weight must be greater than zero.");
+        if (weightKg is <= 0 or > AssessmentLimits.MaxWeightKg)
+            throw new DomainException(
+                "Weight must be greater than zero and at most {AssessmentLimits.MaxWeightKg} kg.");
         if (heightCm <= 0)
             throw new DomainException("Height must be greater than zero.");
         if (bodyFatPercentage is <= 0 or >= 100)

@@ -100,3 +100,22 @@ denuncia hunks em falta antes de correr qualquer teste.
 da coluna. O máximo vive como constante no Domain (`ClientExerciseSetLog.MaxWeightKg = 1000`),
 o Domain também o impõe e os validadores referem a constante. Ficam por rever no mesmo padrão
 os pesos planeados e os das avaliações (backlog).
+
+## 2026-10-11 — Blueprints 6F-4: validador mais largo do que o domínio (500 no peso corporal e no email)
+
+**O que aconteceu.** Dois pedidos passavam o FluentValidation e rebentavam a seguir:
+`weight_kg: 999999999` na resposta ao check-in (coluna `numeric(10,2)`) e
+`contact_email: "a@b"` no perfil do portal (`.EmailAddress()` aceita, o value object
+`EmailAddress` lança `DomainException`, que a API não mapeia). Provado com um teste funcional
+temporário contra o PostgreSQL.
+
+**A regra.**
+- Todo o `decimal` de entrada tem máximo abaixo do limite da coluna (repetição da regra de
+  2026-10-09). Uma coluna JSON não rebenta, mas grava lixo: decidir o teto na mesma.
+- Quando o domínio tem um value object para um formato, o validador chama a regra do value
+  object (`EmailAddress.IsValid`), nunca uma regra parecida de biblioteca.
+- Com `RuleForEach` sobre um array inline, o `errors[].field` é a posição
+  (`BodyMeasurements[2]`), não o nome do campo: fixar com um teste funcional se um cliente da
+  API depender disso.
+- `WithErrorCode` só se aplica à regra imediatamente anterior: para um intervalo com um só
+  código, usar um `Must`.

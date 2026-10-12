@@ -6,6 +6,18 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-11: Sprint 6F-4 blueprints validados (por aplicar).**
+- Pack `sprint_6F/sprint_6F4/01–08` + manifest, com 53 caminhos (44 integrais e 9 patches).
+- Check-ins em três passos, perfil com fotografia moderada, menu do topo com fotografia e
+  nome; fecho das pendências do sprint (A4 nas 5 páginas, V8, `PortalUnavailable`, retoques
+  do `design-is`).
+- Backend sem contrato novo: `AssessmentLimits.MaxWeightKg` e `EmailAddress.IsValid`
+  (dois 500 passam a 400).
+- Decisões U20–U26. Evidência na worktree `C:\ptm-tmp-6f4` (apagada): backend 2986 + 1
+  skip, Vitest 544, 57 mutações mortas e 1 código morto retirado, round-trip 53/53.
+- `rate_limit_exceeded` não existe no backend (429 com `title: "Too many requests"`).
+- Ver `Sessions/2026-10-11-sprint6f4-blueprints.md`.
+
 **2026-10-11: Sprint 6F-3 FINALIZADA (frontend).**
 - Aplicação manual (`8ae93a4`) verde à primeira; fecho em `858e7f4` (CI #34 verde).
 - Sem defeitos de comportamento. A3: `fieldErrors[0]?.code` retirado da toma (pedido sem

@@ -1,54 +1,71 @@
-# TODO: sessão de 2026-10-11 · Sprint 6F-3 (Nutrição e suplementos do portal), fecho
+# TODO: sessão de 2026-10-11/12 · Sprint 6F-4 (Check-ins e perfil do portal), blueprints
 
-Plano aprovado em `~/.claude/plans/cryptic-wondering-hellman.md`. Só frontend: `backend/` não é
-tocado. Um processo pesado de cada vez, 2 workers.
+Plano aprovado em `~/.claude/plans/c-users-leandro-alves-desktop-projeto-p-lazy-globe.md`.
+Validação na worktree descartável `C:\ptm-tmp-6f4` (branch `tmp/blueprints-6f4`, base `7153956`).
+Nada foi aplicado em `frontend/` nem `backend/` do checkout real.
 
-## 1. Comparação com o pack
-- [x] SHA-256 dos 13 caminhos contra o `manifest.json` (5 iguais, 8 divergentes)
-- [x] Diff bloco a bloco dos 8 divergentes: só comentários e uma frase de copy
-- [x] Patch de `portal-fixtures.ts`: só o comentário de abertura mudou de forma
+## 1. Preparar
+- [x] `git status` limpo e worktree criada
+- [x] Watchers verificados e `npm ci` na worktree
 
-## 2. Baseline no checkout real
-- [x] `npm run lint` e `npm run typecheck`
-- [x] Vitest dos 3 ficheiros da fase (37/37)
+## 2. Backend (worktree)
+- [x] Provar o 500 do peso sem máximo (provado; as medidas não dão 500: coluna JSON)
+- [x] Provar o 500 do email `a@b` (provado em `PATCH /portal/my-profile`)
+- [x] Corrigir com testes: `AssessmentLimits.MaxWeightKg`, `EmailAddress.IsValid`, 7 validadores
+- [x] Suite completa: 2986 + 1 skip (1 intermitente de moderação, verde ao repetir)
+- [x] Contrato sem alterações (só validação)
 
-## 3. Revisão e correções
-- [x] `code-review-leandro` aos 8 ficheiros de produção
-- [x] A1: JSDoc "falha de marcar" (`SupplementIntakeRow`)
-- [x] A2: ponto final no JSDoc de `TargetsTable`
-- [x] A3: `intakeFailureMessage` lê só `failure.code` (ramo `errors[]` morto nestes endpoints)
-- [x] A4: `isError` com dados em cache igual ao padrão da 6F-2; registado, sem alteração
+## 3. Frontend (worktree)
+- [x] `api/portal.ts`: chaves e hooks de check-in e perfil
+- [x] `lib/checkIn.ts` e `lib/profile.ts`
+- [x] `PortalUnavailable`, `StaleDataNotice` e `ClientAvatar`
+- [x] Passo a passo do check-in (U20, U21, U22, U26)
+- [x] `AvatarSection` e `ProfileContactsForm`
+- [x] `PortalCheckInsPage`, `PortalProfilePage`, `index.ts`, `router.tsx`
+- [x] `PortalLayout` (V8) e `ProfileMenu` (U23)
+- [x] A4 nas 5 páginas existentes
+- [x] Retoques design-is (MealCard, SupplementIntakeRow, PortalNutritionPage)
 
-## 4. Mutações no código real
-- [x] M01–M34 do pack repetidas
-- [x] M35–M50 novas
-- [x] Sobreviventes tratadas (teste novo ou equivalente justificada)
+## 4. Testes
+- [x] Handlers e fixtures MSW por omissão
+- [x] Libs, duas páginas novas, `ProfileMenu`
+- [x] Casos novos nos testes dos ecrãs tocados
+- [x] Tudo verde na worktree: 544/544 em 53 ficheiros
 
-## 5. Gates finais
-- [x] lint, typecheck, Vitest completo, build, Prettier, `npm audit`
+## 5. Gates na worktree
+- [x] lint, typecheck, Vitest completo, build, Prettier, `npm audit`, greps
+- [x] Mutações: 57 mortas de 58; M21 era código morto e foi retirado
+- [x] Verificação visual (375 px, claro e escuro, ecrã largo)
 
-## 6. Documentação
-- [x] Blueprints 02–05 e manifest realinhados (round-trip 13/13)
-- [x] `06_6F3_quality_gates.md` e `backlogs/QualityGates.md`
-- [x] `07_relatorio_fecho_fase_6F3.md`, `01` (estado), `10_fecho_sprint_6F.md`
-- [x] Memória: ACTIVE, MEMORY, NEST, nota de sessão, lessons, GOTCHAS_FRONTEND
+## 6. Pack
+- [x] Gerado por script, `manifest.json`, round-trip 53/53
+- [x] Docs 01–08 em `sprint_6F/sprint_6F4/`
 
-## 7. Fecho
-- [x] Commit e push
-- [x] CI do GitHub Actions verde no commit de fecho
+## 7. Documentação
+- [x] `00_plano_fase_6F_completa.md` (reposto depois do crash e atualizado) e `10_fecho_sprint_6F.md`
+- [x] `backlogs/QualityGates.md`
+- [x] `05_ECRAS_CLIENTE.md`, sprint-6 README, `plan_sprint_6_por_atualizar.md`
+- [x] Memória (ACTIVE, MEMORY, NEST, nota de sessão, lessons, GOTCHAS)
+
+## 8. Descartar
+- [x] Worktree e branch apagados; `git status` final sem `frontend/` nem `backend/`
 
 ## Review
 
-- A aplicação do Leandro (`8ae93a4`) chegou verde e fiel ao pack: 8 de 13 ficheiros divergiam do
-  manifest só em comentários e numa frase de copy.
-- Três correções pequenas em `858e7f4`: dois typos de JSDoc e o ramo morto
-  `fieldErrors[0]?.code` em `intakeFailureMessage`.
-- 50 mutações no código real (34 do pack e 16 novas), todas mortas pelos 37 testes existentes:
-  não se acrescentaram testes.
-- Gates: lint, typecheck, Vitest 419/419, build e Prettier verdes; round-trip 13/13.
-- CI: #33 verde em `8ae93a4`; CI #34 verde em `858e7f4`.
-- `design-is` dos dois ecrãs: 20/30, REFINE; artefactos em `frontend/DESIGN-IS-2026-10-11/`.
-- Ficam com o Leandro: `QG6F3-UI-001` e `QG6F3-ISOLAMENTO-UI-001` (login no browser).
-- Por decidir no fecho do sprint: A4 (`isError` antes dos dados nos três ecrãs do portal).
+- Pack `sprint_6F4/01–08` + manifest: 53 caminhos (44 integrais, 9 patches), round-trip 53/53.
+- Decisões U20–U26 do Leandro. O check-in ficou em três passos num só formulário.
+- A confirmação do contrato por teste funcional encontrou dois 500 no backend (peso corporal
+  sem teto e email `a@b`); corrigidos no doc 02, sem contrato novo.
+- Achados fora do pack, no backlog do doc 08: `rate_limit_exceeded` nunca é emitido pelo
+  backend; medidas sem teto; três casas decimais partem a idempotência; `.EmailAddress()` nos
+  validadores de autenticação.
+- Não foi feito: mutações de backend e teste funcional do formato `Feedback[n]` (o Docker
+  deixou de responder depois do primeiro reinício da máquina); envio de um ficheiro real no
+  browser.
+- Incidente: um reinício deixou `00_plano_fase_6F_completa.md` a zeros (`docs/` não está no
+  git). Reposto a partir do conteúdo lido no início da sessão; convém o Leandro confirmar que
+  o ficheiro está como esperava.
+- Ficam com o Leandro: aplicar o pack, testes antes do push e os gates manuais
+  (`QG6F4-UI-001`, `QG6F4-ISOLAMENTO-UI-001`, `QG6F4-AVATAR-001`, `QG6F-GATE-001`).
 
-**Fase 6F-3: Finalizado.**
+**Blueprints da fase 6F-4: Finalizado.** A fase fecha depois da aplicação e dos gates.

@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Domain.ValueObjects;
 using FluentValidation;
 
 namespace Application.Features.Clients.UpdateClient;
@@ -24,7 +25,7 @@ public sealed class UpdateClientCommandValidator : AbstractValidator<UpdateClien
         RuleFor(client => client.ContactEmail)
             .MaximumLength(255)
             .WithErrorCode("client_email_invalid")
-            .EmailAddress()
+            .Must(EmailAddress.IsValid)
             .WithErrorCode("client_email_invalid")
             .When(client => !string.IsNullOrWhiteSpace(client.ContactEmail));
 

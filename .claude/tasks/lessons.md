@@ -315,3 +315,24 @@ Lições capturadas depois de correções do utilizador.
   log JSON por mutação permite retomar sem repetir.
 - **CI sem `gh`:** a API pública (`api.github.com/repos/<dono>/<repo>/actions/runs`) devolve o
   número, o commit e a conclusão de cada run.
+
+## 2026-10-11: blueprints da 6F-4
+
+- **Provar o contrato com uma sonda funcional antes de escrever o ecrã.** Quinze pedidos-limite
+  contra o PostgreSQL mostraram quatro 500, o formato real de `errors[]` e o
+  `BodyMeasurements[2]`. Nada disto estava no plano nem no resumo do agente de exploração.
+- **Um validador mais largo do que a coluna ou do que o value object dá 500.** É a mesma classe
+  da U15. Quando um validador usa uma regra de biblioteca (`.EmailAddress()`) e o domínio tem a
+  sua, o validador chama a do domínio.
+- **Um código de erro confirma-se no backend, não noutra feature do frontend.**
+  `rate_limit_exceeded` estava em três mapas e o backend nunca o emite.
+- **Uma mutação que sobrevive pode estar a mostrar código morto.** Antes de escrever o teste,
+  perguntar se o ramo alguma vez corre (a exceção de `/auth` no aviso de saída não corria).
+- **Uma sobrevivente por dados fracos resolve-se com um caso que distinga o mutante**
+  (`a@b.pt@c.pt` em vez de `a@b@c.pt`), não com "equivalente".
+- **`docs/` não tem git: um crash a meio de uma escrita perde o ficheiro.** Depois de um
+  reinício, procurar ficheiros a zeros entre os tocados na sessão antes de continuar.
+- **PowerShell 5.1 estraga UTF-8 sem BOM** com `Get-Content`/`Set-Content`. Editar Markdown
+  e código só com Node ou `[IO.File]::ReadAllText`/`WriteAllText`.
+- **Não correr o gerador do pack ao mesmo tempo que o Vitest** numa máquina com pouca memória:
+  três workers não arrancaram.

@@ -25,6 +25,13 @@ public record EmailAddress
         Normalized = trimmed.ToUpperInvariant();
     }
 
+    /// <summary>
+    /// Indica se o texto seria aceite pelo construtor, sem lançar exceção.
+    /// Os validadores usam-no para recusar com um 400 o que, de outra forma, rebentava aqui.
+    /// </summary>
+    public static bool IsValid(string? value) =>
+        !string.IsNullOrWhiteSpace(value) && IsValidEmail(value.Trim());
+
     private static bool IsValidEmail(string email)
     {
         // Valida o comprimento do email, máximo 255 caracteres

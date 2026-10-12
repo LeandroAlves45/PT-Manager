@@ -1,3 +1,4 @@
+using Domain.ValueObjects;
 using FluentValidation;
 
 namespace Application.Features.ClientPortal.UpdateMyProfile;
@@ -11,7 +12,7 @@ public sealed class UpdateMyProfileCommandValidator : AbstractValidator<UpdateMy
             .Cascade(CascadeMode.Stop)
             .MaximumLength(255)
             .WithErrorCode("client_email_too_long")
-            .EmailAddress()
+            .Must(EmailAddress.IsValid)
             .WithErrorCode("client_email_invalid")
             .When(command => !string.IsNullOrWhiteSpace(command.ContactEmail));
 

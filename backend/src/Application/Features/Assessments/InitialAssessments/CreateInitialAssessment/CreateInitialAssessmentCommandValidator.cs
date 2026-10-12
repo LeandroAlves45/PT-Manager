@@ -1,3 +1,4 @@
+using Domain.Entities.Assessments;
 using Domain.Exceptions;
 using Domain.ValueObjects;
 using FluentValidation;
@@ -15,7 +16,8 @@ public sealed class CreateInitialAssessmentCommandValidator
             .WithErrorCode("client_id_required");
 
         RuleFor(command => command.WeightKg)
-            .GreaterThan(0).WithErrorCode("weight_invalid");
+            .Must(value => value is > 0 and <= AssessmentLimits.MaxWeightKg)
+            .WithErrorCode("weight_invalid");
 
         RuleFor(command => command.HeightCm)
             .GreaterThan(0).WithErrorCode("height_invalid");

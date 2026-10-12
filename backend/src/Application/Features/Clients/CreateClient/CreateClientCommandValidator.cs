@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Domain.ValueObjects;
 using FluentValidation;
 
 namespace Application.Features.Clients.CreateClient;
@@ -23,7 +24,7 @@ public sealed class CreateClientCommandValidator : AbstractValidator<CreateClien
             .MaximumLength(255)
             .WithErrorCode("client_email_invalid")
             .WithMessage("Client email is invalid.")
-            .EmailAddress()
+            .Must(EmailAddress.IsValid)
             .WithErrorCode("client_email_invalid")
             .WithMessage("Client email is invalid.")
             .When(client => !string.IsNullOrWhiteSpace(client.ContactEmail));

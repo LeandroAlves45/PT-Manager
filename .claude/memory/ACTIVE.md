@@ -1,12 +1,38 @@
-# Estado ativo: Sprint 6F (portal do cliente). 6F-1, 6F-2 e 6F-3 FINALIZADAS; 6F-4 por gerar
+# Estado ativo: Sprint 6F (portal do cliente). 6F-1, 6F-2 e 6F-3 FINALIZADAS; 6F-4 com blueprints validados, por aplicar
 
-Atualizado: 2026-10-11
+Atualizado: 2026-10-12
 
 ## Sprint 6F: portal do cliente
 
 **Ler primeiro** `docs/blueprints/frontend-files/sprint_6/sprint_6F/00_plano_fase_6F_completa.md`.
 Tem as fases, as decisões U1–U19, os contratos de todas as fases e as armadilhas.
 
+- **6F-4 BLUEPRINTS VALIDADOS (2026-10-11).**
+  - Pack: `sprint_6F/sprint_6F4/01–08` + `manifest.json`, com 53 caminhos (44 integrais e 9
+    patches `git apply --recount`).
+  - Âmbito:
+    - `/portal/check-ins` em três passos, com confirmação e próximo check-in;
+    - `/portal/profile` com fotografia moderada, dados da ficha e contactos;
+    - menu do topo com fotografia e nome;
+    - fecho do sprint: aviso com dados em cache nas 5 páginas (A4), coluna de 576 px (V8),
+      `PortalUnavailable`, retoques do `design-is`;
+    - backend: teto de 1000 kg no peso corporal e email pela regra do domínio (dois 500
+      passam a 400; sem migration nem contrato novo).
+  - Decisões U20–U26 (doc 01).
+  - Evidência na worktree `C:\ptm-tmp-6f4` (apagada):
+    - backend 2986 + 1 skip;
+    - Vitest 544 (419 + 125), lint, typecheck e build verdes;
+    - 57 mutações mortas e 1 código morto retirado;
+    - round-trip 53/53;
+    - verificação visual no browser com a API simulada.
+  - Em desenvolvimento o envio da fotografia responde 503 (Cloudinary e Vision desligados):
+    o envio real é o gate manual `QG6F4-AVATAR-001`.
+  - `00_plano_fase_6F_completa.md` foi reposto depois de um crash o deixar a zeros
+    (`docs/` não está no git).
+  - **Próximo passo:** o Leandro aplica o pack pela ordem do doc 01 (doc 07 no mesmo commit
+    dos docs 03 a 06), corre os testes antes do push e faz os gates manuais. Depois, fecho
+    da fase e do sprint (`10_fecho_sprint_6F.md`).
+  - Ver `Sessions/2026-10-11-sprint6f4-blueprints.md`.
 - **6F-3 FINALIZADA (2026-10-11).**
   - Aplicação do Leandro em `8ae93a4` (CI #33 verde, sem testes vermelhos). Fecho em `858e7f4`
     (CI #34 verde).
@@ -23,7 +49,6 @@ Tem as fases, as decisões U1–U19, os contratos de todas as fases e as armadil
   - `design-is` dos dois ecrãs: 20/30, REFINE (`frontend/DESIGN-IS-2026-10-11/`, fora do git);
     5 movimentos por decidir.
   - Faltam os gates manuais `QG6F3-UI-001` e `QG6F3-ISOLAMENTO-UI-001` (login).
-  - **Próximo passo:** blueprints da 6F-4 (check-ins, perfil, avatar moderado).
 - **6F-3 blueprints validados (2026-10-11, histórico).**
   - Pack: `sprint_6F/sprint_6F3/01–06` + `manifest.json`, com 13 caminhos (12 integrais e 1
     patch). Só frontend; sem backend, contrato ou reset da BD.
@@ -89,7 +114,7 @@ Tem as fases, as decisões U1–U19, os contratos de todas as fases e as armadil
     - round-trip 31/31.
   - Ver `Sessions/2026-10-04-sprint6f-plano-6f1-blueprints.md`.
 - Gates manuais da 6F-1 (doc 08) continuam com o Leandro (o reset foi feito a 2026-10-07).
-- A 6F-4 está por gerar. O fecho do sprint fica em `sprint_6F/10_fecho_sprint_6F.md`.
+- O fecho do sprint fica em `sprint_6F/10_fecho_sprint_6F.md`, depois de aplicada a 6F-4.
 
 ## Sprint 6E — frontend trainer
 
