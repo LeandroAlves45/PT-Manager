@@ -3,10 +3,12 @@ import { Link } from 'react-router';
 
 import { usePortalPlanQuery } from '@/features/portal/api/portal';
 import { PortalExerciseVideo } from '@/features/portal/components/PortalExerciseVideo';
+import { StaleDataNotice } from '@/features/portal/components/StaleDataNotice';
 import { TrainingPlanError } from '@/features/portal/components/TrainingPlanError';
 import { weekdayLabel } from '@/features/portal/lib/schedule';
 import {
   exerciseDisplayName,
+  isTrainingPlanUnavailable,
   plannedSetLabel,
   prescriptionSummary,
   workoutSize,
@@ -46,8 +48,10 @@ export function PortalPlanPage() {
       </section>
     );
 
-  if (query.isError)
-    return <TrainingPlanError error={query.error} onRetry={() => query.refetch()} />;
+  // Sem dados, ou com um estado de negócio (sem plano, ficha arquivada): o ecrã é o da falha.
+  // Uma falha técnica com dados em cache fica só como aviso, mais abaixo.
+  if (query.data === undefined || isTrainingPlanUnavailable(query.error))
+    return <TrainingPlanError error={query.error} onRetry={() => void query.refetch()} />;
 
   const plan = query.data;
 
@@ -70,6 +74,10 @@ export function PortalPlanPage() {
         {plan.description !== null && <p className="text-sm">{plan.description}</p>}
         {plan.notes !== null && <p className="text-muted-foreground text-sm">{plan.notes}</p>}
       </header>
+
+      {query.isError && (
+        <StaleDataNotice onRetry={() => void query.refetch()} retrying={query.isFetching} />
+      )}
 
       {plan.days.length === 0 ? (
         <p className="text-sm">O plano ainda não tem dias de treino.</p>

@@ -2,6 +2,7 @@ import { UtensilsCrossed } from 'lucide-react';
 
 import { usePortalNutritionQuery } from '@/features/portal/api/portal';
 import { MealCard } from '@/features/portal/components/MealCard';
+import { StaleDataNotice } from '@/features/portal/components/StaleDataNotice';
 import { formatGrams, formatKcal } from '@/features/portal/lib/nutrition';
 import type { components } from '@/shared/api/schema';
 import { isApiProblem } from '@/shared/api/problem';
@@ -34,18 +35,22 @@ export function PortalNutritionPage() {
       </section>
     );
 
-  if (query.isError) {
-    if (isApiProblem(query.error) && query.error.code === 'portal_nutrition_plan_not_available')
-      return (
+  // Vale mesmo com dados em cache: o plano deixou de estar ativo.
+  if (isApiProblem(query.error) && query.error.code === 'portal_nutrition_plan_not_available')
+    return (
+      <section className="space-y-4">
+        <h1 className="font-display text-3xl leading-none">Nutrição</h1>
         <EmptyState
           icon={UtensilsCrossed}
           title="Sem plano alimentar"
           description="O teu personal trainer ainda não te atribuiu um plano alimentar."
         />
-      );
+      </section>
+    );
 
+  // Sem dados nenhuns, a falha ocupa o ecrã; com dados em cache, fica só um aviso mais abaixo.
+  if (query.data === undefined)
     return <ErrorState error={query.error} onRetry={() => void query.refetch()} />;
-  }
 
   const plan = query.data;
 
@@ -61,6 +66,10 @@ export function PortalNutritionPage() {
         <p className="text-muted-foreground text-sm wrap-break-word">{plan.name}</p>
         {plan.description !== null && <p className="text-sm wrap-break-word">{plan.description}</p>}
       </header>
+
+      {query.isError && (
+        <StaleDataNotice onRetry={() => void query.refetch()} retrying={query.isFetching} />
+      )}
 
       <TargetsTable plan={plan} />
 

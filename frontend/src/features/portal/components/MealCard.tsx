@@ -5,6 +5,8 @@ import {
   macrosLabel,
   mealSupplementDose,
 } from '@/features/portal/lib/nutrition';
+import { Link } from 'react-router';
+
 import type { components } from '@/shared/api/schema';
 import { Badge } from '@/shared/components/ui/badge';
 
@@ -60,12 +62,23 @@ export function MealCard({ meal }: { meal: Meal }) {
                   </span>
                   {supplement.is_unavailable && <Badge variant="secondary">Indisponível</Badge>}
                 </p>
+                {supplement.is_unavailable && (
+                  <p className="text-muted-foreground">
+                    Este suplemento já não está disponível. Fala com o teu personal trainer.
+                  </p>
+                )}
                 {supplement.notes !== null && (
                   <p className="text-muted-foreground">{supplement.notes}</p>
                 )}
               </li>
             ))}
           </ul>
+          <Link
+            to="/portal/supplements"
+            className="text-primary inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4"
+          >
+            Registar tomas
+          </Link>
         </div>
       )}
     </article>

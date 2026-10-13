@@ -1,5 +1,6 @@
-import { Dumbbell, UserX } from 'lucide-react';
+import { Dumbbell } from 'lucide-react';
 
+import { PortalUnavailable } from '@/features/portal/components/PortalUnavailable';
 import { isApiProblem } from '@/shared/api/problem';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState';
@@ -12,7 +13,13 @@ import { ErrorState } from '@/shared/components/ErrorState';
  * (`portal_profile_not_available`, igual ao Início). Tentar de novo não os resolveria. O resto
  * é uma falha técnica com "Tentar novamente".
  */
-export function TrainingPlanError({ error, onRetry }: { error: Error; onRetry: () => void }) {
+export function TrainingPlanError({
+  error,
+  onRetry,
+}: {
+  error: Error | null;
+  onRetry: () => void;
+}) {
   if (isApiProblem(error) && error.code === 'portal_training_plan_not_available')
     return (
       <EmptyState
@@ -23,13 +30,7 @@ export function TrainingPlanError({ error, onRetry }: { error: Error; onRetry: (
     );
 
   if (isApiProblem(error) && error.code === 'portal_profile_not_available')
-    return (
-      <EmptyState
-        icon={UserX}
-        title="Portal indisponível"
-        description="A tua ficha não está ativa. Fala com o teu personal trainer."
-      />
-    );
+    return <PortalUnavailable />;
 
   return <ErrorState error={error} onRetry={onRetry} />;
 }

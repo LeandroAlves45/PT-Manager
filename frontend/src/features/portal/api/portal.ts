@@ -1,9 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient, unwrap } from '@/shared/api/client';
+import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
 
 type LoggedSet = components['schemas']['MyLoggedSetResponse'];
+type CheckInAnswer = components['schemas']['CheckInAnswerRequest'];
+type ProfileUpdate = components['schemas']['UpdateMyProfileRequest'];
+type Profile = components['schemas']['MyProfileResponse'];
 
 /**
  * Query keys do portal do cliente.
@@ -20,6 +24,9 @@ export const portalKeys = {
   nutrition: () => [...portalKeys.all, 'nutrition'] as const,
   supplementIntakes: () => [...portalKeys.all, 'supplementIntakes'] as const,
   supplements: () => [...portalKeys.all, 'supplements'] as const,
+  checkInDue: () => [...portalKeys.all, 'checkInDue'] as const,
+  checkInNext: () => [...portalKeys.all, 'checkInNext'] as const,
+  profile: () => [...portalKeys.all, 'profile'] as const,
 };
 
 /**
@@ -254,4 +261,144 @@ export function useToggleIntakeMutation() {
         queryClient.invalidateQueries({ queryKey: portalKeys.home() }),
       ]),
   });
+}
+
+/**
+ * Lê um recurso opcional do portal: o backend responde 404 `resource_not_found` quando ele
+ * não existe (`RespondOptionalAsync`), e isso é um estado do ecrã, não uma falha.
+ */
+async function orNullWhenAbsent<T>(read: () => Promise<T>): Promise<T | null> {
+  try {
+    return await read();
+  } catch (error) {
+    if (isApiProblem(error) && error.code === 'resource_not_found') return null;
+    throw error;
+  }
+}
+
+/**
+ * Check-in por responder hoje, ou `null` quando não há.
+ *
+ * "Hoje" é o dia local do personal trainer, decidido pelo servidor. Um check-in de um dia que
+ * já passou nunca aparece aqui: o cliente só pode responder no próprio dia.
+ */
+export function usePortalDueCheckInQuery() {
+  return useQuery({
+    queryKey: portalKeys.checkInDue(),
+    queryFn: ({ signal }) =>
+      orNullWhenAbsent(async () =>
+        unwrap(await apiClient.GET('/api/v1/portal/my-check-ins/due', { signal }))
+      ),
+  });
+}
+
+/**
+ * Próximo check-in agendado (hoje ou depois), ou `null` quando não há.
+ *
+ * @param enabled O ecrã só o pede quando não há check-in para responder: com um por responder,
+ *   o próximo seria esse mesmo.
+ */
+export function usePortalNextCheckInQuery(enabled: boolean) {
+  return useQuery({
+    queryKey: portalKeys.checkInNext(),
+    queryFn: ({ signal }) =>
+      orNullWhenAbsent(async () =>
+        unwrap(await apiClient.GET('/api/v1/portal/my-check-ins/next', { signal }))
+      ),
+    enabled,
+  });
+}
+
+/**
+ * Envia a resposta a um check-in.
+ *
+ * Em `onSettled` voltam a ler-se o check-in por responder, o próximo e o cartão do Início,
+ * também quando o envio falha: um 409 quer dizer que o ecrã estava desatualizado (já
+ * respondido, cancelado ou fora do dia).
+ */
+export function useRespondCheckInMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ checkInId, answer }: { checkInId: string; answer: CheckInAnswer }) =>
+      unwrap(
+        await apiClient.POST('/api/v1/portal/check-ins/{checkInId}/respond', {
+          params: { path: { checkInId } },
+          body: answer,
+        })
+      ),
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: portalKeys.checkInDue() }),
+        queryClient.invalidateQueries({ queryKey: portalKeys.checkInNext() }),
+        queryClient.invalidateQueries({ queryKey: portalKeys.home() }),
+      ]),
+  });
+}
+
+/**
+ * Perfil do cliente autenticado: nome, contactos e fotografia.
+ *
+ * Fica fresco durante 5 minutos, como a marca: o menu do topo lê-o em todas as páginas do
+ * portal e só muda quando o próprio cliente o edita (as escritas substituem a cache).
+ *
+ * @param enabled O menu de perfil é partilhado com o personal trainer e o administrador, que
+ *   não têm perfil de cliente: só o cliente faz o pedido.
+ */
+export function usePortalProfileQuery(enabled = true) {
+  return useQuery({
+    queryKey: portalKeys.profile(),
+    queryFn: async ({ signal }) =>
+      unwrap(await apiClient.GET('/api/v1/portal/my-profile', { signal })),
+    staleTime: 5 * 60 * 1000,
+    enabled,
+  });
+}
+
+/**
+ * Todas as escritas do perfil devolvem o perfil completo: a resposta substitui a cache, sem
+ * um `GET` a seguir, e o menu do topo acompanha.
+ */
+function useProfileMutation<TVariables>(write: (variables: TVariables) => Promise<Profile>) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: write,
+    onSuccess: (profile) => queryClient.setQueryData(portalKeys.profile(), profile),
+  });
+}
+
+/** Substitui os quatro contactos: um opcional a `null` apaga o valor guardado. */
+export function useUpdateProfileMutation() {
+  return useProfileMutation(async (body: ProfileUpdate) =>
+    unwrap(await apiClient.PATCH('/api/v1/portal/my-profile', { body }))
+  );
+}
+
+/**
+ * Substitui a fotografia por `multipart/form-data` com a parte `file`.
+ *
+ * O OpenAPI descreve este corpo como um `IFormFile` serializado em formulário, que não
+ * corresponde ao pedido real (igual ao logo do personal trainer). O `bodySerializer` envia o
+ * `FormData` tal como está e o browser escreve o `boundary`.
+ */
+export function useReplaceAvatarMutation() {
+  return useProfileMutation(async (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+
+    return unwrap(
+      await apiClient.PUT('/api/v1/portal/my-profile/avatar', {
+        body: {},
+        bodySerializer: () => form,
+      })
+    );
+  });
+}
+
+/** Remove a fotografia. Idempotente: sem fotografia, devolve o mesmo perfil. */
+export function useRemoveAvatarMutation() {
+  return useProfileMutation(async () =>
+    unwrap(await apiClient.DELETE('/api/v1/portal/my-profile/avatar'))
+  );
 }

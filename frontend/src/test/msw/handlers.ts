@@ -2,9 +2,12 @@ import { http, HttpResponse } from 'msw';
 
 import type { components } from '@/shared/api/schema';
 import {
+  dueCheckIn,
+  nextCheckIn,
   nutritionPlan,
   portalBranding,
   portalHome,
+  portalProfile,
   supplementAssignmentsPage,
   supplementIntakesToday,
   trainingPlan,
@@ -84,6 +87,10 @@ export const handlers = [
     HttpResponse.json(supplementIntakesToday())
   ),
   http.get(`${API}/portal/my-supplements`, () => HttpResponse.json(supplementAssignmentsPage())),
+  // O menu de perfil do portal lê o perfil em todas as páginas do cliente.
+  http.get(`${API}/portal/my-profile`, () => HttpResponse.json(portalProfile())),
+  http.get(`${API}/portal/my-check-ins/due`, () => HttpResponse.json(dueCheckIn())),
+  http.get(`${API}/portal/my-check-ins/next`, () => HttpResponse.json(nextCheckIn())),
 ];
 
 /** Arranque com cookie de refresh válido: a sessão é restaurada com os dados indicados. */

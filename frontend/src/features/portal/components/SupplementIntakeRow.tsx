@@ -93,6 +93,11 @@ export function SupplementIntakeRow({
         </Button>
       </div>
 
+      {detail?.is_supplement_archived === true && (
+        <p className="text-muted-foreground text-sm">
+          Este suplemento foi descontinuado. Confirma com o teu personal trainer se o deves manter.
+        </p>
+      )}
       {detail !== undefined && detail.trainer_notes !== null && (
         <p className="text-sm wrap-break-word">{detail.trainer_notes}</p>
       )}

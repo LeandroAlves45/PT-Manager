@@ -1,8 +1,9 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
+import { portalKeys } from '@/features/portal';
 import type { components } from '@/shared/api/schema';
 import { API, problem, restorableSession } from '@/test/msw/handlers';
 import { homeWorkout, portalHome } from '@/test/msw/portal-fixtures';
@@ -247,5 +248,54 @@ describe('PortalHomePage', () => {
 
     expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe(pathname);
+  });
+
+  it('keeps what was on screen and warns when a refresh fails, then recovers on retry', async () => {
+    server.use(...restorableSession({ role: 'client' }));
+    const { queryClient } = renderApp({ initialEntries: ['/portal'] });
+    await screen.findByRole('heading', { name: 'Hoje' });
+
+    server.use(
+      http.get(`${API}/portal/home`, () =>
+        HttpResponse.json(problem('Internal server error'), { status: 500 })
+      )
+    );
+    await queryClient.invalidateQueries({ queryKey: portalKeys.home() });
+
+    expect(
+      await screen.findByText(
+        'Não foi possível atualizar. Estás a ver os últimos dados carregados.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText('Tens um check-in para hoje.')).toBeInTheDocument();
+    // É um aviso, não o ecrã de erro.
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    server.use(http.get(`${API}/portal/home`, () => HttpResponse.json(portalHome())));
+    await userEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Não foi possível atualizar. Estás a ver os últimos dados carregados.')
+      ).not.toBeInTheDocument()
+    );
+    expect(screen.getByText('Tens um check-in para hoje.')).toBeInTheDocument();
+  });
+
+  it('drops the cached data when the refresh says the client was archived', async () => {
+    server.use(...restorableSession({ role: 'client' }));
+    const { queryClient } = renderApp({ initialEntries: ['/portal'] });
+    await screen.findByRole('heading', { name: 'Hoje' });
+
+    server.use(
+      http.get(`${API}/portal/home`, () =>
+        HttpResponse.json(problem('portal_profile_not_available'), { status: 404 })
+      )
+    );
+    await queryClient.invalidateQueries({ queryKey: portalKeys.home() });
+
+    expect(await screen.findByRole('heading', { name: 'Portal indisponível' })).toBeInTheDocument();
+    expect(screen.queryByText('Tens um check-in para hoje.')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument();
   });
 });

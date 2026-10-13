@@ -1,9 +1,11 @@
-import { Pill, UserX } from 'lucide-react';
+import { Pill } from 'lucide-react';
 
 import {
   usePortalSupplementIntakesQuery,
   usePortalSupplementsQuery,
 } from '@/features/portal/api/portal';
+import { PortalUnavailable } from '@/features/portal/components/PortalUnavailable';
+import { StaleDataNotice } from '@/features/portal/components/StaleDataNotice';
 import { SupplementIntakeRow } from '@/features/portal/components/SupplementIntakeRow';
 import { longLocalDate } from '@/features/portal/lib/schedule';
 import { progressPercent } from '@/features/portal/lib/workout';
@@ -42,20 +44,15 @@ export function PortalSupplementsPage() {
       </section>
     );
 
-  if (intakes.isError) {
-    // Ficha arquivada ou relação terminada: o backend responde como atribuição inexistente
-    // (`ListMyTodaySupplementIntakesHandler`). Tentar de novo não ajudaria.
-    if (isApiProblem(intakes.error) && intakes.error.code === 'supplement_assignment_not_found')
-      return (
-        <EmptyState
-          icon={UserX}
-          title="Portal indisponível"
-          description="A tua ficha não está ativa. Fala com o teu personal trainer."
-        />
-      );
+  // Ficha arquivada ou relação terminada: o backend responde como atribuição inexistente
+  // (`ListMyTodaySupplementIntakesHandler`). Tentar de novo não ajudaria, e vale mesmo com
+  // dados em cache.
+  if (isApiProblem(intakes.error) && intakes.error.code === 'supplement_assignment_not_found')
+    return <PortalUnavailable />;
 
+  // Sem dados nenhuns, a falha ocupa o ecrã; com dados em cache, fica só um aviso mais abaixo.
+  if (intakes.data === undefined)
     return <ErrorState error={intakes.error} onRetry={() => void intakes.refetch()} />;
-  }
 
   const today = intakes.data;
   const detailById = new Map((details.data?.items ?? []).map((detail) => [detail.id, detail]));
@@ -67,6 +64,10 @@ export function PortalSupplementsPage() {
         <p className="text-muted-foreground font-mono text-xs">{longLocalDate(today.local_date)}</p>
         <h1 className="font-display text-3xl leading-none">Suplementos</h1>
       </header>
+
+      {intakes.isError && (
+        <StaleDataNotice onRetry={() => void intakes.refetch()} retrying={intakes.isFetching} />
+      )}
 
       {today.total_count === 0 ? (
         <EmptyState

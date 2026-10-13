@@ -4,9 +4,14 @@ import { Link } from 'react-router';
 
 import { usePortalWorkoutTodayQuery } from '@/features/portal/api/portal';
 import { CompleteWorkoutDialog } from '@/features/portal/components/CompleteWorkoutDialog';
+import { StaleDataNotice } from '@/features/portal/components/StaleDataNotice';
 import { TrainingPlanError } from '@/features/portal/components/TrainingPlanError';
 import { WorkoutExerciseCard } from '@/features/portal/components/WorkoutExerciseCard';
-import { progressPercent, workoutSize } from '@/features/portal/lib/workout';
+import {
+  isTrainingPlanUnavailable,
+  progressPercent,
+  workoutSize,
+} from '@/features/portal/lib/workout';
 import { longLocalDate, planDayTitle, shortLocalDate } from '@/features/portal/lib/schedule';
 import type { components } from '@/shared/api/schema';
 import { EmptyState } from '@/shared/components/EmptyState';
@@ -52,8 +57,10 @@ export function PortalTodayPage() {
       </section>
     );
 
-  if (query.isError)
-    return <TrainingPlanError error={query.error} onRetry={() => query.refetch()} />;
+  // Sem dados, ou com um estado de negócio (sem plano, ficha arquivada): o ecrã é o da falha.
+  // Uma falha técnica com dados em cache fica só como aviso, mais abaixo.
+  if (query.data === undefined || isTrainingPlanUnavailable(query.error))
+    return <TrainingPlanError error={query.error} onRetry={() => void query.refetch()} />;
 
   const today = query.data;
 
@@ -64,6 +71,10 @@ export function PortalTodayPage() {
         <h1 className="font-display text-3xl leading-none">Treino de hoje</h1>
         <p className="text-muted-foreground text-sm">{today.plan_name}</p>
       </header>
+
+      {query.isError && (
+        <StaleDataNotice onRetry={() => void query.refetch()} retrying={query.isFetching} />
+      )}
 
       {today.status === 'workout' && today.day !== null ? (
         <WorkoutDay today={today} day={today.day} />

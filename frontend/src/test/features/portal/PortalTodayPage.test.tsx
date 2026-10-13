@@ -590,4 +590,53 @@ describe('PortalTodayPage', () => {
     expect(screen.getByRole('region', { name: 'Exercício indisponível' })).toBeInTheDocument();
     expect(screen.queryByText('Unavailable exercise')).not.toBeInTheDocument();
   });
+
+  it('keeps what was on screen and warns when a refresh fails, then recovers on retry', async () => {
+    server.use(...restorableSession({ role: 'client' }));
+    const { queryClient } = renderApp({ initialEntries: ['/portal/today'] });
+    await screen.findByRole('heading', { name: 'Treino de hoje' });
+
+    server.use(
+      http.get(`${API}/portal/my-workout/today`, () =>
+        HttpResponse.json(problem('Internal server error'), { status: 500 })
+      )
+    );
+    await queryClient.invalidateQueries({ queryKey: portalKeys.workoutToday() });
+
+    expect(
+      await screen.findByText(
+        'Não foi possível atualizar. Estás a ver os últimos dados carregados.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText('Concluir treino')).toBeInTheDocument();
+    // É um aviso, não o ecrã de erro.
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    server.use(http.get(`${API}/portal/my-workout/today`, () => HttpResponse.json(workoutToday())));
+    await userEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Não foi possível atualizar. Estás a ver os últimos dados carregados.')
+      ).not.toBeInTheDocument()
+    );
+    expect(screen.getByText('Concluir treino')).toBeInTheDocument();
+  });
+
+  it('drops the cached data when the refresh says the plan is gone', async () => {
+    server.use(...restorableSession({ role: 'client' }));
+    const { queryClient } = renderApp({ initialEntries: ['/portal/today'] });
+    await screen.findByRole('heading', { name: 'Treino de hoje' });
+
+    server.use(
+      http.get(`${API}/portal/my-workout/today`, () =>
+        HttpResponse.json(problem('portal_training_plan_not_available'), { status: 404 })
+      )
+    );
+    await queryClient.invalidateQueries({ queryKey: portalKeys.workoutToday() });
+
+    expect(await screen.findByRole('heading', { name: 'Sem plano de treino' })).toBeInTheDocument();
+    expect(screen.queryByText('Concluir treino')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument();
+  });
 });

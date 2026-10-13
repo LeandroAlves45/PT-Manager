@@ -2,7 +2,9 @@
  * API pública da feature check-ins.
  *
  * O detalhe do cliente monta a tab Check-ins. A página entra no router pelo caminho, como
- * as das outras features.
+ * as das outras features. O portal do cliente usa os mesmos rótulos das respostas: o cliente
+ * escreve com os nomes que o personal trainer lê.
  */
 export { checkInKeys } from '@/features/check-ins/api/keys';
+export { FEEDBACK_LABELS } from '@/features/check-ins/lib/answers';
 export { ClientCheckInsTab } from '@/features/check-ins/components/ClientCheckInsTab';

@@ -15,9 +15,11 @@ import { ModerationPage } from '@/features/admin-moderation/pages/ModerationPage
 import { ClientDetailPage } from '@/features/clients/pages/ClientDetailPage';
 import { ClientsPage } from '@/features/clients/pages/ClientsPage';
 import {
+  PortalCheckInsPage,
   PortalHomePage,
   PortalNutritionPage,
   PortalPlanPage,
+  PortalProfilePage,
   PortalSupplementsPage,
   PortalTodayPage,
 } from '@/features/portal';
@@ -31,15 +33,10 @@ import { SessionsPage } from '@/features/sessions/pages/SessionsPage';
 import { SettingsPage } from '@/features/trainer-settings/pages/SettingsPage';
 import { TrainerDashboardPage } from '@/features/trainer-dashboard/pages/TrainerDashboardPage';
 import { RootRedirect } from '@/app/RootRedirect';
-import { PhasePlaceholderPage } from '@/shared/components/PhasePlaceholderPage';
 
 /**
  * Rotas da aplicação.
  */
-
-function placeholder(title: string, phase: string): RouteObject['element'] {
-  return <PhasePlaceholderPage title={title} phase={phase} />;
-}
 
 const applicationRoutes: RouteObject[] = [
   { path: '/', element: <RootRedirect /> },
@@ -108,8 +105,8 @@ const applicationRoutes: RouteObject[] = [
               { path: 'plan', element: <PortalPlanPage /> },
               { path: 'nutrition', element: <PortalNutritionPage /> },
               { path: 'supplements', element: <PortalSupplementsPage /> },
-              { path: 'check-ins', element: placeholder('Check-ins', '6F') },
-              { path: 'profile', element: placeholder('Perfil', '6F') },
+              { path: 'check-ins', element: <PortalCheckInsPage /> },
+              { path: 'profile', element: <PortalProfilePage /> },
             ],
           },
         ],

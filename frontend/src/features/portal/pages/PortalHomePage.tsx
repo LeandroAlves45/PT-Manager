@@ -1,11 +1,12 @@
-import { ClipboardCheck, Dumbbell, Pill, UserX, UtensilsCrossed } from 'lucide-react';
+import { ClipboardCheck, Dumbbell, Pill, UtensilsCrossed } from 'lucide-react';
 
 import { usePortalHomeQuery } from '@/features/portal/api/portal';
 import { HomeCard } from '@/features/portal/components/HomeCard';
+import { PortalUnavailable } from '@/features/portal/components/PortalUnavailable';
+import { StaleDataNotice } from '@/features/portal/components/StaleDataNotice';
 import { longLocalDate, planDayTitle, shortLocalDate } from '@/features/portal/lib/schedule';
 import type { components } from '@/shared/api/schema';
 import { isApiProblem } from '@/shared/api/problem';
-import { EmptyState } from '@/shared/components/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState';
 import { Progress } from '@/shared/components/ui/progress';
 import { Skeleton } from '@/shared/components/ui/skeleton';
@@ -42,19 +43,13 @@ export function PortalHomePage() {
       </section>
     );
 
-  if (query.isError) {
-    // Ficha arquivada ou relação terminada: não é falha técnica, tentar de novo não ajudará.
-    if (isApiProblem(query.error) && query.error.code === 'portal_profile_not_available')
-      return (
-        <EmptyState
-          icon={UserX}
-          title="Portal indisponível"
-          description="A tua ficha não está ativa. Fala com o teu personal trainer."
-        />
-      );
+  // Ficha arquivada ou relação terminada: não é falha técnica, tentar de novo não ajudará.
+  // Vale mesmo com dados em cache.
+  if (isApiProblem(query.error) && query.error.code === 'portal_profile_not_available')
+    return <PortalUnavailable />;
 
+  if (query.data === undefined)
     return <ErrorState error={query.error} onRetry={() => void query.refetch()} />;
-  }
 
   const home = query.data;
 
@@ -64,6 +59,10 @@ export function PortalHomePage() {
         <p className="text-muted-foreground font-mono text-xs">{longLocalDate(home.local_date)}</p>
         <h1 className="font-display text-3xl leading-none">Hoje</h1>
       </header>
+
+      {query.isError && (
+        <StaleDataNotice onRetry={() => void query.refetch()} retrying={query.isFetching} />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <WorkoutCard workout={home.workout} />

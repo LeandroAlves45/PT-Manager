@@ -285,6 +285,13 @@ describe('PortalSupplementsPage', () => {
     const rows = within(screen.getByRole('main')).getAllByRole('listitem');
     expect(await within(rows[0]!).findByText('Descontinuado')).toBeInTheDocument();
     expect(within(rows[1]!).queryByText('Descontinuado')).not.toBeInTheDocument();
+    // A etiqueta sozinha não diz o que fazer: a frase diz, e só na linha arquivada.
+    expect(
+      within(rows[0]!).getByText(
+        'Este suplemento foi descontinuado. Confirma com o teu personal trainer se o deves manter.'
+      )
+    ).toBeInTheDocument();
+    expect(within(rows[1]!).queryByText(/foi descontinuado/)).not.toBeInTheDocument();
     // Continua atribuído: a toma regista-se na mesma. Sem detalhe, a linha mostra só a dose.
     expect(intakeButton('Desmarcar', 'Creatina')).toBeEnabled();
     expect(rows[1]).toHaveTextContent('2 cápsulas · Ao pequeno-almoço');
@@ -371,5 +378,58 @@ describe('PortalSupplementsPage', () => {
     await screen.findByRole('heading', { name: 'Bom treino' });
     expect(router.state.location.pathname).toBe('/trainer');
     expect(requests).toBe(0);
+  });
+
+  it('keeps what was on screen and warns when a refresh fails, then recovers on retry', async () => {
+    server.use(...restorableSession({ role: 'client' }));
+    const { queryClient } = renderApp({ initialEntries: ['/portal/supplements'] });
+    await screen.findByRole('heading', { name: 'Suplementos' });
+
+    server.use(
+      http.get(`${API}/portal/my-supplements/intakes/today`, () =>
+        HttpResponse.json(problem('Internal server error'), { status: 500 })
+      )
+    );
+    await queryClient.invalidateQueries({ queryKey: portalKeys.supplementIntakes() });
+
+    expect(
+      await screen.findByText(
+        'Não foi possível atualizar. Estás a ver os últimos dados carregados.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText('1 de 2 tomadas hoje')).toBeInTheDocument();
+    // É um aviso, não o ecrã de erro.
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    server.use(
+      http.get(`${API}/portal/my-supplements/intakes/today`, () =>
+        HttpResponse.json(supplementIntakesToday())
+      )
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Não foi possível atualizar. Estás a ver os últimos dados carregados.')
+      ).not.toBeInTheDocument()
+    );
+    expect(screen.getByText('1 de 2 tomadas hoje')).toBeInTheDocument();
+  });
+
+  it('drops the cached data when the refresh says the client was archived', async () => {
+    server.use(...restorableSession({ role: 'client' }));
+    const { queryClient } = renderApp({ initialEntries: ['/portal/supplements'] });
+    await screen.findByRole('heading', { name: 'Suplementos' });
+
+    server.use(
+      http.get(`${API}/portal/my-supplements/intakes/today`, () =>
+        HttpResponse.json(problem('supplement_assignment_not_found'), { status: 404 })
+      )
+    );
+    await queryClient.invalidateQueries({ queryKey: portalKeys.supplementIntakes() });
+
+    expect(await screen.findByRole('heading', { name: 'Portal indisponível' })).toBeInTheDocument();
+    expect(screen.queryByText('1 de 2 tomadas hoje')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument();
   });
 });

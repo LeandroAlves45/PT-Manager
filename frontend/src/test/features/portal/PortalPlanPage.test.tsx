@@ -1,8 +1,9 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
+import { portalKeys } from '@/features/portal';
 import { API, problem, restorableSession } from '@/test/msw/handlers';
 import { CATALOG_EXERCISE_ID, trainingPlan } from '@/test/msw/portal-fixtures';
 import { server } from '@/test/msw/server';
@@ -168,5 +169,54 @@ describe('PortalPlanPage', () => {
 
     await user.click(screen.getByRole('link', { name: 'Treino de hoje' }));
     expect(await screen.findByRole('heading', { name: 'Treino de hoje' })).toBeInTheDocument();
+  });
+
+  it('keeps what was on screen and warns when a refresh fails, then recovers on retry', async () => {
+    server.use(...restorableSession({ role: 'client' }));
+    const { queryClient } = renderApp({ initialEntries: ['/portal/plan'] });
+    await screen.findByRole('heading', { name: 'Força 3x' });
+
+    server.use(
+      http.get(`${API}/portal/my-plan`, () =>
+        HttpResponse.json(problem('Internal server error'), { status: 500 })
+      )
+    );
+    await queryClient.invalidateQueries({ queryKey: portalKeys.plan() });
+
+    expect(
+      await screen.findByText(
+        'Não foi possível atualizar. Estás a ver os últimos dados carregados.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText('Desde 05/10/2026')).toBeInTheDocument();
+    // É um aviso, não o ecrã de erro.
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    server.use(http.get(`${API}/portal/my-plan`, () => HttpResponse.json(trainingPlan())));
+    await userEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Não foi possível atualizar. Estás a ver os últimos dados carregados.')
+      ).not.toBeInTheDocument()
+    );
+    expect(screen.getByText('Desde 05/10/2026')).toBeInTheDocument();
+  });
+
+  it('drops the cached data when the refresh says the plan is gone', async () => {
+    server.use(...restorableSession({ role: 'client' }));
+    const { queryClient } = renderApp({ initialEntries: ['/portal/plan'] });
+    await screen.findByRole('heading', { name: 'Força 3x' });
+
+    server.use(
+      http.get(`${API}/portal/my-plan`, () =>
+        HttpResponse.json(problem('portal_training_plan_not_available'), { status: 404 })
+      )
+    );
+    await queryClient.invalidateQueries({ queryKey: portalKeys.plan() });
+
+    expect(await screen.findByRole('heading', { name: 'Sem plano de treino' })).toBeInTheDocument();
+    expect(screen.queryByText('Desde 05/10/2026')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument();
   });
 });

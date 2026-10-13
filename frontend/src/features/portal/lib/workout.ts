@@ -85,6 +85,19 @@ export function exerciseDisplayName(exercise: {
   return exercise.is_unavailable ? 'Exercício indisponível' : exercise.exercise_name;
 }
 
+/**
+ * Verdadeiro quando a leitura do treino ou do plano falhou por um estado de negócio (sem plano
+ * ativo, ficha arquivada) e não por uma falha técnica. Nesse caso os dados em cache já não
+ * valem: o ecrã mostra o estado vazio, não o treino antigo.
+ */
+export function isTrainingPlanUnavailable(error: unknown): boolean {
+  return (
+    isApiProblem(error) &&
+    (error.code === 'portal_training_plan_not_available' ||
+      error.code === 'portal_profile_not_available')
+  );
+}
+
 /** Percentagem inteira de séries registadas; 0 quando não há séries planeadas. */
 export function progressPercent(logged: number, planned: number): number {
   return planned === 0 ? 0 : Math.round((logged / planned) * 100);

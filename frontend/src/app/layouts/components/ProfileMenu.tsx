@@ -2,6 +2,7 @@ import { ChevronDown, LogOut, Settings, User } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import { useAuth } from '@/app/providers/useAuth';
+import { ClientAvatar, usePortalProfileQuery } from '@/features/portal';
 import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar';
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -17,12 +18,17 @@ import { roleLabel } from '@/shared/config/navigation';
 /**
  * Menu de perfil da topbar.
  *
+ * O cliente vê a sua fotografia (ou as iniciais do nome) e o nome, lidos do perfil do portal.
+ * O personal trainer e o administrador não têm perfil com nome na API: continuam com as duas
+ * primeiras letras do identificador, e nenhum pedido é feito por eles.
+ *
  * Não há sino de notificações: notificações in-app são futuro e um ícone
  * que nunca faz nada é pior do que ícone nenhum.
  */
 export function ProfileMenu() {
   const { session, signOut } = useAuth();
   const navigate = useNavigate();
+  const profile = usePortalProfileQuery(session?.role === 'client').data;
 
   if (session === null) return null;
 
@@ -35,19 +41,36 @@ export function ProfileMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="gap-2 px-2" aria-label="Menu de perfil">
-          <Avatar className="size-7">
-            <AvatarFallback className="text-xs">
-              {session.userId.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          {profile === undefined ? (
+            <Avatar className="size-7">
+              <AvatarFallback className="text-xs">
+                {session.userId.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <ClientAvatar
+              name={profile.name}
+              avatarUrl={profile.avatar_url}
+              className="size-7 text-xs"
+            />
+          )}
           <ChevronDown aria-hidden className="size-4 opacity-70" />
         </Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="font-normal">
-          <span className="block text-sm font-medium">{roleLabel(session.role)}</span>
-          <span className="tabular text-muted-foreground block text-xs">{session.userId}</span>
+          {profile === undefined ? (
+            <>
+              <span className="block text-sm font-medium">{roleLabel(session.role)}</span>
+              <span className="tabular text-muted-foreground block text-xs">{session.userId}</span>
+            </>
+          ) : (
+            <>
+              <span className="block truncate text-sm font-medium">{profile.name}</span>
+              <span className="text-muted-foreground block text-xs">{roleLabel(session.role)}</span>
+            </>
+          )}
         </DropdownMenuLabel>
 
         <DropdownMenuSeparator />

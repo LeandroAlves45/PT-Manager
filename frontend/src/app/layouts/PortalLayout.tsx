@@ -91,7 +91,10 @@ export function PortalLayout() {
       </header>
 
       <main className="flex-1 px-4 pt-4 pb-[calc(64px+20px+1rem)]">
-        <Outlet />
+        {/* Coluna com a largura de um telemóvel grande: num ecrã largo o conteúdo não estica. */}
+        <div className="mx-auto w-full max-w-xl">
+          <Outlet />
+        </div>
       </main>
 
       <nav

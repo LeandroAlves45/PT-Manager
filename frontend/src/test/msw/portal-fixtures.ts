@@ -417,3 +417,77 @@ export function supplementAssignmentsPage(
 ): Schemas['PagedResponseOfMySupplementAssignmentResponse'] {
   return { items, total_count: items.length, page_number: 1, page_size: 100 };
 }
+
+// Check-ins e perfil. O João do seed: check-in por responder no domingo, 4 de outubro de
+// 2026 (o mesmo dia da home), sem contacto de emergência e sem fotografia.
+
+export const DUE_CHECK_IN_ID = '0f1e2d3c-4b5a-4968-8776-655443322110';
+
+/** Check-in de hoje por responder (`GET /portal/my-check-ins/due`): todos os valores vazios. */
+export function dueCheckIn(
+  overrides: Partial<Schemas['MyCheckInResponse']> = {}
+): Schemas['MyCheckInResponse'] {
+  return {
+    id: DUE_CHECK_IN_ID,
+    check_in_date: '2026-10-04',
+    target_date: null,
+    weight_kg: null,
+    body_fat_percentage: null,
+    notes: null,
+    body_measurements: {
+      waist_cm: null,
+      hip_cm: null,
+      chest_cm: null,
+      right_arm_cm: null,
+      left_arm_cm: null,
+      right_thigh_cm: null,
+      left_thigh_cm: null,
+      right_calf_cm: null,
+      left_calf_cm: null,
+    },
+    feedback: {
+      appetite: null,
+      digestion: null,
+      training_load: null,
+      recovery_sleep: null,
+      energy_levels: null,
+      body_response: null,
+    },
+    training_adherence_score: null,
+    nutrition_adherence_score: null,
+    status: 'scheduled',
+    responded_at: null,
+    updated_at: '2026-10-01T09:00:00Z',
+    ...overrides,
+  };
+}
+
+/** Próximo check-in agendado (`GET /portal/my-check-ins/next`), duas semanas depois. */
+export function nextCheckIn(
+  overrides: Partial<Schemas['MyNextCheckInResponse']> = {}
+): Schemas['MyNextCheckInResponse'] {
+  return {
+    id: '1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d',
+    check_in_date: '2026-10-18',
+    is_today: false,
+    ...overrides,
+  };
+}
+
+/** Perfil do João tal como o seed o cria. */
+export function portalProfile(
+  overrides: Partial<Schemas['MyProfileResponse']> = {}
+): Schemas['MyProfileResponse'] {
+  return {
+    name: 'João Pereira',
+    contact_email: 'joao@ptmanager.local',
+    phone: '+351912345678',
+    birth_date: '1992-04-17',
+    sex: 'male',
+    emergency_contact_name: null,
+    emergency_contact_phone: null,
+    avatar_url: null,
+    updated_at: '2026-10-01T09:00:00Z',
+    ...overrides,
+  };
+}

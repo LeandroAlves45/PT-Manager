@@ -1,8 +1,9 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
 
+import { portalKeys } from '@/features/portal';
 import type { components } from '@/shared/api/schema';
 import { API, problem, restorableSession } from '@/test/msw/handlers';
 import { nutritionPlan } from '@/test/msw/portal-fixtures';
@@ -74,6 +75,7 @@ describe('PortalNutritionPage', () => {
     expect(within(breakfast).getByText('Creatina · 5 g')).toBeInTheDocument();
     expect(within(breakfast).getByText('Com água.')).toBeInTheDocument();
     expect(within(breakfast).queryByText('Indisponível')).not.toBeInTheDocument();
+    expect(within(breakfast).queryByText(/já não está disponível/)).not.toBeInTheDocument();
 
     const lunch = screen.getByRole('article', { name: 'Almoço' });
     expect(within(lunch).getByText('492 kcal')).toBeInTheDocument();
@@ -113,6 +115,12 @@ describe('PortalNutritionPage', () => {
     // As gramas e as kcal do alimento bloqueado continuam a contar nos totais do backend.
     expect(within(card).getAllByRole('listitem')[0]).toHaveTextContent('80 g · 298 kcal');
     expect(within(card).getByText('Indisponível')).toBeInTheDocument();
+    // A etiqueta sozinha não diz o que fazer: a frase diz.
+    expect(
+      within(card).getByText(
+        'Este suplemento já não está disponível. Fala com o teu personal trainer.'
+      )
+    ).toBeInTheDocument();
     expect(within(card).queryByText('Com água.')).not.toBeInTheDocument();
   });
 
@@ -188,6 +196,8 @@ describe('PortalNutritionPage', () => {
     renderApp({ initialEntries: ['/portal/nutrition'] });
 
     expect(await screen.findByRole('heading', { name: 'Sem plano alimentar' })).toBeInTheDocument();
+    // O título do ecrã mantém-se no estado vazio: o cliente sabe onde está.
+    expect(screen.getByRole('heading', { name: 'Nutrição', level: 1 })).toBeInTheDocument();
     expect(
       screen.getByText('O teu personal trainer ainda não te atribuiu um plano alimentar.')
     ).toBeInTheDocument();
@@ -245,5 +255,73 @@ describe('PortalNutritionPage', () => {
     await screen.findByRole('heading', { name: 'Bom treino' });
     expect(router.state.location.pathname).toBe('/trainer');
     expect(requests).toBe(0);
+  });
+
+  it('links the supplements of a meal to the screen where intakes are registered', async () => {
+    const { router } = await openNutrition();
+
+    const links = screen.getAllByRole('link', { name: 'Registar tomas' });
+    await userEvent.click(links[0]!);
+
+    expect(await screen.findByRole('heading', { name: 'Suplementos' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/portal/supplements');
+  });
+
+  it('offers no link to the intakes in a meal without supplements', async () => {
+    const plan = nutritionPlan();
+    useNutrition({ ...plan, meals: plan.meals.map((meal) => ({ ...meal, supplements: [] })) });
+
+    await openNutrition();
+
+    expect(screen.queryByRole('link', { name: 'Registar tomas' })).not.toBeInTheDocument();
+  });
+
+  it('keeps what was on screen and warns when a refresh fails, then recovers on retry', async () => {
+    server.use(...restorableSession({ role: 'client' }));
+    const { queryClient } = renderApp({ initialEntries: ['/portal/nutrition'] });
+    await screen.findByRole('heading', { name: 'Nutrição' });
+
+    server.use(
+      http.get(`${API}/portal/my-nutrition`, () =>
+        HttpResponse.json(problem('Internal server error'), { status: 500 })
+      )
+    );
+    await queryClient.invalidateQueries({ queryKey: portalKeys.nutrition() });
+
+    expect(
+      await screen.findByText(
+        'Não foi possível atualizar. Estás a ver os últimos dados carregados.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText('Desde 05/10/2026')).toBeInTheDocument();
+    // É um aviso, não o ecrã de erro.
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    server.use(http.get(`${API}/portal/my-nutrition`, () => HttpResponse.json(nutritionPlan())));
+    await userEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Não foi possível atualizar. Estás a ver os últimos dados carregados.')
+      ).not.toBeInTheDocument()
+    );
+    expect(screen.getByText('Desde 05/10/2026')).toBeInTheDocument();
+  });
+
+  it('drops the cached data when the refresh says the plan is gone', async () => {
+    server.use(...restorableSession({ role: 'client' }));
+    const { queryClient } = renderApp({ initialEntries: ['/portal/nutrition'] });
+    await screen.findByRole('heading', { name: 'Nutrição' });
+
+    server.use(
+      http.get(`${API}/portal/my-nutrition`, () =>
+        HttpResponse.json(problem('portal_nutrition_plan_not_available'), { status: 404 })
+      )
+    );
+    await queryClient.invalidateQueries({ queryKey: portalKeys.nutrition() });
+
+    expect(await screen.findByRole('heading', { name: 'Sem plano alimentar' })).toBeInTheDocument();
+    expect(screen.queryByText('Desde 05/10/2026')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument();
   });
 });
