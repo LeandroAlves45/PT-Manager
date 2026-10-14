@@ -336,3 +336,16 @@ Lições capturadas depois de correções do utilizador.
   e código só com Node ou `[IO.File]::ReadAllText`/`WriteAllText`.
 - **Não correr o gerador do pack ao mesmo tempo que o Vitest** numa máquina com pouca memória:
   três workers não arrancaram.
+
+## 2026-10-14: fecho da 6F-4 e do Sprint 6F
+
+- **A revisão com agentes encontrou o que o CI verde não via.** Seis defeitos numa fase com o
+  CI #38 verde; três de backend só apareceram com sondas funcionais contra o PostgreSQL.
+- **Provar o defeito antes de o corrigir, e verificar o achado no código.** Cada achado do
+  agente passou por teste vermelho; dois foram descartados por leitura (desenho e ramo morto).
+- **Um botão que muda de função no mesmo sítio precisa de espera**, não de outra `key`.
+- **Ao apertar uma regra de backend, procurar o teste antigo que afirma o contrário** (o
+  "arquivado preserva o histórico" dos suplementos).
+- **Comando longo em segundo plano: `run_in_background`**; `nohup` morre com o shell da
+  ferramenta e o log fica sem sumário.
+- **Scripts Node em ficheiro para editar Markdown com crases**; heredocs longos partem o Bash.

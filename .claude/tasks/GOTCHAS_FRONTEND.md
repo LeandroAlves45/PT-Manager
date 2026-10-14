@@ -311,3 +311,27 @@ com um corpo real.
 - Imagem que um teste tem de ver: `<img>` com `onError`, e `fireEvent.error` no teste.
 - Uma mutação sobrevivente num ramo defensivo: confirmar primeiro se o ramo corre; se não
   corre, retirar o ramo e deixar o teste do comportamento.
+
+## 2026-10-13 — Fecho 6F-4: o mesmo botão para "Seguinte" e "Enviar", ramo morto herdado
+
+**O que aconteceu.**
+- No check-in em três passos, "Seguinte" e "Enviar check-in" eram o mesmo `<Button type="submit">`
+  com outro texto. Dois toques rápidos no passo das medidas enviavam o check-in sem o cliente
+  ver o último passo, e o envio não se desfaz. Estava igual ao blueprint; nenhum teste tocava
+  duas vezes.
+- A primeira correção pensada (`key` por passo no botão) passava no teste e falhava num
+  telemóvel: o botão novo aparece na mesma posição e o segundo toque acerta-lhe na mesma.
+- `isTrainingPlanUnavailable` e `TrainingPlanError` tratavam `portal_profile_not_available`,
+  que `GET /my-workout/today` e `GET /my-plan` nunca emitem. O teste que o cobria usava um
+  corpo inventado.
+
+**A regra.**
+- Uma ação irreversível não partilha a posição com o botão do passo anterior sem uma espera:
+  ao entrar no último passo, "Enviar" fica desativado durante `SEND_HOLD_MS` (500 ms). Nos
+  testes, o helper `send()` espera que o botão fique ativo.
+- Uma correção de toque duplo prova-se com o mesmo elemento clicado duas vezes, e pensa-se no
+  ecrã real: trocar o nó do DOM não muda o sítio onde o dedo cai.
+- Antes de tratar um código de erro num ecrã, procurar que handler o emite para esse endpoint.
+  O mesmo estado (ficha arquivada) tem códigos diferentes de endpoint para endpoint.
+- O backend passou a recusar texto com U+0000 com `text_invalid_character`: nenhum mapa do
+  frontend o conhece e fica na mensagem geral, de propósito (nenhum teclado o escreve).

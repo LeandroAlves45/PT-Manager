@@ -119,3 +119,32 @@ temporário contra o PostgreSQL.
   API depender disso.
 - `WithErrorCode` só se aplica à regra imediatamente anterior: para um intervalo com um só
   código, usar um `Must`.
+
+## 2026-10-13 — Fecho 6F-4: escala do decimal, carácter nulo e leitura sem `IsActive`
+
+**O que aconteceu.** Três achados do agente de segurança, provados com sondas funcionais contra
+o PostgreSQL antes de corrigir:
+- `weight_kg: 0.004` e `body_fat_percentage: 99.996` passavam o validador (`> 0`, `< 100`),
+  a coluna `numeric(10,2)` arredondava para `0.00` e `100.00` e o check da tabela rebentava:
+  500. Com `71.555` a escrita passava, mas a resposta devolvia o valor por arredondar e o
+  reenvio igual dava 409.
+- `"notes": "a b"` e `"phone": "+351 911"` davam 500: o PostgreSQL não guarda
+  U+0000 em `text` nem em `jsonb`.
+- `GetMyAsync` e `ListMyActiveAsync` dos suplementos do portal não filtravam
+  `client.IsActive`: um cliente arquivado, com o token ainda válido, lia as atribuições e as
+  notas do personal trainer.
+- À parte, o diff contra o blueprint mostrou um `$` em falta numa mensagem interpolada de
+  `InitialAssessment`. Compilava e nenhum teste olhava para a mensagem.
+
+**A regra.**
+- Um `decimal` de entrada valida o intervalo **e** a escala da coluna
+  (`AssessmentLimits.FitsDecimalPlaces`). Um intervalo aberto (`> 0`, `< 100`) mais
+  arredondamento na coluna dá um valor fora do check.
+- Texto livre vindo de um cliente leva `.WithoutNullCharacter()`
+  (`Application/Validation/TextValidationRules.cs`, código `text_invalid_character`). Foi
+  aplicado aos validadores do portal; os do personal trainer ficam no backlog.
+- Toda a leitura do portal parte de um cliente ativo. Ao escrever uma query nova com
+  `client.UserId == userId`, juntar `client.IsActive` ou usar `PortalClients.FindActiveIdAsync`.
+- Um teste de limite usa o valor literal (`1000`, `1000.01`), não a constante do domínio: com
+  a constante, o teste acompanha qualquer alteração e nunca falha.
+- Uma exceção com mensagem interpolada merece uma asserção sobre a mensagem.

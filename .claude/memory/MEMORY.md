@@ -6,7 +6,20 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
-**2026-10-11: Sprint 6F-4 blueprints validados (por aplicar).**
+**2026-10-14: Sprint 6F-4 e Sprint 6F FINALIZADOS.**
+- Fecho da 6F-4 sobre `16b572f`/`5ddacd8` (CI #37 e #38 verdes): 6 defeitos (D1 `# PT Manager: memória operacional
+
+O código e os documentos em `.claude/project/` são as fontes de verdade. Esta
+memória é um índice operacional conciso; detalhes e evidência permanecem nas
+notas de `.claude/memory/Sessions/`.
+
+ em falta,
+  D2 toque duplo no check-in, D3 ramo morto, S1 escala de 2 casas, S2 suplementos de
+  arquivado, S3 U+0000 em texto), backend 3013 + 1 skip, Vitest 554/554, mutações 7/7.
+- Faltam só os gates manuais com login. Backlog no relatório `sprint_6F4/09`.
+- Ver `Sessions/2026-10-14-sprint6f4-fecho-sprint6f.md`.
+
+**2026-10-11: Sprint 6F-4 blueprints validados (histórico).**
 - Pack `sprint_6F/sprint_6F4/01–08` + manifest, com 53 caminhos (44 integrais e 9 patches).
 - Check-ins em três passos, perfil com fotografia moderada, menu do topo com fotografia e
   nome; fecho das pendências do sprint (A4 nas 5 páginas, V8, `PortalUnavailable`, retoques

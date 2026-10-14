@@ -1,71 +1,49 @@
-# TODO: sessão de 2026-10-11/12 · Sprint 6F-4 (Check-ins e perfil do portal), blueprints
+# TODO: sessão de 2026-10-13 · Fecho da 6F-4 e do Sprint 6F
 
-Plano aprovado em `~/.claude/plans/c-users-leandro-alves-desktop-projeto-p-lazy-globe.md`.
-Validação na worktree descartável `C:\ptm-tmp-6f4` (branch `tmp/blueprints-6f4`, base `7153956`).
-Nada foi aplicado em `frontend/` nem `backend/` do checkout real.
+Plano aprovado em `~/.claude/plans/virtual-napping-globe.md`.
+Base: `5ddacd8` (CI #38 verde). Aplicação do pack em `16b572f` (backend) e `5ddacd8` (frontend).
 
-## 1. Preparar
-- [x] `git status` limpo e worktree criada
-- [x] Watchers verificados e `npm ci` na worktree
+## 1. Análise (feita em modo plano, sem editar)
+- [x] Diff programático contra o `manifest.json`: 40 iguais, 13 divergentes
+- [x] Linha de base: backend 2986 + 1 skip, Vitest 544, lint, typecheck, build
+- [x] Skill `code-review-leandro` sobre a 6F-4
+- [x] Skill `performance-reviewer` (check-ins, menu do topo, refetch do portal)
+- [x] Três agentes (sonnet) sobre o 6F inteiro: comportamento, segurança, cobertura
+- [x] Achados verificados no código; decisões do Leandro recolhidas
 
-## 2. Backend (worktree)
-- [x] Provar o 500 do peso sem máximo (provado; as medidas não dão 500: coluna JSON)
-- [x] Provar o 500 do email `a@b` (provado em `PATCH /portal/my-profile`)
-- [x] Corrigir com testes: `AssessmentLimits.MaxWeightKg`, `EmailAddress.IsValid`, 7 validadores
-- [x] Suite completa: 2986 + 1 skip (1 intermitente de moderação, verde ao repetir)
-- [x] Contrato sem alterações (só validação)
+## 2. Backend
+- [ ] D1: `$` em falta em `InitialAssessment.ValidateParameters` + teste de domínio
+- [ ] S1: escala de duas casas no peso e na massa gorda (sonda do 500 primeiro)
+- [ ] S2: `client.IsActive` nas duas leituras de suplementos do portal + teste
+- [ ] S3: `\u0000` em texto (sonda primeiro; corrigir só se der 500)
+- [ ] Lacunas: `UpdateInitialAssessment` com peso 0; limite literal 1000
+- [ ] `GOTCHAS_BACKEND.md`
+- [ ] Suite completa verde
 
-## 3. Frontend (worktree)
-- [x] `api/portal.ts`: chaves e hooks de check-in e perfil
-- [x] `lib/checkIn.ts` e `lib/profile.ts`
-- [x] `PortalUnavailable`, `StaleDataNotice` e `ClientAvatar`
-- [x] Passo a passo do check-in (U20, U21, U22, U26)
-- [x] `AvatarSection` e `ProfileContactsForm`
-- [x] `PortalCheckInsPage`, `PortalProfilePage`, `index.ts`, `router.tsx`
-- [x] `PortalLayout` (V8) e `ProfileMenu` (U23)
-- [x] A4 nas 5 páginas existentes
-- [x] Retoques design-is (MealCard, SupplementIntakeRow, PortalNutritionPage)
+## 3. Frontend
+- [ ] D2: duplo toque em "Seguinte" envia o check-in (teste primeiro)
+- [ ] D3: ramo morto `portal_profile_not_available` em Treino e Plano
+- [ ] `phone` de `toProfileValues` como no blueprint
+- [ ] Mutações dirigidas e testes só para as sobreviventes
+- [ ] `GOTCHAS_FRONTEND.md`
+- [ ] Vitest, lint, typecheck e build verdes
 
-## 4. Testes
-- [x] Handlers e fixtures MSW por omissão
-- [x] Libs, duas páginas novas, `ProfileMenu`
-- [x] Casos novos nos testes dos ecrãs tocados
-- [x] Tudo verde na worktree: 544/544 em 53 ficheiros
+## 4. Blueprints e gates
+- [ ] Realinhar docs 02–07 e `manifest.json` com o código final (round-trip 53/53)
+- [ ] `sprint_6F4/08_6F4_quality_gates.md`
+- [ ] `backlogs/QualityGates.md`
 
-## 5. Gates na worktree
-- [x] lint, typecheck, Vitest completo, build, Prettier, `npm audit`, greps
-- [x] Mutações: 57 mortas de 58; M21 era código morto e foi retirado
-- [x] Verificação visual (375 px, claro e escuro, ecrã largo)
+## 5. Relatórios
+- [ ] `sprint_6F4/09_relatorio_fecho_fase_6F4.md`
+- [ ] `10_fecho_sprint_6F.md`
+- [ ] `00_plano_fase_6F_completa.md`
 
-## 6. Pack
-- [x] Gerado por script, `manifest.json`, round-trip 53/53
-- [x] Docs 01–08 em `sprint_6F/sprint_6F4/`
+## 6. Memória
+- [ ] Nota em `.claude/memory/Sessions/`
+- [ ] `MEMORY.md`, `ACTIVE.md`, `lessons.md`
+- [ ] Memória automática do projeto
 
-## 7. Documentação
-- [x] `00_plano_fase_6F_completa.md` (reposto depois do crash e atualizado) e `10_fecho_sprint_6F.md`
-- [x] `backlogs/QualityGates.md`
-- [x] `05_ECRAS_CLIENTE.md`, sprint-6 README, `plan_sprint_6_por_atualizar.md`
-- [x] Memória (ACTIVE, MEMORY, NEST, nota de sessão, lessons, GOTCHAS)
-
-## 8. Descartar
-- [x] Worktree e branch apagados; `git status` final sem `frontend/` nem `backend/`
-
-## Review
-
-- Pack `sprint_6F4/01–08` + manifest: 53 caminhos (44 integrais, 9 patches), round-trip 53/53.
-- Decisões U20–U26 do Leandro. O check-in ficou em três passos num só formulário.
-- A confirmação do contrato por teste funcional encontrou dois 500 no backend (peso corporal
-  sem teto e email `a@b`); corrigidos no doc 02, sem contrato novo.
-- Achados fora do pack, no backlog do doc 08: `rate_limit_exceeded` nunca é emitido pelo
-  backend; medidas sem teto; três casas decimais partem a idempotência; `.EmailAddress()` nos
-  validadores de autenticação.
-- Não foi feito: mutações de backend e teste funcional do formato `Feedback[n]` (o Docker
-  deixou de responder depois do primeiro reinício da máquina); envio de um ficheiro real no
-  browser.
-- Incidente: um reinício deixou `00_plano_fase_6F_completa.md` a zeros (`docs/` não está no
-  git). Reposto a partir do conteúdo lido no início da sessão; convém o Leandro confirmar que
-  o ficheiro está como esperava.
-- Ficam com o Leandro: aplicar o pack, testes antes do push e os gates manuais
-  (`QG6F4-UI-001`, `QG6F4-ISOLAMENTO-UI-001`, `QG6F4-AVATAR-001`, `QG6F-GATE-001`).
-
-**Blueprints da fase 6F-4: Finalizado.** A fase fecha depois da aplicação e dos gates.
+## 7. Commit e CI
+- [ ] Commits em `main` e `git push`
+- [ ] Run de CI verde
+- [ ] Checklist final e secção Review
