@@ -23,8 +23,8 @@ Tem as fases, as decisões U1–U19, os contratos de todas as fases e as armadil
   - Backend 3013 + 1 skip, Vitest 554/554, mutações G1–G7 7/7, blueprints realinhados 53/53.
   - Commits `749f6da`, `cf8af27`, `503d113`; CI #39 verde.
   - Relatório `sprint_6F4/09_relatorio_fecho_fase_6F4.md`; fecho do sprint em `10_fecho_sprint_6F.md`.
-  - Faltam `QG6F4-UI-001`, `QG6F4-ISOLAMENTO-UI-001`, `QG6F4-AVATAR-001`, `QG6F-GATE-001` e
-    `QG6F4-DESIGN-001`. Próximo: Sprint 6G (admin/fecho do Sprint 6, graphify).
+  - Faltam `QG6F4-UI-001`, `QG6F4-ISOLAMENTO-UI-001`, `QG6F4-AVATAR-001`, `QG6F-GATE-001`.
+    `design-is` da 6F-4: 20/30 REFINE (`frontend/DESIGN-IS-2026-10-14/`). Próximo: Sprint 6G (admin/fecho do Sprint 6, graphify).
   - Ver `Sessions/2026-10-14-sprint6f4-fecho-sprint6f.md`.
 - **6F-4 blueprints validados (2026-10-11, histórico).**
   - Pack: `sprint_6F/sprint_6F4/01–08` + `manifest.json`, com 53 caminhos (44 integrais e 9
