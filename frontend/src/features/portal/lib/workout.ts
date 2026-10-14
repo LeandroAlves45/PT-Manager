@@ -86,16 +86,15 @@ export function exerciseDisplayName(exercise: {
 }
 
 /**
- * Verdadeiro quando a leitura do treino ou do plano falhou por um estado de negócio (sem plano
- * ativo, ficha arquivada) e não por uma falha técnica. Nesse caso os dados em cache já não
- * valem: o ecrã mostra o estado vazio, não o treino antigo.
+ * Verdadeiro quando a leitura do treino ou do plano falhou por um estado de negócio e não por
+ * uma falha técnica. Nesse caso os dados em cache já não valem: o ecrã mostra o estado vazio,
+ * não o treino antigo.
+ *
+ * Os dois endpoints só emitem `portal_training_plan_not_available`, também para uma ficha
+ * arquivada: `portal_profile_not_available` é do Início e do perfil.
  */
 export function isTrainingPlanUnavailable(error: unknown): boolean {
-  return (
-    isApiProblem(error) &&
-    (error.code === 'portal_training_plan_not_available' ||
-      error.code === 'portal_profile_not_available')
-  );
+  return isApiProblem(error) && error.code === 'portal_training_plan_not_available';
 }
 
 /** Percentagem inteira de séries registadas; 0 quando não há séries planeadas. */

@@ -50,7 +50,7 @@ export type ProfileValues = z.input<typeof profileSchema>;
 export function toProfileValues(profile: Profile): ProfileValues {
   return {
     contact_email: profile.contact_email ?? '',
-    phone: profile.phone ?? '',
+    phone: profile.phone,
     emergency_contact_name: profile.emergency_contact_name ?? '',
     emergency_contact_phone: profile.emergency_contact_phone ?? '',
   };

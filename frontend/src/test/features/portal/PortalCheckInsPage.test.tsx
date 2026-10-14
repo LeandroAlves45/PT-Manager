@@ -33,7 +33,12 @@ async function openCheckIns() {
 const field = (name: string) => screen.getByRole('textbox', { name });
 const next = () => screen.getByRole('button', { name: 'Seguinte' });
 const previous = () => screen.getByRole('button', { name: 'Anterior' });
-const send = () => screen.getByRole('button', { name: 'Enviar check-in' });
+/** "Enviar check-in" só fica ativo um instante depois de o último passo abrir. */
+async function send() {
+  const button = screen.getByRole('button', { name: 'Enviar check-in' });
+  await waitFor(() => expect(button).toBeEnabled());
+  return button;
+}
 
 /** Preenche o peso e avança até ao último passo. */
 async function reachLastStep(user: ReturnType<typeof userEvent.setup>, weight = '71,5') {
@@ -167,7 +172,7 @@ describe('PortalCheckInsPage', () => {
       'Alta toda a semana.'
     );
 
-    await user.click(send());
+    await user.click(await send());
 
     // Espera pelo servidor: o botão fica desativado e o formulário continua no ecrã.
     const sending = await screen.findByRole('button', { name: 'A enviar…' });
@@ -233,7 +238,7 @@ describe('PortalCheckInsPage', () => {
     await openCheckIns();
 
     await reachLastStep(user, '80');
-    await user.click(send());
+    await user.click(await send());
 
     await screen.findByText('Check-in enviado. O teu personal trainer já o pode ver.');
     expect(body).toEqual({
@@ -245,6 +250,34 @@ describe('PortalCheckInsPage', () => {
       training_adherence_score: null,
       nutrition_adherence_score: null,
     });
+  });
+
+  it('does not send the check-in when "Seguinte" is tapped twice on the second step', async () => {
+    let posts = 0;
+    server.use(
+      http.post(RESPOND, () => {
+        posts += 1;
+        return HttpResponse.json(dueCheckIn({ status: 'answered' }));
+      })
+    );
+    const user = userEvent.setup();
+    await openCheckIns();
+
+    await user.type(field('Peso (kg)'), '71,5');
+    await user.click(next());
+    await screen.findByRole('heading', { name: 'Medidas' });
+    // O segundo toque cai no mesmo sítio do ecrã, já depois de o passo mudar.
+    const tapped = next();
+    await user.click(tapped);
+    await screen.findByRole('heading', { name: 'Como correu' });
+    expect(tapped).toHaveAccessibleName('Enviar check-in');
+    await user.click(tapped);
+
+    expect(posts).toBe(0);
+    expect(screen.getByRole('heading', { name: 'Como correu' })).toBeInTheDocument();
+    expect(
+      screen.queryByText('Check-in enviado. O teu personal trainer já o pode ver.')
+    ).not.toBeInTheDocument();
   });
 
   it('checks the last step before sending', async () => {
@@ -260,7 +293,7 @@ describe('PortalCheckInsPage', () => {
 
     await reachLastStep(user);
     await user.type(field('Adesão ao treino (%)'), '101');
-    await user.click(send());
+    await user.click(await send());
 
     expect(await screen.findByText('Indica um valor inteiro de 0 a 100.')).toBeInTheDocument();
     expect(field('Adesão ao treino (%)')).toHaveAttribute('aria-invalid', 'true');
@@ -299,7 +332,7 @@ describe('PortalCheckInsPage', () => {
     await user.type(field('Peito (cm)'), '100');
     await user.click(next());
     await screen.findByRole('heading', { name: 'Como correu' });
-    await user.click(send());
+    await user.click(await send());
 
     // Volta ao passo das medidas, com a mensagem no campo certo e o valor ainda lá.
     expect(await screen.findByRole('heading', { name: 'Medidas' })).toBeInTheDocument();
@@ -313,7 +346,7 @@ describe('PortalCheckInsPage', () => {
     await user.type(field('Peito (cm)'), '101');
     await user.click(next());
     await screen.findByRole('heading', { name: 'Como correu' });
-    await user.click(send());
+    await user.click(await send());
 
     await screen.findByText('Check-in enviado. O teu personal trainer já o pode ver.');
     expect(bodies).toHaveLength(2);
@@ -338,13 +371,43 @@ describe('PortalCheckInsPage', () => {
     await openCheckIns();
 
     await reachLastStep(user);
-    await user.click(send());
+    await user.click(await send());
 
     await waitFor(() => expect(toastMock.error).toHaveBeenCalledWith(message));
     // O formulário sai (a mensagem não podia viver nele) e o ecrã mostra o próximo.
     expect(await screen.findByRole('heading', { name: 'Próximo check-in' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Enviar check-in' })).not.toBeInTheDocument();
     expect(screen.queryByText(/Check-in enviado/)).not.toBeInTheDocument();
+  });
+
+  it('goes back to the earliest step when the server refuses fields of several steps', async () => {
+    server.use(
+      http.post(RESPOND, () =>
+        HttpResponse.json(
+          {
+            ...problem('validation_failed'),
+            errors: [
+              { field: 'Feedback[0]', code: 'check_in_feedback_too_long', message: '' },
+              { field: 'WeightKg', code: 'weight_invalid', message: '' },
+            ],
+          },
+          { status: 400 }
+        )
+      )
+    );
+    const user = userEvent.setup();
+    await openCheckIns();
+
+    await reachLastStep(user);
+    await user.click(await send());
+
+    expect(await screen.findByRole('heading', { name: 'Peso' })).toBeInTheDocument();
+    expect(field('Peso (kg)')).toHaveAttribute('aria-invalid', 'true');
+    // O erro do último passo fica à espera: aparece quando o cliente lá voltar.
+    await user.click(next());
+    await screen.findByRole('heading', { name: 'Medidas' });
+    await user.click(next());
+    await screen.findByRole('heading', { name: 'Como correu' });
   });
 
   it('keeps everything typed when the server fails, and says so', async () => {
@@ -356,7 +419,7 @@ describe('PortalCheckInsPage', () => {
 
     await reachLastStep(user);
     await user.type(field('Notas'), 'Semana boa.');
-    await user.click(send());
+    await user.click(await send());
 
     expect(
       await screen.findByText('Não foi possível enviar o check-in. O que escreveste continua aqui.')
@@ -364,7 +427,7 @@ describe('PortalCheckInsPage', () => {
     expect(field('Notas')).toHaveValue('Semana boa.');
     // É uma falha do envio, não de um campo: nenhum fica marcado.
     expect(field('Notas')).toHaveAttribute('aria-invalid', 'false');
-    expect(send()).toBeEnabled();
+    expect(await send()).toBeEnabled();
     expect(toastMock.error).not.toHaveBeenCalled();
     await user.click(previous());
     await user.click(await screen.findByRole('button', { name: 'Anterior' }));

@@ -167,6 +167,33 @@ describe('PortalTodayPage', () => {
     expect(posts).not.toHaveBeenCalled();
   });
 
+  it('corrects a logged set when only the reps change, instead of unmarking it', async () => {
+    useToday(todayWithFirstSetLogged());
+    const patches: unknown[] = [];
+    const deletes = vi.fn();
+    server.use(
+      http.patch(`${API}/portal/exercise-set-logs/:logId`, async ({ request }) => {
+        patches.push(await request.json());
+        return HttpResponse.json({});
+      }),
+      http.delete(`${API}/portal/exercise-set-logs/:logId`, () => {
+        deletes();
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+    const user = userEvent.setup();
+    await openToday();
+
+    const reps = screen.getByLabelText('Repetições da série 1 de Agachamento');
+    await user.clear(reps);
+    await user.type(reps, '6');
+    await user.click(screen.getByRole('button', { name: 'Guardar série 1 de Agachamento' }));
+
+    await waitFor(() => expect(patches).toHaveLength(1));
+    expect(patches[0]).toEqual({ weight_kg: 62.5, reps_done: 6, rpe: 8.5, notes: null });
+    expect(deletes).not.toHaveBeenCalled();
+  });
+
   it('unmarks a logged set with DELETE', async () => {
     let state = todayWithFirstSetLogged();
     const deleted: unknown[] = [];
@@ -454,20 +481,6 @@ describe('PortalTodayPage', () => {
     expect(
       screen.getByText('O teu personal trainer ainda não atribuiu um plano.')
     ).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument();
-  });
-
-  it('tells an inactive client profile apart from a missing plan', async () => {
-    server.use(
-      http.get(`${API}/portal/my-workout/today`, () =>
-        HttpResponse.json(problem('portal_profile_not_available'), { status: 404 })
-      ),
-      ...restorableSession({ role: 'client' })
-    );
-
-    renderApp({ initialEntries: ['/portal/today'] });
-
-    expect(await screen.findByRole('heading', { name: 'Portal indisponível' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument();
   });
 

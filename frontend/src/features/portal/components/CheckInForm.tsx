@@ -30,6 +30,15 @@ import { formatNumber } from '@/shared/lib/format';
 const LAST_STEP = CHECK_IN_STEPS.length - 1;
 
 /**
+ * Tempo em que "Enviar check-in" fica desativado ao chegar ao último passo.
+ *
+ * "Seguinte" e "Enviar check-in" ocupam o mesmo sítio do ecrã. Sem esta espera, o segundo
+ * toque de um toque duplo em "Seguinte" enviava o check-in sem o cliente ver o último passo,
+ * e o envio não se desfaz.
+ */
+const SEND_HOLD_MS = 500;
+
+/**
  * Resposta ao check-in de hoje, em três passos: peso, medidas e como correu.
  *
  * É um só formulário: o passo é só o que está à vista, e os valores dos outros passos ficam
@@ -48,6 +57,7 @@ export function CheckInForm({ checkInId, onSent }: { checkInId: string; onSent: 
   const [step, setStep] = useState(0);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const opened = useRef(false);
+  const [sendHeld, setSendHeld] = useState(false);
   const errors = form.formState.errors;
   const dirty = form.formState.isDirty;
 
@@ -73,6 +83,14 @@ export function CheckInForm({ checkInId, onSent }: { checkInId: string; onSent: 
     opened.current = true;
   }, [step]);
 
+  // Liberta "Enviar check-in" depois da espera que trava o toque duplo.
+  useEffect(() => {
+    if (!sendHeld) return;
+
+    const timer = setTimeout(() => setSendHeld(false), SEND_HOLD_MS);
+    return () => clearTimeout(timer);
+  }, [sendHeld]);
+
   /** Mostra os erros e leva o cliente ao primeiro passo que os tem. */
   function show(issues: readonly CheckInIssue[]) {
     form.clearErrors();
@@ -89,6 +107,8 @@ export function CheckInForm({ checkInId, onSent }: { checkInId: string; onSent: 
       else {
         form.clearErrors();
         setStep(step + 1);
+
+        if (step + 1 === LAST_STEP) setSendHeld(true);
       }
       return;
     }
@@ -269,7 +289,11 @@ export function CheckInForm({ checkInId, onSent }: { checkInId: string; onSent: 
             Anterior
           </Button>
         )}
-        <Button type="submit" className="min-h-11 flex-1" disabled={pending}>
+        <Button
+          type="submit"
+          className="min-h-11 flex-1"
+          disabled={pending || (step === LAST_STEP && sendHeld)}
+        >
           {step < LAST_STEP ? 'Seguinte' : pending ? 'A enviar…' : 'Enviar check-in'}
         </Button>
       </div>

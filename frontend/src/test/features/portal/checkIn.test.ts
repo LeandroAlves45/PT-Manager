@@ -178,6 +178,43 @@ describe('serverCheckInIssues', () => {
     expect(issues[1]?.message).toBe('Indica uma medida maior que 0 e até 1000 cm.');
   });
 
+  it.each([
+    ['WeightKg', 'weight_invalid', 'weight_kg', 0, 'Indica um peso maior que 0 e até 1000 kg.'],
+    [
+      'BodyFatPercentage',
+      'body_fat_percentage_invalid',
+      'body_fat_percentage',
+      0,
+      'Indica uma percentagem maior que 0 e menor que 100.',
+    ],
+    [
+      'TrainingAdherenceScore',
+      'training_adherence_invalid',
+      'training_adherence_score',
+      2,
+      'Indica um valor inteiro de 0 a 100.',
+    ],
+    [
+      'NutritionAdherenceScore',
+      'nutrition_adherence_invalid',
+      'nutrition_adherence_score',
+      2,
+      'Indica um valor inteiro de 0 a 100.',
+    ],
+    ['Notes', 'notes_too_long', 'notes', 2, 'O texto não pode exceder 2000 caracteres.'],
+    [
+      'Feedback[0]',
+      'check_in_feedback_too_long',
+      'feedback.appetite',
+      2,
+      'O texto não pode exceder 2000 caracteres.',
+    ],
+  ])('puts %s (%s) on its own field, step and message', (field, code, target, step, message) => {
+    expect(serverCheckInIssues([{ field, code, message: '' }])).toEqual([
+      { field: target, step, message },
+    ]);
+  });
+
   it('leaves out what the form does not know, so the screen shows the general message', () => {
     expect(
       serverCheckInIssues([

@@ -185,6 +185,24 @@ describe('PortalProfilePage', () => {
     expect(bodies).toHaveLength(2);
   });
 
+  it('says so and keeps what was typed when saving fails without a field', async () => {
+    server.use(
+      http.patch(PROFILE, () => HttpResponse.json(problem('internal_error'), { status: 500 }))
+    );
+    const user = userEvent.setup();
+    await openProfile();
+
+    await user.clear(field('Telefone'));
+    await user.type(field('Telefone'), '961112223');
+    await user.click(screen.getByRole('button', { name: 'Guardar contactos' }));
+
+    expect(await within(section('Contactos')).findByRole('alert')).toHaveTextContent(
+      'Não foi possível guardar os contactos. Tenta novamente.'
+    );
+    expect(field('Telefone')).toHaveValue('961112223');
+    expect(toastMock.success).not.toHaveBeenCalled();
+  });
+
   it('maps a validation error from errors[] to its field', async () => {
     server.use(
       http.patch(PROFILE, () =>
@@ -321,6 +339,24 @@ describe('PortalProfilePage', () => {
     expect(
       within(section('Fotografia')).queryByRole('button', { name: 'Remover' })
     ).not.toBeInTheDocument();
+  });
+
+  it('keeps the dialog open and says so when removing the photo fails', async () => {
+    server.use(
+      http.delete(AVATAR, () => HttpResponse.json(problem('internal_error'), { status: 500 }))
+    );
+    const user = userEvent.setup();
+    await openProfile(portalProfile({ avatar_url: PHOTO }));
+
+    await user.click(within(section('Fotografia')).getByRole('button', { name: 'Remover' }));
+    const dialog = await screen.findByRole('alertdialog', { name: 'Remover a fotografia?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Remover fotografia' }));
+
+    await waitFor(() =>
+      expect(toastMock.error).toHaveBeenCalledWith('Não foi possível remover a fotografia.')
+    );
+    expect(screen.getByRole('alertdialog', { name: 'Remover a fotografia?' })).toBeInTheDocument();
+    expect(toastMock.success).not.toHaveBeenCalled();
   });
 
   it('does not wipe the contacts being typed when the photo changes', async () => {
