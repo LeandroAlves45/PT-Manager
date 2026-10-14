@@ -8,4 +8,15 @@ public static class AssessmentLimits
     /// valor com mais de oito dígitos inteiros rebentava na escrita com um 500.
     /// </summary>
     public const decimal MaxWeightKg = 1000m;
+
+    /// <summary>
+    /// Casas decimais do peso e da massa gorda. As colunas são <c>numeric(10,2)</c>: com mais
+    /// casas, o PostgreSQL arredondava ao gravar (0.004 passava a 0.00 e violava o check da
+    /// tabela) e o reenvio do mesmo valor deixava de ser reconhecido como igual.
+    /// </summary>
+    public const int DecimalPlaces = 2;
+
+    /// <summary>Indica se o valor cabe nas casas decimais da coluna, sem arredondar.</summary>
+    public static bool FitsDecimalPlaces(decimal value) =>
+        decimal.Round(value, DecimalPlaces) == value;
 }

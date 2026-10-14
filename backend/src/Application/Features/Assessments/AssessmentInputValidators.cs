@@ -1,3 +1,4 @@
+using Application.Validation;
 using FluentValidation;
 
 namespace Application.Features.Assessments;
@@ -84,6 +85,7 @@ internal sealed class CheckInFeedbackInputValidator
                 x.BodyResponse
             })
             .MaximumLength(2000)
-            .WithErrorCode("check_in_feedback_too_long");
+            .WithErrorCode("check_in_feedback_too_long")
+            .WithoutNullCharacter();
     }
 }

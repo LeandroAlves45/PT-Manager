@@ -31,6 +31,7 @@ public sealed class RecordMyExerciseSetLogCommandValidator
 
         RuleFor(command => command.Notes)
             .MaximumLength(500)
-            .WithErrorCode("training_log_notes_too_long");
+            .WithErrorCode("training_log_notes_too_long")
+            .WithoutNullCharacter();
     }
 }

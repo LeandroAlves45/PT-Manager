@@ -64,8 +64,11 @@ public sealed class SupplementQueryBudgetTests
         Assert.Equal(2, counter.ReaderCommands);
     }
 
+    // [6F-4] ALTERADO: até aqui o cliente arquivado lia o detalhe ("preserva o histórico").
+    // As restantes leituras do portal exigem cliente ativo; o histórico continua visível ao
+    // personal trainer, que lê pelas queries dele.
     [Fact]
-    public async Task ClientDetail_WhenClientIsArchived_UsesOneJoinAndPreservesHistory()
+    public async Task ClientDetail_WhenClientIsArchived_ReturnsNothingInOneQuery()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(
@@ -92,9 +95,7 @@ public sealed class SupplementQueryBudgetTests
         var result = await queries.GetMyAsync(
             tenant.TrainerId, tenant.ClientUserId, assignment.Id, cancellationToken);
 
-        Assert.NotNull(result);
-        Assert.Equal("client-visible", result.TrainerNotes);
-        Assert.NotEqual("internal-only", result.TrainerNotes);
+        Assert.Null(result);
         Assert.Equal(1, counter.ReaderCommands);
     }
 

@@ -34,6 +34,66 @@ public sealed class InitialAssessmentTests
             null, null, null, null, null, null, null
         );
 
+    [Theory]
+    [InlineData("0")]
+    [InlineData("-1")]
+    [InlineData("1000.01")]
+    public void Constructor_WeightOutOfRange_ThrowsWithTheLimitInTheMessage(string weight)
+    {
+        var exception = Assert.Throws<DomainException>(() => CreateWithWeight(Parse(weight)));
+
+        Assert.Equal(
+            "Weight must be greater than zero and at most 1000 kg.",
+            exception.Message);
+    }
+
+    [Fact]
+    public void Constructor_WeightAtMaximum_Accepted()
+    {
+        var assessment = CreateWithWeight(1000m);
+
+        Assert.Equal(1000m, assessment.WeightKg);
+    }
+
+    [Fact]
+    public void Update_WeightAboveMaximum_Throws()
+    {
+        var assessment = CreateValid();
+
+        Assert.Throws<DomainException>(() => assessment.Update(
+            1000.01m,
+            180,
+            20,
+            null,
+            "intermediate",
+            ActivityLevel.ModeratelyActive,
+            "lose weight",
+            null,
+            null,
+            null,
+            TestNow));
+    }
+
+    private static decimal Parse(string value) =>
+        decimal.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+
+    private static InitialAssessment CreateWithWeight(decimal weightKg) =>
+        new(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            weightKg,
+            180,
+            20,
+            null,
+            "intermediate",
+            ActivityLevel.ModeratelyActive,
+            "lose weight",
+            null,
+            null,
+            null,
+            TestNow
+        );
+
     [Fact]
     public void Constructor_ProfessionAtMaxLength_Accepted()
     {

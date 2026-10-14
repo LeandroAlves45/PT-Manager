@@ -78,6 +78,69 @@ public sealed class ClientPortalInputLimitsTests
         Assert.Equal("answered", body.GetProperty("status").GetString());
     }
 
+    // As colunas são numeric(10,2): 0.004 gravava-se como 0.00 e 99.996 como 100.00, fora dos
+    // checks da tabela (500). Com três casas, o reenvio igual deixava de ser reconhecido (409).
+    [Theory]
+    [InlineData("0.004", "null", "WeightKg", "weight_invalid")]
+    [InlineData("71.555", "null", "WeightKg", "weight_invalid")]
+    [InlineData("70", "99.996", "BodyFatPercentage", "body_fat_percentage_invalid")]
+    [InlineData("70", "17.555", "BodyFatPercentage", "body_fat_percentage_invalid")]
+    public async Task SubmitCheckInResponse_MoreThanTwoDecimals_ReturnsValidationError(
+        string weightKg, string bodyFat, string field, string code)
+    {
+        var (client, url) = await DueCheckInAsync();
+        var payload =
+            "{\"weight_kg\":" + weightKg + ",\"body_fat_percentage\":" + bodyFat + "," +
+            "\"body_measurements\":null,\"notes\":null,\"feedback\":null," +
+            "\"training_adherence_score\":null,\"nutrition_adherence_score\":null}";
+
+        var response = await PostAsync(client, url, payload);
+
+        var body = await ReadBodyAsync(response);
+        Assert.True(response.StatusCode == HttpStatusCode.BadRequest, body.ToString());
+        var error = Assert.Single(body.GetProperty("errors").EnumerateArray());
+        Assert.Equal(field, error.GetProperty("field").GetString());
+        Assert.Equal(code, error.GetProperty("code").GetString());
+    }
+
+    // O PostgreSQL não guarda U+0000 em text nem em jsonb: sem a regra, a escrita dava 500.
+    [Fact]
+    public async Task SubmitCheckInResponse_NullCharacterInNotes_ReturnsValidationError()
+    {
+        var (client, url) = await DueCheckInAsync();
+        var payload =
+            "{\"weight_kg\":70,\"body_fat_percentage\":null,\"body_measurements\":null," +
+            "\"notes\":\"a\\u0000b\",\"feedback\":null," +
+            "\"training_adherence_score\":null,\"nutrition_adherence_score\":null}";
+
+        var response = await PostAsync(client, url, payload);
+
+        var body = await ReadBodyAsync(response);
+        Assert.True(response.StatusCode == HttpStatusCode.BadRequest, body.ToString());
+        var error = Assert.Single(body.GetProperty("errors").EnumerateArray());
+        Assert.Equal("Notes", error.GetProperty("field").GetString());
+        Assert.Equal("text_invalid_character", error.GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task PatchMyProfile_NullCharacterInPhone_ReturnsValidationError()
+    {
+        var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(
+            _fixture.Factory, Token);
+        var client = ClientPortalClient(trainerId, clientUserId);
+        const string payload =
+            "{\"contact_email\":null,\"phone\":\"+351\\u0000911\"," +
+            "\"emergency_contact_name\":null,\"emergency_contact_phone\":null}";
+
+        var response = await PatchAsync(client, "/api/v1/portal/my-profile", payload);
+
+        var body = await ReadBodyAsync(response);
+        Assert.True(response.StatusCode == HttpStatusCode.BadRequest, body.ToString());
+        var error = Assert.Single(body.GetProperty("errors").EnumerateArray());
+        Assert.Equal("Phone", error.GetProperty("field").GetString());
+        Assert.Equal("text_invalid_character", error.GetProperty("code").GetString());
+    }
+
     [Fact]
     public async Task SubmitCheckInResponse_InvalidMeasurement_ReportsItsPositionInTheField()
     {

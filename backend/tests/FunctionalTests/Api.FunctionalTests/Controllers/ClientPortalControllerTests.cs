@@ -210,6 +210,30 @@ public sealed class ClientPortalControllerTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
+    // Um cliente arquivado com o token ainda válido não lê as atribuições nem as notas do
+    // personal trainer, como já acontecia nas tomas, no treino e no perfil.
+    [Fact]
+    public async Task MySupplements_ForArchivedClient_AreNotReturned()
+    {
+        var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(
+            _fixture.Factory, Token);
+        var assignmentId = await PortalTestData.SeedSupplementAssignmentAsync(
+            _fixture.Factory, trainerId, clientUserId, Token);
+        await PortalTestData.DeactivateClientAsync(
+            _fixture.Factory, trainerId, clientUserId, Token);
+        var client = ClientPortalClient(trainerId, clientUserId);
+
+        var list = await client.GetAsync("/api/v1/portal/my-supplements", Token);
+        var single = await client.GetAsync(
+            $"/api/v1/portal/my-supplements/{assignmentId}", Token);
+
+        var listBody = await ReadJsonAsync(list);
+        Assert.True(list.StatusCode == HttpStatusCode.OK, listBody.ToString());
+        Assert.Equal(0, listBody.GetProperty("items").GetArrayLength());
+        Assert.Equal(0, listBody.GetProperty("total_count").GetInt32());
+        Assert.Equal(HttpStatusCode.NotFound, single.StatusCode);
+    }
+
     [Fact]
     public async Task PortalEndpoints_WithoutToken_ReturnUnauthorized()
     {

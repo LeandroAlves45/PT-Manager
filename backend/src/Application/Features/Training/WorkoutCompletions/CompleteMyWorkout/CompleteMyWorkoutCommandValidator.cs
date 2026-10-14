@@ -1,3 +1,4 @@
+using Application.Validation;
 using Domain.Entities.Training;
 using FluentValidation;
 
@@ -14,6 +15,7 @@ public sealed class CompleteMyWorkoutCommandValidator : AbstractValidator<Comple
 
         RuleFor(command => command.Notes)
             .MaximumLength(WorkoutCompletion.NotesMaxLength)
-            .WithErrorCode("workout_completion_notes_too_long");
+            .WithErrorCode("workout_completion_notes_too_long")
+            .WithoutNullCharacter();
     }
 }

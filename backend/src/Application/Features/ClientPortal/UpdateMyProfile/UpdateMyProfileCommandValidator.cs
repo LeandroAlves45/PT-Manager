@@ -1,3 +1,4 @@
+using Application.Validation;
 using Domain.ValueObjects;
 using FluentValidation;
 
@@ -14,6 +15,7 @@ public sealed class UpdateMyProfileCommandValidator : AbstractValidator<UpdateMy
             .WithErrorCode("client_email_too_long")
             .Must(EmailAddress.IsValid)
             .WithErrorCode("client_email_invalid")
+            .WithoutNullCharacter()
             .When(command => !string.IsNullOrWhiteSpace(command.ContactEmail));
 
         RuleFor(command => command.Phone)
@@ -21,16 +23,19 @@ public sealed class UpdateMyProfileCommandValidator : AbstractValidator<UpdateMy
             .NotEmpty()
             .WithErrorCode("client_phone_invalid")
             .MaximumLength(32)
-            .WithErrorCode("client_phone_too_long");
+            .WithErrorCode("client_phone_too_long")
+            .WithoutNullCharacter();
 
         RuleFor(command => command.EmergencyContactName)
             .MaximumLength(255)
             .WithErrorCode("client_emergency_contact_name_too_long")
+            .WithoutNullCharacter()
             .When(command => !string.IsNullOrWhiteSpace(command.EmergencyContactName));
 
         RuleFor(command => command.EmergencyContactPhone)
             .MaximumLength(32)
             .WithErrorCode("client_emergency_contact_phone_too_long")
+            .WithoutNullCharacter()
             .When(command => !string.IsNullOrWhiteSpace(command.EmergencyContactPhone));
     }
 }

@@ -16,14 +16,16 @@ public sealed class CreateInitialAssessmentCommandValidator
             .WithErrorCode("client_id_required");
 
         RuleFor(command => command.WeightKg)
-            .Must(value => value is > 0 and <= AssessmentLimits.MaxWeightKg)
+            .Must(value => value is > 0 and <= AssessmentLimits.MaxWeightKg &&
+                AssessmentLimits.FitsDecimalPlaces(value))
             .WithErrorCode("weight_invalid");
 
         RuleFor(command => command.HeightCm)
             .GreaterThan(0).WithErrorCode("height_invalid");
 
         RuleFor(command => command.BodyFatPercentage)
-            .Must(value => !value.HasValue || value.Value is > 0 and < 100)
+            .Must(value => !value.HasValue ||
+                (value.Value is > 0 and < 100 && AssessmentLimits.FitsDecimalPlaces(value.Value)))
             .WithErrorCode("body_fat_percentage_invalid");
 
         RuleFor(command => command.FitnessLevel)

@@ -1,3 +1,4 @@
+using Application.Validation;
 using Domain.Entities.Assessments;
 using FluentValidation;
 
@@ -13,16 +14,19 @@ public sealed class SubmitCheckInResponseCommandValidator : AbstractValidator<Su
             .WithErrorCode("check_in_id_required");
 
         RuleFor(command => command.WeightKg)
-            .Must(value => value is > 0 and <= AssessmentLimits.MaxWeightKg)
+            .Must(value => value is > 0 and <= AssessmentLimits.MaxWeightKg &&
+                AssessmentLimits.FitsDecimalPlaces(value))
             .WithErrorCode("weight_invalid");
 
         RuleFor(command => command.BodyFatPercentage)
-            .Must(value => !value.HasValue || value.Value is > 0 and < 100)
+            .Must(value => !value.HasValue ||
+                (value.Value is > 0 and < 100 && AssessmentLimits.FitsDecimalPlaces(value.Value)))
             .WithErrorCode("body_fat_percentage_invalid");
 
         RuleFor(command => command.Notes)
             .MaximumLength(2000)
-            .WithErrorCode("notes_too_long");
+            .WithErrorCode("notes_too_long")
+            .WithoutNullCharacter();
 
         RuleFor(command => command.TrainingAdherenceScore)
             .InclusiveBetween(0, 100)

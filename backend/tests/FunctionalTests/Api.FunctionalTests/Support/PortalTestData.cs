@@ -130,6 +130,26 @@ internal static class PortalTestData
         return clientUserId;
     }
 
+    /// <summary>Arquiva a ficha do cliente; o token já emitido continua válido até expirar.</summary>
+    internal static async Task DeactivateClientAsync(
+        ApiWebApplicationFactory factory,
+        Guid trainerId,
+        Guid clientUserId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(factory);
+
+        await using var scope = CreateTrainerScope(factory, trainerId);
+        var context = scope.ServiceProvider.GetRequiredService<PtManagerDbContext>();
+
+        var client = await context.Clients.SingleAsync(
+            item => item.OwnerTrainerId == trainerId && item.UserId == clientUserId,
+            cancellationToken);
+
+        client.Deactivate(TrainerTenantSeeder.SeedInstant);
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
     /// <summary>Bloqueia o exercício do plano activo do cliente.</summary>
     internal static async Task BlockExerciseInActivePlanAsync(
         ApiWebApplicationFactory factory,

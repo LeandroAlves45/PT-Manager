@@ -82,7 +82,7 @@ internal sealed class ClientSupplementAssignmentQueries : IClientSupplementAssig
         Guid assignmentId,
         CancellationToken cancellationToken) => (
             from client in _dbContext.Clients.AsNoTracking()
-            where client.OwnerTrainerId == trainerId && client.UserId == userId
+            where client.OwnerTrainerId == trainerId && client.UserId == userId && client.IsActive
             join assignment in _dbContext.ClientSupplementAssignments.AsNoTracking()
                 on client.Id equals assignment.ClientId
             where assignment.OwnerTrainerId == trainerId &&
@@ -111,7 +111,7 @@ internal sealed class ClientSupplementAssignmentQueries : IClientSupplementAssig
     {
         var query =
             from client in _dbContext.Clients.AsNoTracking()
-            where client.OwnerTrainerId == trainerId && client.UserId == userId
+            where client.OwnerTrainerId == trainerId && client.UserId == userId && client.IsActive
             join assignment in _dbContext.ClientSupplementAssignments.AsNoTracking()
                 on client.Id equals assignment.ClientId
             where assignment.OwnerTrainerId == trainerId && assignment.IsActive
