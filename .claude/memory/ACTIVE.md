@@ -21,6 +21,7 @@ Tem as fases, as decisões U1–U19, os contratos de todas as fases e as armadil
  em falta, D2 toque duplo em "Seguinte", D3 ramo morto, S1 escala de 2 casas
     (500), S2 suplementos de arquivado, S3 U+0000 (500). Copy do Leandro mantida.
   - Backend 3013 + 1 skip, Vitest 554/554, mutações G1–G7 7/7, blueprints realinhados 53/53.
+  - Commits `749f6da`, `cf8af27`, `503d113`; CI #39 verde.
   - Relatório `sprint_6F4/09_relatorio_fecho_fase_6F4.md`; fecho do sprint em `10_fecho_sprint_6F.md`.
   - Faltam `QG6F4-UI-001`, `QG6F4-ISOLAMENTO-UI-001`, `QG6F4-AVATAR-001`, `QG6F-GATE-001` e
     `QG6F4-DESIGN-001`. Próximo: Sprint 6G (admin/fecho do Sprint 6, graphify).
@@ -230,9 +231,3 @@ Ver `Sessions/2026-09-23-sprint6c-fecho-frontend.md`.
 - Sprint 6B fechada no backend real: `Sessions/2026-09-20-sprint6b-fecho-implementacao.md`
 - Sprint 6A fechada: `Sessions/2026-09-17-sprint6a-fecho-implementacao.md`
 - Sprint 5D (vídeo R2): `Sessions/2026-09-16-sprint5d-fecho-implementacao.md`
-
-## Nota 2026-09-22 — Cursor lento
-
-Hooks do projeto só correm com `/mem-on` / «liga a memória». Globais em
-`~/.cursor/hooks.json` ficam vazios. Superpowers: plugin desligado; pedir com
-`/superpowers`.
