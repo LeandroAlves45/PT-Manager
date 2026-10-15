@@ -70,7 +70,8 @@ public sealed class GoogleAuthController : ApiControllerBase
                 new GoogleSignInCommand(
                     request.IdToken,
                     GoogleChallengeCookieWriter.Read(Request) ?? string.Empty,
-                    request.InvitationToken),
+                    request.InvitationToken,
+                    request.CreateAccount),
                 cancellationToken);
 
             if (!result.IsSuccess)

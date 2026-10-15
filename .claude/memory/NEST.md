@@ -95,14 +95,14 @@ Raiz: `docs/blueprints/`.
 | Caminho | Conteúdo |
 |---|---|
 | `docs/blueprints/README.md` | Convenções do formato |
-| `docs/blueprints/plan_sprint_6_por_atualizar.md` | Estado do Sprint 6 e ponto de entrada |
 | `docs/blueprints/backend-files/sprint_6/sprint_6A/` | Pack 6A (00–14), fechado |
 | `docs/blueprints/backend-files/sprint_6/sprint_6B/` | Pack 6B (00–14), fechado |
 | `docs/blueprints/backend-files/sprint_concluidos/` | Sprints 4 e 5 |
 | `docs/blueprints/frontend-files/sprint_6/sprint_6C/` | **Pack 6C (frontend + backend de suporte)**; fecho em `19_relatorio_fecho_fase_6C.md` |
 | `docs/blueprints/frontend-files/sprint_6/sprint_6E/` | **Pack 6E trainer**: `00` plano da fase completa (ler primeiro); `sprint_6E1/01–09` painel e clientes (FINALIZADA); `sprint_6E2/01–09` sessões e packs (FINALIZADA); `sprint_6E3/01–09` biblioteca privada (FINALIZADA); `sprint_6E4/01–10` planos de treino, séries, nutrição e suplementos (FINALIZADA; relatório `10`); `sprint_6E5/01–09` check-ins, definições e subscrição (FINALIZADA; relatório `09`); `10_fecho_sprint_6E.md` fecho do sprint inteiro (FINALIZADO 2026-10-04); `manifest.json` em cada fatia com hashes e estado dos ficheiros |
-| `docs/blueprints/frontend-files/sprint_6/sprint_6F/` | **Pack 6F portal do cliente**: `00_plano_fase_6F_completa.md` (ler primeiro: fases 6F-1..6F-4, decisões U1–U26, contratos `/portal/*`, armadilhas); `sprint_6F1/01–08` + `manifest.json` (casa e marca, blueprints validados 2026-10-04; `09_relatorio_fecho_fase_6F1.md`, FINALIZADA 2026-10-08); `sprint_6F2/01–08` + `manifest.json` (treino, plano, vídeo, backend `exercise_id`/`has_ready_video` e peso máximo; blueprints validados 2026-10-09, 38 caminhos; `09_relatorio_fecho_fase_6F2.md`, FINALIZADA 2026-10-10); `sprint_6F3/01–06` + `manifest.json` (nutrição e suplementos, só frontend, decisões U16–U19; blueprints validados 2026-10-11, 13 caminhos; `07_relatorio_fecho_fase_6F3.md`, FINALIZADA 2026-10-11); `sprint_6F4/01–08` + `manifest.json` (check-ins em três passos, perfil e fotografia moderada, menu do topo, fecho das pendências do sprint e ajuste de backend dos limites de entrada; decisões U20–U26; blueprints validados 2026-10-11, 53 caminhos; por aplicar); `10_fecho_sprint_6F.md` (esqueleto do fecho). **A pasta `docs/` está no `.gitignore` (`docs/*`): os packs só existem no disco** |
-| `docs/blueprints/frontend-files/sprint_6/plan_sprint_6_por_atualizar.md` | Estado real 6A–6F (o caminho em `docs/blueprints/` raiz não existe) |
+| `docs/blueprints/frontend-files/sprint_6/sprint_6F/` | **Pack 6F portal do cliente**: `00_plano_fase_6F_completa.md` (ler primeiro: fases 6F-1..6F-4, decisões U1–U26, contratos `/portal/*`, armadilhas); `sprint_6F1/01–08` + `manifest.json` (casa e marca, blueprints validados 2026-10-04; `09_relatorio_fecho_fase_6F1.md`, FINALIZADA 2026-10-08); `sprint_6F2/01–08` + `manifest.json` (treino, plano, vídeo, backend `exercise_id`/`has_ready_video` e peso máximo; blueprints validados 2026-10-09, 38 caminhos; `09_relatorio_fecho_fase_6F2.md`, FINALIZADA 2026-10-10); `sprint_6F3/01–06` + `manifest.json` (nutrição e suplementos, só frontend, decisões U16–U19; blueprints validados 2026-10-11, 13 caminhos; `07_relatorio_fecho_fase_6F3.md`, FINALIZADA 2026-10-11); `sprint_6F4/01–08` + `manifest.json` (check-ins em três passos, perfil e fotografia moderada, menu do topo, fecho das pendências do sprint e ajuste de backend dos limites de entrada; decisões U20–U26; blueprints validados 2026-10-11, 53 caminhos; `09_relatorio_fecho_fase_6F4.md`, FINALIZADA 2026-10-14); `10_fecho_sprint_6F.md` (fecho do sprint, FINALIZADO 2026-10-14). **A pasta `docs/` está no `.gitignore` (`docs/*`): os packs só existem no disco** |
+| `docs/blueprints/frontend-files/sprint_6/plan_sprint_6_por_atualizar.md` | **Ponto de entrada do Sprint 6**: estado real 6A–6GB, decisões por fase, próximo passo |
+| `docs/blueprints/frontend-files/sprint_6/sprint_6G/` | **Sprint 6G**: `00_plano_sprint_6G.md` (ler primeiro: divisão 6GA/6GB, decisões U27–U38 em resumo, lista da 6GB com prioridades e a entrada reservada do portal); `sprint_6GA/01–12` + `manifest.json` (12 = revisão e fecho do backend, 2026-10-15) (Auth UX: backend de auth ajustado sem migration e frontend de autenticação completo; blueprints validados 2026-10-14; por aplicar). Prints da 6GB em `docs/erros pt manager/` |
 | `docs/blueprints/frontend-files/sprint_6/sprint_6D/` | **Pack 6D admin (00–07)**; contrato de vídeo, catálogos, moderação, visão geral, testes, gates, gestão de vídeo (06) e relatório de fecho (07). **Finalizada 2026-09-24** |
 
 Padrões de escrita:
@@ -117,7 +117,7 @@ Padrões de escrita:
 
 ## 6. Sprint packs
 
-`.claude/project/sprints/README.md`, `sprint-5/`, `sprint-6/README.md` (tabela 6A–6G, gates,
+`.claude/project/sprints/README.md`, `sprint-5/`, `sprint-6/README.md` (tabela 6A–6GB, gates,
 decisões abertas), `.claude/project/sprints/GRAPHIFY.md` (regenerar o grafo no fecho de sprint;
 grafo em `graphify-out/`).
 
@@ -154,3 +154,11 @@ Regras que acompanham o método:
 4. O diff entre bloco e ficheiro materializado é **programático e normalizado** (sem comentários,
    sem diferenças de fim de linha) — lição 6 de `.claude/tasks/lessons.md`.
 5. Precedente histórico: `C:\ptm6a` na 6A, removido sem merge.
+
+## 8. Documentação de produto
+
+`.claude/docs_about_app/` — visão, requisitos, regras, fluxos, qualidade e riscos.
+Índice: `README.md`. Desenho: `documentacao_pt_manager.md`.
+
+Não duplica arquitectura, esquema, roadmap nem guia (`.claude/project/`), blueprints
+(`docs/blueprints/`) nem gates (`backlogs/`).

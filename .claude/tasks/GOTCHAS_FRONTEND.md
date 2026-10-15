@@ -335,3 +335,14 @@ com um corpo real.
   O mesmo estado (ficha arquivada) tem códigos diferentes de endpoint para endpoint.
 - O backend passou a recusar texto com U+0000 com `text_invalid_character`: nenhum mapa do
   frontend o conhece e fica na mensagem geral, de propósito (nenhum teclado o escreve).
+
+## 2026-10-14 — Blueprints 6GA: 401 de domínio, aviso depois de sair, migalhas
+
+- `client.ts` fazia refresh e repetia **qualquer** 401. Um 401 com `title` de domínio
+  (palavra-passe atual errada, link expirado) não é sessão expirada: não se repete. O 401 do
+  JWT Bearer vem sem corpo, e é esse que os testes simulam.
+- Um aviso que tem de sobreviver a `clearSession()` + redirect do guard usa um flash de
+  módulo (`auth-notice.ts`): `peek` no initializer do `useState`, `consume` num efeito
+  (StrictMode chama o initializer duas vezes). Nunca `setTimeout(0)` para ganhar ao guard.
+- Rota nova dentro do `AppShell` precisa de rótulo em `Breadcrumbs.tsx`, senão aparece o
+  segmento cru (apanhado só na verificação visual).

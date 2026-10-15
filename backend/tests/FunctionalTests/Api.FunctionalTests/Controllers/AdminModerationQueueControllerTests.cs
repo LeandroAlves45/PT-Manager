@@ -18,12 +18,25 @@ public sealed class AdminModerationQueueControllerTests : ApiReadEndpointsTestCo
         var client = _fixture.Factory.CreateOriginClient()
             .WithBearer(TestJwtFactory.IssueSuperuser(Guid.NewGuid()));
 
-        var response = await client.GetAsync(
-            "/api/v1/admin/content-moderation/foods?search=Portal%20rice&page_size=25", token);
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        // Todos os alimentos "Portal rice" da suite partilham o mesmo UpdatedAt (SeedInstant),
+        // por isso a ordem entre eles não é estável: percorrer todas as páginas em vez de
+        // assumir que o alimento deste trainer cai na primeira.
+        var items = new List<JsonElement>();
+        for (var page = 1; ; page++)
+        {
+            var response = await client.GetAsync(
+                $"/api/v1/admin/content-moderation/foods?search=Portal%20rice&page_size=25&page_number={page}",
+                token);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token));
-        var items = document.RootElement.GetProperty("items").EnumerateArray().ToList();
+            using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token));
+            var pageItems = document.RootElement.GetProperty("items").EnumerateArray()
+                .Select(item => item.Clone())
+                .ToList();
+            items.AddRange(pageItems);
+            if (pageItems.Count < 25)
+                break;
+        }
 
         Assert.NotEmpty(items);
         Assert.All(items, item =>

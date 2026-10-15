@@ -128,7 +128,7 @@ o PostgreSQL antes de corrigir:
   a coluna `numeric(10,2)` arredondava para `0.00` e `100.00` e o check da tabela rebentava:
   500. Com `71.555` a escrita passava, mas a resposta devolvia o valor por arredondar e o
   reenvio igual dava 409.
-- `"notes": "a b"` e `"phone": "+351 911"` davam 500: o PostgreSQL não guarda
+- `"notes": "a\u0000b"` e `"phone": "+351\u0000911"` davam 500: o PostgreSQL não guarda
   U+0000 em `text` nem em `jsonb`.
 - `GetMyAsync` e `ListMyActiveAsync` dos suplementos do portal não filtravam
   `client.IsActive`: um cliente arquivado, com o token ainda válido, lia as atribuições e as
@@ -148,3 +148,31 @@ o PostgreSQL antes de corrigir:
 - Um teste de limite usa o valor literal (`1000`, `1000.01`), não a constante do domínio: com
   a constante, o teste acompanha qualquer alteração e nunca falha.
 - Uma exceção com mensagem interpolada merece uma asserção sobre a mensagem.
+
+## 2026-10-14: blueprints da 6GA (Auth UX)
+
+**O que aconteceu.**
+- U+0000 no email ou no nome dava **500 anónimo** em signup, login, reposição e reenvio da
+  confirmação: `EmailAddress.IsValidEmail` só recusava espaços, e o PostgreSQL recusa NUL em
+  `text`. Provado por sonda funcional (`AuthNullCharacterTests`, 5/5 a 500 antes).
+- `.EmailAddress()` do FluentValidation ainda estava em login, convite, reposição e signup
+  (`a@b` passava e o `new EmailAddress(...)` lançava).
+- `AdminModerationQueueControllerTests` falhava 3 em 5: assumia o alimento do trainer na
+  página 1, com 52 alimentos "Portal rice" do mesmo `UpdatedAt` na suite.
+
+**A regra.**
+- Toda a validação de email passa por `EmailAddress.IsValid`, que agora recusa
+  `char.IsControl`. Nomes e outro texto livre anónimo levam `.WithoutNullCharacter()`.
+- Um teste funcional que procura um item numa listagem partilhada pela suite percorre as
+  páginas; nunca assume a página 1.
+- Signup, reenvio e recuperação respondem igual para email existente e inexistente
+  (`AuthEnumerationSafetyTests`); o que muda é só o email enviado.
+
+## 6GA · aplicação do blueprint perdeu uma linha (2026-10-15)
+
+- `RegisterTrainerCommandValidator` ficou sem `.WithoutNullCharacter()` em `FullName`:
+  500 anónimo e diferença entre email novo e existente. Apanhou-o `AuthNullCharacterTests`.
+- Depois de aplicar um pack, comparar os ficheiros com o `manifest.json` por hash antes de
+  correr a suite; o diff por linha do `.md` encontra a linha em falta em segundos.
+- Reemissão de token pedida sem sessão tem cooldown (60 s, `RecentlyIssued`): sem ele, um
+  terceiro invalida o link pendente da conta.

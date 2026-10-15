@@ -86,6 +86,66 @@ public sealed class AuthenticationEmailTemplateTests
         Assert.DoesNotContain("confirmar-email", log, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void Render_AccountAlreadyExists_ResolvesEveryPlaceholderWithoutExpiry()
+    {
+        var rendered = AuthenticationEmailTemplateRenderer.Render(
+            AuthenticationEmailTemplateRenderer.AccountAlreadyExistsTemplate,
+            "Já existe uma conta.",
+            "https://app.example.test/entrar",
+            "Entrar",
+            expiresAt: null,
+            secondaryAction: ("https://app.example.test/recuperar-password", "Recuperar password"));
+
+        Assert.DoesNotContain("{{", rendered.Html, StringComparison.Ordinal);
+        Assert.Contains("https://app.example.test/entrar", rendered.Html, StringComparison.Ordinal);
+        Assert.Contains("https://app.example.test/recuperar-password", rendered.Html, StringComparison.Ordinal);
+        Assert.Contains("https://app.example.test/recuperar-password", rendered.Text, StringComparison.Ordinal);
+        Assert.DoesNotContain("expira", rendered.Html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("expira", rendered.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Render_AccountAlreadyExistsWithoutSecondaryAction_FailsClosed()
+    {
+        var action = () => AuthenticationEmailTemplateRenderer.Render(
+            AuthenticationEmailTemplateRenderer.AccountAlreadyExistsTemplate,
+            "Intro", "https://app.example.test/entrar", "Entrar", expiresAt: null);
+
+        Assert.Throws<InvalidOperationException>(action);
+    }
+
+    [Theory]
+    [InlineData("confirm-email.html")]
+    [InlineData("client-invitation.html")]
+    [InlineData("password-reset.html")]
+    public void Render_LinkTemplatesStillRequireAnExpiry(string template)
+    {
+        var action = () => AuthenticationEmailTemplateRenderer.Render(
+            template, "Intro", "https://app.example.test/x", "Continuar", expiresAt: null);
+
+        Assert.Throws<InvalidOperationException>(action);
+    }
+
+    [Fact]
+    public async Task SendAccountAlreadyExists_PointsToSignInAndRecoveryWithoutAnyToken()
+    {
+        var handler = new RecordingHandler();
+        var sender = CreateSender(handler);
+
+        var outcome = await sender.SendAccountAlreadyExistsAsync(
+            "trainer@example.test", TestContext.Current.CancellationToken);
+
+        using var document = JsonDocument.Parse(handler.Body!);
+        var root = document.RootElement;
+        var text = root.GetProperty("text").GetString()!;
+        Assert.Equal(AuthenticationEmailDeliveryOutcome.Sent, outcome);
+        Assert.Equal("trainer@example.test", root.GetProperty("to")[0].GetString());
+        Assert.Contains("https://app.example.test/entrar", text, StringComparison.Ordinal);
+        Assert.Contains("https://app.example.test/recuperar-password", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("token=", text, StringComparison.Ordinal);
+    }
+
     private static ResendAuthenticationEmailSender CreateSender(
         HttpMessageHandler handler,
         ILogger<ResendAuthenticationEmailSender>? logger = null)

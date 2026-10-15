@@ -11,6 +11,7 @@ frontend/.env
 frontend/.env.*
 !frontend/.env.example
 frontend/.vite
+frontend/Design-is
 
 # Site de marketing (site/)
 site/node_modules

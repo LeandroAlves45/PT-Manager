@@ -1,8 +1,9 @@
 # Sprint Pack — Sprint 6 (backend do layout + frontend)
 
-Estado em 2026-10-11: 6A e 6B fechadas no backend; 6C, 6D e 6E fechadas no frontend
-(6E em `134139c`, CI #25 verde). 6F em 4 fases (`sprint_6F/00`): 6F-1, 6F-2 e 6F-3
-fechadas; 6F-4 com blueprints validados (`sprint_6F4/01–08`) e a aplicação pendente. Packs em
+Estado em 2026-10-14: 6A e 6B fechadas no backend; 6C, 6D, 6E e 6F fechadas no frontend
+(6F em `503d113`, CI #39 verde). O 6G divide-se em **6GA** (Auth UX, blueprints validados,
+aplicação pendente) e **6GB** (análise visual e correção, registada; prints do portal por
+entregar). Plano do 6G em `sprint_6G/00_plano_sprint_6G.md`. Packs em
 `docs/blueprints/backend-files/sprint_6/` e
 `docs/blueprints/frontend-files/sprint_6/`.
 
@@ -20,7 +21,8 @@ começa na 6C.
 | 6D | Frontend — Admin | Visão geral, fila de moderação, catálogos globais e estado de vídeo de exercício | 6C |
 | 6E | Frontend — Trainer | Dashboard, clientes, sessões/packs, planos, biblioteca, check-ins, definições, billing, vídeo 5D | 6C |
 | 6F | Frontend — Cliente | 4 fases: 6F-1 casa e marca (white-label AA, Início), 6F-2 treino (+ vídeo, backend aditivo), 6F-3 nutrição e suplementos, 6F-4 check-ins e perfil | 6C |
-| 6G | Frontend — Auth UX | Login final, signup, email, password, convite, Google, Page 404 Not Found personalizada| 6C |
+| 6GA | Frontend + ajustes de backend — Auth UX | Login final (`/entrar`), signup sem enumeração, confirmação e reenvio, recuperar/repor/mudar password, convite com palavra-passe ou Google, Google (entrar, criar, ligar), 404 personalizada, "Conta e segurança" | 6C |
+| 6GB | Frontend — Análise visual e correção | Revisão visual de admin, trainer, cliente e auth a partir dos prints do Leandro; correção dos P1/P2 (`sprint_6G/00` §4) | 6F, 6GA |
 
 Fora: categoria de alimento e notas de moderação (excluídos); CSV, notificações in-app e
 pesquisa transversal (DEF-PROD-004 a 006).
@@ -30,7 +32,8 @@ pesquisa transversal (DEF-PROD-004 a 006).
 1. `.claude/memory/ACTIVE.md`
 2. Este README
 3. `docs/blueprints/frontend-files/sprint_6/plan_sprint_6_por_atualizar.md` (ponto de entrada local)
-   e o `00` da fase ativa (`sprint_6F/00_plano_fase_6F_completa.md`)
+   e o `00` da fase ativa (`sprint_6G/00_plano_sprint_6G.md`; para aplicar a 6GA,
+   `sprint_6G/sprint_6GA/01`)
 4. `.claude/project/frontend/layout/01_RELATORIO_ANALISE.md`
 5. Documento de layout do ecrã da fase (`layout/02`–`06`) e a imagem correspondente em
    `layout/assets/` (PNG; não abrir o Claude Design nem PDF)
@@ -39,7 +42,7 @@ pesquisa transversal (DEF-PROD-004 a 006).
 
 ## Gates
 
-Definidos em `02_SPRINTS_ROADMAP.md` §Sprint 6 (Gate 6A a Gate 6G). Os IDs `QG6*-*`
+Definidos em `02_SPRINTS_ROADMAP.md` §Sprint 6 (Gate 6A a Gate 6F, Gate 6GA e Gate 6GB). Os IDs `QG6*-*`
 são atribuídos no blueprint de cada fase e registados em `backlogs/QualityGates.md`.
 
 ## Decisões abertas

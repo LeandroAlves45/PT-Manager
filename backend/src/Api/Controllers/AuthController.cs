@@ -15,7 +15,9 @@ using Application.Features.Authentication.InviteClient;
 using Application.Features.Authentication.Login;
 using Application.Features.Authentication.Logout;
 using Application.Features.Authentication.RefreshSession;
+using Application.Features.Authentication.RegisterInvitedClient;
 using Application.Features.Authentication.RegisterTrainer;
+using Application.Features.Authentication.RequestEmailConfirmation;
 using Application.Features.Authentication.RequestPasswordReset;
 using Application.Features.Authentication.ResendEmailConfirmation;
 using Application.Features.Authentication.ResetPassword;
@@ -73,7 +75,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("signup")]
-    [ProducesResponseType<SignUpResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<SignUpAcceptedResponse>(StatusCodes.Status202Accepted)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.SignUp)]
     public async Task<IActionResult> SignUpAsync(
         [FromBody] SignUpRequest request,
@@ -87,7 +89,7 @@ public sealed class AuthController : ControllerBase
         LogResult(SecurityLogEvents.SignUp, "signup", result);
 
         return result.IsSuccess
-            ? Created(string.Empty, SignUpResponse.From(result.Value))
+            ? Accepted(new SignUpAcceptedResponse(SignUpAcceptedResponse.ConfirmationEmailSent))
             : Problem(result.Error!);
     }
 
@@ -169,6 +171,21 @@ public sealed class AuthController : ControllerBase
         CancellationToken cancellationToken) =>
         Respond(await handler.HandleAsync(cancellationToken));
 
+    [HttpPost("email-confirmation/request")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [EnableRateLimiting(ApiRateLimitPolicyNames.EmailConfirmationRequest)]
+    public async Task<IActionResult> RequestEmailConfirmationAsync(
+        [FromBody] EmailConfirmationRequest request,
+        [FromServices] RequestEmailConfirmationHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(
+            new RequestEmailConfirmationCommand(request.Email),
+            cancellationToken);
+        LogResult(SecurityLogEvents.EmailConfirmation, "request_email_confirmation", result);
+        return Respond(result);
+    }
+
     [HttpPost("password-reset/request")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.PasswordResetRequest)]
@@ -234,6 +251,24 @@ public sealed class AuthController : ControllerBase
             new AcceptClientInviteCommand(request.Token, request.TransferApproved),
             cancellationToken);
         LogResult(SecurityLogEvents.SignUp, "accept_invite", result);
+        return CompleteSession(result);
+    }
+
+    [HttpPost("accept-invite/register")]
+    [ProducesResponseType<SessionResponse>(StatusCodes.Status200OK)]
+    [EnableRateLimiting(ApiRateLimitPolicyNames.InviteRegister)]
+    public async Task<IActionResult> RegisterInvitedClientAsync(
+        [FromBody] InvitedClientRegistrationRequest request,
+        [FromServices] RegisterInvitedClientHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(
+            new RegisterInvitedClientCommand(
+                request.Token,
+                request.Password,
+                request.ConfirmPassword),
+            cancellationToken);
+        LogResult(SecurityLogEvents.SignUp, "register_invited_client", result);
         return CompleteSession(result);
     }
 

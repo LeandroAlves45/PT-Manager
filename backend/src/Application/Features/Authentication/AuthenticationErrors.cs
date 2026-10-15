@@ -17,12 +17,6 @@ public static class AuthenticationErrors
         "Only a client account can perform this operation."
     );
 
-    public static readonly Error DuplicateEmail = Error.Create(
-        "authentication_email_already_exists",
-        ErrorCategory.Conflict,
-        "An account with this email already exists."
-    );
-
     /// <summary>Converte detalhes internos do Identity numa falha de validação segura.</summary>
     public static Error RegistrationRejected() => Error.Validation([
         new ValidationError(
@@ -108,6 +102,12 @@ public static class AuthenticationErrors
         "authentication_invitation_consumed",
         ErrorCategory.Conflict,
         "The client invitation was already used."
+    );
+
+    public static readonly Error InvitationAccountExists = Error.Create(
+        "authentication_invitation_account_exists",
+        ErrorCategory.Conflict,
+        "An account already exists for the invited email."
     );
 
     public static readonly Error TransferApprovalRequired = Error.Create(

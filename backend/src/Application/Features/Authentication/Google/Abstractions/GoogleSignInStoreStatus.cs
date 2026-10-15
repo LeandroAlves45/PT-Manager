@@ -7,6 +7,7 @@ public enum GoogleSignInStoreStatus
     EmailConfirmationRequired,
     ChallengeInvalid,
     AccountLinkRequired,
+    AccountNotFound,
     AccountInactive,
     RelationshipInactive,
     InvitationInvalid,

@@ -2,8 +2,14 @@ using Application.Features.Authentication.Google.Dtos;
 
 namespace Api.Contracts.Authentication;
 
-/// <summary>Credenciais Google Sign-In. O nonce vem do cookie HttpOnly.</summary>
-public sealed record GoogleSignInRequest(string IdToken, string? InvitationToken);
+/// <summary>
+/// Credenciais Google Sign-In. O nonce vem do cookie HttpOnly. <c>CreateAccount</c> é o
+/// consentimento para criar conta quando a identidade Google não é conhecida.
+/// </summary>
+public sealed record GoogleSignInRequest(
+    string IdToken,
+    string? InvitationToken,
+    bool CreateAccount = false);
 
 /// <summary>Credenciais para associar Google a uma conta local autenticada.</summary>
 public sealed record GoogleLinkRequest(string IdToken, string CurrentPassword);

@@ -1,3 +1,4 @@
+using Domain.ValueObjects;
 using FluentValidation;
 
 namespace Application.Features.Authentication.InviteClient;
@@ -17,7 +18,7 @@ public sealed class InviteClientCommandValidator : AbstractValidator<InviteClien
             .WithErrorCode("authentication_email_required")
             .MaximumLength(255)
             .WithErrorCode("authentication_email_too_long")
-            .EmailAddress()
+            .Must(EmailAddress.IsValid)
             .WithErrorCode("authentication_email_invalid");
     }
 }

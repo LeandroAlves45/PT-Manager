@@ -1,3 +1,5 @@
+using Domain.ValueObjects;
+using Application.Validation;
 using FluentValidation;
 
 namespace Application.Features.Authentication.RegisterTrainer;
@@ -14,7 +16,7 @@ public sealed class RegisterTrainerCommandValidator
             .WithErrorCode("authentication_email_required")
             .MaximumLength(255)
             .WithErrorCode("authentication_email_too_long")
-            .EmailAddress()
+            .Must(EmailAddress.IsValid)
             .WithErrorCode("authentication_email_invalid");
 
         RuleFor(command => command.Password)
@@ -31,6 +33,7 @@ public sealed class RegisterTrainerCommandValidator
             .NotEmpty()
             .WithErrorCode("authentication_full_name_required")
             .MaximumLength(255)
-            .WithErrorCode("authentication_full_name_too_long");
+            .WithErrorCode("authentication_full_name_too_long")
+            .WithoutNullCharacter();
     }
 }

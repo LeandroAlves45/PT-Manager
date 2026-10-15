@@ -6,14 +6,24 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-15: Sprint 6GA, backend FINALIZADO (revisão no checkout real).**
+- 3164 + 1 skip, 0 avisos, sem migration. A1: `FullName` sem `WithoutNullCharacter` (500 e
+  oráculo de enumeração); A2 cooldown 60 s no reenvio; A4 convite vs contacto da ficha. A3 e A5
+  aceites em backlog. `schema.d.ts` regenerado. Frontend 6GA por aplicar.
+- Ver `Sessions/2026-10-15-sprint6ga-backend-revisao-fecho.md`.
+
+**2026-10-14: Sprint 6G planeado (6GA + 6GB) e blueprints da 6GA validados.**
+- O 6G passou a duas fases: 6GA Auth UX e 6GB análise visual e correção (19 pontos dos prints
+  de admin e trainer; portal por entregar). Plano em `sprint_6G/00_plano_sprint_6G.md`.
+- Pack `sprint_6G/sprint_6GA/01–11` + manifest: 163 caminhos, round-trip 163/163. Decisões
+  U27–U38 (convite com palavra-passe, rotas PT, signup sem enumeração, `/entrar` com Google só
+  entra, "Conta e segurança"). Defeitos D1–D7, incluindo U+0000 → 500 no login e no signup.
+- Evidência na worktree `C:\ptm-tmp-6ga`: backend 3161 + 1 skip, Vitest 700/700, 23/23
+  mutações. Por aplicar pelo Leandro.
+- Ver `Sessions/2026-10-14-sprint6g-plano-6ga-blueprints.md`.
+
 **2026-10-14: Sprint 6F-4 e Sprint 6F FINALIZADOS.**
-- Fecho da 6F-4 sobre `16b572f`/`5ddacd8` (CI #37 e #38 verdes): 6 defeitos (D1 `# PT Manager: memória operacional
-
-O código e os documentos em `.claude/project/` são as fontes de verdade. Esta
-memória é um índice operacional conciso; detalhes e evidência permanecem nas
-notas de `.claude/memory/Sessions/`.
-
- em falta,
+- Fecho da 6F-4 sobre `16b572f`/`5ddacd8` (CI #37 e #38 verdes): 6 defeitos (D1 `$` em falta,
   D2 toque duplo no check-in, D3 ramo morto, S1 escala de 2 casas, S2 suplementos de
   arquivado, S3 U+0000 em texto), backend 3013 + 1 skip, Vitest 554/554, mutações 7/7.
 - Faltam só os gates manuais com login. Backlog no relatório `sprint_6F4/09`.

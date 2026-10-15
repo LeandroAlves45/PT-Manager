@@ -1,4 +1,3 @@
-using System.Data.Common;
 using Application.Common.Abstractions;
 using Application.Features.Authentication.Abstractions;
 using Application.Features.Authentication.Google.Abstractions;
@@ -12,9 +11,7 @@ using Infrastructure.IntegrationTests.Support;
 using Infrastructure.Time;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
 
 namespace Infrastructure.IntegrationTests.Identity;
 
@@ -54,6 +51,7 @@ public sealed class ExternalAuthenticationStoreRetryTests(PostgresContainerFixtu
             identity,
             nonce.RawToken,
             null,
+            true,
             Now.AddDays(15),
             Now.AddHours(24),
             Now.AddDays(30),
@@ -162,28 +160,4 @@ public sealed class ExternalAuthenticationStoreRetryTests(PostgresContainerFixtu
         $"google-{discriminator}-{Guid.NewGuid():N}@example.test",
         "Google Retry Test",
         true);
-
-    private sealed class FailOnceAfterCommitInterceptor : DbTransactionInterceptor
-    {
-        private bool _isArmed;
-        internal int Failures { get; private set; }
-
-        internal void Arm() => _isArmed = true;
-
-        public override Task TransactionCommittedAsync(
-            DbTransaction transaction,
-            TransactionEndEventData eventData,
-            CancellationToken cancellationToken = default)
-        {
-            if (_isArmed && Failures == 0)
-            {
-                Failures++;
-                throw new NpgsqlException(
-                    "Simulated loss of the PostgreSQL commit acknowledgement.",
-                    new TimeoutException());
-            }
-
-            return Task.CompletedTask;
-        }
-    }
 }

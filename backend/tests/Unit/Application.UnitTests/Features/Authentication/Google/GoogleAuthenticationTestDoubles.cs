@@ -50,6 +50,7 @@ internal sealed class ExternalAuthenticationStoreStub :
     internal string? ChallengePurpose { get; private set; }
     internal DateTime ChallengeExpiresAt { get; private set; }
     internal string? ReceivedInvitationToken { get; private set; }
+    internal bool? ReceivedCreateAccount { get; private set; }
     internal Guid ReceivedLinkUserId { get; private set; }
 
     public Task<IssuedExternalChallenge> IssueAsync(
@@ -70,6 +71,7 @@ internal sealed class ExternalAuthenticationStoreStub :
         VerifiedExternalIdentity identity,
         string rawNonce,
         string? rawInvitationToken,
+        bool createAccount,
         DateTime trialEndsAt,
         DateTime confirmationExpiresAt,
         DateTime refreshExpiresAt,
@@ -78,6 +80,7 @@ internal sealed class ExternalAuthenticationStoreStub :
     {
         SignInCalls++;
         ReceivedInvitationToken = rawInvitationToken;
+        ReceivedCreateAccount = createAccount;
         return Task.FromResult(SignInResult);
     }
 

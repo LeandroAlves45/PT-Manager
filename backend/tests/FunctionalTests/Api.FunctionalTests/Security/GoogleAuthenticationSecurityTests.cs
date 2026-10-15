@@ -119,8 +119,8 @@ public sealed class GoogleAuthenticationSecurityTests : IAsyncLifetime
         var secondNonce = await IssueChallengeAsync(client);
 
         var responses = await Task.WhenAll(
-            PostSignInAsync(client, firstNonce),
-            PostSignInAsync(client, secondNonce));
+            PostSignInAsync(client, firstNonce, createAccount: true),
+            PostSignInAsync(client, secondNonce, createAccount: true));
 
         Assert.Equal(1, responses.Count(response =>
             response.StatusCode == HttpStatusCode.OK));
@@ -270,12 +270,18 @@ public sealed class GoogleAuthenticationSecurityTests : IAsyncLifetime
         HttpClient client,
         string nonce,
         string idToken = "opaque-id-token",
-        string? invitationToken = null)
+        string? invitationToken = null,
+        bool createAccount = false)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, SignInRoute)
         {
             Content = JsonContent.Create(
-                new { id_token = idToken, invitation_token = invitationToken },
+                new
+                {
+                    id_token = idToken,
+                    invitation_token = invitationToken,
+                    create_account = createAccount
+                },
                 options: ApiJsonPayload.Options)
         };
         request.Headers.Add("Cookie", $"{NonceCookie}={nonce}");

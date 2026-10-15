@@ -18,4 +18,15 @@ public interface IClientInvitationStore
         DateTime refreshExpiresAt,
         DateTime now,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Cria a conta do cliente convidado, associa-a à ficha e abre a sessão, tudo numa
+    /// transação. O email da conta é o do convite, já provado pelo link.
+    /// </summary>
+    Task<RegisterInvitedClientStoreResult> RegisterClientAsync(
+        string rawToken,
+        string password,
+        DateTime refreshExpiresAt,
+        DateTime now,
+        CancellationToken cancellationToken);
 }

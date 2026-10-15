@@ -1,5 +1,6 @@
 using Application.Features.Authentication.Abstractions;
 using Domain.Entities.Identity;
+using Domain.ValueObjects;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +9,13 @@ namespace Infrastructure.Identity;
 /// <summary>Emite e consome confirmações de email de uso único.</summary>
 internal sealed class EmailConfirmationStore : IEmailConfirmationStore
 {
+    /// <summary>
+    /// Intervalo mínimo entre emissões pedidas por email, sem sessão. Impede que um terceiro
+    /// que conheça o email invalide o link pendente da conta e que um duplo clique deixe um
+    /// email com o link já morto.
+    /// </summary>
+    private static readonly TimeSpan AnonymousReissueCooldown = TimeSpan.FromSeconds(60);
+
     private readonly PtManagerDbContext _dbContext;
     private readonly IOpaqueTokenService _tokens;
 
@@ -17,81 +25,36 @@ internal sealed class EmailConfirmationStore : IEmailConfirmationStore
         _tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
     }
 
-    public async Task<EmailConfirmationStoreResult> IssueAsync(
+    public Task<EmailConfirmationStoreResult> IssueAsync(
         Guid userId,
         DateTime expiresAt,
         DateTime now,
         CancellationToken cancellationToken
-    )
-    {
-        var generated = _tokens.Generate();
-        var strategy = _dbContext.Database.CreateExecutionStrategy();
-        var attempt = 0;
-
-        return await strategy.ExecuteAsync(async () =>
-        {
-            attempt++;
-
-            // Confirma um commit ambíguo antes de repetir a escrita.
-            if (attempt > 1)
-            {
-                _dbContext.ChangeTracker.Clear();
-                var committedEmail = await _dbContext.EmailVerificationTokens
-                    .AsNoTracking()
-                    .Where(token => token.TokenHash == generated.TokenHash)
-                    .Join(_dbContext.Users,
-                        token => token.UserId,
-                        user => user.Id,
-                        (token, user) => user.Email)
-                    .SingleOrDefaultAsync(cancellationToken);
-                if (committedEmail is not null)
-                {
-                    return EmailConfirmationStoreResult.Issued(
-                        new IssuedAuthenticationSecret(
-                            committedEmail,
-                            generated.RawToken,
-                            expiresAt));
-                }
-            }
-
-            await using var transaction = await _dbContext.Database
-                .BeginTransactionAsync(cancellationToken);
-
-            var user = await _dbContext.Users
+    ) =>
+        IssueForLockedUserAsync(
+            ct => _dbContext.Users
                 .FromSqlInterpolated($"SELECT * FROM users WHERE id = {userId} FOR UPDATE")
-                .SingleOrDefaultAsync(cancellationToken);
-            if (user is null)
-                return EmailConfirmationStoreResult.For(EmailConfirmationStoreStatus.UserNotFound);
-            if (!user.IsActive || user.IsDeleted)
-                return EmailConfirmationStoreResult.For(EmailConfirmationStoreStatus.AccountInactive);
-            if (user.EmailConfirmed)
-                return EmailConfirmationStoreResult.For(EmailConfirmationStoreStatus.AlreadyConfirmed);
+                .SingleOrDefaultAsync(ct),
+            expiresAt,
+            now,
+            cancellationToken);
 
-            var previous = await _dbContext.EmailVerificationTokens
-                .Where(token => token.UserId == userId &&
-                    token.ConsumedAt == null)
-                .ToListAsync(cancellationToken);
-            _dbContext.EmailVerificationTokens.RemoveRange(previous);
-
-            _dbContext.EmailVerificationTokens.Add(new EmailVerificationToken(
-                userId,
-                generated.TokenHash,
-                expiresAt,
-                now
-            ));
-
-            try
-            {
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                return EmailConfirmationStoreResult.Issued(
-                    new IssuedAuthenticationSecret(user.Email, generated.RawToken, expiresAt));
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                return EmailConfirmationStoreResult.For(EmailConfirmationStoreStatus.ConcurrencyConflict);
-            }
-        });
+    public Task<EmailConfirmationStoreResult> IssueByEmailAsync(
+        string email,
+        DateTime expiresAt,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var normalized = new EmailAddress(email).Normalized;
+        return IssueForLockedUserAsync(
+            ct => _dbContext.Users
+                .FromSqlInterpolated(
+                    $"SELECT * FROM users WHERE normalized_email = {normalized} FOR UPDATE")
+                .SingleOrDefaultAsync(ct),
+            expiresAt,
+            now,
+            cancellationToken,
+            AnonymousReissueCooldown);
     }
 
     public async Task<EmailConfirmationStoreResult> ConsumeAsync(
@@ -157,6 +120,92 @@ internal sealed class EmailConfirmationStore : IEmailConfirmationStore
                 await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return EmailConfirmationStoreResult.For(EmailConfirmationStoreStatus.Confirmed);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return EmailConfirmationStoreResult.For(EmailConfirmationStoreStatus.ConcurrencyConflict);
+            }
+        });
+    }
+
+    /// <summary>
+    /// Emite a confirmação para o utilizador devolvido por <paramref name="lockUser"/>, que
+    /// o tem de bloquear dentro da transação. Partilhado pelo pedido autenticado (por id)
+    /// e pelo anónimo (por email). Com <paramref name="reissueCooldown"/>, uma confirmação por
+    /// consumir criada dentro desse intervalo é mantida e nenhuma nova é emitida.
+    /// </summary>
+    private async Task<EmailConfirmationStoreResult> IssueForLockedUserAsync(
+        Func<CancellationToken, Task<User?>> lockUser,
+        DateTime expiresAt,
+        DateTime now,
+        CancellationToken cancellationToken,
+        TimeSpan? reissueCooldown = null)
+    {
+        var generated = _tokens.Generate();
+        var strategy = _dbContext.Database.CreateExecutionStrategy();
+        var attempt = 0;
+
+        return await strategy.ExecuteAsync(async () =>
+        {
+            attempt++;
+
+            // Confirma um commit ambíguo antes de repetir a escrita.
+            if (attempt > 1)
+            {
+                _dbContext.ChangeTracker.Clear();
+                var committedEmail = await _dbContext.EmailVerificationTokens
+                    .AsNoTracking()
+                    .Where(token => token.TokenHash == generated.TokenHash)
+                    .Join(_dbContext.Users,
+                        token => token.UserId,
+                        user => user.Id,
+                        (token, user) => user.Email)
+                    .SingleOrDefaultAsync(cancellationToken);
+
+                if (committedEmail is not null)
+                {
+                    return EmailConfirmationStoreResult.Issued(
+                        new IssuedAuthenticationSecret(
+                            committedEmail,
+                            generated.RawToken,
+                            expiresAt));
+                }
+            }
+
+            await using var transaction = await _dbContext.Database
+                .BeginTransactionAsync(cancellationToken);
+
+            var user = await lockUser(cancellationToken);
+            if (user is null)
+                return EmailConfirmationStoreResult.For(EmailConfirmationStoreStatus.UserNotFound);
+            if (!user.IsActive || user.IsDeleted)
+                return EmailConfirmationStoreResult.For(EmailConfirmationStoreStatus.AccountInactive);
+            if (user.EmailConfirmed)
+                return EmailConfirmationStoreResult.For(EmailConfirmationStoreStatus.AlreadyConfirmed);
+
+            var previous = await _dbContext.EmailVerificationTokens
+                .Where(token => token.UserId == user.Id &&
+                    token.ConsumedAt == null)
+                .ToListAsync(cancellationToken);
+
+            if (reissueCooldown is { } cooldown &&
+                previous.Any(token => token.CreatedAt > now - cooldown))
+                return EmailConfirmationStoreResult.For(EmailConfirmationStoreStatus.RecentlyIssued);
+
+            _dbContext.EmailVerificationTokens.RemoveRange(previous);
+
+            _dbContext.EmailVerificationTokens.Add(new EmailVerificationToken(
+                user.Id,
+                generated.TokenHash,
+                expiresAt,
+                now));
+
+            try
+            {
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return EmailConfirmationStoreResult.Issued(
+                    new IssuedAuthenticationSecret(user.Email, generated.RawToken, expiresAt));
             }
             catch (DbUpdateConcurrencyException)
             {

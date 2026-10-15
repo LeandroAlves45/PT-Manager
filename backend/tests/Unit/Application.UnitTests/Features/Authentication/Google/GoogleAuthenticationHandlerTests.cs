@@ -34,7 +34,7 @@ public sealed class GoogleAuthenticationHandlerTests
         var handler = CreateSignIn(store, new ExternalVerifierStub(), new TestEmailSender());
 
         var result = await handler.HandleAsync(
-            new GoogleSignInCommand("id-token", "nonce", null),
+            new GoogleSignInCommand("id-token", "nonce", null, false),
             TestContext.Current.CancellationToken);
 
         Assert.True(result.IsSuccess);
@@ -56,7 +56,7 @@ public sealed class GoogleAuthenticationHandlerTests
         var handler = CreateSignIn(store, new ExternalVerifierStub(), sender);
 
         var result = await handler.HandleAsync(
-            new GoogleSignInCommand("id-token", "nonce", null),
+            new GoogleSignInCommand("id-token", "nonce", null, false),
             TestContext.Current.CancellationToken);
 
         Assert.True(result.IsSuccess);
@@ -81,7 +81,7 @@ public sealed class GoogleAuthenticationHandlerTests
         var handler = CreateSignIn(store, new ExternalVerifierStub(), sender);
 
         var result = await handler.HandleAsync(
-            new GoogleSignInCommand("id-token", "nonce", null),
+            new GoogleSignInCommand("id-token", "nonce", null, false),
             TestContext.Current.CancellationToken);
 
         Assert.False(result.IsSuccess);
@@ -100,7 +100,7 @@ public sealed class GoogleAuthenticationHandlerTests
         var handler = CreateSignIn(store, verifier, new TestEmailSender());
 
         var result = await handler.HandleAsync(
-            new GoogleSignInCommand("invalid", "nonce", null),
+            new GoogleSignInCommand("invalid", "nonce", null, false),
             TestContext.Current.CancellationToken);
 
         Assert.Equal("google_credential_invalid", result.Error!.Code);
@@ -120,11 +120,26 @@ public sealed class GoogleAuthenticationHandlerTests
         var handler = CreateSignIn(store, verifier, new TestEmailSender());
 
         await handler.HandleAsync(
-            new GoogleSignInCommand("id-token", "nonce-abc", null),
+            new GoogleSignInCommand("id-token", "nonce-abc", null, false),
             TestContext.Current.CancellationToken);
 
         Assert.Equal(ExternalIdentity.GoogleProvider, verifier.ReceivedProvider);
         Assert.Equal("nonce-abc", verifier.ReceivedNonce);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task SignIn_CreateAccount_ReachesStoreUnchanged(bool createAccount)
+    {
+        var store = new ExternalAuthenticationStoreStub();
+        var handler = CreateSignIn(store, new ExternalVerifierStub(), new TestEmailSender());
+
+        await handler.HandleAsync(
+            new GoogleSignInCommand("id-token", "nonce", null, createAccount),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(createAccount, store.ReceivedCreateAccount);
     }
 
     [Theory]
@@ -136,7 +151,7 @@ public sealed class GoogleAuthenticationHandlerTests
         var handler = CreateSignIn(store, new ExternalVerifierStub(), new TestEmailSender());
 
         await handler.HandleAsync(
-            new GoogleSignInCommand("id-token", "nonce", invitationToken),
+            new GoogleSignInCommand("id-token", "nonce", invitationToken, false),
             TestContext.Current.CancellationToken);
 
         Assert.Null(store.ReceivedInvitationToken);
@@ -145,6 +160,7 @@ public sealed class GoogleAuthenticationHandlerTests
     [Theory]
     [InlineData(GoogleSignInStoreStatus.ChallengeInvalid, "google_credential_invalid")]
     [InlineData(GoogleSignInStoreStatus.AccountLinkRequired, "google_account_link_required")]
+    [InlineData(GoogleSignInStoreStatus.AccountNotFound, "google_account_not_found")]
     [InlineData(GoogleSignInStoreStatus.AccountInactive, "authentication_account_inactive")]
     [InlineData(GoogleSignInStoreStatus.RelationshipInactive, "authentication_relationship_conflict")]
     [InlineData(GoogleSignInStoreStatus.InvitationInvalid, "authentication_invitation_invalid")]
@@ -164,7 +180,7 @@ public sealed class GoogleAuthenticationHandlerTests
         var handler = CreateSignIn(store, new ExternalVerifierStub(), new TestEmailSender());
 
         var result = await handler.HandleAsync(
-            new GoogleSignInCommand("id-token", "nonce", null),
+            new GoogleSignInCommand("id-token", "nonce", null, false),
             TestContext.Current.CancellationToken);
 
         Assert.False(result.IsSuccess);

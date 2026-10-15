@@ -111,10 +111,13 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.Authentication.ChangePassword.ChangePasswordHandler>();
         services.AddScoped<Application.Features.Authentication.ConfirmEmail.ConfirmEmailHandler>();
         services.AddScoped<Application.Features.Authentication.InviteClient.InviteClientHandler>();
+        services.AddScoped<Application.Features.Authentication.GetAccount.GetAccountHandler>();
         services.AddScoped<Application.Features.Authentication.Login.LoginHandler>();
         services.AddScoped<Application.Features.Authentication.Logout.LogoutHandler>();
         services.AddScoped<Application.Features.Authentication.RefreshSession.RefreshSessionHandler>();
+        services.AddScoped<Application.Features.Authentication.RegisterInvitedClient.RegisterInvitedClientHandler>();
         services.AddScoped<Application.Features.Authentication.RegisterTrainer.RegisterTrainerHandler>();
+        services.AddScoped<Application.Features.Authentication.RequestEmailConfirmation.RequestEmailConfirmationHandler>();
         services.AddScoped<Application.Features.Authentication.RequestPasswordReset.RequestPasswordResetHandler>();
         services.AddScoped<Application.Features.Authentication.ResendEmailConfirmation.ResendEmailConfirmationHandler>();
         services.AddScoped<Application.Features.Authentication.ResetPassword.ResetPasswordHandler>();
@@ -137,7 +140,11 @@ public static class DependencyInjection
         services.AddScoped<IValidator<Application.Features.Authentication
             .RefreshSession.RefreshSessionCommand>, Application.Features.Authentication.RefreshSession.RefreshSessionCommandValidator>();
         services.AddScoped<IValidator<Application.Features.Authentication
+            .RegisterInvitedClient.RegisterInvitedClientCommand>, Application.Features.Authentication.RegisterInvitedClient.RegisterInvitedClientCommandValidator>();
+        services.AddScoped<IValidator<Application.Features.Authentication
             .RegisterTrainer.RegisterTrainerCommand>, Application.Features.Authentication.RegisterTrainer.RegisterTrainerCommandValidator>();
+        services.AddScoped<IValidator<Application.Features.Authentication
+            .RequestEmailConfirmation.RequestEmailConfirmationCommand>, Application.Features.Authentication.RequestEmailConfirmation.RequestEmailConfirmationCommandValidator>();
         services.AddScoped<IValidator<Application.Features.Authentication
             .RequestPasswordReset.RequestPasswordResetCommand>, Application.Features.Authentication.RequestPasswordReset.RequestPasswordResetCommandValidator>();
         services.AddScoped<IValidator<Application.Features.Authentication

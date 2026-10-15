@@ -87,8 +87,7 @@ internal sealed class AuthenticationRegistrationStore : IAuthenticationRegistrat
             if (!identityResult.Succeeded)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                return RegisterTrainerStoreResult.For(identityResult.Errors.Any(error =>
-                    error.Code == nameof(IdentityErrorDescriber.DuplicateEmail))
+                return RegisterTrainerStoreResult.For(identityResult.IsOnlyDuplicateAccount()
                     ? RegisterTrainerStoreStatus.DuplicateEmail
                     : RegisterTrainerStoreStatus.InvalidIdentityData);
             }

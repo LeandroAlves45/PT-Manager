@@ -21,6 +21,8 @@ public sealed class EmailAddressTests
     [InlineData("two@@atsign.com")]
     [InlineData("invalid@domain")]
     [InlineData("with space@x.com")]
+    [InlineData("a\u0000b@example.com")]
+    [InlineData("ab@exa\u0007mple.com")]
     public void Constructor_InvalidFormat_ThrowsDomainException(string invalidEmail)
     {
         // Arrange & Act

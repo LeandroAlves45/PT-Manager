@@ -12,6 +12,8 @@ public static class ApiRateLimitPolicyNames
     public const string PasswordResetComplete = "auth_password_reset_complete";
     public const string EmailConfirmation = "auth_email_confirmation";
     public const string EmailConfirmationResend = "auth_email_confirmation_resend";
+    public const string EmailConfirmationRequest = "auth_email_confirmation_request";
+    public const string InviteRegister = "auth_invite_register";
     public const string InviteClient = "auth_invite_client";
     public const string GoogleSignIn = "auth_google_sign_in";
     public const string GoogleLink = "auth_google_link";

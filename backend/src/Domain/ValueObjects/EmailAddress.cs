@@ -42,6 +42,10 @@ public record EmailAddress
         if (email.Any(char.IsWhiteSpace))
             return false;
 
+        // Sem caracteres de controlo: o PostgreSQL recusa U+0000 em text e a escrita dava 500
+        if (email.Any(char.IsControl))
+            return false;
+
         // Se contem '@', deve ter pelo menos um caractere antes e depois
         var parts = email.Split('@');
         if (parts.Length != 2)

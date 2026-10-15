@@ -49,6 +49,12 @@ public static class ApiRateLimiting
             options.AddPolicy(ApiRateLimitPolicyNames.EmailConfirmationResend,
                 context => FixedWindow(IpKey(context), 3, TimeSpan.FromHours(1)));
 
+            options.AddPolicy(ApiRateLimitPolicyNames.EmailConfirmationRequest,
+                context => FixedWindow(IpKey(context), 3, TimeSpan.FromHours(1)));
+
+            options.AddPolicy(ApiRateLimitPolicyNames.InviteRegister,
+                context => FixedWindow(IpKey(context), 10, TimeSpan.FromMinutes(15)));
+
             options.AddPolicy(ApiRateLimitPolicyNames.InviteClient,
                 context => FixedWindow(UserKey(context), 10, TimeSpan.FromHours(1)));
 

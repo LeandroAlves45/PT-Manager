@@ -27,6 +27,8 @@ internal sealed class TestEmailSender : IAuthenticationEmailSender
     public int ConfirmationCalls { get; private set; }
     public int InvitationCalls { get; private set; }
     public int ResetCalls { get; private set; }
+    public int AccountExistsCalls { get; private set; }
+    public string? LastAccountExistsRecipient { get; private set; }
 
     public Task<AuthenticationEmailDeliveryOutcome> SendEmailConfirmationAsync(
         IssuedAuthenticationSecret secret,
@@ -51,6 +53,15 @@ internal sealed class TestEmailSender : IAuthenticationEmailSender
         ResetCalls++;
         return Task.FromResult(Outcome);
     }
+
+    public Task<AuthenticationEmailDeliveryOutcome> SendAccountAlreadyExistsAsync(
+        string recipientEmail,
+        CancellationToken cancellationToken)
+    {
+        AccountExistsCalls++;
+        LastAccountExistsRecipient = recipientEmail;
+        return Task.FromResult(Outcome);
+    }
 }
 
 internal sealed class RegistrationStoreStub(RegisterTrainerStoreResult result) :
@@ -70,11 +81,25 @@ internal sealed class RegistrationStoreStub(RegisterTrainerStoreResult result) :
 internal sealed class EmailConfirmationStoreStub(EmailConfirmationStoreResult result) :
     IEmailConfirmationStore
 {
+    public int IssueByEmailCalls { get; private set; }
+    public string? LastIssuedEmail { get; private set; }
     public Task<EmailConfirmationStoreResult> IssueAsync(
         Guid userId,
         DateTime expiresAt,
         DateTime now,
         CancellationToken cancellationToken) => Task.FromResult(result);
+
+    public Task<EmailConfirmationStoreResult> IssueByEmailAsync(
+        string email,
+        DateTime expiresAt,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        IssueByEmailCalls++;
+        LastIssuedEmail = email;
+        return Task.FromResult(result);
+    }
+
 
     public Task<EmailConfirmationStoreResult> ConsumeAsync(
         string rawToken,
@@ -98,7 +123,11 @@ internal sealed class ClientInvitationStoreStub : IClientInvitationStore
         IssueClientInvitationStoreResult.For(IssueClientInvitationStoreStatus.ClientNotFound);
     public ConsumeClientInvitationStoreResult ConsumeResult { get; set; } =
         ConsumeClientInvitationStoreResult.For(ConsumeClientInvitationStoreStatus.TokenNotFound);
+    public RegisterInvitedClientStoreResult RegisterResult { get; set; } =
+        RegisterInvitedClientStoreResult.For(RegisterInvitedClientStoreStatus.TokenNotFound);
     public int IssueCalls { get; private set; }
+    public int RegisterCalls { get; private set; }
+    public string? LastRegisteredPassword { get; private set; }
 
     public Task<IssueClientInvitationStoreResult> IssueAsync(
         Guid trainerId,
@@ -119,6 +148,18 @@ internal sealed class ClientInvitationStoreStub : IClientInvitationStore
         DateTime refreshExpiresAt,
         DateTime now,
         CancellationToken cancellationToken) => Task.FromResult(ConsumeResult);
+
+    public Task<RegisterInvitedClientStoreResult> RegisterClientAsync(
+        string rawToken,
+        string password,
+        DateTime refreshExpiresAt,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        RegisterCalls++;
+        LastRegisteredPassword = password;
+        return Task.FromResult(RegisterResult);
+    }
 }
 
 internal sealed class SessionStoreStub : IAuthenticationSessionStore

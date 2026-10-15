@@ -1,30 +1,49 @@
-# Estado ativo: Sprint 6F (portal do cliente) FINALIZADO. 6F-1 a 6F-4 fechadas; faltam só os gates manuais com login
+# Estado ativo: Sprint 6G. 6GA (Auth UX) com blueprints validados, por aplicar; 6GB (análise visual) registada
 
 Atualizado: 2026-10-14
 
-## Sprint 6F: portal do cliente
+## Sprint 6G: 6GA Auth UX + 6GB análise visual e correção
+
+**Ler primeiro** `docs/blueprints/frontend-files/sprint_6/sprint_6G/00_plano_sprint_6G.md`
+(divisão, gates, lista da 6GB) e, para aplicar, `sprint_6G/sprint_6GA/01_indice_decisoes_e_ordem.md`.
+
+- **6GA backend FINALIZADO (2026-10-15).** Docs 02–04 aplicados e revistos no checkout real:
+  3164 + 1 skip, 0 avisos, defeitos A1/A2/A4 corrigidos, `schema.d.ts` regenerado. Faltam o
+  frontend (docs 05–10), gates manuais `QG6GA-GATE-001..004` e CI. Relatório `sprint_6GA/12`.
+- **6GA blueprints validados (2026-10-14).**
+  - Pack `sprint_6G/sprint_6GA/01–11` + `manifest.json`: 163 caminhos (150 integrais, 12 patches,
+    1 apagado), round-trip 163/163. Backend e frontend no mesmo diretório.
+  - Decisões U27–U38: convite com palavra-passe ou Google, rotas em português (`/entrar`, …),
+    signup 202 sem enumeração, reenvio da confirmação por email, email de dev no log,
+    "Conta e segurança" nos três papéis, `GET /auth/account`, `/entrar` com Google só entra
+    (`create_account`), CSP no Sprint 9 §4.
+  - Defeitos D1–D7 (U+0000 dava 500 no signup/login/reset; `.EmailAddress()` em auth; 401 de
+    domínio fazia refresh; teste intermitente da moderação; Google criava trainer; migalhas;
+    erro morto).
+  - Evidência na worktree `C:\ptm-tmp-6ga` (desregistada; a pasta ficou por apagar à mão):
+    backend 3161 + 1 skip, Vitest 700/700, 23/23 mutações, security-reviewer sem altos.
+  - **Próximo passo:** o Leandro aplica 6GA-1 → 6GA-4 (doc 01 §5), corre os gates manuais
+    `QG6GA-GATE-001..004` e o CI; depois fecho da 6GA.
+- **6GB registada:** 19 pontos de admin e trainer (`sprint_6G/00` §4, P1/P2/P3, ✱ por decidir);
+  prints do portal por entregar (§4.3); o item da marca na app do trainer foi adiado pelo Leandro.
+  A 6GB divide-se em 6GB-1 (correção visual) e 6GB-2 (mudanças de produto). A data do
+  convite na ficha do cliente entra na 6GB-2, não na 6GA (2026-10-15).
+- Ver `Sessions/2026-10-14-sprint6g-plano-6ga-blueprints.md`.
+
+## Sprint 6F: portal do cliente (FINALIZADO 2026-10-14)
 
 **Ler primeiro** `docs/blueprints/frontend-files/sprint_6/sprint_6F/00_plano_fase_6F_completa.md`.
 Tem as fases, as decisões U1–U19, os contratos de todas as fases e as armadilhas.
 
 - **6F-4 FINALIZADA e Sprint 6F FINALIZADO (2026-10-14).**
   - Aplicação do Leandro em `16b572f` (backend, CI #37) e `5ddacd8` (frontend, CI #38).
-  - Fecho: D1 `# Estado ativo: Sprint 6F (portal do cliente) FINALIZADO. 6F-1 a 6F-4 fechadas; faltam só os gates manuais com login
-
-Atualizado: 2026-10-14
-
-## Sprint 6F: portal do cliente
-
-**Ler primeiro** `docs/blueprints/frontend-files/sprint_6/sprint_6F/00_plano_fase_6F_completa.md`.
-Tem as fases, as decisões U1–U19, os contratos de todas as fases e as armadilhas.
-
- em falta, D2 toque duplo em "Seguinte", D3 ramo morto, S1 escala de 2 casas
+  - Fecho: D1 `$` em falta, D2 toque duplo em "Seguinte", D3 ramo morto, S1 escala de 2 casas
     (500), S2 suplementos de arquivado, S3 U+0000 (500). Copy do Leandro mantida.
   - Backend 3013 + 1 skip, Vitest 554/554, mutações G1–G7 7/7, blueprints realinhados 53/53.
   - Commits `749f6da`, `cf8af27`, `503d113`; CI #39 verde.
   - Relatório `sprint_6F4/09_relatorio_fecho_fase_6F4.md`; fecho do sprint em `10_fecho_sprint_6F.md`.
   - Faltam `QG6F4-UI-001`, `QG6F4-ISOLAMENTO-UI-001`, `QG6F4-AVATAR-001`, `QG6F-GATE-001`.
-    `design-is` da 6F-4: 20/30 REFINE (`frontend/DESIGN-IS-2026-10-14/`). Próximo: Sprint 6G (admin/fecho do Sprint 6, graphify).
+    `design-is` da 6F-4: 20/30 REFINE (`frontend/DESIGN-IS-2026-10-14/`). Próximo: Sprint 6G (6GA Auth UX + 6GB análise visual; ver secção acima).
   - Ver `Sessions/2026-10-14-sprint6f4-fecho-sprint6f.md`.
 - **6F-4 blueprints validados (2026-10-11, histórico).**
   - Pack: `sprint_6F/sprint_6F4/01–08` + `manifest.json`, com 53 caminhos (44 integrais e 9

@@ -24,9 +24,9 @@ namespace ArchitectureTests;
 /// </remarks>
 public sealed class ApiContractArchitectureTests
 {
-    private const int ExpectedConcreteControllers = 31;
-    private const int ExpectedDeclaredActions = 165;
-    private const int ExpectedEffectiveOperations = 170;
+    private const int ExpectedConcreteControllers = 32;
+    private const int ExpectedDeclaredActions = 168;
+    private const int ExpectedEffectiveOperations = 173;
 
     private static readonly IReadOnlyList<Operation> Operations = DiscoverOperations();
 
@@ -141,7 +141,7 @@ public sealed class ApiContractArchitectureTests
     }
 
     [Fact]
-    public void AcceptedResponse_IsDeclaredOnlyByGoogleSignIn()
+    public void AcceptedResponse_IsDeclaredOnlyBySignUpAndGoogleSignIn()
     {
         var accepted = Operations
             .Where(operation => operation.MethodResponses.Any(response =>
@@ -149,7 +149,9 @@ public sealed class ApiContractArchitectureTests
             .Select(operation => operation.Id)
             .ToArray();
 
-        Assert.Equal(["GoogleAuthController.SignInAsync"], accepted);
+        Assert.Equal(
+            ["AuthController.SignUpAsync", "GoogleAuthController.SignInAsync"],
+            accepted);
     }
 
     private static bool IsSuccess(ProducesResponseTypeAttribute response) =>

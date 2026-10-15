@@ -22,21 +22,31 @@ internal static partial class AuthenticationEmailTemplateRenderer
         "{{intro}}",
         "{{action_url}}",
         "{{action_label}}",
-        "{{expires_at_utc}}",
         "{{footer_attribution}}"
     ];
+
+    private const string ExpiryPlaceholder = "{{expires_at_utc}}";
+    private const string SecondaryUrlPlaceholder = "{{secondary_action_url}}";
+    private const string SecondaryLabelPlaceholder = "{{secondary_action_label}}";
+
+    /// <summary>Template sem link com expiração: avisa que o email já tem conta.</summary>
+    internal const string AccountAlreadyExistsTemplate = "account-already-exists.html";
 
     private static readonly Lazy<IReadOnlyDictionary<string, string>> Templates =
         new(LoadTemplates, LazyThreadSafetyMode.ExecutionAndPublication);
 
+    /// <summary>
+    /// Renderiza o template. <c>expiresAt</c> é <c>null</c> nos templates sem link com prazo e
+    /// <c>secondaryAction</c> só é usado pelos templates que declaram a segunda ligação.
+    /// </summary>
     internal static RenderedAuthenticationEmail Render(
         string templateName,
         string intro,
         string actionUrl,
         string actionLabel,
-        DateTime expiresAt,
-        AuthenticationEmailTemplateOptions? options = null
-    )
+        DateTime? expiresAt,
+        AuthenticationEmailTemplateOptions? options = null,
+        (string Url, string Label)? secondaryAction = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(templateName);
         ArgumentException.ThrowIfNullOrWhiteSpace(intro);
@@ -50,7 +60,7 @@ internal static partial class AuthenticationEmailTemplateRenderer
                 $"Authentication email template '{templateName}' is not registered.");
 
         var appName = options.AppName.Trim();
-        var expiresAtUtc = expiresAt.ToUniversalTime().ToString("yyyy-MM-dd HH:mm 'UTC'");
+        var expiresAtUtc = expiresAt?.ToUniversalTime().ToString("yyyy-MM-dd HH:mm 'UTC'");
         var brandHeader = BuildBrandHeader(appName, options.LogoUrl);
         var recipientGreeting = BuildRecipientGreeting(options.RecipientName);
         var footerAttribution = string.IsNullOrWhiteSpace(options.FooterAttribution)
@@ -63,8 +73,17 @@ internal static partial class AuthenticationEmailTemplateRenderer
             .Replace("{{intro}}", WebUtility.HtmlEncode(intro), StringComparison.Ordinal)
             .Replace("{{action_url}}", WebUtility.HtmlEncode(actionUrl), StringComparison.Ordinal)
             .Replace("{{action_label}}", WebUtility.HtmlEncode(actionLabel), StringComparison.Ordinal)
-            .Replace("{{expires_at_utc}}", WebUtility.HtmlEncode(expiresAtUtc), StringComparison.Ordinal)
             .Replace("{{footer_attribution}}", WebUtility.HtmlEncode(footerAttribution), StringComparison.Ordinal);
+
+        if (expiresAtUtc is not null)
+            html = html.Replace(ExpiryPlaceholder, WebUtility.HtmlEncode(expiresAtUtc), StringComparison.Ordinal);
+
+        if (secondaryAction is { } secondary)
+        {
+            html = html
+                .Replace(SecondaryUrlPlaceholder, WebUtility.HtmlEncode(secondary.Url), StringComparison.Ordinal)
+                .Replace(SecondaryLabelPlaceholder, WebUtility.HtmlEncode(secondary.Label), StringComparison.Ordinal);
+        }
 
         if (UnresolvedPlaceholder().IsMatch(html))
             throw new InvalidOperationException(
@@ -74,11 +93,20 @@ internal static partial class AuthenticationEmailTemplateRenderer
             ? string.Empty
             : $"Olá {options.RecipientName},{Environment.NewLine}{Environment.NewLine}";
 
+        var secondaryLine = secondaryAction is { } second
+            ? $"{second.Label}: {second.Url}{Environment.NewLine}{Environment.NewLine}"
+            : string.Empty;
+
+        var expiryLine = expiresAtUtc is null
+            ? string.Empty
+            : $"Este link expira em {expiresAtUtc}.{Environment.NewLine}{Environment.NewLine}";
+
         var text =
             $"{greetingLine}{intro}{Environment.NewLine}{Environment.NewLine}" +
             $"{actionLabel}: {actionUrl}{Environment.NewLine}{Environment.NewLine}" +
+            secondaryLine +
             $"Se o link não abrir, copia e cola o URL acima no browser.{Environment.NewLine}{Environment.NewLine}" +
-            $"Este link expira em {expiresAtUtc}.{Environment.NewLine}{Environment.NewLine}" +
+            expiryLine +
             $"{footerAttribution} - email automatico. Por favor não responda a este email.";
 
         return new(html, text);
@@ -115,7 +143,13 @@ internal static partial class AuthenticationEmailTemplateRenderer
 
     private static IReadOnlyDictionary<string, string> LoadTemplates()
     {
-        var names = new[] { "confirm-email.html", "client-invitation.html", "password-reset.html" };
+        var names = new[]
+        {
+            "confirm-email.html",
+            "client-invitation.html",
+            "password-reset.html",
+            AccountAlreadyExistsTemplate
+        };
         var templates = new Dictionary<string, string>(StringComparer.Ordinal);
         var assembly = typeof(AuthenticationEmailTemplateRenderer).Assembly;
 
@@ -128,7 +162,11 @@ internal static partial class AuthenticationEmailTemplateRenderer
             using var reader = new StreamReader(stream);
             var content = reader.ReadToEnd();
 
-            var missing = RequiredPlaceholders.Where(placeholder =>
+            // A expiração é obrigatória em todos os templates menos no que não tem link com prazo.
+            var required = name == AccountAlreadyExistsTemplate
+                ? RequiredPlaceholders
+                : [.. RequiredPlaceholders, ExpiryPlaceholder];
+            var missing = required.Where(placeholder =>
                 !content.Contains(placeholder, StringComparison.Ordinal)).ToArray();
             if (missing.Length > 0)
                 throw new InvalidOperationException(

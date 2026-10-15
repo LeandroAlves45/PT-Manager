@@ -74,6 +74,7 @@ internal sealed class ExternalAuthenticationStore :
         VerifiedExternalIdentity identity,
         string rawNonce,
         string? rawInvitationToken,
+        bool createAccount,
         DateTime trialEndsAt,
         DateTime confirmationExpiresAt,
         DateTime refreshExpiresAt,
@@ -179,6 +180,15 @@ internal sealed class ExternalAuthenticationStore :
                 await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return GoogleSignInStoreResult.Failure(GoogleSignInStoreStatus.AccountLinkRequired);
+            }
+
+            // Entrar com Google nunca cria conta por omissão: sem convite, só com o
+            // consentimento explícito do utilizador. O challenge fica consumido na mesma.
+            if (rawInvitationToken is null && !createAccount)
+            {
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return GoogleSignInStoreResult.Failure(GoogleSignInStoreStatus.AccountNotFound);
             }
 
             GoogleSignInStoreResult created;

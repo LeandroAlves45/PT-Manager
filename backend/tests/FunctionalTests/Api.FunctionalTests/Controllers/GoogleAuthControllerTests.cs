@@ -213,7 +213,7 @@ public sealed class GoogleAuthControllerTests : IAsyncLifetime
         var client = _factory.CreateOriginClient();
         var nonce = await IssueChallengeAsync(client);
 
-        var response = await PostSignInAsync(client, nonce);
+        var response = await PostSignInAsync(client, nonce, createAccount: true);
 
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         var body = await ReadJsonAsync(response);
@@ -234,7 +234,7 @@ public sealed class GoogleAuthControllerTests : IAsyncLifetime
         var client = _factory.CreateOriginClient();
         var nonce = await IssueChallengeAsync(client);
 
-        var response = await PostSignInAsync(client, nonce);
+        var response = await PostSignInAsync(client, nonce, createAccount: true);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         await using var scope = _factory.Services.CreateAsyncScope();
@@ -259,6 +259,42 @@ public sealed class GoogleAuthControllerTests : IAsyncLifetime
         Assert.True(await tenantContext.TrainerSubscriptions.AsNoTracking().AnyAsync(
             subscription => subscription.TrainerId == user.Id,
             TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task SignIn_UnknownIdentityWithoutCreateAccount_IsRejectedAndCreatesNoUser()
+    {
+        var email = $"not-yet-{Guid.NewGuid():N}@gmail.com";
+        _verifier.Result = Verified($"sub-{Guid.NewGuid():N}", email);
+        var client = _factory.CreateOriginClient();
+        var nonce = await IssueChallengeAsync(client);
+
+        var response = await PostSignInAsync(client, nonce);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var body = await ReadJsonAsync(response);
+        Assert.Equal("google_account_not_found", body.GetProperty("title").GetString());
+        await AssertNoUserAsync(email);
+    }
+
+    [Fact]
+    public async Task SignIn_CreateAccountOmittedFromBody_BehavesAsFalse()
+    {
+        var email = $"omitted-{Guid.NewGuid():N}@gmail.com";
+        _verifier.Result = Verified($"sub-{Guid.NewGuid():N}", email);
+        var client = _factory.CreateOriginClient();
+        var nonce = await IssueChallengeAsync(client);
+        var request = new HttpRequestMessage(HttpMethod.Post, SignInRoute)
+        {
+            Content = JsonContent.Create(
+                new { id_token = "opaque-id-token" },
+                options: ApiJsonPayload.Options)
+        };
+        request.Headers.Add("Cookie", $"{NonceCookie}={nonce}");
+
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        await AssertNoUserAsync(email);
     }
 
     [Fact]
@@ -390,7 +426,7 @@ public sealed class GoogleAuthControllerTests : IAsyncLifetime
         var nonce = await IssueChallengeAsync(client);
         _factory.EmailRequests.Clear();
 
-        var response = await PostSignInAsync(client, nonce);
+        var response = await PostSignInAsync(client, nonce, createAccount: true);
 
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         var sent = Assert.Single(_factory.EmailRequests.Requests);
@@ -714,12 +750,18 @@ public sealed class GoogleAuthControllerTests : IAsyncLifetime
     private static Task<HttpResponseMessage> PostSignInAsync(
         HttpClient client,
         string nonce,
-        string? invitationToken = null)
+        string? invitationToken = null,
+        bool createAccount = false)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, SignInRoute)
         {
             Content = JsonContent.Create(
-                new { id_token = "opaque-id-token", invitation_token = invitationToken },
+                new
+                {
+                    id_token = "opaque-id-token",
+                    invitation_token = invitationToken,
+                    create_account = createAccount
+                },
                 options: ApiJsonPayload.Options)
         };
         request.Headers.Add("Cookie", $"{NonceCookie}={nonce}");

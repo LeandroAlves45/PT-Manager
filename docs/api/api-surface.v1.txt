@@ -11,6 +11,7 @@ GET /api/v1/admin/content-moderation/exercises [query:page_number?,query:page_si
 GET /api/v1/admin/content-moderation/exercises/{exerciseId}/video [path:exerciseId!] auth=required
 GET /api/v1/admin/content-moderation/foods [query:page_number?,query:page_size?,query:search?,query:status?] auth=required
 GET /api/v1/admin/overview auth=required
+GET /api/v1/auth/account auth=required
 GET /api/v1/billing/subscription auth=required
 GET /api/v1/check-ins [query:client_id?,query:from_date?,query:page_number?,query:page_size?,query:status?,query:to_date?] auth=required
 GET /api/v1/check-ins/{checkInId} [path:checkInId!] auth=required
@@ -88,9 +89,11 @@ POST /api/v1/admin/content-moderation/exercises/{exerciseId}/unblock [path:exerc
 POST /api/v1/admin/content-moderation/foods/{foodId}/block [path:foodId!] auth=required
 POST /api/v1/admin/content-moderation/foods/{foodId}/unblock [path:foodId!] auth=required
 POST /api/v1/auth/accept-invite auth=required
+POST /api/v1/auth/accept-invite/register auth=anonymous
 POST /api/v1/auth/change-password auth=required
 POST /api/v1/auth/confirm-email auth=anonymous
 POST /api/v1/auth/csrf auth=anonymous
+POST /api/v1/auth/email-confirmation/request auth=anonymous
 POST /api/v1/auth/google/challenge auth=anonymous
 POST /api/v1/auth/google/link auth=required
 POST /api/v1/auth/google/link/challenge auth=required

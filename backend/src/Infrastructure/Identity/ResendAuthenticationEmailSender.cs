@@ -29,7 +29,7 @@ internal sealed class ResendAuthenticationEmailSender : IAuthenticationEmailSend
         CancellationToken cancellationToken) =>
         SendAsync(
             secret,
-            "confirmar-email",
+            AuthenticationLinkBuilder.ConfirmEmailPath,
             "confirm-email.html",
             "Confirme o seu email",
             "Obrigado por se registar no PT Manager. Para completar o registo e ativar a conta, " +
@@ -42,7 +42,7 @@ internal sealed class ResendAuthenticationEmailSender : IAuthenticationEmailSend
         CancellationToken cancellationToken) =>
         SendAsync(
             secret,
-            "aceitar-convite",
+            AuthenticationLinkBuilder.AcceptInvitePath,
             "client-invitation.html",
             "Convite do seu personal trainer",
             "Foi convidado para aceder ao PT Manager.",
@@ -54,14 +54,35 @@ internal sealed class ResendAuthenticationEmailSender : IAuthenticationEmailSend
         CancellationToken cancellationToken) =>
         SendAsync(
             secret,
-            "repor-password",
+            AuthenticationLinkBuilder.PasswordResetPath,
             "password-reset.html",
             "Reposição de password",
             "Recebemos um pedido para repor a password da sua conta. Se não foi você, ignore este email.",
             "Repor password",
             cancellationToken);
 
-    private async Task<AuthenticationEmailDeliveryOutcome> SendAsync(
+    public Task<AuthenticationEmailDeliveryOutcome> SendAccountAlreadyExistsAsync(
+        string recipientEmail,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(recipientEmail);
+
+        var frontend = _options.FrontendBaseUrl!;
+        return DeliverAsync(
+            recipientEmail,
+            AuthenticationLinkBuilder.Build(frontend, AuthenticationLinkBuilder.SignInPath),
+            expiresAt: null,
+            AuthenticationEmailTemplateRenderer.AccountAlreadyExistsTemplate,
+            "Já existe uma conta com este email",
+            "Alguém tentou criar uma conta no PT Manager com este email, mas já existe uma conta associada. " +
+            "Se foi você, entre na sua conta.",
+            "Entrar",
+            (AuthenticationLinkBuilder.Build(frontend, AuthenticationLinkBuilder.ForgotPasswordPath),
+                "Recuperar password"),
+            cancellationToken);
+    }
+
+    private Task<AuthenticationEmailDeliveryOutcome> SendAsync(
         IssuedAuthenticationSecret secret,
         string path,
         string templateName,
@@ -72,20 +93,43 @@ internal sealed class ResendAuthenticationEmailSender : IAuthenticationEmailSend
     {
         ArgumentNullException.ThrowIfNull(secret);
 
-        var link = BuildLink(path, secret.RawToken);
+        return DeliverAsync(
+            secret.RecipientEmail,
+            AuthenticationLinkBuilder.Build(_options.FrontendBaseUrl!, path, secret.RawToken),
+            secret.ExpiresAt,
+            templateName,
+            subject,
+            intro,
+            actionLabel,
+            secondaryAction: null,
+            cancellationToken);
+    }
+
+    private async Task<AuthenticationEmailDeliveryOutcome> DeliverAsync(
+        string recipientEmail,
+        string link,
+        DateTime? expiresAt,
+        string templateName,
+        string subject,
+        string intro,
+        string actionLabel,
+        (string Url, string Label)? secondaryAction,
+        CancellationToken cancellationToken)
+    {
         var rendered = AuthenticationEmailTemplateRenderer.Render(
             templateName,
             intro,
             link,
             actionLabel,
-            secret.ExpiresAt,
-            BuildTemplateOptions(templateName, secret));
+            expiresAt,
+            new AuthenticationEmailTemplateOptions(),
+            secondaryAction);
 
         var result = await ResendEmailTransport.SendAsync(
             _httpClient,
             new ResendEmailMessage(
                 _options.FromAddress,
-                [secret.RecipientEmail],
+                [recipientEmail],
                 subject,
                 rendered.Html,
                 rendered.Text),
@@ -109,15 +153,4 @@ internal sealed class ResendAuthenticationEmailSender : IAuthenticationEmailSend
 
         return AuthenticationEmailDeliveryOutcome.Unavailable;
     }
-
-    private string BuildLink(string path, string rawToken) =>
-        new UriBuilder(new Uri(_options.FrontendBaseUrl!, path))
-        {
-            Query = $"token={Uri.EscapeDataString(rawToken)}"
-        }.Uri.ToString();
-
-    // O contrato visual opcional continua isolado do transporte HTTP partilhado.
-    private static AuthenticationEmailTemplateOptions BuildTemplateOptions(
-        string templateName,
-        IssuedAuthenticationSecret secret) => new();
 }

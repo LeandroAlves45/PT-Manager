@@ -11,5 +11,8 @@ public enum EmailConfirmationStoreStatus
     TokenNotFound,
     TokenExpired,
     TokenAlreadyConsumed,
-    ConcurrencyConflict
+    ConcurrencyConflict,
+
+    /// <summary>Já existe uma confirmação emitida há menos do que o intervalo mínimo; nada foi alterado.</summary>
+    RecentlyIssued
 }

@@ -349,3 +349,18 @@ Lições capturadas depois de correções do utilizador.
 - **Comando longo em segundo plano: `run_in_background`**; `nohup` morre com o shell da
   ferramenta e o log fica sem sumário.
 - **Scripts Node em ficheiro para editar Markdown com crases**; heredocs longos partem o Bash.
+
+## 2026-10-14 — Blueprints 6GA
+
+- **`git apply` respeita `core.autocrlf`**, mesmo fora do repositório: o round-trip em LF
+  usa `git -c core.autocrlf=false apply --recount`.
+- **`node -e` com `\\u0000` dentro de aspas simples do bash escreve um NUL real** no
+  ficheiro. Para o texto da sequência de escape: `String.fromCharCode(92) + "u0000"`. O
+  `GOTCHAS_BACKEND.md` tinha dois NUL assim desde `503d113` (corrigidos).
+- **Reparar texto com script: dry-run primeiro** e confirmar que o delimitador existe; um
+  `indexOf` a -1 truncou o `MEMORY.md` e o `ACTIVE.md` (repostos do git). A corrupção original
+  ("D1 `$` em falta" trocado pelo cabeçalho) é o padrão `$`` de uma substituição com regex.
+- **Blocos de blueprint gerados por script a partir do commit testado**, com notas de mentor
+  escritas à parte em JSON: 163 caminhos com round-trip 163/163, sem copiar código à mão.
+- **Agentes interrompidos por limite de uso podem deixar shells presos** com a worktree como
+  diretório: procurar processos com o caminho antes de `git worktree remove`.

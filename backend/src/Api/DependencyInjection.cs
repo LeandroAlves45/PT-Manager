@@ -4,6 +4,8 @@ using Api.Authorization;
 using Api.Configuration;
 using Api.Http;
 using Api.Security;
+using Infrastructure.Identity;
+using Microsoft.Extensions.Options;
 
 namespace Api;
 
@@ -57,6 +59,9 @@ public static class DependencyInjection
             .ValidateOnStart();
 
         services.AddSingleton<AuthCookieWriter>();
+
+        services.AddSingleton<IValidateOptions<DevelopmentEmailOptions>>(
+            new DevelopmentEmailOptionsValidator(environment));
 
         return services;
     }

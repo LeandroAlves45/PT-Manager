@@ -17,7 +17,7 @@ public sealed class GoogleAuthenticationValidatorTests
     public async Task SignIn_ValidCommand_Passes()
     {
         var result = await _signIn.ValidateAsync(
-            new GoogleSignInCommand("id-token", "nonce", null),
+            new GoogleSignInCommand("id-token", "nonce", null, false),
             TestContext.Current.CancellationToken);
 
         Assert.True(result.IsValid);
@@ -27,7 +27,7 @@ public sealed class GoogleAuthenticationValidatorTests
     public async Task SignIn_EmptyIdToken_Fails()
     {
         var result = await _signIn.ValidateAsync(
-            new GoogleSignInCommand(string.Empty, "nonce", null),
+            new GoogleSignInCommand(string.Empty, "nonce", null, false),
             TestContext.Current.CancellationToken);
 
         Assert.Contains(result.Errors, error =>
@@ -39,7 +39,7 @@ public sealed class GoogleAuthenticationValidatorTests
     {
         // Um pedido sem cookie de challenge chega ao handler com nonce vazio.
         var result = await _signIn.ValidateAsync(
-            new GoogleSignInCommand("id-token", string.Empty, null),
+            new GoogleSignInCommand("id-token", string.Empty, null, false),
             TestContext.Current.CancellationToken);
 
         Assert.Contains(result.Errors, error =>
@@ -50,7 +50,7 @@ public sealed class GoogleAuthenticationValidatorTests
     public async Task SignIn_OversizedIdToken_Fails()
     {
         var result = await _signIn.ValidateAsync(
-            new GoogleSignInCommand(new string('t', 10_001), "nonce", null),
+            new GoogleSignInCommand(new string('t', 10_001), "nonce", null, false),
             TestContext.Current.CancellationToken);
 
         Assert.Contains(result.Errors, error =>
@@ -61,7 +61,7 @@ public sealed class GoogleAuthenticationValidatorTests
     public async Task SignIn_OversizedInvitationToken_Fails()
     {
         var result = await _signIn.ValidateAsync(
-            new GoogleSignInCommand("id-token", "nonce", new string('i', 513)),
+            new GoogleSignInCommand("id-token", "nonce", new string('i', 513), false),
             TestContext.Current.CancellationToken);
 
         Assert.Contains(result.Errors, error =>

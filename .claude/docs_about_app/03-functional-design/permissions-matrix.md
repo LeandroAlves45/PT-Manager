@@ -1,0 +1,29 @@
+# Matriz de permissões
+
+Estado: à espera do teu preenchimento (2026-10-14).
+
+A célula diz o âmbito: «os seus», «os do seu trainer», «todos», «nenhum» ou outra frase tua. Três limites já estão na visão; o resto está por preencher para não transformar a arquitectura numa matriz que ainda não confirmaste operação a operação.
+
+Operações: ver, criar, editar, arquivar, apagar.
+
+| Recurso | trainer | client | superuser | Nota já registada |
+|---|---|---|---|---|
+| Clientes | Os seus: ver, criar, editar e arquivar | Nenhum. A ficha própria está em «Perfil e fotografia do cliente» | Nenhum | O superuser não abre fichas de clientes. Vê contagens, catálogos e moderação. Confirmado em 2026-10-14. |
+| Avaliação inicial | Cria, vê e corrige a dos seus clientes. Vê na dashboard as já gravadas e marca-as como revistas | Preenche a sua uma vez, num cartão no início do portal, se ainda não existir. Depois deixa de a ver | Nenhum | Sem email. Quem ainda não preencheu não entra na lista. Marcar como revista tira-a da lista, com ou sem correcção. Confirmado em 2026-10-14. |
+| Sessões | As suas: ver, criar, editar, concluir, falta e cancelar | Nenhum. Não vê a lista. Recebe o email da véspera | Nenhum | Cancelar pela app do cliente está fora do MVP. O calendário fica com o treinador. Confirmado em 2026-10-14. |
+| Packs | Os seus: criar, atribuir e ver o saldo | Nenhum até ao go-live. Depois vê o valor e o comprovativo, pela `RN-011` | Nenhum | Antes do go-live o portal não ganha página de pack. Confirmado em 2026-10-14. |
+| Planos de treino | Os seus: criar, editar e arquivar. Um activo por cliente | Regista, corrige e apaga o registo do que fez, e conclui o treino, só no dia de hoje. Em dias anteriores só lê, por um filtro de dia, para comparar cargas e repetições, e lê as notas. Esse filtro entra na 6GB e só lista dias já passados do plano activo. A conclusão não se anula. Só o cliente a marca. O treinador vê-a e não a marca. A nota da conclusão fica para o treinador e não se edita depois. Mostrá-la ao treinador entra na 6GB. Não apaga a série do plano | Nenhum | Confirmado em 2026-10-14. A correcção das séries já está no portal e só no dia de hoje, no fuso do treinador. O treinador pode corrigir esses registos, também de dias anteriores. Não os apaga. Só o cliente apaga um registo, e só no treino de hoje. Se o apagar, o treinador pode criar outro registo dessa série. Já é assim na app: apagar fecha ao concluir; registar e corrigir não fecham. |
+| Planos alimentares | Os seus: criar e editar. Pode haver vários para o mesmo cliente | Vê os planos todos e abre o que quiser, mesmo a meio do dia. Vê as metas e as refeições desse plano. Não vê a fórmula. Não marca refeições como feitas | Nenhum | Não ficam presos ao dia. A lista entra na 6GB. Se o escolhido for arquivado, a escolha cai e o cliente volta a escolher entre os activos. A app não abre outro. Confirmado em 2026-10-14. O portal hoje mostra um plano. |
+| Suplementos e tomas | Atribui aos seus clientes, numa refeição de um plano ou nesse plano fora da refeição | Marca e desmarca a toma de hoje, no fuso do treinador, do plano escolhido na alimentação. Não escolhe o plano nesta página | Nenhum | O suplemento pertence a um plano. O treinador não vê as tomas antes do go-live. Confirmado em 2026-10-14. A desmarcação já está no portal. O cliente só vê o dia de hoje. Não há lista de dias anteriores. |
+| Check-ins | Marca, revê e guarda as respostas | Responde à que está para hoje. Não vê o histórico | Nenhum | Depois de enviar, vê a confirmação e a próxima data. Confirmado em 2026-10-14. Coincide com o portal actual. |
+| Marca e logótipo | Edita a sua | Vê a do seu treinador | Nenhum | Só o treinador edita nome, cores e logótipo. Confirmado em 2026-10-14. Coincide com `TrainerSettingsController`. |
+| Subscrição | Gere a sua no pagamento. No convite de isenção, escolhe a password e entra já no Pro | Nenhum | Pode isentar, tirar a isenção e convidar um email ainda não registado | Convite de uso único, expira em 7 dias, sem pagamento. Email já registado é recusado. Link expirado pede outro envio. Link já usado manda entrar com a conta. Link inválido diz só que o convite não serve, sem revelar se o email existe. Um convite novo anula o anterior. Confirmado em 2026-10-14. |
+| Perfil e fotografia do cliente | Altera nome, telefones, email de contacto da ficha, data de nascimento, sexo, objectivo e notas. Vê a fotografia aceite. Não a muda | Altera o próprio nome, o seu telefone, e o nome e o telefone de emergência. Não vê nem altera emails. Muda a fotografia | Nenhum | Data de nascimento, sexo, objectivo e notas ficam só com o treinador. O acerto do nome e dos emails entra na 6GB. O nome é obrigatório. O telefone do cliente, o nome de emergência e o telefone de emergência podem ficar vazios. Confirmado em 2026-10-14. Hoje o portal ainda deixa mudar o email de contacto e não deixa mudar o nome. |
+| Catálogos globais | Vê. Não altera | Nenhum. Só vê o que está no plano | Cria, altera e arquiva | O cliente não consulta catálogos. Confirmado em 2026-10-14. |
+| Moderação | Nenhum | Nenhum | Bloqueia alimentos, exercícios, suplementos e treinadores | Nota livre e prazo de 7 dias na `RN-013`. |
+| Biblioteca privada | A sua: cria e altera. Não vê a de outro | Nenhum. Só vê o que está no plano | Não edita a biblioteca. Pode bloquear, pela `RN-013` | Confirmado em 2026-10-14. |
+| Comprovativo (futuro) | Valida, recusa, ou activa sem comprovativo com nota no histórico dele | Vê o valor, envia o comprovativo e vê a recusa no painel | Nenhum | Depois do go-live, pela `RN-011`. Até lá o cliente não vê o pack. |
+
+Confirma ou corrige a nota da primeira linha.
+
+**A tua resposta:** por preencher

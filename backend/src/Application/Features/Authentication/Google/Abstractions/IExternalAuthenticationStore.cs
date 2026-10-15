@@ -7,6 +7,7 @@ public interface IExternalAuthenticationStore
         VerifiedExternalIdentity identity,
         string rawNonce,
         string? rawInvitationToken,
+        bool createAccount,
         DateTime trialEndsAt,
         DateTime confirmationExpiresAt,
         DateTime refreshExpiresAt,

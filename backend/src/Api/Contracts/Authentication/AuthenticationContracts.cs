@@ -8,6 +8,15 @@ public sealed record LoginRequest(string Email, string Password);
 /// <summary>Registo de um novo personal trainer.</summary>
 public sealed record SignUpRequest(string Email, string Password, string FullName);
 
+/// <summary>Email para o qual é pedido um novo link de confirmação.</summary>
+public sealed record EmailConfirmationRequest(string Email);
+
+/// <summary>Registo de um cliente convidado: cria a conta e abre a sessão.</summary>
+public sealed record InvitedClientRegistrationRequest(
+    string Token,
+    string Password,
+    string ConfirmPassword);
+
 /// <summary>Token de confirmação de email.</summary>
 public sealed record ConfirmEmailRequest(string Token);
 
@@ -68,23 +77,26 @@ public sealed record CsrfResponse(string CsrfToken)
     }
 }
 
-/// <summary>Identificador do personal trainer registado.</summary>
-public sealed record SignUpResponse(
-    Guid UserId,
-    Guid TrainerId,
-    string Email,
-    DateTime TrialEndsAt
-)
+/// <summary>
+/// Resposta única do signup. Não distingue email novo de email já registado: o resultado
+/// só se vê na caixa de correio.
+/// </summary>
+public sealed record SignUpAcceptedResponse(string Status)
 {
-    public static SignUpResponse From(RegisteredTrainerDto dto)
+    public const string ConfirmationEmailSent = "confirmation_email_sent";
+}
+
+/// <summary>Email, role e métodos de entrada da conta autenticada.</summary>
+public sealed record AccountResponse(
+    string Email,
+    string Role,
+    bool HasPassword,
+    bool GoogleLinked)
+{
+    public static AccountResponse From(AccountSecurityDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
 
-        return new(
-            dto.UserId,
-            dto.TrainerId,
-            dto.Email,
-            dto.TrialEndsAt
-        );
+        return new(dto.Email, dto.Role, dto.HasPassword, dto.GoogleLinked);
     }
 }

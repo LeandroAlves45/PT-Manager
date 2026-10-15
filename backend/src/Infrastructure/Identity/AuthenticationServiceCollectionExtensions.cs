@@ -31,6 +31,7 @@ internal static class AuthenticationServiceCollectionExtensions
         services.AddScoped<IAuthenticationRegistrationStore, AuthenticationRegistrationStore>();
         services.AddScoped<IAuthenticationSessionStore, AuthenticationSessionStore>();
         services.AddScoped<IClientInvitationStore, ClientInvitationStore>();
+        services.AddScoped<IAccountSecurityQueries, AccountSecurityQueries>();
         services.AddScoped<IEmailConfirmationStore, EmailConfirmationStore>();
         services.AddScoped<IPasswordResetRequestStore, PasswordResetRequestStore>();
         services.AddScoped<IPasswordManagementStore, PasswordManagementStore>();
@@ -68,7 +69,21 @@ internal static class AuthenticationServiceCollectionExtensions
             )
             .ValidateOnStart();
 
-        services.AddHttpClient<IAuthenticationEmailSender, ResendAuthenticationEmailSender>(
+        // A validação corre sempre: o validador da Api recusa LogLinks fora de Development.
+        services.AddOptions<DevelopmentEmailOptions>()
+            .Bind(configuration.GetSection(DevelopmentEmailOptions.SectionName))
+            .ValidateOnStart();
+
+        // As opções do Resend continuam obrigatórias: o gateway de notificações usa-as.
+        var logLinks = configuration.GetValue<bool>(
+            $"{DevelopmentEmailOptions.SectionName}:{nameof(DevelopmentEmailOptions.LogLinks)}");
+        if (logLinks)
+        {
+            services.AddSingleton<IAuthenticationEmailSender, LoggingAuthenticationEmailSender>();
+        }
+        else
+        {
+            services.AddHttpClient<IAuthenticationEmailSender, ResendAuthenticationEmailSender>(
             (provider, client) =>
             {
                 var options = provider
@@ -83,6 +98,7 @@ internal static class AuthenticationServiceCollectionExtensions
             .ConfigureHttpClient(client =>
                 client.DefaultRequestHeaders.Accept.Add(
                     new MediaTypeWithQualityHeaderValue("application/json")));
+        }
 
         // A API da Resend espera "from", "to", "subject" e "html" em
         // minúsculas. Sem estas opções, PostAsJsonAsync usa o nome PascalCase da

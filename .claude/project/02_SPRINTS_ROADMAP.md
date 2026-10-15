@@ -396,7 +396,7 @@ moderação de alimentos e exercícios privados.
    - Portas provider-neutral na Application e `Google.Apis.Auth` apenas em Infrastructure
    - Identidade externa por `provider + subject`; linking nunca é automático por email
    - Implementação real concluída em 2026-09-06; migration local aplicada;
-     `QG5-FRONTEND-001` obrigatório no frontend do Sprint 6 (fecha na Fase 6G,
+     `QG5-FRONTEND-001` obrigatório no frontend do Sprint 6 (fecha na Fase 6GA,
      Auth UX)
 
 ### Deliverables
@@ -730,7 +730,7 @@ acima de 100 registos; suite completa verde.
    `nuqs`, mapeamento de ProblemDetails.
 6. Sessão no browser: access token e CSRF em memória, arranque `csrf → refresh`, refresh
    single-flight serializado entre separadores, guards por role. Login **mínimo** de
-   desenvolvimento (a página final fica para a 6G).
+   desenvolvimento (a página final fica para a 6GA).
 7. Vite local em HTTPS e origem em `Cors:AllowedOrigins` (User Secrets de Development).
 8. **Backend — seed de desenvolvimento** idempotente e só em Development: superuser,
    trainer com subscrição de teste, clientes ligados ao trainer e dados para todas as
@@ -784,13 +784,49 @@ campos, isolamento entre dois trainers do seed verificado na UI.
 Gate 6F: utilizável a 375px; marca do trainer não quebra contraste AA; o cliente só vê e
 regista dados próprios.
 
-### Sprint 6G: Frontend — Auth UX
+### Sprint 6G: Auth UX (6GA) e análise visual (6GB)
 
-- Login final, signup de trainer, confirmação de email, recuperação e mudança de password,
-  aceitação de convite e primeiro acesso do cliente, Google Sign-In e linking.
+Dividido em 2026-10-14 em duas fases. Plano em
+`docs/blueprints/frontend-files/sprint_6/sprint_6G/00_plano_sprint_6G.md`.
 
-Gate 6G: fecha `QG5-FRONTEND-001`; mensagens de erro de auth não permitem enumeração de
-contas; rate limits (429) tratados sem loops.
+**6GA — Auth UX** (depende da 6C):
+- Login final (`/entrar`), signup de trainer, confirmação de email e reenvio, recuperação,
+  reposição e mudança de password, aceitação de convite com palavra-passe ou Google e primeiro
+  acesso do cliente, Google Sign-In (entrar, criar conta, ligar), página 404 personalizada e
+  "Conta e segurança" nos três papéis.
+- Ajustes de backend sem migration: signup sem enumeração (202), reenvio da confirmação pelo
+  email, registo do cliente por convite com palavra-passe, `GET /auth/account`,
+  `create_account` no Google e email de desenvolvimento escrito no log.
+
+Gate 6GA: fecha `QG5-FRONTEND-001`; mensagens de erro de auth não permitem enumeração de
+contas; rate limits (429) tratados sem loops (`QG6GA-*`).
+
+**6GB — Análise visual e correção** (depende da 6F e da 6GA). Divide-se em 6GB-1, correção visual dos prints, e 6GB-2, mudanças de produto. A data de validade do convite na ficha do cliente entra na 6GB-2, não na 6GA (2026-10-15).
+- Revisão visual de admin, trainer, cliente e auth, a partir dos prints do Leandro, e correção
+  dos defeitos registados (P1/P2 obrigatórios; P3 por decisão).
+
+Gate 6GB: lista fechada com o portal incluído (`QG6GB-LISTA-001`); todos os P1 e P2 corrigidos
+e verificados no browser (`QG6GB-GATE-001`).
+
+Na 6GB entram também, por decisão de produto de 2026-10-14: o nome «Avaliações»; os planos
+em página; o perfil do cliente com nome editável e sem campo de email; a lista de planos
+alimentares, com a escolha guardada na conta; e os cartões da dashboard sem edição. Na mesma fase, o treinador passa a ver a nota que o cliente escreveu ao concluir o treino. Essa nota já fica gravada e não se edita. Na mesma fase, a página de treino do cliente ganha um filtro de dia: dias anteriores só se lêem, para comparar cargas e repetições. O
+detalhe está em `.claude/docs_about_app/`.
+
+### Bloco de produto entre a 6GB e o Sprint 7
+
+Decisão de 2026-10-14. Entra logo após o Gate 6GB e antes do Sprint 7, por esta ordem:
+avaliação inicial preenchida pelo cliente; email da sessão na véspera; resto do arquivo
+do cliente; no fim, juntos, o painel do superuser, o bloqueio de treinadores e a isenção
+de pagamento. As quatro partes são obrigatórias. Se o tempo apertar, o Sprint 7 espera.
+Há um gate no fim do bloco: o Sprint 7 só começa quando as quatro partes estão feitas.
+O gate da 6GB fica separado e fecha a revisão visual. O bloco começa depois da 6GB.
+Os gates manuais com login da 6D, 6E e 6F continuam abertos como risco. O bloco não espera por eles.
+Esse gate do bloco prova o envio do email da sessão. O horário de 20 em 20 minutos só liga no
+Sprint 9. Até lá o email não sai sozinho em produção. O Sprint 7 mede a app já com estas
+regras. O Sprint 8 testa-as. O Sprint 9
+só liga o horário do email. O detalhe está em `.claude/docs_about_app/`, regras `RN-005`,
+`RN-008`, `RN-013`, `RN-016`, `RN-018` e `RN-020`.
 
 ### Fora do Sprint 6 (decisão de 2026-09-16)
 
@@ -999,6 +1035,10 @@ Deploy no Render free tier, validação final, documentação de handoff.
    - CORS restrito às origens Vercel de produção
    - `Microsoft.AspNetCore.RateLimiting` ativo em login/signup/recuperação de conta
    - JWT secret gerado, mínimo 32 caracteres
+   - CSP da SPA em `frontend/vercel.json` (decisão U36 da 6GA): primeiro
+     `Content-Security-Policy-Report-Only`, depois bloquear; inclui as regras do Google
+     Identity Services (`script-src`, `frame-src`, `connect-src`, `style-src` para
+     `https://accounts.google.com/gsi/`) — lista exata em `sprint_6GA/01`
 
 5. **Documentação + Handoff**
    - Runbook de debugging em produção
@@ -1127,8 +1167,9 @@ arquitectura enquanto não existir uma decisão canónica que os substitua.
 | 5-6 | Sprint 3 | Application | Handlers + DTOs + Validators por feature |
 | 7-8 | Sprint 4 | API + Moderação + Google | Finalizado em 2026-09-06; Fases 1 a 6 aprovadas e 1907 testes verdes |
 | 9+ | Sprint 5 | Execução durável + Billing + Media | Gates 5A a 5D; duração reestimada no fecho do Sprint 4 |
-| Após 5D | Sprint 6 | Backend de suporte + Frontend | 6A–6B backend (escrita/schema, leituras agregadas); 6C–6G frontend: fundações, admin, trainer, cliente, auth UX; seed, health checks e CI mínimo |
-| Após 6G | Sprint 7 | Observabilidade + decisão Redis | Gate 7A mede; Gate 7B decide e implementa se necessário |
+| Após 5D | Sprint 6 | Backend de suporte + Frontend | 6A–6B backend (escrita/schema, leituras agregadas); 6C–6G frontend: fundações, admin, trainer, cliente, 6GA auth UX e 6GB análise visual; seed, health checks e CI mínimo |
+| Após 6GB | Bloco de produto | Antes do Sprint 7 | Avaliação inicial pelo cliente; email da sessão; arquivo; no fim, painel, bloqueio e isenção |
+| Após esse bloco | Sprint 7 | Observabilidade + decisão Redis | Gate 7A mede a app já com o bloco; Gate 7B decide e implementa se necessário |
 | Após 7B | Sprint 8 | Testing + CI/CD | Suite crítica + architecture tests + CI |
 | Após 8 | Sprint 9 | Produção | Deploy Render free + Vercel, QStash produção, docs |
 | Pós-MVP | Sprint 10 | Backlog governado | Trust & Safety, escala, produto, compliance e contratos por critérios de entrada |
@@ -1148,8 +1189,9 @@ arquitectura enquanto não existir uma decisão canónica que os substitua.
 | Backend do layout | 6A–6B | Após Gate 5D | RPE, porção, séries e tomas pelo cliente, check-in revisto; dashboard, resumo do cliente, fila de moderação |
 | Fundações frontend | 6C | Após Gate 6B | Shell, sessão cookie + CSRF, cliente gerado, seed, health checks, CI mínimo |
 | Frontend por role | 6D–6F | Gates 6D–6F | Admin, trainer e portal do cliente completos |
-| Auth UX | 6G | Gate 6G | Fluxos de auth finais; `QG5-FRONTEND-001` fechado |
-| Observabilidade | 7A | Após Gate 6G | Logs, Sentry, OpenTelemetry e métricas operacionais |
+| Auth UX | 6GA | Gate 6GA | Fluxos de auth finais; `QG5-FRONTEND-001` fechado |
+| Revisão visual | 6GB | Gate 6GB | Defeitos visuais P1/P2 de todos os papéis corrigidos |
+| Observabilidade | 7A | Após o bloco de produto | Logs, Sentry, OpenTelemetry e métricas operacionais |
 | Decisão Redis | 7B | Gate 7B | Implementar com consumidor medido ou diferir explicitamente para 10B |
 | Testes | 8 | Após Gate 7B | Suite crítica, architecture tests e CI verde |
 | Go-live | 9 | Após Sprint 8 | Deploy em produção no Render free tier e Vercel |

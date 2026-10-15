@@ -3,6 +3,7 @@ using Application.Features.Authentication.Abstractions;
 using Domain.Entities.Identity;
 using Domain.ValueObjects;
 using Infrastructure.Data;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Identity;
@@ -13,15 +14,21 @@ internal sealed class ClientInvitationStore : IClientInvitationStore
     private readonly PtManagerDbContext _dbContext;
     private readonly IOpaqueTokenService _tokens;
     private readonly ITenantContext _tenantContext;
+    private readonly ITenantContextInitializer _tenantInitializer;
+    private readonly UserManager<User> _userManager;
 
     public ClientInvitationStore(
         PtManagerDbContext dbContext,
         IOpaqueTokenService tokens,
-        ITenantContext tenantContext)
+        ITenantContext tenantContext,
+        ITenantContextInitializer tenantInitializer,
+        UserManager<User> userManager)
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
         _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
+        _tenantInitializer = tenantInitializer ?? throw new ArgumentNullException(nameof(tenantInitializer));
+        _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
     }
 
     public async Task<IssueClientInvitationStoreResult> IssueAsync(
@@ -158,6 +165,152 @@ internal sealed class ClientInvitationStore : IClientInvitationStore
                 refreshExpiresAt,
                 now,
                 cancellationToken);
+        });
+    }
+
+    public async Task<RegisterInvitedClientStoreResult> RegisterClientAsync(
+        string rawToken,
+        string password,
+        DateTime refreshExpiresAt,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var hash = _tokens.Hash(rawToken);
+
+        // Leitura sem bloqueio só para construir o utilizador e estabelecer o tenant uma
+        // única vez, fora do delegate repetível. Todas as decisões são retomadas, com
+        // bloqueio, dentro da transação.
+        var preview = await _dbContext.InviteTokens
+            .AsNoTracking()
+            .Where(token => token.TokenHash == hash)
+            .Join(_dbContext.Clients.IgnoreQueryFilters().AsNoTracking(),
+                token => token.ClientId,
+                client => client.Id,
+                (token, client) => new { token.Email, token.TrainerId, client.Name })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (preview is null)
+            return RegisterInvitedClientStoreResult.For(
+                RegisterInvitedClientStoreStatus.TokenNotFound);
+
+        // O link do convite prova a posse do email: a conta nasce confirmada.
+        var email = new EmailAddress(preview.Email);
+        var user = new User(email, "client", preview.Name, now);
+        user.ConfirmEmail(now);
+        _tenantInitializer.Establish(
+            preview.TrainerId,
+            user.Id,
+            "client",
+            TenantOrigin.System,
+            false);
+
+        var generated = _tokens.Generate();
+        var csrf = _tokens.Generate();
+        var strategy = _dbContext.Database.CreateExecutionStrategy();
+        var attempt = 0;
+
+        return await strategy.ExecuteAsync(async () =>
+        {
+            attempt++;
+
+            // Confirma um commit ambíguo antes de repetir a escrita: o refresh token
+            // emitido é único por chamada e prova o sucesso anterior.
+            if (attempt > 1)
+            {
+                _dbContext.ChangeTracker.Clear();
+                var stamp = await _dbContext.Users
+                    .AsNoTracking()
+                    .Where(candidate => candidate.Id == user.Id &&
+                        _dbContext.RefreshTokens.Any(token =>
+                            token.UserId == candidate.Id &&
+                            token.TokenHash == generated.TokenHash))
+                    .Select(candidate => candidate.SecurityStamp)
+                    .SingleOrDefaultAsync(cancellationToken);
+                if (stamp is not null)
+                    return RegisterInvitedClientStoreResult.Registered(
+                        new AuthenticatedPrincipal(user.Id, preview.TrainerId, "client", stamp),
+                        new IssuedRefreshSession(generated.RawToken, csrf.RawToken, refreshExpiresAt));
+            }
+
+            await using var transaction = await _dbContext.Database
+                .BeginTransactionAsync(cancellationToken);
+
+            var invite = await _dbContext.InviteTokens
+                .FromSqlInterpolated(
+                    $"SELECT * FROM invite_tokens WHERE token_hash = {hash} FOR UPDATE")
+                .SingleOrDefaultAsync(cancellationToken);
+            if (invite is null)
+                return RegisterInvitedClientStoreResult.For(
+                    RegisterInvitedClientStoreStatus.TokenNotFound);
+            if (invite.ExpiresAt <= now)
+                return RegisterInvitedClientStoreResult.For(
+                    RegisterInvitedClientStoreStatus.TokenExpired);
+            if (invite.UsedAt is not null)
+                return RegisterInvitedClientStoreResult.For(
+                    RegisterInvitedClientStoreStatus.TokenAlreadyConsumed);
+
+            if (await _dbContext.Users.AnyAsync(
+                candidate => candidate.NormalizedEmail == email.Normalized,
+                cancellationToken))
+                return RegisterInvitedClientStoreResult.For(
+                    RegisterInvitedClientStoreStatus.AccountAlreadyExists);
+
+            var client = await _dbContext.Clients
+                .FromSqlInterpolated(
+                    $"SELECT * FROM clients WHERE owner_trainer_id = {invite.TrainerId} AND id = {invite.ClientId} FOR UPDATE")
+                .IgnoreQueryFilters()
+                .SingleOrDefaultAsync(cancellationToken);
+            // O contacto da ficha pode ter mudado depois do convite: um convite antigo não
+            // cria uma conta com o email desatualizado.
+            if (client is null || client.IsDeleted || !client.IsActive || client.UserId.HasValue ||
+                client.NormalizedContactEmail != email.Normalized)
+                return RegisterInvitedClientStoreResult.For(
+                    RegisterInvitedClientStoreStatus.RelationshipConflict);
+
+            var created = await _userManager.CreateAsync(user, password);
+            if (!created.Succeeded)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return RegisterInvitedClientStoreResult.For(created.IsOnlyDuplicateAccount()
+                    ? RegisterInvitedClientStoreStatus.AccountAlreadyExists
+                    : RegisterInvitedClientStoreStatus.PasswordRejected);
+            }
+
+            client.AttachUser(user.Id, now);
+            invite.MarkUsed(now);
+            _dbContext.RefreshTokens.Add(new RefreshToken(
+                user.Id,
+                Guid.NewGuid(),
+                generated.TokenHash,
+                csrf.TokenHash,
+                null,
+                refreshExpiresAt,
+                now
+            ));
+
+            try
+            {
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return RegisterInvitedClientStoreResult.For(
+                    RegisterInvitedClientStoreStatus.ConcurrencyConflict);
+            }
+            catch (DbUpdateException)
+            {
+                return RegisterInvitedClientStoreResult.For(
+                    RegisterInvitedClientStoreStatus.RelationshipConflict);
+            }
+
+            return RegisterInvitedClientStoreResult.Registered(
+                new AuthenticatedPrincipal(
+                    user.Id,
+                    invite.TrainerId,
+                    "client",
+                    user.SecurityStamp),
+                new IssuedRefreshSession(generated.RawToken, csrf.RawToken, refreshExpiresAt));
         });
     }
 

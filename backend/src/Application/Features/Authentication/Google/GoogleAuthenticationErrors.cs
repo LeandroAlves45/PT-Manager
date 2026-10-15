@@ -10,6 +10,11 @@ public static class GoogleAuthenticationErrors
         ErrorCategory.Unauthorized,
         "The Google credential or challenge is invalid or expired.");
 
+    public static readonly Error AccountNotFound = Error.Create(
+        "google_account_not_found",
+        ErrorCategory.Unauthorized,
+        "No PT Manager account exists for this Google identity.");
+
     public static readonly Error ProviderUnavailable = Error.Create(
         "google_provider_unavailable",
         ErrorCategory.ExternalDependency,

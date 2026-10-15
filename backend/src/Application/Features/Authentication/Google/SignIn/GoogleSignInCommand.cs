@@ -4,4 +4,5 @@ namespace Application.Features.Authentication.Google.SignIn;
 public sealed record GoogleSignInCommand(
     string IdToken,
     string RawNonce,
-    string? InvitationToken);
+    string? InvitationToken,
+    bool CreateAccount);

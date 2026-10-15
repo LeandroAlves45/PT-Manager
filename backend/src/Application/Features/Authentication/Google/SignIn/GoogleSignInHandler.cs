@@ -61,6 +61,7 @@ public sealed class GoogleSignInHandler
             verified.Value,
             command.RawNonce,
             string.IsNullOrWhiteSpace(command.InvitationToken) ? null : command.InvitationToken,
+            command.CreateAccount,
             now.AddDays(_policy.TrialDays),
             now.Add(_policy.EmailConfirmationLifetime),
             now.Add(_policy.RefreshSessionLifetime),
@@ -99,6 +100,7 @@ public sealed class GoogleSignInHandler
         {
             GoogleSignInStoreStatus.ChallengeInvalid => GoogleAuthenticationErrors.InvalidCredential,
             GoogleSignInStoreStatus.AccountLinkRequired => GoogleAuthenticationErrors.AccountLinkRequired,
+            GoogleSignInStoreStatus.AccountNotFound => GoogleAuthenticationErrors.AccountNotFound,
             GoogleSignInStoreStatus.AccountInactive => AuthenticationErrors.AccountInactive,
             GoogleSignInStoreStatus.RelationshipInactive => AuthenticationErrors.RelationshipConflict,
             GoogleSignInStoreStatus.InvitationInvalid => AuthenticationErrors.InvitationInvalid,
