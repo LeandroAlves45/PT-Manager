@@ -69,7 +69,7 @@ export function InviteAcceptance({ token }: { token: string }) {
       <LinkProblemPanel
         title="Convite indisponível"
         message={terminal}
-        actions={[{ to: homeRouteFor('client'), label: 'Voltar à página inicial' }]}
+        actions={[{ to: homeRouteFor('client'), label: 'Voltar ao início' }]}
       />
     );
 

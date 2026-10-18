@@ -6,6 +6,13 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-18: Sprint 6GA, frontend FINALIZADO (revisão no checkout real).**
+- Vitest 723/723 (era 700), lint/typecheck/Prettier/build verdes, backend intocado. 5 defeitos: retorno
+  `/.//host`, U+0000 no `full_name`, símbolo só ASCII vs Identity Unicode, corrida do nonce Google
+  (`AbortController`), copy. `design-is` 20/30 REFINE; CSP no Sprint 9 §4.
+- Faltam `QG6GA-GATE-001..004` e `QG6GA-CI-001` (Google/HTTPS/CI reais, Leandro).
+- Ver `Sessions/2026-10-18-sprint6ga-frontend-revisao-fecho.md`.
+
 **2026-10-15: Sprint 6GA, backend FINALIZADO (revisão no checkout real).**
 - 3164 + 1 skip, 0 avisos, sem migration. A1: `FullName` sem `WithoutNullCharacter` (500 e
   oráculo de enumeração); A2 cooldown 60 s no reenvio; A4 convite vs contacto da ficha. A3 e A5

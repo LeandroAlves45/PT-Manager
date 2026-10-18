@@ -81,6 +81,14 @@ describe('ConfirmEmailPage', () => {
     expect(screen.getByRole('link', { name: 'Entrar' })).toHaveAttribute('href', '/entrar');
   });
 
+  it('shows a connection message on network failure and still offers a new email', async () => {
+    server.use(http.post(`${API}/auth/confirm-email`, () => HttpResponse.error()));
+    renderApp({ initialEntries: ['/confirmar-email?token=abc'] });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível contactar');
+    expect(screen.getByRole('link', { name: 'Pedir um novo email' })).toBeInTheDocument();
+  });
+
   it('explains an inactive account', async () => {
     answerWith(403, 'authentication_account_inactive');
     renderApp({ initialEntries: ['/confirmar-email?token=abc'] });

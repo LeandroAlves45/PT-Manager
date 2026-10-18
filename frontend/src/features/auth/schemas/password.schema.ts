@@ -18,7 +18,8 @@ export const newPasswordRule = z
   .regex(/[A-Z]/, 'Inclui pelo menos uma letra maiúscula.')
   .regex(/[a-z]/, 'Inclui pelo menos uma letra minúscula.')
   .regex(/\d/, 'Inclui pelo menos um número.')
-  .regex(/[^A-Za-z0-9]/, 'Inclui pelo menos um símbolo.');
+  // Símbolo = `!char.IsLetterOrDigit` do Identity (Unicode): "ç" é letra, não conta.
+  .regex(/[^\p{L}\p{Nd}]/u, 'Inclui pelo menos um símbolo.');
 
 const MISMATCH = 'As palavras-passe não coincidem.';
 

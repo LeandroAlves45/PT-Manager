@@ -59,8 +59,8 @@ export function GoogleSignInSection({
 
       setSession(outcome.session);
       onSignedIn(outcome.session);
-    } catch (error) {
-      setFailure(authErrorMessage(error));
+    } catch (caught) {
+      setFailure(authErrorMessage(caught));
     }
   }
 

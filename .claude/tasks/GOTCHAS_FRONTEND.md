@@ -346,3 +346,10 @@ com um corpo real.
   (StrictMode chama o initializer duas vezes). Nunca `setTimeout(0)` para ganhar ao guard.
 - Rota nova dentro do `AppShell` precisa de rótulo em `Breadcrumbs.tsx`, senão aparece o
   segmento cru (apanhado só na verificação visual).
+
+## 2026-10-18 — Fecho 6GA: Unicode, nonce e retorno
+
+- Símbolo da palavra-passe: `/[^p{L}p{Nd}]/u`, igual a `!char.IsLetterOrDigit`.
+- `getReturnPath`: rejeitar pathname `//…` mesmo com a origem igual.
+- `useGoogleIdentity`: `AbortController` no efeito; challenge e cookie têm de corresponder ao último pedido.
+- `full_name`: `refine` contra `[ -]` (com `eslint-disable no-control-regex`).

@@ -27,6 +27,8 @@ describe('newPasswordRule', () => {
     ['SEMMINUSCULA1!', 'Inclui pelo menos uma letra minúscula.'],
     ['SemNumero!!', 'Inclui pelo menos um número.'],
     ['SemSimbolo123', 'Inclui pelo menos um símbolo.'],
+    // Letra acentuada não é símbolo para o Identity (`char.IsLetterOrDigit`).
+    ['SemSimboloç123', 'Inclui pelo menos um símbolo.'],
     [`Aa1!${'x'.repeat(125)}`, 'A palavra-passe deve conter no máximo 128 caracteres.'],
   ])('rejects %j', (value, message) => {
     expect(firstMessage(newPasswordRule.safeParse(value))).toBe(message);

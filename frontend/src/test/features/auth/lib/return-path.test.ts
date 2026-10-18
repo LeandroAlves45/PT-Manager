@@ -14,6 +14,7 @@ describe('getReturnPath', () => {
     '//evil.example/phish',
     '/\\evil.example',
     '/\\/evil.example',
+    '/.//evil.example',
     'https://evil.example/phish',
     'javascript:alert(1)',
     'trainer',

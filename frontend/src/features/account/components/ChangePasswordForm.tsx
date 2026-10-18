@@ -52,7 +52,7 @@ export function ChangePasswordForm() {
     try {
       await change.mutateAsync(values);
       // O servidor revogou as sessões. Quem leva ao login é o `RequireAuth`, ao ver a sessão
-      // acabar; ele não leva avisos no state, por isso o aviso vai por um flash em memoria.
+      // acabar; ele não leva avisos no state, por isso o aviso vai por um flash em memória.
       setPendingAuthNotice('Palavra-passe alterada. Entra com a nova.');
       endLocalSession(queryClient);
     } catch (failure) {

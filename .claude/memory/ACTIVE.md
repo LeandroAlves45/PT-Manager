@@ -1,12 +1,17 @@
 # Estado ativo: Sprint 6G. 6GA (Auth UX) com blueprints validados, por aplicar; 6GB (análise visual) registada
 
-Atualizado: 2026-10-14
+Atualizado: 2026-10-18
 
 ## Sprint 6G: 6GA Auth UX + 6GB análise visual e correção
 
 **Ler primeiro** `docs/blueprints/frontend-files/sprint_6/sprint_6G/00_plano_sprint_6G.md`
 (divisão, gates, lista da 6GB) e, para aplicar, `sprint_6G/sprint_6GA/01_indice_decisoes_e_ordem.md`.
 
+- **6GA frontend FINALIZADO (2026-10-18).** Revisão do commit `5022f4c`: manifest conforme, 5 defeitos
+  corrigidos (retorno `//host`, U+0000 no nome, símbolo Unicode, corrida do challenge Google, copy),
+  Vitest 723/723, `design-is` 20/30 REFINE. Relatório `sprint_6GA/13`. Faltam só `QG6GA-GATE-001..004` e
+  `QG6GA-CI-001` (Leandro). **Próximo:** 6GB; no arranque, ler `.claude/docs_about_app/` e dizer o que se vai
+  ajustar antes de o fazer.
 - **6GA backend FINALIZADO (2026-10-15).** Docs 02–04 aplicados e revistos no checkout real:
   3164 + 1 skip, 0 avisos, defeitos A1/A2/A4 corrigidos, `schema.d.ts` regenerado. Faltam o
   frontend (docs 05–10), gates manuais `QG6GA-GATE-001..004` e CI. Relatório `sprint_6GA/12`.

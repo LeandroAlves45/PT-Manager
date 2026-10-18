@@ -32,7 +32,7 @@ export function useChangePasswordMutation() {
   });
 }
 
-/** Liga a conta Google (id_token do GIS) á conta local, confirmando a palavra-passe. */
+/** Liga a conta Google (id_token do GIS) à conta local, confirmando a palavra-passe. */
 export function useLinkGoogleMutation() {
   const queryClient = useQueryClient();
 

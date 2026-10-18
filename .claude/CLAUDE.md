@@ -19,6 +19,8 @@ Regenerar no fecho de cada Sprint — ver `.claude/project/sprints/GRAPHIFY.md`.
 2. `.claude/memory/ACTIVE.md` — fase activa e sub-lote
 3. Sprint Pack em `.claude/project/sprints/`
 4. Skill `sprint-context` para plan, blueprint ou review
+5. `.claude/docs_about_app/` — no início de cada sprint, ler e comparar com o plano; se for preciso ajustar ou
+   atualizar algo, **dizer primeiro ao utilizador o que vai mudar** e só então alterar
 
 ## Memória
 

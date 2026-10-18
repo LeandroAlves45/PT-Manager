@@ -13,7 +13,9 @@ export function getReturnPath(state: unknown): string | null {
   if (typeof from !== 'string' || !from.startsWith('/')) return null;
 
   const target = new URL(from, window.location.origin);
-  return target.origin === window.location.origin
+  // `/.//host` resolve para a mesma origem mas com pathname `//host`, que um `navigate` voltaria
+  // a tratar como relativo ao protocolo.
+  return target.origin === window.location.origin && !target.pathname.startsWith('//')
     ? `${target.pathname}${target.search}${target.hash}`
     : null;
 }

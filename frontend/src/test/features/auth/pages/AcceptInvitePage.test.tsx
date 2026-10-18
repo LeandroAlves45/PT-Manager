@@ -124,6 +124,72 @@ describe('AcceptInvitePage', () => {
       expect(screen.getByRole('alert')).toHaveTextContent('Este convite já foi usado.');
       expect(screen.queryByLabelText('Palavra-passe')).not.toBeInTheDocument();
     });
+
+    it.each([
+      [
+        'authentication_invitation_expired',
+        401,
+        'O convite expirou. Pede um novo ao teu personal trainer.',
+      ],
+      ['authentication_invitation_invalid', 401, 'O convite não é válido.'],
+      [
+        'authentication_relationship_conflict',
+        409,
+        'Não foi possível associar a tua conta a este personal trainer. Contacta-o para resolver.',
+      ],
+    ])(
+      'ends on an unavailable screen for %s (retrying cannot help)',
+      async (code, status, text) => {
+        server.use(
+          http.post(`${API}/auth/accept-invite/register`, () =>
+            HttpResponse.json(problem(code), { status })
+          )
+        );
+        renderApp({ initialEntries: [INVITE] });
+
+        await register();
+
+        expect(await screen.findByRole('alert')).toHaveTextContent(text);
+        expect(screen.queryByLabelText('Palavra-passe')).not.toBeInTheDocument();
+      }
+    );
+
+    it('keeps the form and shows the server password rule on the field', async () => {
+      server.use(
+        http.post(`${API}/auth/accept-invite/register`, () =>
+          HttpResponse.json(
+            problem('validation_failed', {
+              errors: [
+                {
+                  field: 'Password',
+                  code: 'authentication_new_password_rejected',
+                  message: 'rejected',
+                },
+              ],
+            }),
+            { status: 400 }
+          )
+        )
+      );
+      renderApp({ initialEntries: [INVITE] });
+
+      await register();
+
+      expect(
+        await screen.findByText('A nova palavra-passe não é aceite. Escolhe outra.')
+      ).toBeInTheDocument();
+      expect(screen.getByLabelText('Palavra-passe')).toBeInTheDocument();
+    });
+
+    it('keeps the form and shows a connection message when the network fails', async () => {
+      server.use(http.post(`${API}/auth/accept-invite/register`, () => HttpResponse.error()));
+      renderApp({ initialEntries: [INVITE] });
+
+      await register();
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível contactar');
+      expect(screen.getByLabelText('Palavra-passe')).toBeInTheDocument();
+    });
   });
 
   describe('authenticated client', () => {

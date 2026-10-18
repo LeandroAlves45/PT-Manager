@@ -364,3 +364,17 @@ Lições capturadas depois de correções do utilizador.
   escritas à parte em JSON: 163 caminhos com round-trip 163/163, sem copiar código à mão.
 - **Agentes interrompidos por limite de uso podem deixar shells presos** com a worktree como
   diretório: procurar processos com o caminho antes de `git worktree remove`.
+
+## 2026-10-18 — Fecho do frontend da 6GA
+
+- **Regras de palavra-passe no cliente espelham o Identity em Unicode**: `p{Lu}`, `p{Ll}`, `[^p{L}p{Nd}]`
+  com a flag `u`. Regex ASCII recusa palavras-passe válidas ("Segredo1ç").
+- **Pedido de uso único com cookie (challenge Google)**: cancelar o pedido no cleanup do efeito
+  (`AbortController`); um pedido cancelado pode chegar depois do novo e sobrescrever o cookie.
+- **Caminho de retorno**: depois de comparar a origem, rejeitar também `pathname` a começar por `//`
+  (`/.//host` resolve para a mesma origem).
+- **Mutações com `sed` e regex com escapes falham em silêncio**: mutar com Node (`includes` antes de
+  substituir) e confirmar que a mutação aplicou, senão o "sobrevivente" é falso.
+- **Baseline de testes não corre em paralelo com a escrita de testes novos**: dá falhas falsas.
+- **Revisão de pack aplicado**: comparar por SHA-256 normalizado para LF cada caminho do manifest; as
+  divergências classificam-se (comentário, copy, comportamento) antes de se tocar em código.

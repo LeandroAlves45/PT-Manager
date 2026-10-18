@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
@@ -78,6 +78,28 @@ describe('SignUpPage', () => {
     await fill({ password: 'semsimbolo1A' });
 
     expect(await screen.findByText('Inclui pelo menos um símbolo.')).toBeInTheDocument();
+    expect(calls).not.toHaveBeenCalled();
+  });
+
+  it('refuses control characters in the name before calling the server (U+0000, D1)', async () => {
+    const calls = vi.fn();
+    server.use(
+      http.post(`${API}/auth/signup`, () => {
+        calls();
+        return HttpResponse.json({ status: 'confirmation_email_sent' }, { status: 202 });
+      })
+    );
+    const user = userEvent.setup();
+    openSignUp();
+
+    fireEvent.change(await screen.findByLabelText('Nome completo'), {
+      target: { value: 'Ana\u0000Sousa' },
+    });
+    await user.type(screen.getByLabelText('Email'), 'ana@ptmanager.test');
+    await user.type(screen.getByLabelText('Palavra-passe'), VALID_PASSWORD);
+    await user.click(screen.getByRole('button', { name: 'Criar conta' }));
+
+    expect(await screen.findByText('O nome tem caracteres inválidos.')).toBeInTheDocument();
     expect(calls).not.toHaveBeenCalled();
   });
 

@@ -15,7 +15,7 @@ import { toSession, type Session } from '@/shared/api/session';
 
 type Schemas = components['schemas'];
 
-/** Resultado do ínicio de sessão com Google: sessão iniciada ou falta confirmar o email. */
+/** Resultado do início de sessão com Google: sessão iniciada ou falta confirmar o email. */
 export type GoogleSignInOutcome = { kind: 'session'; session: Session } | { kind: 'pending' };
 
 export function useLoginMutation() {

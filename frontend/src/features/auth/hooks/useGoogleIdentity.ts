@@ -75,13 +75,22 @@ export function useGoogleIdentity({
     if (clientId === null || container === null) return;
 
     let cancelled = false;
+    // Cancelar o pedido evita que um challenge antigo, que chegue depois do novo, deixe no
+    // cookie HttpOnly um nonce diferente do que o GIS vai usar.
+    const controller = new AbortController();
 
     async function prepare(id: string, node: HTMLDivElement): Promise<void> {
       try {
         const challenge =
           purpose === 'sign-in'
-            ? unwrap(await apiClient.POST('/api/v1/auth/google/challenge'))
-            : unwrap(await apiClient.POST('/api/v1/auth/google/link/challenge'));
+            ? unwrap(
+                await apiClient.POST('/api/v1/auth/google/challenge', { signal: controller.signal })
+              )
+            : unwrap(
+                await apiClient.POST('/api/v1/auth/google/link/challenge', {
+                  signal: controller.signal,
+                })
+              );
         const google = await loadGoogleIdentity();
         if (cancelled) return;
 
@@ -121,6 +130,7 @@ export function useGoogleIdentity({
 
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [clientId, container, purpose, resolved, attempt, reset]);
 

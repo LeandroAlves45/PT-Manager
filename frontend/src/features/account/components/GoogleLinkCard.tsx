@@ -34,8 +34,8 @@ export function GoogleLinkCard() {
 
       await link.mutateAsync({ id_token: idToken, current_password: currentPassword });
       setCurrentPassword('');
-    } catch (error) {
-      setFailure(authErrorMessage(error));
+    } catch (caught) {
+      setFailure(authErrorMessage(caught));
     }
   }
 

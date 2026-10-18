@@ -43,8 +43,8 @@ export function LoginPage() {
   const login = useLoginMutation();
   const [formError, setFormError] = useState<string | null>(null);
   const returnPath = getReturnPath(location.state);
-  // O aviso do state ganha; senao o flash de quem terminou a sessao (mudar palavra-passe).
-  // Le-se sem consumir no inicializador (o StrictMode chama-o duas vezes) e consome-se no efeito.
+  // O aviso do state ganha; senão o flash de quem terminou a sessão (mudar palavra-passe).
+  // Lê-se sem consumir no inicializador (o StrictMode chama-o duas vezes) e consome-se no efeito.
   const [notice] = useState(() => readNotice(location.state) ?? peekPendingAuthNotice());
   useEffect(() => {
     consumePendingAuthNotice();
