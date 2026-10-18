@@ -29,3 +29,16 @@ export const env = {
   apiPrefix: '/api/v1',
   isDevelopment: import.meta.env.DEV,
 } as const;
+
+/**
+ * Identificador do cliente OAuth do Google, ou `null` quando o início de sessão com Google
+ * não está configurado neste ambiente.
+ *
+ * Lido na chamada e não no arranque: é opcional (a aplicação funciona sem ele, só esconde o
+ * botão) e os testes precisam de o ligar e desligar por teste. Não é um segredo: é público
+ * por desenho e vai no bundle.
+ */
+export function getGoogleClientId(): string | null {
+  const value = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim();
+  return value === undefined || value.length === 0 ? null : value;
+}

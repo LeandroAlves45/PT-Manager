@@ -27,9 +27,9 @@ async function openProfileMenu(role: 'superuser' | 'trainer' | 'client', entry: 
 
 describe('ProfileMenu', () => {
   it.each([
-    ['superuser', '/admin', []],
-    ['trainer', '/trainer', ['Definições']],
-    ['client', '/portal/today', ['O meu perfil']],
+    ['superuser', '/admin', ['Conta e segurança']],
+    ['trainer', '/trainer', ['Definições', 'Conta e segurança']],
+    ['client', '/portal/today', ['O meu perfil', 'Conta e segurança']],
   ] as const)('offers the %s only the routes that exist', async (role, entry, expected) => {
     await openProfileMenu(role, entry);
 
@@ -37,12 +37,27 @@ describe('ProfileMenu', () => {
     expect(items).toEqual([...expected, 'Terminar sessão']);
   });
 
+  it.each([
+    ['superuser', '/admin', '/admin/account'],
+    ['trainer', '/trainer', '/trainer/account'],
+    ['client', '/portal/today', '/portal/account'],
+  ] as const)('opens the %s account page inside their own area', async (role, entry, target) => {
+    const { user, router } = await openProfileMenu(role, entry);
+
+    await user.click(screen.getByRole('menuitem', { name: 'Conta e segurança' }));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe(target));
+    expect(
+      await screen.findByRole('heading', { name: 'Conta e segurança', level: 1 })
+    ).toBeInTheDocument();
+  });
+
   it('signs out and goes back to login', async () => {
     const { user, router } = await openProfileMenu('trainer', '/trainer');
 
     await user.click(screen.getByRole('menuitem', { name: 'Terminar sessão' }));
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/auth/login'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/entrar'));
     expect(getSession()).toBeNull();
   });
 

@@ -38,7 +38,7 @@ export default defineConfig({
     // da máquina de quem corre a suite.
     // O fuso também é fixo: o CI corre em UTC, onde "offset local" e "Z" coincidem e um
     // instante enviado sem o offset do browser passaria nos testes. Lisboa tem +01:00 no verão.
-    env: { VITE_API_BASE_URL: 'https://localhost:7186', TZ: 'Europe/Lisbon' },
+    env: { VITE_API_BASE_URL: 'https://localhost:7186', TZ: 'Europe/Lisbon', VITE_GOOGLE_CLIENT_ID: '' },
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     // Igual ao gate 6E-4 (`--maxWorkers=4 --testTimeout=15000`). O setup espera até

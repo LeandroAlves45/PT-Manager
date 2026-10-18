@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import type { components } from '@/shared/api/schema';
+import { SIGN_UP_ACCEPTED, accountResponse, googleChallenge } from '@/test/msw/auth-fixtures';
 import {
   dueCheckIn,
   nextCheckIn,
@@ -63,6 +64,29 @@ export const handlers = [
   ),
   http.post(`${API}/auth/login`, () => HttpResponse.json(sessionResponse())),
   http.post(`${API}/auth/logout`, () => new HttpResponse(null, { status: 204 })),
+
+  // 6GA: ciclo de vida da conta. Os 204 e o 202 do signup não dependem de a conta existir.
+  http.post(`${API}/auth/signup`, () => HttpResponse.json(SIGN_UP_ACCEPTED, { status: 202 })),
+  http.post(
+    `${API}/auth/email-confirmation/request`,
+    () => new HttpResponse(null, { status: 204 })
+  ),
+  http.post(`${API}/auth/confirm-email`, () => new HttpResponse(null, { status: 204 })),
+  http.post(`${API}/auth/password-reset/request`, () => new HttpResponse(null, { status: 204 })),
+  http.post(`${API}/auth/password-reset/complete`, () => new HttpResponse(null, { status: 204 })),
+  http.post(`${API}/auth/change-password`, () => new HttpResponse(null, { status: 204 })),
+  http.post(`${API}/auth/accept-invite`, () => HttpResponse.json(sessionResponse())),
+  http.post(`${API}/auth/accept-invite/register`, () =>
+    HttpResponse.json(sessionResponse({ role: 'client', trainer_id: null }))
+  ),
+  http.get(`${API}/auth/account`, () => HttpResponse.json(accountResponse())),
+
+  // Google: o sign-in tem dois sucessos (200 sessão, 202 por confirmar); a rota nunca é
+  // chamada em testes que não ligam `VITE_GOOGLE_CLIENT_ID`.
+  http.post(`${API}/auth/google/challenge`, () => HttpResponse.json(googleChallenge())),
+  http.post(`${API}/auth/google/sign-in`, () => HttpResponse.json(sessionResponse())),
+  http.post(`${API}/auth/google/link/challenge`, () => HttpResponse.json(googleChallenge())),
+  http.post(`${API}/auth/google/link`, () => new HttpResponse(null, { status: 204 })),
   http.get(`${API}/billing/subscription`, () =>
     HttpResponse.json({
       tier: 'STARTER',

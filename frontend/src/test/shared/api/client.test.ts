@@ -73,7 +73,7 @@ function useProtectedSubscription(): void {
     http.get(SUBSCRIPTION, ({ request }) =>
       request.headers.get('Authorization') === 'Bearer access-2'
         ? HttpResponse.json(SUBSCRIPTION_BODY)
-        : HttpResponse.json(problem('authentication_required'), { status: 401 })
+        : new HttpResponse(null, { status: 401 })
     )
   );
 }
@@ -142,7 +142,7 @@ describe('apiClient 401 handling', () => {
         bodies.push(await request.text());
         return request.headers.get('Authorization') === 'Bearer access-2'
           ? HttpResponse.json({ ok: true })
-          : HttpResponse.json(problem('authentication_required'), { status: 401 });
+          : new HttpResponse(null, { status: 401 });
       })
     );
 
@@ -194,16 +194,56 @@ describe('apiClient 401 handling', () => {
     const tab = await loadTab();
     signIn(tab);
     useRotatingRefresh();
-    server.use(
-      http.get(SUBSCRIPTION, () =>
-        HttpResponse.json(problem('authentication_required'), { status: 401 })
-      )
-    );
+    server.use(http.get(SUBSCRIPTION, () => new HttpResponse(null, { status: 401 })));
 
     const result = await tab.apiClient.GET('/api/v1/billing/subscription');
 
     expect(result.response.status).toBe(401);
     expect(count('GET /api/v1/billing/subscription')).toBe(2);
+    expect(count('POST /api/v1/auth/refresh')).toBe(1);
+  });
+
+  it('does not refresh when the 401 carries a domain code, and keeps the body readable', async () => {
+    const tab = await loadTab();
+    signIn(tab);
+    useRotatingRefresh();
+    server.use(
+      http.post(`${API}/auth/change-password`, () =>
+        HttpResponse.json(problem('authentication_current_password_invalid'), { status: 401 })
+      )
+    );
+
+    const result = await tab.apiClient.POST('/api/v1/auth/change-password', {
+      body: { current_password: 'x', new_password: 'y', confirm_new_password: 'y' },
+    });
+
+    expect(result.response.status).toBe(401);
+    expect(result.error).toMatchObject({ title: 'authentication_current_password_invalid' });
+    expect(requests).toEqual(['POST /api/v1/auth/change-password']);
+  });
+
+  it.each([
+    ['an empty body', () => new HttpResponse(null, { status: 401 })],
+    [
+      'a natural-language title',
+      () => HttpResponse.json({ title: 'Unauthorized', status: 401 }, { status: 401 }),
+    ],
+    ['a malformed body', () => HttpResponse.json('not json', { status: 401 })],
+  ])('still refreshes and retries when the 401 has %s', async (_name, rejection) => {
+    const tab = await loadTab();
+    signIn(tab);
+    useRotatingRefresh();
+    server.use(
+      http.get(SUBSCRIPTION, ({ request }) =>
+        request.headers.get('Authorization') === 'Bearer access-2'
+          ? HttpResponse.json(SUBSCRIPTION_BODY)
+          : rejection()
+      )
+    );
+
+    const result = await tab.apiClient.GET('/api/v1/billing/subscription');
+
+    expect(result.response.status).toBe(200);
     expect(count('POST /api/v1/auth/refresh')).toBe(1);
   });
 });

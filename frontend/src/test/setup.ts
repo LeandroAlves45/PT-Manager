@@ -42,6 +42,8 @@ afterEach(() => {
   localStorage.clear();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  // `VITE_GOOGLE_CLIENT_ID` é ligada por teste com `vi.stubEnv`; por omissão não há Google.
+  vi.unstubAllEnvs();
   vi.useRealTimers();
 });
 

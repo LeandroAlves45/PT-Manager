@@ -30,6 +30,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   today: 'Treino de hoje',
   nutrition: 'Nutrição',
   profile: 'Perfil',
+  account: 'Conta e segurança',
 };
 
 const IDENTIFIER = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

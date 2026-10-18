@@ -17,13 +17,13 @@ describe('RequireAuth', () => {
     expect(router.state.location.pathname).toBe('/trainer/clients');
 
     restore.release();
-    await waitFor(() => expect(router.state.location.pathname).toBe('/auth/login'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/entrar'));
   });
 
   it('sends an anonymous visitor to login keeping pathname and search in state.from', async () => {
     const { router } = renderApp({ initialEntries: ['/trainer/clients?search=ana&page=2'] });
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/auth/login'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/entrar'));
     expect(router.state.location.state).toEqual({ from: '/trainer/clients?search=ana&page=2' });
   });
 

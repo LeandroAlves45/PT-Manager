@@ -1,4 +1,4 @@
-import { ChevronDown, LogOut, Settings, User } from 'lucide-react';
+import { ChevronDown, LogOut, Settings, ShieldCheck, User } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import { useAuth } from '@/app/providers/useAuth';
@@ -13,6 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
+import { homeRouteFor } from '@/shared/api/session';
+import { AUTH_ROUTES } from '@/shared/config/auth-routes';
 import { roleLabel } from '@/shared/config/navigation';
 
 /**
@@ -34,7 +36,7 @@ export function ProfileMenu() {
 
   async function handleSignOut(): Promise<void> {
     await signOut();
-    void navigate('/auth/login', { replace: true });
+    void navigate(AUTH_ROUTES.login, { replace: true });
   }
 
   return (
@@ -75,8 +77,8 @@ export function ProfileMenu() {
 
         <DropdownMenuSeparator />
 
-        {/* Só o cliente tem página de perfil; o personal trainer gere a conta em Definições e o
-            superuser não tem rota de perfil. */}
+        {/* Só o cliente tem página de perfil; o personal trainer tem Definições (marca,
+            contactos) e o superuser não tem rota de perfil. */}
         {session.role === 'client' && (
           <DropdownMenuItem onSelect={() => void navigate('/portal/profile')}>
             <User aria-hidden />O meu perfil
@@ -89,6 +91,12 @@ export function ProfileMenu() {
             Definições
           </DropdownMenuItem>
         )}
+
+        {/* Os três papéis têm conta e segurança, dentro do layout da sua área. */}
+        <DropdownMenuItem onSelect={() => void navigate(`${homeRouteFor(session.role)}/account`)}>
+          <ShieldCheck aria-hidden />
+          Conta e segurança
+        </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 

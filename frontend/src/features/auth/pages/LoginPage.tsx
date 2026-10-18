@@ -1,141 +1,159 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { Navigate, useLocation, useNavigate } from 'react-router';
+import { useEffect, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router';
 
 import { useAuth } from '@/app/providers/useAuth';
-import { apiClient } from '@/shared/api/client';
-import { toApiProblem, type ApiProblem } from '@/shared/api/problem';
-import { homeRouteFor, setSession, toSession } from '@/shared/api/session';
+import { useLoginMutation } from '@/features/auth/api/auth';
+import { AuthHeading } from '@/features/auth/components/AuthHeading';
+import { GoogleSignInSection } from '@/features/auth/components/GoogleSignInSection';
+import { PasswordField } from '@/features/auth/components/PasswordField';
+import { consumePendingAuthNotice, peekPendingAuthNotice } from '@/features/auth/lib/auth-notice';
+import { authErrorMessage } from '@/features/auth/lib/auth-errors';
+import { applyProblemToForm } from '@/features/auth/lib/form-errors';
+import { readNotice } from '@/features/auth/lib/location-state';
+import { getReturnPath } from '@/features/auth/lib/return-path';
+import { loginSchema, type LoginFormValues } from '@/features/auth/schemas/login.schema';
+import { isApiProblem } from '@/shared/api/problem';
+import { homeRouteFor, setSession } from '@/shared/api/session';
+import { FormField } from '@/shared/components/FormField';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
-import { Label } from '@/shared/components/ui/label';
-import { loginSchema, type LoginFormValues } from '@/features/auth/schemas/login.schema';
+import { AUTH_ROUTES } from '@/shared/config/auth-routes';
+
+/** Campos do formulário por nome de campo do servidor (ver `applyProblemToForm`). */
+const LOGIN_FIELDS = { email: 'email', password: 'password' } as const;
 
 /**
- * Destino guardado pelo `RequireAuth`, aceite só se for interno.
+ * Início de sessão (`/entrar`).
  *
- * Comparar prefixos não chega: o browser trata `\` como `/`, por isso `/\host` é tão
- * relativo ao protocolo como `//host`. Resolver contra a origem atual e comparar origens
- * cobre todas as variantes.
- */
-function getReturnPath(state: unknown): string | null {
-  const from = (state as { from?: unknown } | null)?.from;
-  if (typeof from !== 'string' || !from.startsWith('/')) return null;
-
-  const target = new URL(from, window.location.origin);
-  return target.origin === window.location.origin
-    ? `${target.pathname}${target.search}${target.hash}`
-    : null;
-}
-
-/**
- * Login mínimo de desenvolvimento.
+ * Regras que não podem falhar:
+ * - sem enumeração de contas: credenciais erradas, conta inexistente e email por confirmar
+ *   têm a mesma resposta (`authentication_invalid_credentials`);
+ * - erros de validação do servidor voltam aos campos; o 429 não repete o pedido;
+ * - o destino guardado pelo `RequireAuth` só é seguido se for interno (`getReturnPath`);
+ * - um aviso de outro ecrã (`state.notice`: "Palavra-passe alterada...") aparece por cima.
  *
- * A página final — com recuperação de password, Google Sign-In e todo o copy — é da fase
- * 6G. Esta existe para que as fases 6D a 6F tenham como entrar na aplicação, e já respeita
- * as regras que não podem esperar: sem enumeração de contas na mensagem de erro, erros de
- * validação do servidor devolvidos aos campos, e 429 tratado sem repetir o pedido.
+ * O link "Não recebeste o email?" leva o email escrito em `state`, nunca na query string.
  */
 export function LoginPage() {
   const { status, session } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const login = useLoginMutation();
   const [formError, setFormError] = useState<string | null>(null);
   const returnPath = getReturnPath(location.state);
+  // O aviso do state ganha; senao o flash de quem terminou a sessao (mudar palavra-passe).
+  // Le-se sem consumir no inicializador (o StrictMode chama-o duas vezes) e consome-se no efeito.
+  const [notice] = useState(() => readNotice(location.state) ?? peekPendingAuthNotice());
+  useEffect(() => {
+    consumePendingAuthNotice();
+  }, []);
 
   const {
     register,
     handleSubmit,
     setError,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
   });
 
+  const typedEmail = useWatch({ control, name: 'email' });
+
   if (status === 'authenticated' && session !== null)
     return <Navigate to={returnPath ?? homeRouteFor(session.role)} replace />;
-
-  function applyProblem(problem: ApiProblem): void {
-    if (problem.hasFieldErrors) {
-      for (const fieldError of problem.fieldErrors) {
-        if (fieldError.field === 'email' || fieldError.field === 'password') {
-          setError(fieldError.field, { message: fieldError.message });
-        }
-      }
-      return;
-    }
-
-    if (problem.status === 429) {
-      setFormError('Demasiadas tentativas. Tenta dentro de momentos.');
-      return;
-    }
-
-    // Mensagem única para credenciais erradas e conta inexistente: dizer qual dos dois
-    // falhou revelaria que aquele email está registado.
-    setFormError(
-      problem.status === 401
-        ? 'Email ou password inválidos.'
-        : 'Não foi possível iniciar sessão. Tenta novamente.'
-    );
-  }
 
   async function onSubmit(values: LoginFormValues): Promise<void> {
     setFormError(null);
 
     try {
-      const result = await apiClient.POST('/api/v1/auth/login', { body: values });
-
-      if (result.data === undefined) {
-        applyProblem(toApiProblem(result.response.status, result.error));
-        return;
-      }
-
-      const newSession = toSession(result.data);
+      const newSession = await login.mutateAsync(values);
       setSession(newSession);
       void navigate(returnPath ?? homeRouteFor(newSession.role), { replace: true });
-    } catch {
-      setFormError('Não foi possível contactar o servidor. Verifica a ligação e tenta novamente.');
+    } catch (failure) {
+      if (isApiProblem(failure) && applyProblemToForm(failure, setError, LOGIN_FIELDS)) return;
+
+      setFormError(authErrorMessage(failure));
     }
   }
 
+  const busy = isSubmitting || status === 'restoring';
+
   return (
-    <form
-      onSubmit={(event) => void handleSubmit(onSubmit)(event)}
-      className="border-border bg-card space-y-4 rounded-xl border p-6"
-      noValidate
-    >
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" autoComplete="email" {...register('email')} />
-        {errors.email !== undefined && (
-          <p className="text-destructive text-xs">{errors.email.message}</p>
-        )}
-      </div>
+    <div className="space-y-6">
+      <AuthHeading title="Entrar" description="Acede à tua conta PT Manager." />
 
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          {...register('password')}
-        />
-        {errors.password !== undefined && (
-          <p className="text-destructive text-xs">{errors.password.message}</p>
-        )}
-      </div>
-
-      {formError !== null && (
-        <p role="alert" aria-live="assertive" className="text-destructive text-sm">
-          {formError}
+      {notice !== null && (
+        <p role="status" className="border-border bg-muted rounded-md border p-3 text-sm">
+          {notice}
         </p>
       )}
 
-      <Button type="submit" className="w-full" disabled={isSubmitting || status === 'restoring'}>
-        {isSubmitting || status === 'restoring' ? 'A entrar…' : 'Entrar'}
-      </Button>
-    </form>
+      <form
+        onSubmit={(event) => void handleSubmit(onSubmit)(event)}
+        className="space-y-4"
+        noValidate
+      >
+        <FormField label="Email" error={errors.email?.message}>
+          {(control) => (
+            <Input
+              {...control}
+              type="email"
+              autoComplete="email"
+              className="h-11"
+              {...register('email')}
+            />
+          )}
+        </FormField>
+
+        <PasswordField
+          label="Palavra-passe"
+          autoComplete="current-password"
+          error={errors.password?.message}
+          {...register('password')}
+        />
+
+        {formError !== null && (
+          <p role="alert" aria-live="assertive" className="text-destructive text-sm">
+            {formError}
+          </p>
+        )}
+
+        <Button type="submit" className="min-h-11 w-full" disabled={busy}>
+          {busy ? 'A entrar…' : 'Entrar'}
+        </Button>
+      </form>
+
+      <GoogleSignInSection
+        onSignedIn={(newSession) =>
+          void navigate(returnPath ?? homeRouteFor(newSession.role), { replace: true })
+        }
+      />
+
+      <nav aria-label="Outras opções" className="space-y-2 text-sm">
+        <Link
+          to={AUTH_ROUTES.forgotPassword}
+          className="text-foreground block underline underline-offset-4"
+        >
+          Esqueceste a palavra-passe?
+        </Link>
+        <Link
+          to={AUTH_ROUTES.resendConfirmation}
+          state={{ email: typedEmail }}
+          className="text-muted-foreground block underline underline-offset-4"
+        >
+          Não recebeste o email de confirmação?
+        </Link>
+        <p className="text-muted-foreground">
+          Ainda não tens conta?{' '}
+          <Link to={AUTH_ROUTES.signUp} className="text-foreground underline underline-offset-4">
+            Criar conta
+          </Link>
+        </p>
+      </nav>
+    </div>
   );
 }

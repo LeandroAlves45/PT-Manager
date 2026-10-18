@@ -12,13 +12,12 @@ describe('RequireRole', () => {
 
     renderApp({ initialEntries: ['/trainer'] });
 
-    // [6E] ALTERADO: '/trainer' é agora o painel real (título "Bom treino"), não o placeholder.
+    // '/trainer' é agora o painel real (título "Bom treino"), não o placeholder.
     expect(await screen.findByRole('heading', { name: 'Bom treino' })).toBeInTheDocument();
   });
 
   it.each([
     ['client', '/trainer/clients', '/portal'],
-    // [6E-3] NOVO: a biblioteca é só do trainer.
     ['client', '/trainer/library', '/portal'],
     ['superuser', '/portal/today', '/admin'],
     ['trainer', '/admin/moderation', '/trainer'],
@@ -33,7 +32,7 @@ describe('RequireRole', () => {
   it('leaves anonymous visitors to the RequireAuth flow', async () => {
     const { router } = renderApp({ initialEntries: ['/admin'] });
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/auth/login'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/entrar'));
     expect(router.state.location.state).toEqual({ from: '/admin' });
   });
 
@@ -48,7 +47,7 @@ describe('RequireRole', () => {
           element: <RequireRole role="trainer" />,
           children: [{ path: '/secret', element: <p>secret</p> }],
         },
-        { path: '/auth/login', element: <p>login</p> },
+        { path: '/entrar', element: <p>login</p> },
       ],
     });
 

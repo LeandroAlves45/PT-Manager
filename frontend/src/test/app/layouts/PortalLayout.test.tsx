@@ -109,7 +109,7 @@ describe('PortalLayout', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Menu de perfil' }));
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Terminar sessão' }));
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/auth/login'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/entrar'));
     expect(rootStyle().getPropertyValue('--primary')).toBe('');
     expect(rootStyle().getPropertyValue('--primary-foreground')).toBe('');
     expect(rootStyle().getPropertyValue('--ring')).toBe('');

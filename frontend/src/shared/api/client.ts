@@ -133,6 +133,25 @@ async function runExclusive<T>(operation: () => Promise<T>): Promise<T> {
   return await navigator.locks.request(REFRESH_LOCK, operation);
 }
 
+/** Código estável de domínio: palavras minúsculas separadas por `_` (`authentication_...`). */
+const DOMAIN_CODE = /^[a-z]+(_[a-z]+)+$/;
+
+/**
+ * Indica se o 401 traz um `title` de domínio.
+ *
+ * O JWT Bearer recusado responde 401 sem corpo; os casos de uso respondem Problem Details com
+ * o código no `title`. O corpo lê-se de um clone para o chamador ainda o poder ler. O 429 e
+ * outros `title` em linguagem natural ("Too many requests") não casam com o padrão.
+ */
+async function carriesDomainCode(response: Response): Promise<boolean> {
+  try {
+    const body = (await response.clone().json()) as { title?: unknown } | null;
+    return typeof body?.title === 'string' && DOMAIN_CODE.test(body.title);
+  } catch {
+    return false;
+  }
+}
+
 function isSessionEndpoint(url: string): boolean {
   return SESSION_ENDPOINTS.has(new URL(url, env.apiBaseUrl).pathname);
 }
@@ -166,6 +185,10 @@ const authMiddleware: Middleware = {
     const retry = retryableRequests.get(request);
     retryableRequests.delete(request);
     if (retry === undefined) return response;
+
+    // Um 401 com código de domínio é uma resposta do próprio caso de uso (palavra-passe atual
+    // errada, link expirado...), não um access token recusado: renovar a sessão não o muda.
+    if (await carriesDomainCode(response)) return response;
 
     // Uma só repetição, e só depois de o refresh ter sucedido. Repetir um POST após um
     // refresh falhado arriscaria duplicar uma escrita sem qualquer hipótese de sucesso.

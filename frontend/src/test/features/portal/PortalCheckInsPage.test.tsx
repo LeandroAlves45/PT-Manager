@@ -593,7 +593,7 @@ describe('PortalCheckInsPage', () => {
     await user.keyboard('{Enter}');
     await user.click(await screen.findByRole('menuitem', { name: 'Terminar sessão' }));
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/auth/login'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/entrar'));
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
 

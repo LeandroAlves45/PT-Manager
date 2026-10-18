@@ -2,6 +2,7 @@ import { Navigate, Outlet, useLocation } from 'react-router';
 
 import { useAuth } from '@/app/providers/useAuth';
 import { FullPageSpinner } from '@/shared/components/FullPageSpinner';
+import { AUTH_ROUTES } from '@/shared/config/auth-routes';
 
 /**
  * Exige sessão iniciada.
@@ -19,7 +20,7 @@ export function RequireAuth() {
   if (status === 'anonymous') {
     return (
       <Navigate
-        to="/auth/login"
+        to={AUTH_ROUTES.login}
         replace
         state={{ from: `${location.pathname}${location.search}` }}
       />

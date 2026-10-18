@@ -1,12 +1,23 @@
-import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
+import { createBrowserRouter, type RouteObject } from 'react-router';
 
 import { AppRouteRoot } from '@/app/AppRouteRoot';
+import { LegacyLoginRedirect } from '@/app/LegacyLoginRedirect';
+import { NotFoundPage } from '@/app/NotFoundPage';
 import { RequireAuth } from '@/app/guards/RequireAuth';
 import { RequireRole } from '@/app/guards/RequireRole';
 import { AppShell } from '@/app/layouts/AppShell';
 import { AuthLayout } from '@/app/layouts/AuthLayout';
 import { PortalLayout } from '@/app/layouts/PortalLayout';
-import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { AccountSecurityPage } from '@/features/account';
+import {
+  AcceptInvitePage,
+  ConfirmEmailPage,
+  ForgotPasswordPage,
+  LoginPage,
+  ResendConfirmationPage,
+  ResetPasswordPage,
+  SignUpPage,
+} from '@/features/auth';
 import { BillingPage } from '@/features/billing/pages/BillingPage';
 import { CheckInsPage } from '@/features/check-ins/pages/CheckInsPage';
 import { AdminOverviewPage } from '@/features/admin-overview/pages/AdminOverviewPage';
@@ -33,6 +44,7 @@ import { SessionsPage } from '@/features/sessions/pages/SessionsPage';
 import { SettingsPage } from '@/features/trainer-settings/pages/SettingsPage';
 import { TrainerDashboardPage } from '@/features/trainer-dashboard/pages/TrainerDashboardPage';
 import { RootRedirect } from '@/app/RootRedirect';
+import { AUTH_ROUTES, LEGACY_LOGIN_ROUTES } from '@/shared/config/auth-routes';
 
 /**
  * Rotas da aplicação.
@@ -41,14 +53,22 @@ import { RootRedirect } from '@/app/RootRedirect';
 const applicationRoutes: RouteObject[] = [
   { path: '/', element: <RootRedirect /> },
 
+  // Páginas públicas de autenticação, todas sob a mesma moldura. `/aceitar-convite` fica aqui
+  // e não atrás do `RequireAuth`: tem de funcionar com e sem sessão.
   {
-    path: '/auth',
     element: <AuthLayout />,
     children: [
-      { index: true, element: <Navigate to="/auth/login" replace /> },
-      { path: 'login', element: <LoginPage /> },
+      { path: AUTH_ROUTES.login, element: <LoginPage /> },
+      { path: AUTH_ROUTES.signUp, element: <SignUpPage /> },
+      { path: AUTH_ROUTES.forgotPassword, element: <ForgotPasswordPage /> },
+      { path: AUTH_ROUTES.resetPassword, element: <ResetPasswordPage /> },
+      { path: AUTH_ROUTES.confirmEmail, element: <ConfirmEmailPage /> },
+      { path: AUTH_ROUTES.acceptInvite, element: <AcceptInvitePage /> },
+      { path: AUTH_ROUTES.resendConfirmation, element: <ResendConfirmationPage /> },
     ],
   },
+
+  ...LEGACY_LOGIN_ROUTES.map((path): RouteObject => ({ path, element: <LegacyLoginRedirect /> })),
 
   {
     element: <RequireAuth />,
@@ -65,6 +85,7 @@ const applicationRoutes: RouteObject[] = [
               { path: 'catalog/foods', element: <CatalogPage kind="foods" /> },
               { path: 'catalog/exercises', element: <CatalogPage kind="exercises" /> },
               { path: 'catalog/supplements', element: <CatalogPage kind="supplements" /> },
+              { path: 'account', element: <AccountSecurityPage /> },
             ],
           },
         ],
@@ -88,6 +109,7 @@ const applicationRoutes: RouteObject[] = [
               { path: 'library', element: <LibraryPage /> },
               { path: 'settings', element: <SettingsPage /> },
               { path: 'billing', element: <BillingPage /> },
+              { path: 'account', element: <AccountSecurityPage /> },
             ],
           },
         ],
@@ -107,6 +129,7 @@ const applicationRoutes: RouteObject[] = [
               { path: 'supplements', element: <PortalSupplementsPage /> },
               { path: 'check-ins', element: <PortalCheckInsPage /> },
               { path: 'profile', element: <PortalProfilePage /> },
+              { path: 'account', element: <AccountSecurityPage /> },
             ],
           },
         ],
@@ -114,8 +137,8 @@ const applicationRoutes: RouteObject[] = [
     ],
   },
 
-  // Qualquer outra rota volta á raiz, que decide o destino conforme a sessão.
-  { path: '*', element: <Navigate to="/" replace /> },
+  // Qualquer outra rota mostra a página 404, que funciona com e sem sessão.
+  { path: '*', element: <NotFoundPage /> },
 ];
 
 export const routes: RouteObject[] = [
