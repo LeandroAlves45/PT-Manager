@@ -6,6 +6,6 @@ public sealed record CreateSupplementCommand(
     string? Description,
     string UnitOfMeasure,
     string ServingSize,
-    string Timing,
+    string? Timing,
     string? TrainerNotes
 );

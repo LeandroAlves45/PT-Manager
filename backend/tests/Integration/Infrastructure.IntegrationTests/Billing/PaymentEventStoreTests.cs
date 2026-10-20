@@ -30,6 +30,7 @@ public sealed class PaymentEventStoreTests(PostgresContainerFixture database)
         var result = await store.CommitAsync(
             paymentEvent,
             Snapshot("cus_atomic", "sub_atomic", Now.AddMinutes(5)),
+            null,
             Now.AddMinutes(6),
             cancellationToken);
 
@@ -77,6 +78,7 @@ public sealed class PaymentEventStoreTests(PostgresContainerFixture database)
         await Assert.ThrowsAsync<DbUpdateException>(() => store.CommitAsync(
             FailureEvent("evt_rollback", "cus_rollback", "sub_rollback"),
             Snapshot("cus_rollback", "sub_rollback", Now.AddMinutes(5)),
+            null,
             Now.AddMinutes(6),
             cancellationToken));
 
@@ -107,6 +109,7 @@ public sealed class PaymentEventStoreTests(PostgresContainerFixture database)
             var firstResult = await new PaymentEventStore(firstContext, firstTenant).CommitAsync(
                 paymentEvent,
                 snapshot,
+                null,
                 Now.AddMinutes(6),
                 cancellationToken);
             Assert.Equal(CommitPaymentEventStoreStatus.Processed, firstResult.Kind);
@@ -116,6 +119,7 @@ public sealed class PaymentEventStoreTests(PostgresContainerFixture database)
         var secondResult = await new PaymentEventStore(secondContext, secondTenant).CommitAsync(
             paymentEvent,
             snapshot,
+            null,
             Now.AddMinutes(7),
             cancellationToken);
 
@@ -148,11 +152,13 @@ public sealed class PaymentEventStoreTests(PostgresContainerFixture database)
             new PaymentEventStore(firstContext, firstTenant).CommitAsync(
                 paymentEvent,
                 snapshot,
+                null,
                 Now.AddMinutes(6),
                 cancellationToken),
             new PaymentEventStore(secondContext, secondTenant).CommitAsync(
                 paymentEvent,
                 snapshot,
+                null,
                 Now.AddMinutes(6),
                 cancellationToken));
 
@@ -197,6 +203,7 @@ public sealed class PaymentEventStoreTests(PostgresContainerFixture database)
                 Guid.NewGuid(),
                 Now),
             null,
+            null,
             Now.AddMinutes(1),
             cancellationToken);
 
@@ -221,6 +228,7 @@ public sealed class PaymentEventStoreTests(PostgresContainerFixture database)
             var newerResult = await new PaymentEventStore(newerContext, newerTenant).CommitAsync(
                 Event("evt_newer", PaymentEventKind.SubscriptionUpdated, "cus_stale", "sub_stale"),
                 Snapshot("cus_stale", "sub_stale", Now.AddMinutes(10), "active", SubscriptionTier.Pro),
+                null,
                 Now.AddMinutes(11),
                 cancellationToken);
             Assert.Equal(CommitPaymentEventStoreStatus.Processed, newerResult.Kind);
@@ -230,6 +238,7 @@ public sealed class PaymentEventStoreTests(PostgresContainerFixture database)
         var staleResult = await new PaymentEventStore(staleContext, staleTenant).CommitAsync(
             FailureEvent("evt_stale", "cus_stale", "sub_stale"),
             Snapshot("cus_stale", "sub_stale", Now.AddMinutes(5), "past_due", SubscriptionTier.Starter),
+            null,
             Now.AddMinutes(12),
             cancellationToken);
 
@@ -263,6 +272,7 @@ public sealed class PaymentEventStoreTests(PostgresContainerFixture database)
         var result = await new PaymentEventStore(context, tenant).CommitAsync(
             FailureEvent("evt_payload", "cus_payload", "sub_payload"),
             Snapshot("cus_payload", "sub_payload", Now.AddMinutes(5)),
+            null,
             Now.AddMinutes(6),
             cancellationToken);
 
@@ -310,6 +320,7 @@ public sealed class PaymentEventStoreTests(PostgresContainerFixture database)
         var result = await new PaymentEventStore(context, tenant).CommitAsync(
             FailureEvent("evt_inactive", "cus_inactive", "sub_inactive"),
             Snapshot("cus_inactive", "sub_inactive", Now.AddMinutes(5)),
+            null,
             Now.AddMinutes(6),
             cancellationToken);
 
@@ -341,6 +352,7 @@ public sealed class PaymentEventStoreTests(PostgresContainerFixture database)
         var result = await new PaymentEventStore(context, tenant).CommitAsync(
             Event("evt_trial", PaymentEventKind.TrialWillEnd, "cus_trial", "sub_trial"),
             null,
+            null,
             Now.AddMinutes(1),
             cancellationToken);
 
@@ -355,6 +367,66 @@ public sealed class PaymentEventStoreTests(PostgresContainerFixture database)
             .AnyAsync(message =>
                 message.IdempotencyKey == "billing:evt_trial:TrialWillEnd",
                 cancellationToken));
+    }
+
+    [Fact]
+    public async Task Commit_InvoicePaid_RecordsTheNetPaymentOnceEvenAcrossTwoEvents()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var support = new BillingTestSupport(database);
+        var trainer = await support.SeedTrainerAsync(
+            "commit-paid",
+            customerId: "cus_paid",
+            subscriptionId: "sub_paid",
+            cancellationToken: cancellationToken);
+        var invoiceId = $"in_{Guid.NewGuid():N}";
+        var payment = new InvoicePaymentSnapshot(invoiceId, 2900, 2789, "eur", Now.AddMinutes(-1));
+
+        foreach (var eventId in new[] { $"evt_paid_a_{invoiceId}", $"evt_paid_b_{invoiceId}" })
+        {
+            await using var context = support.CreateRetryingWebhookContext(out var tenant);
+            var result = await new PaymentEventStore(context, tenant).CommitAsync(
+                Event(eventId, PaymentEventKind.InvoicePaid, "cus_paid", "sub_paid"),
+                Snapshot("cus_paid", "sub_paid", Now.AddMinutes(5), "active"),
+                payment,
+                Now.AddMinutes(6),
+                cancellationToken);
+            Assert.Equal(CommitPaymentEventStoreStatus.Processed, result.Kind);
+        }
+
+        await using var verification = database.CreateAdministrativeContext();
+        var stored = await verification.PlatformSubscriptionPayments
+            .Where(row => row.StripeInvoiceId == invoiceId)
+            .ToListAsync(cancellationToken);
+        var single = Assert.Single(stored);
+        Assert.Equal(trainer.TrainerId, single.TrainerId);
+        Assert.Equal(2789, single.NetCents);
+        Assert.Equal("eur", single.Currency);
+    }
+
+    [Fact]
+    public async Task Commit_InvoicePaidWithoutMoney_RecordsNoPayment()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var support = new BillingTestSupport(database);
+        var trainer = await support.SeedTrainerAsync(
+            "commit-zero",
+            customerId: "cus_zero",
+            subscriptionId: "sub_zero",
+            cancellationToken: cancellationToken);
+        await using var context = support.CreateRetryingWebhookContext(out var tenant);
+
+        var result = await new PaymentEventStore(context, tenant).CommitAsync(
+            Event("evt_paid_zero", PaymentEventKind.InvoicePaid, "cus_zero", "sub_zero"),
+            Snapshot("cus_zero", "sub_zero", Now.AddMinutes(5), "trialing"),
+            null,
+            Now.AddMinutes(6),
+            cancellationToken);
+
+        Assert.Equal(CommitPaymentEventStoreStatus.Processed, result.Kind);
+        await using var verification = database.CreateAdministrativeContext();
+        Assert.False(await verification.PlatformSubscriptionPayments
+            .AnyAsync(row => row.TrainerId == trainer.TrainerId, cancellationToken));
     }
 
     private static NormalizedPaymentEvent FailureEvent(

@@ -4,6 +4,6 @@ namespace Application.Features.Supplements.UpdateSupplementAssignment;
 public sealed record UpdateSupplementAssignmentCommand(
     Guid AssignmentId,
     string ServingSize,
-    string Timing,
+    string? Timing,
     string? TrainerNotes
 );

@@ -17,7 +17,7 @@ internal sealed class SupplementConfiguration : IEntityTypeConfiguration<Supplem
             table.HasCheckConstraint("ck_supplements_name", "btrim(name) <> ''");
             table.HasCheckConstraint("ck_supplements_unit", "btrim(unit_of_measure) <> ''");
             table.HasCheckConstraint("ck_supplements_serving_size", "btrim(serving_size) <> ''");
-            table.HasCheckConstraint("ck_supplements_timing", "btrim(timing) <> ''");
+            table.HasCheckConstraint("ck_supplements_timing", "timing IS NULL OR btrim(timing) <> ''");
         });
 
         builder.HasKey(s => s.Id);
@@ -53,8 +53,7 @@ internal sealed class SupplementConfiguration : IEntityTypeConfiguration<Supplem
 
         builder.Property(s => s.Timing)
             .HasColumnName("timing")
-            .HasMaxLength(255)
-            .IsRequired();
+            .HasMaxLength(255);
 
         builder.Property(s => s.TrainerNotes)
             .HasColumnName("trainer_notes");

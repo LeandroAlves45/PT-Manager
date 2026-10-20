@@ -15,8 +15,7 @@ public sealed class UpdateSupplementAssignmentCommandValidator
             .WithErrorCode("supplement_assignment_serving_size_required")
             .MaximumLength(100).WithErrorCode("supplement_assignment_serving_size_too_long");
 
-        RuleFor(command => command.Timing).NotEmpty()
-            .WithErrorCode("supplement_assignment_timing_required")
+        RuleFor(command => command.Timing)
             .MaximumLength(255).WithErrorCode("supplement_assignment_timing_too_long");
     }
 }

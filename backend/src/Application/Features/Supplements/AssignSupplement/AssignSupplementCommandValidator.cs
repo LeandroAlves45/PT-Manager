@@ -18,9 +18,9 @@ public sealed class AssignSupplementCommandValidator : AbstractValidator<AssignS
             .WithErrorCode("supplement_assignment_serving_size_invalid")
             .MaximumLength(100).WithErrorCode("supplement_assignment_serving_size_too_long");
 
+        // null herda o Momento do catálogo; texto vazio é a escolha explícita de não ter Momento
+        // (opcional desde a 6GB), e o domínio grava-o como null.
         RuleFor(command => command.Timing)
-            .Must(value => value is null || !string.IsNullOrWhiteSpace(value))
-            .WithErrorCode("supplement_assignment_timing_invalid")
             .MaximumLength(255).WithErrorCode("supplement_assignment_timing_too_long");
     }
 }

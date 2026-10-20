@@ -166,9 +166,66 @@ public sealed class ProcessPaymentWebhookHandlerTests
         Assert.Equal(expectedCode, result.Error!.Code);
     }
 
+    [Fact]
+    public async Task InvoicePaid_PassesNetPaymentToTheSameCommit()
+    {
+        var gateway = new ReconciliationGatewayStub { Snapshot = Snapshot() };
+        var payment = new InvoicePaymentSnapshot("in_1", 2900, 2789, "eur", Now.AddMinutes(-2));
+        var invoices = new InvoicePaymentGatewayStub
+        {
+            Outcome = new(SubscriptionReconciliationStatus.Success, payment)
+        };
+        var store = new PaymentEventStoreStub();
+        var handler = CreateHandler(gateway, store, invoices);
+
+        var result = await handler.HandleAsync(
+            Event(PaymentEventKind.InvoicePaid, "cus_1", "sub_1") with { ProviderInvoiceId = "in_1" },
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("in_1", invoices.RequestedInvoiceId);
+        Assert.Same(payment, store.InvoicePayment);
+    }
+
+    [Fact]
+    public async Task InvoicePaid_WhenNetIsNotAvailableYet_FailsWithoutCommitting()
+    {
+        var invoices = new InvoicePaymentGatewayStub
+        {
+            Outcome = new(SubscriptionReconciliationStatus.TransientFailure)
+        };
+        var store = new PaymentEventStoreStub();
+        var handler = CreateHandler(new ReconciliationGatewayStub { Snapshot = Snapshot() }, store, invoices);
+
+        var result = await handler.HandleAsync(
+            Event(PaymentEventKind.InvoicePaid, "cus_1", "sub_1") with { ProviderInvoiceId = "in_1" },
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(BillingErrors.ProviderUnavailable.Code, result.Error!.Code);
+        Assert.Equal(0, store.Calls);
+    }
+
+    [Fact]
+    public async Task OtherEvents_DoNotReadInvoicePayments()
+    {
+        var invoices = new InvoicePaymentGatewayStub();
+        var store = new PaymentEventStoreStub();
+        var handler = CreateHandler(new ReconciliationGatewayStub { Snapshot = Snapshot() }, store, invoices);
+
+        await handler.HandleAsync(
+            Event(PaymentEventKind.InvoicePaymentFailed, "cus_1", "sub_1") with { ProviderInvoiceId = "in_1" },
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(0, invoices.Calls);
+        Assert.Null(store.InvoicePayment);
+    }
+
     private static ProcessPaymentWebhookHandler CreateHandler(
         ReconciliationGatewayStub gateway,
-        PaymentEventStoreStub store) => new(gateway, store, new BillingClock(Now));
+        PaymentEventStoreStub store,
+        InvoicePaymentGatewayStub? invoices = null) =>
+        new(gateway, invoices ?? new InvoicePaymentGatewayStub(), store, new BillingClock(Now));
 
     private static NormalizedPaymentEvent Event(
         PaymentEventKind kind,

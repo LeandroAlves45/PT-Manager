@@ -318,9 +318,30 @@ public sealed class RoundTripAndConstraintTests
     }
 
     [Theory]
+    [InlineData("supplements")]
+    [InlineData("client_supplement_assignments")]
+    public async Task SupplementTiming_AfterAllMigrations_IsOptional(string tableName)
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        const string sql = """
+            SELECT is_nullable = 'YES'
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+                AND table_name = @table_name
+                AND column_name = 'timing';
+        """;
+
+        var isNullable = await _fixture.QueryScalarAsync<bool>(
+            sql,
+            cancellationToken,
+            new NpgsqlParameter("table_name", tableName));
+
+        Assert.True(isNullable);
+    }
+
+    [Theory]
     [InlineData("foods", "is_active")]
     [InlineData("supplements", "serving_size")]
-    [InlineData("supplements", "timing")]
     [InlineData("supplements", "is_active")]
     [InlineData("pack_types", "currency")]
     [InlineData("pack_types", "is_active")]

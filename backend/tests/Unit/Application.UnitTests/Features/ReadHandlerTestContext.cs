@@ -1,3 +1,4 @@
+using Application.Common.Time;
 using Application.Common.Abstractions;
 using Application.Features.Administration.ContentModeration.Abstractions;
 using Application.Features.Administration.ContentModeration.Dtos;
@@ -288,12 +289,18 @@ public abstract class ReadHandlerTestContext
 
     protected sealed class AdminOverviewQueriesFake : IAdminOverviewQueries
     {
-        public Task<AdminOverviewDto> GetAsync(CancellationToken cancellationToken) =>
-            Task.FromResult(new AdminOverviewDto(
+        public UtcRange? LastRevenuePeriod { get; private set; }
+
+        public Task<AdminOverviewDto> GetAsync(UtcRange revenuePeriod, CancellationToken cancellationToken)
+        {
+            LastRevenuePeriod = revenuePeriod;
+            return Task.FromResult(new AdminOverviewDto(
                 new AdminOverviewDto.CatalogCountsDto(3, 2, 1),
                 new AdminOverviewDto.CatalogCountsDto(0, 0, 0),
                 new AdminOverviewDto.CatalogCountsDto(0, 0, 0),
                 new AdminOverviewDto.ModerationCountsDto(5, 0),
-                new AdminOverviewDto.ModerationCountsDto(4, 1)));
+                new AdminOverviewDto.ModerationCountsDto(4, 1),
+                new AdminOverviewDto.TrainerCountsDto(2, 1, 1, 2789)));
+        }
     }
 }

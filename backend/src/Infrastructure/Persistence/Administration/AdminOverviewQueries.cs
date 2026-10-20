@@ -1,3 +1,4 @@
+using Application.Common.Time;
 using Application.Features.Administration.Overview;
 using Domain.ValueObjects;
 using Infrastructure.Data;
@@ -16,7 +17,9 @@ internal sealed class AdminOverviewQueries : IAdminOverviewQueries
     public AdminOverviewQueries(PtManagerDbContext dbContext) =>
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 
-    public async Task<AdminOverviewDto> GetAsync(CancellationToken cancellationToken)
+    public async Task<AdminOverviewDto> GetAsync(
+        UtcRange revenuePeriod,
+        CancellationToken cancellationToken)
     {
         var globalFoods = await _dbContext.Foods
             .IgnoreQueryFilters()
@@ -73,12 +76,47 @@ internal sealed class AdminOverviewQueries : IAdminOverviewQueries
                     exercise.PlatformEnforcementStatus == PlatformEnforcementStatus.Blocked)))
             .FirstOrDefaultAsync(cancellationToken);
 
+        // Só contam treinadores com conta utilizável; o isento é um número à parte e nunca
+        // entra na subscrição ativa paga nem na suspensa (RN-018).
+        var subscriptions = _dbContext.TrainerSubscriptions
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(subscription => _dbContext.Users
+                .IgnoreQueryFilters()
+                .Any(user => user.Id == subscription.TrainerId &&
+                    user.Role == "trainer" && user.IsActive && !user.IsDeleted));
+
+        var trainerCounts = await subscriptions
+            .GroupBy(_ => 1)
+            .Select(group => new
+            {
+                Active = group.Count(subscription => !subscription.IsExemptFromBilling &&
+                    subscription.Status == SubscriptionStatus.Active),
+                Suspended = group.Count(subscription => !subscription.IsExemptFromBilling &&
+                    subscription.Status == SubscriptionStatus.Suspended),
+                Exempt = group.Count(subscription => subscription.IsExemptFromBilling)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var periodStart = revenuePeriod.StartUtc.UtcDateTime;
+        var periodEnd = revenuePeriod.EndUtc.UtcDateTime;
+        var revenueCents = await _dbContext.PlatformSubscriptionPayments
+            .AsNoTracking()
+            .Where(payment => payment.Currency == "eur" &&
+                payment.PaidAt >= periodStart && payment.PaidAt < periodEnd)
+            .SumAsync(payment => (long?)payment.NetCents, cancellationToken) ?? 0;
+
         return new AdminOverviewDto(
             globalFoods ?? EmptyCatalog,
             globalExercises ?? EmptyCatalog,
             globalSupplements ?? EmptyCatalog,
             privateFoods ?? EmptyModeration,
-            privateExercises ?? EmptyModeration);
+            privateExercises ?? EmptyModeration,
+            new AdminOverviewDto.TrainerCountsDto(
+                trainerCounts?.Active ?? 0,
+                trainerCounts?.Suspended ?? 0,
+                trainerCounts?.Exempt ?? 0,
+                revenueCents));
     }
 
     private static AdminOverviewDto.CatalogCountsDto EmptyCatalog => new(0, 0, 0);

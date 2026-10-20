@@ -118,6 +118,7 @@ public sealed class AuthenticationEmailTemplateTests
     [Theory]
     [InlineData("confirm-email.html")]
     [InlineData("client-invitation.html")]
+    [InlineData("trainer-invitation.html")]
     [InlineData("password-reset.html")]
     public void Render_LinkTemplatesStillRequireAnExpiry(string template)
     {

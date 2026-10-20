@@ -15,7 +15,7 @@ public sealed record MyTodaySupplementIntakesDto(
         Guid AssignmentId,
         string SupplementName,
         string ServingSize,
-        string Timing,
+        string? Timing,
         bool IsTaken,
         DateTime? TakenAt);
 }

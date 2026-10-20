@@ -31,6 +31,8 @@ internal static class AuthenticationServiceCollectionExtensions
         services.AddScoped<IAuthenticationRegistrationStore, AuthenticationRegistrationStore>();
         services.AddScoped<IAuthenticationSessionStore, AuthenticationSessionStore>();
         services.AddScoped<IClientInvitationStore, ClientInvitationStore>();
+        services.AddScoped<Application.Features.Authentication.TrainerInvitations.ITrainerInvitationAcceptanceStore,
+            TrainerInvitationAcceptanceStore>();
         services.AddScoped<IAccountSecurityQueries, AccountSecurityQueries>();
         services.AddScoped<IEmailConfirmationStore, EmailConfirmationStore>();
         services.AddScoped<IPasswordResetRequestStore, PasswordResetRequestStore>();

@@ -11,6 +11,7 @@ public interface IPaymentEventStore
     Task<CommitPaymentEventStoreResult> CommitAsync(
         NormalizedPaymentEvent paymentEvent,
         ProviderSubscriptionSnapshot? reconciledSnapshot,
+        InvoicePaymentSnapshot? invoicePayment,
         DateTime now,
         CancellationToken cancellationToken
     );

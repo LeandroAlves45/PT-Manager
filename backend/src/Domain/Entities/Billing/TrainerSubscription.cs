@@ -16,6 +16,7 @@ public sealed class TrainerSubscription
     public int? ClientLimit { get; private set; }
     public int CurrentClientCount { get; private set; }
     public bool IsExemptFromBilling { get; private set; }
+    public DateTime? BillingExemptSince { get; private set; }
     public DateTime? TrialEndsAt { get; private set; }
     public string? StripeSubscriptionId { get; private set; }
     public string? StripeCustomerId { get; private set; }
@@ -64,10 +65,22 @@ public sealed class TrainerSubscription
         UpdatedAt = now;
     }
 
-    /// <summary>Define se o personal trainer está isento de faturação.</summary>
+    /// <summary>
+    /// Dá ou tira a isenção de faturação (RN-008). Isentar passa a Pro ativo, sem limite nem
+    /// trial; tirar volta a Free inativo, porque já não há subscrição paga a sustentar o acesso.
+    /// Repetir o mesmo valor não altera nada, para preservar a data de início da isenção.
+    /// </summary>
     public void SetBillingExemption(bool isExempt, DateTime now)
     {
+        if (IsExemptFromBilling == isExempt)
+            return;
+
         IsExemptFromBilling = isExempt;
+        BillingExemptSince = isExempt ? now : null;
+        Tier = isExempt ? SubscriptionTier.Pro : SubscriptionTier.Free;
+        ClientLimit = Tier.ClientLimit;
+        Status = isExempt ? SubscriptionStatus.Active : SubscriptionStatus.Inactive;
+        TrialEndsAt = null;
         UpdatedAt = now;
     }
 
@@ -181,6 +194,11 @@ public sealed class TrainerSubscription
 
         if (LastProviderStateObservedAt.HasValue &&
             observedAt <= LastProviderStateObservedAt.Value)
+            return false;
+
+        // A isenção é uma decisão do superuser: os eventos da subscrição Stripe cancelada
+        // ao isentar não podem rebaixar o treinador.
+        if (IsExemptFromBilling)
             return false;
 
         StripeCustomerId = normalizedCustomerId;

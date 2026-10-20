@@ -9,7 +9,7 @@ public sealed record ClientSupplementAssignmentDto(
     string? SupplementDescription,
     string UnitOfMeasure,
     string ServingSize,
-    string Timing,
+    string? Timing,
     string? TrainerNotes,
     bool IsActive,
     bool IsSupplementArchived,

@@ -85,7 +85,12 @@ public sealed class DevelopmentEmailConfigurationTests(PostgresApiFixture databa
     [Fact]
     public async Task LogLinksOff_InDevelopment_StillSendsThroughTheProvider()
     {
-        using var factory = new ApiWebApplicationFactory(database.ConnectionString, "Development");
+        // Fixado de propósito: em Development o host lê os User Secrets do programador, e um
+        // DevelopmentEmail:LogLinks=true local fazia este teste depender da máquina.
+        using var factory = new ApiWebApplicationFactory(database.ConnectionString, "Development")
+        {
+            AdditionalSettings = new Dictionary<string, string> { ["DevelopmentEmail:LogLinks"] = "false" }
+        };
         var client = factory.CreateOriginClient();
 
         var response = await client.PostAsJsonAsync(

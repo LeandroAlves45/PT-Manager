@@ -28,6 +28,8 @@ internal static class BillingServiceCollectionExtensions
         services.AddScoped<ICheckoutGateway, StripeCheckoutGateway>();
         services.AddScoped<ICustomerPortalGateway, StripeCustomerPortalGateway>();
         services.AddScoped<ISubscriptionReconciliationGateway, StripeSubscriptionReconciliationGateway>();
+        services.AddScoped<IInvoicePaymentGateway, StripeInvoicePaymentGateway>();
+        services.AddScoped<ISubscriptionCancellationGateway, StripeSubscriptionCancellationGateway>();
         services.AddScoped<IPaymentWebhookAuthenticator, StripePaymentWebhookAuthenticator>();
 
         return services;

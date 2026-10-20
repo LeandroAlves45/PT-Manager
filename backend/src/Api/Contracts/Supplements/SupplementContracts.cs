@@ -8,7 +8,7 @@ public sealed record CreateSupplementRequest(
     string? Description,
     string UnitOfMeasure,
     string ServingSize,
-    string Timing,
+    string? Timing,
     string? TrainerNotes);
 
 /// <summary>Substitui os campos editáveis de um suplemento privado.</summary>
@@ -17,7 +17,7 @@ public sealed record UpdateSupplementRequest(
     string? Description,
     string UnitOfMeasure,
     string ServingSize,
-    string Timing,
+    string? Timing,
     string? TrainerNotes);
 
 /// <summary>Suplemento visível ao personal trainer, global ou privado.</summary>
@@ -28,7 +28,7 @@ public sealed record SupplementResponse(
     string? Description,
     string UnitOfMeasure,
     string ServingSize,
-    string Timing,
+    string? Timing,
     string? TrainerNotes,
     bool IsActive,
     DateTime CreatedAt,
@@ -60,7 +60,7 @@ public sealed record CreateGlobalSupplementRequest(
     string? Description,
     string UnitOfMeasure,
     string ServingSize,
-    string Timing,
+    string? Timing,
     string? TrainerNotes);
 
 /// <summary>Substitui os campos editáveis de um suplemento global.</summary>
@@ -69,7 +69,7 @@ public sealed record UpdateGlobalSupplementRequest(
     string? Description,
     string UnitOfMeasure,
     string ServingSize,
-    string Timing,
+    string? Timing,
     string? TrainerNotes);
 
 /// <summary>Suplemento global apresentado ao superuser.</summary>
@@ -80,7 +80,7 @@ public sealed record GlobalSupplementResponse(
     string? Description,
     string UnitOfMeasure,
     string ServingSize,
-    string Timing,
+    string? Timing,
     string? TrainerNotes,
     bool IsActive,
     DateTime CreatedAt,
@@ -117,7 +117,7 @@ public sealed record AssignSupplementRequest(
 /// <summary>Ajusta a prescrição de uma atribuição existente.</summary>
 public sealed record UpdateSupplementAssignmentRequest(
     string ServingSize,
-    string Timing,
+    string? Timing,
     string? TrainerNotes);
 
 /// <summary>Atribuição de suplemento, na perspetiva do personal trainer.</summary>
@@ -129,7 +129,7 @@ public sealed record ClientSupplementAssignmentResponse(
     string? SupplementDescription,
     string UnitOfMeasure,
     string ServingSize,
-    string Timing,
+    string? Timing,
     string? TrainerNotes,
     bool IsActive,
     bool IsSupplementArchived,

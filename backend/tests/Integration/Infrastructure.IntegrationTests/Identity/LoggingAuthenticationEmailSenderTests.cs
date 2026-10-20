@@ -39,6 +39,7 @@ public sealed class LoggingAuthenticationEmailSenderTests
         {
             ("email_confirmation", sender => sender.SendEmailConfirmationAsync(Secret, cancellationToken)),
             ("client_invitation", sender => sender.SendClientInvitationAsync(Secret, cancellationToken)),
+            ("trainer_invitation", sender => sender.SendTrainerInvitationAsync(Secret, cancellationToken)),
             ("password_reset", sender => sender.SendPasswordResetAsync(Secret, cancellationToken)),
             ("account_already_exists", sender => sender.SendAccountAlreadyExistsAsync(
                 Secret.RecipientEmail, cancellationToken))

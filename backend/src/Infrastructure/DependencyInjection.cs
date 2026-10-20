@@ -104,6 +104,10 @@ public static class DependencyInjection
         services.AddScoped<IPrivateCatalogModerationStore, PrivateCatalogModerationStore>();
         services.AddScoped<IModerationQueueQueries, ModerationQueueQueries>();
         services.AddScoped<IAdminOverviewQueries, AdminOverviewQueries>();
+        services.AddScoped<Application.Features.Administration.Trainers.Abstractions.ITrainerAdministrationQueries,
+            TrainerAdministrationQueries>();
+        services.AddScoped<Application.Features.Administration.Trainers.Abstractions.ITrainerAdministrationStore,
+            TrainerAdministrationStore>();
 
         // Foods
         services.AddScoped<IFoodStore, FoodStore>();

@@ -8,7 +8,7 @@ public sealed record GlobalSupplementDto(
     string? Description,
     string UnitOfMeasure,
     string ServingSize,
-    string Timing,
+    string? Timing,
     string? TrainerNotes,
     bool IsActive,
     DateTime CreatedAt,

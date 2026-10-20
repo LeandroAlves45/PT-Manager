@@ -33,6 +33,7 @@ internal sealed class PaymentEventStore : IPaymentEventStore
     public async Task<CommitPaymentEventStoreResult> CommitAsync(
         NormalizedPaymentEvent paymentEvent,
         ProviderSubscriptionSnapshot? snapshot,
+        InvoicePaymentSnapshot? invoicePayment,
         DateTime now,
         CancellationToken cancellationToken
     )
@@ -79,6 +80,7 @@ internal sealed class PaymentEventStore : IPaymentEventStore
                     status = await StageEventEffectsAsync(
                         paymentEvent,
                         snapshot,
+                        invoicePayment,
                         now,
                         trainerId,
                         operationToken);
@@ -109,6 +111,7 @@ internal sealed class PaymentEventStore : IPaymentEventStore
     private async Task<CommitPaymentEventStoreStatus> StageEventEffectsAsync(
         NormalizedPaymentEvent paymentEvent,
         ProviderSubscriptionSnapshot? snapshot,
+        InvoicePaymentSnapshot? invoicePayment,
         DateTime now,
         Guid trainerId,
         CancellationToken cancellationToken
@@ -135,6 +138,22 @@ internal sealed class PaymentEventStore : IPaymentEventStore
             paymentEvent.EventType,
             now
         ));
+
+        // A mesma fatura pode chegar em dois eventos distintos; conta uma vez.
+        if (invoicePayment is not null &&
+            !await _dbContext.PlatformSubscriptionPayments.AnyAsync(
+                payment => payment.StripeInvoiceId == invoicePayment.ProviderInvoiceId,
+                cancellationToken))
+        {
+            _dbContext.PlatformSubscriptionPayments.Add(new PlatformSubscriptionPayment(
+                trainerId,
+                invoicePayment.ProviderInvoiceId,
+                invoicePayment.AmountPaidCents,
+                invoicePayment.NetCents,
+                invoicePayment.Currency,
+                invoicePayment.PaidAt,
+                now));
+        }
 
         if (paymentEvent.Kind == PaymentEventKind.CheckoutCompleted &&
             paymentEvent.ProviderCheckoutSessionId is not null)

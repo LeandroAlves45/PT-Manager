@@ -11,6 +11,10 @@ public interface IAuthenticationEmailSender
         IssuedAuthenticationSecret secret,
         CancellationToken cancellationToken);
 
+    Task<AuthenticationEmailDeliveryOutcome> SendTrainerInvitationAsync(
+        IssuedAuthenticationSecret secret,
+        CancellationToken cancellationToken);
+
     Task<AuthenticationEmailDeliveryOutcome> SendPasswordResetAsync(
         IssuedAuthenticationSecret secret,
         CancellationToken cancellationToken);

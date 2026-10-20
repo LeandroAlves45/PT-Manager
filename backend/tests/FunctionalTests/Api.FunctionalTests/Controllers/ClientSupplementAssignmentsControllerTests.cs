@@ -315,6 +315,32 @@ public sealed class ClientSupplementAssignmentsControllerTests
         Assert.True(body.GetProperty("is_supplement_archived").GetBoolean());
     }
 
+    [Theory]
+    [InlineData(null, "Daily")]
+    [InlineData("", null)]
+    [InlineData("   ", null)]
+    public async Task Assign_Timing_NullInheritsTheCatalogButEmptyLeavesItEmpty(
+        string? timing,
+        string? expected)
+    {
+        // 6GB: o Momento é opcional. Limpar o campo não pode trazer de volta o do catálogo.
+        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        var supplementId = await SeedSupplementAsync(tenant.TrainerId);
+
+        var response = await ApiJsonPayload.PostAsync(
+            TrainerClient(tenant.TrainerId),
+            "/api/v1/supplement-assignments",
+            new AssignSupplementRequest(tenant.ClientId, supplementId, "5 g", timing, null),
+            Token);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var body = await ReadJsonAsync(response);
+        if (expected is null)
+            Assert.Equal(JsonValueKind.Null, body.GetProperty("timing").ValueKind);
+        else
+            Assert.Equal(expected, body.GetProperty("timing").GetString());
+    }
+
     private async Task<Guid> SeedSupplementAsync(Guid trainerId)
     {
         var created = await ApiJsonPayload.PostAsync(

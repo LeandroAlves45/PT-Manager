@@ -156,7 +156,7 @@ public sealed class SupplementHandlerPolicyTests
         }
 
         public Task<ClientSupplementAssignmentStoreResult> UpdateInstructionsAsync(
-            Guid trainerId, Guid assignmentId, string servingSize, string timing,
+            Guid trainerId, Guid assignmentId, string servingSize, string? timing,
             string? trainerNotes, DateTime now, CancellationToken cancellationToken) =>
             Task.FromResult(ClientSupplementAssignmentStoreResult.For(
                 ClientSupplementAssignmentStoreResult.Status.AssignmentNotFound));
@@ -209,7 +209,7 @@ public sealed class SupplementHandlerPolicyTests
 
         public Task<GlobalSupplementStoreResult> CreateAsync(
             Guid actorUserId, string name, string? description, string unitOfMeasure,
-            string servingSize, string timing, string? trainerNotes, DateTime now,
+            string servingSize, string? timing, string? trainerNotes, DateTime now,
             CancellationToken cancellationToken)
         {
             Calls++;
@@ -224,7 +224,7 @@ public sealed class SupplementHandlerPolicyTests
 
         public Task<GlobalSupplementStoreResult> UpdateAsync(
             Guid actorUserId, Guid supplementId, string name, string? description,
-            string unitOfMeasure, string servingSize, string timing,
+            string unitOfMeasure, string servingSize, string? timing,
             string? trainerNotes, DateTime now, CancellationToken cancellationToken) =>
             Task.FromResult(GlobalSupplementStoreResult.For(
                 GlobalSupplementStoreResult.Status.NotFound));

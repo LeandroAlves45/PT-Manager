@@ -104,7 +104,9 @@ public sealed class PersistenceSchemaMetadataTests : IDisposable
         Assert.Equal(
             new[] { "unit_of_measure", "serving_size", "timing", "trainer_notes" },
             mappings.Select(value => value.ColumnName));
-        Assert.All(mappings.Take(3), mapping => Assert.False(mapping.Property.IsNullable));
+        Assert.All(mappings.Take(2), mapping => Assert.False(mapping.Property.IsNullable));
+        // O Momento é opcional desde a 6GB (business-rules.md, 2026-10-15).
+        Assert.True(mappings[2].Property.IsNullable);
     }
 
     [Fact]

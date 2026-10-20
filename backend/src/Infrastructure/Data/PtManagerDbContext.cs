@@ -38,7 +38,7 @@ public sealed class PtManagerDbContext : DbContext
         _tenantContext = tenantContext;
     }
 
-    // DbSet<T> para as 37 entidades de domínio e um modelo técnico de replay QStash.
+    // DbSet<T> para as 39 entidades de domínio e um modelo técnico de replay QStash.
     public DbSet<User> Users => Set<User>();
     public DbSet<AdministrativeAuditEntry> AdministrativeAuditEntries =>
         Set<AdministrativeAuditEntry>();
@@ -52,6 +52,9 @@ public sealed class PtManagerDbContext : DbContext
     public DbSet<TrainerSubscription> TrainerSubscriptions => Set<TrainerSubscription>();
     public DbSet<BillingCheckoutOperation> BillingCheckoutOperations => Set<BillingCheckoutOperation>();
     public DbSet<InviteToken> InviteTokens => Set<InviteToken>();
+    public DbSet<TrainerInvitation> TrainerInvitations => Set<TrainerInvitation>();
+    public DbSet<PlatformSubscriptionPayment> PlatformSubscriptionPayments =>
+        Set<PlatformSubscriptionPayment>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
@@ -241,7 +244,8 @@ public sealed class PtManagerDbContext : DbContext
                         tp.OwnerTrainerId == CurrentTrainerId))));
 
         // POLÍTICA C — sem filtro de tenant.
-        // User, RefreshToken, InviteToken, ProcessedStripeEvent e recibos QStash:
+        // User, RefreshToken, InviteToken, TrainerInvitation, ProcessedStripeEvent,
+        // PlatformSubscriptionPayment (só lida pelo superuser) e recibos QStash:
         // raiz de tenant, identidade ou estado técnico necessário antes de existir tenant
     }
 

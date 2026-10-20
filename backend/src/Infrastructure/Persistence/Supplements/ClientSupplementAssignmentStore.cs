@@ -40,7 +40,7 @@ internal sealed class ClientSupplementAssignmentStore : IClientSupplementAssignm
         Guid trainerId,
         Guid assignmentId,
         string servingSize,
-        string timing,
+        string? timing,
         string? trainerNotes,
         DateTime now,
         CancellationToken cancellationToken)
@@ -152,7 +152,7 @@ internal sealed class ClientSupplementAssignmentStore : IClientSupplementAssignm
         Guid trainerId,
         Guid assignmentId,
         string servingSize,
-        string timing,
+        string? timing,
         string? trainerNotes,
         DateTime now,
         CancellationToken cancellationToken)

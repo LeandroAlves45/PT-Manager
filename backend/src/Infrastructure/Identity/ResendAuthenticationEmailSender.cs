@@ -49,6 +49,18 @@ internal sealed class ResendAuthenticationEmailSender : IAuthenticationEmailSend
             "Aceitar convite",
             cancellationToken);
 
+    public Task<AuthenticationEmailDeliveryOutcome> SendTrainerInvitationAsync(
+        IssuedAuthenticationSecret secret,
+        CancellationToken cancellationToken) =>
+        SendAsync(
+            secret,
+            AuthenticationLinkBuilder.TrainerInvitePath,
+            "trainer-invitation.html",
+            "Convite para o PT Manager",
+            "Foi convidado(a) para usar o PT Manager como personal trainer.",
+            "Criar conta",
+            cancellationToken);
+
     public Task<AuthenticationEmailDeliveryOutcome> SendPasswordResetAsync(
         IssuedAuthenticationSecret secret,
         CancellationToken cancellationToken) =>

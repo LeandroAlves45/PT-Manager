@@ -1,5 +1,6 @@
 using Application.Common.Abstractions;
 using Application.Common.Authorization;
+using Application.Common.Time;
 using Application.Results;
 
 namespace Application.Features.Administration.Overview;
@@ -11,14 +12,20 @@ public sealed record GetAdminOverviewQuery;
 public sealed class GetAdminOverviewHandler
 {
     private readonly ITenantContext _tenantContext;
+    private static readonly TimeZoneInfo PlatformTimeZone =
+        TimeZoneInfo.FindSystemTimeZoneById("Europe/Lisbon");
+
     private readonly IAdminOverviewQueries _queries;
+    private readonly IClock _clock;
 
     public GetAdminOverviewHandler(
         ITenantContext tenantContext,
-        IAdminOverviewQueries queries)
+        IAdminOverviewQueries queries,
+        IClock clock)
     {
         _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
         _queries = queries ?? throw new ArgumentNullException(nameof(queries));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     }
 
     public async Task<Result<AdminOverviewDto>> HandleAsync(
@@ -33,6 +40,14 @@ public sealed class GetAdminOverviewHandler
         if (!actor.IsSuccess)
             return Result<AdminOverviewDto>.Failure(actor.Error!);
 
-        return Result<AdminOverviewDto>.Success(await _queries.GetAsync(cancellationToken));
+        var today = LocalDates.Today(_clock.UtcNow, PlatformTimeZone);
+        var monthStart = new DateOnly(today.Year, today.Month, 1);
+        var revenuePeriod = LocalDates.ToUtcRange(
+            monthStart,
+            monthStart.AddMonths(1),
+            PlatformTimeZone);
+
+        return Result<AdminOverviewDto>.Success(
+            await _queries.GetAsync(revenuePeriod, cancellationToken));
     }
 }

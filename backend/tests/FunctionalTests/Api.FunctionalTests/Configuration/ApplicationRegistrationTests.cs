@@ -19,10 +19,11 @@ public sealed class ApplicationRegistrationTests
             descriptor.ServiceType.IsGenericType
             && descriptor.ServiceType.GetGenericTypeDefinition() == typeof(IValidator<>));
 
-        // 153 anteriores + 3 handlers 6GA (pedido de confirmação, registo de convidado, conta).
-        Assert.Equal(156, handlerCount);
-        // 80 anteriores + 2 validators 6GA (pedido de confirmação, registo de convidado).
-        Assert.Equal(82, validatorCount);
+        // 156 anteriores + 8 handlers 6GB-SU (procura, isentos, isenção, convidar, convites,
+        // anular, estado e registo do convite de treinador).
+        Assert.Equal(164, handlerCount);
+        // 82 anteriores + 5 validators 6GB-SU (procura, isentos, convidar, estado e registo).
+        Assert.Equal(87, validatorCount);
     }
 
     [Fact]

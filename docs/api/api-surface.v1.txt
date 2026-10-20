@@ -1,3 +1,5 @@
+DELETE /api/v1/admin/trainer-invitations/{invitationId} [path:invitationId!] auth=required
+DELETE /api/v1/admin/trainers/{trainerId}/billing-exemption [path:trainerId!] auth=required
 DELETE /api/v1/exercises/{exerciseId}/video [path:exerciseId!] auth=required
 DELETE /api/v1/global-exercises/{exerciseId} [path:exerciseId!] auth=required
 DELETE /api/v1/global-exercises/{exerciseId}/video [path:exerciseId!] auth=required
@@ -11,6 +13,8 @@ GET /api/v1/admin/content-moderation/exercises [query:page_number?,query:page_si
 GET /api/v1/admin/content-moderation/exercises/{exerciseId}/video [path:exerciseId!] auth=required
 GET /api/v1/admin/content-moderation/foods [query:page_number?,query:page_size?,query:search?,query:status?] auth=required
 GET /api/v1/admin/overview auth=required
+GET /api/v1/admin/trainer-invitations auth=required
+GET /api/v1/admin/trainers/exempt [query:page_number?,query:page_size?] auth=required
 GET /api/v1/auth/account auth=required
 GET /api/v1/billing/subscription auth=required
 GET /api/v1/check-ins [query:client_id?,query:from_date?,query:page_number?,query:page_size?,query:status?,query:to_date?] auth=required
@@ -88,6 +92,9 @@ POST /api/v1/admin/content-moderation/exercises/{exerciseId}/block [path:exercis
 POST /api/v1/admin/content-moderation/exercises/{exerciseId}/unblock [path:exerciseId!] auth=required
 POST /api/v1/admin/content-moderation/foods/{foodId}/block [path:foodId!] auth=required
 POST /api/v1/admin/content-moderation/foods/{foodId}/unblock [path:foodId!] auth=required
+POST /api/v1/admin/trainer-invitations auth=required
+POST /api/v1/admin/trainers/lookup auth=required
+POST /api/v1/admin/trainers/{trainerId}/billing-exemption [path:trainerId!] auth=required
 POST /api/v1/auth/accept-invite auth=required
 POST /api/v1/auth/accept-invite/register auth=anonymous
 POST /api/v1/auth/change-password auth=required
@@ -106,6 +113,8 @@ POST /api/v1/auth/password-reset/request auth=anonymous
 POST /api/v1/auth/refresh auth=anonymous
 POST /api/v1/auth/resend-confirmation auth=required
 POST /api/v1/auth/signup auth=anonymous
+POST /api/v1/auth/trainer-invite/register auth=anonymous
+POST /api/v1/auth/trainer-invite/status auth=anonymous
 POST /api/v1/billing/checkout auth=required
 POST /api/v1/billing/customer-portal auth=required
 POST /api/v1/billing/webhook auth=required

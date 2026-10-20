@@ -9,15 +9,18 @@ namespace Application.Features.Billing.Webhooks;
 public sealed class ProcessPaymentWebhookHandler
 {
     private readonly ISubscriptionReconciliationGateway _gateway;
+    private readonly IInvoicePaymentGateway _invoiceGateway;
     private readonly IPaymentEventStore _store;
     private readonly IClock _clock;
 
     public ProcessPaymentWebhookHandler(
         ISubscriptionReconciliationGateway gateway,
+        IInvoicePaymentGateway invoiceGateway,
         IPaymentEventStore store,
         IClock clock)
     {
         _gateway = gateway ?? throw new ArgumentNullException(nameof(gateway));
+        _invoiceGateway = invoiceGateway ?? throw new ArgumentNullException(nameof(invoiceGateway));
         _store = store ?? throw new ArgumentNullException(nameof(store));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     }
@@ -50,9 +53,27 @@ public sealed class ProcessPaymentWebhookHandler
             snapshot = reconciliation.Snapshot;
         }
 
+        // RN-018: o painel soma o líquido das faturas pagas; sem esse valor o evento não fecha,
+        // para o Stripe voltar a entregá-lo em vez de o dinheiro ficar por contar.
+        InvoicePaymentSnapshot? invoicePayment = null;
+        if (paymentEvent.Kind == PaymentEventKind.InvoicePaid &&
+            paymentEvent.ProviderInvoiceId is not null)
+        {
+            var paid = await _invoiceGateway.GetPaidInvoiceAsync(
+                paymentEvent.ProviderInvoiceId,
+                cancellationToken
+            );
+
+            if (paid.Status != SubscriptionReconciliationStatus.Success)
+                return Result.Failure(MapReconciliationError(paid.Status));
+
+            invoicePayment = paid.Payment;
+        }
+
         var committed = await _store.CommitAsync(
             paymentEvent,
             snapshot,
+            invoicePayment,
             _clock.UtcNow,
             cancellationToken
         );

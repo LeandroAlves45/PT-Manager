@@ -12,7 +12,7 @@ public sealed class Supplement
     public string? Description { get; private set; }
     public string UnitOfMeasure { get; private set; } = null!;
     public string ServingSize { get; private set; } = null!;
-    public string Timing { get; private set; } = null!;
+    public string? Timing { get; private set; }
     public string? TrainerNotes { get; private set; }
     public bool IsActive { get; private set; }
     public DateTime CreatedAt { get; private set; }
@@ -28,7 +28,7 @@ public sealed class Supplement
         string? description,
         string unitOfMeasure,
         string servingSize,
-        string timing,
+        string? timing,
         string? trainerNotes,
         DateTime now
     )
@@ -55,7 +55,7 @@ public sealed class Supplement
         string? description,
         string unitOfMeasure,
         string servingSize,
-        string timing,
+        string? timing,
         string? trainerNotes,
         DateTime now
     )
@@ -86,14 +86,14 @@ public sealed class Supplement
         string? description,
         string unitOfMeasure,
         string servingSize,
-        string timing,
+        string? timing,
         string? trainerNotes
     )
     {
         var normalizedName = name?.Trim() ?? string.Empty;
         var normalizedUnit = unitOfMeasure?.Trim() ?? string.Empty;
         var normalizedServingSize = servingSize?.Trim() ?? string.Empty;
-        var normalizedTiming = timing?.Trim() ?? string.Empty;
+        var normalizedTiming = NormalizeOptional(timing);
 
         if (normalizedName.Length is 0 or > 255)
             throw new DomainException("Supplement name must be between 1 and 255 characters.");
@@ -101,8 +101,8 @@ public sealed class Supplement
             throw new DomainException("Unit of measure must contain between 1 and 50 characters.");
         if (normalizedServingSize.Length is 0 or > 100)
             throw new DomainException("Serving size must contain between 1 and 100 characters.");
-        if (normalizedTiming.Length is 0 or > 255)
-            throw new DomainException("Timing must contain between 1 and 255 characters.");
+        if (normalizedTiming?.Length > 255)
+            throw new DomainException("Timing must contain at most 255 characters.");
 
         Name = normalizedName;
         Description = NormalizeOptional(description);

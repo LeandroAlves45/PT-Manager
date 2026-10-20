@@ -92,6 +92,15 @@ internal sealed class ReconciliationGatewayStub : ISubscriptionReconciliationGat
     { Calls++; RequestedProviderCustomerId = providerCustomerId; RequestedProviderSubscriptionId = providerSubscriptionId; return Task.FromResult(new SubscriptionReconciliationOutcome(Status, Snapshot)); }
 }
 
+internal sealed class InvoicePaymentGatewayStub : IInvoicePaymentGateway
+{
+    public InvoicePaymentOutcome Outcome { get; set; } = new(SubscriptionReconciliationStatus.Success);
+    public int Calls { get; private set; }
+    public string? RequestedInvoiceId { get; private set; }
+    public Task<InvoicePaymentOutcome> GetPaidInvoiceAsync(string providerInvoiceId, CancellationToken cancellationToken)
+    { Calls++; RequestedInvoiceId = providerInvoiceId; return Task.FromResult(Outcome); }
+}
+
 internal sealed class PaymentEventStoreStub : IPaymentEventStore
 {
     public bool IsProcessed { get; set; }
@@ -99,10 +108,12 @@ internal sealed class PaymentEventStoreStub : IPaymentEventStore
     public int Calls { get; private set; }
     public NormalizedPaymentEvent? PaymentEvent { get; private set; }
     public ProviderSubscriptionSnapshot? Snapshot { get; private set; }
+    public InvoicePaymentSnapshot? InvoicePayment { get; private set; }
     public DateTime? CommittedAt { get; private set; }
     public Task<bool> IsProcessedAsync(string eventId, CancellationToken cancellationToken) =>
         Task.FromResult(IsProcessed);
     public Task<CommitPaymentEventStoreResult> CommitAsync(NormalizedPaymentEvent paymentEvent,
-        ProviderSubscriptionSnapshot? reconciledSnapshot, DateTime now, CancellationToken cancellationToken)
-    { Calls++; PaymentEvent = paymentEvent; Snapshot = reconciledSnapshot; CommittedAt = now; return Task.FromResult(Result); }
+        ProviderSubscriptionSnapshot? reconciledSnapshot, InvoicePaymentSnapshot? invoicePayment, DateTime now,
+        CancellationToken cancellationToken)
+    { Calls++; PaymentEvent = paymentEvent; Snapshot = reconciledSnapshot; InvoicePayment = invoicePayment; CommittedAt = now; return Task.FromResult(Result); }
 }

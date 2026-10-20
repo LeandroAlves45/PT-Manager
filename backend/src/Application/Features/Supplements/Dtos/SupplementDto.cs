@@ -8,7 +8,7 @@ public sealed record SupplementDto(
     string? Description,
     string UnitOfMeasure,
     string ServingSize,
-    string Timing,
+    string? Timing,
     string? TrainerNotes,
     bool IsActive,
     DateTime CreatedAt,

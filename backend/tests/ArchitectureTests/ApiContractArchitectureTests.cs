@@ -24,9 +24,10 @@ namespace ArchitectureTests;
 /// </remarks>
 public sealed class ApiContractArchitectureTests
 {
-    private const int ExpectedConcreteControllers = 32;
-    private const int ExpectedDeclaredActions = 168;
-    private const int ExpectedEffectiveOperations = 173;
+    // 6GB-SU: +3 controllers (treinadores, convites de treinador, convite anónimo) e +9 ações.
+    private const int ExpectedConcreteControllers = 35;
+    private const int ExpectedDeclaredActions = 177;
+    private const int ExpectedEffectiveOperations = 182;
 
     private static readonly IReadOnlyList<Operation> Operations = DiscoverOperations();
 

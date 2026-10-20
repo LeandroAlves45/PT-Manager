@@ -36,7 +36,6 @@ public sealed class SupplementTests
     [InlineData(256, "grams", "5 g", "daily")]
     [InlineData(1, "", "5 g", "daily")]
     [InlineData(1, "grams", "", "daily")]
-    [InlineData(1, "grams", "5 g", "")]
     public void Constructor_WhenARequiredFieldExceedsItsBoundary_ThrowsDomainException(
         int nameLength, string unit, string servingSize, string timing)
     {
@@ -45,6 +44,37 @@ public sealed class SupplementTests
             unit, servingSize, timing, null, Now);
 
         Assert.Throws<DomainException>(action);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Constructor_WithoutTiming_StoresNull(string? timing)
+    {
+        var supplement = new Supplement(
+            null, Guid.NewGuid(), "Creatine", null, "grams", "5 g", timing, null, Now);
+
+        Assert.Null(supplement.Timing);
+    }
+
+    [Fact]
+    public void Constructor_WithTimingLongerThan255_ThrowsDomainException()
+    {
+        var action = () => new Supplement(
+            null, Guid.NewGuid(), "Creatine", null, "grams", "5 g", new string('x', 256), null, Now);
+
+        Assert.Throws<DomainException>(action);
+    }
+
+    [Fact]
+    public void Update_ClearingTiming_StoresNull()
+    {
+        var supplement = CreateSupplement();
+
+        supplement.Update("Creatine", null, "grams", "5 g", "  ", null, Now.AddMinutes(1));
+
+        Assert.Null(supplement.Timing);
     }
 
     [Fact]

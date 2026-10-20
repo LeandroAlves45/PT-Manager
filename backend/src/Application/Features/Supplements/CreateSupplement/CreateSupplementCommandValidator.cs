@@ -26,8 +26,6 @@ public sealed class CreateSupplementCommandValidator : AbstractValidator<CreateS
             .WithErrorCode("supplement_serving_size_too_long");
 
         RuleFor(command => command.Timing)
-            .NotEmpty()
-            .WithErrorCode("supplement_timing_required")
             .MaximumLength(255)
             .WithErrorCode("supplement_timing_too_long");
     }

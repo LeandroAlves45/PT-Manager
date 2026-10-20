@@ -48,6 +48,9 @@ internal sealed class TrainerSubscriptionConfiguration : IEntityTypeConfiguratio
             .HasColumnName("is_exempt_from_billing")
             .HasDefaultValue(false);
 
+        builder.Property(ts => ts.BillingExemptSince)
+            .HasColumnName("billing_exempt_since");
+
         builder.Property(ts => ts.TrialEndsAt)
             .HasColumnName("trial_ends_at");
 

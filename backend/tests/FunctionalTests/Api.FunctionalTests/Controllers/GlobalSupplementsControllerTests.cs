@@ -146,6 +146,39 @@ public sealed class GlobalSupplementsControllerTests
         Assert.Equal(HttpStatusCode.NotFound, afterDelete.StatusCode);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("   ")]
+    public async Task Create_WithoutTiming_StoresNullTiming(string? timing)
+    {
+        // O Momento não é obrigatório (decisão de 2026-10-15).
+        var client = await SuperuserClientAsync();
+
+        var response = await ApiJsonPayload.PostAsync(
+            client,
+            "/api/v1/global-supplements",
+            NewGlobalSupplement($"Sem momento {Guid.NewGuid():N}") with { Timing = timing },
+            Token);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var body = await ReadJsonAsync(response);
+        Assert.Equal(JsonValueKind.Null, body.GetProperty("timing").ValueKind);
+    }
+
+    [Fact]
+    public async Task Create_WithTimingLongerThan255_IsBadRequest()
+    {
+        var client = await SuperuserClientAsync();
+
+        var response = await ApiJsonPayload.PostAsync(
+            client,
+            "/api/v1/global-supplements",
+            NewGlobalSupplement($"Momento longo {Guid.NewGuid():N}") with { Timing = new string('x', 256) },
+            Token);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     private static CreateGlobalSupplementRequest NewGlobalSupplement(string name) => new(
         name,
         null,

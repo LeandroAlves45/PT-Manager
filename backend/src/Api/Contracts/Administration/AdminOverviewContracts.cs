@@ -23,13 +23,32 @@ public sealed record ModerationCountsResponse(int TotalCount, int BlockedCount)
     }
 }
 
+/// <summary>Contagens de treinadores e o líquido recebido este mês, em cêntimos de euro.</summary>
+public sealed record TrainerCountsResponse(
+    int ActiveSubscriptionCount,
+    int SuspendedSubscriptionCount,
+    int ExemptCount,
+    long RevenueThisMonthCents)
+{
+    public static TrainerCountsResponse From(AdminOverviewDto.TrainerCountsDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+        return new TrainerCountsResponse(
+            dto.ActiveSubscriptionCount,
+            dto.SuspendedSubscriptionCount,
+            dto.ExemptCount,
+            dto.RevenueThisMonthCents);
+    }
+}
+
 /// <summary>Visão geral da plataforma para o superuser.</summary>
 public sealed record AdminOverviewResponse(
     CatalogCountsResponse GlobalFoods,
     CatalogCountsResponse GlobalExercises,
     CatalogCountsResponse GlobalSupplements,
     ModerationCountsResponse PrivateFoods,
-    ModerationCountsResponse PrivateExercises)
+    ModerationCountsResponse PrivateExercises,
+    TrainerCountsResponse Trainers)
 {
     public static AdminOverviewResponse From(AdminOverviewDto dto)
     {
@@ -39,6 +58,7 @@ public sealed record AdminOverviewResponse(
             CatalogCountsResponse.From(dto.GlobalExercises),
             CatalogCountsResponse.From(dto.GlobalSupplements),
             ModerationCountsResponse.From(dto.PrivateFoods),
-            ModerationCountsResponse.From(dto.PrivateExercises));
+            ModerationCountsResponse.From(dto.PrivateExercises),
+            TrainerCountsResponse.From(dto.Trainers));
     }
 }

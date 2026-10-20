@@ -34,6 +34,11 @@ internal sealed class LoggingAuthenticationEmailSender : IAuthenticationEmailSen
         CancellationToken cancellationToken) =>
         Log("client_invitation", secret, AuthenticationLinkBuilder.AcceptInvitePath);
 
+    public Task<AuthenticationEmailDeliveryOutcome> SendTrainerInvitationAsync(
+        IssuedAuthenticationSecret secret,
+        CancellationToken cancellationToken) =>
+        Log("trainer_invitation", secret, AuthenticationLinkBuilder.TrainerInvitePath);
+
     public Task<AuthenticationEmailDeliveryOutcome> SendPasswordResetAsync(
         IssuedAuthenticationSecret secret,
         CancellationToken cancellationToken) =>

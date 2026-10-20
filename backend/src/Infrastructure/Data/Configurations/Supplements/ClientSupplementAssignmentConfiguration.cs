@@ -19,7 +19,7 @@ internal sealed class ClientSupplementAssignmentConfiguration : IEntityTypeConfi
                 "btrim(serving_size) <> ''");
             table.HasCheckConstraint(
                 "ck_client_supplement_assignments_timing",
-                "btrim(timing) <> ''");
+                "timing IS NULL OR btrim(timing) <> ''");
         });
 
         builder.HasKey(assignment => assignment.Id);
@@ -46,8 +46,7 @@ internal sealed class ClientSupplementAssignmentConfiguration : IEntityTypeConfi
 
         builder.Property(assignment => assignment.Timing)
             .HasColumnName("timing")
-            .HasMaxLength(255)
-            .IsRequired();
+            .HasMaxLength(255);
 
         builder.Property(assignment => assignment.TrainerNotes)
             .HasColumnName("trainer_notes");

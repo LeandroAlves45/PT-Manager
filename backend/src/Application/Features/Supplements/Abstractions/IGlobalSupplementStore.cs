@@ -9,7 +9,7 @@ public interface IGlobalSupplementStore
         string? description,
         string unitOfMeasure,
         string servingSize,
-        string timing,
+        string? timing,
         string? trainerNotes,
         DateTime now,
         CancellationToken cancellationToken
@@ -22,7 +22,7 @@ public interface IGlobalSupplementStore
         string? description,
         string unitOfMeasure,
         string servingSize,
-        string timing,
+        string? timing,
         string? trainerNotes,
         DateTime now,
         CancellationToken cancellationToken

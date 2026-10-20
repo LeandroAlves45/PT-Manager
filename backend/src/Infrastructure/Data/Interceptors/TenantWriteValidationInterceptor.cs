@@ -87,6 +87,16 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                     ValidateRequiredOwnership(entry, "OwnerTrainerId", tenantId.Value);
                     break;
 
+                // Isenção de faturação (RN-008): o superuser altera a subscrição de um
+                // treinador sem tenant efetivo. A auditoria é exigida em
+                // ValidateAdministrativeAuditEntries e o dono nunca muda.
+                case TrainerSubscription when entry.State == EntityState.Modified &&
+                    IsSuperuserAdministration():
+                    if ((Guid?)entry.Property("TrainerId").OriginalValue !=
+                        (Guid?)entry.Property("TrainerId").CurrentValue)
+                        throw new DomainException("Tenant ownership cannot be changed.");
+                    break;
+
                 // Política A': ownership obrigatório sem soft delete
                 case TrainerSettings:
                 case TrainerSubscription:
@@ -678,9 +688,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
         // Moderação da plataforma altera catálogo privado sem tenant efetivo. O ator
         // já foi revalidado dentro da transação e a auditoria é exigida em
         // ValidateAdministrativeAuditEntries, pelo que não há escrita anónima.
-        if (_tenantContext.IsAdministrative &&
-            string.Equals(_tenantContext.Role, "superuser", StringComparison.Ordinal) &&
-            !_tenantContext.TrainerId.HasValue)
+        if (IsSuperuserAdministration())
             return;
 
         tenantId ??= context.RequireTenant();
@@ -726,6 +734,11 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
             throw new DomainException("Cannot write an exercise video for another tenant.");
     }
 
+    private bool IsSuperuserAdministration() =>
+        _tenantContext.IsAdministrative &&
+        string.Equals(_tenantContext.Role, "superuser", StringComparison.Ordinal) &&
+        !_tenantContext.TrainerId.HasValue;
+
     private void ValidateAdministrativeAuditEntries(PtManagerDbContext context)
     {
         var auditEntries = context.ChangeTracker.Entries<AdministrativeAuditEntry>()
@@ -743,6 +756,24 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 _tenantContext.UserId.Value != entry.Entity.ActorUserId)
                 throw new DomainException(
                     "Administrative audit actor does not match the authorized context.");
+        }
+
+        if (IsSuperuserAdministration())
+        {
+            var subscriptionWrites = context.ChangeTracker.Entries<TrainerSubscription>()
+                .Where(entry => entry.State == EntityState.Modified)
+                .Select(entry => entry.Entity.Id);
+
+            foreach (var subscriptionId in subscriptionWrites)
+            {
+                var hasAudit = auditEntries.Any(entry =>
+                    entry.Entity.ResourceType == "trainer_subscription" &&
+                    entry.Entity.ResourceId == subscriptionId);
+
+                if (!hasAudit)
+                    throw new DomainException(
+                        "An administrative subscription mutation requires an audit entry.");
+            }
         }
 
         foreach (var (catalogType, resourceType) in CatalogResourceTypes)

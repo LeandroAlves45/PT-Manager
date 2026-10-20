@@ -8,6 +8,7 @@ internal static class AuthenticationLinkBuilder
 {
     internal const string ConfirmEmailPath = "confirmar-email";
     internal const string AcceptInvitePath = "aceitar-convite";
+    internal const string TrainerInvitePath = "convite-treinador";
     internal const string PasswordResetPath = "repor-password";
     internal const string SignInPath = "entrar";
     internal const string ForgotPasswordPath = "recuperar-password";

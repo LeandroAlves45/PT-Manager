@@ -7,6 +7,6 @@ public sealed record UpdateSupplementCommand(
     string? Description,
     string UnitOfMeasure,
     string ServingSize,
-    string Timing,
+    string? Timing,
     string? TrainerNotes
 );

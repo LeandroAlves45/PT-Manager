@@ -70,7 +70,8 @@ internal sealed class StripePaymentWebhookAuthenticator : IPaymentWebhookAuthent
                 null,
                 CorrelationIdFor(stripeEvent.Id),
                 stripeEvent.Created,
-                references.CheckoutSessionId
+                references.CheckoutSessionId,
+                references.InvoiceId
             )
         );
     }
@@ -109,14 +110,16 @@ internal sealed class StripePaymentWebhookAuthenticator : IPaymentWebhookAuthent
     private static (
         string? CustomerId,
         string? SubscriptionId,
-        string? CheckoutSessionId) Extract(IHasObject entity) => entity switch
+        string? CheckoutSessionId,
+        string? InvoiceId) Extract(IHasObject entity) => entity switch
         {
-            Session session => (session.CustomerId, session.SubscriptionId, session.Id),
-            Subscription subscription => (subscription.CustomerId, subscription.Id, null),
+            Session session => (session.CustomerId, session.SubscriptionId, session.Id, null),
+            Subscription subscription => (subscription.CustomerId, subscription.Id, null, null),
             Invoice invoice => (
                 invoice.CustomerId,
                 invoice.Parent?.SubscriptionDetails?.SubscriptionId,
-                null),
-            _ => (null, null, null)
+                null,
+                invoice.Id),
+            _ => (null, null, null, null)
         };
 }

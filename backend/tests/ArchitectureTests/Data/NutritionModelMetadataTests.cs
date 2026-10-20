@@ -125,7 +125,7 @@ public sealed class NutritionModelMetadataTests : IDisposable
         Assert.NotNull(timing);
         Assert.False(ownerTrainerId.IsNullable);
         Assert.False(servingSize.IsNullable);
-        Assert.False(timing.IsNullable);
+        Assert.True(timing.IsNullable);
         Assert.Equal("owner_trainer_id", ownerTrainerId.GetColumnName(table));
         Assert.Equal("serving_size", servingSize.GetColumnName(table));
         Assert.Equal("timing", timing.GetColumnName(table));

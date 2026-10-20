@@ -27,6 +27,8 @@ internal sealed class TestEmailSender : IAuthenticationEmailSender
     public int ConfirmationCalls { get; private set; }
     public int InvitationCalls { get; private set; }
     public int ResetCalls { get; private set; }
+    public int TrainerInvitationCalls { get; private set; }
+    public IssuedAuthenticationSecret? LastTrainerInvitation { get; private set; }
     public int AccountExistsCalls { get; private set; }
     public string? LastAccountExistsRecipient { get; private set; }
 
@@ -43,6 +45,15 @@ internal sealed class TestEmailSender : IAuthenticationEmailSender
         CancellationToken cancellationToken)
     {
         InvitationCalls++;
+        return Task.FromResult(Outcome);
+    }
+
+    public Task<AuthenticationEmailDeliveryOutcome> SendTrainerInvitationAsync(
+        IssuedAuthenticationSecret secret,
+        CancellationToken cancellationToken)
+    {
+        TrainerInvitationCalls++;
+        LastTrainerInvitation = secret;
         return Task.FromResult(Outcome);
     }
 

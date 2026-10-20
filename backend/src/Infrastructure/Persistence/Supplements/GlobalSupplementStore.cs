@@ -28,7 +28,7 @@ internal sealed class GlobalSupplementStore : IGlobalSupplementStore
         string? description,
         string unitOfMeasure,
         string servingSize,
-        string timing,
+        string? timing,
         string? trainerNotes,
         DateTime now,
         CancellationToken cancellationToken) => ExecuteAsync(
@@ -43,7 +43,7 @@ internal sealed class GlobalSupplementStore : IGlobalSupplementStore
         string? description,
         string unitOfMeasure,
         string servingSize,
-        string timing,
+        string? timing,
         string? trainerNotes,
         DateTime now,
         CancellationToken cancellationToken) => ExecuteAsync(
@@ -81,7 +81,7 @@ internal sealed class GlobalSupplementStore : IGlobalSupplementStore
         string? description,
         string unitOfMeasure,
         string servingSize,
-        string timing,
+        string? timing,
         string? trainerNotes,
         DateTime now,
         CancellationToken cancellationToken)
@@ -115,7 +115,7 @@ internal sealed class GlobalSupplementStore : IGlobalSupplementStore
         string? description,
         string unitOfMeasure,
         string servingSize,
-        string timing,
+        string? timing,
         string? trainerNotes,
         DateTime now,
         CancellationToken cancellationToken)

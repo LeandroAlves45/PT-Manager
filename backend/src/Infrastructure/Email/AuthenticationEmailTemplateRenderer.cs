@@ -147,6 +147,7 @@ internal static partial class AuthenticationEmailTemplateRenderer
         {
             "confirm-email.html",
             "client-invitation.html",
+            "trainer-invitation.html",
             "password-reset.html",
             AccountAlreadyExistsTemplate
         };

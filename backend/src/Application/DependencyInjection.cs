@@ -37,6 +37,24 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.Administration.ContentModeration
             .ListModerationQueue.ListModerationQueueHandler>();
         services.AddScoped<Application.Features.Administration.Overview.GetAdminOverviewHandler>();
+        services.AddScoped<Application.Features.Administration.Trainers.LookupTrainer.LookupTrainerHandler>();
+        services.AddScoped<Application.Features.Administration.Trainers.ListExemptTrainers.ListExemptTrainersHandler>();
+        services.AddScoped<Application.Features.Administration.Trainers.SetBillingExemption.SetBillingExemptionHandler>();
+        services.AddScoped<Application.Features.Administration.Trainers.InviteTrainer.InviteTrainerHandler>();
+        services.AddScoped<Application.Features.Administration.Trainers.ListTrainerInvitations.ListTrainerInvitationsHandler>();
+        services.AddScoped<Application.Features.Administration.Trainers.RevokeTrainerInvitation.RevokeTrainerInvitationHandler>();
+        services.AddScoped<Application.Features.Authentication.TrainerInvitations.GetTrainerInvitationStatusHandler>();
+        services.AddScoped<Application.Features.Authentication.TrainerInvitations.RegisterInvitedTrainerHandler>();
+        services.AddScoped<IValidator<Application.Features.Administration.Trainers.LookupTrainer.LookupTrainerQuery>,
+            Application.Features.Administration.Trainers.LookupTrainer.LookupTrainerQueryValidator>();
+        services.AddScoped<IValidator<Application.Features.Administration.Trainers.ListExemptTrainers.ListExemptTrainersQuery>,
+            Application.Features.Administration.Trainers.ListExemptTrainers.ListExemptTrainersQueryValidator>();
+        services.AddScoped<IValidator<Application.Features.Administration.Trainers.InviteTrainer.InviteTrainerCommand>,
+            Application.Features.Administration.Trainers.InviteTrainer.InviteTrainerCommandValidator>();
+        services.AddScoped<IValidator<Application.Features.Authentication.TrainerInvitations.GetTrainerInvitationStatusQuery>,
+            Application.Features.Authentication.TrainerInvitations.GetTrainerInvitationStatusQueryValidator>();
+        services.AddScoped<IValidator<Application.Features.Authentication.TrainerInvitations.RegisterInvitedTrainerCommand>,
+            Application.Features.Authentication.TrainerInvitations.RegisterInvitedTrainerCommandValidator>();
 
         // Validators
         services.AddScoped<IValidator<Application.Features.Administration.ContentModeration

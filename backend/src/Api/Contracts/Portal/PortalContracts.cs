@@ -352,7 +352,7 @@ public sealed record MySupplementAssignmentResponse(
     string? SupplementDescription,
     string UnitOfMeasure,
     string ServingSize,
-    string Timing,
+    string? Timing,
     string? TrainerNotes,
     bool IsSupplementArchived,
     DateTime UpdatedAt)
@@ -471,7 +471,7 @@ public sealed record MyTodaySupplementIntakeItemResponse(
     Guid AssignmentId,
     string SupplementName,
     string ServingSize,
-    string Timing,
+    string? Timing,
     bool IsTaken,
     DateTime? TakenAt);
 

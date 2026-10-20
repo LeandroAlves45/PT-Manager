@@ -29,7 +29,7 @@ internal sealed class SupplementStore : ISupplementStore
         string? description,
         string unitOfMeasure,
         string servingSize,
-        string timing,
+        string? timing,
         string? trainerNotes,
         DateTime now,
         CancellationToken cancellationToken)

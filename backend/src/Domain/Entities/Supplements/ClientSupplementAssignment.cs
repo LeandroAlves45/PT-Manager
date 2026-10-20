@@ -9,7 +9,7 @@ public sealed class ClientSupplementAssignment
     public Guid ClientId { get; private set; }
     public Guid SupplementId { get; private set; }
     public string ServingSize { get; private set; } = null!;
-    public string Timing { get; private set; } = null!;
+    public string? Timing { get; private set; }
     public string? TrainerNotes { get; private set; }
     public bool IsActive { get; private set; }
     public DateTime CreatedAt { get; private set; }
@@ -23,7 +23,7 @@ public sealed class ClientSupplementAssignment
         Guid clientId,
         Guid supplementId,
         string servingSize,
-        string timing,
+        string? timing,
         string? trainerNotes,
         DateTime now
     )
@@ -44,7 +44,7 @@ public sealed class ClientSupplementAssignment
     /// <summary>Altera apenas as instruções personalizadas da atribuição.</summary>
     public void UpdateInstructions(
         string servingSize,
-        string timing,
+        string? timing,
         string? trainerNotes,
         DateTime now
     )
@@ -67,15 +67,15 @@ public sealed class ClientSupplementAssignment
         UpdatedAt = now;
     }
 
-    private void SetInstructions(string servingSize, string timing, string? trainerNotes)
+    private void SetInstructions(string servingSize, string? timing, string? trainerNotes)
     {
         var normalizedServingSize = servingSize?.Trim() ?? string.Empty;
-        var normalizedTiming = timing?.Trim() ?? string.Empty;
+        var normalizedTiming = NormalizeOptional(timing);
 
         if (normalizedServingSize.Length is 0 or > 100)
             throw new DomainException("Serving size must contain between 1 and 100 characters.");
-        if (normalizedTiming.Length is 0 or > 255)
-            throw new DomainException("Timing must contain between 1 and 255 characters.");
+        if (normalizedTiming?.Length > 255)
+            throw new DomainException("Timing must contain at most 255 characters.");
 
         ServingSize = normalizedServingSize;
         Timing = normalizedTiming;

@@ -8,7 +8,7 @@ public sealed record MySupplementAssignmentDto(
     string? SupplementDescription,
     string UnitOfMeasure,
     string ServingSize,
-    string Timing,
+    string? Timing,
     string? TrainerNotes,
     bool IsSupplementArchived,
     DateTime UpdatedAt
