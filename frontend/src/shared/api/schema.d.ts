@@ -24519,6 +24519,7 @@ export interface components {
             has_password: boolean;
             google_linked: boolean;
         };
+        /** @description Visão geral da plataforma para o superuser. */
         AdminOverviewResponse: {
             global_foods: components["schemas"]["CatalogCountsResponse"];
             global_exercises: components["schemas"]["CatalogCountsResponse"];
@@ -26723,7 +26724,7 @@ export interface components {
             location: null | string;
             status: string;
         };
-        /** @description Visão geral da plataforma para o superuser. */
+        /** @description Contagens de treinadores e o líquido recebido este mês, em cêntimos de euro. */
         TrainerCountsResponse: {
             /** Format: int32 */
             active_subscription_count: number;
