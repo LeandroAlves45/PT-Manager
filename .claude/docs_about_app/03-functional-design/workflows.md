@@ -84,7 +84,7 @@ Passos, confirmados em 2026-10-14:
 6. Se o email já tiver conta, o convite é recusado. O superuser isenta essa conta, sem email.
 7. No painel, os isentos são um número à parte. Não contam como subscrição activa paga e não entram no dinheiro deste mês.
 
-A isenção e o convite entram no bloco depois da 6GB e antes do Sprint 7. O limite e o acesso já estão no Sprint 5B.
+A isenção e o convite foram antecipados para a 6GB-SU (2026-10-19) e estão na app, na página «Treinadores» do superuser. O convite aceita-se em `/convite-treinador`. O limite e o acesso já estão no Sprint 5B.
 
 ## FL-006 — Avaliação inicial até poder planear
 

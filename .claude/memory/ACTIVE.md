@@ -1,8 +1,10 @@
-# Estado ativo: Sprint 6G. 6GA (Auth UX) com blueprints validados, por aplicar; 6GB (análise visual) registada
+# Estado ativo: Sprint 6G. 6GA FINALIZADA; 6GB-SU (superuser) FINALIZADA sem commit; seguem 6GB trainer e cliente
 
-Atualizado: 2026-10-18
+Atualizado: 2026-10-20
 
 ## Sprint 6G: 6GA Auth UX + 6GB análise visual e correção
+
+- **6GB-SU (superuser) FINALIZADA (2026-10-20), sem commit, branch `feat/6gb-superuser`.** Momento opcional, painel RN-018 (líquido em Lisboa), isenção com cancelamento Stripe, página Treinadores, convite isento e `/convite-treinador`, catálogo em páginas, moderação com separadores. Backend 3223 + 1 skip, mutações 13/13, `design-is` 20/30 REFINE. Faltam `QG6GB-SU-GATE-001`, `QG6GB-SU-STRIPE-001`, `QG6GB-SU-VIDEO-001` e o commit. **Próximo:** 6GB do personal trainer (pontos 5–19 do `00_plano_sprint_6G.md` §4.2). Ver `Sessions/2026-10-20-sprint6gb-superuser-fecho.md`.
 
 **Ler primeiro** `docs/blueprints/frontend-files/sprint_6/sprint_6G/00_plano_sprint_6G.md`
 (divisão, gates, lista da 6GB) e, para aplicar, `sprint_6G/sprint_6GA/01_indice_decisoes_e_ordem.md`.

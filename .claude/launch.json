@@ -6,6 +6,26 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "site", "run", "preview"],
       "port": 5174
+    },
+    {
+      "name": "api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "backend/src/Api/Api.csproj",
+        "--launch-profile",
+        "https"
+      ],
+      "port": 7186,
+      "url": "https://localhost:7186"
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "frontend", "run", "dev"],
+      "port": 5173,
+      "url": "https://localhost:5173"
     }
   ]
 }

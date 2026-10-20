@@ -378,3 +378,16 @@ Lições capturadas depois de correções do utilizador.
 - **Baseline de testes não corre em paralelo com a escrita de testes novos**: dá falhas falsas.
 - **Revisão de pack aplicado**: comparar por SHA-256 normalizado para LF cada caminho do manifest; as
   divergências classificam-se (comentário, copy, comportamento) antes de se tocar em código.
+
+## 2026-10-20 — Fecho da 6GB-SU (superuser)
+
+- **Projeção para record e depois `Where`/`OrderBy` não traduz no EF**: três 500 só apareceram nos
+  testes funcionais, com a exceção lida pelos logs capturados. Filtrar e ordenar sobre as entidades.
+- **Teste que corre o host em Development herda os User Secrets**: fixar em `AdditionalSettings`
+  todas as opções de que depende; provar a origem com a variável de ambiente, sem abrir segredos.
+- **Não lançar agentes de leitura enquanto o script de mutações corre**: um agente reportou a mutação
+  F1 como defeito real. Confirmar cada achado com `grep` no estado reposto.
+- **Uma mutação sobrevivente pode ser uma guarda redundante**: a B6 mostrou um `!IsDeleted` repetido;
+  retirou-se e mutou-se o comportamento real.
+- **O review a frio apanha o que os testes do autor não veem**: Momento limpo a herdar o do catálogo e
+  envio de vídeo cancelado ao sair, os dois confirmados no código antes de corrigir.

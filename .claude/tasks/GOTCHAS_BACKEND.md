@@ -176,3 +176,15 @@ o PostgreSQL antes de corrigir:
   correr a suite; o diff por linha do `.md` encontra a linha em falta em segundos.
 - Reemissão de token pedida sem sessão tem cooldown (60 s, `RecentlyIssued`): sem ele, um
   terceiro invalida o link pendente da conta.
+
+## 2026-10-19 — 6GB-SU: teste de Development herdava `DevelopmentEmail:LogLinks` dos User Secrets
+
+- `LogLinksOff_InDevelopment_StillSendsThroughTheProvider` falhava também no `main` limpo (worktree).
+  Sem entrada no `appsettings`, o teste passou com `DevelopmentEmail__LogLinks=false` no ambiente:
+  o `true` vinha dos User Secrets da máquina. Mesma classe do `DevelopmentSeed:Enabled`.
+- **Regra:** um teste que corre o host em Development fixa em `AdditionalSettings` todas as opções
+  de que depende; nunca confia no valor por omissão. Provar a origem com a variável de ambiente,
+  sem abrir os segredos.
+- Admin sem tenant a escrever `TrainerSubscription`: o interceptor exige tenant (Política A'). A
+  isenção usa uma exceção explícita (superuser administrativo, sem tenant, auditoria
+  `trainer_subscription` obrigatória, dono imutável), como a moderação do catálogo privado.

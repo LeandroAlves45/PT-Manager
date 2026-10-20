@@ -353,3 +353,12 @@ com um corpo real.
 - `getReturnPath`: rejeitar pathname `//…` mesmo com a origem igual.
 - `useGoogleIdentity`: `AbortController` no efeito; challenge e cookie têm de corresponder ao último pedido.
 - `full_name`: `refine` contra `[ -]` (com `eslint-disable no-control-regex`).
+
+## 2026-10-19 — 6GB-SU: Popover dentro de um Sheet não desliza com a roda do rato
+
+- O `MuscleGroupPicker` (Popover em portal) aberto dentro de um `Sheet` (Radix Dialog) não mexia
+  com a roda: o `react-remove-scroll` do diálogo bloqueia o wheel fora do conteúdo do diálogo, e o
+  portal fica fora. Provado no browser (arnês MSW): `scrollTop` ficava em 0 com 304 px por ver.
+- **Regra:** um Popover com lista que deslize e que possa abrir dentro de um Dialog/Sheet leva
+  `modal`. O bloqueio ativo passa a ser o do popover. Com `modal`, o mesmo gesto levou o
+  `scrollTop` a 304. O jsdom não reproduz isto: a prova é no browser.

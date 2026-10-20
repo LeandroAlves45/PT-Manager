@@ -6,6 +6,11 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-20: Sprint 6GB, fase superuser FINALIZADA (sem commit, `feat/6gb-superuser`).**
+- U39–U52: painel RN-018 sem gráficos, isenção (cancela Stripe; tirar → Free inativo), convite isento, página Treinadores, Momento opcional, catálogo em páginas, moderação com separadores, rotas lazy.
+- Backend 3223 + 1 skip, migration `AddSuperuserPlatformPanel` aplicada à dev, mutações 13/13, security sem achados, 5 defeitos do review corrigidos, `design-is` 20/30.
+- Faltam gates manuais (login real, Stripe de teste, R2) e o commit. Ver `Sessions/2026-10-20-sprint6gb-superuser-fecho.md`.
+
 **2026-10-18: Sprint 6GA, frontend FINALIZADO (revisão no checkout real).**
 - Vitest 723/723 (era 700), lint/typecheck/Prettier/build verdes, backend intocado. 5 defeitos: retorno
   `/.//host`, U+0000 no `full_name`, símbolo só ASCII vs Identity Unicode, corrida do nonce Google

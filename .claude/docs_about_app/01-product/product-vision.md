@@ -63,7 +63,8 @@ O âmbito deste documento é o MVP até ao go-live (Sprints 0 a 9). O Sprint 10 
 | Uso real com login, nos gates manuais ainda abertos | Por validar | `ACTIVE.md`: gates `QG6E*`, `QG6F*` e `QG6D-ADMIN-001` |
 | Entrar, criar conta, confirmar email, recuperar password, convite e Google, nos três papéis | Planeado | Sprint 6GA: blueprints validados em 2026-10-14, por aplicar |
 | Correcção visual dos ecrãs já construídos, incluindo o nome «Avaliações», os planos em página, o perfil do cliente, a lista de planos alimentares, a nota de conclusão do treino para o treinador e o filtro de dia para ler treinos anteriores | Planeado | Sprint 6GB |
-| Email da sessão na véspera, bloqueio de suplementos e treinadores, painel do superuser, isenção de pagamento, arquivo completo do cliente e avaliação inicial preenchida pelo cliente | Planeado | Logo a seguir à 6GB e antes do Sprint 7. Ordem: avaliação inicial pelo cliente, email da sessão, arquivo do cliente, e no fim, juntos, o painel, o bloqueio e a isenção. O Sprint 9 só liga o horário do email |
+| Email da sessão na véspera, bloqueio de suplementos e treinadores, arquivo completo do cliente e avaliação inicial preenchida pelo cliente | Planeado | Logo a seguir à 6GB e antes do Sprint 7. Ordem: avaliação inicial pelo cliente, email da sessão, arquivo do cliente, e no fim o bloqueio (com a contagem de contas bloqueadas no painel). O Sprint 9 só liga o horário do email |
+| Painel do superuser (sem a contagem de bloqueados), isenção de pagamento e convite isento | Implementado na 6GB-SU (2026-10-19) | Decisões U39–U52 em `sprint_6GB/00_plano_6GB_superuser.md` |
 | Logs, erros e métricas de operação | Planeado | Sprint 7A |
 | Cache e limites partilhados entre instâncias | Planeado como decisão | Sprint 7B: só se implementa se a medição o justificar |
 | Suite crítica e entrega contínua | Planeado | Sprint 8 |

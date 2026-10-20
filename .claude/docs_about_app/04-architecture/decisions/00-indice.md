@@ -12,6 +12,6 @@ Diferenças já conhecidas, sem ADR próprio:
 |---|---|---|
 | Reembolso | `RNF-014` | Sem prioridade. A arquitectura ainda não o inclui. |
 | Intervalo de repetições | Plano 6G, ponto 5; `business-rules.md` | Muda `exercise_sets` na 6GB-2. O esquema actual tem um só `planned_reps`. |
-| Momento do suplemento vazio | Plano 6G, ponto 3 | `supplements.timing` ainda é obrigatório. |
+| Momento do suplemento vazio | Plano 6G, ponto 3 | Aplicado na 6GB-SU (2026-10-19): `timing` opcional no suplemento e na atribuição. |
 | Marca na área do treinador | Plano 6G, ponto 14 | Os dados já estão em `trainer_settings`. Muda o ecrã, na 6GB-2. |
 | Copiar link do convite | Plano 6G, ponto 13 | O token persiste só como hash. |

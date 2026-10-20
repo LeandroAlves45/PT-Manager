@@ -21,7 +21,7 @@ Identificadores são `uuid`. A conta está em `users`, não no esquema padrão d
 |---|---|---|
 | `exercise_sets.planned_reps` | Um inteiro, ou vazio | Na 6GB-2 a série pode ter máximo opcional. Um só número é o alvo. Com os dois, escreve-se o maior primeiro, como 12-10. Ainda não há coluna de máximo. |
 | `client_exercise_set_logs.reps_done` | Um inteiro, de 0 a 100 | O cliente regista um só número, mesmo fora do intervalo. A app aceita e não avisa. Cabe na coluna actual. |
-| `supplements.timing` | Obrigatório e não vazio (`ck_supplements_timing`) | Momento pode ficar vazio. Decisão de 2026-10-15. O esquema ainda não o permite. |
+| `supplements.timing` | Opcional (`ck_supplements_timing`: nulo ou não vazio), também em `client_supplement_assignments.timing` | Momento pode ficar vazio. Decisão de 2026-10-15, aplicada na 6GB-SU (migration `AddSuperuserPlatformPanel`, 2026-10-19). |
 | `supplements.unit_of_measure` | Texto livre, não vazio | «gr» guarda-se como «g». Não pede coluna nova. Um campo numérico de gramas não aceita «5gr». |
 | `invite_tokens` | `email`, `expires_at`, `used_at`, e só o hash do token | A ficha da 6GB-2 lê estes campos: válido até à data, expirado com a data, aceite deixa de mostrar, email antigo continua no convite. O link em claro não se reconstrói a partir do hash. |
 | `client_supplement_assignments` | Atribuição por cliente | Cliente activo aparece na lista. Cliente arquivado sai da lista activa e os dados ficam. |
