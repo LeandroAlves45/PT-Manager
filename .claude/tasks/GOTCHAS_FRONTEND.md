@@ -362,3 +362,11 @@ com um corpo real.
 - **Regra:** um Popover com lista que deslize e que possa abrir dentro de um Dialog/Sheet leva
   `modal`. O bloqueio ativo passa a ser o do popover. Com `modal`, o mesmo gesto levou o
   `scrollTop` a 304. O jsdom não reproduz isto: a prova é no browser.
+
+## 2026-10-20 — 6GB-SU: CI #45 falhou no «Contrato OpenAPI» por causa de um XML doc
+
+- Depois de gerar o `schema.d.ts`, mudei dois `<summary>` em `AdminOverviewContracts.cs`. Os `<summary>`
+  entram nas descrições do OpenAPI, por isso o `api:types:check` do CI falhou. O #46 passou depois
+  de regenerar.
+- **Regra:** qualquer alteração em contratos da API, mesmo só nos XML docs, obriga a correr
+  `npm run api:types` e `npm run api:types:check` antes do push.

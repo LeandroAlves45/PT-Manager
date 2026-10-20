@@ -43,5 +43,6 @@ Branch `feat/6gb-superuser`, base `df88341` (main). Instruções completas em `.
 FINALIZADO 2026-10-20. Backend 3223 + 1 skip, frontend 791/791, mutações 13/13, security sem achados,
 code review com 5 defeitos corrigidos, `design-is` 20/30 REFINE, browser com MSW a 1440/375 nos dois temas.
 Defeitos D1–D9 no relatório `sprint_6GB/01_relatorio_fecho_6GB_superuser.md` §3.
-Por fazer pelo Leandro: commit, CI e os gates `QG6GB-SU-GATE-001`, `-STRIPE-001` e `-VIDEO-001`
+Commits `f5f905d`..`f4394bf` na `main`; CI #46 verde (o #45 falhou no contrato OpenAPI, corrigido).
+Por fazer pelo Leandro: os gates `QG6GB-SU-GATE-001`, `-STRIPE-001` e `-VIDEO-001`
 (o browser real com login de superuser não foi feito: a palavra-passe do seed está nos User Secrets).
