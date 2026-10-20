@@ -119,4 +119,75 @@ describe('Supplement assignments', () => {
     // isto passa dos 15 s nesta máquina; sozinho termina em cerca de 2 s.
     30_000
   );
+
+  /** Abre «Nova atribuição» com Marta e Creatina escolhidas (o Momento do catálogo pré-preenche). */
+  async function openPrefilledForm(posts: Array<Record<string, unknown>>) {
+    server.use(
+      ...restorableSession(),
+      http.get(API + '/supplement-assignments', () =>
+        HttpResponse.json({ items: [], total_count: 0, page_number: 1, page_size: 25 })
+      ),
+      http.get(API + '/clients', () =>
+        HttpResponse.json({
+          items: [{ id: CLIENT_ID, name: 'Marta Figueiredo', phone: '912345678' }],
+          total_count: 1,
+          page_number: 1,
+          page_size: 5,
+        })
+      ),
+      http.get(API + '/supplements', () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: SUPPLEMENT_ID,
+              name: 'Creatina',
+              serving_size: '5 g',
+              timing: 'Manhã',
+              is_archived: false,
+            },
+          ],
+          total_count: 1,
+          page_number: 1,
+          page_size: 25,
+        })
+      ),
+      http.post(API + '/supplement-assignments', async ({ request }) => {
+        posts.push((await request.json()) as Record<string, unknown>);
+        return HttpResponse.json({ id: ASSIGNMENT_ID, is_active: true }, { status: 201 });
+      })
+    );
+    renderApp({ initialEntries: ['/trainer/supplement-assignments'] });
+    await userEvent.click(await screen.findByRole('button', { name: 'Nova atribuição' }));
+    await userEvent.click(screen.getByRole('combobox', { name: 'Cliente' }));
+    await userEvent.type(screen.getByPlaceholderText('Pesquisar por nome'), 'Mar');
+    await userEvent.click(await screen.findByText('Marta Figueiredo'));
+    await userEvent.click(screen.getByRole('combobox', { name: 'Suplemento' }));
+    await userEvent.type(screen.getByPlaceholderText(/Pesquisar no cat/), 'Cre');
+    await userEvent.click(await screen.findByText('Creatina'));
+  }
+
+  it('sends an empty timing, not null, when the prefilled Momento is cleared', async () => {
+    const posts: Array<Record<string, unknown>> = [];
+    await openPrefilledForm(posts);
+    const timing = screen.getByLabelText('Momento');
+    expect(timing).toHaveValue('Manhã');
+    await userEvent.clear(timing);
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar atribuição' }));
+
+    await waitFor(() => expect(posts).toHaveLength(1));
+    expect(posts[0]).toMatchObject({ timing: '' });
+  }, 30_000);
+
+  it('asks for the dose and no longer for the Momento', async () => {
+    const posts: Array<Record<string, unknown>> = [];
+    await openPrefilledForm(posts);
+    await userEvent.clear(screen.getByLabelText('Momento'));
+    // Só espaços: o `required` nativo deixa passar e a validação própria responde.
+    await userEvent.clear(screen.getByLabelText('Dose'));
+    await userEvent.type(screen.getByLabelText('Dose'), '   ');
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar atribuição' }));
+
+    expect(await screen.findByText('Indica a dose.')).toBeInTheDocument();
+    expect(posts).toHaveLength(0);
+  }, 30_000);
 });

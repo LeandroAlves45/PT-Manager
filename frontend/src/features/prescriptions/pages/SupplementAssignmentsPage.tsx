@@ -22,6 +22,7 @@ import { Pagination } from '@/shared/components/Pagination';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Skeleton } from '@/shared/components/ui/skeleton';
+import { formatDoseAndTiming } from '@/shared/lib/format';
 
 type Assignment = components['schemas']['ClientSupplementAssignmentResponse'];
 const PAGE_SIZE = 25;
@@ -105,6 +106,7 @@ export function SupplementAssignmentsPage({
     mutationFn: async () => {
       const body = {
         serving_size: servingSize.trim(),
+        // Vazio (e não null) diz ao servidor que o Momento fica vazio: null herdaria o do catálogo.
         timing: timing.trim(),
         trainer_notes: notes.trim() || null,
       };
@@ -193,7 +195,7 @@ export function SupplementAssignmentsPage({
   function openEdit(item: Assignment) {
     setEditing(item);
     setServingSize(item.serving_size);
-    setTiming(item.timing);
+    setTiming(item.timing ?? '');
     setNotes(item.trainer_notes ?? '');
     setExistingAssignment(null);
     setError('');
@@ -224,7 +226,7 @@ export function SupplementAssignmentsPage({
             {existingAssignment.supplement_name} ·{' '}
             {existingAssignment.client_name ?? chosenClient?.name}
             {' · '}
-            {existingAssignment.serving_size} · {existingAssignment.timing}
+            {formatDoseAndTiming(existingAssignment.serving_size, existingAssignment.timing)}
           </p>
           <p>
             {existingAssignment.is_active
@@ -248,8 +250,8 @@ export function SupplementAssignmentsPage({
               setError('Escolhe o cliente e o suplemento.');
               return;
             }
-            if (servingSize.trim() === '' || timing.trim() === '') {
-              setError('Indica a dose e o momento.');
+            if (servingSize.trim() === '') {
+              setError('Indica a dose.');
               return;
             }
             void save.mutateAsync().catch(() => undefined);
@@ -299,7 +301,6 @@ export function SupplementAssignmentsPage({
                 {...control}
                 value={timing}
                 maxLength={255}
-                required
                 onChange={(event) => setTiming(event.target.value)}
               />
             )}
@@ -391,7 +392,7 @@ export function SupplementAssignmentsPage({
                     <p className="text-muted-foreground text-sm">{item.client_name ?? 'Cliente'}</p>
                   )}
                   <p className="text-muted-foreground text-sm">
-                    {item.serving_size} · {item.timing}
+                    {formatDoseAndTiming(item.serving_size, item.timing)}
                     {!item.is_active && ' · Inativa'}
                     {item.is_supplement_archived && ' · Suplemento arquivado'}
                   </p>

@@ -73,12 +73,16 @@ async function openExercise(overrides: Partial<typeof exercise> = {}) {
         page_number: 1,
         page_size: 25,
       })
+    ),
+    http.get(`${API}/global-exercises/:exerciseId`, () =>
+      HttpResponse.json({ ...exercise, ...overrides })
     )
   );
   stubVideoMetadata();
   const user = userEvent.setup({ applyAccept: false });
   renderApp({ initialEntries: ['/admin/catalog/exercises'] });
-  await user.click(await screen.findByRole('button', { name: 'Editar Agachamento' }));
+  await user.click(await screen.findByRole('link', { name: 'Editar Agachamento' }));
+  await screen.findByRole('heading', { name: 'Editar Agachamento' });
   return user;
 }
 

@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -7,8 +8,10 @@ import { catalogKeys } from '@/features/admin-catalog/api/catalog';
 import { apiClient, unwrap } from '@/shared/api/client';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard';
 
 /** Grama por 100 g: obrigatório, entre 0 e 100, com mensagens pt-PT em vez das do Zod. */
 const gramsPer100 = z
@@ -39,9 +42,10 @@ const foodSchema = z
 type FoodValues = z.infer<typeof foodSchema>;
 type Food = components['schemas']['GlobalFoodResponse'];
 
-/** Formulário próprio dos alimentos; kcal nunca integra o pedido de escrita. */
-export function FoodForm({ item, onSaved }: { item: Food | null; onSaved: () => void }) {
+/** Formulário próprio dos alimentos; kcal nunca integra o pedido de escrita. Sair com alterações por guardar pede confirmação. */
+export function FoodForm({ item, onSaved }: { item: Food | null; onSaved: (saved: Food) => void }) {
   const queryClient = useQueryClient();
+  const [saved, setSaved] = useState<Food | null>(null);
   const form = useForm<FoodValues>({
     defaultValues: {
       name: item?.name ?? '',
@@ -66,7 +70,7 @@ export function FoodForm({ item, onSaved }: { item: Food | null; onSaved: () => 
             })
           );
     },
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: catalogKeys.all }),
         queryClient.invalidateQueries({ queryKey: ['admin-overview'] }),
@@ -74,9 +78,15 @@ export function FoodForm({ item, onSaved }: { item: Food | null; onSaved: () => 
       toast.success(
         item === null ? 'Alimento criado com sucesso.' : 'Alimento atualizado com sucesso.'
       );
-      onSaved();
+      setSaved(result);
     },
   });
+  const blocker = useUnsavedChangesGuard(form.formState.isDirty && saved === null);
+  // Só depois de o render sem «alterações por guardar» é que se sai: assim o guard não bloqueia
+  // a navegação que o próprio guardar provoca.
+  useEffect(() => {
+    if (saved !== null) onSaved(saved);
+  }, [saved, onSaved]);
 
   const macros = useWatch({ control: form.control, name: ['protein', 'carbs', 'fats'] });
   const kcal =
@@ -117,7 +127,7 @@ export function FoodForm({ item, onSaved }: { item: Food | null; onSaved: () => 
   return (
     <form
       onSubmit={form.handleSubmit((values) => void submit(values))}
-      className="flex h-full flex-col gap-4 pb-4"
+      className="flex max-w-xl flex-col gap-4 pb-4"
     >
       <label className="space-y-1 text-sm">
         Nome
@@ -172,10 +182,29 @@ export function FoodForm({ item, onSaved }: { item: Food | null; onSaved: () => 
         </p>
       )}
       <div className="border-border mt-auto flex justify-end gap-2 border-t pt-4">
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'A guardar…' : 'Guardar alterações'}
+        <Button type="submit" className="min-h-11 md:min-h-8" disabled={mutation.isPending}>
+          {item === null
+            ? mutation.isPending
+              ? 'A criar…'
+              : 'Criar'
+            : mutation.isPending
+              ? 'A guardar…'
+              : 'Guardar'}
         </Button>
       </div>
+      <ConfirmDialog
+        open={blocker.state === 'blocked'}
+        onOpenChange={(open) => {
+          if (!open) blocker.reset?.();
+        }}
+        title="Sair sem guardar?"
+        description="As alterações a este item perdem-se."
+        confirmLabel="Sair sem guardar"
+        cancelLabel="Continuar a editar"
+        destructive
+        pending={false}
+        onConfirm={() => blocker.proceed?.()}
+      />
     </form>
   );
 }

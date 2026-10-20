@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -7,15 +8,17 @@ import { catalogKeys } from '@/features/admin-catalog/api/catalog';
 import { apiClient, unwrap } from '@/shared/api/client';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard';
 
 const supplementSchema = z.object({
   name: z.string().trim().min(1, 'Indica o nome do suplemento.').max(255),
   description: z.string(),
   unit_of_measure: z.string().trim().min(1, 'Indica a unidade.').max(50),
   serving_size: z.string().trim().min(1, 'Indica a dose.').max(100),
-  timing: z.string().trim().min(1, 'Indica quando tomar o suplemento.').max(255),
+  timing: z.string().trim().max(255, 'O momento não pode exceder 255 caracteres.'),
   trainer_notes: z.string(),
 });
 type SupplementValues = z.infer<typeof supplementSchema>;
@@ -27,9 +30,10 @@ export function SupplementForm({
   onSaved,
 }: {
   item: Supplement | null;
-  onSaved: () => void;
+  onSaved: (saved: Supplement) => void;
 }) {
   const queryClient = useQueryClient();
+  const [saved, setSaved] = useState<Supplement | null>(null);
   const form = useForm<SupplementValues>({
     defaultValues: {
       name: item?.name ?? '',
@@ -45,6 +49,7 @@ export function SupplementForm({
     mutationFn: async (values: SupplementValues) => {
       const body = {
         ...values,
+        timing: values.timing.trim() || null,
         description: values.description || null,
         trainer_notes: values.trainer_notes || null,
       };
@@ -57,7 +62,7 @@ export function SupplementForm({
             })
           );
     },
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: catalogKeys.all }),
         queryClient.invalidateQueries({ queryKey: ['admin-overview'] }),
@@ -65,9 +70,15 @@ export function SupplementForm({
       toast.success(
         item === null ? 'Suplemento criado com sucesso.' : 'Suplemento atualizado com sucesso.'
       );
-      onSaved();
+      setSaved(result);
     },
   });
+  const blocker = useUnsavedChangesGuard(form.formState.isDirty && saved === null);
+  // Só depois de o render sem «alterações por guardar» é que se sai: assim o guard não bloqueia
+  // a navegação que o próprio guardar provoca.
+  useEffect(() => {
+    if (saved !== null) onSaved(saved);
+  }, [saved, onSaved]);
 
   async function submit(values: SupplementValues) {
     const parsed = supplementSchema.safeParse(values);
@@ -101,7 +112,7 @@ export function SupplementForm({
   return (
     <form
       onSubmit={form.handleSubmit((values) => void submit(values))}
-      className="flex h-full flex-col gap-4 pb-4"
+      className="flex max-w-xl flex-col gap-4 pb-4"
     >
       {(
         [
@@ -120,7 +131,7 @@ export function SupplementForm({
               description: 'Descrição',
               unit_of_measure: 'Unidade',
               serving_size: 'Dose',
-              timing: 'Momento',
+              timing: 'Momento (opcional)',
               trainer_notes: 'Notas para o personal trainer',
             }[field]
           }
@@ -138,10 +149,29 @@ export function SupplementForm({
         </p>
       )}
       <div className="border-border mt-auto flex justify-end border-t pt-4">
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'A guardar…' : 'Guardar alterações'}
+        <Button type="submit" className="min-h-11 md:min-h-8" disabled={mutation.isPending}>
+          {item === null
+            ? mutation.isPending
+              ? 'A criar…'
+              : 'Criar'
+            : mutation.isPending
+              ? 'A guardar…'
+              : 'Guardar'}
         </Button>
       </div>
+      <ConfirmDialog
+        open={blocker.state === 'blocked'}
+        onOpenChange={(open) => {
+          if (!open) blocker.reset?.();
+        }}
+        title="Sair sem guardar?"
+        description="As alterações a este item perdem-se."
+        confirmLabel="Sair sem guardar"
+        cancelLabel="Continuar a editar"
+        destructive
+        pending={false}
+        onConfirm={() => blocker.proceed?.()}
+      />
     </form>
   );
 }

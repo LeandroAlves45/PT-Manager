@@ -58,10 +58,10 @@ describe('CatalogPage', () => {
     );
     const user = userEvent.setup();
     renderApp({ initialEntries: ['/admin/catalog/foods'] });
-    await user.click(await screen.findByRole('button', { name: /Novo alimento/ }));
-    await user.type(screen.getByLabelText('Nome'), 'Arroz');
+    await user.click(await screen.findByRole('link', { name: /Novo alimento/ }));
+    await user.type(await screen.findByLabelText('Nome'), 'Arroz');
     expect(screen.getByText('0 kcal/100 g')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Guardar alterações' }));
+    await user.click(screen.getByRole('button', { name: 'Criar' }));
     expect(screen.queryAllByRole('alert').map((element) => element.textContent)).toEqual([]);
     await waitFor(() => expect(body).not.toBeNull());
     expect(body).not.toHaveProperty('kcal');
@@ -157,6 +157,7 @@ describe('CatalogPage', () => {
       http.get(`${API}/global-foods`, () =>
         HttpResponse.json({ items: [food], total_count: 1, page_number: 1, page_size: 25 })
       ),
+      http.get(`${API}/global-foods/:foodId`, () => HttpResponse.json(food)),
       http.patch(`${API}/global-foods/:foodId`, async ({ request }) => {
         body = (await request.json()) as Record<string, unknown>;
         return HttpResponse.json(food);
@@ -164,8 +165,9 @@ describe('CatalogPage', () => {
     );
     const user = userEvent.setup();
     renderApp({ initialEntries: ['/admin/catalog/foods'] });
-    await user.click(await screen.findByRole('button', { name: 'Editar Arroz' }));
-    await user.click(screen.getByRole('button', { name: 'Guardar alterações' }));
+    await user.click(await screen.findByRole('link', { name: 'Editar Arroz' }));
+    expect(await screen.findByRole('heading', { name: 'Editar Arroz' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
     await waitFor(() => expect(body).not.toBeNull());
     expect(body).toMatchObject({ default_serving_grams: 150 });
   }, 15000);
@@ -184,10 +186,10 @@ describe('CatalogPage', () => {
     );
     const user = userEvent.setup();
     renderApp({ initialEntries: ['/admin/catalog/foods'] });
-    await user.click(await screen.findByRole('button', { name: /Novo alimento/ }));
-    await user.type(screen.getByLabelText('Nome'), 'Arroz');
+    await user.click(await screen.findByRole('link', { name: /Novo alimento/ }));
+    await user.type(await screen.findByLabelText('Nome'), 'Arroz');
     await user.clear(screen.getByLabelText('Proteína (g)'));
-    await user.click(screen.getByRole('button', { name: 'Guardar alterações' }));
+    await user.click(screen.getByRole('button', { name: 'Criar' }));
     expect(await screen.findByText('Indica um valor entre 0 e 100.')).toBeInTheDocument();
     expect(writes).toBe(0);
   }, 15000);
@@ -214,6 +216,7 @@ describe('CatalogPage', () => {
       http.get(`${API}/global-exercises`, () =>
         HttpResponse.json({ items: [exercise], total_count: 1, page_number: 1, page_size: 25 })
       ),
+      http.get(`${API}/global-exercises/:exerciseId`, () => HttpResponse.json(exercise)),
       http.patch(`${API}/global-exercises/:exerciseId`, async ({ request }) => {
         body = (await request.json()) as Record<string, unknown>;
         return HttpResponse.json(exercise);
@@ -221,12 +224,12 @@ describe('CatalogPage', () => {
     );
     const user = userEvent.setup();
     renderApp({ initialEntries: ['/admin/catalog/exercises'] });
-    await user.click(await screen.findByRole('button', { name: 'Editar Agachamento' }));
-    expect(screen.getByRole('button', { name: 'Remover Quadríceps' })).toBeVisible();
+    await user.click(await screen.findByRole('link', { name: 'Editar Agachamento' }));
+    expect(await screen.findByRole('button', { name: 'Remover Quadríceps' })).toBeVisible();
     await user.click(screen.getByRole('combobox', { name: 'Grupos musculares' }));
     await user.click(await screen.findByRole('option', { name: 'Glúteos' }));
     await user.keyboard('{Escape}');
-    await user.click(screen.getByRole('button', { name: 'Guardar alterações' }));
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
     await waitFor(() => expect(body).not.toBeNull());
     expect(body).toMatchObject({ muscle_groups: 'glutes,quadriceps' });
   }, 15000);

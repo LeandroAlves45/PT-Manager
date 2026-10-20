@@ -19,6 +19,7 @@ export const catalogKeys = {
   all: ['admin-catalog'] as const,
   list: (kind: CatalogKind, filters: CatalogFilters) =>
     [...catalogKeys.all, kind, filters] as const,
+  item: (kind: CatalogKind, id: string) => [...catalogKeys.all, kind, 'item', id] as const,
 };
 
 /** A API devolve itens e total na mesma resposta; nunca há pedido por linha. */
@@ -43,6 +44,45 @@ export function useCatalogQuery(kind: CatalogKind, filters: CatalogFilters) {
         case 'supplements':
           return unwrap(
             await apiClient.GET('/api/v1/global-supplements', { params: { query }, signal })
+          );
+      }
+    },
+  });
+}
+
+/**
+ * Um item do catálogo para a página de edição.
+ *
+ * Sem cache entre visitas (`gcTime: 0`): o formulário arranca com os valores recebidos, e um
+ * valor antigo da cache deixaria o administrador a editar dados desatualizados.
+ */
+export function useCatalogItemQuery(kind: CatalogKind, id: string) {
+  return useQuery({
+    queryKey: catalogKeys.item(kind, id),
+    gcTime: 0,
+    refetchOnWindowFocus: false,
+    queryFn: async ({ signal }): Promise<CatalogItem> => {
+      switch (kind) {
+        case 'foods':
+          return unwrap(
+            await apiClient.GET('/api/v1/global-foods/{foodId}', {
+              params: { path: { foodId: id } },
+              signal,
+            })
+          );
+        case 'exercises':
+          return unwrap(
+            await apiClient.GET('/api/v1/global-exercises/{exerciseId}', {
+              params: { path: { exerciseId: id } },
+              signal,
+            })
+          );
+        case 'supplements':
+          return unwrap(
+            await apiClient.GET('/api/v1/global-supplements/{supplementId}', {
+              params: { path: { supplementId: id } },
+              signal,
+            })
           );
       }
     },

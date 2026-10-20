@@ -12,6 +12,7 @@ export const AUTH_ROUTES = {
   resetPassword: '/repor-password',
   confirmEmail: '/confirmar-email',
   acceptInvite: '/aceitar-convite',
+  trainerInvite: '/convite-treinador',
   resendConfirmation: '/reenviar-confirmacao',
 } as const;
 

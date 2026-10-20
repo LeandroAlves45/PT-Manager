@@ -53,17 +53,24 @@ function uploadErrorMessage(error: unknown): string {
  * @param listKey Query key da lista a invalidar quando o vídeo muda de estado ou é removido.
  * @param mode `manage` envia, substitui e remove; `view` só reproduz (exercício global visto
  *   pelo personal trainer, arquivado ou bloqueado — o servidor recusaria o envio).
+ * @param onUploadingChange Avisa quando o envio passa a depender desta página (sair cancela-o).
+ * @param initialFile Ficheiro escolhido antes de o exercício existir; o envio começa uma vez
+ *   depois de montar (em `setTimeout` porque o StrictMode monta duas vezes e o desmonte cancela).
  */
 export function ExerciseVideoPanel({
   exercise,
   audience,
   listKey,
   mode = 'manage',
+  initialFile = null,
+  onUploadingChange,
 }: {
   exercise: ExerciseVideoSubject;
   audience: ExerciseVideoAudience;
   listKey: QueryKey;
   mode?: 'manage' | 'view';
+  initialFile?: File | null;
+  onUploadingChange?: (uploading: boolean) => void;
 }) {
   const headingId = useId();
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' });
@@ -86,14 +93,26 @@ export function ExerciseVideoPanel({
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
+  // O desmonte simulado do StrictMode cancela o `setTimeout` antes de correr, por isso o
+  // envio só começa uma vez, na montagem que fica.
+  useEffect(() => {
+    if (initialFile === null) return;
+
+    const timer = setTimeout(() => void upload(initialFile), 0);
+    return () => clearTimeout(timer);
+    // `upload` fecha sobre estado que muda; só o ficheiro inicial decide quando arranca.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFile]);
+
   const processing =
     phase.kind === 'tracking' &&
     (trackedStatus === undefined || !TERMINAL_VIDEO_STATUSES.includes(trackedStatus));
-  const busy =
-    phase.kind === 'checking' ||
-    phase.kind === 'uploading' ||
-    phase.kind === 'completing' ||
-    processing;
+  // Só estas fases dependem do browser: sair da página cancela-as. O processamento continua no servidor.
+  const uploading =
+    phase.kind === 'checking' || phase.kind === 'uploading' || phase.kind === 'completing';
+  const busy = uploading || processing;
+
+  useEffect(() => onUploadingChange?.(uploading), [uploading, onUploadingChange]);
   // Em modo de leitura não interessa o estado de uma substituição em curso de outra pessoa.
   const summary =
     mode === 'view'

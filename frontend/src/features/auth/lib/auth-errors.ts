@@ -55,6 +55,10 @@ const MESSAGES: Readonly<Record<string, string>> = {
     'Não foi possível associar a tua conta a este personal trainer. Contacta-o para resolver.',
   authentication_client_only: 'Só uma conta de cliente pode aceitar um convite.',
 
+  trainer_invitation_invalid: 'O convite não é válido.',
+  trainer_invitation_expired: 'Este convite expirou. Pede outro à equipa do PT Manager.',
+  trainer_invitation_used: 'Este convite já foi usado. Entra com a conta que criaste.',
+
   google_credential_invalid: 'Não foi possível validar a conta Google. Tenta novamente.',
   google_account_not_found:
     'Não há conta com este Google. Cria uma conta ou usa o link do convite.',

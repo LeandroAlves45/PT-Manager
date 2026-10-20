@@ -82,7 +82,7 @@ export function CatalogPicker({
         label: item.name,
         description: item.scope === 'global' ? 'Global' : 'Privado',
         servingSize: item.serving_size,
-        timing: item.timing,
+        timing: item.timing ?? undefined,
       }));
     },
   });

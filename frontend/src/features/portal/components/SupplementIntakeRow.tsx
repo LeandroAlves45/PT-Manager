@@ -6,6 +6,7 @@ import type { components } from '@/shared/api/schema';
 import { isApiProblem } from '@/shared/api/problem';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
+import { formatDoseAndTiming } from '@/shared/lib/format';
 
 type IntakeItem = components['schemas']['MyTodaySupplementIntakeItemResponse'];
 type Assignment = components['schemas']['MySupplementAssignmentResponse'];
@@ -63,7 +64,7 @@ export function SupplementIntakeRow({
             )}
           </p>
           <p className="text-muted-foreground text-sm wrap-break-word">
-            {item.serving_size} · {item.timing}
+            {formatDoseAndTiming(item.serving_size, item.timing)}
           </p>
         </div>
         <Button

@@ -54,7 +54,45 @@ export function formatCurrency(cents: number, currency: string): string {
   }).format(cents / 100);
 }
 
+/**
+ * Dose de um suplemento com o momento, quando existe: «5 g · Depois do treino» ou só «5 g».
+ *
+ * O momento é opcional desde a 6GB (business-rules.md, 2026-10-15).
+ */
+export function formatDoseAndTiming(servingSize: string, timing: string | null): string {
+  return timing === null || timing.trim() === '' ? servingSize : `${servingSize} · ${timing}`;
+}
+
+const PLURAL_RULES = new Intl.PluralRules('pt-PT');
+
+/**
+ * Número com o substantivo concordante: «1 ativo», «0 ativos», «2 ativos».
+ *
+ * Usa as regras do português de Portugal em vez de um `=== 1` escrito à mão em cada ecrã.
+ */
+export function formatCount(count: number, singular: string, plural: string): string {
+  return `${formatNumber(count)} ${PLURAL_RULES.select(count) === 'one' ? singular : plural}`;
+}
+
 /** Percentagem inteira; 'null' vira travessão, para não fingir um zero que não existe. */
 export function formatPercent(value: number | null): string {
   return value === null ? '—' : `${formatNumber(value)} %`;
+}
+
+const LISBON_DATE_TIME = new Intl.DateTimeFormat('pt-PT', {
+  timeZone: 'Europe/Lisbon',
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+/**
+ * Data e hora em Europe/Lisbon, independentemente do fuso do browser (RN-008).
+ *
+ * O superuser vê sempre as horas de Lisboa; `formatDateTime` usa o fuso da máquina.
+ */
+export function formatLisbonDateTime(value: string | Date): string {
+  return LISBON_DATE_TIME.format(toDate(value));
 }

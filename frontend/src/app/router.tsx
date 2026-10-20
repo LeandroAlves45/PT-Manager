@@ -11,6 +11,7 @@ import { PortalLayout } from '@/app/layouts/PortalLayout';
 import { AccountSecurityPage } from '@/features/account';
 import {
   AcceptInvitePage,
+  AcceptTrainerInvitePage,
   ConfirmEmailPage,
   ForgotPasswordPage,
   LoginPage,
@@ -20,9 +21,6 @@ import {
 } from '@/features/auth';
 import { BillingPage } from '@/features/billing/pages/BillingPage';
 import { CheckInsPage } from '@/features/check-ins/pages/CheckInsPage';
-import { AdminOverviewPage } from '@/features/admin-overview/pages/AdminOverviewPage';
-import { CatalogPage } from '@/features/admin-catalog/pages/CatalogPage';
-import { ModerationPage } from '@/features/admin-moderation/pages/ModerationPage';
 import { ClientDetailPage } from '@/features/clients/pages/ClientDetailPage';
 import { ClientsPage } from '@/features/clients/pages/ClientsPage';
 import {
@@ -50,6 +48,8 @@ import { AUTH_ROUTES, LEGACY_LOGIN_ROUTES } from '@/shared/config/auth-routes';
  * Rotas da aplicação.
  */
 
+const CATALOG_KINDS = ['foods', 'exercises', 'supplements'] as const;
+
 const applicationRoutes: RouteObject[] = [
   { path: '/', element: <RootRedirect /> },
 
@@ -64,6 +64,7 @@ const applicationRoutes: RouteObject[] = [
       { path: AUTH_ROUTES.resetPassword, element: <ResetPasswordPage /> },
       { path: AUTH_ROUTES.confirmEmail, element: <ConfirmEmailPage /> },
       { path: AUTH_ROUTES.acceptInvite, element: <AcceptInvitePage /> },
+      { path: AUTH_ROUTES.trainerInvite, element: <AcceptTrainerInvitePage /> },
       { path: AUTH_ROUTES.resendConfirmation, element: <ResendConfirmationPage /> },
     ],
   },
@@ -80,11 +81,62 @@ const applicationRoutes: RouteObject[] = [
             path: '/admin',
             element: <AppShell />,
             children: [
-              { index: true, element: <AdminOverviewPage /> },
-              { path: 'moderation', element: <ModerationPage /> },
-              { path: 'catalog/foods', element: <CatalogPage kind="foods" /> },
-              { path: 'catalog/exercises', element: <CatalogPage kind="exercises" /> },
-              { path: 'catalog/supplements', element: <CatalogPage kind="supplements" /> },
+              // U47: as páginas do admin só se descarregam quando o superuser as abre, para
+              // não pesarem no bundle do personal trainer e do cliente.
+              {
+                index: true,
+                lazy: async () => ({
+                  Component: (await import('@/features/admin-overview/pages/AdminOverviewPage'))
+                    .AdminOverviewPage,
+                }),
+              },
+              {
+                path: 'moderation',
+                lazy: async () => ({
+                  Component: (await import('@/features/admin-moderation/pages/ModerationPage'))
+                    .ModerationPage,
+                }),
+              },
+              {
+                path: 'trainers',
+                lazy: async () => ({
+                  Component: (await import('@/features/admin-trainers/pages/AdminTrainersPage'))
+                    .AdminTrainersPage,
+                }),
+              },
+              {
+                path: 'trainers/invite',
+                lazy: async () => ({
+                  Component: (await import('@/features/admin-trainers/pages/InviteTrainerPage'))
+                    .InviteTrainerPage,
+                }),
+              },
+              ...CATALOG_KINDS.flatMap((kind): RouteObject[] => [
+                {
+                  path: `catalog/${kind}`,
+                  lazy: async () => {
+                    const { CatalogPage } =
+                      await import('@/features/admin-catalog/pages/CatalogPage');
+                    return { element: <CatalogPage kind={kind} /> };
+                  },
+                },
+                {
+                  path: `catalog/${kind}/new`,
+                  lazy: async () => {
+                    const { CatalogEditorPage } =
+                      await import('@/features/admin-catalog/pages/CatalogEditorPage');
+                    return { element: <CatalogEditorPage kind={kind} /> };
+                  },
+                },
+                {
+                  path: `catalog/${kind}/:itemId`,
+                  lazy: async () => {
+                    const { CatalogEditorPage } =
+                      await import('@/features/admin-catalog/pages/CatalogEditorPage');
+                    return { element: <CatalogEditorPage kind={kind} /> };
+                  },
+                },
+              ]),
               { path: 'account', element: <AccountSecurityPage /> },
             ],
           },

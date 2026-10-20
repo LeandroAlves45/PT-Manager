@@ -13,6 +13,7 @@ import {
   Pill,
   ShieldCheck,
   User,
+  UserCog,
   Users,
   UtensilsCrossed,
   type LucideIcon,
@@ -73,6 +74,7 @@ const ADMIN_NAVIGATION: readonly NavigationGroup[] = [
     items: [
       { label: 'Visão geral', route: '/admin', icon: BarChart3, exact: true },
       { label: 'Moderação', route: '/admin/moderation', icon: ShieldCheck },
+      { label: 'Treinadores', route: '/admin/trainers', icon: UserCog },
     ],
   },
   {

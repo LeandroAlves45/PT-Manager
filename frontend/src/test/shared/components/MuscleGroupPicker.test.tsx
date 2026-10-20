@@ -18,7 +18,8 @@ function Harness({ initial = [] }: { initial?: MuscleGroupCode[] }) {
   );
 }
 
-const value = () => screen.getByRole('status', { name: 'valor' });
+// A lista é um popover modal (6GB): enquanto está aberta, o resto da página fica aria-hidden.
+const value = () => screen.getByRole('status', { name: 'valor', hidden: true });
 
 describe('MuscleGroupPicker', () => {
   it('toggles groups in the list and keeps it open for more choices', async () => {

@@ -258,8 +258,31 @@ describe('Trainer library', () => {
     expect(await screen.findByText('Indica o nome do suplemento.')).toBeVisible();
     expect(screen.getByText('Indica a dose.')).toBeVisible();
     expect(screen.getByText('Indica a unidade de medida.')).toBeVisible();
-    expect(screen.getByText('Indica quando tomar.')).toBeVisible();
+    // O momento é opcional desde a 6GB (business-rules.md, 2026-10-15).
+    expect(screen.queryByText('Indica quando tomar.')).toBeNull();
     expect(posted).toBe(0);
+  }, 15000);
+
+  it('creates a supplement without a moment and sends timing as null', async () => {
+    libraryHandlers({ supplements: libraryPage([]) });
+    let body: Record<string, unknown> | null = null;
+    server.use(
+      http.post(`${API}/supplements`, async ({ request }) => {
+        body = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(supplement(), { status: 201 });
+      })
+    );
+    const user = userEvent.setup();
+    renderApp({ initialEntries: [`${ROUTE}?tab=supplements`] });
+
+    await user.click(await screen.findByRole('button', { name: 'Novo suplemento' }));
+    await user.type(screen.getByLabelText('Nome'), 'Creatina');
+    await user.type(screen.getByLabelText('Dose'), '5');
+    await user.type(screen.getByLabelText('Unidade de medida'), 'g');
+    await user.click(screen.getByRole('button', { name: 'Criar suplemento' }));
+
+    await waitFor(() => expect(body).not.toBeNull());
+    expect(body).toMatchObject({ name: 'Creatina', timing: null });
   }, 15000);
 
   it('checks the macros per 100 g and sends decimals written with a comma', async () => {

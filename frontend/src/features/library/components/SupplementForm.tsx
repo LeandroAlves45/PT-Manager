@@ -33,11 +33,7 @@ const supplementSchema = z.object({
     .trim()
     .min(1, 'Indica a dose.')
     .max(100, 'A dose não pode exceder 100 caracteres.'),
-  timing: z
-    .string()
-    .trim()
-    .min(1, 'Indica quando tomar.')
-    .max(255, 'O momento não pode exceder 255 caracteres.'),
+  timing: z.string().trim().max(255, 'O momento não pode exceder 255 caracteres.'),
   trainer_notes: z.string(),
 });
 type SupplementValues = z.input<typeof supplementSchema>;
@@ -98,7 +94,7 @@ export function SupplementForm({
         description: data.description.trim() || null,
         unit_of_measure: data.unit_of_measure,
         serving_size: data.serving_size,
-        timing: data.timing,
+        timing: data.timing || null,
         trainer_notes: data.trainer_notes.trim() || null,
       });
       toast.success(

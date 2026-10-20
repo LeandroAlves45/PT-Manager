@@ -70,7 +70,11 @@ export function MuscleGroupPicker({
           </button>
         </span>
       ))}
+      {/* `modal`: dentro de um Sheet (Radix Dialog) a lista vive num portal fora do diálogo e o
+          bloqueio de scroll do diálogo engolia a roda do rato. Como popover modal, o bloqueio
+          ativo passa a ser o do próprio popover, que deixa deslizar a lista (print da 6GB). */}
       <Popover
+        modal
         open={open}
         onOpenChange={(next) => {
           setOpen(next);

@@ -30,7 +30,6 @@ const LIBRARY_ERROR_MESSAGES: Readonly<Record<string, string>> = {
   supplement_unit_too_long: 'A unidade não pode exceder 50 caracteres.',
   supplement_serving_size_required: 'Indica a dose.',
   supplement_serving_size_too_long: 'A dose não pode exceder 100 caracteres.',
-  supplement_timing_required: 'Indica quando tomar.',
   supplement_timing_too_long: 'O momento não pode exceder 255 caracteres.',
   supplement_inactive: 'Este suplemento está arquivado. Reativa-o antes de o editar.',
   global_exercise_read_only: 'Os exercícios globais só podem ser consultados.',

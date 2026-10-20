@@ -1,6 +1,7 @@
 import { Archive, PackageOpen, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { toast } from 'sonner';
 
 import {
@@ -9,9 +10,6 @@ import {
   type CatalogItem,
   type CatalogKind,
 } from '@/features/admin-catalog/api/catalog';
-import { ExerciseForm } from '@/features/admin-catalog/components/ExerciseForm';
-import { FoodForm } from '@/features/admin-catalog/components/FoodForm';
-import { SupplementForm } from '@/features/admin-catalog/components/SupplementForm';
 import { describeExerciseVideo } from '@/features/exercise-video';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
@@ -28,16 +26,9 @@ import {
   DialogTitle,
 } from '@/shared/components/ui/dialog';
 import { Input } from '@/shared/components/ui/input';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/shared/components/ui/sheet';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useDebounce } from '@/shared/hooks/useDebounce';
-import { formatNumber } from '@/shared/lib/format';
+import { formatDoseAndTiming, formatNumber } from '@/shared/lib/format';
 
 const TITLES: Record<CatalogKind, string> = {
   foods: 'Alimentos',
@@ -60,7 +51,6 @@ export function CatalogPage({ kind }: { kind: CatalogKind }) {
   const filters = { search, activity, page };
   const query = useCatalogQuery(kind, filters);
   const action = useCatalogAction(kind);
-  const [editing, setEditing] = useState<CatalogItem | 'new' | null>(null);
   const [confirm, setConfirm] = useState<{
     item: CatalogItem;
     action: 'archive' | 'reactivate' | 'delete';
@@ -102,9 +92,11 @@ export function CatalogPage({ kind }: { kind: CatalogKind }) {
         title={`Catálogo global de ${title.toLowerCase()}`}
         description={`${formatNumber(total)} ${title.toLowerCase()}`}
         action={
-          <Button onClick={() => setEditing('new')}>
-            <Plus aria-hidden /> Novo{' '}
-            {kind === 'foods' ? 'alimento' : kind === 'exercises' ? 'exercício' : 'suplemento'}
+          <Button asChild className="min-h-11 md:min-h-8">
+            <Link to={`/admin/catalog/${kind}/new`}>
+              <Plus aria-hidden /> Novo{' '}
+              {kind === 'foods' ? 'alimento' : kind === 'exercises' ? 'exercício' : 'suplemento'}
+            </Link>
           </Button>
         }
       />
@@ -209,13 +201,8 @@ export function CatalogPage({ kind }: { kind: CatalogKind }) {
                   )}
                   <td className="p-3">{item.is_active ? 'Ativo' : 'Arquivado'}</td>
                   <td className="flex gap-1 p-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="min-h-11 md:min-h-8"
-                      onClick={() => setEditing(item)}
-                    >
-                      Editar {item.name}
+                    <Button asChild size="sm" variant="outline" className="min-h-11 md:min-h-8">
+                      <Link to={`/admin/catalog/${kind}/${item.id}`}>Editar {item.name}</Link>
                     </Button>
                     <Button
                       size="icon-sm"
@@ -265,53 +252,6 @@ export function CatalogPage({ kind }: { kind: CatalogKind }) {
           </Button>
         </nav>
       )}
-      <Sheet
-        open={editing !== null}
-        onOpenChange={(open) => {
-          if (!open) setEditing(null);
-        }}
-      >
-        <SheetContent className="w-full sm:max-w-110">
-          <SheetHeader>
-            <SheetTitle>
-              {editing === 'new' ? 'Criar' : 'Editar'} {title.toLowerCase()}
-            </SheetTitle>
-            <SheetDescription>Os dados ficam disponíveis no catálogo global.</SheetDescription>
-          </SheetHeader>
-          {editing !== null && (
-            <div className="min-h-0 flex-1 overflow-y-auto px-4">
-              {kind === 'foods' ? (
-                <FoodForm
-                  item={
-                    editing === 'new'
-                      ? null
-                      : (editing as components['schemas']['GlobalFoodResponse'])
-                  }
-                  onSaved={() => setEditing(null)}
-                />
-              ) : kind === 'exercises' ? (
-                <ExerciseForm
-                  item={
-                    editing === 'new'
-                      ? null
-                      : (editing as components['schemas']['GlobalExerciseResponse'])
-                  }
-                  onSaved={() => setEditing(null)}
-                />
-              ) : (
-                <SupplementForm
-                  item={
-                    editing === 'new'
-                      ? null
-                      : (editing as components['schemas']['GlobalSupplementResponse'])
-                  }
-                  onSaved={() => setEditing(null)}
-                />
-              )}
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
       <Dialog
         open={confirm !== null}
         onOpenChange={(open) => {
@@ -371,5 +311,5 @@ function detailFor(kind: CatalogKind, item: CatalogItem): string {
   }
 
   const supplement = item as components['schemas']['GlobalSupplementResponse'];
-  return `${supplement.serving_size} · ${supplement.timing}`;
+  return formatDoseAndTiming(supplement.serving_size, supplement.timing);
 }

@@ -12,7 +12,7 @@ const COLUMNS: readonly LibraryColumn<Supplement>[] = [
     header: 'Dose',
     cell: (supplement) => `${supplement.serving_size} ${supplement.unit_of_measure}`,
   },
-  { header: 'Quando tomar', cell: (supplement) => supplement.timing },
+  { header: 'Quando tomar', cell: (supplement) => supplement.timing ?? '—' },
 ];
 
 /** Separador "Suplementos": globais e privados (sem moderação de plataforma). */

@@ -6,6 +6,7 @@
  * importar ficheiros internos desta feature.
  */
 export { AcceptInvitePage } from '@/features/auth/pages/AcceptInvitePage';
+export { AcceptTrainerInvitePage } from '@/features/auth/pages/AcceptTrainerInvitePage';
 export { ConfirmEmailPage } from '@/features/auth/pages/ConfirmEmailPage';
 export { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
 export { LoginPage } from '@/features/auth/pages/LoginPage';

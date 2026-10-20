@@ -24,6 +24,83 @@ function queue(items: unknown[]) {
   return HttpResponse.json({ items, total_count: items.length, page_number: 1, page_size: 25 });
 }
 
+describe('ModerationPage filters', () => {
+  function track(kind: 'foods' | 'exercises', seen: URLSearchParams[], total = 60) {
+    return http.get(`${API}/admin/content-moderation/${kind}`, ({ request }) => {
+      seen.push(new URL(request.url).searchParams);
+      return HttpResponse.json({
+        items: [privateFood],
+        total_count: total,
+        page_number: 1,
+        page_size: 25,
+      });
+    });
+  }
+
+  it('has a single selected tab and sends kind/status/page on the first request', async () => {
+    const exercises: URLSearchParams[] = [];
+    const foods: URLSearchParams[] = [];
+    server.use(
+      ...restorableSession({ role: 'superuser', trainer_id: null }),
+      track('exercises', exercises),
+      track('foods', foods)
+    );
+    renderApp({ initialEntries: ['/admin/moderation?kind=exercises&status=blocked&page=2'] });
+    await screen.findByText('Alimento privado');
+    expect(foods).toHaveLength(0);
+    expect(exercises[0]?.get('status')).toBe('blocked');
+    expect(exercises[0]?.get('page_number')).toBe('2');
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs.filter((tab) => tab.getAttribute('aria-selected') === 'true')).toHaveLength(1);
+    expect(screen.getByRole('tab', { name: 'Exercícios' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    expect(screen.getByLabelText('Estado')).toHaveValue('blocked');
+    // A tab ativa aponta para um painel que existe.
+    const controls = screen.getByRole('tab', { name: 'Exercícios' }).getAttribute('aria-controls');
+    expect(controls).not.toBeNull();
+    expect(document.getElementById(controls ?? '')).not.toBeNull();
+  }, 15000);
+
+  it('switching tab requests the other kind from page 1', async () => {
+    const foods: URLSearchParams[] = [];
+    const exercises: URLSearchParams[] = [];
+    server.use(
+      ...restorableSession({ role: 'superuser', trainer_id: null }),
+      track('foods', foods),
+      track('exercises', exercises)
+    );
+    const user = userEvent.setup();
+    renderApp({ initialEntries: ['/admin/moderation?page=2'] });
+    await screen.findByText('Alimento privado');
+    expect(foods[0]?.get('page_number')).toBe('2');
+    await user.click(screen.getByRole('tab', { name: 'Exercícios' }));
+    await waitFor(() => expect(exercises.length).toBeGreaterThan(0));
+    expect(exercises[0]?.get('page_number')).toBe('1');
+    expect(screen.getByRole('tab', { name: 'Exercícios' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    expect(screen.getByRole('tab', { name: 'Alimentos' })).toHaveAttribute(
+      'aria-selected',
+      'false'
+    );
+  }, 15000);
+
+  it('the Estado select changes the status param and resets the page', async () => {
+    const seen: URLSearchParams[] = [];
+    server.use(...restorableSession({ role: 'superuser', trainer_id: null }), track('foods', seen));
+    const user = userEvent.setup();
+    renderApp({ initialEntries: ['/admin/moderation?page=2'] });
+    await screen.findByText('Alimento privado');
+    await user.selectOptions(screen.getByLabelText('Estado'), 'blocked');
+    await waitFor(() => expect(seen.at(-1)?.get('status')).toBe('blocked'));
+    expect(seen.at(-1)?.get('page_number')).toBe('1');
+    expect(screen.getByText('60 conteúdos privados')).toBeInTheDocument();
+  }, 15000);
+});
+
 describe('ModerationPage', () => {
   it('requires a reason and sends the backend reason code', async () => {
     let body: Record<string, unknown> | null = null;

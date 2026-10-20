@@ -27,6 +27,7 @@ export function ConfirmDialog({
   description,
   confirmLabel,
   pendingLabel = 'A guardar…',
+  cancelLabel = 'Cancelar',
   destructive = false,
   pending,
   onConfirm,
@@ -37,6 +38,7 @@ export function ConfirmDialog({
   description: ReactNode;
   confirmLabel: string;
   pendingLabel?: string;
+  cancelLabel?: string;
   destructive?: boolean;
   pending: boolean;
   onConfirm: () => void;
@@ -49,7 +51,7 @@ export function ConfirmDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={pending}>{cancelLabel}</AlertDialogCancel>
           <Button
             variant={destructive ? 'destructive' : 'default'}
             disabled={pending}
