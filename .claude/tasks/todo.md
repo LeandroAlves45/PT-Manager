@@ -39,7 +39,13 @@ Branch `feat/6gb-trainer`, base `ebb6568` (main). Instruções completas em `.cl
 - [x] Browser 375/1440, claro/escuro (arnês MSW; 28 rotas sem overflow; 3 defeitos corrigidos: nome da marca cortado na sidebar, setas de scroll nos separadores, grelha do painel a 375 px)
 - [x] Revisão sonnet (`code-review-leandro`: 2 médias + 8 baixas tratadas; email falhado → `email_sent: false`, decisão do Leandro), `security-reviewer` (sem achados), `design-is` (20/30 REFINE, 4 de 5 corrigidos)
 - [x] Relatório `03`, docs_about_app (com autorização), GOTCHAS/lessons, ACTIVE, sessão, memória
-- [ ] Apagar `SPEC.md`, commits, checklist «Finalizado»
+- [x] Apagar `SPEC.md`, commits (`5e25a87` backend, `9e75dfd` frontend, `ee10ef3` docs), checklist «Finalizado»
 
 ## Review
-(por preencher no fecho)
+**FINALIZADO 2026-10-21** na branch `feat/6gb-trainer` (sem push).
+- Backend 3223 → 3266 + 1 skip, 0 avisos, format limpo; migration `AddPlannedRepsRange` aplicada à dev.
+- Frontend 791 → 900/900, lint, typecheck, Prettier, build e `api:types:check` verdes.
+- Mutações 10/10; revisão de código e segurança tratadas; `design-is` 20/30 REFINE (4 de 5 corrigidos).
+- Fica para o próximo passe: altura dos campos `Input`/`Textarea` partilhados no mobile.
+- Gates manuais do Leandro: `QG6GB-TR-GATE-001` (login real), `QG6GB-TR-EMAIL-001` (Resend real e em baixo),
+  `QG6GB-TR-VIDEO-001` (R2 real). Próximo: 6GB do cliente.
