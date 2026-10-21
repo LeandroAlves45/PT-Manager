@@ -5,7 +5,8 @@ namespace Api.Contracts.Training;
 
 /// <summary>
 /// Série prescrita. Identificador nulo cria; presente reconcilia. <c>planned_rpe</c> é
-/// opcional (1–10, passo 0,5); omitido equivale a sem RPE.
+/// opcional (1–10, passo 0,5); omitido equivale a sem RPE. <c>planned_reps_max</c> é o topo
+/// opcional de um intervalo: exige <c>planned_reps</c> (mínimo) e tem de ser maior.
 /// </summary>
 public sealed record ExerciseSetRequest(
     Guid? Id,
@@ -14,7 +15,8 @@ public sealed record ExerciseSetRequest(
     decimal? PlannedWeightKg,
     int? RestSecondsMin,
     int? RestSecondsMax,
-    decimal? PlannedRpe = null);
+    decimal? PlannedRpe = null,
+    int? PlannedRepsMax = null);
 
 /// <summary>Exercício prescrito num dia de treino.</summary>
 public sealed record DayExerciseRequest(
@@ -64,7 +66,8 @@ public sealed record TrainingPlanStructureRequest(IReadOnlyList<TrainingDayReque
                                 set.PlannedWeightKg,
                                 set.RestSecondsMin,
                                 set.RestSecondsMax,
-                                set.PlannedRpe))
+                                set.PlannedRpe,
+                                set.PlannedRepsMax))
                             .ToArray()))
                     .ToArray()))
                 .ToArray());
@@ -105,11 +108,14 @@ public sealed record UpdateTrainingPlanMetadataRequest(
 public sealed record UpdateTrainingPlanStructureRequest(
     TrainingPlanStructureRequest Structure);
 
-/// <summary>Série prescrita, tal como devolvida.</summary>
+/// <summary>
+/// Série prescrita, tal como devolvida. <c>planned_reps_max</c> nulo quando o alvo é único.
+/// </summary>
 public sealed record ExerciseSetResponse(
     Guid Id,
     int SetNumber,
     int? PlannedReps,
+    int? PlannedRepsMax,
     decimal? PlannedWeightKg,
     int? RestSecondsMin,
     int? RestSecondsMax,
@@ -124,6 +130,7 @@ public sealed record ExerciseSetResponse(
             set.Id,
             set.SetNumber,
             set.PlannedReps,
+            set.PlannedRepsMax,
             set.PlannedWeightKg,
             set.RestSecondsMin,
             set.RestSecondsMax,

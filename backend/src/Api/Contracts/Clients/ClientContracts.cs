@@ -103,6 +103,20 @@ public sealed record ClientDetailsResponse(
     }
 }
 
+/// <summary>
+/// Convite do portal na ficha. <c>state</c>: none, pending, expired ou accepted. <c>email</c> e
+/// <c>expires_at</c> só em pending e expired; o email é o do convite, não o atual da ficha.
+/// </summary>
+public sealed record ClientInvitationResponse(string State, string? Email, DateTime? ExpiresAt)
+{
+    /// <summary>Projeta o estado da Application.</summary>
+    public static ClientInvitationResponse From(ClientInvitationDto invitation)
+    {
+        ArgumentNullException.ThrowIfNull(invitation);
+        return new ClientInvitationResponse(invitation.State, invitation.Email, invitation.ExpiresAt);
+    }
+}
+
 /// <summary>Projeção compacta usada nas listagens.</summary>
 public sealed record ClientSummaryResponse(
     Guid Id,

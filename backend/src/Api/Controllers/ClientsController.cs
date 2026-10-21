@@ -5,6 +5,7 @@ using Api.Contracts.Common;
 using Application.Features.Clients.ArchiveClient;
 using Application.Features.Clients.CreateClient;
 using Application.Features.Clients.GetClient;
+using Application.Features.Clients.GetClientInvitation;
 using Application.Features.Clients.GetClientSummary;
 using Application.Features.Clients.ListClients;
 using Application.Features.Clients.ReactivateClient;
@@ -93,6 +94,23 @@ public sealed class ClientsController : ApiControllerBase
                 cancellationToken
             ),
             ClientDetailsResponse.From);
+
+    /// <summary>
+    /// Estado do convite do portal da ficha: none, pending, expired ou accepted. Em pending e
+    /// expired traz o email do convite e a validade (UTC).
+    /// </summary>
+    [HttpGet("{clientId:guid}/invitation")]
+    [ProducesResponseType<ClientInvitationResponse>(StatusCodes.Status200OK)]
+    public Task<IActionResult> GetInvitationAsync(
+        Guid clientId,
+        [FromServices] GetClientInvitationHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(
+            handler.HandleAsync(
+                new GetClientInvitationQuery(clientId),
+                cancellationToken
+            ),
+            ClientInvitationResponse.From);
 
     /// <summary>Devolve o resumo de progresso de um cliente do tenant.</summary>
     [HttpGet("{clientId:guid}/summary")]

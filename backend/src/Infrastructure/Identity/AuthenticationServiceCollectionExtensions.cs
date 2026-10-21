@@ -71,6 +71,9 @@ internal static class AuthenticationServiceCollectionExtensions
             )
             .ValidateOnStart();
 
+        // O link devolvido ao personal trainer sai da mesma base que o link do email.
+        services.AddSingleton<IAuthenticationLinkFactory, AuthenticationLinkFactory>();
+
         // A validação corre sempre: o validador da Api recusa LogLinks fora de Development.
         services.AddOptions<DevelopmentEmailOptions>()
             .Bind(configuration.GetSection(DevelopmentEmailOptions.SectionName))

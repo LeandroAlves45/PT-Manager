@@ -21,9 +21,11 @@ public sealed class ApplicationRegistrationTests
 
         // 156 anteriores + 8 handlers 6GB-SU (procura, isentos, isenção, convidar, convites,
         // anular, estado e registo do convite de treinador).
-        Assert.Equal(164, handlerCount);
+        // + 2 do trainer (estado do convite na ficha, conclusões de treino).
+        Assert.Equal(166, handlerCount);
         // 82 anteriores + 5 validators 6GB-SU (procura, isentos, convidar, estado e registo).
-        Assert.Equal(87, validatorCount);
+        // + 1 do trainer (conclusões de treino).
+        Assert.Equal(88, validatorCount);
     }
 
     [Fact]

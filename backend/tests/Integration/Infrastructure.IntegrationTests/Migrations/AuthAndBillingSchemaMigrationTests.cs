@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.IntegrationTests.Migrations;
 
 [Collection(MigrationLifecycleCollection.Name)]
-public sealed class CompleteSprint3Lote3GMigrationTests : IAsyncLifetime
+public sealed class AuthAndBillingSchemaMigrationTests : IAsyncLifetime
 {
     private readonly MigrationLifecycleFixture _fixture;
 
-    public CompleteSprint3Lote3GMigrationTests(MigrationLifecycleFixture fixture)
+    public AuthAndBillingSchemaMigrationTests(MigrationLifecycleFixture fixture)
     {
         _fixture = fixture;
     }

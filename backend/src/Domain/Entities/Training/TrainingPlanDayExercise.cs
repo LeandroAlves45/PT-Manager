@@ -67,7 +67,8 @@ public sealed class TrainingPlanDayExercise
         int? restSecondsMin,
         int? restSecondsMax,
         DateTime now,
-        decimal? plannedRpe = null
+        decimal? plannedRpe = null,
+        int? plannedRepsMax = null
     )
     {
         if (_sets.Any(set => set.SetNumber == setNumber))
@@ -81,7 +82,8 @@ public sealed class TrainingPlanDayExercise
             restSecondsMin,
             restSecondsMax,
             now,
-            plannedRpe
+            plannedRpe,
+            plannedRepsMax
         );
         _sets.Add(set);
         UpdatedAt = now;
@@ -102,6 +104,7 @@ public sealed class TrainingPlanDayExercise
         int? restSecondsMin,
         int? restSecondsMax,
         decimal? plannedRpe,
+        int? plannedRepsMax,
         DateTime now
     )
     {
@@ -115,6 +118,7 @@ public sealed class TrainingPlanDayExercise
             restSecondsMin,
             restSecondsMax,
             plannedRpe,
+            plannedRepsMax,
             now
         );
         UpdatedAt = now;

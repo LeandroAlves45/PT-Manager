@@ -25,6 +25,7 @@ GET /api/v1/client-session-packs/{clientSessionPackId} [path:clientSessionPackId
 GET /api/v1/clients [query:activity?,query:page_number?,query:page_size?,query:search?,query:without_training_plan?] auth=required
 GET /api/v1/clients/{clientId} [path:clientId!] auth=required
 GET /api/v1/clients/{clientId}/initial-assessment [path:clientId!] auth=required
+GET /api/v1/clients/{clientId}/invitation [path:clientId!] auth=required
 GET /api/v1/clients/{clientId}/summary [path:clientId!] auth=required
 GET /api/v1/dashboard auth=required
 GET /api/v1/exercise-set-logs [query:client_id?,query:page_number?,query:page_size?,query:performed_from?,query:performed_to?,query:training_plan_id?] auth=required
@@ -67,6 +68,7 @@ GET /api/v1/supplements/{supplementId} [path:supplementId!] auth=required
 GET /api/v1/trainer-settings auth=required
 GET /api/v1/training-plans [query:activity?,query:client_id?,query:ends_from?,query:ends_to?,query:page_number?,query:page_size?,query:search?] auth=required
 GET /api/v1/training-plans/{trainingPlanId} [path:trainingPlanId!] auth=required
+GET /api/v1/workout-completions [query:client_id?,query:page_number?,query:page_size?,query:training_plan_id?] auth=required
 PATCH /api/v1/check-ins/{checkInId}/reschedule [path:checkInId!] auth=required
 PATCH /api/v1/client-session-packs/{clientSessionPackId}/expected-end-date [path:clientSessionPackId!] auth=required
 PATCH /api/v1/clients/{clientId} [path:clientId!] auth=required

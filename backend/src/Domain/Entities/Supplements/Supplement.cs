@@ -1,4 +1,5 @@
 using Domain.Exceptions;
+using Domain.ValueObjects;
 
 namespace Domain.Entities.Supplements;
 
@@ -91,8 +92,9 @@ public sealed class Supplement
     )
     {
         var normalizedName = name?.Trim() ?? string.Empty;
-        var normalizedUnit = unitOfMeasure?.Trim() ?? string.Empty;
-        var normalizedServingSize = servingSize?.Trim() ?? string.Empty;
+        var normalizedUnit = SupplementUnits.NormalizeUnit(unitOfMeasure?.Trim() ?? string.Empty);
+        var normalizedServingSize =
+            SupplementUnits.NormalizeServingSize(servingSize?.Trim() ?? string.Empty);
         var normalizedTiming = NormalizeOptional(timing);
 
         if (normalizedName.Length is 0 or > 255)

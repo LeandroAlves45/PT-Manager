@@ -11,12 +11,12 @@ using Microsoft.EntityFrameworkCore.Metadata;
 namespace ArchitectureTests.Data;
 
 /// <summary>Fixa o contrato de persistência da Sprint 6A sem precisar de base de dados.</summary>
-public sealed class Sprint6AModelMetadataTests : IDisposable
+public sealed class PortalWriteModelMetadataTests : IDisposable
 {
     private readonly PtManagerDbContext _context;
     private readonly IModel _model;
 
-    public Sprint6AModelMetadataTests()
+    public PortalWriteModelMetadataTests()
     {
         var options = new DbContextOptionsBuilder<PtManagerDbContext>()
             .UseNpgsql("Host=localhost;Database=metadata_tests;Username=metadata_tests;Password=metadata_tests")

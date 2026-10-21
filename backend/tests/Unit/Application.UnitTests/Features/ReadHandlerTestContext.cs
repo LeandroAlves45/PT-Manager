@@ -75,8 +75,8 @@ public abstract class ReadHandlerTestContext
                             null,
                             null,
                             [
-                                new MyTrainingPlanDto.SetDto(Guid.NewGuid(), 1, 8, 60m, 60, 90, 8m),
-                                new MyTrainingPlanDto.SetDto(Guid.NewGuid(), 2, 8, 60m, 60, 90, 8m)
+                                new MyTrainingPlanDto.SetDto(Guid.NewGuid(), 1, 8, null, 60m, 60, 90, 8m),
+                                new MyTrainingPlanDto.SetDto(Guid.NewGuid(), 2, 8, null, 60m, 60, 90, 8m)
                             ])
                     ])
             ],

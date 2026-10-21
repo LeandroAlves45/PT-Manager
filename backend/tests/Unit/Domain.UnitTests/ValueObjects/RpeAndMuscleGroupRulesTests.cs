@@ -4,7 +4,7 @@ using Domain.ValueObjects;
 namespace Domain.UnitTests.ValueObjects;
 
 /// <summary>Prova a escala do RPE e a lista fechada de grupos musculares (Sprint 6A).</summary>
-public sealed class Sprint6AValueRulesTests
+public sealed class RpeAndMuscleGroupRulesTests
 {
     [Theory]
     [InlineData(1)]

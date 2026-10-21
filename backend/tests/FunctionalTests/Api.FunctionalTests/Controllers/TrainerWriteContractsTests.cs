@@ -16,11 +16,11 @@ namespace Api.FunctionalTests.Controllers;
 /// grupos musculares validados e RPE planeado e registado.
 /// </summary>
 [Collection(ApiTestCollection.Name)]
-public sealed class Sprint6ATrainerWritesTests
+public sealed class TrainerWriteContractsTests
 {
     private readonly PostgresApiFixture _fixture;
 
-    public Sprint6ATrainerWritesTests(PostgresApiFixture fixture) => _fixture = fixture;
+    public TrainerWriteContractsTests(PostgresApiFixture fixture) => _fixture = fixture;
 
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 

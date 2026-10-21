@@ -69,6 +69,38 @@ internal sealed class ClientQueries : IClientQueries
             client.UpdatedAt);
     }
 
+    /// <inheritdoc/>
+    public async Task<ClientInvitationSnapshot?> GetInvitationAsync(
+        Guid trainerId,
+        Guid clientId,
+        CancellationToken cancellationToken)
+    {
+        // A ficha passa pelo filtro de tenant; o convite filtra também pelo personal trainer, porque
+        // invite_tokens não tem filtro global.
+        var client = await _dbContext.Clients
+            .AsNoTracking()
+            .Where(client => client.Id == clientId)
+            .Select(client => new { client.UserId })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (client is null)
+            return null;
+
+        var pending = await _dbContext.InviteTokens
+            .AsNoTracking()
+            .Where(token => token.ClientId == clientId &&
+                token.TrainerId == trainerId &&
+                token.UsedAt == null)
+            .OrderByDescending(token => token.CreatedAt)
+            .ThenByDescending(token => token.Id)
+            .Select(token => new { token.Email, token.ExpiresAt })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return new ClientInvitationSnapshot(
+            client.UserId.HasValue,
+            pending?.Email,
+            pending?.ExpiresAt);
+    }
+
     public async Task<PageResult<ClientSummaryDto>> ListAsync(
         string? search,
         ClientActivityFilter activity,

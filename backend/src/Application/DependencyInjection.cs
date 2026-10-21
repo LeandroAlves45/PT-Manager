@@ -210,6 +210,7 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.Clients.ArchiveClient.ArchiveClientHandler>();
         services.AddScoped<Application.Features.Clients.CreateClient.CreateClientHandler>();
         services.AddScoped<Application.Features.Clients.GetClient.GetClientHandler>();
+        services.AddScoped<Application.Features.Clients.GetClientInvitation.GetClientInvitationHandler>();
         services.AddScoped<Application.Features.Clients.GetClientBranding.GetClientBrandingHandler>();
         services.AddScoped<Application.Features.Clients.GetClientSummary.GetClientSummaryHandler>();
         services.AddScoped<Application.Features.Clients.ListClients.ListClientsHandler>();
@@ -473,6 +474,7 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.Training.Exercises.UpdateGlobalExercise.UpdateGlobalExerciseHandler>();
         services.AddScoped<Application.Features.Training.ExerciseSetLogs.CorrectExerciseSetLog.CorrectExerciseSetLogHandler>();
         services.AddScoped<Application.Features.Training.ExerciseSetLogs.ListExerciseSetLogs.ListExerciseSetLogsHandler>();
+        services.AddScoped<Application.Features.Training.WorkoutCompletions.ListWorkoutCompletions.ListWorkoutCompletionsHandler>();
         services.AddScoped<Application.Features.Training.ExerciseSetLogs.RecordExerciseSetLog.RecordExerciseSetLogHandler>();
         services.AddScoped<Application.Features.Training.ExerciseSetLogs.RecordMyExerciseSetLog.RecordMyExerciseSetLogHandler>();
         services.AddScoped<Application.Features.Training.ExerciseSetLogs.CorrectMyExerciseSetLog.CorrectMyExerciseSetLogHandler>();
@@ -507,6 +509,8 @@ public static class DependencyInjection
             .CorrectExerciseSetLogCommand>, Application.Features.Training.ExerciseSetLogs.CorrectExerciseSetLog.CorrectExerciseSetLogCommandValidator>();
         services.AddScoped<IValidator<Application.Features.Training.ExerciseSetLogs.ListExerciseSetLogs
             .ListExerciseSetLogsQuery>, Application.Features.Training.ExerciseSetLogs.ListExerciseSetLogs.ListExerciseSetLogsQueryValidator>();
+        services.AddScoped<IValidator<Application.Features.Training.WorkoutCompletions.ListWorkoutCompletions
+            .ListWorkoutCompletionsQuery>, Application.Features.Training.WorkoutCompletions.ListWorkoutCompletions.ListWorkoutCompletionsQueryValidator>();
         services.AddScoped<IValidator<Application.Features.Training.ExerciseSetLogs.RecordExerciseSetLog
             .RecordExerciseSetLogCommand>, Application.Features.Training.ExerciseSetLogs.RecordExerciseSetLog.RecordExerciseSetLogCommandValidator>();
         services.AddScoped<IValidator<Application.Features.Training.ExerciseSetLogs.RecordMyExerciseSetLog

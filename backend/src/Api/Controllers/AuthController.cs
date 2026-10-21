@@ -272,17 +272,26 @@ public sealed class AuthController : ControllerBase
         return CompleteSession(result);
     }
 
+    /// <summary>
+    /// Envia o convite por email e devolve o mesmo link e a validade, para o personal trainer o copiar
+    /// e enviar por outro canal. Pedir outro convite anula o anterior.
+    /// </summary>
     [HttpPost("invite-client")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<InviteClientResponse>(StatusCodes.Status200OK)]
     [Authorize(ApiPolicyNames.Trainer)]
     [EnableRateLimiting(ApiRateLimitPolicyNames.InviteClient)]
     public async Task<IActionResult> InviteClientAsync(
         [FromBody] InviteClientRequest request,
         [FromServices] InviteClientHandler handler,
-        CancellationToken cancellationToken) =>
-        Respond(await handler.HandleAsync(
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(
             new InviteClientCommand(request.ClientId, request.Email),
-            cancellationToken));
+            cancellationToken);
+        return result.IsSuccess
+            ? Ok(InviteClientResponse.From(result.Value))
+            : Problem(result.Error!);
+    }
 
     /// <summary>Emite o cookie e devolve a sessão sem o refresh token no corpo.</summary>
     private IActionResult CompleteSession(Result<AuthenticationSessionDto> result)

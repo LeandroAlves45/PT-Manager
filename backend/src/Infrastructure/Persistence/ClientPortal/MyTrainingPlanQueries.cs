@@ -96,6 +96,7 @@ internal sealed class MyTrainingPlanQueries : IMyTrainingPlanQueries
                                         set.Id,
                                         set.SetNumber,
                                         set.PlannedReps,
+                                        set.PlannedRepsMax,
                                         set.PlannedWeightKg,
                                         set.RestSecondsMin,
                                         set.RestSecondsMax,

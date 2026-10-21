@@ -1,4 +1,5 @@
 using Application.Features.Authentication.Dtos;
+using Application.Features.Authentication.InviteClient;
 
 namespace Api.Contracts.Authentication;
 
@@ -40,6 +41,21 @@ public sealed record AcceptInvitationRequest(string Token, bool TransferApproved
 
 /// <summary>Emissão de um convite para um cliente do personal trainer autenticado.</summary>
 public sealed record InviteClientRequest(Guid ClientId, string Email);
+
+/// <summary>
+/// Convite emitido: <c>invite_url</c> é o link do email, para o personal trainer copiar e enviar por
+/// outro canal; <c>expires_at</c> em UTC; <c>email_sent</c> falso quando o email não saiu (o
+/// convite serve na mesma). O link não volta a ser devolvido depois desta resposta.
+/// </summary>
+public sealed record InviteClientResponse(string InviteUrl, DateTime ExpiresAt, bool EmailSent)
+{
+    /// <summary>Projeta o resultado da Application.</summary>
+    public static InviteClientResponse From(InviteClientResultDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+        return new InviteClientResponse(dto.InviteUrl, dto.ExpiresAt, dto.EmailSent);
+    }
+}
 
 /// <summary>Sessão devolvida ao cliente. O refresh token nunca aparece aqui.</summary>
 public sealed record SessionResponse(

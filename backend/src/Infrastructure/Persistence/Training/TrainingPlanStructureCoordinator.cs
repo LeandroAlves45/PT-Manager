@@ -81,6 +81,7 @@ internal sealed class TrainingPlanStructureCoordinator
                     var set = exercise.GetSet(setInput.Id!.Value);
                     if (set.SetNumber != setInput.SetNumber ||
                         set.PlannedReps != setInput.PlannedReps ||
+                        set.PlannedRepsMax != setInput.PlannedRepsMax ||
                         set.PlannedWeightKg != setInput.PlannedWeightKg ||
                         set.RestSecondsMin != setInput.RestSecondsMin ||
                         set.RestSecondsMax != setInput.RestSecondsMax ||
@@ -240,6 +241,7 @@ internal sealed class TrainingPlanStructureCoordinator
                 setInput.RestSecondsMin,
                 setInput.RestSecondsMax,
                 setInput.PlannedRpe,
+                setInput.PlannedRepsMax,
                 now);
         }
 
@@ -290,7 +292,8 @@ internal sealed class TrainingPlanStructureCoordinator
                 input.RestSecondsMin,
                 input.RestSecondsMax,
                 now,
-                input.PlannedRpe);
+                input.PlannedRpe,
+                input.PlannedRepsMax);
         }
     }
 
@@ -436,6 +439,7 @@ internal sealed class TrainingPlanStructureCoordinator
                     blocker.RestSecondsMin,
                     blocker.RestSecondsMax,
                     blocker.PlannedRpe,
+                    blocker.PlannedRepsMax,
                     now);
                 await _dbContext.SaveChangesAsync(cancellationToken);
             }
@@ -448,6 +452,7 @@ internal sealed class TrainingPlanStructureCoordinator
                 movable.RestSecondsMin,
                 movable.RestSecondsMax,
                 movable.PlannedRpe,
+                movable.PlannedRepsMax,
                 now);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }

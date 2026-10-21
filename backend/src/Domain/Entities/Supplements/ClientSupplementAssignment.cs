@@ -1,4 +1,5 @@
 using Domain.Exceptions;
+using Domain.ValueObjects;
 namespace Domain.Entities.Supplements;
 
 /// <summary>Prescrição direta de um suplemento a um cliente.</summary>
@@ -69,7 +70,8 @@ public sealed class ClientSupplementAssignment
 
     private void SetInstructions(string servingSize, string? timing, string? trainerNotes)
     {
-        var normalizedServingSize = servingSize?.Trim() ?? string.Empty;
+        var normalizedServingSize =
+            SupplementUnits.NormalizeServingSize(servingSize?.Trim() ?? string.Empty);
         var normalizedTiming = NormalizeOptional(timing);
 
         if (normalizedServingSize.Length is 0 or > 100)

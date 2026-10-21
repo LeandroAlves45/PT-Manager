@@ -33,6 +33,7 @@ public sealed record TrainingPlanStructureInput(
         decimal? PlannedWeightKg,
         int? RestSecondsMin,
         int? RestSecondsMax,
-        decimal? PlannedRpe = null
+        decimal? PlannedRpe = null,
+        int? PlannedRepsMax = null
     );
 }

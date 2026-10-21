@@ -128,6 +128,13 @@ internal sealed class PasswordResetRequestStoreStub(PasswordResetRequestStoreRes
         CancellationToken cancellationToken) => Task.FromResult(result);
 }
 
+/// <summary>Constrói um link previsível a partir do token, para provar que o handler o devolve.</summary>
+internal sealed class TestAuthenticationLinkFactory : IAuthenticationLinkFactory
+{
+    public string ClientInvitation(string rawToken) =>
+        $"https://app.example.test/aceitar-convite?token={rawToken}";
+}
+
 internal sealed class ClientInvitationStoreStub : IClientInvitationStore
 {
     public IssueClientInvitationStoreResult IssueResult { get; set; } =

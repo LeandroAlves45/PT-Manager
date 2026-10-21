@@ -11,11 +11,11 @@ namespace Infrastructure.IntegrationTests.Migrations;
 /// recusa um rollback que apagaria histórico do cliente.
 /// </summary>
 [Collection(MigrationLifecycleCollection.Name)]
-public sealed class AddSprint6AWriteSchemaMigrationTests : IAsyncLifetime
+public sealed class PortalWriteSchemaMigrationTests : IAsyncLifetime
 {
     private readonly MigrationLifecycleFixture _fixture;
 
-    public AddSprint6AWriteSchemaMigrationTests(MigrationLifecycleFixture fixture) => _fixture = fixture;
+    public PortalWriteSchemaMigrationTests(MigrationLifecycleFixture fixture) => _fixture = fixture;
 
     public async ValueTask InitializeAsync() =>
         await _fixture.ResetAsync(TestContext.Current.CancellationToken);

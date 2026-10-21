@@ -80,7 +80,8 @@ internal static class TrainerTenantSeeder
         Guid trainerId,
         string name,
         CancellationToken cancellationToken,
-        bool isActive = true)
+        bool isActive = true,
+        string? contactEmail = null)
     {
         ArgumentNullException.ThrowIfNull(factory);
 
@@ -90,7 +91,7 @@ internal static class TrainerTenantSeeder
         var client = new Client(
             trainerId,
             name,
-            null,
+            contactEmail,
             $"+3519{Random.Shared.Next(10_000_000, 99_999_999)}",
             BirthDate.Create(
                 new DateOnly(1990, 1, 1),

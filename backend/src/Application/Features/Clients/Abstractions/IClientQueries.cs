@@ -15,6 +15,15 @@ public interface IClientQueries
         Guid clientId,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Conta associada e convite por usar mais recente da ficha, ou null se a ficha não existir
+    /// no tenant.
+    /// </summary>
+    Task<ClientInvitationSnapshot?> GetInvitationAsync(
+        Guid trainerId,
+        Guid clientId,
+        CancellationToken cancellationToken);
+
     /// <summary>Lista clientes com filtro e ordem determinística.</summary>
     Task<PageResult<ClientSummaryDto>> ListAsync(
         string? search,

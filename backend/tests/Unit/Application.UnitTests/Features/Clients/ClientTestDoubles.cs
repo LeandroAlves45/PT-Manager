@@ -147,6 +147,20 @@ internal sealed class FakeClientQueries : IClientQueries
         return Task.FromResult(DetailsResult);
     }
 
+    public ClientInvitationSnapshot? InvitationResult { get; set; }
+    public Guid LastInvitationTrainerId { get; private set; }
+
+    public Task<ClientInvitationSnapshot?> GetInvitationAsync(
+        Guid trainerId,
+        Guid clientId,
+        CancellationToken cancellationToken
+    )
+    {
+        LastInvitationTrainerId = trainerId;
+        LastClientId = clientId;
+        return Task.FromResult(InvitationResult);
+    }
+
     // [6B] NOVO: o filtro "sem plano de treino activo" fica observável no double.
     public bool LastWithoutTrainingPlan { get; private set; }
 

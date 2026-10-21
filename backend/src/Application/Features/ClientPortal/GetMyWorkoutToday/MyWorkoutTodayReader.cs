@@ -101,6 +101,7 @@ public sealed class MyWorkoutTodayReader
                             set.Id,
                             set.SetNumber,
                             set.PlannedReps,
+                            set.PlannedRepsMax,
                             set.PlannedWeightKg,
                             set.RestSecondsMin,
                             set.RestSecondsMax,

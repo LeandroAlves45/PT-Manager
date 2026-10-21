@@ -2931,6 +2931,10 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("planned_reps");
 
+                    b.Property<int?>("PlannedRepsMax")
+                        .HasColumnType("integer")
+                        .HasColumnName("planned_reps_max");
+
                     b.Property<decimal?>("PlannedRpe")
                         .HasPrecision(3, 1)
                         .HasColumnType("numeric(3,1)")
@@ -2979,6 +2983,8 @@ namespace Infrastructure.Data.Migrations
                             t.HasCheckConstraint("planned_weight_check", "planned_weight_kg IS NULL OR planned_weight_kg >= 0");
 
                             t.HasCheckConstraint("reps_check", "planned_reps IS NULL OR planned_reps > 0");
+
+                            t.HasCheckConstraint("reps_range_check", "planned_reps_max IS NULL OR (planned_reps IS NOT NULL AND planned_reps_max > planned_reps)");
 
                             t.HasCheckConstraint("rest_max_check", "rest_seconds_max IS NULL OR rest_seconds_max >= 0");
 

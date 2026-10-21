@@ -95,7 +95,8 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
                 set.PlannedWeightKg,
                 set.RestSecondsMin,
                 set.RestSecondsMax,
-                set.PlannedRpe
+                set.PlannedRpe,
+                set.PlannedRepsMax
             })
             .ToListAsync(cancellationToken);
 
@@ -123,7 +124,8 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
                             set.PlannedWeightKg,
                             set.RestSecondsMin,
                             set.RestSecondsMax,
-                            set.PlannedRpe))
+                            set.PlannedRpe,
+                            set.PlannedRepsMax))
                         .ToArray()))
                 .ToArray()))
             .ToArray();

@@ -21,7 +21,7 @@ namespace Application.UnitTests.Features;
 /// Prova autorização, identidade efetiva e mapeamento de resultados dos casos de uso do
 /// portal e da revisão de check-in (Sprint 6A).
 /// </summary>
-public sealed class Sprint6AClientHandlersTests
+public sealed class PortalWriteHandlersTests
 {
     private static readonly DateTime Now = new(2026, 9, 16, 10, 0, 0, DateTimeKind.Utc);
     private static readonly Guid TrainerId = Guid.NewGuid();

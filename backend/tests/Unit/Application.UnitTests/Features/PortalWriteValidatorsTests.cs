@@ -9,7 +9,7 @@ using Application.Features.Training.WorkoutCompletions.CompleteMyWorkout;
 namespace Application.UnitTests.Features;
 
 /// <summary>Prova os códigos de erro estáveis das regras de entrada da Sprint 6A.</summary>
-public sealed class Sprint6AValidatorsTests
+public sealed class PortalWriteValidatorsTests
 {
     [Fact]
     public void Structure_WithInvalidPlannedRpe_ReturnsPlannedRpeCode()

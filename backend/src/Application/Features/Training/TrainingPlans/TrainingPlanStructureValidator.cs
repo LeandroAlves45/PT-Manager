@@ -102,6 +102,11 @@ public sealed class TrainingPlanStructureValidator : AbstractValidator<TrainingP
                         .GreaterThan(0)
                         .When(value => value.PlannedReps.HasValue)
                         .WithErrorCode("training_planned_reps_invalid");
+                    set.RuleFor(value => value)
+                        .Must(value => !value.PlannedRepsMax.HasValue ||
+                            (value.PlannedReps.HasValue &&
+                                value.PlannedRepsMax > value.PlannedReps))
+                        .WithErrorCode("training_planned_reps_range_invalid");
                     set.RuleFor(value => value.PlannedWeightKg)
                         .GreaterThanOrEqualTo(0)
                         .When(value => value.PlannedWeightKg.HasValue)

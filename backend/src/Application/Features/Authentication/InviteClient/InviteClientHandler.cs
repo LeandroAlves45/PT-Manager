@@ -7,7 +7,11 @@ using FluentValidation;
 
 namespace Application.Features.Authentication.InviteClient;
 
-/// <summary>Emite convite para uma ficha pertecente ao personal trainer autenticado.</summary>
+/// <summary>
+/// Emite convite para uma ficha pertencente ao personal trainer autenticado, envia o email e
+/// devolve o link e a validade para o trainer o poder copiar (U61). O link só existe aqui: a base
+/// de dados guarda o hash do token.
+/// </summary>
 public sealed class InviteClientHandler
 {
     private readonly IValidator<InviteClientCommand> _validator;
@@ -16,6 +20,7 @@ public sealed class InviteClientHandler
     private readonly AuthenticationPolicy _policy;
     private readonly IClientInvitationStore _store;
     private readonly IAuthenticationEmailSender _emailSender;
+    private readonly IAuthenticationLinkFactory _links;
 
     public InviteClientHandler(
         IValidator<InviteClientCommand> validator,
@@ -23,7 +28,8 @@ public sealed class InviteClientHandler
         IClock clock,
         AuthenticationPolicy policy,
         IClientInvitationStore store,
-        IAuthenticationEmailSender emailSender)
+        IAuthenticationEmailSender emailSender,
+        IAuthenticationLinkFactory links)
     {
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
@@ -31,9 +37,10 @@ public sealed class InviteClientHandler
         _policy = policy ?? throw new ArgumentNullException(nameof(policy));
         _store = store ?? throw new ArgumentNullException(nameof(store));
         _emailSender = emailSender ?? throw new ArgumentNullException(nameof(emailSender));
+        _links = links ?? throw new ArgumentNullException(nameof(links));
     }
 
-    public async Task<Result> HandleAsync(
+    public async Task<Result<InviteClientResultDto>> HandleAsync(
         InviteClientCommand command,
         CancellationToken cancellationToken
     )
@@ -42,13 +49,13 @@ public sealed class InviteClientHandler
 
         var validation = await _validator.ValidateAsync(command, cancellationToken);
         if (!validation.IsValid)
-            return Result.Failure(validation.ToApplicationError());
+            return Result<InviteClientResultDto>.Failure(validation.ToApplicationError());
 
         var actor = ActorAuthorization.RequireTrainer(
             _tenantContext,
             AuthenticationErrors.TrainerOnly);
         if (!actor.IsSuccess)
-            return Result.Failure(actor.Error!);
+            return Result<InviteClientResultDto>.Failure(actor.Error!);
 
         var now = _clock.UtcNow;
         var outcome = await _store.IssueAsync(
@@ -65,15 +72,15 @@ public sealed class InviteClientHandler
             return outcome.Kind switch
             {
                 IssueClientInvitationStoreStatus.ClientNotFound =>
-                    Result.Failure(AuthenticationErrors.ClientNotFound),
+                    Result<InviteClientResultDto>.Failure(AuthenticationErrors.ClientNotFound),
                 IssueClientInvitationStoreStatus.ClientInactive =>
-                    Result.Failure(AuthenticationErrors.ClientInactive),
+                    Result<InviteClientResultDto>.Failure(AuthenticationErrors.ClientInactive),
                 IssueClientInvitationStoreStatus.EmailMismatch =>
-                    Result.Failure(AuthenticationErrors.InvitationEmailMismatch),
+                    Result<InviteClientResultDto>.Failure(AuthenticationErrors.InvitationEmailMismatch),
                 IssueClientInvitationStoreStatus.RelationshipConflict =>
-                    Result.Failure(AuthenticationErrors.RelationshipConflict),
+                    Result<InviteClientResultDto>.Failure(AuthenticationErrors.RelationshipConflict),
                 IssueClientInvitationStoreStatus.ConcurrencyConflict =>
-                    Result.Failure(AuthenticationErrors.ConcurrencyConflict),
+                    Result<InviteClientResultDto>.Failure(AuthenticationErrors.ConcurrencyConflict),
                 _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
             };
         }
@@ -83,8 +90,13 @@ public sealed class InviteClientHandler
             cancellationToken
         );
 
-        return delivery == AuthenticationEmailDeliveryOutcome.Sent
-            ? Result.Success()
-            : Result.Failure(AuthenticationErrors.EmailDeliveryUnavailable);
+        // O convite já está gravado (e o anterior anulado) quando o email é tentado. Se o email
+        // falhar, devolver o link mantém a ficha coerente: o convite existe, serve, e o personal
+        // trainer copia o link e envia-o por outro canal.
+        var secret = outcome.Secret!;
+        return Result<InviteClientResultDto>.Success(new InviteClientResultDto(
+            _links.ClientInvitation(secret.RawToken),
+            secret.ExpiresAt,
+            delivery == AuthenticationEmailDeliveryOutcome.Sent));
     }
 }

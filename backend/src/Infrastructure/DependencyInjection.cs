@@ -133,6 +133,7 @@ public static class DependencyInjection
         // Exercise Set Logs
         services.AddScoped<IExerciseSetLogStore, ExerciseSetLogStore>();
         services.AddScoped<IExerciseSetLogQueries, ExerciseSetLogQueries>();
+        services.AddScoped<IWorkoutCompletionQueries, WorkoutCompletionQueries>();
         services.AddScoped<IMyExerciseSetLogStore, MyExerciseSetLogStore>();
         services.AddScoped<IWorkoutCompletionStore, WorkoutCompletionStore>();
 

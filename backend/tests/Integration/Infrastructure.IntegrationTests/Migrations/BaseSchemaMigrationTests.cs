@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.IntegrationTests.Migrations;
 
 [Collection(MigrationLifecycleCollection.Name)]
-public sealed class CompleteSprint3Phase3MigrationTests : IAsyncLifetime
+public sealed class BaseSchemaMigrationTests : IAsyncLifetime
 {
     private const string TrainerId = "10000000-0000-0000-0000-000000000001";
     private const string ClientId = "20000000-0000-0000-0000-000000000001";
@@ -14,7 +14,7 @@ public sealed class CompleteSprint3Phase3MigrationTests : IAsyncLifetime
     private const string PackTypeId = "40000000-0000-0000-0000-000000000001";
     private readonly MigrationLifecycleFixture _fixture;
 
-    public CompleteSprint3Phase3MigrationTests(MigrationLifecycleFixture fixture)
+    public BaseSchemaMigrationTests(MigrationLifecycleFixture fixture)
     {
         _fixture = fixture;
     }

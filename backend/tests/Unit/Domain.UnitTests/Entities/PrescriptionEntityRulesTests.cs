@@ -7,7 +7,7 @@ using Domain.Exceptions;
 namespace Domain.UnitTests.Entities;
 
 /// <summary>Prova as invariantes de domínio acrescentadas na Sprint 6A.</summary>
-public sealed class Sprint6AEntityRulesTests
+public sealed class PrescriptionEntityRulesTests
 {
     private static readonly DateTime Now = new(2026, 9, 16, 10, 0, 0, DateTimeKind.Utc);
     private static readonly DateOnly Today = new(2026, 9, 16);
@@ -31,7 +31,7 @@ public sealed class Sprint6AEntityRulesTests
         var prescription = new TrainingPlanDayExercise(Guid.NewGuid(), Guid.NewGuid(), 1, null, null, null, Now);
         var set = prescription.AddSet(1, 8, 60m, 60, 90, Now, plannedRpe: 7m);
 
-        prescription.UpdateSet(set.Id, 1, 8, 60m, 60, 90, null, Now.AddMinutes(1));
+        prescription.UpdateSet(set.Id, 1, 8, 60m, 60, 90, null, null, Now.AddMinutes(1));
 
         Assert.Null(set.PlannedRpe);
     }

@@ -29,6 +29,7 @@ public sealed class ActorMatrixTests
         "/api/v1/dashboard",
         "/api/v1/supplements",
         "/api/v1/supplement-assignments",
+        "/api/v1/workout-completions",
         "/api/v1/exercises/6f1c1f10-7b1f-4a31-9a8e-1a2b3c4d5e6f/video"
     ];
 

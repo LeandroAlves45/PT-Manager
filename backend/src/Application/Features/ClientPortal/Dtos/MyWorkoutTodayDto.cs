@@ -52,6 +52,7 @@ public sealed record MyWorkoutTodayDto(
         Guid Id,
         int SetNumber,
         int? PlannedReps,
+        int? PlannedRepsMax,
         decimal? PlannedWeightKg,
         int? RestSecondsMin,
         int? RestSecondsMax,

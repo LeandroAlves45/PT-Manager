@@ -20,7 +20,7 @@ namespace Infrastructure.IntegrationTests.ClientPortal;
 /// janela de hoje, bloqueio de desmarcar depois de concluir, idempotência e histórico.
 /// </summary>
 [Collection(PostgresCollection.Name)]
-public sealed class Sprint6AClientWriteStoresTests
+public sealed class ClientPortalWriteStoresTests
 {
     // 12:00 UTC é o mesmo dia civil em Europe/Lisbon (fuso por omissão do trainer).
     private static readonly DateTime Now = new(2026, 9, 16, 12, 0, 0, DateTimeKind.Utc);
@@ -28,7 +28,7 @@ public sealed class Sprint6AClientWriteStoresTests
 
     private readonly PostgresContainerFixture _fixture;
 
-    public Sprint6AClientWriteStoresTests(PostgresContainerFixture fixture) => _fixture = fixture;
+    public ClientPortalWriteStoresTests(PostgresContainerFixture fixture) => _fixture = fixture;
 
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 

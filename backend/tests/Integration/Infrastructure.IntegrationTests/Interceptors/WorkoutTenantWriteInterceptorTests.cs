@@ -11,14 +11,14 @@ namespace Infrastructure.IntegrationTests.Interceptors;
 /// outro cliente, e que a eliminação de uma toma passa pela validação de owner.
 /// </summary>
 [Collection(PostgresCollection.Name)]
-public sealed class Sprint6ATenantWriteTests
+public sealed class WorkoutTenantWriteInterceptorTests
 {
     private static readonly DateTime Now = new(2026, 9, 16, 12, 0, 0, DateTimeKind.Utc);
     private static readonly DateOnly Today = new(2026, 9, 16);
 
     private readonly PostgresContainerFixture _fixture;
 
-    public Sprint6ATenantWriteTests(PostgresContainerFixture fixture) => _fixture = fixture;
+    public WorkoutTenantWriteInterceptorTests(PostgresContainerFixture fixture) => _fixture = fixture;
 
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 

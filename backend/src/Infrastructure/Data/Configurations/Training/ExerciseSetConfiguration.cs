@@ -28,6 +28,9 @@ internal sealed class ExerciseSetConfiguration : IEntityTypeConfiguration<Exerci
         builder.Property(es => es.PlannedReps)
             .HasColumnName("planned_reps");
 
+        builder.Property(es => es.PlannedRepsMax)
+            .HasColumnName("planned_reps_max");
+
         builder.Property(es => es.PlannedWeightKg)
             .HasColumnName("planned_weight_kg")
             .HasPrecision(10, 2);
@@ -56,6 +59,8 @@ internal sealed class ExerciseSetConfiguration : IEntityTypeConfiguration<Exerci
         {
             t.HasCheckConstraint("set_num_check", "set_number >= 1 AND set_number <= 15");
             t.HasCheckConstraint("reps_check", "planned_reps IS NULL OR planned_reps > 0");
+            t.HasCheckConstraint("reps_range_check",
+                "planned_reps_max IS NULL OR (planned_reps IS NOT NULL AND planned_reps_max > planned_reps)");
             t.HasCheckConstraint("planned_weight_check", "planned_weight_kg IS NULL OR planned_weight_kg >= 0");
             t.HasCheckConstraint("rest_min_check", "rest_seconds_min IS NULL OR rest_seconds_min >= 0");
             t.HasCheckConstraint("rest_max_check", "rest_seconds_max IS NULL OR rest_seconds_max >= 0");

@@ -89,7 +89,8 @@ public sealed class AuthLinkHandlerTests
             new TestClock(Now),
             new AuthenticationPolicy(),
             store,
-            new TestEmailSender());
+            new TestEmailSender(),
+            new TestAuthenticationLinkFactory());
 
         var result = await handler.HandleAsync(
             new InviteClientCommand(Guid.NewGuid(), "client@example.test"),
@@ -98,5 +99,69 @@ public sealed class AuthLinkHandlerTests
         Assert.True(result.IsFailure);
         Assert.Equal(AuthenticationErrors.TrainerOnly.Code, result.Error!.Code);
         Assert.Equal(0, store.IssueCalls);
+    }
+
+    [Fact]
+    public async Task InviteClient_Issued_ReturnsLinkFromRawTokenAndExpiry()
+    {
+        var expiresAt = Now.AddDays(7);
+        var store = new ClientInvitationStoreStub
+        {
+            IssueResult = IssueClientInvitationStoreResult.Issued(
+                new IssuedAuthenticationSecret("client@example.test", "raw-token", expiresAt))
+        };
+        var handler = new InviteClientHandler(
+            new ValidValidator<InviteClientCommand>(),
+            new TestTenantContext
+            {
+                TrainerId = Guid.NewGuid(),
+                UserId = Guid.NewGuid(),
+                Role = "trainer"
+            },
+            new TestClock(Now),
+            new AuthenticationPolicy(),
+            store,
+            new TestEmailSender(),
+            new TestAuthenticationLinkFactory());
+
+        var result = await handler.HandleAsync(
+            new InviteClientCommand(Guid.NewGuid(), "client@example.test"),
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("https://app.example.test/aceitar-convite?token=raw-token", result.Value.InviteUrl);
+        Assert.Equal(expiresAt, result.Value.ExpiresAt);
+        Assert.True(result.Value.EmailSent);
+    }
+
+    [Fact]
+    public async Task InviteClient_EmailUnavailable_StillReturnsTheLinkFlaggedAsNotSent()
+    {
+        var store = new ClientInvitationStoreStub
+        {
+            IssueResult = IssueClientInvitationStoreResult.Issued(
+                new IssuedAuthenticationSecret("client@example.test", "raw-token", Now.AddDays(7)))
+        };
+        var handler = new InviteClientHandler(
+            new ValidValidator<InviteClientCommand>(),
+            new TestTenantContext
+            {
+                TrainerId = Guid.NewGuid(),
+                UserId = Guid.NewGuid(),
+                Role = "trainer"
+            },
+            new TestClock(Now),
+            new AuthenticationPolicy(),
+            store,
+            new TestEmailSender { Outcome = AuthenticationEmailDeliveryOutcome.Unavailable },
+            new TestAuthenticationLinkFactory());
+
+        var result = await handler.HandleAsync(
+            new InviteClientCommand(Guid.NewGuid(), "client@example.test"),
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value.EmailSent);
+        Assert.Equal("https://app.example.test/aceitar-convite?token=raw-token", result.Value.InviteUrl);
     }
 }
