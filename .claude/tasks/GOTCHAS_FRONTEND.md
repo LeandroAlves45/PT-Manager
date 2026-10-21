@@ -391,3 +391,8 @@ com um corpo real.
 - Browser integrado recusa o certificado do `basicSsl` do Vite (`chrome-error`), e a API só aceita
   origens HTTPS. **Regra:** verificação visual com o arnês MSW em HTTP (`gotcha_visual_harness_msw`),
   com fixtures completas: um campo em falta (`undefined`) rebenta onde a API real manda `null`.
+- CI #48: tokens novos (`--macro-*`) no `.dark` do frontend partiram o teste
+  `site/src/test/styles/tokens-sync.test.ts`, que exige o mesmo `.dark` no site. Passou localmente
+  porque só corri a suite do `frontend/`. **Regra:** mudar tokens em
+  `frontend/src/shared/styles/globals.css` → copiar para `site/src/styles/globals.css` e correr
+  `npm run test:run` também no `site/` antes do push.
