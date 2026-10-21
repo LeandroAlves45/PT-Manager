@@ -123,7 +123,7 @@ export function MealPlansPage({ client = null }: { client?: ClientChoice | null 
         />
         <select
           aria-label="Estado dos planos alimentares"
-          className="border-input bg-background h-9 rounded-md border px-3"
+          className="border-input bg-background h-11 rounded-md border px-3 md:h-9"
           value={activity}
           onChange={(event) => {
             setActivity(event.target.value as typeof activity);

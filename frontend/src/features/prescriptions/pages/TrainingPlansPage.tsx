@@ -119,7 +119,7 @@ export function TrainingPlansPage({ client = null }: { client?: ClientChoice | n
         />
         <select
           aria-label="Estado dos planos de treino"
-          className="border-input bg-background h-9 rounded-md border px-3"
+          className="border-input bg-background h-11 rounded-md border px-3 md:h-9"
           value={activity}
           onChange={(event) => {
             setActivity(event.target.value as typeof activity);
