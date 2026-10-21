@@ -1,8 +1,10 @@
-# Estado ativo: Sprint 6G. 6GA FINALIZADA; 6GB-SU (superuser) FINALIZADA sem commit; seguem 6GB trainer e cliente
+# Estado ativo: Sprint 6G. 6GA, 6GB-SU e 6GB-TR (personal trainer) FINALIZADAS; segue 6GB do cliente
 
-Atualizado: 2026-10-20
+Atualizado: 2026-10-21
 
 ## Sprint 6G: 6GA Auth UX + 6GB análise visual e correção
+
+- **6GB-TR (personal trainer) FINALIZADA (2026-10-21), branch `feat/6gb-trainer`.** U53–U67: tudo em páginas (sem Sheets), planos de treino e alimentares em 2 passos, reps «12-10» (migration `AddPlannedRepsRange` aplicada à dev), «gr»→«g», convite com «Copiar link» + `email_sent` + validade na ficha, nota de conclusão visível, marca do personal trainer em toda a área, destaque dinâmico no painel, fuso com pesquisa, seletor de cor, rotas lazy. Backend 3266 + 1 skip, frontend 900/900, mutações 10/10, security sem achados, review 2 médias + 8 baixas corrigidas. Faltam `QG6GB-TR-GATE-001`, `-EMAIL-001`, `-VIDEO-001`. **Próximo:** 6GB do cliente (prints `cliente_*`, filtro de dia, perfil, lista de planos alimentares, suplementos fora de refeição U67, «Avaliações» no portal). Ver `Sessions/2026-10-21-sprint6gb-trainer-fecho.md` e `sprint_6GB/03_relatorio_fecho_6GB_trainer.md`.
 
 - **6GB-SU (superuser) FINALIZADA (2026-10-20), commits `f5f905d`..`f4394bf` na `main`, CI #46 verde.** Momento opcional, painel RN-018 (líquido em Lisboa), isenção com cancelamento Stripe, página Treinadores, convite isento e `/convite-treinador`, catálogo em páginas, moderação com separadores. Backend 3223 + 1 skip, mutações 13/13, `design-is` 20/30 REFINE. Faltam `QG6GB-SU-GATE-001`, `QG6GB-SU-STRIPE-001`, `QG6GB-SU-VIDEO-001`. **Próximo:** 6GB do personal trainer (pontos 5–19 do `00_plano_sprint_6G.md` §4.2). Ver `Sessions/2026-10-20-sprint6gb-superuser-fecho.md`.
 

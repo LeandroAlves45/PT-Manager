@@ -188,3 +188,16 @@ o PostgreSQL antes de corrigir:
 - Admin sem tenant a escrever `TrainerSubscription`: o interceptor exige tenant (Política A'). A
   isenção usa uma exceção explícita (superuser administrativo, sem tenant, auditoria
   `trainer_subscription` obrigatória, dono imutável), como a moderação do catálogo privado.
+
+## 2026-10-21 — 6GB-TR
+
+- Convite: o token é gravado (e o anterior anulado) antes do envio do email. Com o «Copiar link», um
+  email falhado deixava a ficha a dizer «Convite enviado» sem link. **Regra:** depois de um commit,
+  uma falha externa (email) não pode deixar o estado gravado sem saída; aqui devolve-se o link com
+  `email_sent: false`.
+- A API a correr (`preview_start api`) bloqueia as binárias de Debug: `dotnet build` dos testes falha
+  com «2 Error(s)» sem mensagem útil. **Regra:** parar a API antes de compilar ou de regenerar
+  snapshots; voltar a arrancá-la para o `api:types`.
+- Testes funcionais com Testcontainers falham todos ao mesmo tempo com `DockerUnavailableException`
+  quando o Docker Desktop para (aconteceu durante uma pausa por limite). Confirmar `docker ps` antes
+  de investigar código.

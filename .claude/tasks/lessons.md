@@ -391,3 +391,12 @@ Lições capturadas depois de correções do utilizador.
   retirou-se e mutou-se o comportamento real.
 - **O review a frio apanha o que os testes do autor não veem**: Momento limpo a herdar o do catálogo e
   envio de vídeo cancelado ao sair, os dois confirmados no código antes de corrigir.
+- **Cinco agentes Sonnet em paralelo esgotaram o limite de sessão a meio**: todos pararam ao mesmo
+  tempo e foram retomados com `SendMessage` a partir do ponto onde estavam. Dividir por pastas
+  funcionou (zero conflitos); escalonar quando o âmbito é grande.
+- **Ficheiros provisórios para rotas lazy**: criar os ficheiros com o export final antes de lançar os
+  agentes deixou o router e o typecheck verdes do início ao fim.
+- **Ler os dados reais antes de corrigir um «bug» relatado**: o ponto 19 (suplemento da Ana) não era
+  defeito; estava noutra entidade (refeição do plano alimentar).
+- **Escritas com Node em `.claude/` falham às vezes com `UNKNOWN`** (ficheiro bloqueado): usar o Edit
+  e confirmar que o ficheiro não ficou a zeros.

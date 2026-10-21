@@ -370,3 +370,24 @@ com um corpo real.
   de regenerar.
 - **Regra:** qualquer alteração em contratos da API, mesmo só nos XML docs, obriga a correr
   `npm run api:types` e `npm run api:types:check` antes do push.
+
+## 2026-10-21 — 6GB-TR: rotas lazy, separadores e grelha a 375 px
+
+- Rotas lazy (`lazy` no router): o 1.º teste de cada ficheiro que desenhava a app esgotava os 5 s do
+  `findBy`, porque a 1.ª importação (transformação a frio) caía dentro da espera. Sem `HydrateFallback`
+  o 1.º carregamento em produção também mostrava ecrã em branco.
+- **Regra:** `hydrateFallbackElement` na rota raiz e pré-carregamento das rotas lazy com `await` de
+  topo em `test/render.tsx` (repõe o custo que o import estático tinha). Não subir timeouts teste a teste.
+- `TabsList` com `overflow-x-auto`: o CSS obriga `overflow-y` a `auto`, e 1 px a mais pôs setas de
+  scroll ao lado dos separadores. **Regra:** `overflow-x-auto` leva sempre `overflow-y-hidden`.
+- Grelha `grid gap-4 lg:grid-cols-12` sem colunas no mobile: a coluna implícita é `auto` e um filho
+  largo empurrou 32 px de overflow a 375 px. **Regra:** grelha responsiva começa em `grid-cols-1`
+  (`minmax(0,1fr)`). Medir com `document.documentElement.scrollWidth` no browser.
+- Migalhas e `?client_id=`: um editor aberto da ficha perdia o cliente ao voltar um passo pela
+  migalha. **Regra:** contexto que vive na query string tem de sobreviver às migalhas (o
+  `Breadcrumbs` conserva `client_id` a partir do 3.º nível).
+- A fonte `font-display` é itálica: com `truncate` corta a última letra («PT Fi»). **Regra:** `pe-1`
+  em texto `font-display` truncado.
+- Browser integrado recusa o certificado do `basicSsl` do Vite (`chrome-error`), e a API só aceita
+  origens HTTPS. **Regra:** verificação visual com o arnês MSW em HTTP (`gotcha_visual_harness_msw`),
+  com fixtures completas: um campo em falta (`undefined`) rebenta onde a API real manda `null`.
