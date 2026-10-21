@@ -85,15 +85,15 @@ describe('Pack types and client packs', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [TYPES_ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Criar tipo de pack' }));
-    const sheet = await screen.findByRole('dialog');
-    await user.type(within(sheet).getByLabelText('Nome'), 'Pack 12');
-    await user.type(within(sheet).getByLabelText('Número de sessões'), '12');
+    await user.click(await screen.findByRole('link', { name: 'Criar tipo de pack' }));
+    await screen.findByRole('heading', { name: 'Criar tipo de pack' });
+    await user.type(screen.getByLabelText('Nome'), 'Pack 12');
+    await user.type(screen.getByLabelText('Número de sessões'), '12');
     // Uma só casa decimal: "300,5" são 300,50 € e não 300,05 €.
-    await user.type(within(sheet).getByLabelText('Preço'), '300,5');
-    await user.clear(within(sheet).getByLabelText('Moeda'));
-    await user.type(within(sheet).getByLabelText('Moeda'), 'eur');
-    await user.click(within(sheet).getByRole('button', { name: 'Criar tipo de pack' }));
+    await user.type(screen.getByLabelText('Preço'), '300,5');
+    await user.clear(screen.getByLabelText('Moeda'));
+    await user.type(screen.getByLabelText('Moeda'), 'eur');
+    await user.click(screen.getByRole('button', { name: 'Criar' }));
 
     await waitFor(() =>
       expect(body).toEqual({
@@ -110,6 +110,7 @@ describe('Pack types and client packs', () => {
   it('shows the server validation on the matching field', async () => {
     packHandlers();
     server.use(
+      http.get(`${API}/pack-types/:packTypeId`, () => HttpResponse.json(packType())),
       http.patch(`${API}/pack-types/:packTypeId`, () =>
         HttpResponse.json(
           problem('validation_failed', {
@@ -128,12 +129,11 @@ describe('Pack types and client packs', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [TYPES_ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Editar Pack 10 sessões' }));
-    const sheet = await screen.findByRole('dialog');
-    expect(within(sheet).getByLabelText('Preço')).toHaveValue('300,00');
-    await user.click(within(sheet).getByRole('button', { name: 'Guardar alterações' }));
+    await user.click(await screen.findByRole('link', { name: 'Editar Pack 10 sessões' }));
+    expect(await screen.findByLabelText('Preço')).toHaveValue('300,00');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
 
-    expect(await within(sheet).findByLabelText('Número de sessões')).toHaveAccessibleDescription(
+    expect(await screen.findByLabelText('Número de sessões')).toHaveAccessibleDescription(
       'Tem de ser positivo.'
     );
   }, 15000);
@@ -184,18 +184,18 @@ describe('Pack types and client packs', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [PACKS_ROUTE] });
 
-    await user.click((await screen.findAllByRole('button', { name: 'Vender pack' }))[0]!);
-    const sheet = await screen.findByRole('dialog');
-    await user.click(within(sheet).getByRole('combobox', { name: 'Cliente' }));
+    await user.click((await screen.findAllByRole('link', { name: 'Vender pack' }))[0]!);
+    await screen.findByRole('heading', { name: 'Vender pack' });
+    await user.click(screen.getByRole('combobox', { name: 'Cliente' }));
     await user.type(await screen.findByPlaceholderText('Pesquisar por nome'), 'Ma');
     await user.click(await screen.findByRole('option', { name: /Marta Figueiredo/ }));
-    await waitFor(() => expect(within(sheet).getByLabelText('Tipo de pack')).toBeEnabled());
-    await user.selectOptions(within(sheet).getByLabelText('Tipo de pack'), PACK_TYPE_ID);
+    await waitFor(() => expect(screen.getByLabelText('Tipo de pack')).toBeEnabled());
+    await user.selectOptions(screen.getByLabelText('Tipo de pack'), PACK_TYPE_ID);
 
     const today = format(new Date(), 'yyyy-MM-dd');
     const suggested = format(addDays(new Date(), 90), 'yyyy-MM-dd');
-    expect(within(sheet).getByLabelText('Fim previsto')).toHaveValue(suggested);
-    await user.click(within(sheet).getByRole('button', { name: 'Vender pack' }));
+    expect(screen.getByLabelText('Fim previsto')).toHaveValue(suggested);
+    await user.click(screen.getByRole('button', { name: 'Vender pack' }));
 
     await waitFor(() =>
       expect(body).toEqual({
@@ -219,16 +219,16 @@ describe('Pack types and client packs', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [PACKS_ROUTE] });
 
-    await user.click((await screen.findAllByRole('button', { name: 'Vender pack' }))[0]!);
-    const sheet = await screen.findByRole('dialog');
-    await user.click(within(sheet).getByRole('combobox', { name: 'Cliente' }));
+    await user.click((await screen.findAllByRole('link', { name: 'Vender pack' }))[0]!);
+    await screen.findByRole('heading', { name: 'Vender pack' });
+    await user.click(screen.getByRole('combobox', { name: 'Cliente' }));
     await user.type(await screen.findByPlaceholderText('Pesquisar por nome'), 'Ma');
     await user.click(await screen.findByRole('option', { name: /Marta Figueiredo/ }));
-    await waitFor(() => expect(within(sheet).getByLabelText('Tipo de pack')).toBeEnabled());
-    await user.selectOptions(within(sheet).getByLabelText('Tipo de pack'), PACK_TYPE_ID);
-    await user.click(within(sheet).getByRole('button', { name: 'Vender pack' }));
+    await waitFor(() => expect(screen.getByLabelText('Tipo de pack')).toBeEnabled());
+    await user.selectOptions(screen.getByLabelText('Tipo de pack'), PACK_TYPE_ID);
+    await user.click(screen.getByRole('button', { name: 'Vender pack' }));
 
-    expect(await within(sheet).findByRole('alert')).toHaveTextContent(
+    expect(await screen.findByRole('alert')).toHaveTextContent(
       'Este cliente está arquivado. Reativa-o antes de lhe atribuir um pack.'
     );
   }, 20000);
@@ -357,19 +357,19 @@ describe('Pack types and client packs', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [PACKS_ROUTE] });
 
-    await user.click((await screen.findAllByRole('button', { name: 'Vender pack' }))[0]!);
-    const sheet = await screen.findByRole('dialog');
-    await user.click(within(sheet).getByRole('combobox', { name: 'Cliente' }));
+    await user.click((await screen.findAllByRole('link', { name: 'Vender pack' }))[0]!);
+    await screen.findByRole('heading', { name: 'Vender pack' });
+    await user.click(screen.getByRole('combobox', { name: 'Cliente' }));
     await user.type(await screen.findByPlaceholderText('Pesquisar por nome'), 'Ma');
     await user.click(await screen.findByRole('option', { name: /Marta Figueiredo/ }));
-    await waitFor(() => expect(within(sheet).getByLabelText('Tipo de pack')).toBeEnabled());
-    await user.selectOptions(within(sheet).getByLabelText('Tipo de pack'), PACK_TYPE_ID);
-    expect(within(sheet).getByLabelText('Fim previsto')).not.toHaveValue('');
-    await user.selectOptions(within(sheet).getByLabelText('Tipo de pack'), openEnded.id);
+    await waitFor(() => expect(screen.getByLabelText('Tipo de pack')).toBeEnabled());
+    await user.selectOptions(screen.getByLabelText('Tipo de pack'), PACK_TYPE_ID);
+    expect(screen.getByLabelText('Fim previsto')).not.toHaveValue('');
+    await user.selectOptions(screen.getByLabelText('Tipo de pack'), openEnded.id);
 
     // A data sugerida pelo tipo anterior não pode seguir com um tipo sem duração.
-    expect(within(sheet).getByLabelText('Fim previsto')).toHaveValue('');
-    await user.click(within(sheet).getByRole('button', { name: 'Vender pack' }));
+    expect(screen.getByLabelText('Fim previsto')).toHaveValue('');
+    await user.click(screen.getByRole('button', { name: 'Vender pack' }));
     await waitFor(() => expect(body).not.toBeNull());
     expect(body!.expected_end_date).toBeNull();
   }, 20000);
@@ -385,12 +385,12 @@ describe('Pack types and client packs', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [PACKS_ROUTE] });
 
-    await user.click((await screen.findAllByRole('button', { name: 'Vender pack' }))[0]!);
-    const sheet = await screen.findByRole('dialog');
-    await user.type(within(sheet).getByLabelText('Fim previsto'), '2099-12-31');
-    await waitFor(() => expect(within(sheet).getByLabelText('Tipo de pack')).toBeEnabled());
-    await user.selectOptions(within(sheet).getByLabelText('Tipo de pack'), openEnded.id);
+    await user.click((await screen.findAllByRole('link', { name: 'Vender pack' }))[0]!);
+    await screen.findByRole('heading', { name: 'Vender pack' });
+    await user.type(screen.getByLabelText('Fim previsto'), '2099-12-31');
+    await waitFor(() => expect(screen.getByLabelText('Tipo de pack')).toBeEnabled());
+    await user.selectOptions(screen.getByLabelText('Tipo de pack'), openEnded.id);
 
-    expect(within(sheet).getByLabelText('Fim previsto')).toHaveValue('2099-12-31');
+    expect(screen.getByLabelText('Fim previsto')).toHaveValue('2099-12-31');
   }, 15000);
 });

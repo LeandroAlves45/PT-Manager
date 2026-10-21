@@ -18,6 +18,7 @@ export const clientKeys = {
   list: (filters: ClientListFilters) => [...clientKeys.lists(), filters] as const,
   search: (term: string) => [...clientKeys.lists(), 'search', term] as const,
   detail: (clientId: string) => [...clientKeys.all, 'detail', clientId] as const,
+  invitation: (clientId: string) => [...clientKeys.detail(clientId), 'invitation'] as const,
   summary: (clientId: string) => [...clientKeys.detail(clientId), 'summary'] as const,
   initialAssessment: (clientId: string) =>
     [...clientKeys.detail(clientId), 'initial-assessment'] as const,

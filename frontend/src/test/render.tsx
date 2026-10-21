@@ -7,6 +7,25 @@ import { AuthProvider } from '@/app/providers/AuthProvider';
 import { ThemeProvider } from '@/app/providers/ThemeProvider';
 import { routes as applicationRoutes } from '@/app/router';
 
+/**
+ * Descarrega o código de todas as rotas lazy antes do primeiro teste do ficheiro.
+ *
+ * Em produção as páginas carregam-se quando são abertas. Num teste, a primeira importação
+ * (transformação a frio) caía dentro da espera de 5 s do `findBy` e o primeiro teste de cada
+ * ficheiro falhava por tempo numa máquina carregada. Antes das rotas lazy, o router importava
+ * tudo ao carregar; isto repõe esse custo no carregamento do ficheiro, fora dos testes.
+ */
+async function preloadLazyRoutes(routes: readonly RouteObject[]): Promise<void> {
+  await Promise.all(
+    routes.map(async (route) => {
+      if (typeof route.lazy === 'function') await route.lazy();
+      if (route.children !== undefined) await preloadLazyRoutes(route.children);
+    })
+  );
+}
+
+await preloadLazyRoutes(applicationRoutes);
+
 /** `QueryClient` novo por teste, sem retries: um erro tem de aparecer já, não à 3.ª tentativa. */
 export function createTestQueryClient(): QueryClient {
   return new QueryClient({

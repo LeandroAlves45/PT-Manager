@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useForm, type FieldPath } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -11,10 +12,12 @@ import {
 } from '@/features/clients/lib/labels';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { NativeSelect } from '@/shared/components/ui/native-select';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard';
 
 type Assessment = components['schemas']['InitialAssessmentResponse'];
 type Measurements = components['schemas']['BodyMeasurementsPayload'];
@@ -183,7 +186,10 @@ function defaultsFrom(assessment: Assessment | null): AssessmentValues {
  *
  * @param clientId Cliente avaliado.
  * @param assessment Avaliação existente, ou `null` para criar.
- * @param onSaved Chamado depois de guardar com sucesso.
+ * Sair com alterações por guardar pede confirmação; `onSaved` corre depois de o guard
+ * deixar de valer.
+ *
+ * @param onSaved Chamado depois de guardar com sucesso. Tem de ter identidade estável.
  */
 export function InitialAssessmentForm({
   clientId,
@@ -197,6 +203,11 @@ export function InitialAssessmentForm({
   const mutation = useSaveInitialAssessmentMutation(clientId, assessment?.id ?? null);
   const defaults = defaultsFrom(assessment);
   const form = useForm<AssessmentValues>({ defaultValues: defaults });
+  const [saved, setSaved] = useState(false);
+  const blocker = useUnsavedChangesGuard(form.formState.isDirty && !saved);
+  useEffect(() => {
+    if (saved) onSaved();
+  }, [saved, onSaved]);
   const errors = form.formState.errors;
 
   async function submit(values: AssessmentValues) {
@@ -243,7 +254,7 @@ export function InitialAssessmentForm({
         nutrition_intake: nutrition,
       });
       toast.success('Avaliação inicial guardada.');
-      onSaved();
+      setSaved(true);
     } catch (error) {
       if (isApiProblem(error) && error.code === 'initial_assessment_already_exists') {
         form.setError('root', {
@@ -422,6 +433,19 @@ export function InitialAssessmentForm({
           {mutation.isPending ? 'A guardar…' : 'Guardar avaliação'}
         </Button>
       </div>
+      <ConfirmDialog
+        open={blocker.state === 'blocked'}
+        onOpenChange={(open) => {
+          if (!open) blocker.reset?.();
+        }}
+        title="Sair sem guardar?"
+        description="As alterações a esta avaliação perdem-se."
+        confirmLabel="Sair sem guardar"
+        cancelLabel="Continuar a editar"
+        destructive
+        pending={false}
+        onConfirm={() => blocker.proceed?.()}
+      />
     </form>
   );
 }

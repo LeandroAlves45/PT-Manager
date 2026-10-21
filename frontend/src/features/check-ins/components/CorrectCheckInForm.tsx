@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useForm, type FieldPath } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -8,10 +9,12 @@ import { checkInErrorMessage } from '@/features/check-ins/lib/checkInStatus';
 import { MEASUREMENT_LABELS } from '@/features/clients';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { FormField } from '@/shared/components/FormField';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard';
 
 type CheckIn = components['schemas']['CheckInResponse'];
 type Measurements = components['schemas']['BodyMeasurementsPayload'];
@@ -35,7 +38,7 @@ const longText = z.string().max(2000, 'O texto não pode exceder 2000 caracteres
 /**
  * Regras de `CorrectCheckInCommandValidator` e `AssessmentInputValidators`: peso > 0,
  * gordura entre 0 e 100 (exclusivos), adesões 0–100, medidas > 0, notas e respostas
- * ≤ 2000 caracteres, data-alvo nunca antes do dia do check-in.
+ * ≤ 2000 caracteres, data-alvo nunca antes do dia da avaliação.
  */
 function correctionSchema(checkInDate: string) {
   return z.object({
@@ -43,7 +46,7 @@ function correctionSchema(checkInDate: string) {
       .string()
       .refine(
         (value) => value === '' || value >= checkInDate,
-        'A data-alvo não pode ser anterior ao check-in.'
+        'A data-alvo não pode ser anterior à avaliação.'
       ),
     weight_kg: z.number('Indica o peso.').positive('O peso tem de ser maior que 0 kg.'),
     body_fat_percentage: z
@@ -122,24 +125,36 @@ function toValues(checkIn: CheckIn): CorrectionValues {
 }
 
 /**
- * Correção de um check-in respondido pelo personal trainer (`PUT /check-ins/{id}/answer`).
+ * Correção de uma avaliação respondida pelo personal trainer (`PUT /check-ins/{id}/answer`).
  *
  * Pré-preenchido com a resposta atual; o `PUT` substitui todos os valores, por isso um campo
- * esvaziado passa a `null`. Corrigir não marca como revisto: são ações separadas.
+ * esvaziado passa a `null`. Corrigir não marca como revista: são ações separadas.
  *
- * @param checkIn Check-in respondido a corrigir.
- * @param onSaved Chamado depois de guardar.
+ * Sair com alterações por guardar pede confirmação (navegação pelo guard; «Cancelar» pergunta
+ * antes de descartar); o guard só deixa de valer depois de `saved` estar a `true`.
+ *
+ * @param checkIn Avaliação respondida a corrigir.
+ * @param onSaved Chamado depois de guardar, já sem alterações por guardar.
+ * @param onCancel Chamado por «Cancelar» (volta à leitura da resposta).
  */
 export function CorrectCheckInForm({
   checkIn,
   onSaved,
+  onCancel,
 }: {
   checkIn: CheckIn;
   onSaved: () => void;
+  onCancel: () => void;
 }) {
   const mutation = useCorrectCheckInMutation();
   const form = useForm<CorrectionValues>({ defaultValues: toValues(checkIn) });
   const errors = form.formState.errors;
+  const [saved, setSaved] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
+  const blocker = useUnsavedChangesGuard(form.formState.isDirty && !saved);
+  useEffect(() => {
+    if (saved) onSaved();
+  }, [saved, onSaved]);
 
   async function submit(values: CorrectionValues) {
     const parsed = correctionSchema(checkIn.check_in_date).safeParse(values);
@@ -174,8 +189,8 @@ export function CorrectCheckInForm({
           },
         },
       });
-      toast.success(`Check-in de ${checkIn.client_name} corrigido.`);
-      onSaved();
+      toast.success(`Avaliação periódica de ${checkIn.client_name} corrigida.`);
+      setSaved(true);
     } catch (error) {
       if (!isApiProblem(error)) {
         form.setError('root', { message: fallback });
@@ -288,11 +303,43 @@ export function CorrectCheckInForm({
           {errors.root.message}
         </p>
       )}
-      <div className="border-border mt-auto flex justify-end gap-2 border-t pt-4">
-        <Button type="submit" disabled={mutation.isPending}>
+      <div className="border-border mt-auto flex flex-wrap justify-end gap-2 border-t pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          className="min-h-11 md:min-h-8"
+          onClick={() => (form.formState.isDirty ? setDiscarding(true) : onCancel())}
+        >
+          Cancelar
+        </Button>
+        <Button type="submit" className="min-h-11 md:min-h-8" disabled={mutation.isPending}>
           {mutation.isPending ? 'A guardar…' : 'Guardar correção'}
         </Button>
       </div>
+      <ConfirmDialog
+        open={blocker.state === 'blocked'}
+        onOpenChange={(open) => {
+          if (!open) blocker.reset?.();
+        }}
+        title="Sair sem guardar?"
+        description="As alterações a esta avaliação perdem-se."
+        confirmLabel="Sair sem guardar"
+        cancelLabel="Continuar a editar"
+        destructive
+        pending={false}
+        onConfirm={() => blocker.proceed?.()}
+      />
+      <ConfirmDialog
+        open={discarding}
+        onOpenChange={setDiscarding}
+        title="Descartar a correção?"
+        description="Os valores que alteraste perdem-se."
+        confirmLabel="Descartar"
+        cancelLabel="Continuar a editar"
+        destructive
+        pending={false}
+        onConfirm={onCancel}
+      />
     </form>
   );
 }

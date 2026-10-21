@@ -90,6 +90,31 @@ describe('ClientsPage', () => {
     expect(pages).toEqual(['2', '1']);
   }, 15000);
 
+  it('links «Novo cliente» to the editor page instead of opening a side panel', async () => {
+    server.use(
+      ...restorableSession(),
+      http.get(`${API}/clients`, () => HttpResponse.json(clientPage([clientSummary()])))
+    );
+    renderApp({ initialEntries: ['/trainer/clients'] });
+
+    expect(await screen.findByRole('link', { name: 'Novo cliente' })).toHaveAttribute(
+      'href',
+      '/trainer/clients/new'
+    );
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  }, 15000);
+
+  it('redirects the old ?new=true link to the editor page', async () => {
+    server.use(
+      ...restorableSession(),
+      http.get(`${API}/clients`, () => HttpResponse.json(clientPage([])))
+    );
+    const { router } = renderApp({ initialEntries: ['/trainer/clients?new=true'] });
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/trainer/clients/new'));
+    expect(await screen.findByRole('heading', { name: 'Criar cliente' })).toBeInTheDocument();
+  }, 15000);
+
   it('validates in PT-PT before sending anything', async () => {
     let posts = 0;
     server.use(
@@ -101,9 +126,9 @@ describe('ClientsPage', () => {
       })
     );
     const user = userEvent.setup();
-    renderApp({ initialEntries: ['/trainer/clients?new=true'] });
+    renderApp({ initialEntries: ['/trainer/clients/new'] });
 
-    await user.click(await screen.findByRole('button', { name: 'Criar cliente' }));
+    await user.click(await screen.findByRole('button', { name: 'Criar' }));
 
     expect(await screen.findByText('Indica o nome do cliente.')).toBeInTheDocument();
     expect(screen.getByText('Indica um número de telefone.')).toBeInTheDocument();
@@ -123,14 +148,14 @@ describe('ClientsPage', () => {
       )
     );
     const user = userEvent.setup();
-    renderApp({ initialEntries: ['/trainer/clients?new=true'] });
+    renderApp({ initialEntries: ['/trainer/clients/new'] });
 
     await user.type(await screen.findByLabelText('Nome'), 'Marta Figueiredo');
     await user.type(screen.getByLabelText('Email de contacto'), 'marta@example.com');
     await user.type(screen.getByLabelText('Telefone'), '+351912345680');
     await user.type(screen.getByLabelText('Data de nascimento'), '1992-04-17');
     await user.selectOptions(screen.getByLabelText('Sexo biológico'), 'female');
-    await user.click(screen.getByRole('button', { name: 'Criar cliente' }));
+    await user.click(screen.getByRole('button', { name: 'Criar' }));
 
     expect(await screen.findByText('Já existe um cliente com este email.')).toBeInTheDocument();
     expect(screen.getByLabelText('Email de contacto')).toHaveAttribute('aria-invalid', 'true');
@@ -146,16 +171,21 @@ describe('ClientsPage', () => {
         return HttpResponse.json(clientDetails(), { status: 201 });
       }),
       http.get(`${API}/clients/:clientId`, () => HttpResponse.json(clientDetails())),
-      http.get(`${API}/clients/:clientId/summary`, () => HttpResponse.json(clientSummaryOverview()))
+      http.get(`${API}/clients/:clientId/summary`, () =>
+        HttpResponse.json(clientSummaryOverview())
+      ),
+      http.get(`${API}/clients/:clientId/invitation`, () =>
+        HttpResponse.json({ state: 'none', email: null, expires_at: null })
+      )
     );
     const user = userEvent.setup();
-    const { router } = renderApp({ initialEntries: ['/trainer/clients?new=true'] });
+    const { router } = renderApp({ initialEntries: ['/trainer/clients/new'] });
 
     await user.type(await screen.findByLabelText('Nome'), 'Marta Figueiredo');
     await user.type(screen.getByLabelText('Telefone'), '+351912345680');
     await user.type(screen.getByLabelText('Data de nascimento'), '1992-04-17');
     await user.selectOptions(screen.getByLabelText('Sexo biológico'), 'female');
-    await user.click(screen.getByRole('button', { name: 'Criar cliente' }));
+    await user.click(screen.getByRole('button', { name: 'Criar' }));
 
     await waitFor(() =>
       expect(router.state.location.pathname).toBe(`/trainer/clients/${CLIENT_ID}`)
@@ -178,13 +208,13 @@ describe('ClientsPage', () => {
       )
     );
     const user = userEvent.setup();
-    renderApp({ initialEntries: ['/trainer/clients?new=true'] });
+    renderApp({ initialEntries: ['/trainer/clients/new'] });
 
     await user.type(await screen.findByLabelText('Nome'), 'Marta');
     await user.type(screen.getByLabelText('Telefone'), '912');
     await user.type(screen.getByLabelText('Data de nascimento'), '1992-04-17');
     await user.selectOptions(screen.getByLabelText('Sexo biológico'), 'female');
-    await user.click(screen.getByRole('button', { name: 'Criar cliente' }));
+    await user.click(screen.getByRole('button', { name: 'Criar' }));
 
     expect(
       await screen.findByText(/Atingiste o limite de clientes do teu plano/)

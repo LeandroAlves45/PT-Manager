@@ -7,7 +7,6 @@ import type { ClientChoice } from '@/features/clients';
 import type { ClientPackListFilters } from '@/features/packs/api/keys';
 import { useCancelPackMutation } from '@/features/packs/api/mutations';
 import { PACK_PAGE_SIZE, useClientPackListQuery } from '@/features/packs/api/queries';
-import { AssignPackForm } from '@/features/packs/components/AssignPackForm';
 import { PackEndDateDialog } from '@/features/packs/components/PackEndDateDialog';
 import { balanceLabel, CANCEL_PACK_ERRORS, priceLabel } from '@/features/packs/lib/labels';
 import { isApiProblem } from '@/shared/api/problem';
@@ -17,13 +16,6 @@ import { EmptyState } from '@/shared/components/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState';
 import { Pagination } from '@/shared/components/Pagination';
 import { Button } from '@/shared/components/ui/button';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/shared/components/ui/sheet';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { formatDate } from '@/shared/lib/format';
 
@@ -38,6 +30,7 @@ const ACTIVITY_LABELS = { usable: 'Com saldo', completed: 'Terminados', all: 'To
  *
  * Serve o separador "Packs dos clientes" (`client === null`, todos os clientes) e a tab
  * Sessões do detalhe (`client` fixo: sem coluna Cliente e a venda já sabe para quem é).
+ * «Vender pack» abre a página `SellPackPage` (sem painel lateral).
  *
  * @param client Cliente fixo, ou `null` para a lista de todos.
  */
@@ -46,10 +39,11 @@ export function ClientPacksPanel({ client }: { client: ClientChoice | null }) {
   const [page, setPage] = useState(1);
   const query = useClientPackListQuery({ clientId: client?.id ?? null, activity, page });
   const cancel = useCancelPackMutation();
-  const [assigning, setAssigning] = useState(false);
   const [endDatePack, setEndDatePack] = useState<ClientPack | null>(null);
   const [cancelPack, setCancelPack] = useState<ClientPack | null>(null);
 
+  const sellPath =
+    client === null ? '/trainer/sessions/sell-pack' : `/trainer/clients/${client.id}/sell-pack`;
   const items = query.data?.items ?? [];
   const total = query.data?.total_count ?? 0;
 
@@ -90,8 +84,10 @@ export function ClientPacksPanel({ client }: { client: ClientChoice | null }) {
             </Button>
           ))}
         </div>
-        <Button className="ml-auto" onClick={() => setAssigning(true)}>
-          <Plus aria-hidden /> Vender pack
+        <Button asChild className="ml-auto">
+          <Link to={sellPath}>
+            <Plus aria-hidden /> Vender pack
+          </Link>
         </Button>
       </div>
 
@@ -130,7 +126,11 @@ export function ClientPacksPanel({ client }: { client: ClientChoice | null }) {
                 ? 'Vende um pack a um cliente para as sessões descontarem do saldo.'
                 : `${client.name} não tem packs com saldo.`
             }
-            action={<Button onClick={() => setAssigning(true)}>Vender pack</Button>}
+            action={
+              <Button asChild>
+                <Link to={sellPath}>Vender pack</Link>
+              </Button>
+            }
           />
         )
       ) : (
@@ -221,24 +221,6 @@ export function ClientPacksPanel({ client }: { client: ClientChoice | null }) {
         pageSize={PACK_PAGE_SIZE}
         onPageChange={setPage}
       />
-
-      <Sheet open={assigning} onOpenChange={setAssigning}>
-        <SheetContent className="w-full sm:max-w-130">
-          <SheetHeader>
-            <SheetTitle>Vender pack</SheetTitle>
-            <SheetDescription>
-              {client === null
-                ? 'As sessões marcadas depois descontam deste pack.'
-                : `Para ${client.name}. As sessões marcadas depois descontam deste pack.`}
-            </SheetDescription>
-          </SheetHeader>
-          {assigning && (
-            <div className="min-h-0 flex-1 overflow-y-auto px-4">
-              <AssignPackForm client={client} onSaved={() => setAssigning(false)} />
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
 
       <PackEndDateDialog
         key={endDatePack?.id ?? 'closed'}

@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import type { components } from '@/shared/api/schema';
+import { trainerSettings } from '@/test/msw/account-fixtures';
 import { SIGN_UP_ACCEPTED, accountResponse, googleChallenge } from '@/test/msw/auth-fixtures';
 import {
   dueCheckIn,
@@ -101,6 +102,14 @@ export const handlers = [
   ),
   http.get(`${API}/dashboard`, () =>
     HttpResponse.json(dashboardResponse({ active_client_count: 0 }))
+  ),
+  // A ficha do cliente lê o estado do convite (U63). Por omissão, nunca enviado.
+  http.get(`${API}/clients/:clientId/invitation`, () =>
+    HttpResponse.json({ state: 'none', email: null, expires_at: null })
+  ),
+  // A shell do trainer lê a marca (U65). Por omissão, um trainer que nunca a configurou.
+  http.get(`${API}/trainer-settings`, () =>
+    HttpResponse.json(trainerSettings({ app_name: 'PT Manager' }))
   ),
   http.get(`${API}/portal/branding`, () => HttpResponse.json(portalBranding())),
   http.get(`${API}/portal/home`, () => HttpResponse.json(portalHome())),

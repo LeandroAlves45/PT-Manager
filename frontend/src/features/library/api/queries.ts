@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery, type Query } from '@tanstack/react-query';
 
 import { isVideoInProgress } from '@/features/exercise-video';
-import { libraryKeys, type LibraryFilters } from '@/features/library/api/keys';
+import { libraryKeys, type LibraryFilters, type LibraryKind } from '@/features/library/api/keys';
 import { apiClient, unwrap } from '@/shared/api/client';
 import type { components } from '@/shared/api/schema';
 
@@ -80,5 +80,58 @@ export function useSupplementListQuery(filters: LibraryFilters) {
           signal,
         })
       ),
+  });
+}
+
+type LibraryItemData =
+  | { readonly kind: 'exercises'; readonly item: components['schemas']['ExerciseResponse'] }
+  | { readonly kind: 'foods'; readonly item: components['schemas']['FoodResponse'] }
+  | { readonly kind: 'supplements'; readonly item: components['schemas']['SupplementResponse'] };
+
+/**
+ * Um item da biblioteca (global ou privado) para a página de edição ou de leitura.
+ *
+ * Sem cache entre visitas (`gcTime: 0`): o formulário arranca com os valores recebidos, e um
+ * valor antigo da cache deixaria o trainer a editar dados desatualizados.
+ */
+export function useLibraryItemQuery(kind: LibraryKind, id: string) {
+  return useQuery({
+    queryKey: libraryKeys.item(kind, id),
+    gcTime: 0,
+    refetchOnWindowFocus: false,
+    queryFn: async ({ signal }): Promise<LibraryItemData> => {
+      switch (kind) {
+        case 'exercises':
+          return {
+            kind,
+            item: unwrap(
+              await apiClient.GET('/api/v1/exercises/{exerciseId}', {
+                params: { path: { exerciseId: id } },
+                signal,
+              })
+            ),
+          };
+        case 'foods':
+          return {
+            kind,
+            item: unwrap(
+              await apiClient.GET('/api/v1/foods/{foodId}', {
+                params: { path: { foodId: id } },
+                signal,
+              })
+            ),
+          };
+        case 'supplements':
+          return {
+            kind,
+            item: unwrap(
+              await apiClient.GET('/api/v1/supplements/{supplementId}', {
+                params: { path: { supplementId: id } },
+                signal,
+              })
+            ),
+          };
+      }
+    },
   });
 }

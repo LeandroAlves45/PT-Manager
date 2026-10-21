@@ -213,17 +213,17 @@ describe('SessionsPage', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Marcar sessão' }));
-    const sheet = await screen.findByRole('dialog');
-    await user.click(within(sheet).getByRole('combobox', { name: 'Cliente' }));
+    await user.click(await screen.findByRole('link', { name: 'Marcar sessão' }));
+    await screen.findByRole('heading', { name: 'Marcar sessão' });
+    await user.click(screen.getByRole('combobox', { name: 'Cliente' }));
     await user.type(await screen.findByPlaceholderText('Pesquisar por nome'), 'Ma');
     await user.click(await screen.findByRole('option', { name: /Marta Figueiredo/ }));
 
-    await waitFor(() => expect(within(sheet).getByLabelText('Pack')).toHaveValue(PACK_ID));
-    await user.clear(within(sheet).getByLabelText('Dia'));
-    await user.type(within(sheet).getByLabelText('Dia'), '2099-01-15');
-    await user.type(within(sheet).getByLabelText('Hora'), '10:30');
-    await user.click(within(sheet).getByRole('button', { name: 'Marcar sessão' }));
+    await waitFor(() => expect(screen.getByLabelText('Pack')).toHaveValue(PACK_ID));
+    await user.clear(screen.getByLabelText('Dia'));
+    await user.type(screen.getByLabelText('Dia'), '2099-01-15');
+    await user.type(screen.getByLabelText('Hora'), '10:30');
+    await user.click(screen.getByRole('button', { name: 'Marcar sessão' }));
 
     await waitFor(() => expect(body).not.toBeNull());
     expect(body).toMatchObject({
@@ -252,17 +252,17 @@ describe('SessionsPage', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Marcar sessão' }));
-    const sheet = await screen.findByRole('dialog');
-    await user.click(within(sheet).getByRole('combobox', { name: 'Cliente' }));
+    await user.click(await screen.findByRole('link', { name: 'Marcar sessão' }));
+    await screen.findByRole('heading', { name: 'Marcar sessão' });
+    await user.click(screen.getByRole('combobox', { name: 'Cliente' }));
     await user.type(await screen.findByPlaceholderText('Pesquisar por nome'), 'Ma');
     await user.click(await screen.findByRole('option', { name: /Marta Figueiredo/ }));
-    await waitFor(() => expect(within(sheet).getByLabelText('Pack')).toHaveValue(PACK_ID));
-    await user.selectOptions(within(sheet).getByLabelText('Pack'), 'none');
-    await user.clear(within(sheet).getByLabelText('Dia'));
-    await user.type(within(sheet).getByLabelText('Dia'), '2099-01-15');
-    await user.type(within(sheet).getByLabelText('Hora'), '10:30');
-    await user.click(within(sheet).getByRole('button', { name: 'Marcar sessão' }));
+    await waitFor(() => expect(screen.getByLabelText('Pack')).toHaveValue(PACK_ID));
+    await user.selectOptions(screen.getByLabelText('Pack'), 'none');
+    await user.clear(screen.getByLabelText('Dia'));
+    await user.type(screen.getByLabelText('Dia'), '2099-01-15');
+    await user.type(screen.getByLabelText('Hora'), '10:30');
+    await user.click(screen.getByRole('button', { name: 'Marcar sessão' }));
 
     await waitFor(() => expect(body).not.toBeNull());
     expect(body!.client_session_pack_id).toBeNull();
@@ -290,22 +290,22 @@ describe('SessionsPage', () => {
     const user = userEvent.setup();
     const { queryClient } = renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Marcar sessão' }));
-    const sheet = await screen.findByRole('dialog');
-    await user.click(within(sheet).getByRole('combobox', { name: 'Cliente' }));
+    await user.click(await screen.findByRole('link', { name: 'Marcar sessão' }));
+    await screen.findByRole('heading', { name: 'Marcar sessão' });
+    await user.click(screen.getByRole('combobox', { name: 'Cliente' }));
     await user.type(await screen.findByPlaceholderText('Pesquisar por nome'), 'Ma');
     await user.click(await screen.findByRole('option', { name: /Marta Figueiredo/ }));
-    await waitFor(() => expect(within(sheet).getByLabelText('Pack')).toHaveValue(PACK_ID));
-    await user.selectOptions(within(sheet).getByLabelText('Pack'), secondPack.id);
+    await waitFor(() => expect(screen.getByLabelText('Pack')).toHaveValue(PACK_ID));
+    await user.selectOptions(screen.getByLabelText('Pack'), secondPack.id);
 
     // O mesmo que acontece ao voltar à janela depois dos 30 s de `staleTime`.
     await queryClient.refetchQueries({ queryKey: ['packs'] });
 
     await waitFor(() => expect(usableRequests).toBe(2));
-    expect(within(sheet).getByLabelText('Pack')).toHaveValue(secondPack.id);
+    expect(screen.getByLabelText('Pack')).toHaveValue(secondPack.id);
   }, 20000);
 
-  it('puts a same-day conflict on the day field and keeps the sheet open', async () => {
+  it('puts a same-day conflict on the day field and stays on the page', async () => {
     sessionsHandler([]);
     server.use(
       http.get(`${API}/clients`, () => HttpResponse.json(clientPage([clientSummary()]))),
@@ -317,18 +317,18 @@ describe('SessionsPage', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Marcar sessão' }));
-    const sheet = await screen.findByRole('dialog');
-    await user.click(within(sheet).getByRole('combobox', { name: 'Cliente' }));
+    await user.click(await screen.findByRole('link', { name: 'Marcar sessão' }));
+    await screen.findByRole('heading', { name: 'Marcar sessão' });
+    await user.click(screen.getByRole('combobox', { name: 'Cliente' }));
     await user.type(await screen.findByPlaceholderText('Pesquisar por nome'), 'Ma');
     await user.click(await screen.findByRole('option', { name: /Marta Figueiredo/ }));
-    await waitFor(() => expect(within(sheet).getByLabelText('Pack')).toHaveValue('none'));
-    await user.clear(within(sheet).getByLabelText('Dia'));
-    await user.type(within(sheet).getByLabelText('Dia'), '2099-01-15');
-    await user.type(within(sheet).getByLabelText('Hora'), '10:30');
-    await user.click(within(sheet).getByRole('button', { name: 'Marcar sessão' }));
+    await waitFor(() => expect(screen.getByLabelText('Pack')).toHaveValue('none'));
+    await user.clear(screen.getByLabelText('Dia'));
+    await user.type(screen.getByLabelText('Dia'), '2099-01-15');
+    await user.type(screen.getByLabelText('Hora'), '10:30');
+    await user.click(screen.getByRole('button', { name: 'Marcar sessão' }));
 
-    expect(await within(sheet).findByLabelText('Dia')).toHaveAccessibleDescription(
+    expect(await screen.findByLabelText('Dia')).toHaveAccessibleDescription(
       'Este cliente já tem uma sessão marcada nesse dia.'
     );
     expect(toastMock.success).not.toHaveBeenCalled();
@@ -348,17 +348,17 @@ describe('SessionsPage', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Marcar sessão' }));
-    const sheet = await screen.findByRole('dialog');
-    await user.click(within(sheet).getByRole('combobox', { name: 'Cliente' }));
+    await user.click(await screen.findByRole('link', { name: 'Marcar sessão' }));
+    await screen.findByRole('heading', { name: 'Marcar sessão' });
+    await user.click(screen.getByRole('combobox', { name: 'Cliente' }));
     await user.type(await screen.findByPlaceholderText('Pesquisar por nome'), 'Ma');
     await user.click(await screen.findByRole('option', { name: /Marta Figueiredo/ }));
-    await user.clear(within(sheet).getByLabelText('Dia'));
-    await user.type(within(sheet).getByLabelText('Dia'), '2020-01-15');
-    await user.type(within(sheet).getByLabelText('Hora'), '10:30');
-    await user.click(within(sheet).getByRole('button', { name: 'Marcar sessão' }));
+    await user.clear(screen.getByLabelText('Dia'));
+    await user.type(screen.getByLabelText('Dia'), '2020-01-15');
+    await user.type(screen.getByLabelText('Hora'), '10:30');
+    await user.click(screen.getByRole('button', { name: 'Marcar sessão' }));
 
-    expect(await within(sheet).findByLabelText('Hora')).toHaveAccessibleDescription(
+    expect(await screen.findByLabelText('Hora')).toHaveAccessibleDescription(
       'A sessão tem de começar no futuro.'
     );
     expect(posted).toBe(false);
@@ -453,6 +453,9 @@ describe('SessionsPage', () => {
     sessionsHandler([trainingSession({ starts_at: startsAt })]);
     let body: Record<string, unknown> | null = null;
     server.use(
+      http.get(`${API}/sessions/:sessionId`, () =>
+        HttpResponse.json(trainingSession({ starts_at: startsAt }))
+      ),
       http.patch(`${API}/sessions/:sessionId/reschedule`, async ({ request, params }) => {
         if (params.sessionId !== SESSION_ID) return new HttpResponse(null, { status: 404 });
         body = (await request.json()) as Record<string, unknown>;
@@ -464,13 +467,13 @@ describe('SessionsPage', () => {
 
     await openMoreActions(user);
     await user.click(await screen.findByRole('menuitem', { name: 'Reagendar' }));
-    const sheet = await screen.findByRole('dialog');
+    await screen.findByRole('heading', { name: 'Reagendar sessão' });
     const day = format(parseISO(startsAt), 'yyyy-MM-dd');
-    expect(within(sheet).getByLabelText('Dia')).toHaveValue(day);
-    expect(within(sheet).getByLabelText('Local')).toHaveValue('Estúdio A');
-    await user.clear(within(sheet).getByLabelText('Hora'));
-    await user.type(within(sheet).getByLabelText('Hora'), '12:15');
-    await user.click(within(sheet).getByRole('button', { name: 'Reagendar' }));
+    expect(screen.getByLabelText('Dia')).toHaveValue(day);
+    expect(screen.getByLabelText('Local')).toHaveValue('Estúdio A');
+    await user.clear(screen.getByLabelText('Hora'));
+    await user.type(screen.getByLabelText('Hora'), '12:15');
+    await user.click(screen.getByRole('button', { name: 'Reagendar' }));
 
     await waitFor(() =>
       expect(body).toEqual({
@@ -485,6 +488,9 @@ describe('SessionsPage', () => {
   it('puts a schedule conflict on the hour when rescheduling', async () => {
     sessionsHandler([trainingSession({ starts_at: '2099-01-15T10:00:00Z' })]);
     server.use(
+      http.get(`${API}/sessions/:sessionId`, () =>
+        HttpResponse.json(trainingSession({ starts_at: '2099-01-15T10:00:00Z' }))
+      ),
       http.patch(`${API}/sessions/:sessionId/reschedule`, () =>
         HttpResponse.json(problem('session_schedule_conflict'), { status: 409 })
       )
@@ -494,10 +500,10 @@ describe('SessionsPage', () => {
 
     await openMoreActions(user);
     await user.click(await screen.findByRole('menuitem', { name: 'Reagendar' }));
-    const sheet = await screen.findByRole('dialog');
-    await user.click(within(sheet).getByRole('button', { name: 'Reagendar' }));
+    await screen.findByRole('heading', { name: 'Reagendar sessão' });
+    await user.click(screen.getByRole('button', { name: 'Reagendar' }));
 
-    expect(await within(sheet).findByLabelText('Hora')).toHaveAccessibleDescription(
+    expect(await screen.findByLabelText('Hora')).toHaveAccessibleDescription(
       'Já tens outra sessão marcada a essa hora.'
     );
     expect(toastMock.success).not.toHaveBeenCalled();
@@ -606,20 +612,20 @@ describe('SessionsPage', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Marcar sessão' }));
-    const sheet = await screen.findByRole('dialog');
-    await user.click(within(sheet).getByRole('combobox', { name: 'Cliente' }));
+    await user.click(await screen.findByRole('link', { name: 'Marcar sessão' }));
+    await screen.findByRole('heading', { name: 'Marcar sessão' });
+    await user.click(screen.getByRole('combobox', { name: 'Cliente' }));
     await user.type(await screen.findByPlaceholderText('Pesquisar por nome'), 'Ma');
     await user.click(await screen.findByRole('option', { name: /Marta Figueiredo/ }));
-    await user.clear(within(sheet).getByLabelText('Dia'));
-    await user.type(within(sheet).getByLabelText('Dia'), '2099-01-15');
-    await user.type(within(sheet).getByLabelText('Hora'), '10:30');
+    await user.clear(screen.getByLabelText('Dia'));
+    await user.type(screen.getByLabelText('Dia'), '2099-01-15');
+    await user.type(screen.getByLabelText('Hora'), '10:30');
 
     // Sem os packs ainda: submeter agora marcaria a sessão sem pack, em silêncio.
-    const submit = within(sheet).getByRole('button', { name: 'Marcar sessão' });
+    const submit = screen.getByRole('button', { name: 'Marcar sessão' });
     expect(submit).toBeDisabled();
     releaseUsable();
-    await waitFor(() => expect(within(sheet).getByLabelText('Pack')).toHaveValue(PACK_ID));
+    await waitFor(() => expect(screen.getByLabelText('Pack')).toHaveValue(PACK_ID));
     await user.click(submit);
 
     await waitFor(() => expect(body).not.toBeNull());

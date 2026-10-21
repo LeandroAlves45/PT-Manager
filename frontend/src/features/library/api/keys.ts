@@ -20,4 +20,6 @@ export const libraryKeys = {
   kind: (kind: LibraryKind) => [...libraryKeys.all, kind] as const,
   list: (kind: LibraryKind, filters: LibraryFilters) =>
     [...libraryKeys.kind(kind), 'list', filters] as const,
+  /** Um item para a página de edição; fica sob `kind`, por isso uma escrita também o refresca. */
+  item: (kind: LibraryKind, id: string) => [...libraryKeys.kind(kind), 'item', id] as const,
 };

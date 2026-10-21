@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { useSaveFoodMutation } from '@/features/library/api/mutations';
+import { UnsavedChangesDialog } from '@/features/library/components/UnsavedChangesDialog';
 import { applyServerErrors, applyZodIssues } from '@/features/library/lib/errors';
 import { gramsLabel } from '@/features/library/lib/labels';
 import type { components } from '@/shared/api/schema';
@@ -115,9 +117,13 @@ function kcalPreview(macros: readonly string[]): number | null {
  * Formulário do alimento privado (criar e editar). Macros por 100 g, como o combobox da 6E-4
  * os mostra.
  *
+ * Avisa ao sair com alterações por guardar.
+ *
  * @param food Alimento a editar, ou `null` para criar.
+ * @param onSaved Chamado depois de guardar, já sem o aviso de saída ativo.
  */
-export function FoodForm({ food, onSaved }: { food: Food | null; onSaved: () => void }) {
+export function FoodForm({ food, onSaved }: { food: Food | null; onSaved: (saved: Food) => void }) {
+  const [saved, setSaved] = useState<Food | null>(null);
   const mutation = useSaveFoodMutation(food?.id ?? null);
   const form = useForm<FoodValues>({
     defaultValues: {
@@ -133,6 +139,10 @@ export function FoodForm({ food, onSaved }: { food: Food | null; onSaved: () => 
   const errors = form.formState.errors;
   const kcal = kcalPreview(useWatch({ control: form.control, name: ['protein', 'carbs', 'fats'] }));
 
+  useEffect(() => {
+    if (saved !== null) onSaved(saved);
+  }, [saved, onSaved]);
+
   async function submit(values: FoodValues) {
     const parsed = foodSchema.safeParse(values);
     if (!parsed.success) {
@@ -142,7 +152,7 @@ export function FoodForm({ food, onSaved }: { food: Food | null; onSaved: () => 
 
     const data = parsed.data;
     try {
-      await mutation.mutateAsync({
+      const result = await mutation.mutateAsync({
         name: data.name,
         description: data.description.trim() || null,
         protein: toNumber(data.protein),
@@ -155,7 +165,7 @@ export function FoodForm({ food, onSaved }: { food: Food | null; onSaved: () => 
       toast.success(
         food === null ? 'Alimento criado com sucesso.' : 'Alimento atualizado com sucesso.'
       );
-      onSaved();
+      setSaved(result);
     } catch (error) {
       applyServerErrors(error, SERVER_FIELDS, form.setError);
     }
@@ -218,14 +228,17 @@ export function FoodForm({ food, onSaved }: { food: Food | null; onSaved: () => 
         </p>
       )}
       <div className="flex justify-end">
-        <Button type="submit" disabled={mutation.isPending}>
+        <Button type="submit" className="min-h-11 md:min-h-8" disabled={mutation.isPending}>
           {mutation.isPending
-            ? 'A guardar…'
+            ? food === null
+              ? 'A criar…'
+              : 'A guardar…'
             : food === null
-              ? 'Criar alimento'
-              : 'Guardar alterações'}
+              ? 'Criar'
+              : 'Guardar'}
         </Button>
       </div>
+      <UnsavedChangesDialog when={form.formState.isDirty && saved === null} />
     </form>
   );
 }

@@ -5,7 +5,6 @@ import { Link } from 'react-router';
 import { toast } from 'sonner';
 
 import { useSessionTransitionMutation } from '@/features/sessions/api/mutations';
-import { RescheduleForm } from '@/features/sessions/components/RescheduleForm';
 import { SessionPackDialog } from '@/features/sessions/components/SessionPackDialog';
 import {
   SESSION_ERRORS,
@@ -25,13 +24,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/shared/components/ui/sheet';
 import { formatDate } from '@/shared/lib/format';
 
 type Session = components['schemas']['TrainingSessionResponse'];
@@ -75,6 +67,8 @@ function hourOf(value: string): string {
  * Agendada: "Registar presença" à vista e, no menu, falta, reagendar, trocar pack e os dois
  * cancelamentos. Estado final: "Repor como agendada" (corrige um registo errado e devolve a
  * sessão ao pack quando tinha sido descontada). Só a linha cujo pedido corre fica ocupada.
+ * «Reagendar» abre a página `SessionEditorPage`; na tab do cliente (`showClient` falso) leva
+ * `?client_id=` para voltar à ficha.
  *
  * @param showClient Coluna Cliente (escondida na tab do próprio cliente).
  * @param showDate Coluna Dia (escondida na agenda de um só dia).
@@ -93,7 +87,6 @@ export function SessionsTable({
     session: Session;
     transition: ConfirmedTransition;
   } | null>(null);
-  const [rescheduling, setRescheduling] = useState<Session | null>(null);
   const [changingPack, setChangingPack] = useState<Session | null>(null);
 
   async function run(session: Session, action: SessionTransition) {
@@ -210,8 +203,12 @@ export function SessionsTable({
                             >
                               Marcar falta
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => setRescheduling(session)}>
-                              Reagendar
+                            <DropdownMenuItem asChild>
+                              <Link
+                                to={`/trainer/sessions/${session.id}${showClient ? '' : `?client_id=${session.client_id}`}`}
+                              >
+                                Reagendar
+                              </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem onSelect={() => setChangingPack(session)}>
                               Trocar pack
@@ -265,25 +262,6 @@ export function SessionsTable({
           if (confirm !== null) void run(confirm.session, confirm.transition);
         }}
       />
-
-      <Sheet
-        open={rescheduling !== null}
-        onOpenChange={(open) => {
-          if (!open) setRescheduling(null);
-        }}
-      >
-        <SheetContent className="w-full sm:max-w-130">
-          <SheetHeader>
-            <SheetTitle>Reagendar sessão</SheetTitle>
-            <SheetDescription>{rescheduling?.client_name}</SheetDescription>
-          </SheetHeader>
-          {rescheduling !== null && (
-            <div className="min-h-0 flex-1 overflow-y-auto px-4">
-              <RescheduleForm session={rescheduling} onSaved={() => setRescheduling(null)} />
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
 
       <SessionPackDialog
         key={changingPack?.id ?? 'closed'}

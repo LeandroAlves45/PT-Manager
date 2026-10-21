@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router';
 
 import { ProfileMenu } from '@/app/layouts/components/ProfileMenu';
@@ -8,37 +7,9 @@ import { ThemeToggle } from '@/app/components/ThemeToggle';
 import { BrandMark, usePortalBrandingQuery } from '@/features/portal';
 import { navigationFor } from '@/shared/config/navigation';
 import { Skeleton } from '@/shared/components/ui/skeleton';
-import { DEFAULT_APP_NAME, resolveBrand, type BrandPair } from '@/shared/lib/brandTheme';
+import { useBrandVariables } from '@/shared/hooks/useBrandVariables';
+import { DEFAULT_APP_NAME, resolveBrand } from '@/shared/lib/brandTheme';
 import { cn } from '@/shared/lib/utils';
-
-/** Variavéis de `global.css` que a cor principal do personal trainer substitui no portal. */
-const BRAND_VARIABLES = ['--primary', '--primary-foreground', '--ring'] as const;
-
-/**
- * Aplica a cor principal do personal trainer ao documento inteiro enquanto o portal está montado.
- *
- * Vai para `document.documentElement` e não para um `div`: diálogos, menus e toasts são
- * renderizados em portais fora da árvore do layout e têm de herdar a mesma cor. O estilo
- * inline ganha a `:root` e a `.dark`; ao sair do portal (logout, troca de papel) as
- * propriedades são removidas e os tokens PT Manager voltam.
- */
-function useBrandVariables(primary: BrandPair | null): void {
-  const background = primary?.background ?? null;
-  const foreground = primary?.foreground ?? null;
-
-  useEffect(() => {
-    if (background === null || foreground === null) return;
-
-    const style = document.documentElement.style;
-    style.setProperty('--primary', background);
-    style.setProperty('--primary-foreground', foreground);
-    style.setProperty('--ring', background);
-
-    return () => {
-      for (const name of BRAND_VARIABLES) style.removeProperty(name);
-    };
-  }, [background, foreground]);
-}
 
 /**
  * Moldura do portal do cliente: mobile-first, cabeçalho com a marca do personal trainer e barra

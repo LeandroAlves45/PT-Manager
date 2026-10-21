@@ -4,6 +4,7 @@ import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { setViewport } from '@/test/browser-fakes';
+import { trainerSettings } from '@/test/msw/account-fixtures';
 import { API, problem, restorableSession } from '@/test/msw/handlers';
 import { server } from '@/test/msw/server';
 import { renderApp } from '@/test/render';
@@ -128,7 +129,7 @@ describe('AppShell on mobile', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Abrir navegação' }));
     const nav = await screen.findByRole('navigation', { name: 'Navegação principal' });
-    await user.click(within(nav).getByRole('link', { name: 'Check-ins' }));
+    await user.click(within(nav).getByRole('link', { name: 'Avaliações' }));
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/trainer/check-ins'));
     await waitFor(() =>
@@ -136,5 +137,86 @@ describe('AppShell on mobile', () => {
         screen.queryByRole('navigation', { name: 'Navegação principal' })
       ).not.toBeInTheDocument()
     );
+  });
+});
+
+// U65: a marca do trainer aplica-se a toda a área do trainer.
+describe('AppShell trainer brand', () => {
+  beforeEach(() => setViewport(1440));
+
+  it('shows the trainer app name, title and brand colour instead of PT Manager', async () => {
+    server.use(
+      http.get(`${API}/trainer-settings`, () =>
+        HttpResponse.json(
+          trainerSettings({
+            app_name: 'Salgado Performance',
+            primary_color: '#FF7F00',
+            body_color: '#D2B48C',
+          })
+        )
+      )
+    );
+
+    await openAs('trainer', '/trainer');
+
+    const brand = await screen.findByTestId('shell-brand');
+    await waitFor(() => expect(brand).toHaveTextContent('Salgado Performance'));
+    expect(brand).not.toHaveTextContent('PT Manager');
+    expect(document.title).toBe('Salgado Performance');
+    // A cor principal passa pelo ajuste AA antes de chegar ao tema (laranja escurecido no claro).
+    expect(document.documentElement.style.getPropertyValue('--primary')).not.toBe('');
+    expect(screen.getByTestId('shell-topbar')).toHaveStyle({ backgroundColor: '#d2b48c' });
+  });
+
+  it('updates the shell as soon as the brand is saved, without reloading', async () => {
+    let appName = 'PT Marta';
+    server.use(
+      http.get(`${API}/trainer-settings`, () =>
+        HttpResponse.json(trainerSettings({ app_name: appName }))
+      ),
+      http.patch(`${API}/trainer-settings/branding`, () => {
+        appName = 'Marta Coach';
+        return HttpResponse.json(trainerSettings({ app_name: appName }));
+      })
+    );
+    const user = userEvent.setup();
+
+    await openAs('trainer', '/trainer/settings');
+    const brand = await screen.findByTestId('shell-brand');
+    await waitFor(() => expect(brand).toHaveTextContent('PT Marta'));
+
+    const name = await screen.findByLabelText('Nome da app');
+    await user.clear(name);
+    await user.type(name, 'Marta Coach');
+    await user.click(screen.getByRole('button', { name: 'Guardar marca' }));
+
+    await waitFor(() => expect(brand).toHaveTextContent('Marta Coach'));
+  });
+
+  it('keeps PT Manager for the superuser and never reads the trainer brand', async () => {
+    let requests = 0;
+    server.use(
+      http.get(`${API}/trainer-settings`, () => {
+        requests += 1;
+        return HttpResponse.json(trainerSettings({ app_name: 'Outra marca' }));
+      })
+    );
+
+    await openAs('superuser', '/admin');
+
+    expect(await screen.findByTestId('shell-brand')).toHaveTextContent('PT Manager');
+    expect(requests).toBe(0);
+  });
+
+  it('falls back to PT Manager when the brand cannot be loaded', async () => {
+    server.use(
+      http.get(`${API}/trainer-settings`, () =>
+        HttpResponse.json(problem('internal_error'), { status: 500 })
+      )
+    );
+
+    await openAs('trainer', '/trainer');
+
+    await waitFor(() => expect(screen.getByTestId('shell-brand')).toHaveTextContent('PT Manager'));
   });
 });

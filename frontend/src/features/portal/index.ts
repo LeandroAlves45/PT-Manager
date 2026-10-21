@@ -10,7 +10,7 @@ export {
   usePortalBrandingQuery,
   usePortalProfileQuery,
 } from '@/features/portal/api/portal';
-export { BrandMark } from '@/features/portal/components/BrandMark';
+export { BrandMark } from '@/shared/components/BrandMark';
 export { ClientAvatar } from '@/features/portal/components/ClientAvatar';
 export { PortalCheckInsPage } from '@/features/portal/pages/PortalCheckInsPage';
 export { PortalHomePage } from '@/features/portal/pages/PortalHomePage';

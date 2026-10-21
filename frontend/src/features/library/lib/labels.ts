@@ -59,3 +59,12 @@ export const ACTIVITY_LABELS = { active: 'Ativos', archived: 'Arquivados', all: 
 export function gramsLabel(value: number): string {
   return value.toLocaleString('pt-PT', { maximumFractionDigits: 2 });
 }
+
+/** "31 g P · 0 g HC · 3,6 g G": a linha de macros por 100 g de um alimento. */
+export function macrosLabel(food: {
+  readonly protein: number;
+  readonly carbs: number;
+  readonly fats: number;
+}): string {
+  return `${gramsLabel(food.protein)} g P · ${gramsLabel(food.carbs)} g HC · ${gramsLabel(food.fats)} g G`;
+}

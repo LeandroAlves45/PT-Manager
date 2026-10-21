@@ -5,8 +5,6 @@ import { toast } from 'sonner';
 
 import { useCheckInActionMutation } from '@/features/check-ins/api/mutations';
 import { CHECK_IN_PAGE_SIZE, useCheckInListQuery } from '@/features/check-ins/api/queries';
-import { CheckInDetailSheet } from '@/features/check-ins/components/CheckInDetailSheet';
-import { ScheduleCheckInSheet } from '@/features/check-ins/components/ScheduleCheckInSheet';
 import {
   CHECK_IN_FILTER_LABELS,
   CHECK_IN_FILTERS,
@@ -40,12 +38,15 @@ import { formatDate, formatNumber } from '@/shared/lib/format';
 type CheckIn = components['schemas']['CheckInResponse'];
 
 /**
- * Tabela de check-ins com filtros de estado e de datas, usada pela página global e pela tab
- * do cliente.
+ * Tabela de avaliações periódicas (antes «check-ins») com filtros de estado e de datas, usada
+ * pela página global e pela tab do cliente.
  *
  * Ações por linha, só quando o servidor as aceitaria:
- * - respondido: "Ver resposta" (leitura e correção) e, se por rever, "Marcar revisto";
- * - agendado e futuro: "Reagendar" e "Cancelar" (com confirmação).
+ * - respondida: "Ver resposta" (página `CheckInDetailPage`: leitura e correção) e, se por rever,
+ *   "Marcar revista";
+ * - agendada e futura: "Reagendar" (página `CheckInSchedulePage`) e "Cancelar" (com confirmação).
+ *
+ * Na tab do cliente os links levam `?client_id=` para a página voltar à ficha.
  *
  * O estado do filtro pertence a quem chama: a página guarda-o no URL (o painel liga a
  * `?status=unreviewed`), a tab do cliente em memória.
@@ -71,8 +72,6 @@ export function CheckInsList({
 }) {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
-  const [viewing, setViewing] = useState<CheckIn | null>(null);
-  const [rescheduling, setRescheduling] = useState<CheckIn | null>(null);
   const [cancelling, setCancelling] = useState<CheckIn | null>(null);
 
   const action = useCheckInActionMutation();
@@ -98,17 +97,18 @@ export function CheckInsList({
 
   const today = todayKey();
   const showClient = client === null;
+  const fromClient = client === null ? '' : `?client_id=${client.id}`;
   const filtered = status !== null || fromDate !== '' || toDate !== '' || page > 1;
 
   async function review(checkIn: CheckIn) {
     try {
       await action.mutateAsync({ checkInId: checkIn.id, action: 'review' });
-      toast.success(`Check-in de ${checkIn.client_name} marcado como revisto.`);
+      toast.success(`Avaliação periódica de ${checkIn.client_name} marcada como revista.`);
     } catch (error) {
       toast.error(
         checkInErrorMessage(
           isApiProblem(error) ? error.code : '',
-          'Não foi possível marcar o check-in como revisto. Tenta novamente.'
+          'Não foi possível marcar a avaliação como revista. Tenta novamente.'
         )
       );
     }
@@ -117,13 +117,13 @@ export function CheckInsList({
   async function cancel(checkIn: CheckIn) {
     try {
       await action.mutateAsync({ checkInId: checkIn.id, action: 'cancel' });
-      toast.success(`Check-in de ${checkIn.client_name} cancelado.`);
+      toast.success(`Avaliação periódica de ${checkIn.client_name} cancelada.`);
       setCancelling(null);
     } catch (error) {
       toast.error(
         checkInErrorMessage(
           isApiProblem(error) ? error.code : '',
-          'Não foi possível cancelar o check-in. Tenta novamente.'
+          'Não foi possível cancelar a avaliação. Tenta novamente.'
         )
       );
     }
@@ -182,17 +182,17 @@ export function CheckInsList({
       )}
 
       {list.isPending ? (
-        <Skeleton role="status" aria-label="A carregar check-ins…" className="h-48 w-full" />
+        <Skeleton role="status" aria-label="A carregar avaliações…" className="h-48 w-full" />
       ) : list.isError ? (
         <ErrorState error={list.error} onRetry={() => void list.refetch()} />
       ) : list.data.items.length === 0 ? (
         <EmptyState
           icon={ClipboardCheck}
-          title="Sem check-ins"
+          title="Sem avaliações"
           description={
             filtered
-              ? 'Não há check-ins para estes filtros.'
-              : 'Agenda um check-in para acompanhar o progresso.'
+              ? 'Não há avaliações para estes filtros.'
+              : 'Agenda uma avaliação periódica para acompanhar o progresso.'
           }
         />
       ) : (
@@ -258,13 +258,17 @@ export function CheckInsList({
                       <td className="flex items-center gap-1 p-2">
                         {checkIn.status === 'answered' && (
                           <Button
+                            asChild
                             size="sm"
                             variant="outline"
                             className="min-h-11 md:min-h-8"
-                            aria-label={`Ver resposta do check-in de ${label}`}
-                            onClick={() => setViewing(checkIn)}
                           >
-                            Ver resposta
+                            <Link
+                              to={`/trainer/check-ins/${checkIn.id}${fromClient}`}
+                              aria-label={`Ver resposta da avaliação de ${label}`}
+                            >
+                              Ver resposta
+                            </Link>
                           </Button>
                         )}
                         {awaiting && (
@@ -272,10 +276,10 @@ export function CheckInsList({
                             size="sm"
                             className="min-h-11 md:min-h-8"
                             disabled={pending}
-                            aria-label={`Marcar como revisto o check-in de ${label}`}
+                            aria-label={`Marcar como revista a avaliação de ${label}`}
                             onClick={() => void review(checkIn)}
                           >
-                            {pending ? 'A marcar…' : 'Marcar revisto'}
+                            {pending ? 'A marcar…' : 'Marcar revista'}
                           </Button>
                         )}
                         {open && (
@@ -286,14 +290,18 @@ export function CheckInsList({
                                 variant="ghost"
                                 className="size-11 md:size-8"
                                 disabled={pending}
-                                aria-label={`Mais ações do check-in de ${label}`}
+                                aria-label={`Mais ações da avaliação de ${label}`}
                               >
                                 <MoreHorizontal aria-hidden />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onSelect={() => setRescheduling(checkIn)}>
-                                Reagendar
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  to={`/trainer/check-ins/${checkIn.id}/reschedule${fromClient}`}
+                                >
+                                  Reagendar
+                                </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem onSelect={() => setCancelling(checkIn)}>
                                 Cancelar
@@ -309,7 +317,7 @@ export function CheckInsList({
             </table>
           </div>
           <Pagination
-            label="Páginas de check-ins"
+            label="Páginas de avaliações"
             page={page}
             total={list.data.total_count}
             pageSize={CHECK_IN_PAGE_SIZE}
@@ -318,35 +326,18 @@ export function CheckInsList({
         </>
       )}
 
-      <CheckInDetailSheet
-        // A linha guardada fica desatualizada depois de corrigir: lê-se sempre da lista.
-        checkIn={
-          viewing === null
-            ? null
-            : (list.data?.items.find((item) => item.id === viewing.id) ?? viewing)
-        }
-        onClose={() => setViewing(null)}
-      />
-      <ScheduleCheckInSheet
-        open={rescheduling !== null}
-        onOpenChange={(open) => {
-          if (!open) setRescheduling(null);
-        }}
-        client={client}
-        {...(rescheduling === null ? {} : { checkIn: rescheduling })}
-      />
       <ConfirmDialog
         open={cancelling !== null}
         onOpenChange={(open) => {
           if (!open) setCancelling(null);
         }}
-        title="Cancelar check-in?"
+        title="Cancelar avaliação periódica?"
         description={
           cancelling === null
             ? ''
-            : `O check-in de ${cancelling.client_name} a ${formatDate(cancelling.check_in_date)} deixa de estar agendado.`
+            : `A avaliação periódica de ${cancelling.client_name} a ${formatDate(cancelling.check_in_date)} deixa de estar agendada.`
         }
-        confirmLabel="Cancelar check-in"
+        confirmLabel="Cancelar avaliação"
         pendingLabel="A cancelar…"
         destructive
         pending={action.isPending}

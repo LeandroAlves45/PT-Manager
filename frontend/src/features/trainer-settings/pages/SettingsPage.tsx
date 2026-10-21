@@ -21,7 +21,7 @@ export function SettingsPage() {
     <section className="space-y-6">
       <PageHeader
         title="Marca própria"
-        description="Nome, cores e logo do portal dos teus clientes, contactos e fuso horário."
+        description="Nome, cores e logo da tua área e do portal dos teus clientes, contactos e fuso horário."
       />
       {settings.isPending ? (
         <div role="status" aria-label="A carregar definições…" className="space-y-4">

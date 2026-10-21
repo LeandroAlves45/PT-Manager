@@ -46,9 +46,12 @@ const SERVER_FIELDS: Readonly<Record<string, keyof BrandingValues>> = {
 /**
  * Marca: nome da app e cores, com pré-visualização local.
  *
- * As cores só se aplicam a sério no portal do cliente; aqui a
- * pré-visualização mostra o efeito sem mexer no tema da app do personal trainer. Cor vazia
- * envia `null`, que o servidor trata como "cor do tema".
+ * Ao guardar, a marca aplica-se ao portal do cliente e a toda a área do trainer (U65), sem
+ * recarregar: a shell lê a mesma cache. A pré-visualização mostra o portal nos dois temas
+ * antes de guardar. Cor vazia envia `null`, que o servidor trata como "cor do tema".
+ *
+ * Cada cor escreve-se em hex ou escolhe-se num seletor, lado a lado (ponto 16): os dois
+ * escrevem o mesmo valor do formulário.
  *
  * @param settings Definições atuais.
  */
@@ -111,7 +114,7 @@ export function BrandingSection({ settings }: { settings: Settings }) {
           Marca
         </h2>
         <p className="text-muted-foreground text-sm">
-          Nome e cores que os teus clientes veem no portal.
+          Nome e cores da tua área e do portal dos teus clientes.
         </p>
       </div>
       <form
@@ -126,12 +129,28 @@ export function BrandingSection({ settings }: { settings: Settings }) {
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField label="Cor principal" error={errors.primary_color?.message}>
               {(control) => (
-                <Input {...control} placeholder="#RRGGBB" {...form.register('primary_color')} />
+                <div className="flex items-center gap-2">
+                  <ColorPicker
+                    label="Escolher a cor principal"
+                    value={preview.primary_color ?? ''}
+                    fallback={BRAND_SURFACES.light.primary}
+                    onPick={(color) => form.setValue('primary_color', color, { shouldDirty: true })}
+                  />
+                  <Input {...control} placeholder="#RRGGBB" {...form.register('primary_color')} />
+                </div>
               )}
             </FormField>
             <FormField label="Cor de fundo" error={errors.body_color?.message}>
               {(control) => (
-                <Input {...control} placeholder="Cor do tema" {...form.register('body_color')} />
+                <div className="flex items-center gap-2">
+                  <ColorPicker
+                    label="Escolher a cor de fundo"
+                    value={preview.body_color ?? ''}
+                    fallback={BRAND_SURFACES.light.card}
+                    onPick={(color) => form.setValue('body_color', color, { shouldDirty: true })}
+                  />
+                  <Input {...control} placeholder="Cor do tema" {...form.register('body_color')} />
+                </div>
               )}
             </FormField>
           </div>
@@ -233,7 +252,8 @@ function BrandPreview({
               {logoUrl !== null && (
                 <img src={logoUrl} alt="" className="size-8 rounded object-contain" />
               )}
-              <span className="font-display truncate text-lg">{name}</span>
+              {/* `pe-1`: a font-display é itálica e o `truncate` cortava a última letra. */}
+              <span className="font-display truncate pe-1 text-lg">{name}</span>
             </div>
             <div className="flex items-center justify-between gap-2 p-3">
               <span className="text-xs">{theme === 'light' ? 'Tema claro' : 'Tema escuro'}</span>
@@ -251,5 +271,35 @@ function BrandPreview({
         );
       })}
     </figure>
+  );
+}
+
+/**
+ * Seletor de cor nativo, ao lado do campo hex (ponto 16): para quem não sabe escrever hex.
+ * Escreve no formulário o mesmo `#rrggbb` que o campo de texto; com o campo vazio ou inválido
+ * mostra a cor do tema (`fallback`), sem a gravar.
+ */
+function ColorPicker({
+  label,
+  value,
+  fallback,
+  onPick,
+}: {
+  label: string;
+  value: string;
+  fallback: string;
+  onPick: (color: string) => void;
+}) {
+  const trimmed = value.trim();
+  const current = HEX_COLOR.test(trimmed) ? trimmed.toLowerCase() : fallback;
+
+  return (
+    <input
+      type="color"
+      aria-label={label}
+      value={current}
+      onChange={(event) => onPick(event.target.value.toUpperCase())}
+      className="border-input size-11 shrink-0 cursor-pointer rounded-md border bg-transparent p-1 md:size-9"
+    />
   );
 }

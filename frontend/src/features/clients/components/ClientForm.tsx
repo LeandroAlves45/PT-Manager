@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
@@ -9,10 +10,12 @@ import { FormField } from '@/shared/components/FormField';
 import { CLIENT_CAPACITY_MESSAGES, SEX_LABELS } from '@/features/clients/lib/labels';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { NativeSelect } from '@/shared/components/ui/native-select';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard';
 
 type ClientDetails = components['schemas']['ClientDetailsResponse'];
 
@@ -94,7 +97,11 @@ const NULLABLE = [
  * Formulário da ficha do cliente (criar e editar).
  *
  * @param client Ficha a editar, ou `null` para criar.
- * @param onSaved Chamado com a ficha devolvida pela API depois de guardar.
+ * Sair com alterações por guardar pede confirmação (`useUnsavedChangesGuard`); o guard só
+ * deixa de valer depois de `saved` estar preenchido, e é aí que `onSaved` navega.
+ *
+ * @param onSaved Chamado com a ficha devolvida pela API depois de guardar. Tem de ter
+ *   identidade estável (`useCallback`).
  */
 export function ClientForm({
   client,
@@ -104,6 +111,7 @@ export function ClientForm({
   onSaved: (client: ClientDetails) => void;
 }) {
   const mutation = useSaveClientMutation(client?.id ?? null);
+  const [saved, setSaved] = useState<ClientDetails | null>(null);
   const form = useForm<ClientValues>({
     defaultValues: {
       name: client?.name ?? '',
@@ -119,6 +127,11 @@ export function ClientForm({
       emergency_contact_phone: client?.emergency_contact_phone ?? '',
     },
   });
+
+  const blocker = useUnsavedChangesGuard(form.formState.isDirty && saved === null);
+  useEffect(() => {
+    if (saved !== null) onSaved(saved);
+  }, [saved, onSaved]);
 
   const errors = form.formState.errors;
   const subscriptionMessage = errors.root?.type === 'subscription' ? errors.root.message : null;
@@ -141,11 +154,11 @@ export function ClientForm({
     } as components['schemas']['CreateClientRequest'];
 
     try {
-      const saved = await mutation.mutateAsync(request);
+      const result = await mutation.mutateAsync(request);
       toast.success(
         client === null ? 'Cliente criado com sucesso.' : 'Cliente atualizado com sucesso.'
       );
-      onSaved(saved);
+      setSaved(result);
     } catch (error) {
       if (!isApiProblem(error)) {
         form.setError('root', { message: 'Não foi possível guardar. Tenta novamente.' });
@@ -231,13 +244,22 @@ export function ClientForm({
       )}
       <div className="border-border mt-auto flex justify-end gap-2 border-t pt-4">
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending
-            ? 'A guardar…'
-            : client === null
-              ? 'Criar cliente'
-              : 'Guardar alterações'}
+          {mutation.isPending ? 'A guardar…' : client === null ? 'Criar' : 'Guardar'}
         </Button>
       </div>
+      <ConfirmDialog
+        open={blocker.state === 'blocked'}
+        onOpenChange={(open) => {
+          if (!open) blocker.reset?.();
+        }}
+        title="Sair sem guardar?"
+        description="As alterações a esta ficha perdem-se."
+        confirmLabel="Sair sem guardar"
+        cancelLabel="Continuar a editar"
+        destructive
+        pending={false}
+        onConfirm={() => blocker.proceed?.()}
+      />
     </form>
   );
 }

@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import type * as Sonner from 'sonner';
@@ -361,10 +361,14 @@ describe('SettingsPage', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [ROUTE] });
 
-    const select = await screen.findByLabelText('Fuso');
-    expect(select).toHaveValue('Europe/Lisbon');
+    // Ponto 11: lista com pesquisa; ponto 12: sem alteração o botão fica inativo e secundário.
+    const picker = await screen.findByRole('combobox', { name: 'Fuso' });
+    expect(picker).toHaveTextContent('Europe/Lisbon');
     expect(screen.getByRole('button', { name: 'Guardar fuso' })).toBeDisabled();
-    await user.selectOptions(select, 'America/New_York');
+    await user.click(picker);
+    await user.type(screen.getByPlaceholderText('Pesquisar cidade ou região'), 'new york');
+    await user.click(await screen.findByRole('option', { name: 'America/New York' }));
+    expect(picker).toHaveTextContent('America/New York');
     await user.click(screen.getByRole('button', { name: 'Guardar fuso' }));
 
     expect(
@@ -389,5 +393,25 @@ describe('SettingsPage', () => {
     renderApp({ initialEntries: [ROUTE] });
 
     expect(await screen.findByRole('button', { name: /Tentar novamente/ })).toBeInTheDocument();
+  });
+
+  // Ponto 16: hex e seletor de cor lado a lado escrevem a mesma cor.
+  it('writes the picked colour into the hex field', async () => {
+    settingsHandler();
+    renderApp({ initialEntries: [ROUTE] });
+
+    const picker = await screen.findByLabelText('Escolher a cor principal');
+    fireEvent.change(picker, { target: { value: '#e8642a' } });
+
+    expect(screen.getByLabelText('Cor principal')).toHaveValue('#E8642A');
+  });
+
+  // Ponto 6: a fonte itálica com truncate cortava a última letra do nome.
+  it('keeps room for the last italic letter of the app name in the preview', async () => {
+    settingsHandler(trainerSettings({ app_name: 'PT Fit' }));
+    renderApp({ initialEntries: [ROUTE] });
+
+    const header = await screen.findByTestId('brand-preview-header-light');
+    expect(within(header).getByText('PT Fit')).toHaveClass('pe-1');
   });
 });

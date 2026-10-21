@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { resetPendingExerciseVideo } from '@/features/admin-catalog/lib/pending-video';
+import { resetPendingExerciseVideo } from '@/shared/lib/pending-video';
 import { API, problem, restorableSession } from '@/test/msw/handlers';
 import { server } from '@/test/msw/server';
 import { renderApp } from '@/test/render';

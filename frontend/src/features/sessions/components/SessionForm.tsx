@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -9,11 +9,13 @@ import { useCreateSessionMutation } from '@/features/sessions/api/mutations';
 import { localInstant, toStartsAt, todayKey } from '@/features/sessions/lib/dates';
 import { SESSION_ERRORS } from '@/features/sessions/lib/sessionStatus';
 import { isApiProblem } from '@/shared/api/problem';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { FormField } from '@/shared/components/FormField';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { NativeSelect } from '@/shared/components/ui/native-select';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard';
 import { formatDate } from '@/shared/lib/format';
 
 /** Valor do `<select>` de pack para "não descontar de nenhum pack". */
@@ -73,9 +75,12 @@ const CONFLICT_FIELDS: Record<string, keyof SessionValues> = {
  * primeiro). O personal trainer pode escolher outro ou "Sem pack". O saldo só desce
  * quando a sessão é concluída ou marcada como falta.
  *
- * @param client Cliente fixo (tab do detalhe) ou `null` para escolher na pesquisa.
+ * Sair com alterações por guardar pede confirmação; o guard só deixa de valer depois de
+ * `saved` estar a `true`, e é aí que `onSaved` navega.
+ *
+ * @param client Cliente fixo (aberto a partir da ficha) ou `null` para escolher na pesquisa.
  * @param defaultDate Dia pré-preenchido (o dia aberto na agenda).
- * @param onSaved Chamado depois de marcar.
+ * @param onSaved Chamado depois de marcar, já sem alterações por guardar.
  */
 export function SessionForm({
   client,
@@ -100,6 +105,11 @@ export function SessionForm({
     },
   });
   const errors = form.formState.errors;
+  const [saved, setSaved] = useState(false);
+  const blocker = useUnsavedChangesGuard(form.formState.isDirty && !saved);
+  useEffect(() => {
+    if (saved) onSaved();
+  }, [saved, onSaved]);
   const chosen = useWatch({ control: form.control, name: 'client' });
   const packs = useUsablePacksQuery(chosen?.id ?? null);
 
@@ -139,7 +149,7 @@ export function SessionForm({
         notes: data.notes.trim() || null,
       });
       toast.success(`Sessão marcada com ${chosen.name}.`);
-      onSaved();
+      setSaved(true);
     } catch (error) {
       if (!isApiProblem(error)) {
         form.setError('root', { message: 'Não foi possível marcar a sessão. Tenta novamente.' });
@@ -261,6 +271,19 @@ export function SessionForm({
           {mutation.isPending ? 'A guardar…' : 'Marcar sessão'}
         </Button>
       </div>
+      <ConfirmDialog
+        open={blocker.state === 'blocked'}
+        onOpenChange={(open) => {
+          if (!open) blocker.reset?.();
+        }}
+        title="Sair sem guardar?"
+        description="Os dados desta sessão perdem-se."
+        confirmLabel="Sair sem guardar"
+        cancelLabel="Continuar a editar"
+        destructive
+        pending={false}
+        onConfirm={() => blocker.proceed?.()}
+      />
     </form>
   );
 }

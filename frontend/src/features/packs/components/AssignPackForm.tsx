@@ -1,5 +1,5 @@
 import { addDays, format, parseISO } from 'date-fns';
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -9,10 +9,12 @@ import { useAssignPackMutation } from '@/features/packs/api/mutations';
 import { useActivePackTypesQuery } from '@/features/packs/api/queries';
 import { ASSIGN_PACK_ERRORS, priceLabel } from '@/features/packs/lib/labels';
 import { isApiProblem } from '@/shared/api/problem';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { FormField } from '@/shared/components/FormField';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { NativeSelect } from '@/shared/components/ui/native-select';
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard';
 
 /** Regras de `AssignClientSessionPackCommandValidator`, com mensagens em PT-PT. */
 const assignSchema = z
@@ -50,8 +52,11 @@ function today(): string {
  * Ao escolher um tipo com duração prevista, o fim previsto é sugerido (compra + dias) —
  * o trainer pode mudá-lo ou apagá-lo. A lista de tipos só é pedida com o formulário aberto.
  *
- * @param client Cliente fixo (tab Sessões do detalhe) ou `null` para escolher na pesquisa.
- * @param onSaved Chamado depois de vender.
+ * Sair com alterações por guardar pede confirmação; o guard só deixa de valer depois de
+ * `saved` estar a `true`, e é aí que `onSaved` navega.
+ *
+ * @param client Cliente fixo (rota da ficha) ou `null` para escolher na pesquisa.
+ * @param onSaved Chamado depois de vender, já sem alterações por guardar.
  */
 export function AssignPackForm({
   client,
@@ -71,6 +76,11 @@ export function AssignPackForm({
     },
   });
   const errors = form.formState.errors;
+  const [saved, setSaved] = useState(false);
+  const blocker = useUnsavedChangesGuard(form.formState.isDirty && !saved);
+  useEffect(() => {
+    if (saved) onSaved();
+  }, [saved, onSaved]);
 
   // Última data sugerida: distingue a sugestão (que se pode apagar) de uma data escrita à mão.
   const suggestedEndDate = useRef<string | null>(null);
@@ -117,7 +127,7 @@ export function AssignPackForm({
         expected_end_date: data.expected_end_date === '' ? null : data.expected_end_date,
       });
       toast.success(`Pack vendido a ${chosen.name}.`);
-      onSaved();
+      setSaved(true);
     } catch (error) {
       if (!isApiProblem(error)) {
         form.setError('root', { message: 'Não foi possível vender o pack. Tenta novamente.' });
@@ -179,7 +189,7 @@ export function AssignPackForm({
       </FormField>
       {types.isSuccess && types.data.length === 0 && (
         <p className="text-muted-foreground text-sm">
-          Ainda não tens tipos de pack ativos. Cria um no separador "Tipos de pack".
+          Ainda não tens tipos de pack ativos. Cria um em «Tipos de pack».
         </p>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
@@ -209,6 +219,19 @@ export function AssignPackForm({
           {mutation.isPending ? 'A guardar…' : 'Vender pack'}
         </Button>
       </div>
+      <ConfirmDialog
+        open={blocker.state === 'blocked'}
+        onOpenChange={(open) => {
+          if (!open) blocker.reset?.();
+        }}
+        title="Sair sem guardar?"
+        description="Os dados desta venda perdem-se."
+        confirmLabel="Sair sem guardar"
+        cancelLabel="Continuar a editar"
+        destructive
+        pending={false}
+        onConfirm={() => blocker.proceed?.()}
+      />
     </form>
   );
 }

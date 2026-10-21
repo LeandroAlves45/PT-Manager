@@ -1,5 +1,6 @@
 import { isApiProblem } from '@/shared/api/problem';
 import { formatNumber } from '@/shared/lib/format';
+import { formatRepsTarget } from '@/shared/lib/reps';
 
 /**
  * Regras de apresentação e de entrada do treino do cliente.
@@ -12,6 +13,8 @@ import { formatNumber } from '@/shared/lib/format';
 export interface PlannedSet {
   set_number: number;
   planned_reps: number | null;
+  /** Topo opcional do intervalo de repetições; `planned_reps` é o mínimo. */
+  planned_reps_max?: number | null;
   planned_weight_kg: number | null;
   rest_seconds_min: number | null;
   rest_seconds_max: number | null;
@@ -43,8 +46,20 @@ function range(min: number, max: number): string {
 export function prescriptionSummary(sets: readonly PlannedSet[]): string {
   const parts = [countLabel(sets.length, 'série', 'séries')];
 
-  const reps = sets.flatMap((set) => (set.planned_reps === null ? [] : [set.planned_reps]));
-  if (reps.length > 0) parts.push(`${range(Math.min(...reps), Math.max(...reps))} reps`);
+  const prescribed = sets.filter((set) => set.planned_reps !== null);
+  if (prescribed.length > 0) {
+    // Séries iguais mostram o alvo («12-10»); séries diferentes mostram o intervalo geral, na
+    // mesma convenção (maior primeiro), para o cliente não ver «12-10» numa linha e «8–12» noutra.
+    const targets = new Set(
+      prescribed.map((set) => formatRepsTarget(set.planned_reps, set.planned_reps_max))
+    );
+    const lows = prescribed.map((set) => set.planned_reps ?? 0);
+    const highs = prescribed.map((set) => set.planned_reps_max ?? set.planned_reps ?? 0);
+    const [only = ''] = targets;
+    const label =
+      targets.size === 1 ? only : formatRepsTarget(Math.min(...lows), Math.max(...highs));
+    parts.push(`${label} reps`);
+  }
 
   const rest = sets.flatMap((set) =>
     [set.rest_seconds_min, set.rest_seconds_max].filter((value) => value !== null)
@@ -64,7 +79,8 @@ export function workoutSize(exercises: readonly { sets: readonly unknown[] }[]):
 export function plannedSetLabel(set: PlannedSet): string {
   const parts = [`Série ${formatNumber(set.set_number)}`];
 
-  if (set.planned_reps !== null) parts.push(`${formatNumber(set.planned_reps)} reps`);
+  if (set.planned_reps !== null)
+    parts.push(`${formatRepsTarget(set.planned_reps, set.planned_reps_max)} reps`);
   if (set.planned_weight_kg !== null) parts.push(`${formatDecimal(set.planned_weight_kg)} kg`);
   if (set.planned_rpe !== null) parts.push(`RPE ${formatDecimal(set.planned_rpe)}`);
 

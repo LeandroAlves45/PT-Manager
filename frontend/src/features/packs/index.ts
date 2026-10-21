@@ -5,7 +5,7 @@
  * ecrã "Sessões e packs" e o detalhe do cliente montam os painéis.
  */
 export { packKeys } from '@/features/packs/api/keys';
-export { useUsablePacksQuery } from '@/features/packs/api/queries';
+export { useFixedClientQuery, useUsablePacksQuery } from '@/features/packs/api/queries';
 export { ClientPacksPanel } from '@/features/packs/components/ClientPacksPanel';
 export { PackTypesPanel } from '@/features/packs/components/PackTypesPanel';
 export { balanceLabel } from '@/features/packs/lib/labels';

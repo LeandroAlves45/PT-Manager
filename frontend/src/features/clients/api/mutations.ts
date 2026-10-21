@@ -73,20 +73,25 @@ export function useClientActivityMutation() {
 }
 
 /**
- * Envia o convite de acesso ao portal.
+ * Envia o convite de acesso ao portal e devolve o link e a validade (U61).
  *
  * O backend só aceita o email de contacto da ficha (`authentication_invitation_email_mismatch`
  * caso contrário), por isso quem chama envia sempre `contact_email` — nunca um campo livre.
+ * O link só vem nesta resposta; outro convite anula o anterior. Invalida o estado do convite
+ * da ficha.
  */
 export function useInviteClientMutation() {
+  const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: async ({ clientId, email }: { clientId: string; email: string }) => {
+    mutationFn: async ({ clientId, email }: { clientId: string; email: string }) =>
       unwrap(
         await apiClient.POST('/api/v1/auth/invite-client', {
           body: { client_id: clientId, email },
         })
-      );
-    },
+      ),
+    onSuccess: (_, { clientId }) =>
+      queryClient.invalidateQueries({ queryKey: clientKeys.invitation(clientId) }),
   });
 }
 

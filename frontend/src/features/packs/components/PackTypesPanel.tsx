@@ -1,11 +1,11 @@
 import { Archive, Package, Pencil, Plus, RotateCcw, SearchX } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { toast } from 'sonner';
 
 import type { PackTypeListFilters } from '@/features/packs/api/keys';
 import { usePackTypeActivityMutation } from '@/features/packs/api/mutations';
 import { PACK_PAGE_SIZE, usePackTypeListQuery } from '@/features/packs/api/queries';
-import { PackTypeForm } from '@/features/packs/components/PackTypeForm';
 import { priceLabel } from '@/features/packs/lib/labels';
 import type { components } from '@/shared/api/schema';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
@@ -14,13 +14,6 @@ import { ErrorState } from '@/shared/components/ErrorState';
 import { Pagination } from '@/shared/components/Pagination';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/shared/components/ui/sheet';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 
@@ -33,6 +26,7 @@ const ACTIVITY_LABELS = { active: 'Ativos', archived: 'Arquivados', all: 'Todos'
  * Separador "Tipos de pack": o catálogo do que o personal trainer vende (nome, sessões, preço,
  * duração prevista), com criar, editar, arquivar e reativar.
  *
+ * Criar e editar abrem a página `PackTypeEditorPage` (sem painel lateral).
  * Arquivar só impede vendas novas: os packs já vendidos continuam a ser usados.
  */
 export function PackTypesPanel() {
@@ -42,7 +36,6 @@ export function PackTypesPanel() {
   const debounced = useDebounce(search.trim(), 300);
   const query = usePackTypeListQuery({ search: debounced, activity, page });
   const activityMutation = usePackTypeActivityMutation();
-  const [editing, setEditing] = useState<PackType | null | undefined>(undefined);
   const [confirm, setConfirm] = useState<PackType | null>(null);
 
   const items = query.data?.items ?? [];
@@ -98,8 +91,10 @@ export function PackTypesPanel() {
             </Button>
           ))}
         </div>
-        <Button className="ml-auto" onClick={() => setEditing(null)}>
-          <Plus aria-hidden /> Novo tipo de pack
+        <Button asChild className="ml-auto">
+          <Link to="/trainer/sessions/pack-types/new">
+            <Plus aria-hidden /> Novo tipo de pack
+          </Link>
         </Button>
       </div>
 
@@ -135,7 +130,11 @@ export function PackTypesPanel() {
             icon={Package}
             title="Ainda não tens tipos de pack"
             description="Cria o primeiro (ex.: 10 sessões por 300 €) para o poderes vender aos clientes."
-            action={<Button onClick={() => setEditing(null)}>Criar tipo de pack</Button>}
+            action={
+              <Button asChild>
+                <Link to="/trainer/sessions/pack-types/new">Criar tipo de pack</Link>
+              </Button>
+            }
           />
         )
       ) : (
@@ -178,14 +177,13 @@ export function PackTypesPanel() {
                   </td>
                   <td className="p-3">{packType.is_active ? 'Ativo' : 'Arquivado'}</td>
                   <td className="flex gap-1 p-2">
-                    <Button
-                      size="icon-sm"
-                      className="size-11 md:size-8"
-                      variant="ghost"
-                      aria-label={`Editar ${packType.name}`}
-                      onClick={() => setEditing(packType)}
-                    >
-                      <Pencil aria-hidden />
+                    <Button asChild size="icon-sm" className="size-11 md:size-8" variant="ghost">
+                      <Link
+                        to={`/trainer/sessions/pack-types/${packType.id}`}
+                        aria-label={`Editar ${packType.name}`}
+                      >
+                        <Pencil aria-hidden />
+                      </Link>
                     </Button>
                     <Button
                       size="icon-sm"
@@ -211,27 +209,6 @@ export function PackTypesPanel() {
         pageSize={PACK_PAGE_SIZE}
         onPageChange={setPage}
       />
-
-      <Sheet
-        open={editing !== undefined}
-        onOpenChange={(open) => {
-          if (!open) setEditing(undefined);
-        }}
-      >
-        <SheetContent className="w-full sm:max-w-130">
-          <SheetHeader>
-            <SheetTitle>{editing ? 'Editar tipo de pack' : 'Novo tipo de pack'}</SheetTitle>
-            <SheetDescription>
-              O que vendes aos clientes: número de sessões, preço e duração prevista.
-            </SheetDescription>
-          </SheetHeader>
-          {editing !== undefined && (
-            <div className="min-h-0 flex-1 overflow-y-auto px-4">
-              <PackTypeForm packType={editing} onSaved={() => setEditing(undefined)} />
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
 
       <ConfirmDialog
         open={confirm !== null}

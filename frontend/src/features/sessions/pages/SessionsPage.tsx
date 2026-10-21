@@ -1,10 +1,10 @@
 import { CalendarPlus } from 'lucide-react';
 import { parseAsStringLiteral, useQueryState } from 'nuqs';
 import { useState } from 'react';
+import { Link } from 'react-router';
 
 import { ClientPacksPanel, PackTypesPanel } from '@/features/packs';
 import { DayAgenda } from '@/features/sessions/components/DayAgenda';
-import { NewSessionSheet } from '@/features/sessions/components/NewSessionSheet';
 import { SessionsList } from '@/features/sessions/components/SessionsList';
 import { todayKey } from '@/features/sessions/lib/dates';
 import { PageHeader } from '@/shared/components/PageHeader';
@@ -31,7 +31,9 @@ export function SessionsPage() {
   const [tab, setTab] = useQueryState('tab', parseAsStringLiteral(TABS).withDefault('agenda'));
   const [view, setView] = useState<(typeof VIEWS)[number]>('day');
   const [day, setDay] = useState(todayKey);
-  const [creating, setCreating] = useState(false);
+  // «Marcar sessão» abre a página `SessionEditorPage`; na vista do dia leva o dia aberto.
+  const newSessionPath =
+    view === 'day' ? `/trainer/sessions/new?date=${day}` : '/trainer/sessions/new';
 
   return (
     <section className="space-y-6">
@@ -39,8 +41,10 @@ export function SessionsPage() {
         title="Sessões e packs"
         description="Agenda, packs vendidos e tipos de pack."
         action={
-          <Button onClick={() => setCreating(true)}>
-            <CalendarPlus aria-hidden /> Marcar sessão
+          <Button asChild>
+            <Link to={newSessionPath}>
+              <CalendarPlus aria-hidden /> Marcar sessão
+            </Link>
           </Button>
         }
       />
@@ -78,7 +82,7 @@ export function SessionsPage() {
             ))}
           </div>
           {view === 'day' ? (
-            <DayAgenda day={day} onDayChange={setDay} onNewSession={() => setCreating(true)} />
+            <DayAgenda day={day} onDayChange={setDay} newSessionPath={newSessionPath} />
           ) : (
             <SessionsList clientId={null} />
           )}
@@ -90,13 +94,6 @@ export function SessionsPage() {
           <PackTypesPanel />
         </TabsContent>
       </Tabs>
-
-      <NewSessionSheet
-        open={creating}
-        onOpenChange={setCreating}
-        client={null}
-        {...(view === 'day' ? { defaultDate: day } : {})}
-      />
     </section>
   );
 }

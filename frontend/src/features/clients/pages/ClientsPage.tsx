@@ -1,13 +1,12 @@
 import { Archive, Plus, RotateCcw, SearchX, UserPlus } from 'lucide-react';
 import { parseAsBoolean, parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, Navigate } from 'react-router';
 import { toast } from 'sonner';
 
 import type { ClientListFilters } from '@/features/clients/api/keys';
 import { useClientActivityMutation } from '@/features/clients/api/mutations';
 import { CLIENT_PAGE_SIZE, useClientListQuery } from '@/features/clients/api/queries';
-import { ClientForm } from '@/features/clients/components/ClientForm';
 import { activityErrorMessage, ageFrom } from '@/features/clients/lib/labels';
 import type { components } from '@/shared/api/schema';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
@@ -16,13 +15,6 @@ import { ErrorState } from '@/shared/components/ErrorState';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/shared/components/ui/sheet';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { formatNumber } from '@/shared/lib/format';
@@ -37,11 +29,10 @@ const ACTIVITY_LABELS = { active: 'Ativos', archived: 'Arquivados', all: 'Todos'
  *
  * Só usa os campos de `ClientSummaryResponse` — o pack de cada cliente aparece no detalhe
  * (decisão do utilizador: nenhum pedido extra por linha nem alteração ao backend).
- * Pesquisa, estado e página vivem no URL; `?new=true` abre o formulário de criação (é o
- * destino do "Novo cliente" do painel).
+ * Pesquisa, estado e página vivem no URL. "Novo cliente" abre a página `/trainer/clients/new`;
+ * `?new=true` (links antigos do painel) redireciona para lá.
  */
 export function ClientsPage() {
-  const navigate = useNavigate();
   const [url, setUrl] = useQueryStates({
     search: parseAsString.withDefault(''),
     activity: parseAsString.withDefault('active'),
@@ -55,6 +46,8 @@ export function ClientsPage() {
   const query = useClientListQuery(filters);
   const activityMutation = useClientActivityMutation();
   const [confirm, setConfirm] = useState<ClientSummary | null>(null);
+
+  if (url.new) return <Navigate to="/trainer/clients/new" replace />;
 
   const items = query.data?.items ?? [];
   const total = query.data?.total_count ?? 0;
@@ -86,8 +79,10 @@ export function ClientsPage() {
         title="Clientes"
         description={`${formatNumber(total)} ${total === 1 ? 'cliente' : 'clientes'}`}
         action={
-          <Button onClick={() => void setUrl({ new: true })}>
-            <Plus aria-hidden /> Novo cliente
+          <Button asChild>
+            <Link to="/trainer/clients/new">
+              <Plus aria-hidden /> Novo cliente
+            </Link>
           </Button>
         }
       />
@@ -144,7 +139,9 @@ export function ClientsPage() {
             title="Ainda não tens clientes"
             description="Cria a ficha do primeiro cliente. Depois podes convidá-lo para o portal."
             action={
-              <Button onClick={() => void setUrl({ new: true })}>Criar primeiro cliente</Button>
+              <Button asChild>
+                <Link to="/trainer/clients/new">Criar primeiro cliente</Link>
+              </Button>
             }
           />
         )
@@ -229,30 +226,6 @@ export function ClientsPage() {
           </Button>
         </nav>
       )}
-
-      <Sheet
-        open={url.new}
-        onOpenChange={(open) => {
-          if (!open) void setUrl({ new: null });
-        }}
-      >
-        <SheetContent className="w-full sm:max-w-130">
-          <SheetHeader>
-            <SheetTitle>Novo cliente</SheetTitle>
-            <SheetDescription>
-              A ficha fica no teu espaço. O convite para o portal envia-se a seguir, no detalhe.
-            </SheetDescription>
-          </SheetHeader>
-          {url.new && (
-            <div className="min-h-0 flex-1 overflow-y-auto px-4">
-              <ClientForm
-                client={null}
-                onSaved={(client) => void navigate(`/trainer/clients/${client.id}`)}
-              />
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
 
       <ConfirmDialog
         open={confirm !== null}

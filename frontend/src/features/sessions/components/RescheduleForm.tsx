@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -7,9 +8,11 @@ import { localInstant, splitStartsAt, toStartsAt } from '@/features/sessions/lib
 import { SESSION_ERRORS } from '@/features/sessions/lib/sessionStatus';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { FormField } from '@/shared/components/FormField';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard';
 
 type Session = components['schemas']['TrainingSessionResponse'];
 
@@ -50,8 +53,11 @@ const CONFLICT_FIELDS: Record<string, keyof RescheduleValues> = {
 /**
  * Formulário "Reagendar" de uma sessão agendada: dia, hora, duração e local.
  *
+ * Sair com alterações por guardar pede confirmação; o guard só deixa de valer depois de
+ * `saved` estar a `true`, e é aí que `onSaved` navega.
+ *
  * @param session Sessão a reagendar (só `scheduled` chega aqui).
- * @param onSaved Chamado depois de guardar.
+ * @param onSaved Chamado depois de guardar, já sem alterações por guardar.
  */
 export function RescheduleForm({ session, onSaved }: { session: Session; onSaved: () => void }) {
   const mutation = useRescheduleSessionMutation();
@@ -65,6 +71,11 @@ export function RescheduleForm({ session, onSaved }: { session: Session; onSaved
     },
   });
   const errors = form.formState.errors;
+  const [saved, setSaved] = useState(false);
+  const blocker = useUnsavedChangesGuard(form.formState.isDirty && !saved);
+  useEffect(() => {
+    if (saved) onSaved();
+  }, [saved, onSaved]);
 
   async function submit(values: RescheduleValues) {
     const parsed = rescheduleSchema.safeParse(values);
@@ -88,7 +99,7 @@ export function RescheduleForm({ session, onSaved }: { session: Session; onSaved
         },
       });
       toast.success(`Sessão de ${session.client_name} reagendada.`);
-      onSaved();
+      setSaved(true);
     } catch (error) {
       if (!isApiProblem(error)) {
         form.setError('root', { message: 'Não foi possível reagendar a sessão. Tenta novamente.' });
@@ -149,6 +160,19 @@ export function RescheduleForm({ session, onSaved }: { session: Session; onSaved
           {mutation.isPending ? 'A guardar…' : 'Reagendar'}
         </Button>
       </div>
+      <ConfirmDialog
+        open={blocker.state === 'blocked'}
+        onOpenChange={(open) => {
+          if (!open) blocker.reset?.();
+        }}
+        title="Sair sem guardar?"
+        description="As alterações a esta sessão perdem-se."
+        confirmLabel="Sair sem guardar"
+        cancelLabel="Continuar a editar"
+        destructive
+        pending={false}
+        onConfirm={() => blocker.proceed?.()}
+      />
     </form>
   );
 }

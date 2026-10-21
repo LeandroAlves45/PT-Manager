@@ -35,3 +35,18 @@ export function useCheckInListQuery(filters: CheckInListFilter) {
       ),
   });
 }
+
+/** Uma avaliação (`GET /check-ins/{id}`), para as páginas de ver, corrigir e reagendar. */
+export function useCheckInQuery(checkInId: string | undefined) {
+  return useQuery({
+    queryKey: checkInKeys.detail(checkInId ?? ''),
+    enabled: checkInId !== undefined,
+    queryFn: async ({ signal }) =>
+      unwrap(
+        await apiClient.GET('/api/v1/check-ins/{checkInId}', {
+          params: { path: { checkInId: checkInId ?? '' } },
+          signal,
+        })
+      ),
+  });
+}

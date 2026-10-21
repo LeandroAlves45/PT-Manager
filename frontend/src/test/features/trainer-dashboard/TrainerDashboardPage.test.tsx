@@ -32,14 +32,14 @@ describe('TrainerDashboardPage', () => {
     );
     renderApp({ initialEntries: ['/trainer'] });
 
-    const reviews = await screen.findByRole('region', { name: 'Check-ins por rever' });
+    const reviews = await screen.findByRole('region', { name: 'Avaliações por rever' });
     expect(within(reviews).getByText('7')).toBeInTheDocument();
     expect(within(reviews).getByText(/3 acima de 48 h/)).toBeInTheDocument();
     // O mais antigo é o de menor `responded_at`, não o primeiro da lista.
     expect(
       within(reviews).getByText(/mais antigo: Marta Figueiredo \(11\/09\/2026\)/)
     ).toBeVisible();
-    expect(within(reviews).getByRole('link', { name: 'Rever check-ins' })).toHaveAttribute(
+    expect(within(reviews).getByRole('link', { name: 'Rever avaliações' })).toHaveAttribute(
       'href',
       '/trainer/check-ins?status=unreviewed'
     );
@@ -52,12 +52,67 @@ describe('TrainerDashboardPage', () => {
     );
     expect(screen.getByRole('link', { name: 'Atribuir plano a Rita Sá' })).toHaveAttribute(
       'href',
-      `/trainer/training-plans?client_id=33333333-3333-3333-3333-333333333333`
+      `/trainer/training-plans/new?client_id=33333333-3333-3333-3333-333333333333`
     );
     expect(screen.getByText(/2480,00\s*€|2\s*480,00\s*€/)).toBeInTheDocument();
     expect(screen.getByText(/\+24 % vs agosto/)).toBeInTheDocument();
     await waitFor(() => expect(requests).toBe(1));
   }, 15000);
+
+  // U54: o destaque azul só acende nos cartões com algo a fazer.
+  it('highlights only the cards that need action', async () => {
+    server.use(
+      ...restorableSession(),
+      http.get(`${API}/dashboard`, () => HttpResponse.json(dashboardResponse()))
+    );
+    renderApp({ initialEntries: ['/trainer'] });
+
+    const reviews = await screen.findByRole('region', { name: 'Avaliações por rever' });
+    expect(reviews).toHaveAttribute('data-highlight', 'true');
+    expect(screen.getByRole('region', { name: 'Packs de sessões a terminar' })).toHaveAttribute(
+      'data-highlight',
+      'true'
+    );
+    expect(screen.getByRole('region', { name: 'Planos a expirar' })).toHaveAttribute(
+      'data-highlight',
+      'true'
+    );
+    expect(screen.getByRole('region', { name: 'Clientes sem plano ativo' })).not.toHaveAttribute(
+      'data-highlight'
+    );
+  });
+
+  it('keeps the cards neutral when there is nothing to do', async () => {
+    const base = dashboardResponse();
+    server.use(
+      ...restorableSession(),
+      http.get(`${API}/dashboard`, () =>
+        HttpResponse.json(
+          dashboardResponse({
+            check_ins_pending_review: { total_count: 0, overdue_count: 0, items: [] },
+            packs_ending: { total_count: 0, items: [] },
+            plans_expiring: {
+              ...base.plans_expiring,
+              total_count: 0,
+              training_plan_count: 0,
+              meal_plan_count: 0,
+            },
+          })
+        )
+      )
+    );
+    renderApp({ initialEntries: ['/trainer'] });
+
+    const reviews = await screen.findByRole('region', { name: 'Avaliações por rever' });
+    expect(within(reviews).getByText('Tudo revisto.')).toBeInTheDocument();
+    for (const name of [
+      'Avaliações por rever',
+      'Packs de sessões a terminar',
+      'Planos a expirar',
+    ]) {
+      expect(screen.getByRole('region', { name })).not.toHaveAttribute('data-highlight');
+    }
+  });
 
   it('omits empty session type and location instead of printing blanks', async () => {
     server.use(
@@ -111,7 +166,7 @@ describe('TrainerDashboardPage', () => {
       'href',
       '/trainer/clients?new=true'
     );
-    expect(screen.queryByRole('region', { name: 'Check-ins por rever' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Avaliações por rever' })).not.toBeInTheDocument();
   }, 15000);
 
   it('registers attendance and refreshes the dashboard', async () => {
@@ -208,7 +263,7 @@ describe('TrainerDashboardPage', () => {
     renderApp({ initialEntries: ['/trainer'] });
 
     await user.click(await screen.findByRole('button', { name: /Tentar novamente/ }));
-    expect(await screen.findByRole('region', { name: 'Check-ins por rever' })).toBeInTheDocument();
+    expect(await screen.findByRole('region', { name: 'Avaliações por rever' })).toBeInTheDocument();
   }, 15000);
 
   it.each(['superuser', 'client'] as const)(

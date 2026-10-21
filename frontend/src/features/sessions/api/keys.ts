@@ -20,4 +20,5 @@ export const sessionKeys = {
   all: ['sessions'] as const,
   lists: () => [...sessionKeys.all, 'list'] as const,
   list: (filters: SessionListFilters) => [...sessionKeys.lists(), filters] as const,
+  detail: (sessionId: string) => [...sessionKeys.all, 'detail', sessionId] as const,
 };

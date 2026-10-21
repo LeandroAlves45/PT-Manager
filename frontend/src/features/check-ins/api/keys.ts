@@ -20,4 +20,5 @@ export const checkInKeys = {
   all: ['check-ins'] as const,
   lists: () => [...checkInKeys.all, 'lists'] as const,
   list: (filter: CheckInListFilter) => [...checkInKeys.lists(), filter] as const,
+  detail: (checkInId: string) => [...checkInKeys.all, 'detail', checkInId] as const,
 };

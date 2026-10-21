@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { catalogKeys } from '@/features/admin-catalog/api/catalog';
-import { setPendingExerciseVideo } from '@/features/admin-catalog/lib/pending-video';
+import { setPendingExerciseVideo } from '@/shared/lib/pending-video';
 import { ExerciseVideoPanel } from '@/features/exercise-video';
 import {
   ACCEPTED_VIDEO_TYPES,

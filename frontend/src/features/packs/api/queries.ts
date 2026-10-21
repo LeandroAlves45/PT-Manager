@@ -5,6 +5,7 @@ import {
   type ClientPackListFilters,
   type PackTypeListFilters,
 } from '@/features/packs/api/keys';
+import { clientKeys } from '@/features/clients';
 import { apiClient, unwrap } from '@/shared/api/client';
 
 /** Tamanho de página das tabelas de tipos de pack e de packs dos clientes. */
@@ -99,6 +100,43 @@ export function useUsablePacksQuery(clientId: string | null) {
       unwrap(
         await apiClient.GET('/api/v1/client-session-packs/usable', {
           params: { query: { client_id: clientId ?? '' } },
+          signal,
+        })
+      ),
+  });
+}
+
+/** Um tipo de pack (`GET /pack-types/{id}`), para a página de edição. */
+export function usePackTypeQuery(packTypeId: string | undefined) {
+  return useQuery({
+    queryKey: packKeys.type(packTypeId ?? ''),
+    enabled: packTypeId !== undefined,
+    queryFn: async ({ signal }) =>
+      unwrap(
+        await apiClient.GET('/api/v1/pack-types/{packTypeId}', {
+          params: { path: { packTypeId: packTypeId ?? '' } },
+          signal,
+        })
+      ),
+  });
+}
+
+/**
+ * Cliente fixo de uma página aberta a partir da ficha (`?client_id=` ou `:clientId` na rota):
+ * o nome para o texto e para o corpo do formulário, e `is_active`. Partilha a entrada de cache
+ * do detalhe do cliente (`clientKeys.detail`), por isso não custa um pedido a mais quando a
+ * ficha acabou de ser vista.
+ *
+ * Sem `clientId` não há pedido (`enabled`): quem chama deve ler `isLoading`, nunca `isPending`.
+ */
+export function useFixedClientQuery(clientId: string | null | undefined) {
+  return useQuery({
+    queryKey: clientKeys.detail(clientId ?? ''),
+    enabled: clientId != null && clientId !== '',
+    queryFn: async ({ signal }) =>
+      unwrap(
+        await apiClient.GET('/api/v1/clients/{clientId}', {
+          params: { path: { clientId: clientId ?? '' } },
           signal,
         })
       ),

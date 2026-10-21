@@ -12,6 +12,7 @@ import {
   SearchX,
 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
+import { Link } from 'react-router';
 import { toast } from 'sonner';
 
 import type { LibraryKind } from '@/features/library/api/keys';
@@ -27,13 +28,6 @@ import { Pagination } from '@/shared/components/Pagination';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/shared/components/ui/sheet';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 
 /** Uma coluna da tabela, além do nome (sempre em primeira). */
@@ -69,17 +63,14 @@ export function LibraryItemBadges({ item }: { item: LibraryItem }) {
   );
 }
 
-type SheetState<T> = { mode: 'new' } | { mode: 'edit'; item: T } | { mode: 'view'; item: T };
-
 /**
- * Um separador da biblioteca: pesquisa (servidor), filtro de estado, tabela paginada, folha
- * para criar/editar/ver e confirmação de arquivar/reativar.
+ * Um separador da biblioteca: pesquisa (servidor), filtro de estado, tabela paginada e
+ * confirmação de arquivar/reativar.
  *
- * As três tabs só diferem nas colunas, no formulário e nos detalhes, que chegam por props.
+ * Criar, editar e ver são páginas próprias (`/trainer/library/:kind/new` e `/:itemId`): aqui só
+ * há ligações. As três tabs só diferem nas colunas, que chegam por props.
  *
  * @param filtered Lista filtrada (pesquisa, estado ou página > 1): vazio = "Sem resultados".
- * @param renderForm Formulário de criar (`null`) ou editar um item privado editável.
- * @param renderDetails Leitura de um item que não se edita (global, arquivado ou bloqueado).
  */
 export function LibraryPanel<T extends LibraryItem>({
   kind,
@@ -87,20 +78,15 @@ export function LibraryPanel<T extends LibraryItem>({
   controls,
   filtered,
   columns,
-  renderForm,
-  renderDetails,
 }: {
   kind: LibraryKind;
   query: UseQueryResult<{ items: T[]; total_count: number }>;
   controls: LibraryControls;
   filtered: boolean;
   columns: readonly LibraryColumn<T>[];
-  renderForm: (item: T | null, onSaved: () => void) => ReactNode;
-  renderDetails: (item: T) => ReactNode;
 }) {
   const texts = LIBRARY_TEXTS[kind];
   const activityMutation = useLibraryActivityMutation(kind);
-  const [sheet, setSheet] = useState<SheetState<T> | null>(null);
   const [confirm, setConfirm] = useState<T | null>(null);
 
   const items = query.data?.items ?? [];
@@ -125,7 +111,7 @@ export function LibraryPanel<T extends LibraryItem>({
     }
   }
 
-  const closeSheet = () => setSheet(null);
+  const basePath = `/trainer/library/${kind}`;
 
   return (
     <section aria-label={texts.tab} className="space-y-4">
@@ -153,8 +139,10 @@ export function LibraryPanel<T extends LibraryItem>({
             </Button>
           ))}
         </div>
-        <Button className="ml-auto" onClick={() => setSheet({ mode: 'new' })}>
-          <Plus aria-hidden /> {texts.newTitle}
+        <Button asChild className="ml-auto">
+          <Link to={`${basePath}/new`}>
+            <Plus aria-hidden /> {texts.newTitle}
+          </Link>
         </Button>
       </div>
 
@@ -183,7 +171,11 @@ export function LibraryPanel<T extends LibraryItem>({
             icon={LibraryBig}
             title={texts.emptyTitle}
             description={texts.emptyDescription}
-            action={<Button onClick={() => setSheet({ mode: 'new' })}>{texts.createLabel}</Button>}
+            action={
+              <Button asChild>
+                <Link to={`${basePath}/new`}>{texts.createLabel}</Link>
+              </Button>
+            }
           />
         )
       ) : (
@@ -220,23 +212,25 @@ export function LibraryPanel<T extends LibraryItem>({
                     <div className="flex gap-1">
                       {isEditable(item) ? (
                         <Button
+                          asChild
                           size="icon-sm"
                           className="size-11 md:size-8"
                           variant="ghost"
-                          aria-label={`Editar ${item.name}`}
-                          onClick={() => setSheet({ mode: 'edit', item })}
                         >
-                          <Pencil aria-hidden />
+                          <Link to={`${basePath}/${item.id}`} aria-label={`Editar ${item.name}`}>
+                            <Pencil aria-hidden />
+                          </Link>
                         </Button>
                       ) : (
                         <Button
+                          asChild
                           size="icon-sm"
                           className="size-11 md:size-8"
                           variant="ghost"
-                          aria-label={`Ver ${item.name}`}
-                          onClick={() => setSheet({ mode: 'view', item })}
                         >
-                          <Eye aria-hidden />
+                          <Link to={`${basePath}/${item.id}`} aria-label={`Ver ${item.name}`}>
+                            <Eye aria-hidden />
+                          </Link>
                         </Button>
                       )}
                       {item.scope === 'private' && (
@@ -266,39 +260,6 @@ export function LibraryPanel<T extends LibraryItem>({
         pageSize={LIBRARY_PAGE_SIZE}
         onPageChange={controls.setPage}
       />
-
-      <Sheet
-        open={sheet !== null}
-        onOpenChange={(open) => {
-          if (!open) closeSheet();
-        }}
-      >
-        <SheetContent className="w-full sm:max-w-130">
-          <SheetHeader>
-            <SheetTitle>
-              {sheet?.mode === 'new'
-                ? texts.newTitle
-                : sheet?.mode === 'edit'
-                  ? texts.editTitle
-                  : (sheet?.item.name ?? '')}
-            </SheetTitle>
-            <SheetDescription>
-              {sheet?.mode === 'view'
-                ? 'Só de leitura.'
-                : `O ${texts.singular} fica só na tua biblioteca. Os clientes veem-no nos planos.`}
-            </SheetDescription>
-          </SheetHeader>
-          {sheet !== null && (
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-              {sheet.mode === 'new'
-                ? renderForm(null, closeSheet)
-                : sheet.mode === 'edit'
-                  ? renderForm(sheet.item, closeSheet)
-                  : renderDetails(sheet.item)}
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
 
       <ConfirmDialog
         open={confirm !== null}

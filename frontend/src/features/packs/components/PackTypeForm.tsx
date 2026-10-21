@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -5,9 +6,11 @@ import { z } from 'zod';
 import { useSavePackTypeMutation } from '@/features/packs/api/mutations';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { FormField } from '@/shared/components/FormField';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard';
 
 type PackType = components['schemas']['PackTypeResponse'];
 
@@ -80,7 +83,10 @@ function fromCents(cents: number): string {
  * Formulário do tipo de pack (criar e editar).
  *
  * @param packType Tipo a editar, ou `null` para criar.
- * @param onSaved Chamado depois de guardar.
+ * Sair com alterações por guardar pede confirmação; o guard só deixa de valer depois de
+ * `saved` estar a `true`, e é aí que `onSaved` navega.
+ *
+ * @param onSaved Chamado depois de guardar, já sem alterações por guardar.
  */
 export function PackTypeForm({
   packType,
@@ -101,6 +107,11 @@ export function PackTypeForm({
     },
   });
   const errors = form.formState.errors;
+  const [saved, setSaved] = useState(false);
+  const blocker = useUnsavedChangesGuard(form.formState.isDirty && !saved);
+  useEffect(() => {
+    if (saved) onSaved();
+  }, [saved, onSaved]);
 
   async function submit(values: PackTypeValues) {
     const parsed = packTypeSchema.safeParse(values);
@@ -128,7 +139,7 @@ export function PackTypeForm({
           ? 'Tipo de pack criado com sucesso.'
           : 'Tipo de pack atualizado com sucesso.'
       );
-      onSaved();
+      setSaved(true);
     } catch (error) {
       if (isApiProblem(error) && error.hasFieldErrors) {
         for (const fieldError of error.fieldErrors) {
@@ -205,13 +216,22 @@ export function PackTypeForm({
       )}
       <div className="border-border mt-auto flex justify-end gap-2 border-t pt-4">
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending
-            ? 'A guardar…'
-            : packType === null
-              ? 'Criar tipo de pack'
-              : 'Guardar alterações'}
+          {mutation.isPending ? 'A guardar…' : packType === null ? 'Criar' : 'Guardar'}
         </Button>
       </div>
+      <ConfirmDialog
+        open={blocker.state === 'blocked'}
+        onOpenChange={(open) => {
+          if (!open) blocker.reset?.();
+        }}
+        title="Sair sem guardar?"
+        description="As alterações a este tipo de pack perdem-se."
+        confirmLabel="Sair sem guardar"
+        cancelLabel="Continuar a editar"
+        destructive
+        pending={false}
+        onConfirm={() => blocker.proceed?.()}
+      />
     </form>
   );
 }

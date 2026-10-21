@@ -114,3 +114,20 @@ export function useInitialAssessmentQuery(clientId: string, enabled: boolean) {
     },
   });
 }
+
+/**
+ * Estado do convite do portal da ficha (`none`, `pending`, `expired` ou `accepted`).
+ *
+ * Só se pede enquanto o cliente ainda não tem conta (`enabled`): com conta, o badge
+ * «Com acesso ao portal» já diz tudo.
+ */
+export function useClientInvitationQuery(clientId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: clientKeys.invitation(clientId),
+    enabled,
+    queryFn: ({ signal }) =>
+      apiClient
+        .GET('/api/v1/clients/{clientId}/invitation', { params: { path: { clientId } }, signal })
+        .then(unwrap),
+  });
+}

@@ -40,7 +40,7 @@ describe('prescriptionSummary', () => {
         planned({ planned_reps: 12, rest_seconds_min: 60, rest_seconds_max: 60 }),
         planned({ planned_reps: 8, rest_seconds_min: 90, rest_seconds_max: 90 }),
       ])
-    ).toBe('2 séries · 8–12 reps · 60–90 s');
+    ).toBe('2 séries · 12-8 reps · 60–90 s');
   });
 
   it('omits what no set prescribes instead of inventing a zero', () => {
@@ -49,6 +49,24 @@ describe('prescriptionSummary', () => {
         planned({ planned_reps: null, rest_seconds_min: null, rest_seconds_max: null }),
       ])
     ).toBe('1 série');
+  });
+
+  it('shows the rep range with the larger value first', () => {
+    expect(
+      prescriptionSummary([
+        planned({ planned_reps: 10, planned_reps_max: 12 }),
+        planned({ planned_reps: 10, planned_reps_max: 12 }),
+      ])
+    ).toBe('2 séries · 12-10 reps · 90–120 s');
+  });
+
+  it('falls back to the overall span when the sets have different targets', () => {
+    expect(
+      prescriptionSummary([
+        planned({ planned_reps: 10, planned_reps_max: 12 }),
+        planned({ planned_reps: 8, planned_reps_max: null }),
+      ])
+    ).toBe('2 séries · 12-8 reps · 90–120 s');
   });
 
   it('shows a single value when the rest is fixed', () => {
@@ -69,6 +87,15 @@ describe('plannedSetLabel', () => {
   it('lists every planned field of a set', () => {
     expect(plannedSetLabel(planned({ planned_weight_kg: 62.5, planned_rpe: 8.5 }))).toBe(
       'Série 1 · 8 reps · 62,5 kg · RPE 8,5 · 90–120 s'
+    );
+  });
+
+  it('shows the rep range of a set', () => {
+    expect(plannedSetLabel(planned({ planned_reps: 10, planned_reps_max: 12 }))).toBe(
+      'Série 1 · 12-10 reps · 60 kg · RPE 8 · 90–120 s'
+    );
+    expect(plannedSetLabel(planned({ planned_reps: 8, planned_reps_max: null }))).toContain(
+      '· 8 reps ·'
     );
   });
 

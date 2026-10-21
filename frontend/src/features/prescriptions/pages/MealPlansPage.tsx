@@ -1,11 +1,11 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { UtensilsCrossed } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { toast } from 'sonner';
 
 import type { ClientChoice } from '@/features/clients';
 import { prescriptionKeys } from '@/features/prescriptions/api/keys';
-import { MealPlanEditor } from '@/features/prescriptions/components/MealPlanEditor';
 import { prescriptionError } from '@/features/prescriptions/lib/errors';
 import { apiClient, unwrap } from '@/shared/api/client';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
@@ -23,9 +23,9 @@ const PAGE_SIZE = 25;
 /**
  * Lista de planos alimentares: página de todos os clientes, ou separador de um cliente.
  *
- * `client === null` é a lista global (cada cartão mostra `client_name`). `editor`:
- * `undefined` mostra a lista, `null` abre um plano novo, `string` abre esse plano.
- * Pesquisa e estado voltam à página 1; os cartões anteriores ficam visíveis até chegar a
+ * `client === null` é a lista global (cada cartão mostra `client_name`). Só lista: «Novo plano»
+ * abre `/trainer/meal-plans/new` e cada plano abre `/trainer/meal-plans/<id>`; na ficha do
+ * cliente os links levam `?client_id=`, que fixa o cliente e define o regresso. Pesquisa e estado voltam à página 1; os cartões anteriores ficam visíveis até chegar a
  * página nova. Arquivar e reativar confirmam no ecrã e invalidam `meal-plans`.
  */
 export function MealPlansPage({ client = null }: { client?: ClientChoice | null }) {
@@ -36,7 +36,7 @@ export function MealPlansPage({ client = null }: { client?: ClientChoice | null 
   const term = search.trim() === '' ? '' : debounced;
   const [activity, setActivity] = useState<'active' | 'archived' | 'all'>('active');
   const [page, setPage] = useState(1);
-  const [editor, setEditor] = useState<string | null | undefined>(undefined);
+  const clientQuery = client === null ? '' : `?client_id=${client.id}`;
   const [actionId, setActionId] = useState<string | null>(null);
   const [actionKind, setActionKind] = useState<'archive' | 'reactivate'>('archive');
   const [error, setError] = useState('');
@@ -85,29 +85,24 @@ export function MealPlansPage({ client = null }: { client?: ClientChoice | null 
     onError: (failure) => setError(prescriptionError(failure)),
   });
 
-  if (editor !== undefined) {
-    return (
-      <MealPlanEditor
-        key={editor ?? 'new'}
-        planId={editor}
-        fixedClient={client}
-        onClose={() => setEditor(undefined)}
-      />
-    );
-  }
-
   return (
     <section className="space-y-5">
       {client === null ? (
         <PageHeader
           title="Planos alimentares"
           description="Define refeições e calcula os alvos nutricionais."
-          action={<Button onClick={() => setEditor(null)}>Novo plano</Button>}
+          action={
+            <Button asChild className="min-h-11 md:min-h-8">
+              <Link to={`/trainer/meal-plans/new${clientQuery}`}>Novo plano</Link>
+            </Button>
+          }
         />
       ) : (
         <div className="flex items-center justify-between">
           <h2 className="font-display text-xl">Nutrição</h2>
-          <Button onClick={() => setEditor(null)}>Novo plano</Button>
+          <Button asChild className="min-h-11 md:min-h-8">
+            <Link to={`/trainer/meal-plans/new${clientQuery}`}>Novo plano</Link>
+          </Button>
         </div>
       )}
       {error !== '' && (
@@ -177,11 +172,12 @@ export function MealPlansPage({ client = null }: { client?: ClientChoice | null 
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setEditor(plan.id)}>
-                    Ver plano
+                  <Button asChild variant="outline" className="min-h-11 md:min-h-8">
+                    <Link to={`/trainer/meal-plans/${plan.id}${clientQuery}`}>Ver plano</Link>
                   </Button>
                   <Button
                     variant="outline"
+                    className="min-h-11 md:min-h-8"
                     onClick={() => {
                       setActionId(plan.id);
                       setActionKind(plan.is_archived ? 'reactivate' : 'archive');

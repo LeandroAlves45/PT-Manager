@@ -1,10 +1,12 @@
 import type { components } from '@/shared/api/schema';
 import { brandInitial, DEFAULT_APP_NAME } from '@/shared/lib/brandTheme';
+import { cn } from '@/shared/lib/utils';
 
 type PortalBranding = components['schemas']['PortalBrandingResponse'];
 
 /**
- * Marca do personal trainer no cabeçalho do portal: logo de 32 px e nome da app.
+ * Marca do personal trainer: logo de 32 px e nome da app. Usada no cabeçalho do portal e na
+ * shell do personal trainer; com `showName={false}` mostra só o logo (sidebar recolhida).
  *
  * Sem logo há duas saídas:
  * - sem marca própria (nome por omissão) → logo PT Manager;
@@ -14,8 +16,16 @@ type PortalBranding = components['schemas']['PortalBrandingResponse'];
  */
 export function BrandMark({
   branding,
+  showName = true,
+  wrapName = false,
 }: {
   branding: Pick<PortalBranding, 'app_name' | 'logo_url'>;
+  showName?: boolean;
+  /**
+   * `true` em espaços estreitos (sidebar de 248 px): o nome ocupa até duas linhas num tamanho
+   * menor, em vez de reticências. Os nomes chegam a 50 caracteres.
+   */
+  wrapName?: boolean;
 }) {
   const appName = branding.app_name.trim() === '' ? DEFAULT_APP_NAME : branding.app_name.trim();
 
@@ -39,7 +49,19 @@ export function BrandMark({
           {brandInitial(appName)}
         </span>
       )}
-      <span className="font-display truncate text-lg">{appName}</span>
+      {showName ? (
+        // `pe-1`: a font-display é itálica e o `truncate` cortava a última letra.
+        <span
+          className={cn(
+            'font-display pe-1',
+            wrapName ? 'line-clamp-2 text-base leading-tight break-words' : 'truncate text-lg'
+          )}
+        >
+          {appName}
+        </span>
+      ) : (
+        <span className="sr-only">{appName}</span>
+      )}
     </span>
   );
 }

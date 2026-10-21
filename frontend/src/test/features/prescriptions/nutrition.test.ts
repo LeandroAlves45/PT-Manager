@@ -2,8 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import {
   EMPTY_CALCULATION,
+  ageOnDate,
+  calculationFromAssessment,
   calculationFromResult,
+  foodContribution,
   normalizeCalculation,
+  remaining,
+  sumFoods,
+  unitLabel,
 } from '@/features/prescriptions/lib/nutrition';
 import type { components } from '@/shared/api/schema';
 
@@ -74,5 +80,63 @@ describe('nutrition calculation mapping', () => {
     expect(request.sex).toBeNull();
     expect(request.protein_percentage).toBeNull();
     expect(request.protein_grams).toBe(140);
+  });
+});
+
+describe('nutrition draft maths', () => {
+  const chicken = { kcal: 220, protein: 20, carbs: 0, fats: 15, fiber: null };
+
+  it('uses per 100 g values × grams / 100, rounded to 2 decimals', () => {
+    expect(foodContribution(chicken, 1000)).toEqual({
+      kcal: 2200,
+      protein: 200,
+      carbs: 0,
+      fats: 150,
+      fiber: 0,
+    });
+    expect(foodContribution({ ...chicken, kcal: 130.555 }, 100).kcal).toBe(130.56);
+    expect(foodContribution(chicken, Number.NaN).kcal).toBe(0);
+  });
+
+  it('lets what is missing go negative, and counts foods not loaded yet as zero', () => {
+    const total = sumFoods(
+      [
+        { food_id: 'a', quantity_in_grams: 1000 },
+        { food_id: 'unknown', quantity_in_grams: 500 },
+      ],
+      { a: chicken }
+    );
+    expect(total.kcal).toBe(2200);
+    expect(remaining(2000, total.kcal)).toBe(-200);
+    expect(remaining(2000, 0)).toBe(2000);
+  });
+
+  it('computes ages and copies the assessment without touching origin or macros', () => {
+    expect(ageOnDate('2000-06-15', new Date(2026, 5, 14))).toBe(25);
+    expect(ageOnDate('2000-06-15', new Date(2026, 5, 15))).toBe(26);
+
+    const copied = calculationFromAssessment(
+      { ...EMPTY_CALCULATION, calculation_origin: 'manual_energy', macro_mode: 'percentage' },
+      { sex: 'female', birth_date: '2000-06-15' },
+      { weight_kg: 62.5, height_cm: 168, body_fat_percentage: null, activity_level: 'sedentary' },
+      new Date(2026, 5, 15)
+    );
+    expect(copied).toMatchObject({
+      calculation_origin: 'manual_energy',
+      macro_mode: 'percentage',
+      sex: 'female',
+      age: 26,
+      weight_kg: 62.5,
+      height_cm: 168,
+      body_fat_percentage: null,
+      activity_level: 'sedentary',
+    });
+  });
+
+  it('shows «gr» as «g» and nothing when the unit is unknown', () => {
+    expect(unitLabel('GR')).toBe('g');
+    expect(unitLabel('ml')).toBe('ml');
+    expect(unitLabel(undefined)).toBeNull();
+    expect(unitLabel('  ')).toBeNull();
   });
 });

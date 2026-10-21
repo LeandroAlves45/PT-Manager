@@ -1,11 +1,11 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Dumbbell } from 'lucide-react';
+import { Dumbbell, Plus } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { toast } from 'sonner';
 
 import type { ClientChoice } from '@/features/clients';
 import { prescriptionKeys } from '@/features/prescriptions/api/keys';
-import { TrainingPlanEditor } from '@/features/prescriptions/components/TrainingPlanEditor';
 import { prescriptionError } from '@/features/prescriptions/lib/errors';
 import { apiClient, unwrap } from '@/shared/api/client';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
@@ -17,6 +17,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useDebounce } from '@/shared/hooks/useDebounce';
+import { formatDate } from '@/shared/lib/format';
 
 const PAGE_SIZE = 25;
 
@@ -27,7 +28,8 @@ const PAGE_SIZE = 25;
  * Com um cliente, o pedido leva `client_id` e o título passa a «Treino».
  * Nos dois casos há «Novo plano». Ter ou não ter planos vê-se na lista, não neste `null`.
  *
- * `editor`: `undefined` mostra a lista, `null` abre um plano novo, `string` abre esse plano.
+ * Cada plano abre a sua página (`/trainer/training-plans/<id>`) e «Novo plano» abre o
+ * editor em passos; na ficha do cliente os links levam `?client_id=` para o regresso.
  * Pesquisa e filtro de estado voltam à página 1. Enquanto a página nova chega,
  * ficam visíveis os cartões anteriores. Arquivar confirma no ecrã e só depois faz POST.
  * O sucesso invalida todas as queries cuja chave começa por `training-plans`.
@@ -40,7 +42,6 @@ export function TrainingPlansPage({ client = null }: { client?: ClientChoice | n
   const term = search.trim() === '' ? '' : debounced;
   const [activity, setActivity] = useState<'active' | 'archived' | 'all'>('active');
   const [page, setPage] = useState(1);
-  const [editor, setEditor] = useState<string | null | undefined>(undefined);
   const [archiveId, setArchiveId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const list = useQuery({
@@ -77,16 +78,14 @@ export function TrainingPlansPage({ client = null }: { client?: ClientChoice | n
     onError: (failure) => setError(prescriptionError(failure)),
   });
 
-  if (editor !== undefined) {
-    return (
-      <TrainingPlanEditor
-        key={editor ?? 'new'}
-        planId={editor}
-        fixedClient={client}
-        onClose={() => setEditor(undefined)}
-      />
-    );
-  }
+  const clientSearch = client === null ? '' : `?client_id=${client.id}`;
+  const newPlan = (
+    <Button asChild className="min-h-11 md:min-h-9">
+      <Link to={`/trainer/training-plans/new${clientSearch}`}>
+        <Plus aria-hidden /> Novo plano
+      </Link>
+    </Button>
+  );
 
   return (
     <section className="space-y-5">
@@ -94,12 +93,12 @@ export function TrainingPlansPage({ client = null }: { client?: ClientChoice | n
         <PageHeader
           title="Planos de treino"
           description="Prescreve semanas, dias, exercícios e séries."
-          action={<Button onClick={() => setEditor(null)}>Novo plano</Button>}
+          action={newPlan}
         />
       ) : (
         <div className="flex items-center justify-between">
           <h2 className="font-display text-xl">Treino</h2>
-          <Button onClick={() => setEditor(null)}>Novo plano</Button>
+          {newPlan}
         </div>
       )}
       {error !== '' && (
@@ -160,17 +159,21 @@ export function TrainingPlansPage({ client = null }: { client?: ClientChoice | n
                     <p className="text-muted-foreground text-sm">{plan.client_name}</p>
                   )}
                   <p className="text-muted-foreground text-sm">
-                    Início: {plan.start_date}
-                    {plan.end_date !== null && ' · Fim: ' + plan.end_date}
+                    Início: {formatDate(plan.start_date)}
+                    {plan.end_date !== null && ' · Fim: ' + formatDate(plan.end_date)}
                     {plan.is_archived && ' · Arquivado'}
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setEditor(plan.id)}>
-                    Ver plano
+                  <Button asChild variant="outline" className="min-h-11 md:min-h-9">
+                    <Link to={`/trainer/training-plans/${plan.id}${clientSearch}`}>Ver plano</Link>
                   </Button>
                   {!plan.is_archived && (
-                    <Button variant="outline" onClick={() => setArchiveId(plan.id)}>
+                    <Button
+                      variant="outline"
+                      className="min-h-11 md:min-h-9"
+                      onClick={() => setArchiveId(plan.id)}
+                    >
                       Arquivar
                     </Button>
                   )}

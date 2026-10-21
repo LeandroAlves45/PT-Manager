@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { useSaveSupplementMutation } from '@/features/library/api/mutations';
+import { UnsavedChangesDialog } from '@/features/library/components/UnsavedChangesDialog';
 import { applyServerErrors, applyZodIssues } from '@/features/library/lib/errors';
 import type { components } from '@/shared/api/schema';
 import { FormField } from '@/shared/components/FormField';
@@ -58,15 +60,19 @@ const SERVER_FIELDS: Record<string, (typeof FIELDS)[number]> = {
 /**
  * Formulário do suplemento privado (criar e editar).
  *
+ * Avisa ao sair com alterações por guardar.
+ *
  * @param supplement Suplemento a editar, ou `null` para criar.
+ * @param onSaved Chamado depois de guardar, já sem o aviso de saída ativo.
  */
 export function SupplementForm({
   supplement,
   onSaved,
 }: {
   supplement: Supplement | null;
-  onSaved: () => void;
+  onSaved: (saved: Supplement) => void;
 }) {
+  const [saved, setSaved] = useState<Supplement | null>(null);
   const mutation = useSaveSupplementMutation(supplement?.id ?? null);
   const form = useForm<SupplementValues>({
     defaultValues: {
@@ -80,6 +86,10 @@ export function SupplementForm({
   });
   const errors = form.formState.errors;
 
+  useEffect(() => {
+    if (saved !== null) onSaved(saved);
+  }, [saved, onSaved]);
+
   async function submit(values: SupplementValues) {
     const parsed = supplementSchema.safeParse(values);
     if (!parsed.success) {
@@ -89,7 +99,7 @@ export function SupplementForm({
 
     const data = parsed.data;
     try {
-      await mutation.mutateAsync({
+      const result = await mutation.mutateAsync({
         name: data.name,
         description: data.description.trim() || null,
         unit_of_measure: data.unit_of_measure,
@@ -102,7 +112,7 @@ export function SupplementForm({
           ? 'Suplemento criado com sucesso.'
           : 'Suplemento atualizado com sucesso.'
       );
-      onSaved();
+      setSaved(result);
     } catch (error) {
       applyServerErrors(error, SERVER_FIELDS, form.setError);
     }
@@ -146,14 +156,17 @@ export function SupplementForm({
         </p>
       )}
       <div className="flex justify-end">
-        <Button type="submit" disabled={mutation.isPending}>
+        <Button type="submit" className="min-h-11 md:min-h-8" disabled={mutation.isPending}>
           {mutation.isPending
-            ? 'A guardar…'
+            ? supplement === null
+              ? 'A criar…'
+              : 'A guardar…'
             : supplement === null
-              ? 'Criar suplemento'
-              : 'Guardar alterações'}
+              ? 'Criar'
+              : 'Guardar'}
         </Button>
       </div>
+      <UnsavedChangesDialog when={form.formState.isDirty && saved === null} />
     </form>
   );
 }

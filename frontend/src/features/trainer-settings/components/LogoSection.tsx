@@ -81,47 +81,50 @@ export function LogoSection({ settings }: { settings: Settings }) {
             />
           )}
         </div>
-        <div className="flex flex-wrap gap-2">
-          <label htmlFor={inputId} className="sr-only">
-            Ficheiro do logo
-          </label>
-          <input
-            ref={inputRef}
-            id={inputId}
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            className="sr-only"
-            aria-invalid={error !== null}
-            aria-describedby={error === null ? undefined : errorId}
-            disabled={replace.isPending}
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file !== undefined) void upload(file);
-            }}
-          />
-          <Button
-            type="button"
-            disabled={replace.isPending}
-            onClick={() => inputRef.current?.click()}
-          >
-            {replace.isPending
-              ? 'A enviar…'
-              : settings.logo_url === null
-                ? 'Enviar logo'
-                : 'Substituir logo'}
-          </Button>
-          {settings.logo_url !== null && (
-            <Button type="button" variant="outline" onClick={() => setConfirmRemove(true)}>
-              Remover
+        {/* O erro fica ao lado do logo, junto dos botões (ponto 12), e não no fundo da secção. */}
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <div className="flex flex-wrap gap-2">
+            <label htmlFor={inputId} className="sr-only">
+              Ficheiro do logo
+            </label>
+            <input
+              ref={inputRef}
+              id={inputId}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="sr-only"
+              aria-invalid={error !== null}
+              aria-describedby={error === null ? undefined : errorId}
+              disabled={replace.isPending}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file !== undefined) void upload(file);
+              }}
+            />
+            <Button
+              type="button"
+              disabled={replace.isPending}
+              onClick={() => inputRef.current?.click()}
+            >
+              {replace.isPending
+                ? 'A enviar…'
+                : settings.logo_url === null
+                  ? 'Enviar logo'
+                  : 'Substituir logo'}
             </Button>
+            {settings.logo_url !== null && (
+              <Button type="button" variant="outline" onClick={() => setConfirmRemove(true)}>
+                Remover
+              </Button>
+            )}
+          </div>
+          {error !== null && (
+            <p id={errorId} role="alert" className="text-destructive text-sm">
+              {error}
+            </p>
           )}
         </div>
       </div>
-      {error !== null && (
-        <p id={errorId} role="alert" className="text-destructive text-sm">
-          {error}
-        </p>
-      )}
       <ConfirmDialog
         open={confirmRemove}
         onOpenChange={setConfirmRemove}

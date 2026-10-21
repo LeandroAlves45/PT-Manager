@@ -15,6 +15,7 @@ import {
   sessionPage,
   trainingSession,
 } from '@/test/msw/trainer-fixtures';
+import { trainerSettings } from '@/test/msw/account-fixtures';
 import { renderApp } from '@/test/render';
 
 const toastMock = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
@@ -24,18 +25,23 @@ vi.mock('sonner', async (importOriginal) => ({
 }));
 
 const ROUTE = `/trainer/clients/${CLIENT_ID}`;
-const ASSESSMENT_ID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+const INVITE_URL = 'https://app.example.test/accept-invite?token=tok-123';
+
+type Invitation = { state: string; email: string | null; expires_at: string | null };
+const NO_INVITATION: Invitation = { state: 'none', email: null, expires_at: null };
 
 /** Handlers do detalhe; devolve o contador de pedidos à avaliação inicial. */
 function detailHandlers(
   details = clientDetails(),
-  summary = clientSummaryOverview()
+  summary = clientSummaryOverview(),
+  invitation: Invitation = NO_INVITATION
 ): { assessmentRequests: () => number } {
   let assessmentRequests = 0;
   server.use(
     ...restorableSession(),
     http.get(`${API}/clients/:clientId`, () => HttpResponse.json(details)),
     http.get(`${API}/clients/:clientId/summary`, () => HttpResponse.json(summary)),
+    http.get(`${API}/clients/:clientId/invitation`, () => HttpResponse.json(invitation)),
     http.get(`${API}/clients/:clientId/initial-assessment`, () => {
       assessmentRequests += 1;
       return HttpResponse.json(problem('resource_not_found'), { status: 404 });
@@ -54,7 +60,10 @@ describe('ClientDetailPage', () => {
     const { assessmentRequests } = detailHandlers();
     renderApp({ initialEntries: [ROUTE] });
 
-    expect(await screen.findByRole('heading', { name: 'Marta Figueiredo' })).toBeInTheDocument();
+    // Primeiro render do ficheiro: carrega o chunk lazy e o shell (lento em máquinas ocupadas).
+    expect(
+      await screen.findByRole('heading', { name: 'Marta Figueiredo' }, { timeout: 12000 })
+    ).toBeInTheDocument();
     expect(screen.getByText('Pack 10 sessões · 3 restantes')).toBeInTheDocument();
     expect(await screen.findByText('86 %')).toBeInTheDocument();
     expect(screen.getByText('96 de 112 séries (28 dias)')).toBeInTheDocument();
@@ -64,6 +73,33 @@ describe('ClientDetailPage', () => {
     expect(screen.getByText('válido até 30/09/2026')).toBeInTheDocument();
     expect(screen.getByText(/64,8 kg · 168 cm · cliente desde 04\/02\/2026/)).toBeInTheDocument();
     expect(assessmentRequests()).toBe(0);
+  }, 15000);
+
+  it('links to the editor pages instead of opening side panels', async () => {
+    detailHandlers();
+    renderApp({ initialEntries: [ROUTE] });
+
+    expect(await screen.findByRole('link', { name: /Editar ficha/ })).toHaveAttribute(
+      'href',
+      `${ROUTE}/edit`
+    );
+    expect(screen.getByRole('link', { name: /Avaliação inicial/ })).toHaveAttribute(
+      'href',
+      `${ROUTE}/initial-assessment`
+    );
+    expect(screen.getByRole('tab', { name: 'Avaliações' })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Check-ins' })).not.toBeInTheDocument();
+  }, 15000);
+
+  it('keeps name and status badge in the same header row, with a non-italic avatar initial', async () => {
+    detailHandlers();
+    renderApp({ initialEntries: [ROUTE] });
+
+    const heading = await screen.findByRole('heading', { name: 'Marta Figueiredo' });
+    const badge = screen.getByText('Ativo');
+    expect(heading.parentElement).toContainElement(badge);
+    expect(heading.parentElement).toHaveClass('items-center');
+    expect(screen.getByText('MF')).not.toHaveClass('font-display');
   }, 15000);
 
   it('shows explicit texts for missing summary data instead of zeros', async () => {
@@ -103,34 +139,253 @@ describe('ClientDetailPage', () => {
     expect(screen.queryByRole('heading', { name: 'Marta Figueiredo' })).not.toBeInTheDocument();
   }, 15000);
 
-  it('invites with the contact email of the record', async () => {
-    let body: unknown = null;
-    detailHandlers();
+  /** Convite aceite pelo servidor: devolve o link e a validade (U61). */
+  function inviteHandler(onBody?: (body: unknown) => void, emailSent = true) {
     server.use(
       http.post(`${API}/auth/invite-client`, async ({ request }) => {
-        body = await request.json();
-        return new HttpResponse(null, { status: 204 });
+        onBody?.(await request.json());
+        return HttpResponse.json({
+          invite_url: INVITE_URL,
+          expires_at: '2026-10-28T14:30:00Z',
+          email_sent: emailSent,
+        });
       })
     );
+  }
+
+  async function sendInvite(user: ReturnType<typeof userEvent.setup>, label = 'Enviar convite') {
+    await user.click(
+      await screen.findByRole('button', { name: /Convidar para o portal|Enviar outro convite/ })
+    );
+    await user.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', { name: label })
+    );
+    return screen.findByRole('dialog');
+  }
+
+  it('invites with the contact email and shows the sent dialog without writing the link', async () => {
+    let body: unknown = null;
+    detailHandlers();
+    inviteHandler((value) => (body = value));
     const user = userEvent.setup();
     renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: /Convidar para o portal/ }));
-    await user.click(
-      within(await screen.findByRole('alertdialog')).getByRole('button', {
-        name: 'Enviar convite',
-      })
-    );
+    const dialog = await sendInvite(user);
 
     await waitFor(() => expect(body).toEqual({ client_id: CLIENT_ID, email: 'marta@example.com' }));
-    expect(toastMock.success).toHaveBeenCalledWith('Convite enviado para marta@example.com.');
+    expect(
+      within(dialog).getByText(/Convite enviado para marta@example.com\./)
+    ).toBeInTheDocument();
+    // 14:30 UTC é 14:30 em Lisboa a 28/10/2026 (o horário de verão acabou a 25/10).
+    expect(within(dialog).getByText(/Válido até 28\/10\/2026 às 14:30/)).toBeInTheDocument();
+    expect(screen.queryByText(INVITE_URL)).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue(INVITE_URL)).not.toBeInTheDocument();
   }, 15000);
 
+  // O email pode falhar com o convite já criado: o link serve e tem de ir por outro canal.
+  it('says the email did not go out and still offers the link', async () => {
+    detailHandlers();
+    inviteHandler(undefined, false);
+    const user = userEvent.setup();
+    renderApp({ initialEntries: [ROUTE] });
+
+    const dialog = await sendInvite(user);
+
+    expect(within(dialog).getByRole('heading', { name: 'Convite criado' })).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/O email para marta@example.com não saiu agora./)
+    ).toBeInTheDocument();
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(/o link funciona/);
+    expect(within(dialog).getByRole('button', { name: 'Copiar link' })).toBeInTheDocument();
+  }, 15000);
+
+  it('copies the invite link and confirms with «Copiado»', async () => {
+    detailHandlers();
+    inviteHandler();
+    const user = userEvent.setup();
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
+    renderApp({ initialEntries: [ROUTE] });
+
+    const dialog = await sendInvite(user);
+    await user.click(within(dialog).getByRole('button', { name: 'Copiar link' }));
+
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(INVITE_URL));
+    expect(await within(dialog).findByRole('button', { name: 'Copiado' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('status')).toHaveTextContent('Link copiado');
+  }, 15000);
+
+  it('forgets the link once the dialog is closed', async () => {
+    detailHandlers();
+    inviteHandler();
+    const user = userEvent.setup();
+    renderApp({ initialEntries: [ROUTE] });
+
+    const dialog = await sendInvite(user);
+    await user.click(within(dialog).getByRole('button', { name: 'Fechar' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: 'Copiar link' })).not.toBeInTheDocument();
+  }, 15000);
+
+  it('shows the link in a read-only field when the clipboard fails', async () => {
+    detailHandlers();
+    inviteHandler();
+    const user = userEvent.setup();
+    vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('denied'));
+    renderApp({ initialEntries: [ROUTE] });
+
+    const dialog = await sendInvite(user);
+    await user.click(within(dialog).getByRole('button', { name: 'Copiar link' }));
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('Não foi possível copiar');
+    const field = within(dialog).getByRole('textbox', { name: 'Link do convite' });
+    expect(field).toHaveValue(INVITE_URL);
+    expect(field).toHaveAttribute('readonly');
+    expect(within(dialog).getByRole('button', { name: 'Copiar link' })).toBeInTheDocument();
+  }, 15000);
+
+  describe('invitation state on the record', () => {
+    const pending = {
+      state: 'pending',
+      email: 'marta@example.com',
+      expires_at: '2026-10-28T14:30:00Z',
+    };
+
+    it('shows the validity of a pending invite', async () => {
+      detailHandlers(clientDetails(), clientSummaryOverview(), pending);
+      renderApp({ initialEntries: [ROUTE] });
+
+      expect(
+        await screen.findByText('Convite enviado · válido até 28/10/2026 às 14:30')
+      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Convidar para o portal/ })).toBeInTheDocument();
+    }, 15000);
+
+    it('uses the trainer time zone, not the browser one', async () => {
+      detailHandlers(clientDetails(), clientSummaryOverview(), {
+        ...pending,
+        expires_at: '2026-07-10T22:30:00Z',
+      });
+      server.use(
+        http.get(`${API}/trainer-settings`, () =>
+          HttpResponse.json(trainerSettings({ timezone: 'America/Sao_Paulo' }))
+        )
+      );
+      renderApp({ initialEntries: [ROUTE] });
+
+      // São Paulo é UTC-3: 22:30 UTC são 19:30 locais.
+      expect(
+        await screen.findByText('Convite enviado · válido até 10/07/2026 às 19:30')
+      ).toBeInTheDocument();
+    }, 15000);
+
+    it('offers another invite when the previous one expired', async () => {
+      detailHandlers(clientDetails(), clientSummaryOverview(), {
+        ...pending,
+        state: 'expired',
+        expires_at: '2026-10-10T09:05:00Z',
+      });
+      renderApp({ initialEntries: [ROUTE] });
+
+      // Em Lisboa a 10/10 vigora o horário de verão (UTC+1).
+      expect(
+        await screen.findByText('O convite expirou a 10/10/2026 às 10:05')
+      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Enviar outro convite' })).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /Convidar para o portal/ })
+      ).not.toBeInTheDocument();
+    }, 15000);
+
+    it('says which email the invite went to when the record email changed', async () => {
+      detailHandlers(
+        clientDetails({ contact_email: 'marta.nova@example.com' }),
+        clientSummaryOverview(),
+        { ...pending, email: 'marta.antiga@example.com' }
+      );
+      renderApp({ initialEntries: [ROUTE] });
+
+      expect(
+        await screen.findByText(
+          'Convite enviado para marta.antiga@example.com · válido até 28/10/2026 às 14:30'
+        )
+      ).toBeInTheDocument();
+    }, 15000);
+
+    it.each([
+      ['accepted', { state: 'accepted', email: null, expires_at: null }],
+      ['none', NO_INVITATION],
+    ])(
+      'shows nothing about the invite when it is %s',
+      async (_, invitation) => {
+        detailHandlers(clientDetails(), clientSummaryOverview(), invitation);
+        renderApp({ initialEntries: [ROUTE] });
+
+        expect(
+          await screen.findByRole('heading', { name: 'Marta Figueiredo' })
+        ).toBeInTheDocument();
+        await screen.findByText('86 %');
+        expect(screen.queryByText(/Convite enviado|O convite expirou/)).not.toBeInTheDocument();
+      },
+      15000
+    );
+
+    it('refreshes the invite state after sending another invite', async () => {
+      let state: Invitation = {
+        state: 'expired',
+        email: 'marta@example.com',
+        expires_at: '2026-10-10T09:05:00Z',
+      };
+      detailHandlers();
+      server.use(
+        http.get(`${API}/clients/:clientId/invitation`, () => HttpResponse.json(state)),
+        http.post(`${API}/auth/invite-client`, () => {
+          state = pending;
+          return HttpResponse.json({
+            invite_url: INVITE_URL,
+            expires_at: pending.expires_at,
+            email_sent: true,
+          });
+        })
+      );
+      const user = userEvent.setup();
+      renderApp({ initialEntries: [ROUTE] });
+
+      expect(await screen.findByText(/O convite expirou a/)).toBeInTheDocument();
+      await sendInvite(user, 'Enviar outro convite');
+
+      expect(
+        await screen.findByText('Convite enviado · válido até 28/10/2026 às 14:30')
+      ).toBeInTheDocument();
+    }, 15000);
+  });
+
+  // Sem conta, o botão fica visível mas desativado e diz o que falta, em vez de desaparecer.
   it.each([
-    ['a portal account', { user_id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' }],
-    ['no contact email', { contact_email: null }],
-    ['an archived record', { is_active: false }],
+    [
+      'no contact email',
+      { contact_email: null },
+      'Adiciona um email de contacto na ficha para o convidar para o portal.',
+    ],
+    [
+      'an archived record',
+      { is_active: false },
+      'Reativa o cliente para o convidar para o portal.',
+    ],
   ])(
+    'disables the invite and explains why for %s',
+    async (_, overrides, reason) => {
+      detailHandlers(clientDetails(overrides));
+      renderApp({ initialEntries: [ROUTE] });
+
+      const button = await screen.findByRole('button', { name: /Convidar para o portal/ });
+      expect(button).toBeDisabled();
+      expect(button).toHaveAccessibleDescription(new RegExp(reason));
+    },
+    15000
+  );
+
+  it.each([['a portal account', { user_id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' }]])(
     'hides the invite for %s',
     async (_, overrides) => {
       detailHandlers(clientDetails(overrides));
@@ -167,138 +422,6 @@ describe('ClientDetailPage', () => {
       )
     );
   }, 15000);
-
-  it('creates the initial assessment only after opening it', async () => {
-    let body: Record<string, unknown> | null = null;
-    detailHandlers();
-    server.use(
-      http.post(`${API}/initial-assessments`, async ({ request }) => {
-        body = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json({}, { status: 201 });
-      })
-    );
-    const user = userEvent.setup();
-    renderApp({ initialEntries: [ROUTE] });
-
-    await user.click(await screen.findByRole('button', { name: /Avaliação inicial/ }));
-    await user.click(await screen.findByRole('button', { name: 'Guardar avaliação' }));
-    expect(await screen.findByText('Indica o peso.')).toBeInTheDocument();
-    expect(screen.getByText('Indica a altura.')).toBeInTheDocument();
-    expect(screen.getByText('Indica os objetivos.')).toBeInTheDocument();
-    expect(body).toBeNull();
-
-    await user.type(screen.getByLabelText('Peso (kg)'), '64.8');
-    await user.type(screen.getByLabelText('Altura (cm)'), '168');
-    await user.type(screen.getByLabelText('Objetivos'), 'Recomposição corporal');
-    await user.click(screen.getByRole('button', { name: 'Guardar avaliação' }));
-
-    await waitFor(() => expect(body).not.toBeNull());
-    expect(body).toMatchObject({
-      client_id: CLIENT_ID,
-      weight_kg: 64.8,
-      height_cm: 168,
-      body_fat_percentage: null,
-      fitness_level: 'beginner',
-      activity_level: 'sedentary',
-      goals: 'Recomposição corporal',
-      profession: null,
-    });
-  }, 20000);
-
-  it('applies the domain limit of body fat below 100 %', async () => {
-    let posts = 0;
-    detailHandlers();
-    server.use(
-      http.post(`${API}/initial-assessments`, () => {
-        posts += 1;
-        return HttpResponse.json({}, { status: 201 });
-      })
-    );
-    const user = userEvent.setup();
-    renderApp({ initialEntries: [ROUTE] });
-
-    await user.click(await screen.findByRole('button', { name: /Avaliação inicial/ }));
-    await user.type(await screen.findByLabelText('Peso (kg)'), '64.8');
-    await user.type(screen.getByLabelText('Altura (cm)'), '168');
-    await user.type(screen.getByLabelText('Massa gorda (%)'), '100');
-    await user.type(screen.getByLabelText('Objetivos'), 'Força');
-    await user.click(screen.getByRole('button', { name: 'Guardar avaliação' }));
-
-    expect(await screen.findByText('Indica uma percentagem entre 0 e 100.')).toBeInTheDocument();
-    expect(screen.getByLabelText('Massa gorda (%)')).toHaveAccessibleDescription(
-      'Indica uma percentagem entre 0 e 100.'
-    );
-    expect(posts).toBe(0);
-  }, 20000);
-
-  it('updates an existing assessment and maps server field errors', async () => {
-    let method: string | null = null;
-    detailHandlers();
-    server.use(
-      http.get(`${API}/clients/:clientId/initial-assessment`, () =>
-        HttpResponse.json({
-          id: ASSESSMENT_ID,
-          client_id: CLIENT_ID,
-          weight_kg: 66,
-          height_cm: 168,
-          body_fat_percentage: null,
-          medical_conditions: null,
-          fitness_level: 'recreational',
-          activity_level: 'moderately_active',
-          goals: 'Força',
-          profession: null,
-          body_measurements: {
-            waist_cm: null,
-            hip_cm: null,
-            chest_cm: null,
-            right_arm_cm: null,
-            left_arm_cm: null,
-            right_thigh_cm: null,
-            left_thigh_cm: null,
-            right_calf_cm: null,
-            left_calf_cm: null,
-          },
-          nutrition_intake: {
-            food_preferences: null,
-            disliked_foods: null,
-            food_intolerances: null,
-            food_allergies: null,
-            dietary_restrictions: null,
-            daily_routine: null,
-            sleep_quality: null,
-            mood: null,
-            stress_level: null,
-            avg_water_liters_per_day: null,
-            hungriest_time_of_day: null,
-            uses_supplements: null,
-            current_supplements: null,
-            other_notes: null,
-          },
-          created_at: '2026-09-01T10:00:00Z',
-          updated_at: '2026-09-01T10:00:00Z',
-        })
-      ),
-      http.put(`${API}/initial-assessments/:assessmentId`, ({ request }) => {
-        method = request.method;
-        return HttpResponse.json(
-          problem('validation_failed', {
-            errors: [{ field: 'WeightKg', code: 'weight_invalid', message: 'Peso inválido.' }],
-          }),
-          { status: 400 }
-        );
-      })
-    );
-    const user = userEvent.setup();
-    renderApp({ initialEntries: [ROUTE] });
-
-    await user.click(await screen.findByRole('button', { name: /Avaliação inicial/ }));
-    // Um nível guardado fora da lista sugerida continua selecionável (não é apagado).
-    expect(await screen.findByLabelText('Condição física')).toHaveValue('recreational');
-    await user.click(screen.getByRole('button', { name: 'Guardar avaliação' }));
-
-    expect(await screen.findByText('Peso inválido.')).toBeInTheDocument();
-    expect(method).toBe('PUT');
-  }, 20000);
 
   // [6E2] NOVO: separador "Sessões" (packs e sessões do cliente), sincronizado com `?tab=`.
   describe('Sessões tab', () => {
@@ -341,7 +464,7 @@ describe('ClientDetailPage', () => {
       expect(packUrls[0]?.searchParams.get('client_id')).toBe(CLIENT_ID);
       // A coluna Cliente seria redundante no próprio cliente.
       expect(screen.queryByRole('columnheader', { name: 'Cliente' })).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Marcar sessão/ })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /Marcar sessão/ })).toBeInTheDocument();
     }, 15000);
 
     it('writes the selected tab to the URL', async () => {
@@ -362,7 +485,7 @@ describe('ClientDetailPage', () => {
       renderApp({ initialEntries: [`${ROUTE}?tab=sessions`] });
 
       expect(await screen.findByText('3 de 10 restantes')).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /Marcar sessão/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /Marcar sessão/ })).not.toBeInTheDocument();
     }, 15000);
   });
 });

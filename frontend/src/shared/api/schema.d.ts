@@ -3758,6 +3758,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * Envia o convite por email e devolve o mesmo link e a validade, para o personal trainer o copiar
+         *     e enviar por outro canal. Pedir outro convite anula o anterior.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -3773,12 +3777,16 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description No Content */
-                204: {
+                /** @description OK */
+                200: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["InviteClientResponse"];
+                        "application/json": components["schemas"]["InviteClientResponse"];
+                        "text/json": components["schemas"]["InviteClientResponse"];
+                    };
                 };
                 /** @description Bad Request */
                 400: {
@@ -8809,6 +8817,148 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/v1/clients/{clientId}/invitation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Estado do convite do portal da ficha: none, pending, expired ou accepted. Em pending e
+         *     expired traz o email do convite e a validade (UTC).
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    clientId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ClientInvitationResponse"];
+                        "application/json": components["schemas"]["ClientInvitationResponse"];
+                        "text/json": components["schemas"]["ClientInvitationResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Payment Required */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/clients/{clientId}/summary": {
@@ -24503,6 +24653,148 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/workout-completions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista as conclusões de um cliente, opcionalmente de um plano. */
+        get: {
+            parameters: {
+                query?: {
+                    client_id?: string;
+                    training_plan_id?: string;
+                    page_number?: number;
+                    page_size?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PagedResponseOfWorkoutCompletionResponse"];
+                        "application/json": components["schemas"]["PagedResponseOfWorkoutCompletionResponse"];
+                        "text/json": components["schemas"]["PagedResponseOfWorkoutCompletionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Payment Required */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -24745,6 +25037,16 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             updated_at: string;
+        };
+        /**
+         * @description Convite do portal na ficha. `state`: none, pending, expired ou accepted. `email` e
+         *     `expires_at` só em pending e expired; o email é o do convite, não o atual da ficha.
+         */
+        ClientInvitationResponse: {
+            state: string;
+            email: null | string;
+            /** Format: date-time */
+            expires_at: null | string;
         };
         /** @description Metas do plano alimentar ativo. */
         ClientNutritionTargetResponse: {
@@ -25237,7 +25539,8 @@ export interface components {
         };
         /**
          * @description Série prescrita. Identificador nulo cria; presente reconcilia. `planned_rpe` é
-         *     opcional (1–10, passo 0,5); omitido equivale a sem RPE.
+         *     opcional (1–10, passo 0,5); omitido equivale a sem RPE. `planned_reps_max` é o topo
+         *     opcional de um intervalo: exige `planned_reps` (mínimo) e tem de ser maior.
          */
         ExerciseSetRequest: {
             /** Format: uuid */
@@ -25254,8 +25557,10 @@ export interface components {
             rest_seconds_max: null | number;
             /** Format: double */
             planned_rpe?: null | number;
+            /** Format: int32 */
+            planned_reps_max?: null | number;
         };
-        /** @description Série prescrita, tal como devolvida. */
+        /** @description Série prescrita, tal como devolvida. `planned_reps_max` nulo quando o alvo é único. */
         ExerciseSetResponse: {
             /** Format: uuid */
             id: string;
@@ -25263,6 +25568,8 @@ export interface components {
             set_number: number;
             /** Format: int32 */
             planned_reps: null | number;
+            /** Format: int32 */
+            planned_reps_max: null | number;
             /** Format: double */
             planned_weight_kg: null | number;
             /** Format: int32 */
@@ -25510,6 +25817,17 @@ export interface components {
             /** Format: uuid */
             client_id: string;
             email: string;
+        };
+        /**
+         * @description Convite emitido: `invite_url` é o link do email, para o personal trainer copiar e enviar por
+         *     outro canal; `expires_at` em UTC; `email_sent` falso quando o email não saiu (o
+         *     convite serve na mesma). O link não volta a ser devolvido depois desta resposta.
+         */
+        InviteClientResponse: {
+            invite_url: string;
+            /** Format: date-time */
+            expires_at: string;
+            email_sent: boolean;
         };
         /** @description Registo de um cliente convidado: cria a conta e abre a sessão. */
         InvitedClientRegistrationRequest: {
@@ -25783,6 +26101,8 @@ export interface components {
             set_number: number;
             /** Format: int32 */
             planned_reps: null | number;
+            /** Format: int32 */
+            planned_reps_max: null | number;
             /** Format: double */
             planned_weight_kg: null | number;
             /** Format: int32 */
@@ -26080,6 +26400,8 @@ export interface components {
             set_number: number;
             /** Format: int32 */
             planned_reps: null | number;
+            /** Format: int32 */
+            planned_reps_max: null | number;
             /** Format: double */
             planned_weight_kg: null | number;
             /** Format: int32 */
@@ -26518,6 +26840,19 @@ export interface components {
          */
         PagedResponseOfTrainingSessionResponse: {
             items: components["schemas"]["TrainingSessionResponse"][];
+            /** Format: int32 */
+            total_count: number;
+            /** Format: int32 */
+            page_number: number;
+            /** Format: int32 */
+            page_size: number;
+        };
+        /**
+         * @description Envelope estável das listagens paginadas. Serializa como
+         *         items, total_count, page_number, page_size.
+         */
+        PagedResponseOfWorkoutCompletionResponse: {
+            items: components["schemas"]["WorkoutCompletionResponse"][];
             /** Format: int32 */
             total_count: number;
             /** Format: int32 */
@@ -27066,6 +27401,25 @@ export interface components {
             expected_end_date: null | string;
             /** Format: date-time */
             created_at: string;
+        };
+        /**
+         * @description Conclusão de treino de um cliente, vista pelo personal trainer. `local_date` é o dia no fuso do
+         *     personal trainer; `notes` é a nota do cliente, só de leitura.
+         */
+        WorkoutCompletionResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            client_id: string;
+            /** Format: uuid */
+            training_plan_id: string;
+            /** Format: uuid */
+            training_plan_day_id: string;
+            /** Format: date */
+            local_date: string;
+            notes: null | string;
+            /** Format: date-time */
+            completed_at: string;
         };
     };
     responses: never;

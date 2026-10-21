@@ -24,6 +24,7 @@ export const packKeys = {
   types: () => [...packKeys.all, 'types'] as const,
   typeList: (filters: PackTypeListFilters) => [...packKeys.types(), 'list', filters] as const,
   activeTypes: () => [...packKeys.types(), 'active'] as const,
+  type: (packTypeId: string) => [...packKeys.types(), 'detail', packTypeId] as const,
   clientPacks: () => [...packKeys.all, 'client-packs'] as const,
   clientPackList: (filters: ClientPackListFilters) =>
     [...packKeys.clientPacks(), 'list', filters] as const,

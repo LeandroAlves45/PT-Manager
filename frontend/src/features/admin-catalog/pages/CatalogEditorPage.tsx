@@ -6,10 +6,7 @@ import { useCatalogItemQuery, type CatalogKind } from '@/features/admin-catalog/
 import { ExerciseForm } from '@/features/admin-catalog/components/ExerciseForm';
 import { FoodForm } from '@/features/admin-catalog/components/FoodForm';
 import { SupplementForm } from '@/features/admin-catalog/components/SupplementForm';
-import {
-  consumePendingExerciseVideo,
-  peekPendingExerciseVideo,
-} from '@/features/admin-catalog/lib/pending-video';
+import { consumePendingExerciseVideo, peekPendingExerciseVideo } from '@/shared/lib/pending-video';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
 import { EmptyState } from '@/shared/components/EmptyState';

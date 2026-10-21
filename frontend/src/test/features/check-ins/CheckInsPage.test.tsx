@@ -44,7 +44,7 @@ function listHandler(state: { items: CheckIn[] }) {
 
 /** Abre o menu "Mais ações" pelo teclado (o Radix abre em `pointerdown`). */
 async function openMoreActions(user: ReturnType<typeof userEvent.setup>) {
-  const trigger = await screen.findByRole('button', { name: /Mais ações do check-in de Marta/ });
+  const trigger = await screen.findByRole('button', { name: /Mais ações da avaliação de Marta/ });
   trigger.focus();
   await user.keyboard('{Enter}');
 }
@@ -64,7 +64,7 @@ describe('CheckInsPage', () => {
       `/trainer/clients/${CLIENT_ID}?tab=check-ins`
     );
     const table = screen.getByRole('table');
-    expect(within(table).getByText('Respondido')).toBeInTheDocument();
+    expect(within(table).getByText('Respondida')).toBeInTheDocument();
     expect(within(table).getByText('Por rever')).toBeInTheDocument();
     expect(within(table).getByText('64,8 kg')).toBeInTheDocument();
     expect(screen.getByLabelText('Estado')).toHaveValue('unreviewed');
@@ -78,7 +78,7 @@ describe('CheckInsPage', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [`${ROUTE}?page=2`] });
 
-    await screen.findByText('Agendado');
+    await screen.findByText('Agendada');
     expect(queries[0]?.get('page_number')).toBe('2');
     await user.selectOptions(screen.getByLabelText('Estado'), 'missed');
 
@@ -109,12 +109,12 @@ describe('CheckInsPage', () => {
     renderApp({ initialEntries: [`${ROUTE}?status=unreviewed&page=2`] });
 
     await user.click(
-      await screen.findByRole('button', { name: /Marcar como revisto o check-in de Marta/ })
+      await screen.findByRole('button', { name: /Marcar como revista a avaliação de Marta/ })
     );
 
     await waitFor(() => expect(pages.at(-1)).toBe('1'));
     await waitFor(() =>
-      expect(within(screen.getByRole('table')).getByText('Agendado')).toBeInTheDocument()
+      expect(within(screen.getByRole('table')).getByText('Agendada')).toBeInTheDocument()
     );
     expect(window.location.search).not.toContain('page=');
   });
@@ -124,7 +124,7 @@ describe('CheckInsPage', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [ROUTE] });
 
-    await screen.findByText('Agendado');
+    await screen.findByText('Agendada');
     await user.type(screen.getByLabelText('De'), '2026-10-20');
     await user.type(screen.getByLabelText('Até'), '2026-10-10');
 
@@ -135,7 +135,7 @@ describe('CheckInsPage', () => {
     expect(queries.at(-1)?.get('to_date')).toBeNull();
   });
 
-  it('marks an answered check-in as reviewed and refreshes the list', async () => {
+  it('marks an answered evaluation as reviewed and refreshes the list', async () => {
     const state = { items: [answeredCheckIn()] };
     const queries = listHandler(state);
     const reviewed: string[] = [];
@@ -150,12 +150,12 @@ describe('CheckInsPage', () => {
     renderApp({ initialEntries: [ROUTE] });
 
     await user.click(
-      await screen.findByRole('button', { name: /Marcar como revisto o check-in de Marta/ })
+      await screen.findByRole('button', { name: /Marcar como revista a avaliação de Marta/ })
     );
 
     await waitFor(() => expect(reviewed).toEqual([CHECK_IN_ID]));
     expect(toastMock.success).toHaveBeenCalledWith(
-      'Check-in de Marta Figueiredo marcado como revisto.'
+      'Avaliação periódica de Marta Figueiredo marcada como revista.'
     );
     await waitFor(() =>
       expect(within(screen.getByRole('table')).queryByText('Por rever')).not.toBeInTheDocument()
@@ -175,7 +175,7 @@ describe('CheckInsPage', () => {
     // Dentro da tabela: "Em falta" também é uma opção do filtro e existe antes dos dados.
     await within(await screen.findByRole('table')).findByText('Em falta');
     expect(
-      screen.queryByRole('button', { name: /Mais ações do check-in/ })
+      screen.queryByRole('button', { name: /Mais ações da avaliação/ })
     ).not.toBeInTheDocument();
   });
 
@@ -192,13 +192,13 @@ describe('CheckInsPage', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Agendar check-in' }));
-    const sheet = await screen.findByRole('dialog');
-    await user.click(within(sheet).getByRole('combobox', { name: 'Cliente' }));
+    await user.click(await screen.findByRole('link', { name: 'Agendar avaliação' }));
+    await screen.findByRole('heading', { name: 'Agendar avaliação periódica' });
+    await user.click(screen.getByRole('combobox', { name: 'Cliente' }));
     await user.type(await screen.findByPlaceholderText('Pesquisar por nome'), 'Ma');
     await user.click(await screen.findByRole('option', { name: /Marta Figueiredo/ }));
-    await user.type(within(sheet).getByLabelText('Dia do check-in'), dayFromToday(7));
-    await user.click(within(sheet).getByRole('button', { name: 'Agendar' }));
+    await user.type(screen.getByLabelText('Dia da avaliação'), dayFromToday(7));
+    await user.click(screen.getByRole('button', { name: 'Agendar' }));
 
     await waitFor(() => expect(body).not.toBeNull());
     expect(body).toEqual({
@@ -206,7 +206,9 @@ describe('CheckInsPage', () => {
       check_in_date: dayFromToday(7),
       target_date: null,
     });
-    expect(toastMock.success).toHaveBeenCalledWith('Check-in de Marta Figueiredo agendado.');
+    expect(toastMock.success).toHaveBeenCalledWith(
+      'Avaliação periódica de Marta Figueiredo agendada.'
+    );
   }, 20000);
 
   it('refuses a past day or a target before the check-in without calling the API', async () => {
@@ -222,17 +224,15 @@ describe('CheckInsPage', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Agendar check-in' }));
-    const sheet = await screen.findByRole('dialog');
-    await user.type(within(sheet).getByLabelText('Dia do check-in'), dayFromToday(-1));
-    await user.type(within(sheet).getByLabelText('Data-alvo (opcional)'), dayFromToday(-5));
-    await user.click(within(sheet).getByRole('button', { name: 'Agendar' }));
+    await user.click(await screen.findByRole('link', { name: 'Agendar avaliação' }));
+    await screen.findByRole('heading', { name: 'Agendar avaliação periódica' });
+    await user.type(screen.getByLabelText('Dia da avaliação'), dayFromToday(-1));
+    await user.type(screen.getByLabelText('Data-alvo (opcional)'), dayFromToday(-5));
+    await user.click(screen.getByRole('button', { name: 'Agendar' }));
 
-    expect(await within(sheet).findByText('Escolhe o cliente.')).toBeInTheDocument();
-    expect(within(sheet).getByText('Escolhe hoje ou um dia futuro.')).toBeInTheDocument();
-    expect(
-      within(sheet).getByText('A data-alvo não pode ser anterior ao check-in.')
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Escolhe o cliente.')).toBeInTheDocument();
+    expect(screen.getByText('Escolhe hoje ou um dia futuro.')).toBeInTheDocument();
+    expect(screen.getByText('A data-alvo não pode ser anterior à avaliação.')).toBeInTheDocument();
     expect(posts).toBe(0);
   });
 
@@ -240,6 +240,7 @@ describe('CheckInsPage', () => {
     listHandler({ items: [checkIn()] });
     const bodies: unknown[] = [];
     server.use(
+      http.get(`${API}/check-ins/:checkInId`, () => HttpResponse.json(checkIn())),
       http.patch(`${API}/check-ins/:checkInId/reschedule`, async ({ request }) => {
         bodies.push(await request.json());
         return HttpResponse.json(problem('check_in_date_conflict'), { status: 409 });
@@ -250,20 +251,20 @@ describe('CheckInsPage', () => {
 
     await openMoreActions(user);
     await user.click(await screen.findByRole('menuitem', { name: 'Reagendar' }));
-    const sheet = await screen.findByRole('dialog');
-    const day = within(sheet).getByLabelText('Dia do check-in');
+    await screen.findByRole('heading', { name: 'Reagendar avaliação periódica' });
+    const day = screen.getByLabelText('Dia da avaliação');
     expect(day).toHaveValue(dayFromToday(7));
     await user.clear(day);
     await user.type(day, dayFromToday(9));
-    await user.click(within(sheet).getByRole('button', { name: 'Reagendar' }));
+    await user.click(screen.getByRole('button', { name: 'Reagendar' }));
 
     expect(
-      await within(sheet).findByText('O cliente já tem um check-in nesse dia.')
+      await screen.findByText('O cliente já tem uma avaliação nesse dia.')
     ).toBeInTheDocument();
     expect(bodies).toEqual([{ check_in_date: dayFromToday(9), target_date: null }]);
   }, 20000);
 
-  it('cancels a future check-in after confirmation', async () => {
+  it('cancels a future evaluation after confirmation', async () => {
     listHandler({ items: [checkIn()] });
     const cancelled: string[] = [];
     server.use(
@@ -279,10 +280,12 @@ describe('CheckInsPage', () => {
     await user.click(await screen.findByRole('menuitem', { name: 'Cancelar' }));
     const dialog = await screen.findByRole('alertdialog');
     expect(cancelled).toEqual([]);
-    await user.click(within(dialog).getByRole('button', { name: 'Cancelar check-in' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Cancelar avaliação' }));
 
     await waitFor(() => expect(cancelled).toEqual([CHECK_IN_ID]));
-    expect(toastMock.success).toHaveBeenCalledWith('Check-in de Marta Figueiredo cancelado.');
+    expect(toastMock.success).toHaveBeenCalledWith(
+      'Avaliação periódica de Marta Figueiredo cancelada.'
+    );
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
   });
 
@@ -290,6 +293,7 @@ describe('CheckInsPage', () => {
     listHandler({ items: [answeredCheckIn()] });
     let body: Record<string, unknown> | null = null;
     server.use(
+      http.get(`${API}/check-ins/:checkInId`, () => HttpResponse.json(answeredCheckIn())),
       http.put(`${API}/check-ins/:checkInId/answer`, async ({ request }) => {
         body = (await request.json()) as Record<string, unknown>;
         return HttpResponse.json(answeredCheckIn({ weight_kg: 64.2 }));
@@ -298,18 +302,18 @@ describe('CheckInsPage', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: /Ver resposta do check-in/ }));
-    const sheet = await screen.findByRole('dialog');
-    expect(within(sheet).getByText('Semana boa.')).toBeInTheDocument();
-    expect(within(sheet).getByText('Alta')).toBeInTheDocument();
-    expect(within(sheet).getByText('Cintura (cm)')).toBeInTheDocument();
+    await user.click(await screen.findByRole('link', { name: /Ver resposta da avaliação/ }));
+    await screen.findByRole('heading', { name: 'Avaliação periódica de Marta Figueiredo' });
+    expect(screen.getByText('Semana boa.')).toBeInTheDocument();
+    expect(screen.getByText('Alta')).toBeInTheDocument();
+    expect(screen.getByText('Cintura (cm)')).toBeInTheDocument();
 
-    await user.click(within(sheet).getByRole('button', { name: 'Corrigir valores' }));
-    const weight = within(sheet).getByLabelText('Peso (kg)');
+    await user.click(screen.getByRole('button', { name: 'Corrigir valores' }));
+    const weight = screen.getByLabelText('Peso (kg)');
     await user.clear(weight);
     await user.type(weight, '64.2');
-    await user.clear(within(sheet).getByLabelText('Apetite'));
-    await user.click(within(sheet).getByRole('button', { name: 'Guardar correção' }));
+    await user.clear(screen.getByLabelText('Apetite'));
+    await user.click(screen.getByRole('button', { name: 'Guardar correção' }));
 
     await waitFor(() => expect(body).not.toBeNull());
     expect(body).toMatchObject({
@@ -322,13 +326,16 @@ describe('CheckInsPage', () => {
       body_measurements: { waist_cm: 70, hip_cm: null },
       feedback: { appetite: null, energy_levels: 'Alta' },
     });
-    expect(toastMock.success).toHaveBeenCalledWith('Check-in de Marta Figueiredo corrigido.');
+    expect(toastMock.success).toHaveBeenCalledWith(
+      'Avaliação periódica de Marta Figueiredo corrigida.'
+    );
   }, 20000);
 
   it('validates the correction locally and maps a server field error', async () => {
     listHandler({ items: [answeredCheckIn()] });
     let puts = 0;
     server.use(
+      http.get(`${API}/check-ins/:checkInId`, () => HttpResponse.json(answeredCheckIn())),
       http.put(`${API}/check-ins/:checkInId/answer`, () => {
         puts += 1;
         return HttpResponse.json(
@@ -343,24 +350,22 @@ describe('CheckInsPage', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: /Ver resposta do check-in/ }));
-    const sheet = await screen.findByRole('dialog');
-    await user.click(within(sheet).getByRole('button', { name: 'Corrigir valores' }));
-    const adherence = within(sheet).getByLabelText('Adesão ao treino (%)');
+    await user.click(await screen.findByRole('link', { name: /Ver resposta da avaliação/ }));
+    await screen.findByRole('heading', { name: 'Avaliação periódica de Marta Figueiredo' });
+    await user.click(screen.getByRole('button', { name: 'Corrigir valores' }));
+    const adherence = screen.getByLabelText('Adesão ao treino (%)');
     await user.clear(adherence);
     await user.type(adherence, '120');
-    await user.click(within(sheet).getByRole('button', { name: 'Guardar correção' }));
+    await user.click(screen.getByRole('button', { name: 'Guardar correção' }));
 
-    expect(
-      await within(sheet).findByText('Indica um valor inteiro de 0 a 100.')
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Indica um valor inteiro de 0 a 100.')).toBeInTheDocument();
     expect(puts).toBe(0);
 
     await user.clear(adherence);
     await user.type(adherence, '95');
-    await user.click(within(sheet).getByRole('button', { name: 'Guardar correção' }));
+    await user.click(screen.getByRole('button', { name: 'Guardar correção' }));
 
-    expect(await within(sheet).findByText('Peso inválido.')).toBeInTheDocument();
+    expect(await screen.findByText('Peso inválido.')).toBeInTheDocument();
     expect(puts).toBe(1);
   }, 20000);
 });

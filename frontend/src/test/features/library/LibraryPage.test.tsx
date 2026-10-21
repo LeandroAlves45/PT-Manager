@@ -39,6 +39,13 @@ const globalExercise = () =>
 
 type Page<T> = ReturnType<typeof libraryPage<T>>;
 
+function itemOr404(items: Array<{ id: string }>, id: unknown) {
+  const found = items.find((item) => item.id === id);
+  return found === undefined
+    ? HttpResponse.json(problem('not_found', { status: 404 }), { status: 404 })
+    : HttpResponse.json(found);
+}
+
 /** Sessão de trainer e as três listas; devolve os URLs pedidos por separador. */
 function libraryHandlers({
   exercises = libraryPage([globalExercise(), exercise()]),
@@ -63,7 +70,15 @@ function libraryHandlers({
     http.get(`${API}/supplements`, ({ request }) => {
       urls.supplements.push(new URL(request.url));
       return HttpResponse.json(supplements);
-    })
+    }),
+    // Um item para a página de edição ou de leitura.
+    http.get(`${API}/exercises/:exerciseId`, ({ params }) =>
+      itemOr404(exercises.items, params.exerciseId)
+    ),
+    http.get(`${API}/foods/:foodId`, ({ params }) => itemOr404(foods.items, params.foodId)),
+    http.get(`${API}/supplements/:supplementId`, ({ params }) =>
+      itemOr404(supplements.items, params.supplementId)
+    )
   );
   return urls;
 }
@@ -86,15 +101,15 @@ describe('Trainer library', () => {
     expect(within(globalRow).getByText('Quadríceps, Glúteos')).toBeInTheDocument();
     expect(within(globalRow).getByText('Com vídeo')).toBeInTheDocument();
     expect(
-      within(globalRow).getByRole('button', { name: 'Ver Agachamento com barra' })
+      within(globalRow).getByRole('link', { name: 'Ver Agachamento com barra' })
     ).toBeVisible();
-    expect(within(globalRow).queryByRole('button', { name: /^Editar/ })).toBeNull();
+    expect(within(globalRow).queryByRole('link', { name: /^Editar/ })).toBeNull();
     expect(within(globalRow).queryByRole('button', { name: /^Arquivar/ })).toBeNull();
 
     const privateRow = await rowOf('Remada curvada');
     expect(within(privateRow).getByText('Privado')).toBeInTheDocument();
     expect(within(privateRow).getByText('Costas, Bíceps')).toBeInTheDocument();
-    expect(within(privateRow).getByRole('button', { name: 'Editar Remada curvada' })).toBeVisible();
+    expect(within(privateRow).getByRole('link', { name: 'Editar Remada curvada' })).toBeVisible();
     expect(
       within(privateRow).getByRole('button', { name: 'Arquivar Remada curvada' })
     ).toBeVisible();
@@ -153,16 +168,18 @@ describe('Trainer library', () => {
       })
     );
     const user = userEvent.setup();
-    renderApp({ initialEntries: [ROUTE] });
+    const { router } = renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Novo exercício' }));
-    await user.type(screen.getByLabelText('Nome'), 'Supino inclinado');
+    await user.click(await screen.findByRole('link', { name: 'Novo exercício' }));
+    expect(await screen.findByRole('heading', { name: 'Criar exercício' })).toBeVisible();
+    expect(router.state.location.pathname).toBe('/trainer/library/exercises/new');
+    await user.type(await screen.findByLabelText('Nome'), 'Supino inclinado');
     await user.click(screen.getByRole('combobox', { name: 'Grupos musculares' }));
     await user.click(await screen.findByRole('option', { name: 'Tríceps' }));
     await user.click(screen.getByRole('option', { name: 'Peito' }));
     await user.keyboard('{Escape}');
     expect(screen.getByRole('button', { name: 'Remover Tríceps' })).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Criar exercício' }));
+    await user.click(screen.getByRole('button', { name: 'Criar' }));
 
     await waitFor(() => expect(body).not.toBeNull());
     expect(body).toEqual({
@@ -174,7 +191,8 @@ describe('Trainer library', () => {
       video_url: null,
     });
     expect(toastMock.success).toHaveBeenCalledWith('Exercício criado com sucesso.');
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(router.state.location.pathname).toBe('/trainer/library'));
+    expect(screen.queryByRole('alertdialog')).toBeNull();
   }, 15000);
 
   it('edits a private exercise and sends back the hidden external video link', async () => {
@@ -191,13 +209,13 @@ describe('Trainer library', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Editar Remada curvada' }));
-    expect(screen.getByRole('button', { name: 'Remover Costas' })).toBeVisible();
+    await user.click(await screen.findByRole('link', { name: 'Editar Remada curvada' }));
+    expect(await screen.findByRole('button', { name: 'Remover Costas' })).toBeVisible();
     expect(screen.queryByLabelText(/ligação|url/i)).toBeNull();
     const name = screen.getByLabelText('Nome');
     await user.clear(name);
     await user.type(name, 'Remada unilateral');
-    await user.click(screen.getByRole('button', { name: 'Guardar alterações' }));
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
 
     await waitFor(() => expect(body).not.toBeNull());
     expect(body).toMatchObject({
@@ -231,9 +249,9 @@ describe('Trainer library', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Novo exercício' }));
-    await user.type(screen.getByLabelText('Nome'), 'Agachamento');
-    await user.click(screen.getByRole('button', { name: 'Criar exercício' }));
+    await user.click(await screen.findByRole('link', { name: 'Novo exercício' }));
+    await user.type(await screen.findByLabelText('Nome'), 'Agachamento');
+    await user.click(screen.getByRole('button', { name: 'Criar' }));
 
     expect(await screen.findByText('O nome não pode exceder 255 caracteres.')).toBeVisible();
     expect(screen.getByLabelText('Nome')).toHaveAttribute('aria-invalid', 'true');
@@ -252,8 +270,8 @@ describe('Trainer library', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [`${ROUTE}?tab=supplements`] });
 
-    await user.click(await screen.findByRole('button', { name: 'Novo suplemento' }));
-    await user.click(screen.getByRole('button', { name: 'Criar suplemento' }));
+    await user.click(await screen.findByRole('link', { name: 'Novo suplemento' }));
+    await user.click(await screen.findByRole('button', { name: 'Criar' }));
 
     expect(await screen.findByText('Indica o nome do suplemento.')).toBeVisible();
     expect(screen.getByText('Indica a dose.')).toBeVisible();
@@ -275,11 +293,11 @@ describe('Trainer library', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [`${ROUTE}?tab=supplements`] });
 
-    await user.click(await screen.findByRole('button', { name: 'Novo suplemento' }));
-    await user.type(screen.getByLabelText('Nome'), 'Creatina');
+    await user.click(await screen.findByRole('link', { name: 'Novo suplemento' }));
+    await user.type(await screen.findByLabelText('Nome'), 'Creatina');
     await user.type(screen.getByLabelText('Dose'), '5');
     await user.type(screen.getByLabelText('Unidade de medida'), 'g');
-    await user.click(screen.getByRole('button', { name: 'Criar suplemento' }));
+    await user.click(screen.getByRole('button', { name: 'Criar' }));
 
     await waitFor(() => expect(body).not.toBeNull());
     expect(body).toMatchObject({ name: 'Creatina', timing: null });
@@ -297,12 +315,12 @@ describe('Trainer library', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [`${ROUTE}?tab=foods`] });
 
-    await user.click(await screen.findByRole('button', { name: 'Novo alimento' }));
-    await user.type(screen.getByLabelText('Nome'), 'Frango grelhado');
+    await user.click(await screen.findByRole('link', { name: 'Novo alimento' }));
+    await user.type(await screen.findByLabelText('Nome'), 'Frango grelhado');
     await user.type(screen.getByLabelText('Proteína (g)'), '60');
     await user.type(screen.getByLabelText('Hidratos (g)'), '30');
     await user.type(screen.getByLabelText('Gordura (g)'), '20');
-    await user.click(screen.getByRole('button', { name: 'Criar alimento' }));
+    await user.click(screen.getByRole('button', { name: 'Criar' }));
     expect(
       await screen.findByText('Proteína, hidratos e gordura não podem somar mais de 100 g.')
     ).toBeVisible();
@@ -313,7 +331,7 @@ describe('Trainer library', () => {
     await user.type(fats, '2,5');
     expect(screen.getByText('≈ 382,5 kcal por 100 g')).toBeInTheDocument();
     await user.type(screen.getByLabelText('Porção habitual (g)'), '150,25');
-    await user.click(screen.getByRole('button', { name: 'Criar alimento' }));
+    await user.click(screen.getByRole('button', { name: 'Criar' }));
 
     await waitFor(() => expect(body).not.toBeNull());
     expect(body).toEqual({
@@ -364,15 +382,17 @@ describe('Trainer library', () => {
 
     const row = await rowOf('Multivitamínico');
     expect(within(row).getByText('Arquivado')).toBeInTheDocument();
-    expect(within(row).queryByRole('button', { name: /^Editar/ })).toBeNull();
-    await user.click(within(row).getByRole('button', { name: 'Ver Multivitamínico' }));
+    expect(within(row).queryByRole('link', { name: /^Editar/ })).toBeNull();
+    await user.click(within(row).getByRole('link', { name: 'Ver Multivitamínico' }));
     expect(
       await screen.findByText(/Arquivado: reativa-o na lista para o voltares a editar/)
     ).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Guardar alterações' })).toBeNull();
-    await user.keyboard('{Escape}');
+    expect(screen.getByText('Só de leitura.')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Guardar' })).toBeNull();
+    await user.click(screen.getByRole('link', { name: 'Voltar a Suplementos' }));
 
-    await user.click(within(row).getByRole('button', { name: 'Reativar Multivitamínico' }));
+    const listRow = await rowOf('Multivitamínico');
+    await user.click(within(listRow).getByRole('button', { name: 'Reativar Multivitamínico' }));
     const dialog = await screen.findByRole('alertdialog', { name: 'Reativar suplemento?' });
     await user.click(within(dialog).getByRole('button', { name: 'Reativar' }));
     await waitFor(() => expect(reactivated).toBe(true));
@@ -393,7 +413,7 @@ describe('Trainer library', () => {
     const row = await rowOf('Batido pós-treino');
     expect(within(row).getByText('Bloqueado')).toBeInTheDocument();
     expect(within(row).getByRole('button', { name: 'Arquivar Batido pós-treino' })).toBeVisible();
-    await user.click(within(row).getByRole('button', { name: 'Ver Batido pós-treino' }));
+    await user.click(within(row).getByRole('link', { name: 'Ver Batido pós-treino' }));
 
     expect(await screen.findByRole('note')).toHaveTextContent(
       'Bloqueado pela moderação da plataforma. Motivo: Informação perigosa.'
@@ -420,7 +440,7 @@ describe('Trainer library', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Ver Agachamento com barra' }));
+    await user.click(await screen.findByRole('link', { name: 'Ver Agachamento com barra' }));
     expect(await screen.findByText('Vídeo disponível')).toBeVisible();
     expect(screen.queryByLabelText('Enviar vídeo')).toBeNull();
     expect(screen.queryByLabelText('Substituir vídeo')).toBeNull();
@@ -485,9 +505,9 @@ describe('Trainer library', () => {
     const user = userEvent.setup({ applyAccept: false });
     renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Editar Remada curvada' }));
+    await user.click(await screen.findByRole('link', { name: 'Editar Remada curvada' }));
     await user.upload(
-      screen.getByLabelText('Enviar vídeo'),
+      await screen.findByLabelText('Enviar vídeo'),
       new File(['video-bytes'], 'remada.mp4', { type: 'video/mp4' })
     );
 
@@ -503,7 +523,10 @@ describe('Trainer library', () => {
     renderApp({ initialEntries: [ROUTE] });
 
     expect(await screen.findByText('Ainda não há exercícios')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Criar exercício' })).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Criar exercício' })).toHaveAttribute(
+      'href',
+      '/trainer/library/exercises/new'
+    );
 
     await user.type(screen.getByRole('searchbox', { name: 'Pesquisar exercícios' }), 'zzz');
     expect(await screen.findByText('Sem resultados')).toBeVisible();
@@ -583,12 +606,12 @@ describe('Trainer library', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [`${ROUTE}?tab=foods`] });
 
-    await user.click(await screen.findByRole('button', { name: 'Novo alimento' }));
-    await user.type(screen.getByLabelText('Nome'), 'Frango');
+    await user.click(await screen.findByRole('link', { name: 'Novo alimento' }));
+    await user.type(await screen.findByLabelText('Nome'), 'Frango');
     await user.type(screen.getByLabelText('Proteína (g)'), 'abc');
     await user.type(screen.getByLabelText('Hidratos (g)'), '0');
     await user.type(screen.getByLabelText('Gordura (g)'), '0');
-    await user.click(screen.getByRole('button', { name: 'Criar alimento' }));
+    await user.click(screen.getByRole('button', { name: 'Criar' }));
 
     expect(await screen.findByText('A proteína tem de estar entre 0 e 100 g.')).toBeVisible();
     expect(
@@ -666,14 +689,14 @@ describe('Trainer library', () => {
     const user = userEvent.setup({ applyAccept: false });
     renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Editar Remada curvada' }));
-    await user.click(screen.getByRole('button', { name: 'Ver vídeo' }));
+    await user.click(await screen.findByRole('link', { name: 'Editar Remada curvada' }));
+    await user.click(await screen.findByRole('button', { name: 'Ver vídeo' }));
     expect(await screen.findByLabelText('Vídeo de Remada curvada')).toHaveAttribute(
       'src',
       playbackUrls[0]
     );
     await user.upload(
-      screen.getByLabelText('Substituir vídeo'),
+      await screen.findByLabelText('Substituir vídeo'),
       new File(['video-bytes'], 'remada.mp4', { type: 'video/mp4' })
     );
     expect(await screen.findByText('Vídeo pronto.')).toBeInTheDocument();
@@ -700,12 +723,12 @@ describe('Trainer library', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [`${ROUTE}?tab=foods`] });
 
-    await user.click(await screen.findByRole('button', { name: 'Novo alimento' }));
-    await user.type(screen.getByLabelText('Nome'), 'Açúcar mascavado');
+    await user.click(await screen.findByRole('link', { name: 'Novo alimento' }));
+    await user.type(await screen.findByLabelText('Nome'), 'Açúcar mascavado');
     await user.type(screen.getByLabelText('Proteína (g)'), '0,15');
     await user.type(screen.getByLabelText('Hidratos (g)'), '65,01');
     await user.type(screen.getByLabelText('Gordura (g)'), '34,84');
-    await user.click(screen.getByRole('button', { name: 'Criar alimento' }));
+    await user.click(screen.getByRole('button', { name: 'Criar' }));
 
     await waitFor(() => expect(body).not.toBeNull());
     expect(body).toMatchObject({ protein: 0.15, carbs: 65.01, fats: 34.84 });

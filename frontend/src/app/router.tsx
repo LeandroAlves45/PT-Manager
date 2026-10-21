@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react';
 import { createBrowserRouter, type RouteObject } from 'react-router';
 
 import { AppRouteRoot } from '@/app/AppRouteRoot';
@@ -19,10 +20,6 @@ import {
   ResetPasswordPage,
   SignUpPage,
 } from '@/features/auth';
-import { BillingPage } from '@/features/billing/pages/BillingPage';
-import { CheckInsPage } from '@/features/check-ins/pages/CheckInsPage';
-import { ClientDetailPage } from '@/features/clients/pages/ClientDetailPage';
-import { ClientsPage } from '@/features/clients/pages/ClientsPage';
 import {
   PortalCheckInsPage,
   PortalHomePage,
@@ -32,16 +29,9 @@ import {
   PortalSupplementsPage,
   PortalTodayPage,
 } from '@/features/portal';
-import { LibraryPage } from '@/features/library/pages/LibraryPage';
-import {
-  MealPlansPage,
-  SupplementAssignmentsPage,
-  TrainingPlansPage,
-} from '@/features/prescriptions';
-import { SessionsPage } from '@/features/sessions/pages/SessionsPage';
-import { SettingsPage } from '@/features/trainer-settings/pages/SettingsPage';
-import { TrainerDashboardPage } from '@/features/trainer-dashboard/pages/TrainerDashboardPage';
 import { RootRedirect } from '@/app/RootRedirect';
+import { RouteFallback } from '@/app/RouteFallback';
+import { LibraryKindRedirect, PackTypesRedirect, SetLogsRedirect } from '@/app/TrainerRedirects';
 import { AUTH_ROUTES, LEGACY_LOGIN_ROUTES } from '@/shared/config/auth-routes';
 
 /**
@@ -49,6 +39,21 @@ import { AUTH_ROUTES, LEGACY_LOGIN_ROUTES } from '@/shared/config/auth-routes';
  */
 
 const CATALOG_KINDS = ['foods', 'exercises', 'supplements'] as const;
+const LIBRARY_KINDS = ['exercises', 'foods', 'supplements'] as const;
+
+/**
+ * Rota lazy (U47, U62): a página só se descarrega quando é aberta, para o bundle de cada papel
+ * não carregar as páginas dos outros.
+ */
+function lazyPage(
+  path: string | undefined,
+  load: () => Promise<{ default: ComponentType }>
+): RouteObject {
+  return {
+    ...(path === undefined ? { index: true } : { path }),
+    lazy: async () => ({ Component: (await load()).default }),
+  };
+}
 
 const applicationRoutes: RouteObject[] = [
   { path: '/', element: <RootRedirect /> },
@@ -150,17 +155,218 @@ const applicationRoutes: RouteObject[] = [
             path: '/trainer',
             element: <AppShell />,
             children: [
-              { index: true, element: <TrainerDashboardPage /> },
-              { path: 'clients', element: <ClientsPage /> },
-              { path: 'clients/:clientId', element: <ClientDetailPage /> },
-              { path: 'sessions', element: <SessionsPage /> },
-              { path: 'check-ins', element: <CheckInsPage /> },
-              { path: 'training-plans', element: <TrainingPlansPage /> },
-              { path: 'meal-plans', element: <MealPlansPage /> },
-              { path: 'supplement-assignments', element: <SupplementAssignmentsPage /> },
-              { path: 'library', element: <LibraryPage /> },
-              { path: 'settings', element: <SettingsPage /> },
-              { path: 'billing', element: <BillingPage /> },
+              // U56: nenhum painel lateral de edição; cada formulário tem a sua página.
+              lazyPage(undefined, async () => ({
+                default: (await import('@/features/trainer-dashboard/pages/TrainerDashboardPage'))
+                  .TrainerDashboardPage,
+              })),
+
+              // Clientes
+              lazyPage('clients', async () => ({
+                default: (await import('@/features/clients/pages/ClientsPage')).ClientsPage,
+              })),
+              lazyPage('clients/new', async () => ({
+                default: (await import('@/features/clients/pages/ClientEditorPage'))
+                  .ClientEditorPage,
+              })),
+              lazyPage('clients/:clientId', async () => ({
+                default: (await import('@/features/clients/pages/ClientDetailPage'))
+                  .ClientDetailPage,
+              })),
+              lazyPage('clients/:clientId/edit', async () => ({
+                default: (await import('@/features/clients/pages/ClientEditorPage'))
+                  .ClientEditorPage,
+              })),
+              lazyPage('clients/:clientId/initial-assessment', async () => ({
+                default: (await import('@/features/clients/pages/InitialAssessmentPage'))
+                  .InitialAssessmentPage,
+              })),
+              lazyPage('clients/:clientId/sell-pack', async () => ({
+                default: (await import('@/features/packs/pages/SellPackPage')).SellPackPage,
+              })),
+
+              // Sessões e packs
+              lazyPage('sessions', async () => ({
+                default: (await import('@/features/sessions/pages/SessionsPage')).SessionsPage,
+              })),
+              lazyPage('sessions/new', async () => ({
+                default: (await import('@/features/sessions/pages/SessionEditorPage'))
+                  .SessionEditorPage,
+              })),
+              lazyPage('sessions/sell-pack', async () => ({
+                default: (await import('@/features/packs/pages/SellPackPage')).SellPackPage,
+              })),
+              { path: 'sessions/pack-types', element: <PackTypesRedirect /> },
+              lazyPage('sessions/pack-types/new', async () => ({
+                default: (await import('@/features/packs/pages/PackTypeEditorPage'))
+                  .PackTypeEditorPage,
+              })),
+              lazyPage('sessions/pack-types/:packTypeId', async () => ({
+                default: (await import('@/features/packs/pages/PackTypeEditorPage'))
+                  .PackTypeEditorPage,
+              })),
+              lazyPage('sessions/:sessionId', async () => ({
+                default: (await import('@/features/sessions/pages/SessionEditorPage'))
+                  .SessionEditorPage,
+              })),
+
+              // Avaliações (antes «check-ins»; o endereço mantém-se)
+              lazyPage('check-ins', async () => ({
+                default: (await import('@/features/check-ins/pages/CheckInsPage')).CheckInsPage,
+              })),
+              lazyPage('check-ins/new', async () => ({
+                default: (await import('@/features/check-ins/pages/CheckInSchedulePage'))
+                  .CheckInSchedulePage,
+              })),
+              lazyPage('check-ins/:checkInId', async () => ({
+                default: (await import('@/features/check-ins/pages/CheckInDetailPage'))
+                  .CheckInDetailPage,
+              })),
+              lazyPage('check-ins/:checkInId/reschedule', async () => ({
+                default: (await import('@/features/check-ins/pages/CheckInSchedulePage'))
+                  .CheckInSchedulePage,
+              })),
+
+              // Planos de treino: passos com o rascunho no layout (U57)
+              lazyPage('training-plans', async () => ({
+                default: (await import('@/features/prescriptions/pages/TrainingPlansPage'))
+                  .TrainingPlansPage,
+              })),
+              {
+                path: 'training-plans/new',
+                lazy: async () => ({
+                  Component: (await import('@/features/prescriptions/pages/TrainingPlanEditorPage'))
+                    .TrainingPlanEditorLayout,
+                }),
+                children: [
+                  lazyPage(undefined, async () => ({
+                    default: (await import('@/features/prescriptions/pages/TrainingPlanEditorPage'))
+                      .TrainingPlanDetailsStep,
+                  })),
+                  lazyPage('structure', async () => ({
+                    default: (await import('@/features/prescriptions/pages/TrainingPlanEditorPage'))
+                      .TrainingPlanStructureStep,
+                  })),
+                ],
+              },
+              lazyPage('training-plans/:planId', async () => ({
+                default: (await import('@/features/prescriptions/pages/TrainingPlanViewPage'))
+                  .TrainingPlanViewPage,
+              })),
+              {
+                path: 'training-plans/:planId/edit',
+                lazy: async () => ({
+                  Component: (await import('@/features/prescriptions/pages/TrainingPlanEditorPage'))
+                    .TrainingPlanEditorLayout,
+                }),
+                children: [
+                  lazyPage(undefined, async () => ({
+                    default: (await import('@/features/prescriptions/pages/TrainingPlanEditorPage'))
+                      .TrainingPlanDetailsStep,
+                  })),
+                  lazyPage('structure', async () => ({
+                    default: (await import('@/features/prescriptions/pages/TrainingPlanEditorPage'))
+                      .TrainingPlanStructureStep,
+                  })),
+                ],
+              },
+              { path: 'training-plans/:planId/set-logs', element: <SetLogsRedirect /> },
+              lazyPage('training-plans/:planId/set-logs/:logId', async () => ({
+                default: (await import('@/features/prescriptions/pages/SetLogCorrectionPage'))
+                  .SetLogCorrectionPage,
+              })),
+
+              // Planos alimentares: passo das metas e passo das refeições (U57)
+              lazyPage('meal-plans', async () => ({
+                default: (await import('@/features/prescriptions/pages/MealPlansPage'))
+                  .MealPlansPage,
+              })),
+              {
+                path: 'meal-plans/new',
+                lazy: async () => ({
+                  Component: (await import('@/features/prescriptions/pages/MealPlanEditorPage'))
+                    .MealPlanEditorLayout,
+                }),
+                children: [
+                  lazyPage(undefined, async () => ({
+                    default: (await import('@/features/prescriptions/pages/MealPlanEditorPage'))
+                      .MealPlanTargetsStep,
+                  })),
+                  lazyPage('meals', async () => ({
+                    default: (await import('@/features/prescriptions/pages/MealPlanEditorPage'))
+                      .MealPlanMealsStep,
+                  })),
+                ],
+              },
+              lazyPage('meal-plans/:planId', async () => ({
+                default: (await import('@/features/prescriptions/pages/MealPlanViewPage'))
+                  .MealPlanViewPage,
+              })),
+              {
+                path: 'meal-plans/:planId/edit',
+                lazy: async () => ({
+                  Component: (await import('@/features/prescriptions/pages/MealPlanEditorPage'))
+                    .MealPlanEditorLayout,
+                }),
+                children: [
+                  lazyPage(undefined, async () => ({
+                    default: (await import('@/features/prescriptions/pages/MealPlanEditorPage'))
+                      .MealPlanTargetsStep,
+                  })),
+                  lazyPage('meals', async () => ({
+                    default: (await import('@/features/prescriptions/pages/MealPlanEditorPage'))
+                      .MealPlanMealsStep,
+                  })),
+                ],
+              },
+
+              // Suplementos atribuídos
+              lazyPage('supplement-assignments', async () => ({
+                default: (await import('@/features/prescriptions/pages/SupplementAssignmentsPage'))
+                  .SupplementAssignmentsPage,
+              })),
+              lazyPage('supplement-assignments/new', async () => ({
+                default: (
+                  await import('@/features/prescriptions/pages/SupplementAssignmentEditorPage')
+                ).SupplementAssignmentEditorPage,
+              })),
+              lazyPage('supplement-assignments/:assignmentId', async () => ({
+                default: (
+                  await import('@/features/prescriptions/pages/SupplementAssignmentEditorPage')
+                ).SupplementAssignmentEditorPage,
+              })),
+
+              // Biblioteca privada
+              lazyPage('library', async () => ({
+                default: (await import('@/features/library/pages/LibraryPage')).LibraryPage,
+              })),
+              ...LIBRARY_KINDS.flatMap((kind): RouteObject[] => [
+                { path: `library/${kind}`, element: <LibraryKindRedirect /> },
+                {
+                  path: `library/${kind}/new`,
+                  lazy: async () => {
+                    const { LibraryEditorPage } =
+                      await import('@/features/library/pages/LibraryEditorPage');
+                    return { element: <LibraryEditorPage kind={kind} /> };
+                  },
+                },
+                {
+                  path: `library/${kind}/:itemId`,
+                  lazy: async () => {
+                    const { LibraryEditorPage } =
+                      await import('@/features/library/pages/LibraryEditorPage');
+                    return { element: <LibraryEditorPage kind={kind} /> };
+                  },
+                },
+              ]),
+
+              lazyPage('settings', async () => ({
+                default: (await import('@/features/trainer-settings/pages/SettingsPage'))
+                  .SettingsPage,
+              })),
+              lazyPage('billing', async () => ({
+                default: (await import('@/features/billing/pages/BillingPage')).BillingPage,
+              })),
               { path: 'account', element: <AccountSecurityPage /> },
             ],
           },
@@ -196,6 +402,7 @@ const applicationRoutes: RouteObject[] = [
 export const routes: RouteObject[] = [
   {
     element: <AppRouteRoot />,
+    hydrateFallbackElement: <RouteFallback />,
     children: applicationRoutes,
   },
 ];

@@ -16,9 +16,10 @@ const SEGMENT_LABELS: Record<string, string> = {
   portal: 'Portal',
   clients: 'Clientes',
   sessions: 'Sessões e packs',
-  'check-ins': 'Check-ins',
+  'check-ins': 'Avaliações',
   'training-plans': 'Planos de treino',
   'meal-plans': 'Planos alimentares',
+  'supplement-assignments': 'Suplementos atribuídos',
   library: 'Biblioteca',
   settings: 'Marca própria',
   billing: 'Subscrição',
@@ -26,6 +27,14 @@ const SEGMENT_LABELS: Record<string, string> = {
   trainers: 'Treinadores',
   invite: 'Convidar',
   new: 'Criar',
+  edit: 'Editar',
+  structure: 'Estrutura',
+  meals: 'Refeições',
+  'initial-assessment': 'Avaliação inicial',
+  'sell-pack': 'Vender pack',
+  'pack-types': 'Tipos de pack',
+  reschedule: 'Reagendar',
+  'set-logs': 'Séries realizadas',
   catalog: 'Catálogos',
   foods: 'Alimentos',
   exercises: 'Exercícios',
@@ -46,19 +55,41 @@ function labelFor(segment: string): string {
   return SEGMENT_LABELS[segment] ?? segment.replace(/-/g, ' ');
 }
 
-/** Caminho de navegação da topbar. */
-export function Breadcrumbs({ className }: { className?: string }) {
-  const { pathname } = useLocation();
+/**
+ * Caminho de navegação da topbar.
+ *
+ * @param inheritColor `true` quando a topbar tem a cor de fundo da marca do personal trainer: o
+ *   texto herda a cor já validada para AA em vez dos tons cinzentos do tema.
+ */
+export function Breadcrumbs({
+  className,
+  inheritColor = false,
+}: {
+  className?: string;
+  inheritColor?: boolean;
+}) {
+  const { pathname, search } = useLocation();
+  // Um editor aberto a partir da ficha do cliente leva `?client_id=`: as migalhas dentro da
+  // secção (passos, detalhe do plano) conservam-no, para o cliente continuar fixo e o regresso
+  // continuar a ser a ficha. As migalhas das listas e do painel não precisam dele.
+  const clientId = new URLSearchParams(search).get('client_id');
+  const clientSearch = clientId === null ? '' : `?client_id=${encodeURIComponent(clientId)}`;
   const segments = pathname.split('/').filter(Boolean);
 
   if (segments.length === 0) return null;
 
   return (
     <nav aria-label="Caminho" className={cn('min-w-0', className)}>
-      <ol className="text-muted-foreground flex items-center gap-1 text-sm">
+      <ol
+        className={cn(
+          'flex items-center gap-1 text-sm',
+          inheritColor ? 'text-current' : 'text-muted-foreground'
+        )}
+      >
         {segments.map((segment, index) => {
           const isLast = index === segments.length - 1;
           const route = `/${segments.slice(0, index + 1).join('/')}`;
+          const to = index >= 2 ? `${route}${clientSearch}` : route;
 
           return (
             <li
@@ -72,11 +103,23 @@ export function Breadcrumbs({ className }: { className?: string }) {
                 />
               )}
               {isLast ? (
-                <span aria-current="page" className="text-foreground overflow-hidden font-medium">
+                <span
+                  aria-current="page"
+                  className={cn(
+                    'overflow-hidden font-medium',
+                    inheritColor ? 'text-current' : 'text-foreground'
+                  )}
+                >
                   {labelFor(segment)}
                 </span>
               ) : (
-                <Link to={route} className="hover:text-foreground transition-colors">
+                <Link
+                  to={to}
+                  className={cn(
+                    'transition-colors',
+                    inheritColor ? 'hover:underline' : 'hover:text-foreground'
+                  )}
+                >
                   {labelFor(segment)}
                 </Link>
               )}

@@ -41,3 +41,18 @@ export function useSessionListQuery(filters: SessionListFilters) {
       ),
   });
 }
+
+/** Uma sessão (`GET /sessions/{id}`), para a página de reagendar. */
+export function useSessionQuery(sessionId: string | undefined) {
+  return useQuery({
+    queryKey: sessionKeys.detail(sessionId ?? ''),
+    enabled: sessionId !== undefined,
+    queryFn: async ({ signal }) =>
+      unwrap(
+        await apiClient.GET('/api/v1/sessions/{sessionId}', {
+          params: { path: { sessionId: sessionId ?? '' } },
+          signal,
+        })
+      ),
+  });
+}

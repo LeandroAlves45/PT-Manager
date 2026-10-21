@@ -1,7 +1,7 @@
-import { Archive, ClipboardList, Mail, Pencil, RotateCcw } from 'lucide-react';
+import { Archive, ClipboardList, Copy, Mail, Pencil, RotateCcw } from 'lucide-react';
 import { parseAsStringLiteral, useQueryState } from 'nuqs';
 import { useState, type ReactNode } from 'react';
-import { useParams } from 'react-router';
+import { Link, useParams } from 'react-router';
 import { toast } from 'sonner';
 
 import {
@@ -9,15 +9,15 @@ import {
   useInviteClientMutation,
 } from '@/features/clients/api/mutations';
 import {
+  useClientInvitationQuery,
   useClientQuery,
   useClientSummaryQuery,
-  useInitialAssessmentQuery,
 } from '@/features/clients/api/queries';
-import { ClientForm } from '@/features/clients/components/ClientForm';
-import { InitialAssessmentForm } from '@/features/clients/components/InitialAssessmentForm';
+import { formatInviteMoment, invitationNote } from '@/features/clients/lib/invitation';
 import { activityErrorMessage, ageFrom, initialsOf } from '@/features/clients/lib/labels';
 import { ClientCheckInsTab } from '@/features/check-ins';
 import { ClientSessionsTab } from '@/features/sessions';
+import { useTrainerSettingsQuery } from '@/features/trainer-settings/api/settings';
 import {
   MealPlansPage,
   SupplementAssignmentsPage,
@@ -30,12 +30,14 @@ import { ErrorState } from '@/shared/components/ErrorState';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/shared/components/ui/sheet';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog';
+import { Input } from '@/shared/components/ui/input';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { formatDate, formatNumber, formatPercent } from '@/shared/lib/format';
@@ -54,7 +56,14 @@ const INVITE_ERRORS: Readonly<Record<string, string>> = {
   rate_limit_exceeded: 'Foram enviados demasiados convites. Aguarda um momento.',
 };
 
-type Panel = 'edit' | 'assessment' | null;
+/** Convite acabado de enviar: o link só existe aqui, nunca fica escrito no ecrã. */
+interface SentInvite {
+  readonly email: string;
+  readonly url: string;
+  readonly expiresAt: string;
+  /** `false` quando o email não saiu: o convite serve na mesma e o link tem de ir por outro canal. */
+  readonly emailSent: boolean;
+}
 type Confirm = 'invite' | 'activity' | null;
 
 /** Separadores do detalhe; pela ordem do layout com Sessões a seguir ao Resumo */
@@ -62,10 +71,11 @@ const TABS = ['summary', 'sessions', 'training', 'nutrition', 'supplements', 'ch
 
 /**
  * Detalhe do cliente — cabeçalho e separadores Resumo, Sessões, Treino, Nutrição,
- * Suplementos e Check-ins (`?tab=`).
+ * Suplementos e Avaliações (`?tab=check-ins`).
  *
  * Orçamento de pedidos: `GET /clients/{id}` e `GET /clients/{id}/summary` em paralelo ao
- * montar; a avaliação inicial só é pedida quando o personal trainer abre o painel dela; cada
+ * montar; a ficha e a avaliação inicial editam-se em páginas próprias; o estado do convite
+ * (`GET /clients/{id}/invitation`) só se pede enquanto o cliente não tem conta; cada
  * separador só pede os seus dados quando está aberto (o Radix não monta separadores
  * inativos).
  */
@@ -73,11 +83,13 @@ export function ClientDetailPage() {
   const { clientId = '' } = useParams();
   const client = useClientQuery(clientId);
   const summary = useClientSummaryQuery(clientId);
-  const [panel, setPanel] = useState<Panel>(null);
+  const [sent, setSent] = useState<SentInvite | null>(null);
   const [confirm, setConfirm] = useState<Confirm>(null);
   const [tab, setTab] = useQueryState('tab', parseAsStringLiteral(TABS).withDefault('summary'));
-  const assessment = useInitialAssessmentQuery(clientId, panel === 'assessment');
+  const settings = useTrainerSettingsQuery();
+  const timeZone = settings.data?.timezone;
   const invite = useInviteClientMutation();
+  const invitation = useClientInvitationQuery(clientId, client.data?.user_id === null);
   const activity = useClientActivityMutation();
 
   if (client.isPending)
@@ -106,14 +118,32 @@ export function ClientDetailPage() {
 
   const data = client.data;
   const canInvite = data.is_active && data.user_id === null && data.contact_email !== null;
+  // Sem conta, o convite é sempre possível de alguma forma: em vez de esconder o botão quando
+  // ainda não dá, mostra-se desativado com o que falta fazer.
+  const inviteBlocked =
+    data.user_id !== null
+      ? null
+      : !data.is_active
+        ? 'Reativa o cliente para o convidar para o portal.'
+        : data.contact_email === null
+          ? 'Adiciona um email de contacto na ficha para o convidar para o portal.'
+          : null;
+  const inviteExpired = data.user_id === null && invitation.data?.state === 'expired';
+  const inviteNote =
+    data.user_id === null ? invitationNote(invitation.data, data.contact_email, timeZone) : null;
 
   async function sendInvite() {
     if (data.contact_email === null) return;
 
     try {
-      await invite.mutateAsync({ clientId: data.id, email: data.contact_email });
-      toast.success(`Convite enviado para ${data.contact_email}.`);
+      const result = await invite.mutateAsync({ clientId: data.id, email: data.contact_email });
       setConfirm(null);
+      setSent({
+        email: data.contact_email,
+        url: result.invite_url,
+        expiresAt: result.expires_at,
+        emailSent: result.email_sent,
+      });
     } catch (error) {
       const message = isApiProblem(error) ? INVITE_ERRORS[error.code] : undefined;
       toast.error(message ?? 'Não foi possível enviar o convite. Tenta novamente.');
@@ -140,16 +170,27 @@ export function ClientDetailPage() {
       <ClientHeader
         client={data}
         summary={summary.data}
+        inviteNote={inviteNote}
         actions={
           <>
-            <Button variant="outline" onClick={() => setPanel('edit')}>
-              <Pencil aria-hidden /> Editar ficha
+            <Button asChild variant="outline">
+              <Link to={`/trainer/clients/${data.id}/edit`}>
+                <Pencil aria-hidden /> Editar ficha
+              </Link>
             </Button>
-            <Button variant="outline" onClick={() => setPanel('assessment')}>
-              <ClipboardList aria-hidden /> Avaliação inicial
+            <Button asChild variant="outline">
+              <Link to={`/trainer/clients/${data.id}/initial-assessment`}>
+                <ClipboardList aria-hidden /> Avaliação inicial
+              </Link>
             </Button>
             {canInvite && (
               <Button onClick={() => setConfirm('invite')}>
+                <Mail aria-hidden />{' '}
+                {inviteExpired ? 'Enviar outro convite' : 'Convidar para o portal'}
+              </Button>
+            )}
+            {inviteBlocked !== null && (
+              <Button disabled aria-describedby="invite-blocked">
                 <Mail aria-hidden /> Convidar para o portal
               </Button>
             )}
@@ -161,6 +202,19 @@ export function ClientDetailPage() {
               {data.is_active ? <Archive aria-hidden /> : <RotateCcw aria-hidden />}
               {data.is_active ? 'Arquivar' : 'Reativar'}
             </Button>
+            {inviteBlocked !== null && (
+              <p id="invite-blocked" className="text-muted-foreground w-full text-sm">
+                {inviteBlocked}{' '}
+                {data.is_active && (
+                  <Link
+                    to={`/trainer/clients/${data.id}/edit`}
+                    className="text-primary underline-offset-2 hover:underline"
+                  >
+                    Editar ficha
+                  </Link>
+                )}
+              </p>
+            )}
           </>
         }
       />
@@ -178,7 +232,7 @@ export function ClientDetailPage() {
           <TabsTrigger value="training">Treino</TabsTrigger>
           <TabsTrigger value="nutrition">Nutrição</TabsTrigger>
           <TabsTrigger value="supplements">Suplementos</TabsTrigger>
-          <TabsTrigger value="check-ins">Check-ins</TabsTrigger>
+          <TabsTrigger value="check-ins">Avaliações</TabsTrigger>
         </TabsList>
         <TabsContent value="summary">
           {summary.isPending ? (
@@ -220,39 +274,6 @@ export function ClientDetailPage() {
         </TabsContent>
       </Tabs>
 
-      <Sheet
-        open={panel !== null}
-        onOpenChange={(open) => {
-          if (!open) setPanel(null);
-        }}
-      >
-        <SheetContent className="w-full sm:max-w-130">
-          <SheetHeader>
-            <SheetTitle>{panel === 'edit' ? 'Editar ficha' : 'Avaliação inicial'}</SheetTitle>
-            <SheetDescription>{data.name}</SheetDescription>
-          </SheetHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto px-4">
-            {panel === 'edit' && <ClientForm client={data} onSaved={() => setPanel(null)} />}
-            {panel === 'assessment' &&
-              (assessment.isPending ? (
-                <Skeleton
-                  role="status"
-                  aria-label="A carregar avaliação…"
-                  className="h-64 w-full"
-                />
-              ) : assessment.isError ? (
-                <ErrorState error={assessment.error} onRetry={() => void assessment.refetch()} />
-              ) : (
-                <InitialAssessmentForm
-                  clientId={data.id}
-                  assessment={assessment.data}
-                  onSaved={() => setPanel(null)}
-                />
-              ))}
-          </div>
-        </SheetContent>
-      </Sheet>
-
       <ConfirmDialog
         open={confirm === 'invite'}
         onOpenChange={(open) => {
@@ -260,11 +281,12 @@ export function ClientDetailPage() {
         }}
         title="Convidar para o portal?"
         description={`Enviamos um convite para ${data.contact_email ?? ''}. O cliente cria a palavra-passe e passa a ver os planos no portal.`}
-        confirmLabel="Enviar convite"
+        confirmLabel={inviteExpired ? 'Enviar outro convite' : 'Enviar convite'}
         pendingLabel="A enviar…"
         pending={invite.isPending}
         onConfirm={() => void sendInvite()}
       />
+      <InviteSentDialog sent={sent} timeZone={timeZone} onClose={() => setSent(null)} />
       <ConfirmDialog
         open={confirm === 'activity'}
         onOpenChange={(open) => {
@@ -289,10 +311,12 @@ export function ClientDetailPage() {
 function ClientHeader({
   client,
   summary,
+  inviteNote,
   actions,
 }: {
   client: ClientDetails;
   summary: Summary | undefined;
+  inviteNote: string | null;
   actions: ReactNode;
 }) {
   const remaining = client.usable_packs.reduce((sum, pack) => sum + pack.sessions_remaining, 0);
@@ -309,13 +333,13 @@ function ClientHeader({
       <div className="flex min-w-0 items-center gap-4">
         <div
           aria-hidden
-          className="bg-muted font-display flex size-14 shrink-0 items-center justify-center rounded-full text-xl"
+          className="bg-muted flex size-14 shrink-0 items-center justify-center rounded-full text-xl font-semibold"
         >
           {initialsOf(client.name)}
         </div>
         <div className="min-w-0 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="font-display truncate text-3xl leading-none">{client.name}</h1>
+            <h1 className="font-display truncate py-1 text-3xl leading-tight">{client.name}</h1>
             <Badge variant={client.is_active ? 'secondary' : 'outline'}>
               {client.is_active ? 'Ativo' : 'Arquivado'}
             </Badge>
@@ -330,10 +354,103 @@ function ClientHeader({
             {client.user_id !== null && <Badge variant="outline">Com acesso ao portal</Badge>}
           </div>
           <p className="text-muted-foreground font-mono text-xs">{context.join(' · ')}</p>
+          {inviteNote !== null && <p className="text-muted-foreground text-xs">{inviteNote}</p>}
         </div>
       </div>
       <div className="flex flex-wrap gap-2">{actions}</div>
     </header>
+  );
+}
+
+/**
+ * Diálogo de convite enviado: email, validade no fuso do personal trainer e «Copiar link».
+ *
+ * O link vive só no estado desta página: ao fechar, `sent` volta a `null` e não se recupera
+ * (outro link pede-se com outro convite, que anula este). Se a área de transferência
+ * falhar, o link aparece num campo só de leitura para o personal trainer o copiar à mão.
+ */
+function InviteSentDialog({
+  sent,
+  timeZone,
+  onClose,
+}: {
+  sent: SentInvite | null;
+  timeZone: string | undefined;
+  onClose: () => void;
+}) {
+  const [copy, setCopy] = useState<'idle' | 'copied' | 'failed'>('idle');
+
+  async function copyLink() {
+    if (sent === null) return;
+    try {
+      await navigator.clipboard.writeText(sent.url);
+      setCopy('copied');
+    } catch {
+      setCopy('failed');
+    }
+  }
+
+  function close() {
+    setCopy('idle');
+    onClose();
+  }
+
+  return (
+    <Dialog
+      open={sent !== null}
+      onOpenChange={(open) => {
+        if (!open) close();
+      }}
+    >
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>
+            {sent?.emailSent === false ? 'Convite criado' : 'Convite enviado'}
+          </DialogTitle>
+          <DialogDescription>
+            {sent?.emailSent === false
+              ? `O email para ${sent.email} não saiu agora.`
+              : `Convite enviado para ${sent?.email ?? ''}.`}{' '}
+            {sent !== null && `Válido até ${formatInviteMoment(sent.expiresAt, timeZone)}`}
+          </DialogDescription>
+        </DialogHeader>
+        {sent?.emailSent === false ? (
+          <p role="alert" className="text-warning text-sm">
+            O convite está criado e o link funciona: copia-o e envia-o por outro canal (por exemplo,
+            WhatsApp). Depois de fechares este aviso o link não volta a aparecer.
+          </p>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            Podes também copiar o link e enviá-lo por outro canal. Depois de fechares este aviso o
+            link não volta a aparecer; para outro link, envia outro convite (anula este).
+          </p>
+        )}
+        {copy === 'failed' && sent !== null && (
+          <div className="space-y-2">
+            <p role="alert" className="text-destructive text-sm">
+              Não foi possível copiar o link. Copia-o daqui.
+            </p>
+            <Input
+              readOnly
+              aria-label="Link do convite"
+              value={sent.url}
+              onFocus={(event) => event.currentTarget.select()}
+            />
+          </div>
+        )}
+        <p role="status" aria-live="polite" className="sr-only">
+          {copy === 'copied' ? 'Link copiado para a área de transferência.' : ''}
+        </p>
+        <DialogFooter>
+          <Button variant="outline" onClick={close}>
+            Fechar
+          </Button>
+          <Button onClick={() => void copyLink()}>
+            <Copy aria-hidden /> {copy === 'copied' ? 'Copiado' : 'Copiar link'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -11,9 +12,11 @@ import { todayKey, tomorrowKey } from '@/features/check-ins/lib/dates';
 import { ClientCombobox, type ClientChoice } from '@/features/clients';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { FormField } from '@/shared/components/FormField';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard';
 
 type CheckIn = components['schemas']['CheckInResponse'];
 
@@ -30,13 +33,13 @@ function scheduleSchema(minimumDate: string, minimumMessage: string) {
       }),
       check_in_date: z
         .string()
-        .min(1, 'Indica o dia do check-in do cliente.')
+        .min(1, 'Indica o dia da avaliação.')
         .refine((value) => value >= minimumDate, minimumMessage),
       target_date: z.string(),
     })
     .refine((values) => values.target_date === '' || values.target_date >= values.check_in_date, {
       path: ['target_date'],
-      message: 'A data-alvo não pode ser anterior ao check-in.',
+      message: 'A data-alvo não pode ser anterior à avaliação.',
     });
 }
 
@@ -62,18 +65,21 @@ const CONFLICT_FIELDS: Readonly<Record<string, keyof ScheduleValues>> = {
 };
 
 /**
- * Formulário "Agendar check-in" (sem `checkIn`) ou "Reagendar" (com `checkIn`).
+ * Formulário "Agendar avaliação" (sem `checkIn`) ou "Reagendar" (com `checkIn`).
  *
  * - Agendar: cliente (fixo na tab do cliente), dia e data-alvo opcional (a data até à qual
- *   o cliente deve atingir o objetivo do check-in).
+ *   o cliente deve atingir o objetivo da avaliação).
  * - Reagendar: dia e data-alvo, pré-preenchidos.
  *
  * A data mínima usa o dia do browser; o servidor decide com o fuso do personal trainer e,
  * se discordar, a recusa aparece no campo do dia.
  *
- * @param client Cliente fixo (tab do cliente) ou `null` para o escolher.
- * @param checkIn Check-in a reagendar, ou `undefined` para agendar um novo.
- * @param onSaved Chamado depois de guardar.
+ * Sair com alterações por guardar pede confirmação; o guard só deixa de valer depois de
+ * `saved` estar a `true`, e é aí que `onSaved` navega.
+ *
+ * @param client Cliente fixo (aberto a partir da ficha) ou `null` para o escolher.
+ * @param checkIn Avaliação a reagendar, ou `undefined` para agendar uma nova.
+ * @param onSaved Chamado depois de guardar, já sem alterações por guardar.
  */
 export function ScheduleCheckInForm({
   client,
@@ -97,6 +103,11 @@ export function ScheduleCheckInForm({
     },
   });
   const errors = form.formState.errors;
+  const [saved, setSaved] = useState(false);
+  const blocker = useUnsavedChangesGuard(form.formState.isDirty && !saved);
+  useEffect(() => {
+    if (saved) onSaved();
+  }, [saved, onSaved]);
 
   // Datas `yyyy-MM-dd` comparam-se como texto: agendar aceita hoje, reagendar só amanhã.
   const schema =
@@ -118,22 +129,22 @@ export function ScheduleCheckInForm({
     const targetDate = values.target_date === '' ? null : values.target_date;
     try {
       if (checkIn === undefined) {
-        const saved = await create.mutateAsync({
+        const created = await create.mutateAsync({
           client_id: values.client!.id,
           check_in_date: values.check_in_date,
           target_date: targetDate,
         });
-        toast.success(`Check-in de ${saved.client_name} agendado.`);
+        toast.success(`Avaliação periódica de ${created.client_name} agendada.`);
       } else {
         await reschedule.mutateAsync({
           checkInId: checkIn.id,
           body: { check_in_date: values.check_in_date, target_date: targetDate },
         });
-        toast.success(`Check-in de ${checkIn.client_name} reagendado.`);
+        toast.success(`Avaliação periódica de ${checkIn.client_name} reagendada.`);
       }
-      onSaved();
+      setSaved(true);
     } catch (error) {
-      const fallback = 'Não foi possível guardar o check-in. Tenta novamente.';
+      const fallback = 'Não foi possível guardar a avaliação. Tenta novamente.';
       if (!isApiProblem(error)) {
         form.setError('root', { message: fallback });
         return;
@@ -183,7 +194,7 @@ export function ScheduleCheckInForm({
         </FormField>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label="Dia do check-in" error={errors.check_in_date?.message}>
+        <FormField label="Dia da avaliação" error={errors.check_in_date?.message}>
           {(control) => <Input {...control} type="date" {...form.register('check_in_date')} />}
         </FormField>
         <FormField label="Data-alvo (opcional)" error={errors.target_date?.message}>
@@ -200,6 +211,19 @@ export function ScheduleCheckInForm({
           {pending ? 'A guardar…' : checkIn === undefined ? 'Agendar' : 'Reagendar'}
         </Button>
       </div>
+      <ConfirmDialog
+        open={blocker.state === 'blocked'}
+        onOpenChange={(open) => {
+          if (!open) blocker.reset?.();
+        }}
+        title="Sair sem guardar?"
+        description="Os dados desta avaliação perdem-se."
+        confirmLabel="Sair sem guardar"
+        cancelLabel="Continuar a editar"
+        destructive
+        pending={false}
+        onConfirm={() => blocker.proceed?.()}
+      />
     </form>
   );
 }

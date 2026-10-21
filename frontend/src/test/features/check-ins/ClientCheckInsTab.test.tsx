@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import type * as Sonner from 'sonner';
@@ -41,8 +41,11 @@ describe('ClientCheckInsTab', () => {
     const queries = handlers();
     renderApp({ initialEntries: [ROUTE] });
 
-    expect(await screen.findByText('Agendado')).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Check-ins' })).toHaveAttribute('aria-selected', 'true');
+    expect(await screen.findByText('Agendada')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /Check-ins|Avaliações/ })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
     expect(queries[0]?.get('client_id')).toBe(CLIENT_ID);
     expect(screen.queryByRole('columnheader', { name: 'Cliente' })).not.toBeInTheDocument();
   });
@@ -59,13 +62,13 @@ describe('ClientCheckInsTab', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Agendar check-in' }));
-    const sheet = await screen.findByRole('dialog');
-    expect(within(sheet).queryByRole('combobox', { name: 'Cliente' })).not.toBeInTheDocument();
-    expect(within(sheet).getByText(/Com Marta Figueiredo/)).toBeInTheDocument();
-    await user.type(within(sheet).getByLabelText('Dia do check-in'), dayFromToday(0));
-    await user.type(within(sheet).getByLabelText('Data-alvo (opcional)'), dayFromToday(30));
-    await user.click(within(sheet).getByRole('button', { name: 'Agendar' }));
+    await user.click(await screen.findByRole('link', { name: 'Agendar avaliação' }));
+    await screen.findByRole('heading', { name: 'Agendar avaliação periódica' });
+    expect(screen.queryByRole('combobox', { name: 'Cliente' })).not.toBeInTheDocument();
+    expect(screen.getByText(/Com Marta Figueiredo/)).toBeInTheDocument();
+    await user.type(screen.getByLabelText('Dia da avaliação'), dayFromToday(0));
+    await user.type(screen.getByLabelText('Data-alvo (opcional)'), dayFromToday(30));
+    await user.click(screen.getByRole('button', { name: 'Agendar' }));
 
     await waitFor(() =>
       expect(body).toEqual({
@@ -86,13 +89,13 @@ describe('ClientCheckInsTab', () => {
     const user = userEvent.setup();
     renderApp({ initialEntries: [ROUTE] });
 
-    await user.click(await screen.findByRole('button', { name: 'Agendar check-in' }));
-    const sheet = await screen.findByRole('dialog');
-    await user.type(within(sheet).getByLabelText('Dia do check-in'), dayFromToday(0));
-    await user.click(within(sheet).getByRole('button', { name: 'Agendar' }));
+    await user.click(await screen.findByRole('link', { name: 'Agendar avaliação' }));
+    await screen.findByRole('heading', { name: 'Agendar avaliação periódica' });
+    await user.type(screen.getByLabelText('Dia da avaliação'), dayFromToday(0));
+    await user.click(screen.getByRole('button', { name: 'Agendar' }));
 
     expect(
-      await within(sheet).findByText('Reativa o cliente antes de agendar check-ins.')
+      await screen.findByText('Reativa o cliente antes de agendar avaliações.')
     ).toBeInTheDocument();
   });
 
@@ -100,7 +103,7 @@ describe('ClientCheckInsTab', () => {
     handlers(clientDetails({ is_active: false }));
     renderApp({ initialEntries: [ROUTE] });
 
-    await screen.findByText('Agendado');
-    expect(screen.queryByRole('button', { name: 'Agendar check-in' })).not.toBeInTheDocument();
+    await screen.findByText('Agendada');
+    expect(screen.queryByRole('link', { name: 'Agendar avaliação' })).not.toBeInTheDocument();
   });
 });

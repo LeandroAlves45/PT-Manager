@@ -47,7 +47,7 @@ const TRAINER_NAVIGATION: readonly NavigationGroup[] = [
       { label: 'Painel', route: '/trainer', icon: LayoutDashboard, exact: true },
       { label: 'Clientes', route: '/trainer/clients', icon: Users },
       { label: 'Sessões e packs', route: '/trainer/sessions', icon: CalendarDays },
-      { label: 'Check-ins', route: '/trainer/check-ins', icon: ClipboardCheck },
+      { label: 'Avaliações', route: '/trainer/check-ins', icon: ClipboardCheck },
     ],
   },
   {

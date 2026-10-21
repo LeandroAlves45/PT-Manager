@@ -1,6 +1,7 @@
 import { format, parseISO } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { CalendarPlus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router';
 
 import { DAY_PAGE_SIZE, useSessionListQuery } from '@/features/sessions/api/queries';
 import { SessionsTable } from '@/features/sessions/components/SessionsTable';
@@ -19,15 +20,16 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
  *
  * @param day Dia aberto ("yyyy-MM-dd"), controlado por quem chama para "Marcar sessão"
  *   pré-preencher o mesmo dia.
+ * @param newSessionPath Rota de «Marcar sessão» (a página `SessionEditorPage`), já com o dia.
  */
 export function DayAgenda({
   day,
   onDayChange,
-  onNewSession,
+  newSessionPath,
 }: {
   day: string;
   onDayChange: (day: string) => void;
-  onNewSession: () => void;
+  newSessionPath: string;
 }) {
   const range = dayRange(day);
   const query = useSessionListQuery({
@@ -97,7 +99,11 @@ export function DayAgenda({
           icon={CalendarPlus}
           title="Sem sessões neste dia"
           description="Marca uma sessão ou escolhe outro dia."
-          action={<Button onClick={onNewSession}>Marcar sessão</Button>}
+          action={
+            <Button asChild>
+              <Link to={newSessionPath}>Marcar sessão</Link>
+            </Button>
+          }
         />
       ) : (
         <SessionsTable sessions={items} showClient showDate={false} />

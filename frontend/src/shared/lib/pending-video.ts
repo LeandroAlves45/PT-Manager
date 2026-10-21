@@ -1,5 +1,5 @@
 /**
- * Vídeo escolhido em «Criar exercício», à espera de o exercício existir (RN-012).
+ * Vídeo escolhido em «Criar exercício», à espera de o exercício existir.
  *
  * O envio precisa do id do exercício, que só existe depois de o criar. A página de criação
  * deixa aqui o ficheiro e abre a edição; a edição lê-o e começa o envio. Fica só em memória,

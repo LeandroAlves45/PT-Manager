@@ -76,7 +76,11 @@ export function TrainerDashboardPage() {
     return (
       <section className="space-y-6">
         {header()}
-        <div role="status" aria-label="A carregar painel…" className="grid gap-4 lg:grid-cols-12">
+        <div
+          role="status"
+          aria-label="A carregar painel…"
+          className="grid grid-cols-1 gap-4 lg:grid-cols-12"
+        >
           {/* Classes completas: o Tailwind não gera `lg:col-span-${n}` construído em runtime. */}
           {SKELETON_SPANS.map((span, index) => (
             <Skeleton key={index} className={`h-48 ${span}`} />
@@ -109,19 +113,27 @@ export function TrainerDashboardPage() {
   const reviews = data.check_ins_pending_review;
   const oldest = [...reviews.items].sort((a, b) => a.responded_at.localeCompare(b.responded_at))[0];
   const plans = data.plans_expiring;
+  // U54: o destaque acompanha o que pede ação; a zero o cartão fica neutro.
+  const reviewsNeedAction = reviews.total_count > 0;
+  const packsNeedAction = data.packs_ending.total_count > 0;
+  const plansNeedAction = plans.total_count > 0;
 
   return (
     <section className="space-y-6">
       {header(data.local_today)}
-      <div className="grid gap-4 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         <BentoCard
-          title="Check-ins por rever"
+          title="Avaliações por rever"
           icon={ClipboardCheck}
-          highlight
+          highlight={reviewsNeedAction}
           className="lg:col-span-4"
           action={
-            <Button asChild className="min-h-11 md:min-h-9">
-              <Link to="/trainer/check-ins?status=unreviewed">Rever check-ins</Link>
+            <Button
+              asChild
+              variant={reviewsNeedAction ? 'default' : 'outline'}
+              className="min-h-11 md:min-h-9"
+            >
+              <Link to="/trainer/check-ins?status=unreviewed">Rever avaliações</Link>
             </Button>
           }
         >
@@ -149,9 +161,14 @@ export function TrainerDashboardPage() {
         <BentoCard
           title="Packs de sessões a terminar"
           icon={AlertTriangle}
+          highlight={packsNeedAction}
           className="lg:col-span-5"
           action={
-            <Button asChild variant="outline" className="min-h-11 w-full md:min-h-9">
+            <Button
+              asChild
+              variant={packsNeedAction ? 'default' : 'outline'}
+              className="min-h-11 w-full md:min-h-9"
+            >
               <Link to="/trainer/sessions?tab=packs">Renovar packs</Link>
             </Button>
           }
@@ -188,9 +205,14 @@ export function TrainerDashboardPage() {
         <BentoCard
           title="Planos a expirar"
           icon={CalendarRange}
+          highlight={plansNeedAction}
           className="lg:col-span-3"
           action={
-            <Button asChild variant="outline" className="min-h-11 w-full md:min-h-9">
+            <Button
+              asChild
+              variant={plansNeedAction ? 'default' : 'outline'}
+              className="min-h-11 w-full md:min-h-9"
+            >
               <Link to="/trainer/training-plans">Prolongar</Link>
             </Button>
           }
@@ -225,7 +247,7 @@ export function TrainerDashboardPage() {
                     <p className="text-muted-foreground text-xs">{withoutPlanLabel(client)}</p>
                   </div>
                   <Link
-                    to={`/trainer/training-plans?client_id=${client.client_id}`}
+                    to={`/trainer/training-plans/new?client_id=${client.client_id}`}
                     className="text-primary shrink-0 text-xs font-medium hover:underline"
                     aria-label={`Atribuir plano a ${client.client_name}`}
                   >
