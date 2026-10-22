@@ -1,20 +1,22 @@
 using Application.Features.ClientPortal.Dtos;
+using Application.Features.ClientPortal.ListMyWorkoutDays;
 
 namespace Api.Contracts.Portal;
 
-/// <summary>Registo de hoje de uma série, visto pelo cliente.</summary>
+/// <summary>Registo de uma série nesse dia, visto pelo cliente, com a nota que ele escreveu.</summary>
 public sealed record MyLoggedSetResponse(
     Guid LogId,
     decimal WeightKg,
     int RepsDone,
     decimal? Rpe,
-    DateTimeOffset PerformedAt)
+    DateTimeOffset PerformedAt,
+    string? Notes)
 {
     public static MyLoggedSetResponse From(MyWorkoutTodayDto.LoggedSetDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
         return new MyLoggedSetResponse(
-            dto.LogId, dto.WeightKg, dto.RepsDone, dto.Rpe, dto.PerformedAt);
+            dto.LogId, dto.WeightKg, dto.RepsDone, dto.Rpe, dto.PerformedAt, dto.Notes);
     }
 }
 
@@ -123,7 +125,10 @@ public sealed record MyNextWorkoutResponse(DateOnly Date, int WeekNumber, int Da
     }
 }
 
-/// <summary>Treino de hoje do cliente autenticado.</summary>
+/// <summary>
+/// Treino de um dia do cliente autenticado: hoje, para registar, ou um dia passado, só para
+/// ler. <c>completion_notes</c> é a nota escrita ao concluir.
+/// </summary>
 public sealed record MyWorkoutTodayResponse(
     DateOnly LocalDate,
     MyWorkoutTodayStatus Status,
@@ -134,6 +139,7 @@ public sealed record MyWorkoutTodayResponse(
     MyWorkoutDayResponse? Day,
     MyWorkoutProgressResponse Progress,
     DateTime? CompletedAt,
+    string? CompletionNotes,
     MyNextWorkoutResponse? NextWorkout)
 {
     public static MyWorkoutTodayResponse From(MyWorkoutTodayDto dto)
@@ -149,7 +155,27 @@ public sealed record MyWorkoutTodayResponse(
             dto.Day is null ? null : MyWorkoutDayResponse.From(dto.Day),
             MyWorkoutProgressResponse.From(dto.Progress),
             dto.CompletedAt,
+            dto.CompletionNotes,
             dto.NextWorkout is null ? null : MyNextWorkoutResponse.From(dto.NextWorkout));
     }
 }
 
+/// <summary>Dia passado com treino do plano ativo, para o filtro de dia do portal.</summary>
+public sealed record MyPastWorkoutDayResponse(DateOnly Date, int WeekNumber, int DayOfWeek)
+{
+    public static MyPastWorkoutDayResponse From(MyPastWorkoutDayDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+        return new MyPastWorkoutDayResponse(dto.Date, dto.WeekNumber, dto.DayOfWeek);
+    }
+}
+
+/// <summary>Dias passados com treino do plano ativo, do mais recente para o mais antigo.</summary>
+public sealed record MyPastWorkoutDaysResponse(IReadOnlyList<MyPastWorkoutDayResponse> Items)
+{
+    public static MyPastWorkoutDaysResponse From(IReadOnlyList<MyPastWorkoutDayDto> days)
+    {
+        ArgumentNullException.ThrowIfNull(days);
+        return new MyPastWorkoutDaysResponse(days.Select(MyPastWorkoutDayResponse.From).ToList());
+    }
+}

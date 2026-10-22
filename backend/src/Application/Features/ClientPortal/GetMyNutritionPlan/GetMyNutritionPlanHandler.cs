@@ -7,8 +7,9 @@ using Application.Results;
 namespace Application.Features.ClientPortal.GetMyNutritionPlan;
 
 /// <summary>
-/// Devolve o plano alimentar ativo do cliente autenticado. Cliente inexiste,
-/// arquivado ou sem plano devolvem o mesmo NotFound, sem revelar qual condição falhou.
+/// Devolve o plano alimentar que o cliente escolheu seguir. Sem escolha válida, distingue "há
+/// planos para escolher" de "não há nenhum plano": a app nunca escolhe por ele, mesmo que só
+/// haja um. Cliente inexistente ou arquivado cai no mesmo NotFound de "sem plano".
 /// </summary>
 public sealed class GetMyNutritionPlanHandler
 {
@@ -32,13 +33,20 @@ public sealed class GetMyNutritionPlanHandler
         if (!actor.IsSuccess)
             return Result<MyNutritionPlanDto>.Failure(actor.Error!);
 
-        var plan = await _queries.GetActiveAsync(
+        var plan = await _queries.GetSelectedAsync(
+            actor.Value.TrainerId,
+            actor.Value.UserId,
+            cancellationToken);
+        if (plan is not null)
+            return Result<MyNutritionPlanDto>.Success(plan);
+
+        var available = await _queries.ListActiveAsync(
             actor.Value.TrainerId,
             actor.Value.UserId,
             cancellationToken);
 
-        return plan is null
-            ? Result<MyNutritionPlanDto>.Failure(ClientPortalErrors.NutritionPlanNotAvailable)
-            : Result<MyNutritionPlanDto>.Success(plan);
+        return Result<MyNutritionPlanDto>.Failure(available.Count > 0
+            ? ClientPortalErrors.NutritionPlanNotSelected
+            : ClientPortalErrors.NutritionPlanNotAvailable);
     }
 }

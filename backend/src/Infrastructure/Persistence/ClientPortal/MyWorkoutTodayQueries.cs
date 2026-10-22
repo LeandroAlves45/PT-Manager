@@ -45,10 +45,11 @@ internal sealed class MyWorkoutTodayQueries : IMyWorkoutTodayQueries
                 log.WeightKg,
                 log.RepsDone,
                 log.Rpe,
-                log.PerformedAt))
+                log.PerformedAt,
+                log.Notes))
             .ToListAsync(cancellationToken);
 
-    public async Task<DateTime?> GetMyCompletionAsync(
+    public async Task<MyWorkoutCompletionRow?> GetMyCompletionAsync(
         Guid trainerId,
         Guid clientUserId,
         Guid trainingPlanDayId,
@@ -65,6 +66,8 @@ internal sealed class MyWorkoutTodayQueries : IMyWorkoutTodayQueries
                 client.OwnerTrainerId == trainerId &&
                 client.UserId == clientUserId &&
                 client.IsActive))
-            .Select(completion => (DateTime?)completion.CompletedAt)
+            .Select(completion => new MyWorkoutCompletionRow(
+                completion.CompletedAt,
+                completion.Notes))
             .FirstOrDefaultAsync(cancellationToken);
 }

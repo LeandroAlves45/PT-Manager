@@ -5,6 +5,5 @@ public enum UpdateMyProfileStatus
 {
     Updated,
     NotFound,
-    DuplicateEmail,
     DuplicatePhone
 }

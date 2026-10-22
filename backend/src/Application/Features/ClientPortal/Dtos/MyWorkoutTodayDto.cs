@@ -9,8 +9,8 @@ public enum MyWorkoutTodayStatus
 }
 
 /// <summary>
-/// Treino de hoje do cliente autenticado, Sem client_id nem campos internos: o portal
-/// só devolve o que o próprio cliente precisa de ver.
+/// Treino de um dia do cliente autenticado (hoje ou um dia passado, só para ler). Sem
+/// client_id nem campos internos: o portal só devolve o que o próprio cliente precisa de ver.
 /// </summary>
 public sealed record MyWorkoutTodayDto(
     DateOnly LocalDate,
@@ -22,6 +22,7 @@ public sealed record MyWorkoutTodayDto(
     MyWorkoutTodayDto.DayDto? Day,
     MyWorkoutTodayDto.ProgressDto Progress,
     DateTime? CompletedAt,
+    string? CompletionNotes,
     MyWorkoutTodayDto.NextWorkoutDto? NextWorkout)
 {
     /// <summary>Dia de treino com a prescrição e o que já foi registado.</summary>
@@ -59,13 +60,14 @@ public sealed record MyWorkoutTodayDto(
         decimal? PlannedRpe,
         LoggedSetDto? Logged);
 
-    /// <summary>Registo de hoje de uma série.</summary>
+    /// <summary>Registo de uma série nesse dia, com a nota do cliente.</summary>
     public sealed record LoggedSetDto(
         Guid LogId,
         decimal WeightKg,
         int RepsDone,
         decimal? Rpe,
-        DateTimeOffset PerformedAt);
+        DateTimeOffset PerformedAt,
+        string? Notes);
 
     /// <summary>Progresso do dia, em séries e em exercícios.</summary>
     public sealed record ProgressDto(

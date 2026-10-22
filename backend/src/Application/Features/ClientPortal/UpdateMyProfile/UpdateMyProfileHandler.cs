@@ -8,7 +8,7 @@ using FluentValidation;
 
 namespace Application.Features.ClientPortal.UpdateMyProfile;
 
-/// <summary>Atualiza os campos de contato do cliente autenticado.</summary>
+/// <summary>Atualiza o nome e os contactos do cliente autenticado.</summary>
 public sealed class UpdateMyProfileHandler
 {
     private readonly ITenantContext _tenantContext;
@@ -48,20 +48,18 @@ public sealed class UpdateMyProfileHandler
             actor.Value.TrainerId,
             actor.Value.UserId,
             new UpdateMyProfileWriteModel(
-                command.ContactEmail,
+                command.Name,
                 command.Phone,
                 command.EmergencyContactName,
                 command.EmergencyContactPhone),
             _clock.UtcNow,
             cancellationToken);
 
-        // As duas colisões são unicidades reais de tenant: sem este ramo sairiam como 500.
+        // O telefone é único dentro do tenant: sem este ramo a colisão sairia como 500.
         return outcome.Status switch
         {
             UpdateMyProfileStatus.Updated =>
                 Result<MyProfileDto>.Success(outcome.Profile!),
-            UpdateMyProfileStatus.DuplicateEmail =>
-                Result<MyProfileDto>.Failure(ClientPortalErrors.ProfileEmailAlreadyExists),
             UpdateMyProfileStatus.DuplicatePhone =>
                 Result<MyProfileDto>.Failure(ClientPortalErrors.ProfilePhoneAlreadyExists),
             _ => Result<MyProfileDto>.Failure(ClientPortalErrors.ProfileNotAvailable)

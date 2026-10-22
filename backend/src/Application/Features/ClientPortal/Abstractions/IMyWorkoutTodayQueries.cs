@@ -8,7 +8,11 @@ public sealed record MyTodaySetLogRow(
     decimal WeightKg,
     int RepsDone,
     decimal? Rpe,
-    DateTimeOffset PerformedAt);
+    DateTimeOffset PerformedAt,
+    string? Notes);
+
+/// <summary>Conclusão de um dia de treino, com a nota que o cliente escreveu ao concluir.</summary>
+public sealed record MyWorkoutCompletionRow(DateTime CompletedAt, string? Notes);
 
 /// <summary>Leitura do treino de hoje do cliente autenticado.</summary>
 public interface IMyWorkoutTodayQueries
@@ -25,7 +29,8 @@ public interface IMyWorkoutTodayQueries
         DateTimeOffset toUtc,
         CancellationToken cancellationToken);
 
-    Task<DateTime?> GetMyCompletionAsync(
+    /// <summary>Conclusão do dia indicado, se existir.</summary>
+    Task<MyWorkoutCompletionRow?> GetMyCompletionAsync(
         Guid trainerId,
         Guid clientUserId,
         Guid trainingPlanDayId,

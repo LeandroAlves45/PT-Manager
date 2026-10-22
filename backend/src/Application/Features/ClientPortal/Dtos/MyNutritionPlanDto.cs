@@ -11,6 +11,7 @@ public sealed record MyNutritionPlanDto(
     decimal ProteinTargetGrams,
     decimal CarbsTargetGrams,
     decimal FatsTargetGrams,
+    string? GoalType,
     MyNutritionPlanDto.TotalsDto ActualTotals,
     IReadOnlyList<MyNutritionPlanDto.MealDto> Meals,
     DateTime UpdatedAt)

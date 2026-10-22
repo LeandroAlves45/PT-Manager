@@ -55,11 +55,15 @@ public sealed record MyHomeSupplementsResponse(int TakenCount, int TotalCount)
     }
 }
 
-/// <summary>Home do portal do cliente.</summary>
+/// <summary>
+/// Home do portal do cliente. <c>nutrition</c> é o plano escolhido; sem escolha vem null e
+/// <c>active_meal_plan_count</c> diz se há planos para escolher.
+/// </summary>
 public sealed record MyPortalHomeResponse(
     DateOnly LocalDate,
     MyHomeWorkoutResponse? Workout,
     MyHomeNutritionResponse? Nutrition,
+    int ActiveMealPlanCount,
     MyHomeSupplementsResponse Supplements,
     MyNextCheckInResponse? NextCheckIn)
 {
@@ -71,6 +75,7 @@ public sealed record MyPortalHomeResponse(
             dto.LocalDate,
             dto.Workout is null ? null : MyHomeWorkoutResponse.From(dto.Workout),
             dto.Nutrition is null ? null : MyHomeNutritionResponse.From(dto.Nutrition),
+            dto.ActiveMealPlanCount,
             MyHomeSupplementsResponse.From(dto.Supplements),
             dto.NextCheckIn is null
                 ? null

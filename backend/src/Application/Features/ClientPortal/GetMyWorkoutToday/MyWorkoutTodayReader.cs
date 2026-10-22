@@ -21,7 +21,8 @@ public sealed class MyWorkoutTodayReader
     }
 
     /// <summary>
-    /// Devolve o treino de hoje ou null quando o cliente não tem plano ativo visível.
+    /// Devolve o treino do dia local indicado ou null quando o cliente não tem plano ativo
+    /// visível. Serve o dia de hoje e os dias passados que o cliente abre só para ler.
     /// </summary>
     public async Task<MyWorkoutTodayDto?> ReadAsync(
         Guid trainerId,
@@ -49,6 +50,7 @@ public sealed class MyWorkoutTodayReader
                 null,
                 EmptyProgress,
                 null,
+                null,
                 NextWorkout(plan, cycleLength, localDate));
 
         var day = plan.Days.FirstOrDefault(item =>
@@ -65,6 +67,7 @@ public sealed class MyWorkoutTodayReader
                 null,
                 EmptyProgress,
                 null,
+                null,
                 NextWorkout(plan, cycleLength, localDate));
 
         var logs = await _queries.ListMyLogsAsync(
@@ -75,7 +78,7 @@ public sealed class MyWorkoutTodayReader
             dayRangeEndUtc,
             cancellationToken);
 
-        var completedAt = await _queries.GetMyCompletionAsync(
+        var completion = await _queries.GetMyCompletionAsync(
             trainerId,
             clientUserId,
             day.Id,
@@ -113,7 +116,8 @@ public sealed class MyWorkoutTodayReader
                                     log.WeightKg,
                                     log.RepsDone,
                                     log.Rpe,
-                                    log.PerformedAt));
+                                    log.PerformedAt,
+                                    log.Notes));
                     })
                     .ToList();
 
@@ -147,7 +151,8 @@ public sealed class MyWorkoutTodayReader
             slot.Value.DayOfWeek,
             new MyWorkoutTodayDto.DayDto(day.Id, day.Notes, exercises),
             progress,
-            completedAt,
+            completion?.CompletedAt,
+            completion?.Notes,
             null);
     }
 

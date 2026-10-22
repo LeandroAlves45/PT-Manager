@@ -991,6 +991,10 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("character varying(32)")
                         .HasColumnName("phone");
 
+                    b.Property<Guid?>("SelectedMealPlanId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("selected_meal_plan_id");
+
                     b.Property<string>("Sex")
                         .IsRequired()
                         .HasMaxLength(6)
@@ -1011,6 +1015,10 @@ namespace Infrastructure.Data.Migrations
 
                     b.HasIndex("OwnerTrainerId")
                         .HasDatabaseName("idx_clients_owner_trainer");
+
+                    b.HasIndex("SelectedMealPlanId")
+                        .HasDatabaseName("idx_clients_selected_meal_plan")
+                        .HasFilter("selected_meal_plan_id IS NOT NULL");
 
                     b.HasIndex("UserId")
                         .IsUnique()
@@ -3524,6 +3532,12 @@ namespace Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_clients_owner_trainer");
+
+                    b.HasOne("Domain.Entities.Nutrition.MealPlan", null)
+                        .WithMany()
+                        .HasForeignKey("SelectedMealPlanId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_clients_selected_meal_plan");
 
                     b.HasOne("Domain.Entities.Identity.User", null)
                         .WithMany()

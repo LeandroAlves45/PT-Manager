@@ -13,9 +13,6 @@ public sealed record UpdateMyProfileOutcome(
     public static readonly UpdateMyProfileOutcome NotFound =
         new(UpdateMyProfileStatus.NotFound, null);
 
-    public static readonly UpdateMyProfileOutcome DuplicateEmail =
-        new(UpdateMyProfileStatus.DuplicateEmail, null);
-
     public static readonly UpdateMyProfileOutcome DuplicatePhone =
         new(UpdateMyProfileStatus.DuplicatePhone, null);
 }

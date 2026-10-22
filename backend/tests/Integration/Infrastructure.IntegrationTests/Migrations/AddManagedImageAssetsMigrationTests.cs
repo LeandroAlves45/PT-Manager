@@ -132,20 +132,35 @@ public sealed class AddManagedImageAssetsMigrationTests : IAsyncLifetime
     {
         var trainer = CreateUser("trainer", Guid.NewGuid());
         var clientUser = CreateUser("client", Guid.NewGuid());
-        var client = new Client(
-            trainer.Id, "Migration Client", clientUser.Email, "+351911111111",
-            BirthDate.Create(new DateOnly(1990, 1, 1), DateOnly.FromDateTime(Now)),
-            BiologicalSex.Female, null, null, null, null, Now);
-        client.AttachUser(clientUser.Id, Now);
-        if (avatar)
-            client.ReplaceAvatar("https://res.cloudinary.com/demo/a.webp", "pt-manager/trainers/t/avatars/a", Now);
 
         await using var context = _fixture.CreateContext();
         context.Users.AddRange(trainer, clientUser);
-        context.Clients.Add(client);
         context.TrainerSettings.Add(new TrainerSettingsEntity(trainer.Id, Now));
         await context.SaveChangesAsync(cancellationToken);
-        return client.Id;
+
+        // A ficha entra por SQL e só com as colunas que existem neste ponto da história: o
+        // modelo EF atual tem colunas de migrations posteriores que esta base ainda não tem.
+        var clientId = Guid.NewGuid();
+        await _fixture.ExecuteSqlAsync(
+            """
+            INSERT INTO clients (
+                id, owner_trainer_id, user_id, name, contact_email, normalized_contact_email,
+                phone, date_of_birth, sex, avatar_url, avatar_public_id,
+                is_active, is_deleted, created_at, updated_at)
+            VALUES (
+                @id, @trainer, @user, 'Migration Client', @email, @email,
+                '+351911111111', DATE '1990-01-01', 'female', @avatarUrl, @avatarPublicId,
+                true, false, @now, @now)
+            """,
+            cancellationToken,
+            new NpgsqlParameter("id", clientId),
+            new NpgsqlParameter("trainer", trainer.Id),
+            new NpgsqlParameter("user", clientUser.Id),
+            new NpgsqlParameter("email", clientUser.Email),
+            new NpgsqlParameter("avatarUrl", avatar ? "https://res.cloudinary.com/demo/a.webp" : DBNull.Value),
+            new NpgsqlParameter("avatarPublicId", avatar ? "pt-manager/trainers/t/avatars/a" : DBNull.Value),
+            new NpgsqlParameter("now", Now));
+        return clientId;
     }
 
     private static User CreateUser(string role, Guid discriminator)

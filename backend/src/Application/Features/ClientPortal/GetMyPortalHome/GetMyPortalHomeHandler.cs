@@ -79,7 +79,8 @@ public sealed class GetMyPortalHomeHandler
             range.StartUtc,
             range.EndUtc,
             cancellationToken);
-        var nutrition = await _nutritionQueries.GetActiveAsync(trainerId, userId, cancellationToken);
+        var nutrition = await _nutritionQueries.GetSelectedAsync(trainerId, userId, cancellationToken);
+        var mealPlans = await _nutritionQueries.ListActiveAsync(trainerId, userId, cancellationToken);
         var nextCheckIn = await _checkInQueries.GetMyNextAsync(
             trainerId,
             userId,
@@ -107,6 +108,7 @@ public sealed class GetMyPortalHomeHandler
                     nutrition.Name,
                     nutrition.TargetKcal,
                     nutrition.Meals.Count),
+            mealPlans.Count,
             new MyPortalHomeDto.SupplementsCardDto(intakes.TakenCount, intakes.TotalCount),
             nextCheckIn is null
                 ? null

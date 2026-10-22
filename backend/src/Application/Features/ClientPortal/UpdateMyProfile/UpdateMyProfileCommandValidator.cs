@@ -1,5 +1,4 @@
 using Application.Validation;
-using Domain.ValueObjects;
 using FluentValidation;
 
 namespace Application.Features.ClientPortal.UpdateMyProfile;
@@ -9,14 +8,15 @@ public sealed class UpdateMyProfileCommandValidator : AbstractValidator<UpdateMy
 {
     public UpdateMyProfileCommandValidator()
     {
-        RuleFor(command => command.ContactEmail)
+        RuleFor(command => command.Name)
             .Cascade(CascadeMode.Stop)
-            .MaximumLength(255)
-            .WithErrorCode("client_email_too_long")
-            .Must(EmailAddress.IsValid)
-            .WithErrorCode("client_email_invalid")
-            .WithoutNullCharacter()
-            .When(command => !string.IsNullOrWhiteSpace(command.ContactEmail));
+            .NotEmpty()
+            .WithErrorCode("client_name_invalid")
+            .WithMessage("Client name must contain between 1 and 255 characters.")
+            .Must(name => name.Trim().Length <= 255)
+            .WithErrorCode("client_name_invalid")
+            .WithMessage("Client name must contain between 1 and 255 characters.")
+            .WithoutNullCharacter();
 
         RuleFor(command => command.Phone)
             .Cascade(CascadeMode.Stop)

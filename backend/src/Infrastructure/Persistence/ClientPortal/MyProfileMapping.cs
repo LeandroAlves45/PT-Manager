@@ -12,7 +12,6 @@ internal static class MyProfileMapping
 
         return new MyProfileDto(
             client.Name,
-            client.ContactEmail,
             client.Phone,
             client.BirthDate.Value,
             client.Sex.Value,

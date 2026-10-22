@@ -24,18 +24,6 @@ public sealed class ContactEmailValidationTests
 
     [Theory]
     [MemberData(nameof(EmailsRejectedByTheDomain))]
-    public void UpdateMyProfile_EmailRejectedByDomain_ReturnsStableCode(string email)
-    {
-        var command = new UpdateMyProfileCommand(email, "+351911111111", null, null);
-
-        var result = new UpdateMyProfileCommandValidator().Validate(command);
-
-        Assert.Contains(result.Errors, error =>
-            error.PropertyName == "ContactEmail" && error.ErrorCode == "client_email_invalid");
-    }
-
-    [Theory]
-    [MemberData(nameof(EmailsRejectedByTheDomain))]
     public void CreateClient_EmailRejectedByDomain_ReturnsStableCode(string email)
     {
         var command = ClientTestData.CreateValidCommand() with { ContactEmail = email };
@@ -61,29 +49,52 @@ public sealed class ContactEmailValidationTests
             error.PropertyName == "ContactEmail" && error.ErrorCode == "client_email_invalid");
     }
 
+    // O perfil do portal já não recebe email: o cliente muda o nome e os contactos, nunca o
+    // email da ficha.
     [Theory]
-    [InlineData("joao@ptmanager.local")]
-    [InlineData("  joao@ptmanager.local  ")]
-    [InlineData(null)]
-    [InlineData("   ")]
-    public void UpdateMyProfile_AcceptedOrEmptyEmail_Passes(string? email)
+    [InlineData("Joana Silva")]
+    [InlineData("  Joana  ")]
+    public void UpdateMyProfile_ValidName_Passes(string name)
     {
-        var command = new UpdateMyProfileCommand(email, "+351911111111", null, null);
+        var command = new UpdateMyProfileCommand(name, "+351911111111", null, null);
 
         var result = new UpdateMyProfileCommandValidator().Validate(command);
 
         Assert.True(result.IsValid);
     }
 
-    [Fact]
-    public void UpdateMyProfile_EmailLongerThanLimit_KeepsTheLengthCode()
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void UpdateMyProfile_EmptyName_IsRejected(string name)
     {
-        var email = new string('a', 251) + "@c.pt";
-        var command = new UpdateMyProfileCommand(email, "+351911111111", null, null);
+        var command = new UpdateMyProfileCommand(name, "+351911111111", null, null);
 
         var result = new UpdateMyProfileCommandValidator().Validate(command);
 
         var error = Assert.Single(result.Errors);
-        Assert.Equal("client_email_too_long", error.ErrorCode);
+        Assert.Equal("client_name_invalid", error.ErrorCode);
+    }
+
+    [Fact]
+    public void UpdateMyProfile_NameLongerThanLimit_IsRejected()
+    {
+        var command = new UpdateMyProfileCommand(new string('a', 256), "+351911111111", null, null);
+
+        var result = new UpdateMyProfileCommandValidator().Validate(command);
+
+        var error = Assert.Single(result.Errors);
+        Assert.Equal("client_name_invalid", error.ErrorCode);
+    }
+
+    [Fact]
+    public void UpdateMyProfile_NameWithNullCharacter_IsRejected()
+    {
+        var command = new UpdateMyProfileCommand("Ana\u0000", "+351911111111", null, null);
+
+        var result = new UpdateMyProfileCommandValidator().Validate(command);
+
+        var error = Assert.Single(result.Errors);
+        Assert.Equal("text_invalid_character", error.ErrorCode);
     }
 }

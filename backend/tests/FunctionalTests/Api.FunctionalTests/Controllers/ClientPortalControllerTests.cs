@@ -78,7 +78,7 @@ public sealed class ClientPortalControllerTests
     }
 
     [Fact]
-    public async Task PatchMyProfile_WithClientToken_UpdatesContactFields()
+    public async Task PatchMyProfile_WithClientToken_UpdatesNameAndContacts()
     {
         var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(
             _fixture.Factory, Token);
@@ -88,7 +88,7 @@ public sealed class ClientPortalControllerTests
             client,
             "/api/v1/portal/my-profile",
             new UpdateMyProfileRequest(
-                "updated.contact@example.test",
+                "  Joana Portal  ",
                 "+351911111111",
                 "New contact",
                 "+351922222222"),
@@ -97,11 +97,41 @@ public sealed class ClientPortalControllerTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var body = await ReadJsonAsync(response);
-        Assert.Equal("updated.contact@example.test", body.GetProperty("contact_email").GetString());
+        Assert.Equal("Joana Portal", body.GetProperty("name").GetString());
+        Assert.Equal("New contact", body.GetProperty("emergency_contact_name").GetString());
+        // O perfil do portal não mostra email nenhum.
+        Assert.False(body.TryGetProperty("contact_email", out _));
     }
 
     [Fact]
-    public async Task PatchMyProfile_IgnoresNameBirthDateAndSex()
+    public async Task PatchMyProfile_EmailInPayload_LeavesRecordEmailUntouched()
+    {
+        var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(
+            _fixture.Factory, Token);
+        var client = ClientPortalClient(trainerId, clientUserId);
+        var trainer = _fixture.Factory.CreateOriginClient()
+            .WithBearer(TestJwtFactory.IssueTrainer(trainerId));
+        var before = await TrainerViewOfClientEmailAsync(trainer, trainerId, clientUserId);
+
+        var payload = """
+            {
+              "name": "Portal client",
+              "contact_email": "tampered@example.test",
+              "phone": "+351933333334"
+            }
+            """;
+        using var content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+        var response = await client.PatchAsync("/api/v1/portal/my-profile", content, Token);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var after = await TrainerViewOfClientEmailAsync(trainer, trainerId, clientUserId);
+        Assert.Equal(before, after);
+        Assert.NotEqual("tampered@example.test", after);
+    }
+
+    [Fact]
+    public async Task PatchMyProfile_IgnoresBirthDateAndSex()
     {
         var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(
             _fixture.Factory, Token);
@@ -109,7 +139,7 @@ public sealed class ClientPortalControllerTests
 
         var payload = """
             {
-              "name": "Tampered name",
+              "name": "Portal client",
               "birth_date": "2000-01-01",
               "sex": "male",
               "phone": "+351933333333"
@@ -303,6 +333,19 @@ public sealed class ClientPortalControllerTests
         Assert.True(
             scope.Count <= 2,
             $"Query budget exceeded: {scope.Count} commands. {string.Join(" | ", scope.Commands)}");
+    }
+
+    private async Task<string?> TrainerViewOfClientEmailAsync(
+        HttpClient trainer,
+        Guid trainerId,
+        Guid clientUserId)
+    {
+        var clientId = await PortalTestData.GetClientIdAsync(
+            _fixture.Factory, trainerId, clientUserId, Token);
+        var response = await trainer.GetAsync($"/api/v1/clients/{clientId}", Token);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await ReadJsonAsync(response);
+        return body.GetProperty("contact_email").GetString();
     }
 
     private HttpClient ClientPortalClient(Guid trainerId, Guid clientUserId) =>

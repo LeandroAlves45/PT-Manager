@@ -12,12 +12,37 @@ public interface IMyTrainingPlanQueries
     );
 }
 
-/// <summary>Resolve o plano alimentar ativo do cliente autenticado.</summary>
+/// <summary>Lê os planos alimentares do cliente autenticado e o que ele escolheu seguir.</summary>
 public interface IMyNutritionPlanQueries
 {
-    Task<MyNutritionPlanDto?> GetActiveAsync(
+    /// <summary>
+    /// Plano que o cliente escolheu, se ainda estiver ativo. Uma escolha de um plano arquivado
+    /// conta como nenhuma: a app nunca abre outro plano sozinha.
+    /// </summary>
+    Task<MyNutritionPlanDto?> GetSelectedAsync(
         Guid trainerId,
         Guid clientUserId,
+        CancellationToken cancellationToken
+    );
+
+    /// <summary>Planos ativos do cliente, do mais recente para o mais antigo.</summary>
+    Task<IReadOnlyList<MyMealPlanSummaryDto>> ListActiveAsync(
+        Guid trainerId,
+        Guid clientUserId,
+        CancellationToken cancellationToken
+    );
+}
+
+/// <summary>Grava o plano alimentar que o cliente escolheu seguir.</summary>
+public interface IMyMealPlanSelectionStore
+{
+    /// <summary>
+    /// Escolhe o plano se for do próprio cliente e estiver ativo. Devolve false quando não é.
+    /// </summary>
+    Task<bool> SelectAsync(
+        Guid trainerId,
+        Guid clientUserId,
+        Guid mealPlanId,
         CancellationToken cancellationToken
     );
 }

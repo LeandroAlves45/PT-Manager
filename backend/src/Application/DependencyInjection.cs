@@ -180,6 +180,11 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.ClientPortal.GetMyWorkoutToday.MyWorkoutTodayReader>();
         services.AddScoped<Application.Features.ClientPortal
             .GetMyWorkoutToday.GetMyWorkoutTodayHandler>();
+        services.AddScoped<Application.Features.ClientPortal.GetMyWorkoutDay.GetMyWorkoutDayHandler>();
+        services.AddScoped<Application.Features.ClientPortal.ListMyMealPlans.ListMyMealPlansHandler>();
+        services.AddScoped<Application.Features.ClientPortal.SelectMyMealPlan.SelectMyMealPlanHandler>();
+        services.AddScoped<Application.Features.ClientPortal
+            .ListMyWorkoutDays.ListMyWorkoutDaysHandler>();
         services.AddScoped<Application.Features.ClientPortal.GetMyPortalHome.GetMyPortalHomeHandler>();
 
         // Validators
