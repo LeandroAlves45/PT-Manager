@@ -1,4 +1,4 @@
-# TODO: Sprint 6GB · fase do Cliente (6GB-CL)
+# TODO: Sprint 6GB · fase do Cliente (6GB-CL) — **Finalizado** (2026-10-22)
 
 Plano aprovado a 2026-10-22 em `~/.claude/plans/dapper-swimming-dove.md`. Decisões U68–U83.
 Branch `feat/6gb-client`, base `8a65094` (main). Resumo em
@@ -42,16 +42,16 @@ Branch `feat/6gb-client`, base `8a65094` (main). Resumo em
 - [x] Browser: arnês MSW (375/1440, claro e escuro) + app real no Chrome (Marta e João)
 - [x] Gates `QG6F4-ISOLAMENTO-UI-001` e `QG6F-GATE-001` passam; `QG6F4-UI-001` e `QG6F4-AVATAR-001` ficam com o Leandro
 - [x] `code-review-leandro` (0 altas, 3 médias corrigidas), `security-reviewer` (sem achados)
-- [ ] `design-is`
+- [x] `design-is` 21/30 REFINE (o `h1` em falta nos estados de exceção foi corrigido em `44e70cb`)
 
 ## 5. Fecho (CL-4)
 - [x] Relatório `05_relatorio_fecho_6GB_cliente.md`
 - [x] `docs_about_app` atualizado (anunciado antes)
 - [x] `sprint_6G/00` §4.3, `QG6GB-LISTA-001`, `QG6GB-GATE-001`
 - [x] Gotchas e lições
-- [ ] Graphify regenerado (fecho do Sprint 6)
-- [ ] Memória: `ACTIVE.md`, `Sessions/`, `MEMORY.md`
-- [ ] Commit da documentação; apagar `SPEC.md`; checklist «Finalizado»
+- [x] Graphify regenerado (15 535 nós, `bc7fb28`)
+- [x] Memória: `ACTIVE.md`, `Sessions/`, `MEMORY.md`
+- [x] Commit da documentação; `SPEC.md` apagado; checklist «Finalizado»
 
 ## Review
 - Entregue: U68–U83 (portal por secções e cores, escolha do plano alimentar, filtro de dia, perfil
