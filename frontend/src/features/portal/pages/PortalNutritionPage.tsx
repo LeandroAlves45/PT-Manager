@@ -1,5 +1,5 @@
 import { UtensilsCrossed } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 
 import { usePortalMealPlansQuery, usePortalNutritionQuery } from '@/features/portal/api/portal';
@@ -28,15 +28,27 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 export function PortalNutritionPage() {
   const query = usePortalNutritionQuery();
   const plansQuery = usePortalMealPlansQuery();
-  // Escolher na lista desta página troca a lista pelo plano: o foco vai para o título do plano,
-  // para o leitor de ecrã e o teclado não ficarem num botão que deixou de existir.
-  const [justChose, setJustChose] = useState(false);
-  const titleRef = useRef<HTMLHeadingElement>(null);
+  const choosing =
+    isApiProblem(query.error) && query.error.code === 'portal_nutrition_plan_not_selected';
   const planId = query.data?.id;
 
+  // Escolher na lista desta página troca a lista pelo plano: o foco vai para o título do plano,
+  // para o leitor de ecrã e o teclado não ficarem num botão que deixou de existir. A página
+  // lembra-se de que estava a mostrar a lista em vez de esperar pelo `onSuccess` da escolha,
+  // que não corre quando a lista já desmontou com a chegada do plano.
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const wasChoosing = useRef(false);
+
   useEffect(() => {
-    if (justChose && planId !== undefined) titleRef.current?.focus();
-  }, [justChose, planId]);
+    if (choosing) {
+      wasChoosing.current = true;
+      return;
+    }
+    if (wasChoosing.current && planId !== undefined) {
+      wasChoosing.current = false;
+      titleRef.current?.focus();
+    }
+  }, [choosing, planId]);
 
   if (query.isPending)
     return (
@@ -68,7 +80,7 @@ export function PortalNutritionPage() {
     );
 
   // Também vale com dados em cache: o plano escolhido foi arquivado e a escolha caiu.
-  if (isApiProblem(query.error) && query.error.code === 'portal_nutrition_plan_not_selected')
+  if (choosing)
     return (
       <section className="space-y-4">
         <header className="space-y-1">
@@ -77,7 +89,7 @@ export function PortalNutritionPage() {
             Escolhe o plano alimentar que queres seguir. Podes trocar quando quiseres.
           </p>
         </header>
-        <PlanChoice onSelected={() => setJustChose(true)} />
+        <PlanChoice />
       </section>
     );
 
@@ -137,7 +149,7 @@ export function PortalNutritionPage() {
  * Lista para escolher o plano quando o cliente ainda não tem nenhum escolhido. Escolher grava
  * e o `GET /portal/my-nutrition`, invalidado pela gravação, passa a mostrar o plano.
  */
-function PlanChoice({ onSelected }: { onSelected: () => void }) {
+function PlanChoice() {
   const plansQuery = usePortalMealPlansQuery();
 
   if (plansQuery.isPending)
@@ -164,5 +176,5 @@ function PlanChoice({ onSelected }: { onSelected: () => void }) {
       />
     );
 
-  return <MealPlanList plans={plansQuery.data.items} onSelected={onSelected} />;
+  return <MealPlanList plans={plansQuery.data.items} />;
 }
