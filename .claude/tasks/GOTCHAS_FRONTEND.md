@@ -396,3 +396,24 @@ com um corpo real.
   porque só corri a suite do `frontend/`. **Regra:** mudar tokens em
   `frontend/src/shared/styles/globals.css` → copiar para `site/src/styles/globals.css` e correr
   `npm run test:run` também no `site/` antes do push.
+
+## 2026-10-22 — 6GB-CL: callback do `mutate` num componente que desmonta, regex com bytes de controlo, Vitest que «passa» sem correr ficheiros
+
+- O `onSuccess` passado a `mutation.mutate(vars, { onSuccess })` **não corre** se o componente que o
+  chamou desmontou entretanto. A lista de planos desmontava mal o `my-nutrition` invalidado chegava,
+  e o foco no título nunca acontecia. No jsdom o teste passava por timing; no Chrome falhava.
+  **Regra:** efeitos que dependem de a escrita ter terminado vivem no componente que fica montado
+  (estado derivado da query, ex. «estava a escolher → agora tenho plano»), não no callback do
+  `mutate`. Provar no browser real, não só no jsdom.
+- Regex com caracteres de controlo escritos em literal (`/[^@-^_^?]/` vistos com `cat -A`) tornam o
+  ficheiro binário para o git (diff ilegível no GitHub). **Regra:** sempre ` -` em
+  escape, também nos testes (`'Jo ão'`); procurar bytes < 0x20 nos ficheiros alterados antes do commit.
+- Com a máquina em pressão de memória, o Vitest terminou com exit 0 e 882/882, mas **4 ficheiros não
+  correram** (worker sem resposta). **Regra:** comparar o número de ficheiros do relatório JSON
+  (`--reporter=json`) com os ficheiros em disco e voltar a correr os que faltam.
+- Arnês MSW com raiz noutra pasta: o Tailwind v4 só gera as classes que vê a partir da raiz do Vite.
+  **Regra:** raiz = `frontend/` e trocar só a entrada do `index.html` com um plugin
+  (`transformIndexHtml`), sem mexer no ficheiro.
+- `/auth/csrf` 400 no browser real não é CORS: é `authentication_refresh_token_required` (sem cookie
+  de refresh, ou seja, sem sessão nesse perfil do Chrome). O login tem de ser feito no separador do
+  grupo do Claude in Chrome; o browser integrado continua a recusar o certificado do Vite.

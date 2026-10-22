@@ -1,51 +1,61 @@
-# TODO: Sprint 6GB · fase Trainer (6GB-TR)
+# TODO: Sprint 6GB · fase do Cliente (6GB-CL)
 
-Plano aprovado a 2026-10-21 em `~/.claude/plans/curious-herding-lampson.md`. Decisões U53–U67.
-Branch `feat/6gb-trainer`, base `ebb6568` (main). Instruções completas em `.claude/SPEC.md`.
+Plano aprovado a 2026-10-22 em `~/.claude/plans/dapper-swimming-dove.md`. Decisões U68–U83.
+Branch `feat/6gb-client`, base `8a65094` (main). Resumo em
+`docs/blueprints/frontend-files/sprint_6/sprint_6G/sprint_6GB/04_plano_6GB_cliente.md`; fecho em `05_relatorio_fecho_6GB_cliente.md`.
 
-## 0. Arranque
-- [x] Prints `trainer_*`, `docs_about_app`, `sprint_6G/00` §4.2, gotchas e lições lidos
-- [x] Decisões U53–U67 com o Leandro
-- [x] Branch, `todo.md`, `SPEC.md`
-- [x] `sprint_6GB/02_plano_6GB_trainer.md`
-- [x] Baseline: backend 3223 + 1 skip; frontend 791/791, lint e typecheck limpos
-- [x] Ficheiros de teste sem sprint no nome (11 renomeados, pedido do Leandro)
+## 0. Arranque (CL-0)
+- [x] Prints do cliente, `docs_about_app`, `sprint_6G/00` §4.3, gotchas e lições lidos
+- [x] Decisões U68–U83 com o Leandro
+- [x] Branch, `todo.md`, `SPEC.md`, `04_plano_6GB_cliente.md`
+- [x] Baseline: backend 3266 + 1 skip; frontend 900/900 em 85 ficheiros
 
-## 1. Backend (TR-1) — 3264 + 1 skip, 0 avisos, format limpo
-- [x] B1 repetições em intervalo (`PlannedRepsMax`) + migration `AddPlannedRepsRange` (aplicada, Down verificado)
-- [x] B2 «gr» → «g» (`SupplementUnits`)
-- [x] B3 convite devolve link e validade (200 `InviteClientResponse`)
-- [x] B4 convite na ficha: `GET /clients/{id}/invitation` (endpoint próprio, para o PUT da ficha não o apagar)
-- [x] B5 `GET /workout-completions` para o trainer
-- [x] B6 testes + `schema.d.ts` regenerado + snapshot da superfície
+## 1. Backend (CL-1) — `7ae35dd`
+- [x] B1 plano alimentar escolhido: `Client.SelectedMealPlanId` + migration `AddClientSelectedMealPlan` (aplicada, `Down` verificado)
+- [x] B1 `GET /portal/my-meal-plans` e `PUT /portal/my-meal-plans/selection`
+- [x] B1 `my-nutrition` e home leem a escolha; arquivar (e reativar) limpa a escolha
+- [x] B2 `GET /portal/my-workout/days` e `GET /portal/my-workout/day?date=`
+- [x] B2 notas das séries e nota de conclusão no treino do portal
+- [x] B3 perfil: nome obrigatório, sem email de contacto (telefone continua obrigatório, U83)
+- [x] B4 testes unitários e funcionais, `schema.d.ts`, snapshot da superfície
 
-## 2. Frontend (TR-2/TR-3)
-- [x] F0 fundações: rotas lazy + fallback, tokens de macros AA, breadcrumbs, redirecionamentos
-- [x] F1 marca do trainer na shell (nome, logo, cor, topbar, título)
-- [x] F2 painel com destaque dinâmico
-- [x] F3 clientes em páginas, cabeçalho, convite, validade
-- [x] F4 sessões e packs em páginas
-- [x] F5 avaliações em páginas
-- [x] F6 planos de treino em passos, reps mín/máx, séries e nota (dia no fuso do personal trainer)
-- [x] F7 planos alimentares em passos com restante e macros
-- [x] F8 suplementos atribuídos (ponto 19: dados reais mostram que o suplemento da Ana está numa refeição do plano «Fase de corte», não é defeito da lista; linha de ajuda na lista)
-- [x] F9 biblioteca em páginas, vídeo ao criar
-- [x] F10 marca própria: fuso, cor, logo
+## 2. Fundações do frontend (CL-2) — `5b4e38f`
+- [x] Rotas lazy do portal + pré-carregamento nos testes
+- [x] `useDocumentTitle` partilhado no portal
+- [x] Cabeçalho: nome da marca em 2 linhas, sem cortes
+- [x] Coluna larga no desktop, fundo com a cor da marca
+- [x] Tokens de secção (AA, claro/escuro) + cópia para `site/`
+- [x] `PortalCard` partilhado
+- [x] Textos «Avaliações» no portal
 
-## 3. Verificação e fecho (TR-4)
-- [x] Backend Release + format (3266 + 1 skip, 0 avisos); frontend lint/typecheck/Prettier/test/build; api:types:check verde
-- [x] Mutações 10/10 mortas: B intervalo de reps, B fronteira \b do gr, B gr só minúsculas, B validade exata do convite, F destaque a zero, F restante nunca negativo, F contribuição /100, F ordem «12-10», F fuso do personal trainer nas séries, F nome da marca na shell
-- [x] Segurança (agente sonnet): sem achados
-- [x] Browser 375/1440, claro/escuro (arnês MSW; 28 rotas sem overflow; 3 defeitos corrigidos: nome da marca cortado na sidebar, setas de scroll nos separadores, grelha do painel a 375 px)
-- [x] Revisão sonnet (`code-review-leandro`: 2 médias + 8 baixas tratadas; email falhado → `email_sent: false`, decisão do Leandro), `security-reviewer` (sem achados), `design-is` (20/30 REFINE, 4 de 5 corrigidos)
-- [x] Relatório `03`, docs_about_app (com autorização), GOTCHAS/lessons, ACTIVE, sessão, memória
-- [x] Apagar `SPEC.md`, commits (`5e25a87` backend, `9e75dfd` frontend, `ee10ef3` docs), checklist «Finalizado»
+## 3. Páginas (CL-3) — `5b4e38f`
+- [x] Treino: progresso, filtro de dia, plano recolhível
+- [x] Nutrição: lista + escolha, barras das macros, chips, «Indisponível», sem link de tomas
+- [x] Perfil, Avaliações e Suplementos: nome sem email, «Dados guardados», avaliação já não pendente, motivo do bloqueio
+- [x] Início: cores por secção, progresso, «Escolhe o teu plano»
+- [x] MSW handlers e fixtures
+
+## 4. Verificação (CL-4) — `5a63fc4`, `16cd359`
+- [x] Vitest 952/952 (88 ficheiros), lint, typecheck, Prettier, build, `api:types:check`; `site/` 44/44
+- [x] Backend 3298 + 1 skip, 0 avisos, format limpo
+- [x] Mutações 14/14 mortas
+- [x] Browser: arnês MSW (375/1440, claro e escuro) + app real no Chrome (Marta e João)
+- [x] Gates `QG6F4-ISOLAMENTO-UI-001` e `QG6F-GATE-001` passam; `QG6F4-UI-001` e `QG6F4-AVATAR-001` ficam com o Leandro
+- [x] `code-review-leandro` (0 altas, 3 médias corrigidas), `security-reviewer` (sem achados)
+- [ ] `design-is`
+
+## 5. Fecho (CL-4)
+- [x] Relatório `05_relatorio_fecho_6GB_cliente.md`
+- [x] `docs_about_app` atualizado (anunciado antes)
+- [x] `sprint_6G/00` §4.3, `QG6GB-LISTA-001`, `QG6GB-GATE-001`
+- [x] Gotchas e lições
+- [ ] Graphify regenerado (fecho do Sprint 6)
+- [ ] Memória: `ACTIVE.md`, `Sessions/`, `MEMORY.md`
+- [ ] Commit da documentação; apagar `SPEC.md`; checklist «Finalizado»
 
 ## Review
-**FINALIZADO 2026-10-21** na branch `feat/6gb-trainer` (sem push).
-- Backend 3223 → 3266 + 1 skip, 0 avisos, format limpo; migration `AddPlannedRepsRange` aplicada à dev.
-- Frontend 791 → 900/900, lint, typecheck, Prettier, build e `api:types:check` verdes.
-- Mutações 10/10; revisão de código e segurança tratadas; `design-is` 20/30 REFINE (4 de 5 corrigidos).
-- Fica para o próximo passe: altura dos campos `Input`/`Textarea` partilhados no mobile.
-- Gates manuais do Leandro: `QG6GB-TR-GATE-001` (login real), `QG6GB-TR-EMAIL-001` (Resend real e em baixo),
-  `QG6GB-TR-VIDEO-001` (R2 real). Próximo: 6GB do cliente.
+- Entregue: U68–U83 (portal por secções e cores, escolha do plano alimentar, filtro de dia, perfil
+  com nome, «Avaliação periódica», rotas lazy, marca no separador e no cabeçalho).
+- Defeitos encontrados e corrigidos: 4 da implementação (testes de migrations, mutação mal apontada,
+  lint do perfil, foco só no jsdom) e 7 da revisão. Detalhe no §3 do relatório.
+- Pendente documentado (RN-014): suplementos fora de refeição e tomas por plano, para o bloco seguinte.

@@ -12,7 +12,7 @@ Há três papéis no sistema: `trainer`, `client` e `superuser`. Os dados de um 
 
 Decisão de 2026-10-14: o treinador junta clientes, planos, sessões e packs num só sítio, e o cliente acompanha o trabalho com a marca desse treinador.
 
-Check-in, na linguagem do produto, é a avaliação periódica. Na 6GB, o nome na interface passa a «Avaliações» ou «Avaliação periódica». A função não muda. Os dados são o peso, as medidas corporais e o questionário que a avaliação inicial e cada check-in já guardam. Os ecrãs actuais ainda dizem check-in.
+Check-in, na linguagem do produto, é a avaliação periódica. Desde a 6GB, o nome na interface é «Avaliações» ou «Avaliação periódica». A função não muda. Os dados são o peso, as medidas corporais e o questionário que a avaliação inicial e cada check-in já guardam. Os ecrãs actuais ainda dizem check-in.
 
 Pagamento, na mesma decisão: o treinador cria o pack do cliente. O cliente não paga ao treinador dentro da app.
 
