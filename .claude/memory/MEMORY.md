@@ -6,7 +6,7 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
-**2026-10-22: Sprint 6GB, fase do cliente FINALIZADA e Sprint 6 FECHADO (branch `feat/6gb-client`, `7ae35dd`..`bee6e36`, por fazer merge).**
+**2026-10-22: Sprint 6GB, fase do cliente FINALIZADA e Sprint 6 FECHADO (na `main`, merge `11cd70d`, CI #51 verde).**
 - U68–U83:
   - escolha do plano alimentar na conta (`Client.SelectedMealPlanId`; arquivar e reativar limpam a escolha);
   - filtro de dia (`/portal/my-workout/days`, `/day?date=`);

@@ -4,7 +4,7 @@ Atualizado: 2026-10-22
 
 ## Sprint 6G: 6GA Auth UX + 6GB análise visual e correção
 
-- **6GB-CL (cliente) FINALIZADA e Sprint 6 FECHADO (2026-10-22)**, branch `feat/6gb-client` (`7ae35dd`..`bee6e36`), **por fazer merge e push (OK do Leandro)**.
+- **6GB-CL (cliente) FINALIZADA e Sprint 6 FECHADO (2026-10-22)**, na `main` (merge `11cd70d` da branch `feat/6gb-client`, `7ae35dd`..`cb93557`), **CI #51 verde** (site, backend, frontend e contrato OpenAPI).
   - U68–U83: lista e escolha do plano alimentar guardada na conta (migration `AddClientSelectedMealPlan` aplicada à dev), filtro de dia só de leitura, perfil com nome e sem email (telefone continua obrigatório), «Avaliação periódica», rotas lazy, marca no separador, cores por secção, barras das macros, plano recolhível.
   - Backend 3298 + 1 skip, frontend 952/952, mutações 14/14, security sem achados, `design-is` 21/30.
   - Gates `QG6GB-LISTA-001`, `QG6GB-GATE-001`, `QG6F4-ISOLAMENTO-UI-001` e `QG6F-GATE-001` fechados; graphify regenerado.
