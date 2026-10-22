@@ -31,7 +31,7 @@ export function PortalMealPlansPage() {
     );
 
   if (query.data === undefined)
-    return <ErrorState error={query.error} onRetry={() => void query.refetch()} />;
+    return <ErrorState error={query.error} onRetry={() => void query.refetch()} titleAs="h1" />;
 
   const plans = query.data.items;
 

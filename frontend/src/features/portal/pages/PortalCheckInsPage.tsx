@@ -45,7 +45,7 @@ export function PortalCheckInsPage() {
     );
 
   if (due.data === undefined)
-    return <ErrorState error={due.error} onRetry={() => void due.refetch()} />;
+    return <ErrorState error={due.error} onRetry={() => void due.refetch()} titleAs="h1" />;
 
   const unavailable = checkIn === null && !sent && draftDirty;
 

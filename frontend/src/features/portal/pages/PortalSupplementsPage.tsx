@@ -52,7 +52,7 @@ export function PortalSupplementsPage() {
 
   // Sem dados nenhuns, a falha ocupa o ecrã; com dados em cache, fica só um aviso mais abaixo.
   if (intakes.data === undefined)
-    return <ErrorState error={intakes.error} onRetry={() => void intakes.refetch()} />;
+    return <ErrorState error={intakes.error} onRetry={() => void intakes.refetch()} titleAs="h1" />;
 
   const today = intakes.data;
   const detailById = new Map((details.data?.items ?? []).map((detail) => [detail.id, detail]));

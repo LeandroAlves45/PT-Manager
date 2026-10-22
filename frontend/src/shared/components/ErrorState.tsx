@@ -41,10 +41,13 @@ export function ErrorState({
   title = 'Não foi possível carregar.',
   error,
   onRetry,
+  titleAs: Title = 'h2',
 }: {
   title?: string;
   error: unknown;
   onRetry?: () => void;
+  /** `h1` quando a falha ocupa a página inteira e não há outro título de página. */
+  titleAs?: 'h1' | 'h2';
 }) {
   const [copied, setCopied] = useState(false);
   const correlationId = isApiProblem(error) ? error.correlationId : null;
@@ -69,7 +72,7 @@ export function ErrorState({
     >
       <div className="flex items-center gap-2">
         <TriangleAlert aria-hidden className="text-destructive size-5" />
-        <h2 className="font-display text-xl">{title}</h2>
+        <Title className="font-display pe-1 text-xl">{title}</Title>
       </div>
 
       <p className="text-muted-foreground text-sm">{detail}</p>

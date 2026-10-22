@@ -171,7 +171,9 @@ describe('Workout day filter', () => {
     );
     openToday('/portal/today?dia=2026-02-31');
 
-    expect(await screen.findByRole('heading', { name: 'Dia indisponível' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Dia indisponível' })
+    ).toBeInTheDocument();
     // O seletor diz o mesmo que o ecrã, em vez de «Hoje».
     const select = await screen.findByLabelText('Ver treino de');
     expect(select).toHaveValue('2026-02-31');
@@ -195,7 +197,9 @@ describe('Workout day filter', () => {
     );
     openToday('/portal/today?dia=2099-01-01');
 
-    expect(await screen.findByRole('heading', { name: 'Dia indisponível' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Dia indisponível' })
+    ).toBeInTheDocument();
     expect(
       screen.getByText('Só podes consultar os dias passados do teu plano.')
     ).toBeInTheDocument();

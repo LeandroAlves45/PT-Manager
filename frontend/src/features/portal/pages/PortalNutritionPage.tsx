@@ -95,7 +95,7 @@ export function PortalNutritionPage() {
 
   // Sem dados nenhuns, a falha ocupa o ecrã; com dados em cache, fica só um aviso mais abaixo.
   if (query.data === undefined)
-    return <ErrorState error={query.error} onRetry={() => void query.refetch()} />;
+    return <ErrorState error={query.error} onRetry={() => void query.refetch()} titleAs="h1" />;
 
   const plan = query.data;
   const goal = goalLabel(plan.goal_type);

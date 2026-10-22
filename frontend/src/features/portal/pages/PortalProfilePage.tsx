@@ -38,7 +38,7 @@ export function PortalProfilePage() {
     return <PortalUnavailable />;
 
   if (query.data === undefined)
-    return <ErrorState error={query.error} onRetry={() => void query.refetch()} />;
+    return <ErrorState error={query.error} onRetry={() => void query.refetch()} titleAs="h1" />;
 
   const profile = query.data;
 

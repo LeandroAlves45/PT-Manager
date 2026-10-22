@@ -229,6 +229,7 @@ function PastWorkout({ date }: { date: string }) {
     return (
       <>
         <EmptyState
+          titleAs="h1"
           icon={CalendarX}
           title="Dia indisponível"
           description="Só podes consultar os dias passados do teu plano."

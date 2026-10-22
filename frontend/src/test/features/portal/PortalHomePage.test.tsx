@@ -199,7 +199,9 @@ describe('PortalHomePage', () => {
     server.use(...restorableSession({ role: 'client' }));
     renderApp({ initialEntries: ['/portal'] });
 
-    expect(await screen.findByText('Portal indisponível')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Portal indisponível' })
+    ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument();
   });
 
