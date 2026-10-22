@@ -228,10 +228,10 @@ describe('serverCheckInIssues', () => {
 
 describe('checkInStateMessage', () => {
   it.each([
-    ['check_in_wrong_day', 'Este check-in só podia ser respondido no próprio dia.'],
-    ['check_in_already_answered', 'Este check-in já foi respondido.'],
-    ['check_in_cancelled', 'Este check-in foi cancelado pelo teu personal trainer.'],
-    ['check_in_not_found', 'Este check-in já não existe.'],
+    ['check_in_wrong_day', 'Esta avaliação só podia ser respondida no próprio dia.'],
+    ['check_in_already_answered', 'Esta avaliação já foi respondida.'],
+    ['check_in_cancelled', 'Esta avaliação foi cancelada pelo teu personal trainer.'],
+    ['check_in_not_found', 'Esta avaliação já não existe.'],
     ['assessment_client_inactive', 'A tua ficha não está ativa. Fala com o teu personal trainer.'],
   ])('explains %s', (code, message) => {
     expect(checkInStateMessage(toApiProblem(409, { title: code }))).toBe(message);

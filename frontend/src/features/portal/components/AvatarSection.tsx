@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 
 import { useRemoveAvatarMutation, useReplaceAvatarMutation } from '@/features/portal/api/portal';
 import { ClientAvatar } from '@/features/portal/components/ClientAvatar';
+import { PortalCard } from '@/features/portal/components/PortalCard';
 import { avatarFailureMessage, avatarFileError } from '@/features/portal/lib/profile';
 import type { components } from '@/shared/api/schema';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
@@ -63,18 +64,10 @@ export function AvatarSection({ profile }: { profile: Profile }) {
   }
 
   return (
-    <section
-      aria-labelledby="avatar-title"
-      className="border-border bg-card space-y-3 rounded-lg border p-3"
-    >
-      <div>
-        <h2 id="avatar-title" className="font-display text-xl">
-          Fotografia
-        </h2>
-        <p className="text-muted-foreground text-sm">PNG, JPEG ou WebP, até 4 MB.</p>
-      </div>
+    <PortalCard title="Fotografia">
+      <p className="text-muted-foreground text-sm">PNG, JPEG ou WebP, até 4 MB.</p>
 
-      <div className="flex flex-wrap items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4 pt-2">
         <ClientAvatar
           name={profile.name}
           avatarUrl={profile.avatar_url}
@@ -141,6 +134,6 @@ export function AvatarSection({ profile }: { profile: Profile }) {
         pending={remove.isPending}
         onConfirm={() => void removeAvatar()}
       />
-    </section>
+    </PortalCard>
   );
 }

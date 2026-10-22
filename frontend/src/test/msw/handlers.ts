@@ -5,14 +5,17 @@ import { trainerSettings } from '@/test/msw/account-fixtures';
 import { SIGN_UP_ACCEPTED, accountResponse, googleChallenge } from '@/test/msw/auth-fixtures';
 import {
   dueCheckIn,
+  mealPlans,
   nextCheckIn,
   nutritionPlan,
+  pastWorkoutDay,
   portalBranding,
   portalHome,
   portalProfile,
   supplementAssignmentsPage,
   supplementIntakesToday,
   trainingPlan,
+  workoutDays,
   workoutToday,
 } from '@/test/msw/portal-fixtures';
 import { dashboardResponse } from '@/test/msw/trainer-fixtures';
@@ -114,6 +117,10 @@ export const handlers = [
   http.get(`${API}/portal/branding`, () => HttpResponse.json(portalBranding())),
   http.get(`${API}/portal/home`, () => HttpResponse.json(portalHome())),
   http.get(`${API}/portal/my-workout/today`, () => HttpResponse.json(workoutToday())),
+  http.get(`${API}/portal/my-workout/days`, () => HttpResponse.json(workoutDays())),
+  http.get(`${API}/portal/my-workout/day`, () => HttpResponse.json(pastWorkoutDay())),
+  http.get(`${API}/portal/my-meal-plans`, () => HttpResponse.json(mealPlans())),
+  http.put(`${API}/portal/my-meal-plans/selection`, () => new HttpResponse(null, { status: 204 })),
   http.get(`${API}/portal/my-plan`, () => HttpResponse.json(trainingPlan())),
   http.get(`${API}/portal/my-nutrition`, () => HttpResponse.json(nutritionPlan())),
   http.get(`${API}/portal/my-supplements/intakes/today`, () =>

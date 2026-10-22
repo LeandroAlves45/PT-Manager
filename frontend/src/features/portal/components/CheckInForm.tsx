@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useBlocker } from 'react-router';
 import { toast } from 'sonner';
@@ -30,16 +30,16 @@ import { formatNumber } from '@/shared/lib/format';
 const LAST_STEP = CHECK_IN_STEPS.length - 1;
 
 /**
- * Tempo em que "Enviar check-in" fica desativado ao chegar ao último passo.
+ * Tempo em que "Enviar avaliação" fica desativado ao chegar ao último passo.
  *
- * "Seguinte" e "Enviar check-in" ocupam o mesmo sítio do ecrã. Sem esta espera, o segundo
- * toque de um toque duplo em "Seguinte" enviava o check-in sem o cliente ver o último passo,
- * e o envio não se desfaz.
+ * "Seguinte" e "Enviar avaliação" ocupam o mesmo sítio do ecrã. Sem esta espera, o segundo
+ * toque de um toque duplo em "Seguinte" enviava a avaliação sem o cliente ver o último passo,
+ * e o envio não se desfaz. Enquanto dura, um texto curto diz porque o botão está desativado.
  */
 const SEND_HOLD_MS = 500;
 
 /**
- * Resposta ao check-in de hoje, em três passos: peso, medidas e como correu.
+ * Resposta à avaliação periódica de hoje, em três passos: peso, medidas e como correu.
  *
  * É um só formulário: o passo é só o que está à vista, e os valores dos outros passos ficam
  * guardados enquanto o cliente avança e recua. "Seguinte" valida o passo atual; "Enviar"
@@ -48,16 +48,27 @@ const SEND_HOLD_MS = 500;
  * O que foi escrito vive só em memória (são dados de saúde, não vão para o armazenamento do
  * browser). Por isso, sair do ecrã com dados escritos pede confirmação.
  *
- * @param checkInId Check-in por responder (`GET /portal/my-check-ins/due`).
+ * @param checkInId Avaliação por responder (`GET /portal/my-check-ins/due`).
  * @param onSent Chamado depois de o servidor aceitar a resposta.
+ * @param onDirtyChange Chamado quando o cliente passa a ter (ou deixa de ter) algo escrito.
+ *   Permite ao ecrã avisar, se a avaliação deixar de estar disponível a meio do preenchimento.
  */
-export function CheckInForm({ checkInId, onSent }: { checkInId: string; onSent: () => void }) {
+export function CheckInForm({
+  checkInId,
+  onSent,
+  onDirtyChange,
+}: {
+  checkInId: string;
+  onSent: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
+}) {
   const respond = useRespondCheckInMutation();
   const form = useForm<CheckInFormValues>({ defaultValues: emptyCheckInValues() });
   const [step, setStep] = useState(0);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const opened = useRef(false);
   const [sendHeld, setSendHeld] = useState(false);
+  const holdId = useId();
   const errors = form.formState.errors;
   const dirty = form.formState.isDirty;
 
@@ -66,6 +77,10 @@ export function CheckInForm({ checkInId, onSent }: { checkInId: string; onSent: 
     ({ currentLocation, nextLocation }) =>
       dirty && currentLocation.pathname !== nextLocation.pathname
   );
+
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
 
   // Fechar o separador ou recarregar: o browser mostra o seu próprio aviso.
   useEffect(() => {
@@ -83,7 +98,7 @@ export function CheckInForm({ checkInId, onSent }: { checkInId: string; onSent: 
     opened.current = true;
   }, [step]);
 
-  // Liberta "Enviar check-in" depois da espera que trava o toque duplo.
+  // Liberta "Enviar avaliação" depois da espera que trava o toque duplo.
   useEffect(() => {
     if (!sendHeld) return;
 
@@ -138,7 +153,7 @@ export function CheckInForm({ checkInId, onSent }: { checkInId: string; onSent: 
       }
 
       form.setError('root', {
-        message: 'Não foi possível enviar o check-in. O que escreveste continua aqui.',
+        message: 'Não foi possível enviar a avaliação. O que escreveste continua aqui.',
       });
     }
   }
@@ -148,7 +163,7 @@ export function CheckInForm({ checkInId, onSent }: { checkInId: string; onSent: 
   return (
     <form
       noValidate
-      aria-label="Responder ao check-in"
+      aria-label="Responder à avaliação"
       onSubmit={form.handleSubmit((values) => void submit(values))}
       className="space-y-4"
     >
@@ -158,7 +173,7 @@ export function CheckInForm({ checkInId, onSent }: { checkInId: string; onSent: 
         </p>
         <Progress
           value={Math.round(((step + 1) / CHECK_IN_STEPS.length) * 100)}
-          aria-label="Progresso do check-in"
+          aria-label="Progresso da avaliação"
         />
         <h2 ref={headingRef} tabIndex={-1} className="font-display text-xl outline-none">
           {CHECK_IN_STEPS[step]}
@@ -289,14 +304,28 @@ export function CheckInForm({ checkInId, onSent }: { checkInId: string; onSent: 
             Anterior
           </Button>
         )}
-        <Button
-          type="submit"
-          className="min-h-11 flex-1"
-          disabled={pending || (step === LAST_STEP && sendHeld)}
-        >
-          {step < LAST_STEP ? 'Seguinte' : pending ? 'A enviar…' : 'Enviar check-in'}
-        </Button>
+        {/* Nós diferentes, com `key`: o botão de enviar nunca herda o toque do "Seguinte". */}
+        {step < LAST_STEP ? (
+          <Button key="next" type="submit" className="min-h-11 flex-1">
+            Seguinte
+          </Button>
+        ) : (
+          <Button
+            key="send"
+            type="submit"
+            className="min-h-11 flex-1"
+            disabled={pending || sendHeld}
+            aria-describedby={sendHeld ? holdId : undefined}
+          >
+            {pending ? 'A enviar…' : 'Enviar avaliação'}
+          </Button>
+        )}
       </div>
+      {step === LAST_STEP && sendHeld && (
+        <p id={holdId} className="text-muted-foreground text-sm">
+          Revê as respostas deste passo. Já podes enviar daqui a instantes.
+        </p>
+      )}
 
       <ConfirmDialog
         open={blocker.state === 'blocked'}
@@ -304,7 +333,7 @@ export function CheckInForm({ checkInId, onSent }: { checkInId: string; onSent: 
           if (!open) blocker.reset?.();
         }}
         title="Sair sem enviar?"
-        description="O que escreveste neste check-in não fica guardado."
+        description="O que escreveste nesta avaliação não fica guardado."
         confirmLabel="Sair sem enviar"
         destructive
         pending={false}

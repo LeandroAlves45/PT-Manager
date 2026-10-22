@@ -68,20 +68,24 @@ describe('PortalProfilePage', () => {
     renderApp({ initialEntries: ['/portal/profile'] });
     await screen.findByRole('heading', { name: 'Perfil' });
 
-    const record = within(section('Os teus dados'));
-    expect(record.getByText('João Pereira')).toBeInTheDocument();
+    const record = within(section('Dados da ficha'));
     expect(record.getByText('17/04/1992')).toBeInTheDocument();
     expect(record.getByText('Masculino')).toBeInTheDocument();
     expect(
-      record.getByText('Para alterar estes dados, fala com o teu personal trainer.')
+      record.getByText(
+        'Para alterar a data de nascimento ou o sexo, fala com o teu personal trainer.'
+      )
     ).toBeInTheDocument();
-    // Nome, nascimento e sexo não são campos: o backend ignora-os no pedido.
+    // Nascimento e sexo não são campos: o backend ignora-os no pedido.
     expect(record.queryByRole('textbox')).not.toBeInTheDocument();
 
+    // O nome é editável; o email da ficha não existe no ecrã.
+    expect(field('Nome')).toHaveValue('João Pereira');
     expect(field('Telefone')).toHaveValue('+351912345678');
-    expect(field('Email de contacto (opcional)')).toHaveValue('joao@ptmanager.local');
     expect(field('Contacto de emergência: nome (opcional)')).toHaveValue('');
     expect(field('Contacto de emergência: telefone (opcional)')).toHaveValue('');
+    expect(screen.queryByRole('textbox', { name: /email/i })).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/email|@/i);
 
     const photo = within(section('Fotografia'));
     expect(photo.getByTestId('client-avatar-initials')).toHaveTextContent('JP');
@@ -91,14 +95,14 @@ describe('PortalProfilePage', () => {
     expect(requests).toBe(1);
   });
 
-  it('saves the four contacts, sending an emptied optional as null', async () => {
+  it('saves the name and the contacts, sending an emptied optional as null and no email', async () => {
     let body: unknown = null;
     server.use(
       http.patch(PROFILE, async ({ request }) => {
         body = await request.json();
         return HttpResponse.json(
           portalProfile({
-            contact_email: null,
+            name: 'Marta Costa',
             phone: '961112223',
             emergency_contact_name: 'Ana Pereira',
             emergency_contact_phone: '912000111',
@@ -110,28 +114,80 @@ describe('PortalProfilePage', () => {
     const user = userEvent.setup();
     const { queryClient } = await openProfile();
 
+    await user.clear(field('Nome'));
+    await user.type(field('Nome'), ' Marta Costa ');
     await user.clear(field('Telefone'));
     await user.type(field('Telefone'), ' 961112223 ');
-    await user.clear(field('Email de contacto (opcional)'));
     await user.type(field('Contacto de emergência: nome (opcional)'), 'Ana Pereira');
     await user.type(field('Contacto de emergência: telefone (opcional)'), '912000111');
-    await user.click(screen.getByRole('button', { name: 'Guardar contactos' }));
+    await user.click(screen.getByRole('button', { name: 'Guardar dados' }));
 
     await waitFor(() =>
-      expect(toastMock.success).toHaveBeenCalledWith('Contactos guardados com sucesso.')
+      expect(toastMock.success).toHaveBeenCalledWith('Dados guardados com sucesso.')
     );
     expect(body).toEqual({
-      contact_email: null,
+      name: 'Marta Costa',
       phone: '961112223',
       emergency_contact_name: 'Ana Pereira',
       emergency_contact_phone: '912000111',
     });
-    // A resposta substitui a cache, sem um GET a seguir.
-    expect(queryClient.getQueryData(portalKeys.profile())).toMatchObject({ phone: '961112223' });
-    expect(field('Telefone')).toHaveValue('961112223');
+    expect(body).not.toHaveProperty('contact_email');
+    // A resposta substitui a cache, sem um GET a seguir, e o menu do topo mostra o nome novo.
+    expect(queryClient.getQueryData(portalKeys.profile())).toMatchObject({
+      name: 'Marta Costa',
+    });
+    expect(field('Nome')).toHaveValue('Marta Costa');
+    expect(
+      within(screen.getByRole('button', { name: 'Menu de perfil' })).getByTestId(
+        'client-avatar-initials'
+      )
+    ).toHaveTextContent('MC');
   });
 
-  it('refuses locally an empty phone and an email the backend would reject', async () => {
+  it('sends an emptied optional contact as null', async () => {
+    let body: unknown = null;
+    server.use(
+      http.patch(PROFILE, async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json(portalProfile());
+      })
+    );
+    const user = userEvent.setup();
+    await openProfile(
+      portalProfile({ emergency_contact_name: 'Ana', emergency_contact_phone: '912000111' })
+    );
+
+    await user.clear(field('Contacto de emergência: nome (opcional)'));
+    await user.clear(field('Contacto de emergência: telefone (opcional)'));
+    await user.click(screen.getByRole('button', { name: 'Guardar dados' }));
+
+    await waitFor(() => expect(toastMock.success).toHaveBeenCalled());
+    expect(body).toEqual({
+      name: 'João Pereira',
+      phone: '+351912345678',
+      emergency_contact_name: null,
+      emergency_contact_phone: null,
+    });
+  });
+
+  it('keeps "Dados guardados." visible after saving and hides it when a field changes again', async () => {
+    server.use(http.patch(PROFILE, () => HttpResponse.json(portalProfile())));
+    const user = userEvent.setup();
+    await openProfile();
+
+    expect(screen.queryByText('Dados guardados.')).not.toBeInTheDocument();
+    await user.type(field('Contacto de emergência: nome (opcional)'), 'Ana');
+    await user.click(screen.getByRole('button', { name: 'Guardar dados' }));
+
+    const confirmation = await screen.findByText('Dados guardados.');
+    expect(confirmation.closest('[role="status"]')).not.toBeNull();
+
+    await user.type(field('Telefone'), '1');
+
+    expect(screen.queryByText('Dados guardados.')).not.toBeInTheDocument();
+  });
+
+  it('refuses an empty name, a name with U+0000 and an empty phone without a request', async () => {
     let patches = 0;
     server.use(
       http.patch(PROFILE, () => {
@@ -142,15 +198,24 @@ describe('PortalProfilePage', () => {
     const user = userEvent.setup();
     await openProfile();
 
+    await user.clear(field('Nome'));
     await user.clear(field('Telefone'));
-    await user.clear(field('Email de contacto (opcional)'));
-    await user.type(field('Email de contacto (opcional)'), 'a@b');
-    await user.click(screen.getByRole('button', { name: 'Guardar contactos' }));
+    await user.click(screen.getByRole('button', { name: 'Guardar dados' }));
 
-    expect(await screen.findByText('Indica o telefone.')).toBeInTheDocument();
-    expect(screen.getByText('Indica um email válido.')).toBeInTheDocument();
+    expect(await screen.findByText('Indica o teu nome.')).toBeInTheDocument();
+    expect(screen.getByText('Indica o telefone.')).toBeInTheDocument();
+    expect(field('Nome')).toHaveAttribute('aria-invalid', 'true');
     expect(field('Telefone')).toHaveAttribute('aria-invalid', 'true');
+
+    // fireEvent: nenhum teclado escreve U+0000.
+    fireEvent.change(field('Nome'), { target: { value: 'Jo ão' } });
+    fireEvent.change(field('Telefone'), { target: { value: '912345678' } });
+    await user.click(screen.getByRole('button', { name: 'Guardar dados' }));
+
+    expect(await screen.findByText('O nome tem caracteres inválidos.')).toBeInTheDocument();
+    expect(screen.queryByText('Indica o telefone.')).not.toBeInTheDocument();
     expect(patches).toBe(0);
+    expect(screen.queryByText('Dados guardados.')).not.toBeInTheDocument();
   });
 
   it('shows a server refusal on its field and lets the client save again', async () => {
@@ -168,7 +233,7 @@ describe('PortalProfilePage', () => {
 
     await user.clear(field('Telefone'));
     await user.type(field('Telefone'), '961112223');
-    await user.click(screen.getByRole('button', { name: 'Guardar contactos' }));
+    await user.click(screen.getByRole('button', { name: 'Guardar dados' }));
 
     expect(
       await screen.findByText('Este telefone já está a ser usado noutra ficha de cliente.')
@@ -179,7 +244,7 @@ describe('PortalProfilePage', () => {
 
     await user.clear(field('Telefone'));
     await user.type(field('Telefone'), '961112224');
-    await user.click(screen.getByRole('button', { name: 'Guardar contactos' }));
+    await user.click(screen.getByRole('button', { name: 'Guardar dados' }));
 
     await waitFor(() => expect(toastMock.success).toHaveBeenCalledTimes(1));
     expect(bodies).toHaveLength(2);
@@ -194,10 +259,10 @@ describe('PortalProfilePage', () => {
 
     await user.clear(field('Telefone'));
     await user.type(field('Telefone'), '961112223');
-    await user.click(screen.getByRole('button', { name: 'Guardar contactos' }));
+    await user.click(screen.getByRole('button', { name: 'Guardar dados' }));
 
-    expect(await within(section('Contactos')).findByRole('alert')).toHaveTextContent(
-      'Não foi possível guardar os contactos. Tenta novamente.'
+    expect(await within(section('Os teus dados')).findByRole('alert')).toHaveTextContent(
+      'Não foi possível guardar os dados. Tenta novamente.'
     );
     expect(field('Telefone')).toHaveValue('961112223');
     expect(toastMock.success).not.toHaveBeenCalled();
@@ -209,7 +274,7 @@ describe('PortalProfilePage', () => {
         HttpResponse.json(
           {
             ...problem('validation_failed'),
-            errors: [{ field: 'ContactEmail', code: 'client_email_invalid', message: 'invalid' }],
+            errors: [{ field: 'Name', code: 'client_name_invalid', message: 'invalid' }],
           },
           { status: 400 }
         )
@@ -218,10 +283,13 @@ describe('PortalProfilePage', () => {
     const user = userEvent.setup();
     await openProfile();
 
-    await user.click(screen.getByRole('button', { name: 'Guardar contactos' }));
+    await user.click(screen.getByRole('button', { name: 'Guardar dados' }));
 
-    expect(await screen.findByText('Indica um email válido.')).toBeInTheDocument();
-    expect(field('Email de contacto (opcional)')).toHaveAttribute('aria-invalid', 'true');
+    expect(
+      await screen.findByText('Indica o teu nome, com até 255 caracteres.')
+    ).toBeInTheDocument();
+    expect(field('Nome')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.queryByText('Dados guardados.')).not.toBeInTheDocument();
   });
 
   it('refuses a file of the wrong type without sending it', async () => {

@@ -20,15 +20,6 @@ import {
   ResetPasswordPage,
   SignUpPage,
 } from '@/features/auth';
-import {
-  PortalCheckInsPage,
-  PortalHomePage,
-  PortalNutritionPage,
-  PortalPlanPage,
-  PortalProfilePage,
-  PortalSupplementsPage,
-  PortalTodayPage,
-} from '@/features/portal';
 import { RootRedirect } from '@/app/RootRedirect';
 import { RouteFallback } from '@/app/RouteFallback';
 import { LibraryKindRedirect, PackTypesRedirect, SetLogsRedirect } from '@/app/TrainerRedirects';
@@ -380,13 +371,36 @@ const applicationRoutes: RouteObject[] = [
             path: '/portal',
             element: <PortalLayout />,
             children: [
-              { index: true, element: <PortalHomePage /> },
-              { path: 'today', element: <PortalTodayPage /> },
-              { path: 'plan', element: <PortalPlanPage /> },
-              { path: 'nutrition', element: <PortalNutritionPage /> },
-              { path: 'supplements', element: <PortalSupplementsPage /> },
-              { path: 'check-ins', element: <PortalCheckInsPage /> },
-              { path: 'profile', element: <PortalProfilePage /> },
+              // Rotas lazy: o cliente só descarrega o código do portal, página a página.
+              lazyPage(undefined, async () => ({
+                default: (await import('@/features/portal/pages/PortalHomePage')).PortalHomePage,
+              })),
+              lazyPage('today', async () => ({
+                default: (await import('@/features/portal/pages/PortalTodayPage')).PortalTodayPage,
+              })),
+              lazyPage('plan', async () => ({
+                default: (await import('@/features/portal/pages/PortalPlanPage')).PortalPlanPage,
+              })),
+              lazyPage('nutrition', async () => ({
+                default: (await import('@/features/portal/pages/PortalNutritionPage'))
+                  .PortalNutritionPage,
+              })),
+              lazyPage('nutrition/planos', async () => ({
+                default: (await import('@/features/portal/pages/PortalMealPlansPage'))
+                  .PortalMealPlansPage,
+              })),
+              lazyPage('supplements', async () => ({
+                default: (await import('@/features/portal/pages/PortalSupplementsPage'))
+                  .PortalSupplementsPage,
+              })),
+              lazyPage('check-ins', async () => ({
+                default: (await import('@/features/portal/pages/PortalCheckInsPage'))
+                  .PortalCheckInsPage,
+              })),
+              lazyPage('profile', async () => ({
+                default: (await import('@/features/portal/pages/PortalProfilePage'))
+                  .PortalProfilePage,
+              })),
               { path: 'account', element: <AccountSecurityPage /> },
             ],
           },

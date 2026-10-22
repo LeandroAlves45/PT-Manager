@@ -1,5 +1,5 @@
 import { ChevronsLeft, ChevronsRight, Menu, Search } from 'lucide-react';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Outlet } from 'react-router';
 
 import { ProfileMenu } from '@/app/layouts/components/ProfileMenu';
@@ -17,6 +17,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/shared/componen
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { navigationFor } from '@/shared/config/navigation';
 import { useBrandVariables } from '@/shared/hooks/useBrandVariables';
+import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 import { DEFAULT_APP_NAME, resolveBrand, type BrandPair } from '@/shared/lib/brandTheme';
 import { cn } from '@/shared/lib/utils';
@@ -79,20 +80,6 @@ function TrainerShell() {
       };
 
   return <ShellFrame brand={brand} />;
-}
-
-/** Título do separador com o nome da app do personal trainer; repõe o anterior ao sair. */
-function useDocumentTitle(appName: string | undefined) {
-  useEffect(() => {
-    const name = appName?.trim();
-    if (name === undefined || name === '') return;
-
-    const previous = document.title;
-    document.title = name;
-    return () => {
-      document.title = previous;
-    };
-  }, [appName]);
 }
 
 function ShellFrame({ brand }: { brand: ShellBrand }) {

@@ -63,8 +63,8 @@ describe('PortalHomePage', () => {
     expect(within(supplements).getByText('1 de 1 tomadas hoje')).toBeInTheDocument();
     expect(within(supplements).getByText('Tudo tomado.')).toBeInTheDocument();
 
-    const checkIn = card('Check-in');
-    expect(within(checkIn).getByText('Tens um check-in para hoje.')).toBeInTheDocument();
+    const checkIn = card('Avaliação periódica');
+    expect(within(checkIn).getByText('Tens uma avaliação para hoje.')).toBeInTheDocument();
     expect(within(checkIn).getByRole('link', { name: 'Responder' })).toHaveAttribute(
       'href',
       '/portal/check-ins'
@@ -78,6 +78,7 @@ describe('PortalHomePage', () => {
       portalHome({
         workout: null,
         nutrition: null,
+        active_meal_plan_count: 0,
         supplements: { taken_count: 0, total_count: 0 },
         next_check_in: null,
       })
@@ -98,7 +99,9 @@ describe('PortalHomePage', () => {
     expect(
       within(card('Suplementos')).getByText('Não tens suplementos atribuídos.')
     ).toBeInTheDocument();
-    expect(within(card('Check-in')).getByText('Não tens check-ins agendados.')).toBeInTheDocument();
+    expect(
+      within(card('Avaliação periódica')).getByText('Não tens avaliações agendadas.')
+    ).toBeInTheDocument();
     // Sem dados, nenhum cartão oferece uma ação.
     expect(screen.queryByRole('link', { name: /Abrir treino|Ver plano|Registar|Responder/ })).toBe(
       null
@@ -179,8 +182,10 @@ describe('PortalHomePage', () => {
 
     await openHome();
 
-    const checkIn = card('Check-in');
-    expect(within(checkIn).getByText('Próximo check-in: quinta-feira, 08/10.')).toBeInTheDocument();
+    const checkIn = card('Avaliação periódica');
+    expect(
+      within(checkIn).getByText('Próxima avaliação: quinta-feira, 08/10.')
+    ).toBeInTheDocument();
     expect(within(checkIn).getByText('Poderás responder nesse dia.')).toBeInTheDocument();
     expect(within(checkIn).queryByRole('link')).not.toBeInTheDocument();
   });
@@ -234,13 +239,55 @@ describe('PortalHomePage', () => {
     expect(requests).toBe(0);
   });
 
+  it('asks the client to choose a meal plan instead of opening one on their behalf', async () => {
+    useHome(portalHome({ nutrition: null, active_meal_plan_count: 1 }));
+    const { router } = await openHome();
+
+    const nutrition = card('Plano alimentar');
+    expect(within(nutrition).getByText('Escolhe o teu plano')).toBeInTheDocument();
+    expect(
+      within(nutrition).getByText('O teu personal trainer deu-te um plano alimentar.')
+    ).toBeInTheDocument();
+    expect(within(nutrition).queryByRole('link', { name: 'Ver plano' })).toBeNull();
+
+    await userEvent.click(within(nutrition).getByRole('link', { name: 'Escolher plano' }));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/portal/nutrition/planos'));
+  });
+
+  it('counts the plans to choose from in the plural', async () => {
+    useHome(portalHome({ nutrition: null, active_meal_plan_count: 2 }));
+    await openHome();
+
+    expect(
+      within(card('Plano alimentar')).getByText(
+        'O teu personal trainer deu-te 2 planos alimentares.'
+      )
+    ).toBeInTheDocument();
+  });
+
+  it('marks every card with the colour of its section', async () => {
+    await openHome();
+
+    expect(card('O meu treino de hoje')).toHaveClass('border-t-primary');
+    expect(card('Plano alimentar')).toHaveClass('border-t-macro-fiber');
+    expect(card('Suplementos')).toHaveClass('border-t-section-supplements');
+    expect(card('Avaliação periódica')).toHaveClass('border-t-section-assessment');
+  });
+
+  it('never says check-in to the client', async () => {
+    await openHome();
+
+    expect(document.body.textContent ?? '').not.toMatch(/check-?in/i);
+  });
+
   // Uma rota desconhecida volta à raiz e daí ao Início, sem erro: só seguir o link prova que
   // a ação do cartão abre um ecrã registado no router.
   it.each([
     ['Abrir treino', 'Treino de hoje', '/portal/today'],
     ['Ver plano', 'Nutrição', '/portal/nutrition'],
     ['Registar tomas', 'Suplementos', '/portal/supplements'],
-    ['Responder', 'Check-ins', '/portal/check-ins'],
+    ['Responder', 'Avaliação periódica', '/portal/check-ins'],
   ])('opens the portal page behind the "%s" action', async (action, heading, pathname) => {
     const { router } = await openHome();
 
@@ -267,7 +314,7 @@ describe('PortalHomePage', () => {
         'Não foi possível atualizar. Estás a ver os últimos dados carregados.'
       )
     ).toBeInTheDocument();
-    expect(screen.getByText('Tens um check-in para hoje.')).toBeInTheDocument();
+    expect(screen.getByText('Tens uma avaliação para hoje.')).toBeInTheDocument();
     // É um aviso, não o ecrã de erro.
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 
@@ -279,7 +326,7 @@ describe('PortalHomePage', () => {
         screen.queryByText('Não foi possível atualizar. Estás a ver os últimos dados carregados.')
       ).not.toBeInTheDocument()
     );
-    expect(screen.getByText('Tens um check-in para hoje.')).toBeInTheDocument();
+    expect(screen.getByText('Tens uma avaliação para hoje.')).toBeInTheDocument();
   });
 
   it('drops the cached data when the refresh says the client was archived', async () => {
@@ -295,7 +342,7 @@ describe('PortalHomePage', () => {
     await queryClient.invalidateQueries({ queryKey: portalKeys.home() });
 
     expect(await screen.findByRole('heading', { name: 'Portal indisponível' })).toBeInTheDocument();
-    expect(screen.queryByText('Tens um check-in para hoje.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tens uma avaliação para hoje.')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument();
   });
 });

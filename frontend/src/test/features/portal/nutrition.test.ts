@@ -4,7 +4,10 @@ import {
   foodDisplayName,
   formatGrams,
   formatKcal,
-  macrosLabel,
+  goalLabel,
+  macroRows,
+  mealCountLabel,
+  planPeriodLabel,
   mealSupplementDose,
 } from '@/features/portal/lib/nutrition';
 
@@ -30,17 +33,78 @@ describe('formatKcal', () => {
   });
 });
 
-describe('macrosLabel', () => {
-  it('lists protein, carbs and fat in that order and leaves kcal and fibre out', () => {
+describe('macroRows', () => {
+  const plan = {
+    target_kcal: 2400,
+    protein_target_grams: 180,
+    carbs_target_grams: 270,
+    fats_target_grams: 67,
+    actual_totals: {
+      kcal: 925.6,
+      protein_grams: 79.25,
+      carbs_grams: 99.36,
+      fats_grams: 19.13,
+      fiber_grams: 9.08,
+    },
+  };
+
+  it('lists energy, protein, carbs, fat and fibre with text and the share of the target', () => {
     expect(
-      macrosLabel({
-        protein_grams: 19.4,
-        carbs_grams: 57.36,
-        fats_grams: 12.2,
-        kcal: 433.6,
-        fiber_grams: 8.48,
-      })
-    ).toBe('Proteína 19,4 g · Hidratos 57,4 g · Gordura 12,2 g');
+      macroRows(plan).map((row) => [row.key, row.actualText, row.targetText, row.percent])
+    ).toEqual([
+      ['kcal', '926 kcal', '2400 kcal', 39],
+      ['protein', '79,3 g', '180 g', 44],
+      ['carbs', '99,4 g', '270 g', 37],
+      ['fats', '19,1 g', '67 g', 29],
+      ['fiber', '9,1 g', '—', null],
+    ]);
+  });
+
+  it('caps the bar at 100 when the plan goes over the target', () => {
+    const rows = macroRows({ ...plan, actual_totals: { ...plan.actual_totals, kcal: 4800 } });
+
+    expect(rows[0]!.percent).toBe(100);
+    expect(rows[0]!.actualText).toBe('4800 kcal');
+  });
+
+  it('leaves the fibre out when the plan has none and draws no bar without a target', () => {
+    const rows = macroRows({
+      ...plan,
+      protein_target_grams: 0,
+      actual_totals: { ...plan.actual_totals, fiber_grams: 0 },
+    });
+
+    expect(rows.map((row) => row.key)).not.toContain('fiber');
+    expect(rows[1]!.percent).toBeNull();
+  });
+});
+
+describe('goalLabel', () => {
+  it.each([
+    ['maintenance', 'Manutenção'],
+    ['deficit', 'Défice'],
+    ['surplus', 'Superávit'],
+    [null, null],
+    ['unknown', null],
+    ['constructor', null],
+  ])('maps %s to %s', (goal, expected) => {
+    expect(goalLabel(goal)).toBe(expected);
+  });
+});
+
+describe('mealCountLabel', () => {
+  it.each([
+    [1, '1 refeição'],
+    [3, '3 refeições'],
+  ])('writes %s as "%s"', (count, expected) => {
+    expect(mealCountLabel(count)).toBe(expected);
+  });
+});
+
+describe('planPeriodLabel', () => {
+  it('writes an open plan from its start and a closed one as a range', () => {
+    expect(planPeriodLabel('2026-10-05', null)).toBe('Desde 05/10/2026');
+    expect(planPeriodLabel('2026-10-05', '2026-11-01')).toBe('05/10/2026 a 01/11/2026');
   });
 });
 

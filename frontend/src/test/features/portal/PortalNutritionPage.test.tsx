@@ -16,6 +16,14 @@ function useNutrition(body: NutritionPlan) {
   server.use(http.get(`${API}/portal/my-nutrition`, () => HttpResponse.json(body)));
 }
 
+/** Linha de uma métrica nas barras das macros (o texto da etiqueta identifica-a). */
+function macroItem(label: string): HTMLElement {
+  const goals = within(screen.getByRole('region', { name: 'Metas do dia' }));
+  const item = goals.getByText(label, { selector: 'span' }).closest('li');
+  if (item === null) throw new Error(`Sem linha para ${label}`);
+  return item;
+}
+
 async function openNutrition() {
   server.use(...restorableSession({ role: 'client' }));
   const view = renderApp({ initialEntries: ['/portal/nutrition'] });
@@ -24,6 +32,73 @@ async function openNutrition() {
 }
 
 describe('PortalNutritionPage', () => {
+  it('draws one bar per macro with its own colour and the share of the target', async () => {
+    await openNutrition();
+
+    const colours = [
+      ['Energia', 'bg-foreground', 39],
+      ['Proteína', 'bg-macro-protein', 44],
+      ['Hidratos', 'bg-macro-carbs', 37],
+      ['Gordura', 'bg-macro-fats', 29],
+    ] as const;
+    for (const [label, bar, percent] of colours) {
+      const meter = within(macroItem(label)).getByRole('progressbar');
+      expect(meter).toHaveAttribute('aria-valuenow', String(percent));
+      expect(meter.firstElementChild).toHaveClass(bar);
+      expect(meter.firstElementChild).toHaveStyle({ width: `${percent}%` });
+    }
+    expect(macroItem('Proteína')).toHaveTextContent('Proteína');
+    expect(within(macroItem('Proteína')).getByText('Proteína')).toHaveClass('text-macro-protein');
+    expect(within(macroItem('Fibra')).getByText('Fibra')).toHaveClass('text-macro-fiber');
+  });
+
+  it('fills the bar and says no more when the plan goes over the target, with no warning', async () => {
+    const plan = nutritionPlan();
+    useNutrition({
+      ...plan,
+      actual_totals: { ...plan.actual_totals, protein_grams: 250, kcal: 3000 },
+    });
+
+    await openNutrition();
+
+    const protein = macroItem('Proteína');
+    expect(within(protein).getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100');
+    expect(protein).toHaveTextContent('Este plano dá 250 g · Objetivo 180 g');
+    expect(macroItem('Energia')).toHaveTextContent('Este plano dá 3000 kcal · Objetivo 2400 kcal');
+    // Sem aviso nem alerta quando a soma passa a meta.
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText(/excede|ultrapassa|demasiad|acima/i)).not.toBeInTheDocument();
+    expect(within(protein).getByRole('progressbar').firstElementChild?.className).not.toMatch(
+      /destructive|red-/
+    );
+  });
+
+  it('shows the goal word and never the formula, age, sex or adjustment', async () => {
+    await openNutrition();
+
+    expect(screen.getByText('Manutenção')).toBeInTheDocument();
+    expect(screen.queryByText(/mifflin|harris|fórmula|formula|idade|sexo|ajuste/i)).toBeNull();
+  });
+
+  it.each([
+    ['deficit', 'Défice'],
+    ['surplus', 'Superávit'],
+  ])('writes the goal %s as "%s"', async (goal, word) => {
+    useNutrition(nutritionPlan({ goal_type: goal }));
+
+    await openNutrition();
+
+    expect(screen.getByText(word)).toBeInTheDocument();
+  });
+
+  it('shows no goal word when the plan has none', async () => {
+    useNutrition(nutritionPlan({ goal_type: null }));
+
+    await openNutrition();
+
+    expect(screen.queryByText(/^(Manutenção|Défice|Superávit)$/)).not.toBeInTheDocument();
+  });
+
   it('shows the target next to what the plan adds up to, from a single request', async () => {
     let requests = 0;
     server.use(
@@ -39,15 +114,13 @@ describe('PortalNutritionPage', () => {
     expect(screen.getByText('Manutenção - 2400 kcal')).toBeInTheDocument();
     expect(screen.getByText('Bebe pelo menos 2 litros de água por dia.')).toBeInTheDocument();
 
-    const table = screen.getByRole('table', { name: 'Objetivo diário e o que este plano dá' });
-    expect(within(table).getByRole('columnheader', { name: 'Objetivo' })).toBeInTheDocument();
-    expect(within(table).getByRole('columnheader', { name: 'Este plano dá' })).toBeInTheDocument();
-    expect(within(table).getByRole('row', { name: 'Energia 2400 kcal 926 kcal' })).toBeVisible();
-    expect(within(table).getByRole('row', { name: 'Proteína 180 g 79,3 g' })).toBeVisible();
-    expect(within(table).getByRole('row', { name: 'Hidratos 270 g 99,4 g' })).toBeVisible();
-    expect(within(table).getByRole('row', { name: 'Gordura 67 g 19,1 g' })).toBeVisible();
-    // A fibra não tem objetivo no plano: travessão, não um zero inventado.
-    expect(within(table).getByRole('row', { name: 'Fibra — 9,1 g' })).toBeVisible();
+    expect(macroItem('Energia')).toHaveTextContent('Este plano dá 926 kcal · Objetivo 2400 kcal');
+    expect(macroItem('Proteína')).toHaveTextContent('Este plano dá 79,3 g · Objetivo 180 g');
+    expect(macroItem('Hidratos')).toHaveTextContent('Este plano dá 99,4 g · Objetivo 270 g');
+    expect(macroItem('Gordura')).toHaveTextContent('Este plano dá 19,1 g · Objetivo 67 g');
+    // A fibra não tem objetivo no plano: travessão, não um zero inventado, e sem barra.
+    expect(macroItem('Fibra')).toHaveTextContent('Este plano dá 9,1 g · Objetivo —');
+    expect(within(macroItem('Fibra')).queryByRole('progressbar')).not.toBeInTheDocument();
     // O backend não sabe o que o cliente comeu: nada no ecrã o pode sugerir.
     expect(screen.queryByText(/comeste|consumid/i)).not.toBeInTheDocument();
     expect(requests).toBe(1);
@@ -63,14 +136,18 @@ describe('PortalNutritionPage', () => {
     expect(meals[0]).toBe(breakfast);
     expect(within(breakfast).getByRole('heading', { name: 'Pequeno-almoço' })).toBeVisible();
     expect(within(breakfast).getByText('434 kcal')).toBeInTheDocument();
-    expect(
-      within(breakfast).getByText('Proteína 19,4 g · Hidratos 57,4 g · Gordura 12,2 g')
-    ).toBeInTheDocument();
-    const foods = within(breakfast).getAllByRole('listitem');
-    expect(foods[0]).toHaveTextContent('Aveia');
-    expect(foods[0]).toHaveTextContent('80 g · 298 kcal');
-    expect(foods[1]).toHaveTextContent('Iogurte natural');
-    expect(foods[1]).toHaveTextContent('200 g · 136 kcal');
+    // Chips de macros: letra visível, nome por extenso para leitores de ecrã, gramas em texto.
+    const chips = within(breakfast).getAllByRole('listitem').slice(0, 3);
+    expect(chips[0]).toHaveTextContent('PProteína19,4 g');
+    expect(chips[1]).toHaveTextContent('HHidratos57,4 g');
+    expect(chips[2]).toHaveTextContent('GGordura12,2 g');
+    expect(chips[0]).toHaveClass('text-macro-protein');
+    expect(chips[1]).toHaveClass('text-macro-carbs');
+    expect(chips[2]).toHaveClass('text-macro-fats');
+    const oats = within(breakfast).getByText('Aveia').closest('li')!;
+    expect(oats).toHaveTextContent('80 g · 298 kcal');
+    const yogurt = within(breakfast).getByText('Iogurte natural').closest('li')!;
+    expect(yogurt).toHaveTextContent('200 g · 136 kcal');
     expect(within(breakfast).getByRole('heading', { name: 'Suplementos' })).toBeVisible();
     expect(within(breakfast).getByText('Creatina · 5 g')).toBeInTheDocument();
     expect(within(breakfast).getByText('Com água.')).toBeInTheDocument();
@@ -113,12 +190,14 @@ describe('PortalNutritionPage', () => {
     expect(within(card).getByText('Alimento indisponível')).toBeInTheDocument();
     expect(screen.queryByText('Unavailable food')).not.toBeInTheDocument();
     // As gramas e as kcal do alimento bloqueado continuam a contar nos totais do backend.
-    expect(within(card).getAllByRole('listitem')[0]).toHaveTextContent('80 g · 298 kcal');
+    expect(within(card).getByText('Alimento indisponível').closest('li')).toHaveTextContent(
+      '80 g · 298 kcal'
+    );
     expect(within(card).getByText('Indisponível')).toBeInTheDocument();
     // A etiqueta sozinha não diz o que fazer: a frase diz.
     expect(
       within(card).getByText(
-        'Este suplemento já não está disponível. Fala com o teu personal trainer.'
+        'Este suplemento já não está disponível. Confirma com o teu personal trainer o que fazer.'
       )
     ).toBeInTheDocument();
     expect(within(card).queryByText('Com água.')).not.toBeInTheDocument();
@@ -138,8 +217,8 @@ describe('PortalNutritionPage', () => {
 
     expect(screen.getByText('05/10/2026 a 01/11/2026')).toBeInTheDocument();
     expect(screen.queryByText('Bebe pelo menos 2 litros de água por dia.')).not.toBeInTheDocument();
-    expect(screen.queryByRole('row', { name: /Fibra/ })).not.toBeInTheDocument();
-    expect(screen.getAllByRole('row')).toHaveLength(5);
+    expect(screen.queryByText('Fibra')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('progressbar')).toHaveLength(4);
     expect(screen.getByText('Esta refeição ainda não tem alimentos.')).toBeInTheDocument();
   });
 
@@ -182,7 +261,7 @@ describe('PortalNutritionPage', () => {
     expect(screen.getByText('O plano ainda não tem refeições.')).toBeInTheDocument();
     expect(screen.queryByRole('article')).not.toBeInTheDocument();
     // Os objetivos existem mesmo sem refeições.
-    expect(screen.getByRole('row', { name: /Energia 2400 kcal/ })).toBeInTheDocument();
+    expect(macroItem('Energia')).toHaveTextContent('Objetivo 2400 kcal');
   });
 
   it('shows an empty state, without retry, when there is no active plan', async () => {
@@ -257,22 +336,11 @@ describe('PortalNutritionPage', () => {
     expect(requests).toBe(0);
   });
 
-  it('links the supplements of a meal to the screen where intakes are registered', async () => {
-    const { router } = await openNutrition();
-
-    const links = screen.getAllByRole('link', { name: 'Registar tomas' });
-    await userEvent.click(links[0]!);
-
-    expect(await screen.findByRole('heading', { name: 'Suplementos' })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe('/portal/supplements');
-  });
-
-  it('offers no link to the intakes in a meal without supplements', async () => {
-    const plan = nutritionPlan();
-    useNutrition({ ...plan, meals: plan.meals.map((meal) => ({ ...meal, supplements: [] })) });
-
+  it('only reads the supplements of a meal: no link to register intakes', async () => {
     await openNutrition();
 
+    const breakfast = screen.getByRole('article', { name: 'Pequeno-almoço' });
+    expect(within(breakfast).getByText('Creatina · 5 g')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Registar tomas' })).not.toBeInTheDocument();
   });
 

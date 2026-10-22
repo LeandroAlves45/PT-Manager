@@ -20,8 +20,11 @@ export const portalKeys = {
   branding: () => [...portalKeys.all, 'branding'] as const,
   home: () => [...portalKeys.all, 'home'] as const,
   workoutToday: () => [...portalKeys.all, 'workoutToday'] as const,
+  workoutDays: () => [...portalKeys.all, 'workoutDays'] as const,
+  workoutDay: (date: string) => [...portalKeys.all, 'workoutDay', date] as const,
   plan: () => [...portalKeys.all, 'plan'] as const,
   nutrition: () => [...portalKeys.all, 'nutrition'] as const,
+  mealPlans: () => [...portalKeys.all, 'mealPlans'] as const,
   supplementIntakes: () => [...portalKeys.all, 'supplementIntakes'] as const,
   supplements: () => [...portalKeys.all, 'supplements'] as const,
   checkInDue: () => [...portalKeys.all, 'checkInDue'] as const,
@@ -66,6 +69,38 @@ export function usePortalWorkoutTodayQuery() {
     queryKey: portalKeys.workoutToday(),
     queryFn: async ({ signal }) =>
       unwrap(await apiClient.GET('/api/v1/portal/my-workout/today', { signal })),
+  });
+}
+
+/**
+ * Dias passados com treino do plano ativo (filtro de dia), do mais recente para o mais antigo.
+ * "Passado" é antes de hoje no fuso do personal trainer; o servidor decide, não o browser.
+ */
+export function usePortalWorkoutDaysQuery() {
+  return useQuery({
+    queryKey: portalKeys.workoutDays(),
+    queryFn: async ({ signal }) =>
+      unwrap(await apiClient.GET('/api/v1/portal/my-workout/days', { signal })),
+  });
+}
+
+/**
+ * Um dia passado do plano ativo, só para ler: o planeado, o registado, as notas das séries e a
+ * nota de conclusão. Sem data (`null`) não faz pedido: o ecrã mostra o treino de hoje.
+ *
+ * @param date Dia local `AAAA-MM-DD` escolhido no filtro.
+ */
+export function usePortalWorkoutDayQuery(date: string | null) {
+  return useQuery({
+    queryKey: portalKeys.workoutDay(date ?? ''),
+    queryFn: async ({ signal }) =>
+      unwrap(
+        await apiClient.GET('/api/v1/portal/my-workout/day', {
+          params: { query: { date: date ?? undefined } },
+          signal,
+        })
+      ),
+    enabled: date !== null,
   });
 }
 
@@ -171,7 +206,10 @@ export function useCompleteWorkoutMutation() {
 }
 
 /**
- * Plano alimentar ativo do cliente, só de leitura.
+ * Plano alimentar que o cliente escolheu seguir, só de leitura.
+ *
+ * Sem escolha responde 404 `portal_nutrition_plan_not_selected` (há planos para escolher) ou
+ * `portal_nutrition_plan_not_available` (não há nenhum). A app nunca escolhe pelo cliente.
  *
  * Orçamento: um `GET /api/v1/portal/my-nutrition` ao abrir o ecrã; refeições, alimentos e
  * totais vêm no mesmo pedido.
@@ -181,6 +219,38 @@ export function usePortalNutritionQuery() {
     queryKey: portalKeys.nutrition(),
     queryFn: async ({ signal }) =>
       unwrap(await apiClient.GET('/api/v1/portal/my-nutrition', { signal })),
+  });
+}
+
+/** Planos alimentares ativos do cliente, com o que ele segue marcado em `is_selected`. */
+export function usePortalMealPlansQuery() {
+  return useQuery({
+    queryKey: portalKeys.mealPlans(),
+    queryFn: async ({ signal }) =>
+      unwrap(await apiClient.GET('/api/v1/portal/my-meal-plans', { signal })),
+  });
+}
+
+/**
+ * Guarda na conta o plano alimentar escolhido. Depois de gravar volta a ler a lista, o plano
+ * aberto e o Início, que resumem a escolha.
+ */
+export function useSelectMealPlanMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (mealPlanId: string) =>
+      unwrap(
+        await apiClient.PUT('/api/v1/portal/my-meal-plans/selection', {
+          body: { meal_plan_id: mealPlanId },
+        })
+      ),
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: portalKeys.mealPlans() }),
+        queryClient.invalidateQueries({ queryKey: portalKeys.nutrition() }),
+        queryClient.invalidateQueries({ queryKey: portalKeys.home() }),
+      ]),
   });
 }
 
@@ -368,7 +438,7 @@ function useProfileMutation<TVariables>(write: (variables: TVariables) => Promis
   });
 }
 
-/** Substitui os quatro contactos: um opcional a `null` apaga o valor guardado. */
+/** Grava o nome e os contactos: um opcional a `null` apaga o valor guardado. */
 export function useUpdateProfileMutation() {
   return useProfileMutation(async (body: ProfileUpdate) =>
     unwrap(await apiClient.PATCH('/api/v1/portal/my-profile', { body }))
