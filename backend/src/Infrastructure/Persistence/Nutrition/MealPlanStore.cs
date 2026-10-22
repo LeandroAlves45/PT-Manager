@@ -171,8 +171,10 @@ internal sealed class MealPlanStore : IMealPlanStore
         CancellationToken cancellationToken
     )
     {
-        // Arquivar tira o plano da escolha do cliente na mesma transação: reativá-lo depois não
-        // o volta a escolher, o cliente escolhe de novo no portal.
+        // Arquivar tira o plano da escolha do cliente na mesma transação. Reativar volta a
+        // limpá-la: se uma escolha correu em paralelo com o arquivo (o EXISTS da escolha ainda
+        // via o plano ativo antes do commit), não fica um plano reativado escolhido sem o
+        // cliente o voltar a escolher no portal.
         var strategy = _dbContext.Database.CreateExecutionStrategy();
         var affected = await strategy.ExecuteAsync(async () =>
         {
@@ -190,7 +192,7 @@ internal sealed class MealPlanStore : IMealPlanStore
                     cancellationToken
                 );
 
-            if (changed == 1 && isArchived)
+            if (changed == 1)
                 await _dbContext.Clients
                     .Where(client =>
                         client.OwnerTrainerId == trainerId &&

@@ -124,11 +124,10 @@ export function loggedSetLabel(logged: {
  * `portal_workout_day_not_available`.
  */
 export function isWorkoutDayUnavailable(error: unknown): boolean {
-  return (
-    isApiProblem(error) &&
-    error.status === 400 &&
-    error.fieldErrors[0]?.code === 'portal_workout_day_not_available'
-  );
+  // Qualquer 400 deste pedido quer dizer que a data não abre: o servidor responde
+  // `portal_workout_day_not_available` e o binder do ASP.NET responde o mesmo estado para uma
+  // data que nem é data. Tentar de novo nunca ajudaria.
+  return isApiProblem(error) && error.status === 400;
 }
 
 /**

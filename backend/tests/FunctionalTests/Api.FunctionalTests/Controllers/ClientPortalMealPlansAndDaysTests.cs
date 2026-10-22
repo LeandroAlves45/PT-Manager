@@ -138,6 +138,26 @@ public sealed class ClientPortalMealPlansAndDaysTests
     }
 
     [Fact]
+    public async Task ReactivatingPlan_ClearsAChoiceLeftByARaceWithArchiving()
+    {
+        var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(_fixture.Factory, Token);
+        var planId = (await PortalTestData.GetSelectedMealPlanIdAsync(
+            _fixture.Factory, trainerId, clientUserId, Token))!.Value;
+        var trainer = _fixture.Factory.CreateOriginClient().WithBearer(TestJwtFactory.IssueTrainer(trainerId));
+        Assert.Equal(
+            HttpStatusCode.NoContent,
+            (await trainer.PostAsync($"/api/v1/meal-plans/{planId}/archive", null, Token)).StatusCode);
+        // Resultado de uma escolha que correu em paralelo com o arquivo: a ficha ficou a apontar
+        // para o plano já arquivado.
+        await PortalTestData.ForceMealPlanSelectionAsync(_fixture.Factory, trainerId, clientUserId, planId, Token);
+
+        var reactivate = await trainer.PostAsync($"/api/v1/meal-plans/{planId}/reactivate", null, Token);
+
+        Assert.Equal(HttpStatusCode.NoContent, reactivate.StatusCode);
+        Assert.Null(await PortalTestData.GetSelectedMealPlanIdAsync(_fixture.Factory, trainerId, clientUserId, Token));
+    }
+
+    [Fact]
     public async Task MyNutrition_SinglePlanWithoutChoice_NeverOpensItAutomatically()
     {
         var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(_fixture.Factory, Token);

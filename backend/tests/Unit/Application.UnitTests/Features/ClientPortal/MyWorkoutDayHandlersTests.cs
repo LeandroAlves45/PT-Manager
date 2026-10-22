@@ -84,6 +84,26 @@ public sealed class MyWorkoutDayHandlersTests : ReadHandlerTestContext
     }
 
     [Fact]
+    public async Task Day_FirstPossibleDate_InPositiveOffsetZone_IsRejectedWithoutFailing()
+    {
+        // Berlim tinha +00:53 em 0001-01-01: converter esse dia para UTC cairia antes do
+        // primeiro instante representável. A data tem de ser recusada antes da conversão.
+        var handler = new GetMyWorkoutDayHandler(
+            new TenantStub(TrainerId, ClientUserId, "client"),
+            new ClockStub(NowUtc),
+            new TimeZoneStub(TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin")),
+            new MyWorkoutTodayReader(
+                new TrainingPlanQueriesFake { Plan = PlanWith(dayOfWeek: 0) },
+                new WorkoutTodayQueriesFake()));
+
+        var result = await handler.HandleAsync(
+            new GetMyWorkoutDayQuery(DateOnly.MinValue),
+            CancellationToken.None);
+
+        Assert.Equal(ClientPortalErrors.WorkoutDayNotAvailable.Code, result.Error!.Code);
+    }
+
+    [Fact]
     public async Task Day_WithoutDate_IsRejected()
     {
         var result = await DayHandler(dayOfWeek: 0)

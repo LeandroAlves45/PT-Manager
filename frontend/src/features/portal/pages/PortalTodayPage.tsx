@@ -61,7 +61,9 @@ function WorkoutSkeleton({ label }: { label: string }) {
  */
 export function PortalTodayPage() {
   const [params, setParams] = useSearchParams();
-  const selected = params.get('dia') === '' ? null : params.get('dia');
+  const raw = params.get('dia');
+  // Só uma data `AAAA-MM-DD` abre um dia passado; o resto (vazio, lixo) é o treino de hoje.
+  const selected = raw !== null && /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : null;
 
   const select = (date: string | null) => setParams(date === null ? {} : { dia: date });
 

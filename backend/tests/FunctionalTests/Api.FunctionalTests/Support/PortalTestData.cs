@@ -437,6 +437,23 @@ internal static class PortalTestData
             .SingleAsync(cancellationToken);
     }
 
+    /// <summary>Escreve a escolha diretamente na ficha, sem as verificações do portal.</summary>
+    internal static async Task ForceMealPlanSelectionAsync(
+        ApiWebApplicationFactory factory,
+        Guid trainerId,
+        Guid clientUserId,
+        Guid mealPlanId,
+        CancellationToken cancellationToken)
+    {
+        await using var scope = CreateTrainerScope(factory, trainerId);
+        var context = scope.ServiceProvider.GetRequiredService<PtManagerDbContext>();
+        await context.Clients
+            .Where(item => item.OwnerTrainerId == trainerId && item.UserId == clientUserId)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(item => item.SelectedMealPlanId, (Guid?)mealPlanId),
+                cancellationToken);
+    }
+
     /// <summary>Tira a escolha do plano alimentar, como um cliente que ainda não escolheu.</summary>
     internal static async Task ClearMealPlanSelectionAsync(
         ApiWebApplicationFactory factory,

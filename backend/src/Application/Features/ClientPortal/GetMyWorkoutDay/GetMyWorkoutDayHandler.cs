@@ -52,13 +52,11 @@ public sealed class GetMyWorkoutDayHandler
         if (date >= today)
             return Result<MyWorkoutTodayDto>.Failure(ClientPortalErrors.WorkoutDayNotAvailable);
 
-        var range = LocalDates.ToUtcRange(date, date.AddDays(1), timeZone);
         var workout = await _reader.ReadAsync(
             actor.Value.TrainerId,
             actor.Value.UserId,
             date,
-            range.StartUtc,
-            range.EndUtc,
+            timeZone,
             cancellationToken);
 
         if (workout is null)

@@ -149,6 +149,37 @@ describe('Workout day filter', () => {
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 
+  it('treats a malformed day in the address as today, without asking for it', async () => {
+    let dayRequests = 0;
+    server.use(
+      http.get(`${API}/portal/my-workout/day`, () => {
+        dayRequests += 1;
+        return HttpResponse.json(pastWorkoutDay());
+      })
+    );
+    openToday('/portal/today?dia=ontem');
+
+    expect(await screen.findByRole('heading', { name: 'Treino de hoje' })).toBeInTheDocument();
+    expect(dayRequests).toBe(0);
+  });
+
+  it('treats any 400 for the day as unavailable, also the binder one without a code', async () => {
+    server.use(
+      http.get(`${API}/portal/my-workout/day`, () =>
+        HttpResponse.json(problem('validation_failed', { errors: [] }), { status: 400 })
+      )
+    );
+    openToday('/portal/today?dia=2026-02-31');
+
+    expect(await screen.findByRole('heading', { name: 'Dia indisponível' })).toBeInTheDocument();
+    // O seletor diz o mesmo que o ecrã, em vez de «Hoje».
+    const select = await screen.findByLabelText('Ver treino de');
+    expect(select).toHaveValue('2026-02-31');
+    expect(
+      within(select).getByRole('option', { name: '2026-02-31 · indisponível' })
+    ).toBeDisabled();
+  });
+
   it('explains a day the server refuses and links back to today', async () => {
     server.use(
       http.get(`${API}/portal/my-workout/day`, () =>

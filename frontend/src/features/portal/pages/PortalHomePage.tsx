@@ -5,6 +5,7 @@ import { PortalCard } from '@/features/portal/components/PortalCard';
 import { PortalUnavailable } from '@/features/portal/components/PortalUnavailable';
 import { StaleDataNotice } from '@/features/portal/components/StaleDataNotice';
 import { longLocalDate, planDayTitle, shortLocalDate } from '@/features/portal/lib/schedule';
+import { progressPercent } from '@/features/portal/lib/workout';
 import type { components } from '@/shared/api/schema';
 import { isApiProblem } from '@/shared/api/problem';
 import { ErrorState } from '@/shared/components/ErrorState';
@@ -116,8 +117,7 @@ function WorkoutCard({ workout }: { workout: HomeWorkout | null }) {
       </PortalCard>
     );
 
-  const percent =
-    workout.planned_sets === 0 ? 0 : Math.round((workout.logged_sets / workout.planned_sets) * 100);
+  const percent = progressPercent(workout.logged_sets, workout.planned_sets);
 
   return (
     <PortalCard
@@ -142,7 +142,11 @@ function WorkoutCard({ workout }: { workout: HomeWorkout | null }) {
         {count(workout.planned_sets, 'série', 'séries')}
       </p>
       <div className="space-y-1 pt-1">
-        <Progress value={percent} aria-label="Séries registadas" />
+        <Progress
+          value={percent}
+          aria-label="Séries registadas"
+          aria-valuetext={`${formatNumber(workout.logged_sets)} de ${formatNumber(workout.planned_sets)} séries`}
+        />
         <p className="text-muted-foreground font-mono text-xs tabular-nums">
           {workout.is_completed
             ? `Treino concluído · ${formatNumber(workout.logged_sets)} de ${formatNumber(workout.planned_sets)} séries`

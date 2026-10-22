@@ -99,6 +99,10 @@ describe('Escolha do plano alimentar', () => {
     expect(account.bodies).toEqual([{ meal_plan_id: REST_DAY_MEAL_PLAN_ID }]);
     expect(screen.getByText('Dias de descanso')).toBeInTheDocument();
     expect(screen.getAllByRole('progressbar').length).toBeGreaterThan(0);
+    // O botão escolhido desapareceu com a lista: o foco passa para o título do plano.
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { level: 1, name: 'Nutrição' })).toHaveFocus()
+    );
   });
 
   it('with a choice shows the plan and a "Trocar de plano" link to the list', async () => {

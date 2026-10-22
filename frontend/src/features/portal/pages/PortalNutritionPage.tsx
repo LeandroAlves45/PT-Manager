@@ -1,4 +1,5 @@
 import { UtensilsCrossed } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 
 import { usePortalMealPlansQuery, usePortalNutritionQuery } from '@/features/portal/api/portal';
@@ -27,6 +28,15 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 export function PortalNutritionPage() {
   const query = usePortalNutritionQuery();
   const plansQuery = usePortalMealPlansQuery();
+  // Escolher na lista desta página troca a lista pelo plano: o foco vai para o título do plano,
+  // para o leitor de ecrã e o teclado não ficarem num botão que deixou de existir.
+  const [justChose, setJustChose] = useState(false);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const planId = query.data?.id;
+
+  useEffect(() => {
+    if (justChose && planId !== undefined) titleRef.current?.focus();
+  }, [justChose, planId]);
 
   if (query.isPending)
     return (
@@ -67,7 +77,7 @@ export function PortalNutritionPage() {
             Escolhe o plano alimentar que queres seguir. Podes trocar quando quiseres.
           </p>
         </header>
-        <PlanChoice />
+        <PlanChoice onSelected={() => setJustChose(true)} />
       </section>
     );
 
@@ -85,7 +95,13 @@ export function PortalNutritionPage() {
         <p className="text-muted-foreground font-mono text-xs">
           {planPeriodLabel(plan.starts_date, plan.ends_date)}
         </p>
-        <h1 className="font-display pe-1 text-3xl leading-none">Nutrição</h1>
+        <h1
+          ref={titleRef}
+          tabIndex={-1}
+          className="font-display pe-1 text-3xl leading-none outline-none"
+        >
+          Nutrição
+        </h1>
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-muted-foreground min-w-0 text-sm wrap-break-word">{plan.name}</p>
           {goal !== null && <Badge variant="secondary">{goal}</Badge>}
@@ -121,7 +137,7 @@ export function PortalNutritionPage() {
  * Lista para escolher o plano quando o cliente ainda não tem nenhum escolhido. Escolher grava
  * e o `GET /portal/my-nutrition`, invalidado pela gravação, passa a mostrar o plano.
  */
-function PlanChoice() {
+function PlanChoice({ onSelected }: { onSelected: () => void }) {
   const plansQuery = usePortalMealPlansQuery();
 
   if (plansQuery.isPending)
@@ -148,5 +164,5 @@ function PlanChoice() {
       />
     );
 
-  return <MealPlanList plans={plansQuery.data.items} />;
+  return <MealPlanList plans={plansQuery.data.items} onSelected={onSelected} />;
 }

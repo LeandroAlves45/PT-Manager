@@ -208,7 +208,7 @@ describe('PortalProfilePage', () => {
     expect(field('Telefone')).toHaveAttribute('aria-invalid', 'true');
 
     // fireEvent: nenhum teclado escreve U+0000.
-    fireEvent.change(field('Nome'), { target: { value: 'Jo ão' } });
+    fireEvent.change(field('Nome'), { target: { value: 'Jo\u0000ão' } });
     fireEvent.change(field('Telefone'), { target: { value: '912345678' } });
     await user.click(screen.getByRole('button', { name: 'Guardar dados' }));
 

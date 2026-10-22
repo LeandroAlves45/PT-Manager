@@ -255,8 +255,11 @@ describe('isWorkoutDayUnavailable', () => {
     expect(isWorkoutDayUnavailable(unavailable)).toBe(true);
   });
 
+  it('also treats a 400 without a code (the binder rejecting a non-date) as unavailable', () => {
+    expect(isWorkoutDayUnavailable(toApiProblem(400, { title: 'validation_failed' }))).toBe(true);
+  });
+
   it('ignores other failures', () => {
-    expect(isWorkoutDayUnavailable(toApiProblem(400, { title: 'validation_failed' }))).toBe(false);
     expect(
       isWorkoutDayUnavailable(toApiProblem(404, { title: 'portal_training_plan_not_available' }))
     ).toBe(false);

@@ -60,7 +60,6 @@ public sealed class GetMyPortalHomeHandler
 
         var timeZone = await _timeZoneProvider.GetRequiredAsync(trainerId, cancellationToken);
         var localDate = LocalDates.Today(_clock.UtcNow, timeZone);
-        var range = LocalDates.ToUtcRange(localDate, localDate.AddDays(1), timeZone);
 
         // As tomas são a única leitura que distingue "cliente inexistente ou arquivado" de
         // "sem dados", por isso servem de porteiro da home.
@@ -76,11 +75,11 @@ public sealed class GetMyPortalHomeHandler
             trainerId,
             userId,
             localDate,
-            range.StartUtc,
-            range.EndUtc,
+            timeZone,
             cancellationToken);
-        var nutrition = await _nutritionQueries.GetSelectedAsync(trainerId, userId, cancellationToken);
+        // A lista basta ao cartão: o plano escolhido vem marcado, sem carregar as refeições.
         var mealPlans = await _nutritionQueries.ListActiveAsync(trainerId, userId, cancellationToken);
+        var nutrition = mealPlans.FirstOrDefault(plan => plan.IsSelected);
         var nextCheckIn = await _checkInQueries.GetMyNextAsync(
             trainerId,
             userId,
@@ -107,7 +106,7 @@ public sealed class GetMyPortalHomeHandler
                     nutrition.Id,
                     nutrition.Name,
                     nutrition.TargetKcal,
-                    nutrition.Meals.Count),
+                    nutrition.MealCount),
             mealPlans.Count,
             new MyPortalHomeDto.SupplementsCardDto(intakes.TakenCount, intakes.TotalCount),
             nextCheckIn is null

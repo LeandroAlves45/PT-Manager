@@ -24,18 +24,24 @@ export function WorkoutDayPicker({
   const days = query.data?.items ?? [];
   if (days.length === 0) return null;
 
-  // Uma data que a lista não conhece (escrita à mão na barra de endereço) mostra «Hoje».
-  const value = days.some((day) => day.date === selected) ? selected : null;
+  // Uma data que a lista não conhece (escrita à mão na barra de endereço, ou hoje) aparece
+  // como opção própria, para o seletor dizer o mesmo que o ecrã («Dia indisponível»).
+  const unknown = selected !== null && !days.some((day) => day.date === selected);
 
   return (
     <div className="space-y-1.5">
       <Label htmlFor="workout-day">Ver treino de</Label>
       <NativeSelect
         id="workout-day"
-        value={value ?? ''}
+        value={selected ?? ''}
         onChange={(event) => onSelect(event.target.value === '' ? null : event.target.value)}
       >
         <option value="">Hoje</option>
+        {unknown && (
+          <option value={selected} disabled>
+            {selected} · indisponível
+          </option>
+        )}
         {days.map((day) => (
           <option key={day.date} value={day.date}>
             {pastDayOptionLabel(day.date, day.week_number)}

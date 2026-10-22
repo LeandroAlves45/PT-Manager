@@ -1,3 +1,4 @@
+using Application.Common.Time;
 using Application.Features.ClientPortal.Abstractions;
 using Application.Features.ClientPortal.Dtos;
 using Domain.Services;
@@ -23,15 +24,18 @@ public sealed class MyWorkoutTodayReader
     /// <summary>
     /// Devolve o treino do dia local indicado ou null quando o cliente não tem plano ativo
     /// visível. Serve o dia de hoje e os dias passados que o cliente abre só para ler.
+    /// O intervalo UTC do dia só se calcula depois de o dia estar dentro do plano: uma data
+    /// arbitrária (por exemplo 0001-01-01) nunca chega à conversão de fuso.
     /// </summary>
     public async Task<MyWorkoutTodayDto?> ReadAsync(
         Guid trainerId,
         Guid clientUserId,
         DateOnly localDate,
-        DateTimeOffset dayRangeStartUtc,
-        DateTimeOffset dayRangeEndUtc,
+        TimeZoneInfo trainerTimeZone,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(trainerTimeZone);
+
         var plan = await _planQueries.GetActiveAsync(trainerId, clientUserId, cancellationToken);
         if (plan is null)
             return null;
@@ -70,12 +74,13 @@ public sealed class MyWorkoutTodayReader
                 null,
                 NextWorkout(plan, cycleLength, localDate));
 
+        var range = LocalDates.ToUtcRange(localDate, localDate.AddDays(1), trainerTimeZone);
         var logs = await _queries.ListMyLogsAsync(
             trainerId,
             clientUserId,
             plan.Id,
-            dayRangeStartUtc,
-            dayRangeEndUtc,
+            range.StartUtc,
+            range.EndUtc,
             cancellationToken);
 
         var completion = await _queries.GetMyCompletionAsync(

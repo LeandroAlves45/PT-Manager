@@ -45,14 +45,12 @@ public sealed class GetMyWorkoutTodayHandler
 
         var timeZone = await _timeZoneProvider.GetRequiredAsync(actor.Value.TrainerId, cancellationToken);
         var localDate = LocalDates.Today(_clock.UtcNow, timeZone);
-        var range = LocalDates.ToUtcRange(localDate, localDate.AddDays(1), timeZone);
 
         var workout = await _reader.ReadAsync(
             actor.Value.TrainerId,
             actor.Value.UserId,
             localDate,
-            range.StartUtc,
-            range.EndUtc,
+            timeZone,
             cancellationToken);
 
         return workout is null
