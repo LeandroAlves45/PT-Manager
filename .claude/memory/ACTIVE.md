@@ -1,8 +1,15 @@
-# Estado ativo: Sprint 6G. 6GA, 6GB-SU e 6GB-TR (personal trainer) FINALIZADAS; segue 6GB do cliente
+# Estado ativo: Sprint 6 FINALIZADO (6GB-CL fechada a 2026-10-22); segue o bloco pós-6GB
 
-Atualizado: 2026-10-21
+Atualizado: 2026-10-22
 
 ## Sprint 6G: 6GA Auth UX + 6GB análise visual e correção
+
+- **6GB-CL (cliente) FINALIZADA e Sprint 6 FECHADO (2026-10-22)**, branch `feat/6gb-client` (`7ae35dd`..`bee6e36`), **por fazer merge e push (OK do Leandro)**.
+  - U68–U83: lista e escolha do plano alimentar guardada na conta (migration `AddClientSelectedMealPlan` aplicada à dev), filtro de dia só de leitura, perfil com nome e sem email (telefone continua obrigatório), «Avaliação periódica», rotas lazy, marca no separador, cores por secção, barras das macros, plano recolhível.
+  - Backend 3298 + 1 skip, frontend 952/952, mutações 14/14, security sem achados, `design-is` 21/30.
+  - Gates `QG6GB-LISTA-001`, `QG6GB-GATE-001`, `QG6F4-ISOLAMENTO-UI-001` e `QG6F-GATE-001` fechados; graphify regenerado.
+  - **Próximo:** bloco pós-6GB: RN-014 restante (suplementos fora de refeição, tomas por plano), RN-020 avaliação inicial pelo cliente, email da véspera, arquivo do cliente, bloqueio de treinadores.
+  - Ver `Sessions/2026-10-22-sprint6gb-cliente-fecho-sprint6.md` e `sprint_6GB/05_relatorio_fecho_6GB_cliente.md`.
 
 - **6GB-TR (personal trainer) FINALIZADA (2026-10-21), na `main` (`ebb6568`..`0e47275`), CI #49 verde** (o #48 falhou no job do site: tokens `--macro-*` por copiar para `site/src/styles/globals.css`). U53–U67: tudo em páginas (sem Sheets), planos de treino e alimentares em 2 passos, reps «12-10» (migration `AddPlannedRepsRange` aplicada à dev), «gr»→«g», convite com «Copiar link» + `email_sent` + validade na ficha, nota de conclusão visível, marca do personal trainer em toda a área, destaque dinâmico no painel, fuso com pesquisa, seletor de cor, rotas lazy. Backend 3266 + 1 skip, frontend 900/900, mutações 10/10, security sem achados, review 2 médias + 8 baixas corrigidas. Faltam `QG6GB-TR-GATE-001`, `-EMAIL-001`, `-VIDEO-001`. **Próximo:** 6GB do cliente (prints `cliente_*`, filtro de dia, perfil, lista de planos alimentares, suplementos fora de refeição U67, «Avaliações» no portal). Ver `Sessions/2026-10-21-sprint6gb-trainer-fecho.md` e `sprint_6GB/03_relatorio_fecho_6GB_trainer.md`.
 

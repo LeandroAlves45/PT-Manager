@@ -235,7 +235,10 @@ public sealed record MyMealResponse(
     }
 }
 
-/// <summary>Plano alimentar ativo do cliente.</summary>
+/// <summary>
+/// Plano alimentar que o cliente escolheu seguir. <c>goal_type</c> é a palavra do objetivo
+/// (<c>maintenance</c>, <c>deficit</c>, <c>surplus</c>) ou null quando as kcal foram escritas à mão.
+/// </summary>
 public sealed record MyNutritionPlanResponse(
     Guid Id,
     string Name,
@@ -246,6 +249,7 @@ public sealed record MyNutritionPlanResponse(
     decimal ProteinTargetGrams,
     decimal CarbsTargetGrams,
     decimal FatsTargetGrams,
+    string? GoalType,
     MyNutritionTotalsResponse ActualTotals,
     IReadOnlyList<MyMealResponse> Meals,
     DateTime UpdatedAt)
@@ -265,15 +269,16 @@ public sealed record MyNutritionPlanResponse(
             plan.ProteinTargetGrams,
             plan.CarbsTargetGrams,
             plan.FatsTargetGrams,
+            plan.GoalType,
             MyNutritionTotalsResponse.From(plan.ActualTotals),
             plan.Meals.Select(MyMealResponse.From).ToArray(),
             plan.UpdatedAt);
     }
 }
 
-/// <summary>Campos de contacto que o cliente pode alterar.</summary>
+/// <summary>Nome e contactos que o cliente pode alterar. O email da ficha não se altera aqui.</summary>
 public sealed record UpdateMyProfileRequest(
-    string? ContactEmail,
+    string Name,
     string Phone,
     string? EmergencyContactName,
     string? EmergencyContactPhone);
@@ -281,7 +286,6 @@ public sealed record UpdateMyProfileRequest(
 /// <summary>Perfil do cliente autenticado.</summary>
 public sealed record MyProfileResponse(
     string Name,
-    string? ContactEmail,
     string Phone,
     DateOnly BirthDate,
     string Sex,
@@ -297,7 +301,6 @@ public sealed record MyProfileResponse(
 
         return new(
             profile.Name,
-            profile.ContactEmail,
             profile.Phone,
             profile.BirthDate,
             profile.Sex,
@@ -504,3 +507,44 @@ public sealed record MyTodaySupplementIntakesResponse(
                 .ToArray());
     }
 }
+
+/// <summary>
+/// Plano alimentar ativo na lista do portal. <c>is_selected</c> marca o que o cliente segue.
+/// </summary>
+public sealed record MyMealPlanSummaryResponse(
+    Guid Id,
+    string Name,
+    DateOnly StartsDate,
+    DateOnly? EndsDate,
+    decimal TargetKcal,
+    string? GoalType,
+    int MealCount,
+    bool IsSelected)
+{
+    public static MyMealPlanSummaryResponse From(MyMealPlanSummaryDto plan)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+        return new(
+            plan.Id,
+            plan.Name,
+            plan.StartsDate,
+            plan.EndsDate,
+            plan.TargetKcal,
+            plan.GoalType,
+            plan.MealCount,
+            plan.IsSelected);
+    }
+}
+
+/// <summary>Planos alimentares ativos do cliente.</summary>
+public sealed record MyMealPlansResponse(IReadOnlyList<MyMealPlanSummaryResponse> Items)
+{
+    public static MyMealPlansResponse From(IReadOnlyList<MyMealPlanSummaryDto> plans)
+    {
+        ArgumentNullException.ThrowIfNull(plans);
+        return new(plans.Select(MyMealPlanSummaryResponse.From).ToList());
+    }
+}
+
+/// <summary>Plano alimentar que o cliente quer passar a seguir.</summary>
+public sealed record SelectMyMealPlanRequest(Guid MealPlanId);

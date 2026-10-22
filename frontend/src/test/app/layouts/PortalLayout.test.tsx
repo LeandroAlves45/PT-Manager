@@ -61,6 +61,25 @@ describe('PortalLayout', () => {
     expect(rootStyle().getPropertyValue('--primary')).toBe('');
   });
 
+  it('names the browser tab after the trainer brand', async () => {
+    useBranding(seededBranding);
+    document.title = 'PT Manager';
+    await openPortal();
+
+    await waitFor(() => expect(document.title).toBe('Salgado Performance'));
+  });
+
+  it('wraps a long brand name on two lines instead of cutting it', async () => {
+    useBranding(portalBranding({ app_name: 'Salgado Performance Coaching Academy Lisboa' }));
+    await openPortal();
+
+    const name = await within(screen.getByTestId('portal-header')).findByText(
+      'Salgado Performance Coaching Academy Lisboa'
+    );
+    expect(name).toHaveClass('line-clamp-2');
+    expect(name).not.toHaveClass('truncate');
+  });
+
   it('applies the seeded brand adjusted to the light theme, with a monogram', async () => {
     useBranding(seededBranding);
     await openPortal();

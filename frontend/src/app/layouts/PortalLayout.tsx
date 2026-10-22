@@ -8,6 +8,7 @@ import { BrandMark, usePortalBrandingQuery } from '@/features/portal';
 import { navigationFor } from '@/shared/config/navigation';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useBrandVariables } from '@/shared/hooks/useBrandVariables';
+import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { DEFAULT_APP_NAME, resolveBrand } from '@/shared/lib/brandTheme';
 import { cn } from '@/shared/lib/utils';
 
@@ -20,8 +21,13 @@ import { cn } from '@/shared/lib/utils';
  * exige a WCAG 2.2.
  *
  * Marca: a cor principal é ajustada ao tema e aplicada aos tokens; a cor de fundo só pinta o
- * cabeçalho. Se a marca falhar a carregar, o portal continua com a marca PT Manager: a
- * marca é decoração e não pode bloquear o treino do cliente.
+ * cabeçalho. O separador tem o nome da app do personal trainer e o nome no cabeçalho ocupa até
+ * duas linhas em vez de ser cortado. Se a marca falhar a carregar, o portal continua com a marca
+ * PT Manager: a marca é decoração e não pode bloquear o treino do cliente.
+ *
+ * Largura: no telemóvel a coluna ocupa o ecrã; no desktop vai até 1024 px, para as páginas
+ * poderem pôr os cartões em duas colunas. As páginas de formulário limitam-se a `max-w-xl`.
+ * O topo leva um degradê muito leve da cor principal, decorativo e por trás do conteúdo.
  */
 export function PortalLayout() {
   const { session } = useAuth();
@@ -30,6 +36,7 @@ export function PortalLayout() {
 
   const brand = branding.data === undefined ? null : resolveBrand(branding.data, resolved);
   useBrandVariables(brand?.primary ?? null);
+  useDocumentTitle(branding.data?.app_name);
 
   if (session === null) return null;
 
@@ -37,7 +44,12 @@ export function PortalLayout() {
   const header = brand?.header ?? null;
 
   return (
-    <div className="bg-background flex min-h-dvh flex-col">
+    <div className="bg-background relative isolate flex min-h-dvh flex-col">
+      <div
+        aria-hidden
+        data-testid="portal-brand-glow"
+        className="from-primary/10 pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-linear-to-b to-transparent"
+      />
       <header
         data-testid="portal-header"
         className={cn(
@@ -53,7 +65,10 @@ export function PortalLayout() {
         {branding.isPending ? (
           <Skeleton className="h-8 w-40" aria-label="A carregar a marca…" />
         ) : (
-          <BrandMark branding={branding.data ?? { app_name: DEFAULT_APP_NAME, logo_url: null }} />
+          <BrandMark
+            branding={branding.data ?? { app_name: DEFAULT_APP_NAME, logo_url: null }}
+            wrapName
+          />
         )}
         <div className="flex shrink-0 items-center gap-1">
           <ThemeToggle />
@@ -62,8 +77,8 @@ export function PortalLayout() {
       </header>
 
       <main className="flex-1 px-4 pt-4 pb-[calc(64px+20px+1rem)]">
-        {/* Coluna com a largura de um telemóvel grande: num ecrã largo o conteúdo não estica. */}
-        <div className="mx-auto w-full max-w-xl">
+        {/* Até 1024 px: num ecrã largo o conteúdo não estica e os cartões cabem em duas colunas. */}
+        <div className="mx-auto w-full max-w-5xl">
           <Outlet />
         </div>
       </main>

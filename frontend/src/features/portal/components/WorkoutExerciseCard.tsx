@@ -31,7 +31,7 @@ export function WorkoutExerciseCard({
   const name = exerciseDisplayName(exercise);
 
   return (
-    <section aria-label={name} className="border-border bg-card rounded-lg border">
+    <section aria-label={name} className="border-border bg-card rounded-xl border">
       <h2>
         <button
           type="button"

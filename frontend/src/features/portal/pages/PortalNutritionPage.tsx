@@ -1,34 +1,65 @@
 import { UtensilsCrossed } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { Link } from 'react-router';
 
-import { usePortalNutritionQuery } from '@/features/portal/api/portal';
+import { usePortalMealPlansQuery, usePortalNutritionQuery } from '@/features/portal/api/portal';
+import { MacroBars } from '@/features/portal/components/MacroBars';
 import { MealCard } from '@/features/portal/components/MealCard';
+import { MealPlanList } from '@/features/portal/components/MealPlanList';
 import { StaleDataNotice } from '@/features/portal/components/StaleDataNotice';
-import { formatGrams, formatKcal } from '@/features/portal/lib/nutrition';
-import type { components } from '@/shared/api/schema';
+import { goalLabel, planPeriodLabel } from '@/features/portal/lib/nutrition';
 import { isApiProblem } from '@/shared/api/problem';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
-import { formatDate } from '@/shared/lib/format';
-
-type NutritionPlan = components['schemas']['MyNutritionPlanResponse'];
 
 /**
- * Plano alimentar do cliente (`/portal/nutrition`), só de leitura.
+ * Plano alimentar que o cliente escolheu seguir (`/portal/nutrition`), só de leitura.
  *
- * Um `GET /portal/my-nutrition` alimenta o ecrã todo. O 404
- * `portal_nutrition_plan_not_available` é um estado vazio, não um erro: o backend responde o
- * mesmo sem plano ativo e com a ficha arquivada, por isso a mensagem não distingue os dois.
+ * Um `GET /portal/my-nutrition` alimenta o plano. Três estados vêm do código do 404:
+ * - `portal_nutrition_plan_not_selected`: há planos ativos mas nenhum escolhido; a lista para
+ *   escolher aparece nesta página e a app nunca escolhe sozinha, nem com um só plano;
+ * - `portal_nutrition_plan_not_available`: não há nenhum plano ativo, estado vazio e não erro
+ *   (o backend responde o mesmo sem plano ativo e com a ficha arquivada);
+ * - sem erro: o plano, com o link "Trocar de plano" quando há mais de um plano ativo.
  */
 export function PortalNutritionPage() {
   const query = usePortalNutritionQuery();
+  const plansQuery = usePortalMealPlansQuery();
+  const choosing =
+    isApiProblem(query.error) && query.error.code === 'portal_nutrition_plan_not_selected';
+  const planId = query.data?.id;
+
+  // Escolher na lista desta página troca a lista pelo plano: o foco vai para o título do plano,
+  // para o leitor de ecrã e o teclado não ficarem num botão que deixou de existir. A página
+  // lembra-se de que estava a mostrar a lista em vez de esperar pelo `onSuccess` da escolha,
+  // que não corre quando a lista já desmontou com a chegada do plano.
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const wasChoosing = useRef(false);
+
+  useEffect(() => {
+    if (choosing) {
+      wasChoosing.current = true;
+      return;
+    }
+    if (wasChoosing.current && planId !== undefined) {
+      wasChoosing.current = false;
+      titleRef.current?.focus();
+    }
+  }, [choosing, planId]);
 
   if (query.isPending)
     return (
       <section className="space-y-4">
         <Skeleton className="h-10 w-48" />
-        <div role="status" aria-label="A carregar o plano alimentar…" className="space-y-3">
-          <Skeleton className="h-40" />
+        <div
+          role="status"
+          aria-label="A carregar o plano alimentar…"
+          className="grid grid-cols-1 gap-4 md:grid-cols-2"
+        >
+          <Skeleton className="h-40 md:col-span-2" />
           <Skeleton className="h-40" />
           <Skeleton className="h-40" />
         </div>
@@ -39,7 +70,7 @@ export function PortalNutritionPage() {
   if (isApiProblem(query.error) && query.error.code === 'portal_nutrition_plan_not_available')
     return (
       <section className="space-y-4">
-        <h1 className="font-display text-3xl leading-none">Nutrição</h1>
+        <h1 className="font-display pe-1 text-3xl leading-none">Nutrição</h1>
         <EmptyState
           icon={UtensilsCrossed}
           title="Sem plano alimentar"
@@ -48,35 +79,63 @@ export function PortalNutritionPage() {
       </section>
     );
 
+  // Também vale com dados em cache: o plano escolhido foi arquivado e a escolha caiu.
+  if (choosing)
+    return (
+      <section className="space-y-4">
+        <header className="space-y-1">
+          <h1 className="font-display pe-1 text-3xl leading-none">Nutrição</h1>
+          <p className="text-muted-foreground text-sm">
+            Escolhe o plano alimentar que queres seguir. Podes trocar quando quiseres.
+          </p>
+        </header>
+        <PlanChoice />
+      </section>
+    );
+
   // Sem dados nenhuns, a falha ocupa o ecrã; com dados em cache, fica só um aviso mais abaixo.
   if (query.data === undefined)
-    return <ErrorState error={query.error} onRetry={() => void query.refetch()} />;
+    return <ErrorState error={query.error} onRetry={() => void query.refetch()} titleAs="h1" />;
 
   const plan = query.data;
+  const goal = goalLabel(plan.goal_type);
+  const canSwitch = (plansQuery.data?.items.length ?? 0) >= 2;
 
   return (
     <section className="space-y-4">
       <header className="space-y-1">
         <p className="text-muted-foreground font-mono text-xs">
-          {plan.ends_date === null
-            ? `Desde ${formatDate(plan.starts_date)}`
-            : `${formatDate(plan.starts_date)} a ${formatDate(plan.ends_date)}`}
+          {planPeriodLabel(plan.starts_date, plan.ends_date)}
         </p>
-        <h1 className="font-display text-3xl leading-none">Nutrição</h1>
-        <p className="text-muted-foreground text-sm wrap-break-word">{plan.name}</p>
+        <h1
+          ref={titleRef}
+          tabIndex={-1}
+          className="font-display pe-1 text-3xl leading-none outline-none"
+        >
+          Nutrição
+        </h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-muted-foreground min-w-0 text-sm wrap-break-word">{plan.name}</p>
+          {goal !== null && <Badge variant="secondary">{goal}</Badge>}
+        </div>
         {plan.description !== null && <p className="text-sm wrap-break-word">{plan.description}</p>}
+        {canSwitch && (
+          <Button asChild variant="outline" className="mt-2 min-h-11">
+            <Link to="/portal/nutrition/planos">Trocar de plano</Link>
+          </Button>
+        )}
       </header>
 
       {query.isError && (
         <StaleDataNotice onRetry={() => void query.refetch()} retrying={query.isFetching} />
       )}
 
-      <TargetsTable plan={plan} />
+      <MacroBars plan={plan} />
 
       {plan.meals.length === 0 ? (
         <p className="text-sm">O plano ainda não tem refeições.</p>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {plan.meals.map((meal) => (
             <MealCard key={meal.order_number} meal={meal} />
           ))}
@@ -87,69 +146,35 @@ export function PortalNutritionPage() {
 }
 
 /**
- * Objetivo diário ao lado do que o plano dá.
- *
- * `actual_totals` é a soma dos alimentos prescritos, não o que o cliente comeu: o backend não
- * regista refeições. Por isso a coluna chama-se "Este plano dá". A fibra não tem objetivo e só
- * aparece quando o plano a tem.
+ * Lista para escolher o plano quando o cliente ainda não tem nenhum escolhido. Escolher grava
+ * e o `GET /portal/my-nutrition`, invalidado pela gravação, passa a mostrar o plano.
  */
-function TargetsTable({ plan }: { plan: NutritionPlan }) {
-  const actual = plan.actual_totals;
-  const rows = [
-    {
-      label: 'Energia',
-      target: formatKcal(plan.target_kcal),
-      actual: formatKcal(actual.kcal),
-    },
-    {
-      label: 'Proteína',
-      target: formatGrams(plan.protein_target_grams),
-      actual: formatGrams(actual.protein_grams),
-    },
-    {
-      label: 'Hidratos',
-      target: formatGrams(plan.carbs_target_grams),
-      actual: formatGrams(actual.carbs_grams),
-    },
-    {
-      label: 'Gordura',
-      target: formatGrams(plan.fats_target_grams),
-      actual: formatGrams(actual.fats_grams),
-    },
-    ...(actual.fiber_grams > 0
-      ? [{ label: 'Fibra', target: '—', actual: formatGrams(actual.fiber_grams) }]
-      : []),
-  ];
+function PlanChoice() {
+  const plansQuery = usePortalMealPlansQuery();
 
-  return (
-    <div className="border-border bg-card rounded-lg border p-3">
-      <table className="w-full text-sm tabular-nums">
-        <caption className="sr-only">Objetivo diário e o que este plano dá</caption>
-        <thead>
-          <tr className="text-muted-foreground font-mono text-xs">
-            <th scope="col" className="pb-2 text-left font-normal">
-              <span className="sr-only">Nutriente</span>
-            </th>
-            <th scope="col" className="pb-2 text-right font-normal">
-              Objetivo
-            </th>
-            <th scope="col" className="pb-2 text-right font-normal">
-              Este plano dá
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-border divide-y">
-          {rows.map((row) => (
-            <tr key={row.label}>
-              <th scope="row" className="py-2 text-left font-medium">
-                {row.label}
-              </th>
-              <td className="py-2 text-right">{row.target}</td>
-              <td className="py-2 text-right">{row.actual}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+  if (plansQuery.isPending)
+    return (
+      <div
+        role="status"
+        aria-label="A carregar os planos alimentares…"
+        className="grid grid-cols-1 gap-4 md:grid-cols-2"
+      >
+        <Skeleton className="h-40" />
+        <Skeleton className="h-40" />
+      </div>
+    );
+
+  if (plansQuery.data === undefined)
+    return <ErrorState error={plansQuery.error} onRetry={() => void plansQuery.refetch()} />;
+
+  if (plansQuery.data.items.length === 0)
+    return (
+      <EmptyState
+        icon={UtensilsCrossed}
+        title="Sem plano alimentar"
+        description="O teu personal trainer ainda não te atribuiu um plano alimentar."
+      />
+    );
+
+  return <MealPlanList plans={plansQuery.data.items} />;
 }

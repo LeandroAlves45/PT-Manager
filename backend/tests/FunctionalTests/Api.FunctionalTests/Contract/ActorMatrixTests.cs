@@ -56,7 +56,10 @@ public sealed class ActorMatrixTests
         // [6B] NOVO
         "/api/v1/portal/home",
         "/api/v1/portal/my-workout/today",
-        "/api/v1/portal/my-check-ins/next"
+        "/api/v1/portal/my-check-ins/next",
+        "/api/v1/portal/my-workout/days",
+        "/api/v1/portal/my-workout/day?date=2026-09-08",
+        "/api/v1/portal/my-meal-plans"
     ];
 
     [Theory]

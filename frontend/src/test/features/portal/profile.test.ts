@@ -4,7 +4,6 @@ import {
   AVATAR_MAX_BYTES,
   avatarFailureMessage,
   avatarFileError,
-  isAcceptedEmail,
   profileFailure,
   profileInitials,
   profileSchema,
@@ -21,46 +20,31 @@ function fileOf(type: string, size: number): File {
   return file;
 }
 
-describe('isAcceptedEmail', () => {
-  it.each(['joao@ptmanager.local', 'a.b+c@sub.dominio.pt'])('accepts %s', (email) => {
-    expect(isAcceptedEmail(email)).toBe(true);
-  });
-
-  // Os mesmos casos que o value object `EmailAddress` do backend recusa.
-  it.each([
-    'a@b',
-    'a b@c.pt',
-    'a@c.pt.',
-    'a@.c.pt',
-    'a@b@c.pt',
-    'a@b.pt@c.pt',
-    'sem-arroba',
-    '@c.pt',
-    'a@',
-  ])('refuses %s', (email) => {
-    expect(isAcceptedEmail(email)).toBe(false);
-  });
-});
-
 describe('profileSchema', () => {
   const valid = {
-    contact_email: '',
+    name: 'João Pereira',
     phone: '+351912345678',
     emergency_contact_name: '',
     emergency_contact_phone: '',
   };
 
-  it('accepts a phone alone and trims what was typed', () => {
-    const parsed = profileSchema.safeParse({ ...valid, phone: '  912 345 678  ' });
+  it('accepts a name and a phone, and trims what was typed', () => {
+    const parsed = profileSchema.safeParse({
+      ...valid,
+      name: '  Joana Silva  ',
+      phone: '  912 345 678  ',
+    });
 
+    expect(parsed.success && parsed.data.name).toBe('Joana Silva');
     expect(parsed.success && parsed.data.phone).toBe('912 345 678');
   });
 
   it.each([
+    [{ name: '   ' }, 'Indica o teu nome.'],
+    [{ name: 'n'.repeat(256) }, 'O nome não pode exceder 255 caracteres.'],
+    [{ name: 'Jo\u0000ão' }, 'O nome tem caracteres inválidos.'],
     [{ phone: '   ' }, 'Indica o telefone.'],
     [{ phone: '1'.repeat(33) }, 'O telefone não pode exceder 32 caracteres.'],
-    [{ contact_email: 'a@b' }, 'Indica um email válido.'],
-    [{ contact_email: `${'a'.repeat(251)}@c.pt` }, 'O email não pode exceder 255 caracteres.'],
     [{ emergency_contact_name: 'n'.repeat(256) }, 'O nome não pode exceder 255 caracteres.'],
     [{ emergency_contact_phone: '1'.repeat(33) }, 'O telefone não pode exceder 32 caracteres.'],
   ])('refuses %o', (change, message) => {
@@ -73,36 +57,37 @@ describe('profileSchema', () => {
 
 describe('profile values', () => {
   it('shows a missing optional as empty and sends an empty optional as null', () => {
-    const formValues = toProfileValues(portalProfile({ contact_email: null }));
+    const formValues = toProfileValues(portalProfile());
 
     expect(formValues).toEqual({
-      contact_email: '',
+      name: 'João Pereira',
       phone: '+351912345678',
       emergency_contact_name: '',
       emergency_contact_phone: '',
     });
     expect(toProfileUpdate(formValues)).toEqual({
-      contact_email: null,
+      name: 'João Pereira',
       phone: '+351912345678',
       emergency_contact_name: null,
       emergency_contact_phone: null,
     });
   });
 
-  it('keeps the filled optionals', () => {
-    expect(
-      toProfileUpdate({
-        contact_email: 'joao@ptmanager.local',
-        phone: '912345678',
-        emergency_contact_name: 'Ana Pereira',
-        emergency_contact_phone: '961112223',
-      })
-    ).toEqual({
-      contact_email: 'joao@ptmanager.local',
+  it('keeps the filled optionals and never carries an email', () => {
+    const update = toProfileUpdate({
+      name: 'Joana Silva',
       phone: '912345678',
       emergency_contact_name: 'Ana Pereira',
       emergency_contact_phone: '961112223',
     });
+
+    expect(update).toEqual({
+      name: 'Joana Silva',
+      phone: '912345678',
+      emergency_contact_name: 'Ana Pereira',
+      emergency_contact_phone: '961112223',
+    });
+    expect(update).not.toHaveProperty('contact_email');
   });
 });
 
@@ -121,28 +106,32 @@ describe('profileFailure', () => {
   it('reads a validation code from errors[] and points at its field', () => {
     const failure = toApiProblem(400, {
       title: 'validation_failed',
-      errors: [{ field: 'ContactEmail', code: 'client_email_invalid', message: 'x' }],
+      errors: [{ field: 'Name', code: 'client_name_invalid', message: 'x' }],
     });
 
     expect(profileFailure(failure)).toEqual({
-      field: 'contact_email',
-      message: 'Indica um email válido.',
+      field: 'name',
+      message: 'Indica o teu nome, com até 255 caracteres.',
     });
   });
 
-  it.each([
-    [
-      'client_email_already_exists',
-      'contact_email',
-      'Este email já está a ser usado noutra ficha de cliente.',
-    ],
-    [
-      'client_phone_already_exists',
-      'phone',
-      'Este telefone já está a ser usado noutra ficha de cliente.',
-    ],
-  ] as const)('points the 409 %s at its field', (code, field, message) => {
-    expect(profileFailure(toApiProblem(409, { title: code }))).toEqual({ field, message });
+  it('points a generic code at the field the server names', () => {
+    const failure = toApiProblem(400, {
+      title: 'validation_failed',
+      errors: [{ field: 'EmergencyContactName', code: 'text_invalid_character', message: 'x' }],
+    });
+
+    expect(profileFailure(failure)).toEqual({
+      field: 'emergency_contact_name',
+      message: 'O texto tem caracteres inválidos.',
+    });
+  });
+
+  it('points the 409 of the phone at its field', () => {
+    expect(profileFailure(toApiProblem(409, { title: 'client_phone_already_exists' }))).toEqual({
+      field: 'phone',
+      message: 'Este telefone já está a ser usado noutra ficha de cliente.',
+    });
   });
 
   it('puts an archived profile and anything unknown on the form, not on a field', () => {
@@ -153,7 +142,7 @@ describe('profileFailure', () => {
     expect(profileFailure(toApiProblem(500, { title: 'constructor' })).field).toBe('root');
     expect(profileFailure(new TypeError('Failed to fetch'))).toEqual({
       field: 'root',
-      message: 'Não foi possível guardar os contactos. Tenta novamente.',
+      message: 'Não foi possível guardar os dados. Tenta novamente.',
     });
   });
 });

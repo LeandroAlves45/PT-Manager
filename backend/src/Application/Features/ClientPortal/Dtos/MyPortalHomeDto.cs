@@ -8,6 +8,7 @@ public sealed record MyPortalHomeDto(
     DateOnly LocalDate,
     MyPortalHomeDto.WorkoutCardDto? Workout,
     MyPortalHomeDto.NutritionCardDto? Nutrition,
+    int ActiveMealPlanCount,
     MyPortalHomeDto.SupplementsCardDto Supplements,
     MyPortalHomeDto.NextCheckInCardDto? NextCheckIn)
 {
@@ -23,7 +24,10 @@ public sealed record MyPortalHomeDto(
         bool IsCompleted,
         MyWorkoutTodayDto.NextWorkoutDto? NextWorkout);
 
-    /// <summary>Cartão "Plano Alimentar".</summary>
+    /// <summary>
+    /// Cartão "Plano Alimentar": o plano escolhido. Null sem escolha; com
+    /// <c>ActiveMealPlanCount</c> maior que zero o cartão convida a escolher um plano.
+    /// </summary>
     public sealed record NutritionCardDto(
         Guid MealPlanId,
         string Name,

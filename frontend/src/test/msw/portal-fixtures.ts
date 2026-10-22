@@ -61,6 +61,7 @@ export function portalHome(
       target_kcal: 2400,
       meal_count: 1,
     },
+    active_meal_plan_count: 1,
     supplements: { taken_count: 1, total_count: 1 },
     next_check_in: {
       id: '0f1e2d3c-4b5a-4968-8776-655443322110',
@@ -109,6 +110,7 @@ export function loggedSet(
     reps_done: 8,
     rpe: 8.5,
     performed_at: '2026-10-06T09:15:00Z',
+    notes: null,
     ...overrides,
   };
 }
@@ -147,9 +149,53 @@ export function workoutToday(
     day: { id: TRAINING_DAY_ID, notes: 'Inferiores', exercises: [workoutExercise()] },
     progress: { planned_sets: 2, logged_sets: 0, planned_exercises: 1, completed_exercises: 0 },
     completed_at: null,
+    completion_notes: null,
     next_workout: null,
     ...overrides,
   };
+}
+
+/** Dias passados com treino do plano ativo: as duas terças e a quinta antes de 6/10/2026. */
+export function workoutDays(
+  items: Schemas['MyPastWorkoutDayResponse'][] = [
+    { date: '2026-10-01', week_number: 1, day_of_week: 3 },
+    { date: '2026-09-29', week_number: 1, day_of_week: 1 },
+  ]
+): Schemas['MyPastWorkoutDaysResponse'] {
+  return { items };
+}
+
+/** Quinta, 1 de outubro de 2026: uma série registada com nota e o treino concluído. */
+export function pastWorkoutDay(
+  overrides: Partial<Schemas['MyWorkoutTodayResponse']> = {}
+): Schemas['MyWorkoutTodayResponse'] {
+  return workoutToday({
+    local_date: '2026-10-01',
+    day_of_week: 3,
+    day: {
+      id: TRAINING_DAY_ID,
+      notes: 'Inferiores',
+      exercises: [
+        workoutExercise({
+          sets: [
+            workoutSet({
+              logged: loggedSet({
+                weight_kg: 60,
+                reps_done: 9,
+                performed_at: '2026-10-01T09:15:00Z',
+                notes: 'Joelho bem',
+              }),
+            }),
+            workoutSet({ id: 'b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d02', set_number: 2 }),
+          ],
+        }),
+      ],
+    },
+    progress: { planned_sets: 2, logged_sets: 1, planned_exercises: 1, completed_exercises: 0 },
+    completed_at: '2026-10-01T10:00:00Z',
+    completion_notes: 'Treino forte',
+    ...overrides,
+  });
 }
 
 /** Plano ativo: terças e quintas da semana 1, como o do João no seed. */
@@ -249,6 +295,7 @@ export function nutritionPlan(
     protein_target_grams: 180,
     carbs_target_grams: 270,
     fats_target_grams: 67,
+    goal_type: 'maintenance',
     actual_totals: {
       protein_grams: 79.25,
       carbs_grams: 99.36,
@@ -482,7 +529,6 @@ export function portalProfile(
 ): Schemas['MyProfileResponse'] {
   return {
     name: 'João Pereira',
-    contact_email: 'joao@ptmanager.local',
     phone: '+351912345678',
     birth_date: '1992-04-17',
     sex: 'male',
@@ -492,4 +538,41 @@ export function portalProfile(
     updated_at: '2026-10-01T09:00:00Z',
     ...overrides,
   };
+}
+
+/** Plano alimentar na lista do portal. Por omissão, o que o João segue. */
+export function mealPlanSummary(
+  overrides: Partial<Schemas['MyMealPlanSummaryResponse']> = {}
+): Schemas['MyMealPlanSummaryResponse'] {
+  return {
+    id: '6b4f8f5e-4d3c-4f1d-9d8e-0a1b2c3d4e5f',
+    name: 'Manutenção - 2400 kcal',
+    starts_date: '2026-10-05',
+    ends_date: null,
+    target_kcal: 2400,
+    goal_type: 'maintenance',
+    meal_count: 2,
+    is_selected: true,
+    ...overrides,
+  };
+}
+
+/** Plano de dias de descanso, por escolher. */
+export const REST_DAY_MEAL_PLAN_ID = '9c8b7a65-4d3e-4f2a-9b1c-0d1e2f3a4b5c';
+
+/** Os dois planos ativos do João: o de manutenção (escolhido) e o dos dias de descanso. */
+export function mealPlans(
+  items: Schemas['MyMealPlanSummaryResponse'][] = [
+    mealPlanSummary(),
+    mealPlanSummary({
+      id: REST_DAY_MEAL_PLAN_ID,
+      name: 'Dias de descanso',
+      target_kcal: 2000,
+      goal_type: 'deficit',
+      meal_count: 3,
+      is_selected: false,
+    }),
+  ]
+): Schemas['MyMealPlansResponse'] {
+  return { items };
 }

@@ -21,11 +21,12 @@ export function TrainingPlanError({
   if (isApiProblem(error) && error.code === 'portal_training_plan_not_available')
     return (
       <EmptyState
+        titleAs="h1"
         icon={Dumbbell}
         title="Sem plano de treino"
         description="O teu personal trainer ainda não atribuiu um plano."
       />
     );
 
-  return <ErrorState error={error} onRetry={onRetry} />;
+  return <ErrorState error={error} onRetry={onRetry} titleAs="h1" />;
 }

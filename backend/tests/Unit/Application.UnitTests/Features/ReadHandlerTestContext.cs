@@ -36,7 +36,8 @@ public abstract class ReadHandlerTestContext
 
     protected static GetMyPortalHomeHandler CreateHomeHandler(
         IntakeQueriesFake intakes,
-        MyNextCheckInDto? nextCheckIn = null) =>
+        MyNextCheckInDto? nextCheckIn = null,
+        NutritionQueriesFake? nutrition = null) =>
         new(
             new TenantStub(TrainerId, ClientUserId, "client"),
             new ClockStub(NowUtc),
@@ -44,7 +45,7 @@ public abstract class ReadHandlerTestContext
             new MyWorkoutTodayReader(
                 new TrainingPlanQueriesFake { Plan = PlanWith(dayOfWeek: 3) },
                 new WorkoutTodayQueriesFake()),
-            new NutritionQueriesFake(),
+            nutrition ?? new NutritionQueriesFake(),
             intakes,
             new CheckInQueriesFake { Next = nextCheckIn });
 
@@ -170,6 +171,8 @@ public abstract class ReadHandlerTestContext
 
         public DateTime? CompletedAt { get; init; }
 
+        public string? CompletionNotes { get; init; }
+
         public DateTimeOffset LastFromUtc { get; private set; }
 
         public Task<IReadOnlyList<MyTodaySetLogRow>> ListMyLogsAsync(
@@ -184,18 +187,40 @@ public abstract class ReadHandlerTestContext
             return Task.FromResult(Logs);
         }
 
-        public Task<DateTime?> GetMyCompletionAsync(
+        public Task<MyWorkoutCompletionRow?> GetMyCompletionAsync(
             Guid trainerId,
             Guid clientUserId,
             Guid trainingPlanDayId,
             DateOnly localDate,
-            CancellationToken cancellationToken) => Task.FromResult(CompletedAt);
+            CancellationToken cancellationToken) =>
+            Task.FromResult(CompletedAt is { } completedAt
+                ? new MyWorkoutCompletionRow(completedAt, CompletionNotes)
+                : null);
     }
 
     protected sealed class NutritionQueriesFake : IMyNutritionPlanQueries
     {
-        public Task<MyNutritionPlanDto?> GetActiveAsync(
+        public bool HasSelection { get; init; } = true;
+
+        public int ActiveCount { get; init; } = 1;
+
+        public Task<IReadOnlyList<MyMealPlanSummaryDto>> ListActiveAsync(
             Guid trainerId, Guid clientUserId, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<MyMealPlanSummaryDto>>(Enumerable.Range(0, ActiveCount)
+                .Select(index => new MyMealPlanSummaryDto(
+                    Guid.NewGuid(),
+                    $"Plano {index + 1}",
+                    new DateOnly(2026, 9, 1),
+                    null,
+                    2_200m,
+                    "maintenance",
+                    1,
+                    HasSelection && index == 0))
+                .ToList());
+
+        public Task<MyNutritionPlanDto?> GetSelectedAsync(
+            Guid trainerId, Guid clientUserId, CancellationToken cancellationToken) =>
+            !HasSelection ? Task.FromResult<MyNutritionPlanDto?>(null) :
             Task.FromResult<MyNutritionPlanDto?>(new MyNutritionPlanDto(
                 Guid.NewGuid(),
                 "Recomposição",
@@ -206,6 +231,7 @@ public abstract class ReadHandlerTestContext
                 180m,
                 200m,
                 60m,
+                "maintenance",
                 new MyNutritionPlanDto.TotalsDto(0, 0, 0, 0, 0),
                 [
                     new MyNutritionPlanDto.MealDto(

@@ -24,17 +24,16 @@ public sealed class ClientPortalInputLimitsTests
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 
     [Theory]
-    [InlineData("a@b")]
-    [InlineData("a b@c.pt")]
-    [InlineData("a@c.pt.")]
-    public async Task PatchMyProfile_EmailRejectedByDomain_ReturnsValidationError(string email)
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task PatchMyProfile_EmptyName_ReturnsValidationError(string name)
     {
         var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(
             _fixture.Factory, Token);
         var client = ClientPortalClient(trainerId, clientUserId);
         var payload = JsonSerializer.Serialize(new
         {
-            contact_email = email,
+            name,
             phone = "+351911111111",
             emergency_contact_name = (string?)null,
             emergency_contact_phone = (string?)null
@@ -46,8 +45,27 @@ public sealed class ClientPortalInputLimitsTests
         Assert.True(response.StatusCode == HttpStatusCode.BadRequest, body.ToString());
         Assert.Equal("validation_failed", body.GetProperty("title").GetString());
         var error = Assert.Single(body.GetProperty("errors").EnumerateArray());
-        Assert.Equal("ContactEmail", error.GetProperty("field").GetString());
-        Assert.Equal("client_email_invalid", error.GetProperty("code").GetString());
+        Assert.Equal("Name", error.GetProperty("field").GetString());
+        Assert.Equal("client_name_invalid", error.GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task PatchMyProfile_NullCharacterInName_ReturnsValidationError()
+    {
+        var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(
+            _fixture.Factory, Token);
+        var client = ClientPortalClient(trainerId, clientUserId);
+        const string payload =
+            "{\"name\":\"Ana\\u0000\",\"phone\":\"+351911111111\"," +
+            "\"emergency_contact_name\":null,\"emergency_contact_phone\":null}";
+
+        var response = await PatchAsync(client, "/api/v1/portal/my-profile", payload);
+
+        var body = await ReadBodyAsync(response);
+        Assert.True(response.StatusCode == HttpStatusCode.BadRequest, body.ToString());
+        var error = Assert.Single(body.GetProperty("errors").EnumerateArray());
+        Assert.Equal("Name", error.GetProperty("field").GetString());
+        Assert.Equal("text_invalid_character", error.GetProperty("code").GetString());
     }
 
     [Fact]
@@ -129,7 +147,7 @@ public sealed class ClientPortalInputLimitsTests
             _fixture.Factory, Token);
         var client = ClientPortalClient(trainerId, clientUserId);
         const string payload =
-            "{\"contact_email\":null,\"phone\":\"+351\\u0000911\"," +
+            "{\"name\":\"Portal client\",\"phone\":\"+351\\u0000911\"," +
             "\"emergency_contact_name\":null,\"emergency_contact_phone\":null}";
 
         var response = await PatchAsync(client, "/api/v1/portal/my-profile", payload);

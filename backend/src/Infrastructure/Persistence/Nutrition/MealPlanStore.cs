@@ -171,16 +171,42 @@ internal sealed class MealPlanStore : IMealPlanStore
         CancellationToken cancellationToken
     )
     {
-        var affected = await _dbContext.MealPlans
-            .Where(plan => plan.Id == mealPlanId && plan.OwnerTrainerId == trainerId)
-            .Where(plan => plan.IsArchived != isArchived)
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(plan => plan.IsArchived, isArchived)
-                    .SetProperty(plan => plan.IsActive, !isArchived)
-                    .SetProperty(plan => plan.UpdatedAt, now),
-                cancellationToken
-            );
+        // Arquivar tira o plano da escolha do cliente na mesma transação. Reativar volta a
+        // limpá-la: se uma escolha correu em paralelo com o arquivo (o EXISTS da escolha ainda
+        // via o plano ativo antes do commit), não fica um plano reativado escolhido sem o
+        // cliente o voltar a escolher no portal.
+        var strategy = _dbContext.Database.CreateExecutionStrategy();
+        var affected = await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await _dbContext.Database
+                .BeginTransactionAsync(cancellationToken);
+
+            var changed = await _dbContext.MealPlans
+                .Where(plan => plan.Id == mealPlanId && plan.OwnerTrainerId == trainerId)
+                .Where(plan => plan.IsArchived != isArchived)
+                .ExecuteUpdateAsync(
+                    setters => setters
+                        .SetProperty(plan => plan.IsArchived, isArchived)
+                        .SetProperty(plan => plan.IsActive, !isArchived)
+                        .SetProperty(plan => plan.UpdatedAt, now),
+                    cancellationToken
+                );
+
+            if (changed == 1)
+                await _dbContext.Clients
+                    .Where(client =>
+                        client.OwnerTrainerId == trainerId &&
+                        client.SelectedMealPlanId == mealPlanId)
+                    .ExecuteUpdateAsync(
+                        setters => setters.SetProperty(
+                            client => client.SelectedMealPlanId,
+                            (Guid?)null),
+                        cancellationToken
+                    );
+
+            await transaction.CommitAsync(cancellationToken);
+            return changed;
+        });
         if (affected == 1)
             return MealPlanStoreResult.ForChanged();
         if (affected > 1)

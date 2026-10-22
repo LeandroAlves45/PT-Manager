@@ -102,6 +102,10 @@ describe('PortalSupplementsPage', () => {
     expect(rows[1]).toHaveTextContent('2 cápsulas · Ao pequeno-almoço');
     expect(intakeButton('Desmarcar', 'Creatina')).toHaveAttribute('aria-pressed', 'true');
     expect(intakeButton('Marcar', 'Ómega 3')).toHaveAttribute('aria-pressed', 'false');
+    // O estado também por texto: a cor da secção nunca é a única pista.
+    expect(within(rows[0]!).getByText('Tomado')).toBeInTheDocument();
+    expect(within(rows[1]!).getByText('Por tomar')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Tomas de hoje' })).toBeInTheDocument();
 
     // As notas chegam com o segundo pedido e juntam-se à linha certa.
     expect(
@@ -153,6 +157,7 @@ describe('PortalSupplementsPage', () => {
     expect(await screen.findByText('2 de 2 tomadas hoje')).toBeInTheDocument();
     expect(screen.getByText('Tudo tomado.')).toBeInTheDocument();
     expect(intakeButton('Desmarcar', 'Ómega 3')).toHaveAttribute('aria-pressed', 'true');
+    expect(within(screen.getAllByRole('listitem')[1]!).getByText('Tomado')).toBeInTheDocument();
     await waitFor(() => expect(intakeButton('Desmarcar', 'Ómega 3')).toBeEnabled());
     expect(writes).toEqual([`PUT ${OMEGA_ASSIGNMENT_ID}`]);
     expect(queryClient.getQueryState(portalKeys.home())?.isInvalidated).toBe(true);

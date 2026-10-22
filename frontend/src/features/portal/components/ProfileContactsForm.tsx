@@ -1,7 +1,10 @@
+import { CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { useUpdateProfileMutation } from '@/features/portal/api/portal';
+import { PortalCard } from '@/features/portal/components/PortalCard';
 import {
   profileFailure,
   profileSchema,
@@ -17,19 +20,26 @@ import { Input } from '@/shared/components/ui/input';
 type Profile = components['schemas']['MyProfileResponse'];
 
 /**
- * Contactos do cliente: telefone (obrigatório), email e contacto de emergência.
+ * Dados editáveis do cliente: nome, telefone (obrigatórios) e contacto de emergência.
  *
  * O `PATCH` substitui os quatro campos de uma vez. Por isso o formulário parte sempre do
- * perfil lido e envia todos: um opcional vazio apaga o valor guardado.
+ * perfil lido e envia todos: um opcional vazio apaga o valor guardado. O email da ficha não
+ * se vê nem se edita aqui.
+ *
+ * Depois de gravar, além do aviso passageiro, o cartão mostra «Dados guardados.» até o
+ * cliente voltar a alterar um campo.
  *
  * @param profile Perfil atual.
  */
 export function ProfileContactsForm({ profile }: { profile: Profile }) {
   const mutation = useUpdateProfileMutation();
   const form = useForm<ProfileValues>({ defaultValues: toProfileValues(profile) });
+  const [saved, setSaved] = useState(false);
   const errors = form.formState.errors;
 
   async function submit(values: ProfileValues) {
+    setSaved(false);
+
     const parsed = profileSchema.safeParse(values);
     if (!parsed.success) {
       for (const issue of parsed.error.issues) {
@@ -41,9 +51,10 @@ export function ProfileContactsForm({ profile }: { profile: Profile }) {
     }
 
     try {
-      const saved = await mutation.mutateAsync(toProfileUpdate(parsed.data));
-      form.reset(toProfileValues(saved));
-      toast.success('Contactos guardados com sucesso.');
+      const updated = await mutation.mutateAsync(toProfileUpdate(parsed.data));
+      form.reset(toProfileValues(updated));
+      setSaved(true);
+      toast.success('Dados guardados com sucesso.');
     } catch (failure) {
       const { field, message } = profileFailure(failure);
       form.setError(field, { message });
@@ -51,23 +62,23 @@ export function ProfileContactsForm({ profile }: { profile: Profile }) {
   }
 
   return (
-    <section
-      aria-labelledby="contacts-title"
-      className="border-border bg-card space-y-3 rounded-lg border p-3"
-    >
-      <div>
-        <h2 id="contacts-title" className="font-display text-xl">
-          Contactos
-        </h2>
-        <p className="text-muted-foreground text-sm">
-          Só o telefone é obrigatório. Um campo vazio fica apagado.
-        </p>
-      </div>
+    <PortalCard title="Os teus dados">
+      <p className="text-muted-foreground mb-3 text-sm">
+        O nome e o telefone são obrigatórios. Um campo opcional vazio fica apagado.
+      </p>
       <form
         noValidate
         onSubmit={form.handleSubmit((values) => void submit(values))}
+        // A confirmação só vale enquanto nada mudou: escrever num campo apaga-a. O `reset`
+        // que segue a gravação não dispara eventos do DOM, por isso não a apaga.
+        onChange={() => setSaved(false)}
         className="space-y-4"
       >
+        <FormField label="Nome" error={errors.name?.message}>
+          {(control) => (
+            <Input {...control} autoComplete="name" className="h-11" {...form.register('name')} />
+          )}
+        </FormField>
         <FormField label="Telefone" error={errors.phone?.message}>
           {(control) => (
             <Input
@@ -76,17 +87,6 @@ export function ProfileContactsForm({ profile }: { profile: Profile }) {
               autoComplete="tel"
               className="h-11"
               {...form.register('phone')}
-            />
-          )}
-        </FormField>
-        <FormField label="Email de contacto (opcional)" error={errors.contact_email?.message}>
-          {(control) => (
-            <Input
-              {...control}
-              type="email"
-              autoComplete="email"
-              className="h-11"
-              {...form.register('contact_email')}
             />
           )}
         </FormField>
@@ -123,9 +123,18 @@ export function ProfileContactsForm({ profile }: { profile: Profile }) {
           </p>
         )}
         <Button type="submit" className="min-h-11 w-full" disabled={mutation.isPending}>
-          {mutation.isPending ? 'A guardar…' : 'Guardar contactos'}
+          {mutation.isPending ? 'A guardar…' : 'Guardar dados'}
         </Button>
+        {/* Região sempre presente para o leitor de ecrã anunciar a confirmação quando entra. */}
+        <p role="status" className="flex items-center gap-2 text-sm empty:hidden">
+          {saved && (
+            <>
+              <CheckCircle2 aria-hidden className="text-primary size-5 shrink-0" />
+              Dados guardados.
+            </>
+          )}
+        </p>
       </form>
-    </section>
+    </PortalCard>
   );
 }

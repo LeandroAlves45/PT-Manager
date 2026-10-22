@@ -96,6 +96,7 @@ public static class DependencyInjection
         services.AddScoped<IMyTrainingPlanQueries, MyTrainingPlanQueries>();
         services.AddScoped<IMyWorkoutTodayQueries, MyWorkoutTodayQueries>();
         services.AddScoped<IMyNutritionPlanQueries, MyNutritionPlanQueries>();
+        services.AddScoped<IMyMealPlanSelectionStore, MyMealPlanSelectionStore>();
         services.AddScoped<IMyProfileQueries, MyProfileQueries>();
         services.AddScoped<IMyProfileStore, MyProfileStore>();
         services.AddScoped<IMyAvatarStore, MyAvatarStore>();

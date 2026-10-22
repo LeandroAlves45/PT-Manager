@@ -3,8 +3,11 @@ import { describe, expect, it } from 'vitest';
 import {
   exerciseDisplayName,
   formatDecimal,
+  isWorkoutDayUnavailable,
+  loggedSetLabel,
   parseReps,
   parseWeight,
+  plannedSetChips,
   plannedSetLabel,
   prescriptionSummary,
   progressPercent,
@@ -206,5 +209,60 @@ describe('exerciseDisplayName', () => {
     expect(exerciseDisplayName({ exercise_name: 'Agachamento', is_unavailable: false })).toBe(
       'Agachamento'
     );
+  });
+});
+
+describe('plannedSetChips', () => {
+  it('splits the prescription in one chip per field, reps first with the larger value first', () => {
+    expect(plannedSetChips(planned({ planned_reps: 10, planned_reps_max: 12 }))).toEqual([
+      '12-10 reps',
+      '60 kg',
+      'RPE 8',
+      'Descanso 90–120 s',
+    ]);
+  });
+
+  it('omits what the set does not prescribe', () => {
+    expect(
+      plannedSetChips(
+        planned({
+          planned_reps: null,
+          planned_weight_kg: null,
+          planned_rpe: null,
+          rest_seconds_min: 60,
+          rest_seconds_max: 60,
+        })
+      )
+    ).toEqual(['Descanso 60 s']);
+  });
+});
+
+describe('loggedSetLabel', () => {
+  it('writes the load and the reps, with the RPE only when it was given', () => {
+    expect(loggedSetLabel({ weight_kg: 62.5, reps_done: 8, rpe: 8.5 })).toBe(
+      '62,5 kg × 8 reps · RPE 8,5'
+    );
+    expect(loggedSetLabel({ weight_kg: 60, reps_done: 9, rpe: null })).toBe('60 kg × 9 reps');
+  });
+});
+
+describe('isWorkoutDayUnavailable', () => {
+  it('recognises the validation failure of a day that cannot be consulted', () => {
+    const unavailable = toApiProblem(400, {
+      title: 'validation_failed',
+      errors: [{ field: 'Date', code: 'portal_workout_day_not_available', message: 'x' }],
+    });
+    expect(isWorkoutDayUnavailable(unavailable)).toBe(true);
+  });
+
+  it('also treats a 400 without a code (the binder rejecting a non-date) as unavailable', () => {
+    expect(isWorkoutDayUnavailable(toApiProblem(400, { title: 'validation_failed' }))).toBe(true);
+  });
+
+  it('ignores other failures', () => {
+    expect(
+      isWorkoutDayUnavailable(toApiProblem(404, { title: 'portal_training_plan_not_available' }))
+    ).toBe(false);
+    expect(isWorkoutDayUnavailable(new Error('network'))).toBe(false);
   });
 });

@@ -7,7 +7,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Infrastructure.Persistence.ClientPortal;
 
 /// <summary>
-/// Projeta o plano alimentar ativo do cliente autenticado.
+/// Projeta os planos alimentares ativos do cliente autenticado e o plano que ele escolheu.
+/// O cliente é sempre resolvido pelo par (tenant, utilizador autenticado).
 /// </summary>
 internal sealed class MyNutritionPlanQueries : IMyNutritionPlanQueries
 {
@@ -16,11 +17,44 @@ internal sealed class MyNutritionPlanQueries : IMyNutritionPlanQueries
     public MyNutritionPlanQueries(PtManagerDbContext dbContext) =>
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 
-    public async Task<MyNutritionPlanDto?> GetActiveAsync(
+    public async Task<IReadOnlyList<MyMealPlanSummaryDto>> ListActiveAsync(
+        Guid trainerId,
+        Guid clientUserId,
+        CancellationToken cancellationToken) =>
+        await _dbContext.MealPlans
+            .AsNoTracking()
+            .Where(candidate =>
+                candidate.OwnerTrainerId == trainerId &&
+                candidate.IsActive &&
+                !candidate.IsArchived)
+            .Join(
+                _dbContext.Clients.Where(client =>
+                    client.OwnerTrainerId == trainerId &&
+                    client.UserId == clientUserId &&
+                    client.IsActive),
+                candidate => candidate.ClientId,
+                client => client.Id,
+                (candidate, client) => new { candidate, client.SelectedMealPlanId })
+            .OrderByDescending(row => row.candidate.StartsDate)
+            .ThenByDescending(row => row.candidate.CreatedAt)
+            .ThenBy(row => row.candidate.Id)
+            .Select(row => new MyMealPlanSummaryDto(
+                row.candidate.Id,
+                row.candidate.Name,
+                row.candidate.StartsDate,
+                row.candidate.EndsDate,
+                row.candidate.KcalTarget,
+                row.candidate.CalculationSnapshot.GoalType,
+                _dbContext.MealPlanMeals.Count(meal => meal.MealPlanId == row.candidate.Id),
+                row.SelectedMealPlanId == row.candidate.Id))
+            .ToListAsync(cancellationToken);
+
+    public async Task<MyNutritionPlanDto?> GetSelectedAsync(
         Guid trainerId,
         Guid clientUserId,
         CancellationToken cancellationToken)
     {
+        // A escolha só vale enquanto o plano estiver ativo: um plano arquivado nunca abre.
         var plan = await _dbContext.MealPlans
             .AsNoTracking()
             .AsSingleQuery()
@@ -32,10 +66,8 @@ internal sealed class MyNutritionPlanQueries : IMyNutritionPlanQueries
                     client.Id == candidate.ClientId &&
                     client.OwnerTrainerId == trainerId &&
                     client.UserId == clientUserId &&
-                    client.IsActive))
-            .OrderByDescending(candidate => candidate.StartsDate)
-            .ThenByDescending(candidate => candidate.CreatedAt)
-            .ThenBy(candidate => candidate.Id)
+                    client.IsActive &&
+                    client.SelectedMealPlanId == candidate.Id))
             .Select(candidate => new PlanRow(
                 candidate.Id,
                 candidate.Name,
@@ -46,6 +78,7 @@ internal sealed class MyNutritionPlanQueries : IMyNutritionPlanQueries
                 candidate.Targets.ProteinGrams,
                 candidate.Targets.CarbsGrams,
                 candidate.Targets.FatsGrams,
+                candidate.CalculationSnapshot.GoalType,
                 candidate.UpdatedAt,
                 _dbContext.MealPlanMeals
                     .Where(meal => meal.MealPlanId == candidate.Id)
@@ -127,6 +160,7 @@ internal sealed class MyNutritionPlanQueries : IMyNutritionPlanQueries
             plan.ProteinTargetGrams,
             plan.CarbsTargetGrams,
             plan.FatsTargetGrams,
+            plan.GoalType,
             CalculateTotals(plan.Meals.SelectMany(meal => meal.Items)),
             meals,
             plan.UpdatedAt);
@@ -167,6 +201,7 @@ internal sealed class MyNutritionPlanQueries : IMyNutritionPlanQueries
         decimal ProteinTargetGrams,
         decimal CarbsTargetGrams,
         decimal FatsTargetGrams,
+        string? GoalType,
         DateTime UpdatedAt,
         IReadOnlyList<MealRow> Meals);
 

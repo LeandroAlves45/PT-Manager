@@ -36,3 +36,14 @@ export function longLocalDate(localDate: string): string {
 export function shortLocalDate(localDate: string): string {
   return format(parseISO(localDate), 'EEEE, dd/MM', { locale: pt });
 }
+
+/**
+ * Rótulo de um dia passado no seletor do treino: «Qui, 01/10 · Semana 1».
+ *
+ * O dia da semana sai da própria data local da API, não do relógio do browser.
+ */
+export function pastDayOptionLabel(localDate: string, weekNumber: number): string {
+  const date = parseISO(localDate);
+  const weekday = format(date, 'EEE', { locale: pt });
+  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${format(date, 'dd/MM')} · Semana ${weekNumber}`;
+}

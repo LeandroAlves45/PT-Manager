@@ -201,3 +201,21 @@ o PostgreSQL antes de corrigir:
 - Testes funcionais com Testcontainers falham todos ao mesmo tempo com `DockerUnavailableException`
   quando o Docker Desktop para (aconteceu durante uma pausa por limite). Confirmar `docker ps` antes
   de investigar código.
+
+## 2026-10-22 — 6GB-CL
+
+- Testes de migrations antigas (`AddManagedImageAssetsMigrationTests`) semeavam a ficha com o modelo
+  EF atual num schema antigo: a coluna nova `clients.selected_meal_plan_id` partiu-os (42703).
+  **Regra:** num teste que migra para trás, semear por SQL só com as colunas que existiam nessa
+  migration.
+- `Error.Create` recusa a categoria `Validation` («Use Validation method»): erros de validação de
+  domínio fazem-se com `Error.Validation([new ValidationError(field, code, message)])` e saem como
+  `errors[]`, não como `title`.
+- Corrida entre um `ExecuteUpdate … WHERE EXISTS(...)` (escolher plano) e uma transação que muda a
+  linha referida (arquivar): em READ COMMITTED o `EXISTS` vê o estado antes do commit. **Regra:**
+  limpar o estado derivado também no caminho inverso (reativar), em vez de confiar na ordem.
+- `TimeZoneInfo.ConvertTimeToUtc` de datas arbitrárias vindas do pedido: calcular o intervalo UTC só
+  depois de a data estar validada contra o domínio (dia do plano). No Windows o fuso de Berlim não tem
+  LMT; no Linux (Render/CI) tem, e o comportamento difere.
+- Depois do reinício da máquina o Docker Desktop fica parado e o daemon responde 500 enquanto arranca:
+  esperar `docker ps` listar o contentor antes dos testes funcionais.

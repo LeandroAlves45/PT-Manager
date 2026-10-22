@@ -1,7 +1,8 @@
-import { Check, Loader2 } from 'lucide-react';
+import { Check, CheckCircle2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useToggleIntakeMutation } from '@/features/portal/api/portal';
+import { PortalCard } from '@/features/portal/components/PortalCard';
 import type { components } from '@/shared/api/schema';
 import { isApiProblem } from '@/shared/api/problem';
 import { Badge } from '@/shared/components/ui/badge';
@@ -54,59 +55,73 @@ export function SupplementIntakeRow({
   const toggle = useToggleIntakeMutation();
 
   return (
-    <li className="border-border bg-card space-y-2 rounded-lg border p-3">
-      <div className="flex items-start gap-3">
-        <div className="min-w-0 flex-1 space-y-0.5">
-          <p className="flex flex-wrap items-center gap-2">
-            <span className="min-w-0 font-medium wrap-break-word">{item.supplement_name}</span>
-            {detail?.is_supplement_archived === true && (
-              <Badge variant="secondary">Descontinuado</Badge>
+    <li>
+      <PortalCard tone="supplements" className="gap-2 p-3">
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <p className="flex flex-wrap items-center gap-2">
+              <span className="min-w-0 font-medium wrap-break-word">{item.supplement_name}</span>
+              {detail?.is_supplement_archived === true && (
+                <Badge variant="secondary">Descontinuado</Badge>
+              )}
+            </p>
+            <p className="text-muted-foreground text-sm wrap-break-word">
+              {formatDoseAndTiming(item.serving_size, item.timing)}
+            </p>
+            {/* O estado também por texto e ícone: a cor da secção nunca é a única pista. */}
+            <p
+              className={
+                item.is_taken
+                  ? 'text-section-supplements flex items-center gap-1 text-sm font-medium'
+                  : 'text-muted-foreground flex items-center gap-1 text-sm'
+              }
+            >
+              {item.is_taken ? <CheckCircle2 aria-hidden className="size-4" /> : null}
+              {item.is_taken ? 'Tomado' : 'Por tomar'}
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="icon"
+            variant={item.is_taken ? 'default' : 'outline'}
+            className="size-11 shrink-0"
+            aria-label={
+              item.is_taken
+                ? `Desmarcar toma de ${item.supplement_name}`
+                : `Marcar toma de ${item.supplement_name}`
+            }
+            aria-pressed={item.is_taken}
+            disabled={toggle.isPending}
+            onClick={() =>
+              toggle.mutate(
+                { assignmentId: item.assignment_id, taken: !item.is_taken },
+                { onError: (failure) => toast.error(intakeFailureMessage(failure)) }
+              )
+            }
+          >
+            {toggle.isPending ? (
+              <Loader2 aria-hidden className="animate-spin" />
+            ) : (
+              <Check aria-hidden />
             )}
-          </p>
-          <p className="text-muted-foreground text-sm wrap-break-word">
-            {formatDoseAndTiming(item.serving_size, item.timing)}
-          </p>
+          </Button>
         </div>
-        <Button
-          type="button"
-          size="icon"
-          variant={item.is_taken ? 'default' : 'outline'}
-          className="size-11 shrink-0"
-          aria-label={
-            item.is_taken
-              ? `Desmarcar toma de ${item.supplement_name}`
-              : `Marcar toma de ${item.supplement_name}`
-          }
-          aria-pressed={item.is_taken}
-          disabled={toggle.isPending}
-          onClick={() =>
-            toggle.mutate(
-              { assignmentId: item.assignment_id, taken: !item.is_taken },
-              { onError: (failure) => toast.error(intakeFailureMessage(failure)) }
-            )
-          }
-        >
-          {toggle.isPending ? (
-            <Loader2 aria-hidden className="animate-spin" />
-          ) : (
-            <Check aria-hidden />
-          )}
-        </Button>
-      </div>
 
-      {detail?.is_supplement_archived === true && (
-        <p className="text-muted-foreground text-sm">
-          Este suplemento foi descontinuado. Confirma com o teu personal trainer se o deves manter.
-        </p>
-      )}
-      {detail !== undefined && detail.trainer_notes !== null && (
-        <p className="text-sm wrap-break-word">{detail.trainer_notes}</p>
-      )}
-      {detail !== undefined && detail.supplement_description !== null && (
-        <p className="text-muted-foreground text-sm wrap-break-word">
-          {detail.supplement_description}
-        </p>
-      )}
+        {detail?.is_supplement_archived === true && (
+          <p className="text-muted-foreground text-sm">
+            Este suplemento foi descontinuado. Confirma com o teu personal trainer se o deves
+            manter.
+          </p>
+        )}
+        {detail !== undefined && detail.trainer_notes !== null && (
+          <p className="text-sm wrap-break-word">{detail.trainer_notes}</p>
+        )}
+        {detail !== undefined && detail.supplement_description !== null && (
+          <p className="text-muted-foreground text-sm wrap-break-word">
+            {detail.supplement_description}
+          </p>
+        )}
+      </PortalCard>
     </li>
   );
 }

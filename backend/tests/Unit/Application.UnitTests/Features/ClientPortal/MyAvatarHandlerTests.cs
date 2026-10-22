@@ -203,7 +203,7 @@ public sealed class MyAvatarHandlerTests
     private static ReplaceMyAvatarCommand ValidCommand() => new(MediaHarness.ValidUpload());
 
     private static MyProfileDto Profile() => new(
-        "Ana", null, "+351912345678", new DateOnly(1990, 1, 1), "female", null, null,
+        "Ana", "+351912345678", new DateOnly(1990, 1, 1), "female", null, null,
         FakeMediaStorage.UploadedUrl, Now);
 
     private sealed class FakeAvatarStore : IMyAvatarStore

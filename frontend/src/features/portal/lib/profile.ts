@@ -4,7 +4,7 @@ import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
 
 /**
- * Regras do perfil do cliente: contactos e fotografia.
+ * Regras do perfil do cliente: nome, contactos e fotografia.
  *
  * Os limites são os de `UpdateMyProfileCommandValidator` e do perfil de imagem `ClientAvatar`
  * (`ImageProfiles.cs`).
@@ -13,28 +13,17 @@ import type { components } from '@/shared/api/schema';
 type Profile = components['schemas']['MyProfileResponse'];
 type ProfileUpdate = components['schemas']['UpdateMyProfileRequest'];
 
-/**
- * Mesma regra do value object `EmailAddress` do backend: sem espaços, um só `@`, texto dos
- * dois lados e um domínio com ponto que não começa nem acaba em ponto.
- */
-export function isAcceptedEmail(email: string): boolean {
-  if (/\s/.test(email)) return false;
-
-  const parts = email.split('@');
-  if (parts.length !== 2) return false;
-
-  const [local, domain] = parts;
-  if (local === undefined || domain === undefined || local === '' || domain === '') return false;
-
-  return domain.includes('.') && !domain.startsWith('.') && !domain.endsWith('.');
-}
-
 export const profileSchema = z.object({
-  contact_email: z
+  name: z
     .string()
     .trim()
-    .max(255, 'O email não pode exceder 255 caracteres.')
-    .refine((value) => value === '' || isAcceptedEmail(value), 'Indica um email válido.'),
+    .min(1, 'Indica o teu nome.')
+    .max(255, 'O nome não pode exceder 255 caracteres.')
+    // O backend recusa U+0000 (`text_invalid_character`); aqui recusam-se também os outros
+    // caracteres de controlo, que nunca fazem parte de um nome. Escritos em escape para o
+    // ficheiro continuar a ser texto.
+    // eslint-disable-next-line no-control-regex
+    .refine((value) => !/[\u0000-\u001f\u007f]/.test(value), 'O nome tem caracteres inválidos.'),
   phone: z
     .string()
     .trim()
@@ -49,7 +38,7 @@ export type ProfileValues = z.input<typeof profileSchema>;
 /** Valores do formulário a partir do perfil; um opcional sem valor fica vazio. */
 export function toProfileValues(profile: Profile): ProfileValues {
   return {
-    contact_email: profile.contact_email ?? '',
+    name: profile.name,
     phone: profile.phone,
     emergency_contact_name: profile.emergency_contact_name ?? '',
     emergency_contact_phone: profile.emergency_contact_phone ?? '',
@@ -60,11 +49,11 @@ const orNull = (value: string) => (value === '' ? null : value);
 
 /**
  * Pedido do `PATCH`, que substitui os quatro campos: um opcional vazio vai a `null` e apaga
- * o valor guardado.
+ * o valor guardado. O email da ficha não faz parte do pedido.
  */
 export function toProfileUpdate(values: z.output<typeof profileSchema>): ProfileUpdate {
   return {
-    contact_email: orNull(values.contact_email),
+    name: values.name,
     phone: values.phone,
     emergency_contact_name: orNull(values.emergency_contact_name),
     emergency_contact_phone: orNull(values.emergency_contact_phone),
@@ -85,26 +74,25 @@ export function profileInitials(name: string): string {
   return `${first}${last}`.toUpperCase();
 }
 
+const INVALID_CHARACTER = 'O texto tem caracteres inválidos.';
+
 const PROFILE_MESSAGES: Readonly<Record<string, string>> = {
-  client_email_invalid: 'Indica um email válido.',
-  client_email_too_long: 'O email não pode exceder 255 caracteres.',
-  client_email_already_exists: 'Este email já está a ser usado noutra ficha de cliente.',
+  client_name_invalid: 'Indica o teu nome, com até 255 caracteres.',
   client_phone_invalid: 'Indica o telefone.',
   client_phone_too_long: 'O telefone não pode exceder 32 caracteres.',
   client_phone_already_exists: 'Este telefone já está a ser usado noutra ficha de cliente.',
   client_emergency_contact_name_too_long: 'O nome não pode exceder 255 caracteres.',
   client_emergency_contact_phone_too_long: 'O telefone não pode exceder 32 caracteres.',
+  text_invalid_character: INVALID_CHARACTER,
   portal_profile_not_available: 'A tua ficha não está ativa. Fala com o teu personal trainer.',
 };
 
 /**
- * Campo do formulário a que cada código pertence. Os dois 409 de unicidade chegam no `title`,
- * sem `errors[]`, e mesmo assim têm um campo óbvio.
+ * Campo do formulário a que cada código pertence. O 409 de unicidade do telefone chega no
+ * `title`, sem `errors[]`, e mesmo assim tem um campo óbvio.
  */
 const PROFILE_CODE_FIELDS: Readonly<Record<string, keyof ProfileValues>> = {
-  client_email_invalid: 'contact_email',
-  client_email_too_long: 'contact_email',
-  client_email_already_exists: 'contact_email',
+  client_name_invalid: 'name',
   client_phone_invalid: 'phone',
   client_phone_too_long: 'phone',
   client_phone_already_exists: 'phone',
@@ -112,22 +100,43 @@ const PROFILE_CODE_FIELDS: Readonly<Record<string, keyof ProfileValues>> = {
   client_emergency_contact_phone_too_long: 'emergency_contact_phone',
 };
 
-/** Falha ao guardar os contactos: a mensagem e o campo onde a mostrar (`root` sem campo). */
+/**
+ * Campo do formulário pelo nome que o servidor dá ao campo do pedido (`Name`,
+ * `EmergencyContactPhone`…). Serve os códigos genéricos, como `text_invalid_character`, que
+ * não dizem a que campo pertencem.
+ */
+const PROFILE_REQUEST_FIELDS: Readonly<Record<string, keyof ProfileValues>> = {
+  name: 'name',
+  phone: 'phone',
+  emergencycontactname: 'emergency_contact_name',
+  emergencycontactphone: 'emergency_contact_phone',
+};
+
+/** Falha ao guardar os dados: a mensagem e o campo onde a mostrar (`root` sem campo). */
 export function profileFailure(failure: unknown): {
   field: keyof ProfileValues | 'root';
   message: string;
 } {
-  const fallback = 'Não foi possível guardar os contactos. Tenta novamente.';
+  const fallback = 'Não foi possível guardar os dados. Tenta novamente.';
   if (!isApiProblem(failure)) return { field: 'root', message: fallback };
 
   // 400: o código em `errors[]`; 404 e 409: está em `title`.
-  const code = failure.fieldErrors[0]?.code ?? failure.code;
+  const first = failure.fieldErrors[0];
+  const code = first?.code ?? failure.code;
   if (!Object.hasOwn(PROFILE_MESSAGES, code)) return { field: 'root', message: fallback };
 
+  const requestField =
+    first === undefined ? undefined : PROFILE_REQUEST_FIELDS[normalized(first.field)];
+
   return {
-    field: PROFILE_CODE_FIELDS[code] ?? 'root',
+    field: PROFILE_CODE_FIELDS[code] ?? requestField ?? 'root',
     message: PROFILE_MESSAGES[code] ?? fallback,
   };
+}
+
+/** `EmergencyContactName`, `emergency_contact_name` e `emergencyContactName` dão a mesma chave. */
+function normalized(field: string): string {
+  return field.replaceAll('_', '').toLowerCase();
 }
 
 /** Formatos aceites pelo perfil de imagem `ClientAvatar`. */

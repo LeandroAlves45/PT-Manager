@@ -366,6 +366,146 @@ internal static class PortalTestData
 
         context.MealPlans.Add(plan);
         await context.SaveChangesAsync(cancellationToken);
+
+        // O cliente semeado já escolheu este plano no portal, como faria ao entrar.
+        await context.Clients
+            .Where(client => client.Id == clientId)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(client => client.SelectedMealPlanId, (Guid?)plan.Id),
+                cancellationToken);
+    }
+
+    /// <summary>Cria outro plano alimentar ativo, sem refeições, para o cliente indicado.</summary>
+    internal static async Task<Guid> SeedExtraMealPlanAsync(
+        ApiWebApplicationFactory factory,
+        Guid trainerId,
+        Guid clientUserId,
+        string name,
+        CancellationToken cancellationToken)
+    {
+        var now = TrainerTenantSeeder.SeedInstant;
+
+        await using var scope = CreateTrainerScope(factory, trainerId);
+        var context = scope.ServiceProvider.GetRequiredService<PtManagerDbContext>();
+        var clientId = await context.Clients
+            .Where(item => item.OwnerTrainerId == trainerId && item.UserId == clientUserId)
+            .Select(item => item.Id)
+            .SingleAsync(cancellationToken);
+
+        var macros = MacroTargetCalculator.CalculateFromManualGrams(
+            1_800m,
+            new ManualMacroInput(140m, 180m, 60m));
+        var plan = new MealPlan(
+            trainerId,
+            clientId,
+            name,
+            null,
+            DateOnly.FromDateTime(now),
+            null,
+            NutritionCalculationSnapshot.FromManualEnergy(80m, macros, now),
+            now);
+
+        context.MealPlans.Add(plan);
+        await context.SaveChangesAsync(cancellationToken);
+        return plan.Id;
+    }
+
+    /// <summary>Dá ao cliente indicado o mesmo plano de treino do cliente semeado.</summary>
+    internal static async Task SeedTrainingPlanForClientAsync(
+        ApiWebApplicationFactory factory,
+        Guid trainerId,
+        Guid clientUserId,
+        CancellationToken cancellationToken) =>
+        await SeedTrainingPlanAsync(
+            factory,
+            trainerId,
+            await GetClientIdAsync(factory, trainerId, clientUserId, cancellationToken),
+            cancellationToken);
+
+    /// <summary>Plano alimentar escolhido pelo cliente, lido diretamente da ficha.</summary>
+    internal static async Task<Guid?> GetSelectedMealPlanIdAsync(
+        ApiWebApplicationFactory factory,
+        Guid trainerId,
+        Guid clientUserId,
+        CancellationToken cancellationToken)
+    {
+        await using var scope = CreateTrainerScope(factory, trainerId);
+        var context = scope.ServiceProvider.GetRequiredService<PtManagerDbContext>();
+        return await context.Clients
+            .Where(item => item.OwnerTrainerId == trainerId && item.UserId == clientUserId)
+            .Select(item => item.SelectedMealPlanId)
+            .SingleAsync(cancellationToken);
+    }
+
+    /// <summary>Escreve a escolha diretamente na ficha, sem as verificações do portal.</summary>
+    internal static async Task ForceMealPlanSelectionAsync(
+        ApiWebApplicationFactory factory,
+        Guid trainerId,
+        Guid clientUserId,
+        Guid mealPlanId,
+        CancellationToken cancellationToken)
+    {
+        await using var scope = CreateTrainerScope(factory, trainerId);
+        var context = scope.ServiceProvider.GetRequiredService<PtManagerDbContext>();
+        await context.Clients
+            .Where(item => item.OwnerTrainerId == trainerId && item.UserId == clientUserId)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(item => item.SelectedMealPlanId, (Guid?)mealPlanId),
+                cancellationToken);
+    }
+
+    /// <summary>Tira a escolha do plano alimentar, como um cliente que ainda não escolheu.</summary>
+    internal static async Task ClearMealPlanSelectionAsync(
+        ApiWebApplicationFactory factory,
+        Guid trainerId,
+        Guid clientUserId,
+        CancellationToken cancellationToken)
+    {
+        await using var scope = CreateTrainerScope(factory, trainerId);
+        var context = scope.ServiceProvider.GetRequiredService<PtManagerDbContext>();
+        await context.Clients
+            .Where(item => item.OwnerTrainerId == trainerId && item.UserId == clientUserId)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(item => item.SelectedMealPlanId, (Guid?)null),
+                cancellationToken);
+    }
+
+    /// <summary>
+    /// Regista uma série e conclui o dia indicado do plano de treino ativo, com notas, como se o
+    /// cliente o tivesse feito nesse dia.
+    /// </summary>
+    internal static async Task SeedPastWorkoutAsync(
+        ApiWebApplicationFactory factory,
+        Guid trainerId,
+        Guid clientUserId,
+        DateOnly localDate,
+        string setNotes,
+        string completionNotes,
+        CancellationToken cancellationToken)
+    {
+        var now = TrainerTenantSeeder.SeedInstant;
+
+        await using var scope = CreateTrainerScope(factory, trainerId);
+        var context = scope.ServiceProvider.GetRequiredService<PtManagerDbContext>();
+        var clientId = await context.Clients
+            .Where(item => item.OwnerTrainerId == trainerId && item.UserId == clientUserId)
+            .Select(item => item.Id)
+            .SingleAsync(cancellationToken);
+        var plan = await context.TrainingPlans
+            .Include(item => item.Days)
+            .ThenInclude(day => day.Exercises)
+            .SingleAsync(item => item.ClientId == clientId && item.IsActive, cancellationToken);
+        var day = plan.Days.Single();
+        var prescription = day.Exercises.Single();
+
+        // Meio-dia UTC fica sempre dentro do dia local de Lisboa.
+        var performedAt = new DateTimeOffset(localDate.ToDateTime(new TimeOnly(12, 0)), TimeSpan.Zero);
+        context.ClientExerciseSetLogs.Add(new ClientExerciseSetLog(
+            clientId, prescription.Id, 1, 62.5m, 9, setNotes, performedAt, now));
+        context.WorkoutCompletions.Add(new WorkoutCompletion(
+            trainerId, clientId, plan.Id, day.Id, localDate, completionNotes, now));
+
+        await context.SaveChangesAsync(cancellationToken);
     }
 
     private static async Task SeedDueCheckInAsync(

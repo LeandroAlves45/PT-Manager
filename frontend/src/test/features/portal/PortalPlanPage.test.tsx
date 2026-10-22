@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { portalKeys } from '@/features/portal';
 import { API, problem, restorableSession } from '@/test/msw/handlers';
-import { CATALOG_EXERCISE_ID, trainingPlan } from '@/test/msw/portal-fixtures';
+import { CATALOG_EXERCISE_ID, trainingPlan, workoutToday } from '@/test/msw/portal-fixtures';
 import { server } from '@/test/msw/server';
 import { renderApp } from '@/test/render';
 
@@ -25,16 +25,18 @@ describe('PortalPlanPage', () => {
     expect(days).toHaveLength(2);
 
     const tuesday = days[0]!;
-    expect(within(tuesday).getByRole('heading', { name: 'Terça' })).toBeInTheDocument();
+    expect(within(tuesday).getByRole('heading', { name: /Terça/ })).toBeInTheDocument();
     expect(within(tuesday).getByText('1 exercício · 2 séries')).toBeInTheDocument();
     expect(within(tuesday).getByText('Agachamento')).toBeInTheDocument();
     expect(within(tuesday).getByText('2 séries · 8 reps · 90–120 s')).toBeInTheDocument();
-    expect(
-      within(tuesday).getByText('Série 2 · 8 reps · 60 kg · RPE 8 · 90–120 s')
-    ).toBeInTheDocument();
+    const secondSet = within(tuesday).getByText('Série 2').closest('li')!;
+    expect(within(secondSet).getByText('8 reps')).toBeInTheDocument();
+    expect(within(secondSet).getByText('60 kg')).toBeInTheDocument();
+    expect(within(secondSet).getByText('RPE 8')).toBeInTheDocument();
+    expect(within(secondSet).getByText('Descanso 90–120 s')).toBeInTheDocument();
 
     const thursday = days[1]!;
-    expect(within(thursday).getByRole('heading', { name: 'Quinta' })).toBeInTheDocument();
+    expect(within(thursday).getByRole('heading', { name: /Quinta/ })).toBeInTheDocument();
     expect(within(thursday).getByText('Controla a descida.')).toBeInTheDocument();
 
     // Só leitura: nada para escrever nem registar.
@@ -128,11 +130,12 @@ describe('PortalPlanPage', () => {
     expect(screen.getByText('05/10/2026 a 01/11/2026')).toBeInTheDocument();
     const firstWeek = screen.getByRole('region', { name: 'Semana 1' });
     expect(within(firstWeek).getAllByRole('article')).toHaveLength(1);
-    expect(
-      within(firstWeek).getByText('Série 1 · 8 reps · 62,5 kg · RPE 8,5 · 90–120 s')
-    ).toBeInTheDocument();
+    expect(within(firstWeek).getByText('62,5 kg')).toBeInTheDocument();
+    expect(within(firstWeek).getByText('RPE 8,5')).toBeInTheDocument();
     const secondWeek = screen.getByRole('region', { name: 'Semana 2' });
-    expect(within(secondWeek).getByRole('heading', { name: 'Quinta' })).toBeInTheDocument();
+    expect(
+      within(secondWeek).getByRole('heading', { name: /Quinta/, hidden: true })
+    ).toBeInTheDocument();
   });
 
   it('says so when the plan has no training days yet', async () => {
@@ -218,5 +221,105 @@ describe('PortalPlanPage', () => {
     expect(await screen.findByRole('heading', { name: 'Sem plano de treino' })).toBeInTheDocument();
     expect(screen.queryByText('Desde 05/10/2026')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument();
+  });
+});
+
+describe('PortalPlanPage collapsing', () => {
+  it('opens and highlights the day of today and keeps the others collapsed', async () => {
+    await openPlan();
+
+    const tuesday = await screen.findByRole('button', { name: /Terça/ });
+    const thursday = screen.getByRole('button', { name: /Quinta/ });
+    await waitFor(() => expect(tuesday).toHaveAttribute('aria-expanded', 'true'));
+    expect(thursday).toHaveAttribute('aria-expanded', 'false');
+
+    // O rótulo «Hoje» só está no dia de hoje, e não depende só da cor.
+    expect(within(tuesday).getByText('Hoje')).toBeInTheDocument();
+    expect(within(thursday).queryByText('Hoje')).not.toBeInTheDocument();
+    expect(screen.getByText('Controla a descida.')).not.toBeVisible();
+    expect(screen.getByText('Agachamento')).toBeVisible();
+  });
+
+  it('expands a collapsed day by click and toggles it by keyboard', async () => {
+    const user = userEvent.setup();
+    await openPlan();
+    const thursday = await screen.findByRole('button', { name: /Quinta/ });
+
+    await user.click(thursday);
+    expect(thursday).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Controla a descida.')).toBeVisible();
+
+    thursday.focus();
+    await user.keyboard('{Enter}');
+    expect(thursday).toHaveAttribute('aria-expanded', 'false');
+    await user.keyboard(' ');
+    expect(thursday).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('writes the rep range with the larger value first in the chips', async () => {
+    const plan = trainingPlan();
+    const [tuesday, thursday] = plan.days;
+    const first = tuesday!.exercises[0]!;
+    server.use(
+      http.get(`${API}/portal/my-plan`, () =>
+        HttpResponse.json({
+          ...plan,
+          days: [
+            {
+              ...tuesday!,
+              exercises: [
+                {
+                  ...first,
+                  sets: [{ ...first.sets[0]!, planned_reps: 10, planned_reps_max: 12 }],
+                },
+              ],
+            },
+            thursday!,
+          ],
+        })
+      )
+    );
+    await openPlan();
+
+    expect(screen.getByText('12-10 reps')).toBeInTheDocument();
+    expect(screen.getByText('1 série · 12-10 reps · 90–120 s')).toBeInTheDocument();
+  });
+
+  it('opens the week of today and collapses the other weeks', async () => {
+    const plan = trainingPlan();
+    const [tuesday, thursday] = plan.days;
+    server.use(
+      http.get(`${API}/portal/my-plan`, () =>
+        HttpResponse.json({ ...plan, days: [tuesday!, { ...thursday!, week_number: 2 }] })
+      )
+    );
+    const user = userEvent.setup();
+    await openPlan();
+
+    const week1 = screen.getByRole('button', { name: /Semana 1/ });
+    const week2 = screen.getByRole('button', { name: /Semana 2/ });
+    await waitFor(() => expect(week1).toHaveAttribute('aria-expanded', 'true'));
+    expect(week2).toHaveAttribute('aria-expanded', 'false');
+
+    await user.click(week2);
+    expect(week2).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('opens the first week and highlights nothing on a rest day', async () => {
+    server.use(
+      http.get(`${API}/portal/my-workout/today`, () =>
+        HttpResponse.json(
+          workoutToday({ status: 'rest', day: null, week_number: null, day_of_week: null })
+        )
+      )
+    );
+    await openPlan();
+
+    expect(screen.getByRole('button', { name: /Semana 1/ })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+    expect(screen.queryByText('Hoje')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Terça/ })).toHaveAttribute('aria-expanded', 'false');
   });
 });

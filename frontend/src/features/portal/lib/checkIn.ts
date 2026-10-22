@@ -4,7 +4,7 @@ import type { components } from '@/shared/api/schema';
 import { formatNumber } from '@/shared/lib/format';
 
 /**
- * Regras do formulário de resposta ao check-in do cliente.
+ * Regras do formulário de resposta à avaliação periódica do cliente.
  *
  * Funções puras: o que cada passo valida, como o texto escrito vira o pedido e como os erros
  * do servidor voltam ao passo e ao campo certos. Os limites são os de
@@ -299,16 +299,16 @@ export function serverCheckInIssues(fieldErrors: readonly ApiFieldError[]): Chec
 }
 
 /**
- * Recusas de estado do check-in (`AssessmentErrors`): 404 e 409 que chegam no `title`.
+ * Recusas de estado da avaliação (`AssessmentErrors`): 404 e 409 que chegam no `title`.
  *
- * Depois de qualquer uma o check-in deixa de estar por responder, o ecrã relê e o formulário
+ * Depois de qualquer uma a avaliação deixa de estar por responder, o ecrã relê e o formulário
  * sai. Por isso a mensagem vai para um toast, não para o formulário.
  */
 const STATE_MESSAGES: Readonly<Record<string, string>> = {
-  check_in_wrong_day: 'Este check-in só podia ser respondido no próprio dia.',
-  check_in_already_answered: 'Este check-in já foi respondido.',
-  check_in_cancelled: 'Este check-in foi cancelado pelo teu personal trainer.',
-  check_in_not_found: 'Este check-in já não existe.',
+  check_in_wrong_day: 'Esta avaliação só podia ser respondida no próprio dia.',
+  check_in_already_answered: 'Esta avaliação já foi respondida.',
+  check_in_cancelled: 'Esta avaliação foi cancelada pelo teu personal trainer.',
+  check_in_not_found: 'Esta avaliação já não existe.',
   assessment_client_inactive: 'A tua ficha não está ativa. Fala com o teu personal trainer.',
 };
 

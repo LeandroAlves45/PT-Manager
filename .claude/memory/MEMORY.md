@@ -6,6 +6,15 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-22: Sprint 6GB, fase do cliente FINALIZADA e Sprint 6 FECHADO (branch `feat/6gb-client`, `7ae35dd`..`bee6e36`, por fazer merge).**
+- U68–U83:
+  - escolha do plano alimentar na conta (`Client.SelectedMealPlanId`; arquivar e reativar limpam a escolha);
+  - filtro de dia (`/portal/my-workout/days`, `/day?date=`);
+  - perfil com nome e sem email; telefone obrigatório (U83);
+  - «Avaliação periódica», `PortalCard` com cores por secção, barras das macros, rotas lazy.
+- Backend 3298 + 1 skip, frontend 952/952, mutações 14/14, `design-is` 21/30, app real validada no Chrome (Marta e João).
+- Pendente RN-014: suplementos fora de refeição e tomas por plano. Ver `Sessions/2026-10-22-sprint6gb-cliente-fecho-sprint6.md`.
+
 **2026-10-20: Sprint 6GB, fase superuser FINALIZADA (commits `f5f905d`..`f4394bf`, CI #46 verde).**
 - U39–U52: painel RN-018 sem gráficos, isenção (cancela Stripe; tirar → Free inativo), convite isento, página Treinadores, Momento opcional, catálogo em páginas, moderação com separadores, rotas lazy.
 - Backend 3223 + 1 skip, migration `AddSuperuserPlatformPanel` aplicada à dev, mutações 13/13, security sem achados, 5 defeitos do review corrigidos, `design-is` 20/30.

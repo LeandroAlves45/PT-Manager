@@ -400,3 +400,16 @@ Lições capturadas depois de correções do utilizador.
   defeito; estava noutra entidade (refeição do plano alimentar).
 - **Escritas com Node em `.claude/` falham às vezes com `UNKNOWN`** (ficheiro bloqueado): usar o Edit
   e confirmar que o ficheiro não ficou a zeros.
+
+## 2026-10-22 — 6GB-CL (portal do cliente)
+
+- **Um processo pesado de cada vez**: API + Vite + mutações (.NET) + agentes em paralelo esgotaram a
+  memória e a sessão reiniciou. Parar servidores antes de mutações e de suites completas.
+- **Verificar a correção no browser real, não só no jsdom**: o foco depois de escolher o plano passou
+  nos testes e falhou no Chrome.
+- **Revisões lidas pelo git** (`git show <commit>:<ficheiro>`) deixam correr mutações em paralelo sem
+  o revisor ver código mutado.
+- **Contradições entre docs e código perguntam-se**: o PM:21 dizia telefone opcional, o domínio exige-o;
+  o Leandro decidiu (U83) e o doc foi corrigido.
+- **Heredocs longos no Bash do Windows partem** (`unexpected EOF`): scripts Python ou TS em ficheiro
+  (Write) e corridos depois.

@@ -27,7 +27,6 @@ internal sealed class MyProfileQueries : IMyProfileQueries
                 client.IsActive)
             .Select(client => new MyProfileDto(
                 client.Name,
-                client.ContactEmail,
                 client.Phone,
                 client.BirthDate.Value,
                 client.Sex.Value,

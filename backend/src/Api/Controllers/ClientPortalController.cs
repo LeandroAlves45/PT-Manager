@@ -7,7 +7,11 @@ using Api.Http;
 using Application.Features.Assessments.CheckIns.GetMyDueCheckIn;
 using Application.Features.Assessments.CheckIns.GetMyNextCheckIn;
 using Application.Features.ClientPortal.GetMyPortalHome;
+using Application.Features.ClientPortal.GetMyWorkoutDay;
 using Application.Features.ClientPortal.GetMyWorkoutToday;
+using Application.Features.ClientPortal.ListMyMealPlans;
+using Application.Features.ClientPortal.SelectMyMealPlan;
+using Application.Features.ClientPortal.ListMyWorkoutDays;
 using Application.Features.Assessments.CheckIns.SubmitCheckInResponse;
 using Application.Features.ClientPortal.GetMyNutritionPlan;
 using Application.Features.ClientPortal.GetMyProfile;
@@ -67,6 +71,33 @@ public sealed class ClientPortalController : ApiControllerBase
             handler.HandleAsync(new GetMyWorkoutTodayQuery(), cancellationToken),
             MyWorkoutTodayResponse.From);
 
+    /// <summary>
+    /// Lista os dias passados com treino do plano ativo, do início do plano até ontem, no fuso
+    /// do personal trainer.
+    /// </summary>
+    [HttpGet("my-workout/days")]
+    [ProducesResponseType<MyPastWorkoutDaysResponse>(StatusCodes.Status200OK)]
+    public Task<IActionResult> ListMyWorkoutDaysAsync(
+        [FromServices] ListMyWorkoutDaysHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(
+            handler.HandleAsync(new ListMyWorkoutDaysQuery(), cancellationToken),
+            MyPastWorkoutDaysResponse.From);
+
+    /// <summary>
+    /// Devolve um dia passado do plano ativo, só para ler: o planeado, o registado e as notas.
+    /// Hoje, dias futuros e dias fora do plano respondem 400.
+    /// </summary>
+    [HttpGet("my-workout/day")]
+    [ProducesResponseType<MyWorkoutTodayResponse>(StatusCodes.Status200OK)]
+    public Task<IActionResult> GetMyWorkoutDayAsync(
+        [FromQuery] DateOnly? date,
+        [FromServices] GetMyWorkoutDayHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(
+            handler.HandleAsync(new GetMyWorkoutDayQuery(date), cancellationToken),
+            MyWorkoutTodayResponse.From);
+
     /// <summary>Devolve o plano de treino ativo do cliente.</summary>
     [HttpGet("my-plan")]
     [ProducesResponseType<MyTrainingPlanResponse>(StatusCodes.Status200OK)]
@@ -77,7 +108,34 @@ public sealed class ClientPortalController : ApiControllerBase
             handler.HandleAsync(cancellationToken),
             MyTrainingPlanResponse.From);
 
-    /// <summary>Devolve o plano alimentar ativo do cliente.</summary>
+    /// <summary>Lista os planos alimentares ativos do cliente, para escolher qual seguir.</summary>
+    [HttpGet("my-meal-plans")]
+    [ProducesResponseType<MyMealPlansResponse>(StatusCodes.Status200OK)]
+    public Task<IActionResult> ListMyMealPlansAsync(
+        [FromServices] ListMyMealPlansHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(handler.HandleAsync(cancellationToken), MyMealPlansResponse.From);
+
+    /// <summary>
+    /// Guarda na conta o plano alimentar que o cliente escolheu seguir. 404 se o plano não for
+    /// dele ou estiver arquivado.
+    /// </summary>
+    [HttpPut("my-meal-plans/selection")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public Task<IActionResult> SelectMyMealPlanAsync(
+        [FromBody] SelectMyMealPlanRequest request,
+        [FromServices] SelectMyMealPlanHandler handler,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return RespondAsync(
+            handler.HandleAsync(new SelectMyMealPlanCommand(request.MealPlanId), cancellationToken));
+    }
+
+    /// <summary>
+    /// Devolve o plano alimentar que o cliente escolheu. Sem escolha, 404
+    /// <c>portal_nutrition_plan_not_selected</c> se houver planos para escolher.
+    /// </summary>
     [HttpGet("my-nutrition")]
     [ProducesResponseType<MyNutritionPlanResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetMyNutritionAsync(
@@ -97,7 +155,7 @@ public sealed class ClientPortalController : ApiControllerBase
             handler.HandleAsync(cancellationToken),
             MyProfileResponse.From);
 
-    /// <summary>Atualiza os contactos do cliente autenticado.</summary>
+    /// <summary>Atualiza o nome e os contactos do cliente autenticado.</summary>
     [HttpPatch("my-profile")]
     [ProducesResponseType<MyProfileResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> UpdateMyProfileAsync(
@@ -110,7 +168,7 @@ public sealed class ClientPortalController : ApiControllerBase
         return RespondAsync(
             handler.HandleAsync(
                 new UpdateMyProfileCommand(
-                    request.ContactEmail,
+                    request.Name,
                     request.Phone,
                     request.EmergencyContactName,
                     request.EmergencyContactPhone),

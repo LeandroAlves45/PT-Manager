@@ -11,6 +11,7 @@ import { EmptyState } from '@/shared/components/EmptyState';
 export function PortalUnavailable() {
   return (
     <EmptyState
+      titleAs="h1"
       icon={UserX}
       title="Portal indisponível"
       description="A tua ficha não está ativa. Fala com o teu personal trainer."

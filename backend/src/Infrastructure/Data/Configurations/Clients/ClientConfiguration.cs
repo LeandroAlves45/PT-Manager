@@ -1,5 +1,6 @@
 using Domain.Entities.Clients;
 using Domain.Entities.Identity;
+using Domain.Entities.Nutrition;
 using Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -90,6 +91,9 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
             .HasColumnName("avatar_public_id")
             .HasMaxLength(500);
 
+        builder.Property(client => client.SelectedMealPlanId)
+            .HasColumnName("selected_meal_plan_id");
+
         builder.Property(client => client.IsActive)
             .HasColumnName("is_active")
             .HasDefaultValue(true)
@@ -143,5 +147,16 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
             .HasForeignKey(client => client.UserId)
             .OnDelete(DeleteBehavior.SetNull)
             .HasConstraintName("fk_clients_user");
+
+        // Apagar o plano tira a escolha; nunca apaga a ficha.
+        builder.HasOne<MealPlan>()
+            .WithMany()
+            .HasForeignKey(client => client.SelectedMealPlanId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .HasConstraintName("fk_clients_selected_meal_plan");
+
+        builder.HasIndex(client => client.SelectedMealPlanId)
+            .HasDatabaseName("idx_clients_selected_meal_plan")
+            .HasFilter("selected_meal_plan_id IS NOT NULL");
     }
 }

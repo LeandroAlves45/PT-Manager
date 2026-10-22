@@ -1,10 +1,11 @@
 import { ClipboardCheck, Dumbbell, Pill, UtensilsCrossed } from 'lucide-react';
 
 import { usePortalHomeQuery } from '@/features/portal/api/portal';
-import { HomeCard } from '@/features/portal/components/HomeCard';
+import { PortalCard } from '@/features/portal/components/PortalCard';
 import { PortalUnavailable } from '@/features/portal/components/PortalUnavailable';
 import { StaleDataNotice } from '@/features/portal/components/StaleDataNotice';
 import { longLocalDate, planDayTitle, shortLocalDate } from '@/features/portal/lib/schedule';
+import { progressPercent } from '@/features/portal/lib/workout';
 import type { components } from '@/shared/api/schema';
 import { isApiProblem } from '@/shared/api/problem';
 import { ErrorState } from '@/shared/components/ErrorState';
@@ -24,7 +25,8 @@ function count(value: number, singular: string, plural: string): string {
  * Início do portal: quatro cartões a partir de `GET /portal/home`.
  *
  * Cada cartão tem o seu estado vazio, porque o backend devolve `null` por bloco (sem plano
- * de treino, sem plano alimentar, sem check-in), e um só pedido alimenta o ecrã todo. A
+ * de treino, sem plano alimentar escolhido, sem avaliação), e um só pedido alimenta o ecrã
+ * todo. Cada cartão tem a cor da sua secção. A
  * data de referência é sempre `local_date` (fuso do personal trainer), nunca o relógio do browser.
  */
 export function PortalHomePage() {
@@ -34,7 +36,11 @@ export function PortalHomePage() {
     return (
       <section className="space-y-4">
         <Skeleton className="h-10 w-40" />
-        <div role="status" aria-label="A carregar o início…" className="grid gap-4 sm:grid-cols-2">
+        <div
+          role="status"
+          aria-label="A carregar o início…"
+          className="grid grid-cols-1 gap-4 md:grid-cols-2"
+        >
           <Skeleton className="h-40" />
           <Skeleton className="h-40" />
           <Skeleton className="h-40" />
@@ -49,7 +55,7 @@ export function PortalHomePage() {
     return <PortalUnavailable />;
 
   if (query.data === undefined)
-    return <ErrorState error={query.error} onRetry={() => void query.refetch()} />;
+    return <ErrorState error={query.error} onRetry={() => void query.refetch()} titleAs="h1" />;
 
   const home = query.data;
 
@@ -57,16 +63,19 @@ export function PortalHomePage() {
     <section className="space-y-4">
       <header className="space-y-1">
         <p className="text-muted-foreground font-mono text-xs">{longLocalDate(home.local_date)}</p>
-        <h1 className="font-display text-3xl leading-none">Hoje</h1>
+        <h1 className="font-display pe-1 text-3xl leading-none">Hoje</h1>
       </header>
 
       {query.isError && (
         <StaleDataNotice onRetry={() => void query.refetch()} retrying={query.isFetching} />
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <WorkoutCard workout={home.workout} />
-        <NutritionCard nutrition={home.nutrition} />
+        <NutritionCard
+          nutrition={home.nutrition}
+          activeMealPlanCount={home.active_meal_plan_count}
+        />
         <SupplementsCard supplements={home.supplements} />
         <CheckInCard checkIn={home.next_check_in} />
       </div>
@@ -77,9 +86,9 @@ export function PortalHomePage() {
 function WorkoutCard({ workout }: { workout: HomeWorkout | null }) {
   if (workout === null)
     return (
-      <HomeCard title="O meu treino de hoje" icon={Dumbbell}>
+      <PortalCard title="O meu treino de hoje" icon={Dumbbell} tone="training">
         <p className="text-sm">O teu personal trainer ainda não atribuiu um plano de treino.</p>
-      </HomeCard>
+      </PortalCard>
     );
 
   const next = workout.next_workout;
@@ -93,9 +102,10 @@ function WorkoutCard({ workout }: { workout: HomeWorkout | null }) {
 
   if (workout.status !== 'workout')
     return (
-      <HomeCard
+      <PortalCard
         title="O meu treino de hoje"
         icon={Dumbbell}
+        tone="training"
         action={{ label: 'Ver treino', to: '/portal/today' }}
       >
         <p className="text-sm">
@@ -104,23 +114,23 @@ function WorkoutCard({ workout }: { workout: HomeWorkout | null }) {
             : 'Hoje está fora do período do teu plano.'}
         </p>
         {nextLine}
-      </HomeCard>
+      </PortalCard>
     );
 
-  const percent =
-    workout.planned_sets === 0 ? 0 : Math.round((workout.logged_sets / workout.planned_sets) * 100);
+  const percent = progressPercent(workout.logged_sets, workout.planned_sets);
 
   return (
-    <HomeCard
+    <PortalCard
       title="O meu treino de hoje"
       icon={Dumbbell}
+      tone="training"
       action={{
         label: workout.is_completed ? 'Ver treino' : 'Abrir treino',
         to: '/portal/today',
       }}
     >
       {workout.week_number !== null && workout.day_of_week !== null && (
-        <p className="font-display text-xl leading-tight">
+        <p className="font-display pe-1 text-xl leading-tight">
           {planDayTitle(workout.week_number, workout.day_of_week)}
         </p>
       )}
@@ -132,37 +142,69 @@ function WorkoutCard({ workout }: { workout: HomeWorkout | null }) {
         {count(workout.planned_sets, 'série', 'séries')}
       </p>
       <div className="space-y-1 pt-1">
-        <Progress value={percent} aria-label="Séries registadas" />
+        <Progress
+          value={percent}
+          aria-label="Séries registadas"
+          aria-valuetext={`${formatNumber(workout.logged_sets)} de ${formatNumber(workout.planned_sets)} séries`}
+        />
         <p className="text-muted-foreground font-mono text-xs tabular-nums">
           {workout.is_completed
             ? `Treino concluído · ${formatNumber(workout.logged_sets)} de ${formatNumber(workout.planned_sets)} séries`
             : `${formatNumber(workout.logged_sets)} de ${formatNumber(workout.planned_sets)} séries · ${formatNumber(percent)} %`}
         </p>
       </div>
-    </HomeCard>
+    </PortalCard>
   );
 }
 
-function NutritionCard({ nutrition }: { nutrition: PortalHome['nutrition'] }) {
+/**
+ * Plano alimentar escolhido. Sem escolha mas com planos ativos, convida a escolher: a app nunca
+ * escolhe pelo cliente, mesmo que só haja um plano.
+ */
+function NutritionCard({
+  nutrition,
+  activeMealPlanCount,
+}: {
+  nutrition: PortalHome['nutrition'];
+  activeMealPlanCount: number;
+}) {
+  if (nutrition === null && activeMealPlanCount > 0)
+    return (
+      <PortalCard
+        title="Plano alimentar"
+        icon={UtensilsCrossed}
+        tone="nutrition"
+        action={{ label: 'Escolher plano', to: '/portal/nutrition/planos' }}
+      >
+        <p className="font-display pe-1 text-xl leading-tight">Escolhe o teu plano</p>
+        <p className="text-muted-foreground text-sm">
+          {activeMealPlanCount === 1
+            ? 'O teu personal trainer deu-te um plano alimentar.'
+            : `O teu personal trainer deu-te ${formatNumber(activeMealPlanCount)} planos alimentares.`}
+        </p>
+      </PortalCard>
+    );
+
   if (nutrition === null)
     return (
-      <HomeCard title="Plano alimentar" icon={UtensilsCrossed}>
+      <PortalCard title="Plano alimentar" icon={UtensilsCrossed} tone="nutrition">
         <p className="text-sm">O teu personal trainer ainda não te atribuiu um plano alimentar.</p>
-      </HomeCard>
+      </PortalCard>
     );
 
   return (
-    <HomeCard
+    <PortalCard
       title="Plano alimentar"
       icon={UtensilsCrossed}
+      tone="nutrition"
       action={{ label: 'Ver plano', to: '/portal/nutrition' }}
     >
-      <p className="font-display text-xl leading-tight">{nutrition.name}</p>
+      <p className="font-display pe-1 text-xl leading-tight">{nutrition.name}</p>
       <p className="text-sm tabular-nums">
         {formatNumber(nutrition.target_kcal)} kcal ·{' '}
         {count(nutrition.meal_count, 'refeição', 'refeições')}
       </p>
-    </HomeCard>
+    </PortalCard>
   );
 }
 
@@ -173,59 +215,61 @@ function NutritionCard({ nutrition }: { nutrition: PortalHome['nutrition'] }) {
 function SupplementsCard({ supplements }: { supplements: PortalHome['supplements'] }) {
   if (supplements.total_count === 0)
     return (
-      <HomeCard title="Suplementos" icon={Pill}>
+      <PortalCard title="Suplementos" icon={Pill} tone="supplements">
         <p className="text-sm">Não tens suplementos atribuídos.</p>
-      </HomeCard>
+      </PortalCard>
     );
 
   const remaining = supplements.total_count - supplements.taken_count;
 
   return (
-    <HomeCard
+    <PortalCard
       title="Suplementos"
       icon={Pill}
+      tone="supplements"
       action={{ label: 'Registar tomas', to: '/portal/supplements' }}
     >
-      <p className="font-display text-xl leading-tight tabular-nums">
+      <p className="font-display pe-1 text-xl leading-tight tabular-nums">
         {formatNumber(supplements.taken_count)} de {formatNumber(supplements.total_count)} tomadas
         hoje
       </p>
       <p className="text-muted-foreground text-sm">
         {remaining === 0 ? 'Tudo tomado.' : `${formatNumber(remaining)} por tomar.`}
       </p>
-    </HomeCard>
+    </PortalCard>
   );
 }
 
 /**
- * Check-in: o cliente só pode responder no próprio dia (`check_in_wrong_day`), por isso o
- * cartão só oferece "Responder" quando `is_today`. Um check-in futuro mostra a data, sem
- * "responder até": a data-alvo não é prazo.
+ * Avaliação periódica: o cliente só pode responder no próprio dia (`check_in_wrong_day`), por
+ * isso o cartão só oferece "Responder" quando `is_today`. Uma avaliação futura mostra a data,
+ * sem "responder até": a data-alvo não é prazo.
  */
 function CheckInCard({ checkIn }: { checkIn: PortalHome['next_check_in'] }) {
   if (checkIn === null)
     return (
-      <HomeCard title="Check-in" icon={ClipboardCheck}>
-        <p className="text-sm">Não tens check-ins agendados.</p>
-      </HomeCard>
+      <PortalCard title="Avaliação periódica" icon={ClipboardCheck} tone="assessment">
+        <p className="text-sm">Não tens avaliações agendadas.</p>
+      </PortalCard>
     );
 
   if (checkIn.is_today)
     return (
-      <HomeCard
-        title="Check-in"
+      <PortalCard
+        title="Avaliação periódica"
         icon={ClipboardCheck}
+        tone="assessment"
         action={{ label: 'Responder', to: '/portal/check-ins' }}
       >
-        <p className="font-display text-xl leading-tight">Tens um check-in para hoje.</p>
+        <p className="font-display pe-1 text-xl leading-tight">Tens uma avaliação para hoje.</p>
         <p className="text-muted-foreground text-sm">Só podes responder hoje.</p>
-      </HomeCard>
+      </PortalCard>
     );
 
   return (
-    <HomeCard title="Check-in" icon={ClipboardCheck}>
-      <p className="text-sm">Próximo check-in: {shortLocalDate(checkIn.check_in_date)}.</p>
+    <PortalCard title="Avaliação periódica" icon={ClipboardCheck} tone="assessment">
+      <p className="text-sm">Próxima avaliação: {shortLocalDate(checkIn.check_in_date)}.</p>
       <p className="text-muted-foreground text-sm">Poderás responder nesse dia.</p>
-    </HomeCard>
+    </PortalCard>
   );
 }

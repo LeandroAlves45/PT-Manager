@@ -26,16 +26,16 @@ const absent = () => HttpResponse.json(problem('resource_not_found'), { status: 
 async function openCheckIns() {
   server.use(...restorableSession({ role: 'client' }));
   const view = renderApp({ initialEntries: ['/portal/check-ins'] });
-  await screen.findByRole('heading', { name: 'Check-ins' });
+  await screen.findByRole('heading', { name: 'Avaliação periódica' });
   return view;
 }
 
 const field = (name: string) => screen.getByRole('textbox', { name });
 const next = () => screen.getByRole('button', { name: 'Seguinte' });
 const previous = () => screen.getByRole('button', { name: 'Anterior' });
-/** "Enviar check-in" só fica ativo um instante depois de o último passo abrir. */
+/** "Enviar avaliação" só fica ativo um instante depois de o último passo abrir. */
 async function send() {
-  const button = screen.getByRole('button', { name: 'Enviar check-in' });
+  const button = screen.getByRole('button', { name: 'Enviar avaliação' });
   await waitFor(() => expect(button).toBeEnabled());
   return button;
 }
@@ -73,7 +73,7 @@ describe('PortalCheckInsPage', () => {
     expect(screen.getByText('Só podes responder hoje.')).toBeInTheDocument();
     expect(screen.getByText('Passo 1 de 3')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Peso' })).toBeInTheDocument();
-    expect(screen.getByRole('progressbar', { name: 'Progresso do check-in' })).toHaveAttribute(
+    expect(screen.getByRole('progressbar', { name: 'Progresso da avaliação' })).toHaveAttribute(
       'aria-valuenow',
       '33'
     );
@@ -81,7 +81,7 @@ describe('PortalCheckInsPage', () => {
     expect(field('Peso (kg)')).toHaveValue('');
     expect(field('Massa gorda (%) (opcional)')).toHaveValue('');
     expect(screen.queryByRole('button', { name: 'Anterior' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Enviar check-in' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Enviar avaliação' })).not.toBeInTheDocument();
     // Com um check-in por responder, o próximo seria esse mesmo: não se pede.
     expect(calls).toEqual(['due']);
   });
@@ -182,7 +182,7 @@ describe('PortalCheckInsPage', () => {
     release();
 
     expect(
-      await screen.findByText('Check-in enviado. O teu personal trainer já o pode ver.')
+      await screen.findByText('Avaliação enviada. O teu personal trainer já a pode ver.')
     ).toBeInTheDocument();
     expect(body).toEqual({
       weight_kg: 71.5,
@@ -210,9 +210,9 @@ describe('PortalCheckInsPage', () => {
       training_adherence_score: 0,
       nutrition_adherence_score: 85,
     });
-    expect(screen.queryByRole('form', { name: 'Responder ao check-in' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('form', { name: 'Responder à avaliação' })).not.toBeInTheDocument();
     // O próximo vem do segundo pedido; os valores enviados não se repetem (não há histórico).
-    expect(await screen.findByRole('heading', { name: 'Próximo check-in' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Próxima avaliação' })).toBeInTheDocument();
     expect(
       screen.getByText('Domingo, 18/10/2026. Poderás responder nesse dia.')
     ).toBeInTheDocument();
@@ -240,7 +240,7 @@ describe('PortalCheckInsPage', () => {
     await reachLastStep(user, '80');
     await user.click(await send());
 
-    await screen.findByText('Check-in enviado. O teu personal trainer já o pode ver.');
+    await screen.findByText('Avaliação enviada. O teu personal trainer já a pode ver.');
     expect(body).toEqual({
       weight_kg: 80,
       body_fat_percentage: null,
@@ -252,7 +252,7 @@ describe('PortalCheckInsPage', () => {
     });
   });
 
-  it('does not send the check-in when "Seguinte" is tapped twice on the second step', async () => {
+  it('does not send the evaluation when "Seguinte" is tapped twice on the second step', async () => {
     let posts = 0;
     server.use(
       http.post(RESPOND, () => {
@@ -270,14 +270,107 @@ describe('PortalCheckInsPage', () => {
     const tapped = next();
     await user.click(tapped);
     await screen.findByRole('heading', { name: 'Como correu' });
-    expect(tapped).toHaveAccessibleName('Enviar check-in');
-    await user.click(tapped);
+    // "Seguinte" e "Enviar" são nós diferentes, e o de enviar começa desativado.
+    expect(tapped).not.toBeInTheDocument();
+    const sendNow = screen.getByRole('button', { name: 'Enviar avaliação' });
+    expect(sendNow).toBeDisabled();
+    await user.click(sendNow);
 
     expect(posts).toBe(0);
     expect(screen.getByRole('heading', { name: 'Como correu' })).toBeInTheDocument();
     expect(
-      screen.queryByText('Check-in enviado. O teu personal trainer já o pode ver.')
+      screen.queryByText('Avaliação enviada. O teu personal trainer já a pode ver.')
     ).not.toBeInTheDocument();
+  });
+
+  it('says why the send button is disabled for the first moments of the last step', async () => {
+    const user = userEvent.setup();
+    await openCheckIns();
+
+    await user.type(field('Peso (kg)'), '71,5');
+    await user.click(next());
+    await screen.findByRole('heading', { name: 'Medidas' });
+    await user.click(next());
+    await screen.findByRole('heading', { name: 'Como correu' });
+
+    const button = screen.getByRole('button', { name: 'Enviar avaliação' });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAccessibleDescription(
+      'Revê as respostas deste passo. Já podes enviar daqui a instantes.'
+    );
+
+    // Passado o tempo, o botão ativa-se e o motivo sai.
+    await waitFor(() => expect(button).toBeEnabled());
+    expect(button).not.toHaveAccessibleDescription();
+    expect(screen.queryByText(/Já podes enviar daqui a instantes/)).not.toBeInTheDocument();
+  });
+
+  it('tells the client the evaluation is no longer available when it disappears mid-way', async () => {
+    let available = true;
+    server.use(
+      http.get(DUE, () => (available ? HttpResponse.json(dueCheckIn()) : absent())),
+      http.get(NEXT, absent)
+    );
+    const user = userEvent.setup();
+    const { queryClient } = await openCheckIns();
+    await user.type(field('Peso (kg)'), '71,5');
+
+    // O dia passou: a releitura já não a devolve.
+    available = false;
+    await queryClient.invalidateQueries({ queryKey: portalKeys.checkInDue() });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Esta avaliação já não está disponível para responder. O dia pode ter passado.'
+    );
+    expect(screen.queryByRole('form', { name: 'Responder à avaliação' })).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Sem avaliações agendadas' })
+    ).toBeInTheDocument();
+  });
+
+  it('does not warn when an untouched evaluation disappears', async () => {
+    let available = true;
+    server.use(
+      http.get(DUE, () => (available ? HttpResponse.json(dueCheckIn()) : absent())),
+      http.get(NEXT, absent)
+    );
+    const { queryClient } = await openCheckIns();
+
+    available = false;
+    await queryClient.invalidateQueries({ queryKey: portalKeys.checkInDue() });
+
+    expect(
+      await screen.findByRole('heading', { name: 'Sem avaliações agendadas' })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('never shows the word "check-in" in the page, in any of its states', async () => {
+    const user = userEvent.setup();
+    const { queryClient } = await openCheckIns();
+    const visible = () => {
+      const main = screen.getByRole('main');
+      const labels = [...main.querySelectorAll('[aria-label]')].map((node) =>
+        node.getAttribute('aria-label')
+      );
+      return [main.textContent, ...labels].join(' ');
+    };
+
+    expect(visible()).not.toMatch(/check-?in/i);
+    await user.type(field('Peso (kg)'), '71,5');
+    await user.click(next());
+    await screen.findByRole('heading', { name: 'Medidas' });
+    await user.click(next());
+    await screen.findByRole('heading', { name: 'Como correu' });
+    expect(visible()).not.toMatch(/check-?in/i);
+
+    server.use(
+      http.get(DUE, absent),
+      http.get(NEXT, () => HttpResponse.json(nextCheckIn()))
+    );
+    await queryClient.invalidateQueries({ queryKey: portalKeys.checkInDue() });
+    await screen.findByRole('heading', { name: 'Próxima avaliação' });
+    expect(visible()).not.toMatch(/check-?in/i);
   });
 
   it('checks the last step before sending', async () => {
@@ -348,15 +441,15 @@ describe('PortalCheckInsPage', () => {
     await screen.findByRole('heading', { name: 'Como correu' });
     await user.click(await send());
 
-    await screen.findByText('Check-in enviado. O teu personal trainer já o pode ver.');
+    await screen.findByText('Avaliação enviada. O teu personal trainer já a pode ver.');
     expect(bodies).toHaveLength(2);
     expect(bodies[1]).toMatchObject({ body_measurements: { chest_cm: 101 } });
   });
 
   it.each([
-    ['check_in_already_answered', 'Este check-in já foi respondido.'],
-    ['check_in_wrong_day', 'Este check-in só podia ser respondido no próprio dia.'],
-    ['check_in_cancelled', 'Este check-in foi cancelado pelo teu personal trainer.'],
+    ['check_in_already_answered', 'Esta avaliação já foi respondida.'],
+    ['check_in_wrong_day', 'Esta avaliação só podia ser respondida no próprio dia.'],
+    ['check_in_cancelled', 'Esta avaliação foi cancelada pelo teu personal trainer.'],
   ])('explains %s in a toast and rereads the screen', async (code, message) => {
     let refused = false;
     server.use(
@@ -375,9 +468,9 @@ describe('PortalCheckInsPage', () => {
 
     await waitFor(() => expect(toastMock.error).toHaveBeenCalledWith(message));
     // O formulário sai (a mensagem não podia viver nele) e o ecrã mostra o próximo.
-    expect(await screen.findByRole('heading', { name: 'Próximo check-in' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Enviar check-in' })).not.toBeInTheDocument();
-    expect(screen.queryByText(/Check-in enviado/)).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Próxima avaliação' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Enviar avaliação' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Avaliação enviada/)).not.toBeInTheDocument();
   });
 
   it('goes back to the earliest step when the server refuses fields of several steps', async () => {
@@ -422,7 +515,9 @@ describe('PortalCheckInsPage', () => {
     await user.click(await send());
 
     expect(
-      await screen.findByText('Não foi possível enviar o check-in. O que escreveste continua aqui.')
+      await screen.findByText(
+        'Não foi possível enviar a avaliação. O que escreveste continua aqui.'
+      )
     ).toBeInTheDocument();
     expect(field('Notas')).toHaveValue('Semana boa.');
     // É uma falha do envio, não de um campo: nenhum fica marcado.
@@ -449,7 +544,7 @@ describe('PortalCheckInsPage', () => {
 
     await openCheckIns();
 
-    expect(await screen.findByRole('heading', { name: 'Próximo check-in' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Próxima avaliação' })).toBeInTheDocument();
     expect(
       screen.getByText('Domingo, 18/10/2026. Poderás responder nesse dia.')
     ).toBeInTheDocument();
@@ -466,10 +561,10 @@ describe('PortalCheckInsPage', () => {
     await openCheckIns();
 
     expect(
-      await screen.findByRole('heading', { name: 'Sem check-ins agendados' })
+      await screen.findByRole('heading', { name: 'Sem avaliações agendadas' })
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Quando o teu personal trainer agendar um check-in, aparece aqui.')
+      screen.getByText('Quando o teu personal trainer agendar uma avaliação, aparece aqui.')
     ).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
@@ -509,12 +604,12 @@ describe('PortalCheckInsPage', () => {
     await openCheckIns();
 
     expect(
-      await screen.findByText('Não foi possível saber quando é o teu próximo check-in.')
+      await screen.findByText('Não foi possível saber quando é a tua próxima avaliação.')
     ).toBeInTheDocument();
     fail = false;
     await user.click(screen.getByRole('button', { name: 'Tentar novamente' }));
 
-    expect(await screen.findByRole('heading', { name: 'Próximo check-in' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Próxima avaliação' })).toBeInTheDocument();
   });
 
   it('keeps the form and warns when a refresh fails', async () => {
@@ -550,7 +645,7 @@ describe('PortalCheckInsPage', () => {
 
     const dialog = await screen.findByRole('alertdialog', { name: 'Sair sem enviar?' });
     expect(
-      within(dialog).getByText('O que escreveste neste check-in não fica guardado.')
+      within(dialog).getByText('O que escreveste nesta avaliação não fica guardado.')
     ).toBeInTheDocument();
     await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
 

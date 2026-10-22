@@ -5825,6 +5825,288 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/portal/my-workout/days": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lista os dias passados com treino do plano ativo, do início do plano até ontem, no fuso
+         *     do personal trainer.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MyPastWorkoutDaysResponse"];
+                        "application/json": components["schemas"]["MyPastWorkoutDaysResponse"];
+                        "text/json": components["schemas"]["MyPastWorkoutDaysResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Payment Required */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/portal/my-workout/day": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Devolve um dia passado do plano ativo, só para ler: o planeado, o registado e as notas.
+         *     Hoje, dias futuros e dias fora do plano respondem 400.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    date?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MyWorkoutTodayResponse"];
+                        "application/json": components["schemas"]["MyWorkoutTodayResponse"];
+                        "text/json": components["schemas"]["MyWorkoutTodayResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Payment Required */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/portal/my-plan": {
         parameters: {
             query?: never;
@@ -5962,6 +6244,285 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/portal/my-meal-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista os planos alimentares ativos do cliente, para escolher qual seguir. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MyMealPlansResponse"];
+                        "application/json": components["schemas"]["MyMealPlansResponse"];
+                        "text/json": components["schemas"]["MyMealPlansResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Payment Required */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/portal/my-meal-plans/selection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Guarda na conta o plano alimentar que o cliente escolheu seguir. 404 se o plano não for
+         *     dele ou estiver arquivado.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SelectMyMealPlanRequest"];
+                    "text/json": components["schemas"]["SelectMyMealPlanRequest"];
+                    "application/*+json": components["schemas"]["SelectMyMealPlanRequest"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Payment Required */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ApiProblemDetails"];
+                        "application/json": components["schemas"]["ApiProblemDetails"];
+                        "text/json": components["schemas"]["ApiProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/portal/my-nutrition": {
         parameters: {
             query?: never;
@@ -5969,7 +6530,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Devolve o plano alimentar ativo do cliente. */
+        /**
+         * Devolve o plano alimentar que o cliente escolheu. Sem escolha, 404
+         *     `portal_nutrition_plan_not_selected` se houver planos para escolher.
+         */
         get: {
             parameters: {
                 query?: never;
@@ -6233,7 +6797,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Atualiza os contactos do cliente autenticado. */
+        /** Atualiza o nome e os contactos do cliente autenticado. */
         patch: {
             parameters: {
                 query?: never;
@@ -26146,7 +26710,7 @@ export interface components {
             is_completed: boolean;
             next_workout: null | components["schemas"]["MyNextWorkoutResponse"];
         };
-        /** @description Registo de hoje de uma série, visto pelo cliente. */
+        /** @description Registo de uma série nesse dia, visto pelo cliente, com a nota que ele escreveu. */
         MyLoggedSetResponse: {
             /** Format: uuid */
             log_id: string;
@@ -26158,6 +26722,7 @@ export interface components {
             rpe: null | number;
             /** Format: date-time */
             performed_at: string;
+            notes: null | string;
         };
         /** @description Alimento prescrito, com marcador de indisponibilidade. */
         MyMealItemResponse: {
@@ -26168,6 +26733,26 @@ export interface components {
             /** Format: double */
             quantity_in_grams: number;
             contribution: components["schemas"]["MyNutritionTotalsResponse"];
+        };
+        /** @description Planos alimentares ativos do cliente. */
+        MyMealPlansResponse: {
+            items: components["schemas"]["MyMealPlanSummaryResponse"][];
+        };
+        /** @description Plano alimentar ativo na lista do portal. `is_selected` marca o que o cliente segue. */
+        MyMealPlanSummaryResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: date */
+            starts_date: string;
+            /** Format: date */
+            ends_date: null | string;
+            /** Format: double */
+            target_kcal: number;
+            goal_type: null | string;
+            /** Format: int32 */
+            meal_count: number;
+            is_selected: boolean;
         };
         /** @description Refeição prescrita e os seus totais. */
         MyMealResponse: {
@@ -26206,7 +26791,10 @@ export interface components {
             /** Format: int32 */
             day_of_week: number;
         };
-        /** @description Plano alimentar ativo do cliente. */
+        /**
+         * @description Plano alimentar que o cliente escolheu seguir. `goal_type` é a palavra do objetivo
+         *     (`maintenance`, `deficit`, `surplus`) ou null quando as kcal foram escritas à mão.
+         */
         MyNutritionPlanResponse: {
             /** Format: uuid */
             id: string;
@@ -26224,6 +26812,7 @@ export interface components {
             carbs_target_grams: number;
             /** Format: double */
             fats_target_grams: number;
+            goal_type: null | string;
             actual_totals: components["schemas"]["MyNutritionTotalsResponse"];
             meals: components["schemas"]["MyMealResponse"][];
             /** Format: date-time */
@@ -26242,19 +26831,36 @@ export interface components {
             /** Format: double */
             fiber_grams: number;
         };
-        /** @description Home do portal do cliente. */
+        /** @description Dia passado com treino do plano ativo, para o filtro de dia do portal. */
+        MyPastWorkoutDayResponse: {
+            /** Format: date */
+            date: string;
+            /** Format: int32 */
+            week_number: number;
+            /** Format: int32 */
+            day_of_week: number;
+        };
+        /** @description Dias passados com treino do plano ativo, do mais recente para o mais antigo. */
+        MyPastWorkoutDaysResponse: {
+            items: components["schemas"]["MyPastWorkoutDayResponse"][];
+        };
+        /**
+         * @description Home do portal do cliente. `nutrition` é o plano escolhido; sem escolha vem null e
+         *     `active_meal_plan_count` diz se há planos para escolher.
+         */
         MyPortalHomeResponse: {
             /** Format: date */
             local_date: string;
             workout: null | components["schemas"]["MyHomeWorkoutResponse"];
             nutrition: null | components["schemas"]["MyHomeNutritionResponse"];
+            /** Format: int32 */
+            active_meal_plan_count: number;
             supplements: components["schemas"]["MyHomeSupplementsResponse"];
             next_check_in: null | components["schemas"]["MyNextCheckInResponse"];
         };
         /** @description Perfil do cliente autenticado. */
         MyProfileResponse: {
             name: string;
-            contact_email: null | string;
             phone: string;
             /** Format: date */
             birth_date: string;
@@ -26412,7 +27018,10 @@ export interface components {
             planned_rpe: null | number;
             logged: null | components["schemas"]["MyLoggedSetResponse"];
         };
-        /** @description Treino de hoje do cliente autenticado. */
+        /**
+         * @description Treino de um dia do cliente autenticado: hoje, para registar, ou um dia passado, só para
+         *     ler. `completion_notes` é a nota escrita ao concluir.
+         */
         MyWorkoutTodayResponse: {
             /** Format: date */
             local_date: string;
@@ -26428,6 +27037,7 @@ export interface components {
             progress: components["schemas"]["MyWorkoutProgressResponse"];
             /** Format: date-time */
             completed_at: null | string;
+            completion_notes: null | string;
             next_workout: null | components["schemas"]["MyNextWorkoutResponse"];
         };
         /**
@@ -26971,6 +27581,11 @@ export interface components {
             duration_minutes: number;
             location: null | string;
         };
+        /** @description Plano alimentar que o cliente quer passar a seguir. */
+        SelectMyMealPlanRequest: {
+            /** Format: uuid */
+            meal_plan_id: string;
+        };
         /** @description Sessão devolvida ao cliente. O refresh token nunca aparece aqui. */
         SessionResponse: {
             /** Format: uuid */
@@ -27333,9 +27948,9 @@ export interface components {
             calculation: null | components["schemas"]["NutritionCalculationRequest"];
             structure: components["schemas"]["MealPlanStructureRequest"];
         };
-        /** @description Campos de contacto que o cliente pode alterar. */
+        /** @description Nome e contactos que o cliente pode alterar. O email da ficha não se altera aqui. */
         UpdateMyProfileRequest: {
-            contact_email: null | string;
+            name: string;
             phone: string;
             emergency_contact_name: null | string;
             emergency_contact_phone: null | string;

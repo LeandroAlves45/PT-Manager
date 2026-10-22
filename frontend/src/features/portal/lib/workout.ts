@@ -91,6 +91,46 @@ export function plannedSetLabel(set: PlannedSet): string {
 }
 
 /**
+ * Prescrição de uma série em partes curtas, uma por chip: «12-10 reps», «60 kg», «RPE 8» e
+ * «Descanso 90–120 s». Um campo que a série não preenche não aparece.
+ */
+export function plannedSetChips(set: PlannedSet): string[] {
+  const chips: string[] = [];
+
+  if (set.planned_reps !== null)
+    chips.push(`${formatRepsTarget(set.planned_reps, set.planned_reps_max)} reps`);
+  if (set.planned_weight_kg !== null) chips.push(`${formatDecimal(set.planned_weight_kg)} kg`);
+  if (set.planned_rpe !== null) chips.push(`RPE ${formatDecimal(set.planned_rpe)}`);
+
+  const rest = [set.rest_seconds_min, set.rest_seconds_max].filter((value) => value !== null);
+  if (rest.length > 0) chips.push(`Descanso ${range(Math.min(...rest), Math.max(...rest))} s`);
+
+  return chips;
+}
+
+/** Série registada numa linha: «62,5 kg × 8 reps · RPE 8,5» (sem RPE quando não foi indicado). */
+export function loggedSetLabel(logged: {
+  weight_kg: number;
+  reps_done: number;
+  rpe: number | null;
+}): string {
+  const text = `${formatDecimal(logged.weight_kg)} kg × ${formatNumber(logged.reps_done)} reps`;
+  return logged.rpe === null ? text : `${text} · RPE ${formatDecimal(logged.rpe)}`;
+}
+
+/**
+ * Verdadeiro quando o pedido de um dia passado falhou porque o dia não pode ser consultado
+ * (hoje, futuro ou fora do período do plano): 400 de validação cujo primeiro erro de campo é
+ * `portal_workout_day_not_available`.
+ */
+export function isWorkoutDayUnavailable(error: unknown): boolean {
+  // Qualquer 400 deste pedido quer dizer que a data não abre: o servidor responde
+  // `portal_workout_day_not_available` e o binder do ASP.NET responde o mesmo estado para uma
+  // data que nem é data. Tentar de novo nunca ajudaria.
+  return isApiProblem(error) && error.status === 400;
+}
+
+/**
  * Nome a mostrar. Um exercício bloqueado pela plataforma chega mascarado em inglês
  * (`"Unavailable exercise"`, `PortalContentMasking`); o cliente vê a versão PT.
  */

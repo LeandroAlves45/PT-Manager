@@ -51,7 +51,13 @@ e usar documentação canónica em `.claude/project/` + `ACTIVE.md`.
 
 ## Última geração
 
-**2026-09-06** — **4211 nós**, 250 comunidades, 7907 arestas (graphify 0.9.12).
+**2026-10-22** (fecho do Sprint 6): **15 535 nós**, 1146 comunidades e 31 686 arestas, com backend e frontend.
+- Inclui o Sprint 6 completo: layout, portal do cliente, 6GA Auth UX e as três fases da 6GB.
+- Símbolos de controlo da última fase: `MyMealPlanSelectionStore`, `PortalCard`.
+- Ficaram sem nós 4 ficheiros de configuração: `hooks.json`, `global.json` e os dois `appsettings*.json`.
+- A geração anterior está guardada em `graphify-out/2026-10-22/`.
+
+Geração anterior: **2026-09-06**, com **4211 nós**, 250 comunidades e 7907 arestas (graphify 0.9.12).
 
 Inclui Sprint 4 completo no backend: Auth local, moderação, controllers de negócio,
 Client Portal e **Google Sign-In (Fase 5)** — `GoogleAuthController`,

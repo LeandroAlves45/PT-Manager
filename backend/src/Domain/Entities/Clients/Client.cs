@@ -24,6 +24,12 @@ public sealed class Client
     public string? EmergencyContactPhone { get; private set; }
     public string? AvatarUrl { get; private set; }
     public string? AvatarPublicId { get; private set; }
+    /// <summary>
+    /// Plano alimentar que o cliente escolheu seguir no portal. Fica guardado na conta até ele
+    /// escolher outro; arquivar o plano limpa a escolha. É escrito só pelos stores, com uma
+    /// atualização direta que confirma o plano na mesma instrução.
+    /// </summary>
+    public Guid? SelectedMealPlanId { get; private set; }
     public bool IsActive { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime CreatedAt { get; private set; }

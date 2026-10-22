@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Infrastructure.Persistence.ClientPortal;
 
 /// <summary>
-/// Aplica as alterações de contacto que o próprio cliente pode fazer ao seu perfil.
+/// Aplica as alterações de nome e contactos que o próprio cliente pode fazer ao seu perfil.
 /// </summary>
 internal sealed class MyProfileStore : IMyProfileStore
 {
@@ -42,10 +42,11 @@ internal sealed class MyProfileStore : IMyProfileStore
         if (client is null)
             return UpdateMyProfileOutcome.NotFound;
 
-        // Os cinco argumentos não editáveis vêm da entidade carregada, não do pedido.
+        // Os campos que o cliente não edita (email, nascimento, sexo, objetivo, notas) vêm da
+        // entidade carregada, não do pedido.
         client.UpdateProfile(
-            client.Name,
-            writeModel.ContactEmail,
+            writeModel.Name,
+            client.ContactEmail,
             writeModel.Phone,
             client.BirthDate,
             client.Sex,
@@ -66,8 +67,6 @@ internal sealed class MyProfileStore : IMyProfileStore
                 PersistenceOperation.UpdateClient,
                 out var error);
 
-            if (translated && error?.Code == "client_email_already_exists")
-                return UpdateMyProfileOutcome.DuplicateEmail;
             if (translated && error?.Code == "client_phone_already_exists")
                 return UpdateMyProfileOutcome.DuplicatePhone;
             throw;

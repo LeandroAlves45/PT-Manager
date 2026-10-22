@@ -56,9 +56,11 @@ public sealed class MyWorkoutTodayReaderTests : ReadHandlerTestContext
                     62.5m,
                     8,
                     8m,
-                    new DateTimeOffset(2026, 9, 3, 9, 0, 0, TimeSpan.Zero))
+                    new DateTimeOffset(2026, 9, 3, 9, 0, 0, TimeSpan.Zero),
+                    "Senti o ombro")
             ],
-            CompletedAt = new DateTime(2026, 9, 3, 10, 0, 0, DateTimeKind.Utc)
+            CompletedAt = new DateTime(2026, 9, 3, 10, 0, 0, DateTimeKind.Utc),
+            CompletionNotes = "Treino duro"
         };
         var reader = new MyWorkoutTodayReader(
             new TrainingPlanQueriesFake { Plan = PlanWith(dayOfWeek: 3) },
@@ -78,6 +80,7 @@ public sealed class MyWorkoutTodayReaderTests : ReadHandlerTestContext
         Assert.Equal(1, result.Value.Progress.PlannedExercises);
         Assert.Equal(0, result.Value.Progress.CompletedExercises);
         Assert.NotNull(result.Value.CompletedAt);
+        Assert.Equal("Treino duro", result.Value.CompletionNotes);
         var exercise = Assert.Single(result.Value.Day!.Exercises);
         // [6F-2] NOVO: o id do catálogo e o vídeo passam do plano para o treino de hoje.
         Assert.Equal(PrescriptionId, exercise.Id);
@@ -85,6 +88,7 @@ public sealed class MyWorkoutTodayReaderTests : ReadHandlerTestContext
         Assert.True(exercise.HasReadyVideo);
         var sets = exercise.Sets;
         Assert.NotNull(sets[0].Logged);
+        Assert.Equal("Senti o ombro", sets[0].Logged!.Notes);
         Assert.Null(sets[1].Logged);
         // A janela de registos é o dia local, convertido para UTC.
         Assert.Equal(
