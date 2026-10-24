@@ -7,6 +7,7 @@ using Api.Security;
 using Application.Features.Administration.ContentModeration.BlockExercise;
 using Application.Features.Administration.ContentModeration.BlockFood;
 using Application.Features.Administration.ContentModeration.UnblockExercise;
+using Application.Features.Administration.ContentModeration.SupplementModeration;
 using Application.Features.Administration.ContentModeration.UnblockFood;
 using Application.Results;
 using Microsoft.AspNetCore.Authorization;
@@ -43,7 +44,7 @@ public sealed class AdminContentModerationController : ControllerBase
         [FromServices] BlockFoodHandler handler,
         CancellationToken cancellationToken) =>
         RespondAsync("block", "food", foodId, handler.HandleAsync(
-            new BlockFoodCommand(foodId, request.ReasonCode), cancellationToken));
+            new BlockFoodCommand(foodId, request.ReasonCode, request.Note), cancellationToken));
 
     [HttpPost("foods/{foodId:guid}/unblock")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -62,7 +63,7 @@ public sealed class AdminContentModerationController : ControllerBase
         [FromServices] BlockExerciseHandler handler,
         CancellationToken cancellationToken) =>
         RespondAsync("block", "exercise", exerciseId, handler.HandleAsync(
-            new BlockExerciseCommand(exerciseId, request.ReasonCode), cancellationToken));
+            new BlockExerciseCommand(exerciseId, request.ReasonCode, request.Note), cancellationToken));
 
     [HttpPost("exercises/{exerciseId:guid}/unblock")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -72,6 +73,25 @@ public sealed class AdminContentModerationController : ControllerBase
         CancellationToken cancellationToken) =>
         RespondAsync("unblock", "exercise", exerciseId, handler.HandleAsync(
             new UnblockExerciseCommand(exerciseId), cancellationToken));
+
+    [HttpPost("supplements/{supplementId:guid}/block")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public Task<IActionResult> BlockSupplementAsync(
+        Guid supplementId,
+        [FromBody] BlockContentRequest request,
+        [FromServices] BlockSupplementHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync("block", "supplement", supplementId, handler.HandleAsync(
+            new BlockSupplementCommand(supplementId, request.ReasonCode, request.Note), cancellationToken));
+
+    [HttpPost("supplements/{supplementId:guid}/unblock")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public Task<IActionResult> UnblockSupplementAsync(
+        Guid supplementId,
+        [FromServices] UnblockSupplementHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync("unblock", "supplement", supplementId, handler.HandleAsync(
+            new UnblockSupplementCommand(supplementId), cancellationToken));
 
     private async Task<IActionResult> RespondAsync(
         string moderationOperation,

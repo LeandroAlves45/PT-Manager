@@ -599,6 +599,28 @@ internal static class PortalTestData
         return (trainerId, clientUserId);
     }
 
+    /// <summary>
+    /// Cliente acabado de entrar no portal: conta ligada, sem avaliação inicial nem
+    /// planeamento. Devolve também o id da ficha.
+    /// </summary>
+    internal static async Task<(Guid TrainerId, Guid ClientUserId, Guid ClientId)> SeedNewClientAsync(
+        ApiWebApplicationFactory factory,
+        CancellationToken cancellationToken,
+        Guid? trainerId = null)
+    {
+        ArgumentNullException.ThrowIfNull(factory);
+
+        var owner = trainerId ?? (await TrainerTenantSeeder.SeedTrainerAsync(
+            factory,
+            $"portal-new-{Guid.NewGuid():N}",
+            cancellationToken)).TrainerId;
+        var clientUserId = await SeedClientUserAsync(factory, cancellationToken);
+        var clientId = await SeedLinkedClientAsync(
+            factory, owner, clientUserId, cancellationToken, name: "Cliente novo");
+
+        return (owner, clientUserId, clientId);
+    }
+
     private static AsyncServiceScope CreateTrainerScope(
         ApiWebApplicationFactory factory,
         Guid trainerId)

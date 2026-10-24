@@ -12,7 +12,8 @@ internal static class ProblemDetailsResponseWriter
         IProblemDetailsService problemDetailsService,
         int statusCode,
         string title,
-        string detail
+        string detail,
+        IReadOnlyDictionary<string, object?>? extensions = null
     )
     {
         if (httpContext.Response.HasStarted)
@@ -28,6 +29,11 @@ internal static class ProblemDetailsResponseWriter
             Instance = httpContext.Request.Path
         };
         problem.Extensions["correlation_id"] = httpContext.TraceIdentifier;
+        if (extensions is not null)
+        {
+            foreach (var (key, value) in extensions)
+                problem.Extensions[key] = value;
+        }
 
         var written = await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
         {

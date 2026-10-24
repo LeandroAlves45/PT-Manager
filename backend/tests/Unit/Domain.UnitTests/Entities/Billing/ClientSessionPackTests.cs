@@ -25,6 +25,32 @@ public sealed class ClientSessionPackTests
     }
 
     [Fact]
+    public void ForfeitRemaining_ClosesThePack_AndRepeatingKeepsTheFirstInstant()
+    {
+        var pack = CreatePack(CreateType());
+        pack.ConsumeSession(Now);
+
+        pack.ForfeitRemaining(Now.AddDays(1));
+        pack.ForfeitRemaining(Now.AddDays(2));
+
+        Assert.Equal(
+            (0, false, Now.AddDays(1), Now.AddDays(1)),
+            (pack.SessionsRemaining, pack.IsUsable, pack.ForfeitedAt, pack.CompletedAt));
+    }
+
+    [Fact]
+    public void RestoreSession_OnAForfeitedPack_DoesNotGiveTheBalanceBack()
+    {
+        var pack = CreatePack(CreateType());
+        pack.ConsumeSession(Now);
+        pack.ForfeitRemaining(Now.AddDays(1));
+
+        pack.RestoreSession(Now.AddDays(2));
+
+        Assert.Equal(0, pack.SessionsRemaining);
+    }
+
+    [Fact]
     public void ExpectedEndDate_InPastButAfterPurchase_RemainsUsable()
     {
         var pack = new ClientSessionPack(

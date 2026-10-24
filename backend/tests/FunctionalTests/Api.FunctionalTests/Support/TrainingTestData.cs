@@ -1,3 +1,5 @@
+using Api.Contracts.Sessions;
+using Api.Contracts.Training;
 using Application.Common.Abstractions;
 using Application.Features.Training.Exercises.Abstractions;
 using Domain.Entities.Billing;
@@ -24,10 +26,44 @@ internal static class TrainingTestData
         Guid ExerciseId,
         Guid PackTypeId);
 
+    /// <summary>Plano de treino de um dia, com uma série, para o cliente do tenant.</summary>
+    internal static CreateTrainingPlanRequest SimplePlan(TrainingTenant tenant) =>
+        new(
+            tenant.ClientId,
+            "Plano simples",
+            null,
+            "hipertrofia",
+            null,
+            new DateOnly(2026, 9, 1),
+            null,
+            new TrainingPlanStructureRequest(
+            [
+                new TrainingDayRequest(
+                    null,
+                    1,
+                    1,
+                    null,
+                    [
+                        new DayExerciseRequest(
+                            null,
+                            tenant.ExerciseId,
+                            1,
+                            null,
+                            null,
+                            null,
+                            [new ExerciseSetRequest(null, 1, 10, 60m, 60, 90)])
+                    ])
+            ]));
+
+    /// <summary>Sessão daqui a três dias, sem pack, para o cliente do tenant.</summary>
+    internal static CreateSessionRequest SimpleSession(TrainingTenant tenant) =>
+        new(tenant.ClientId, null, DateTimeOffset.UtcNow.AddDays(3), 60, "Estúdio", "personal", null);
+
     /// <summary>Semeia um tenant completo para os testes.</summary>
     internal static async Task<TrainingTenant> SeedTenantAsync(
         ApiWebApplicationFactory factory,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool withInitialAssessment = true)
     {
         ArgumentNullException.ThrowIfNull(factory);
 
@@ -39,7 +75,8 @@ internal static class TrainingTestData
             factory,
             trainer.TrainerId,
             "Training client",
-            cancellationToken);
+            cancellationToken,
+            withInitialAssessment: withInitialAssessment);
         var exerciseId = await SeedPrivateExerciseAsync(
             factory,
             trainer.TrainerId,

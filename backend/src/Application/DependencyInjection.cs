@@ -32,6 +32,10 @@ public static class DependencyInjection
     {
         services.AddScoped<Application.Features.Administration.ContentModeration.BlockFood.BlockFoodHandler>();
         services.AddScoped<Application.Features.Administration.ContentModeration.UnblockFood.UnblockFoodHandler>();
+        services.AddScoped<Application.Features.Administration.ContentModeration.SupplementModeration.BlockSupplementHandler>();
+        services.AddScoped<Application.Features.Administration.ContentModeration.SupplementModeration.UnblockSupplementHandler>();
+        services.AddScoped<IValidator<Application.Features.Administration.ContentModeration.SupplementModeration.BlockSupplementCommand>,
+            Application.Features.Administration.ContentModeration.SupplementModeration.BlockSupplementCommandValidator>();
         services.AddScoped<Application.Features.Administration.ContentModeration.BlockExercise.BlockExerciseHandler>();
         services.AddScoped<Application.Features.Administration.ContentModeration.UnblockExercise.UnblockExerciseHandler>();
         services.AddScoped<Application.Features.Administration.ContentModeration
@@ -40,6 +44,10 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.Administration.Trainers.LookupTrainer.LookupTrainerHandler>();
         services.AddScoped<Application.Features.Administration.Trainers.ListExemptTrainers.ListExemptTrainersHandler>();
         services.AddScoped<Application.Features.Administration.Trainers.SetBillingExemption.SetBillingExemptionHandler>();
+        services.AddScoped<Application.Features.Administration.Trainers.TrainerAccess.BlockTrainerHandler>();
+        services.AddScoped<Application.Features.Administration.Trainers.TrainerAccess.UnblockTrainerHandler>();
+        services.AddScoped<IValidator<Application.Features.Administration.Trainers.TrainerAccess.BlockTrainerCommand>,
+            Application.Features.Administration.Trainers.TrainerAccess.BlockTrainerCommandValidator>();
         services.AddScoped<Application.Features.Administration.Trainers.InviteTrainer.InviteTrainerHandler>();
         services.AddScoped<Application.Features.Administration.Trainers.ListTrainerInvitations.ListTrainerInvitationsHandler>();
         services.AddScoped<Application.Features.Administration.Trainers.RevokeTrainerInvitation.RevokeTrainerInvitationHandler>();
@@ -183,6 +191,20 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.ClientPortal.GetMyWorkoutDay.GetMyWorkoutDayHandler>();
         services.AddScoped<Application.Features.ClientPortal.ListMyMealPlans.ListMyMealPlansHandler>();
         services.AddScoped<Application.Features.ClientPortal.SelectMyMealPlan.SelectMyMealPlanHandler>();
+        services.AddScoped<Application.Features.ClientPortal.GetMyInitialAssessment.GetMyInitialAssessmentStatusHandler>();
+        services.AddScoped<Application.Features.ClientPortal.PlanSupplementIntakes.GetMyPlanSupplementsTodayHandler>();
+        services.AddScoped<Application.Features.ClientPortal.PlanSupplementIntakes.MarkMyPlanSupplementIntakeHandler>();
+        services.AddScoped<Application.Features.ClientPortal.PlanSupplementIntakes.UnmarkMyPlanSupplementIntakeHandler>();
+        services.AddScoped<Application.Features.ClientPortal.SubmitMyInitialAssessment.SubmitMyInitialAssessmentHandler>();
+        services.AddScoped<IValidator<Application.Features.ClientPortal.SubmitMyInitialAssessment.SubmitMyInitialAssessmentCommand>,
+            Application.Features.ClientPortal.SubmitMyInitialAssessment.SubmitMyInitialAssessmentCommandValidator>();
+        services.AddScoped<Application.Features.Assessments.InitialAssessments.MarkInitialAssessmentReviewed
+            .MarkInitialAssessmentReviewedHandler>();
+        services.AddScoped<Application.Features.Assessments.InitialAssessments.ListInitialAssessmentsPendingReview
+            .ListInitialAssessmentsPendingReviewHandler>();
+        services.AddScoped<IValidator<Application.Features.Assessments.InitialAssessments.ListInitialAssessmentsPendingReview
+            .ListInitialAssessmentsPendingReviewQuery>, Application.Features.Assessments.InitialAssessments
+                .ListInitialAssessmentsPendingReview.ListInitialAssessmentsPendingReviewQueryValidator>();
         services.AddScoped<Application.Features.ClientPortal
             .ListMyWorkoutDays.ListMyWorkoutDaysHandler>();
         services.AddScoped<Application.Features.ClientPortal.GetMyPortalHome.GetMyPortalHomeHandler>();

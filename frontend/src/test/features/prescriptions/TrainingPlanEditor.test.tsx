@@ -7,7 +7,16 @@ import { API, problem, restorableSession } from '@/test/msw/handlers';
 import { server } from '@/test/msw/server';
 import { renderApp } from '@/test/render';
 
-import { clientHandler, CLIENT_ID, details, EXERCISE_ID, PLAN_ID } from './trainingFixtures';
+import {
+  clientHandler,
+  CLIENT_ID,
+  DAY_EXERCISE_ID,
+  details,
+  detailsWithBlockedExercise,
+  EXERCISE_ID,
+  OTHER_EXERCISE_ID,
+  PLAN_ID,
+} from './trainingFixtures';
 
 const NEW = '/trainer/training-plans/new?client_id=' + CLIENT_ID;
 
@@ -91,6 +100,27 @@ describe('Training plan editor (two steps)', () => {
       { timeout: 15000 }
     );
     expect(router.state.location.search).toBe('?tab=training');
+  });
+
+  it('explains that the client needs an initial assessment when the server refuses the plan', async () => {
+    server.use(
+      ...restorableSession(),
+      clientHandler,
+      exerciseSearch(),
+      http.post(API + '/training-plans', () =>
+        HttpResponse.json(problem('initial_assessment_required'), { status: 409 })
+      )
+    );
+
+    renderApp({ initialEntries: [NEW] });
+    await fillDetails();
+    await pickExercise();
+    await userEvent.type(screen.getByLabelText('Repetições'), '10');
+    await userEvent.click(screen.getByRole('button', { name: 'Criar' }));
+
+    expect(
+      await screen.findByText('Este cliente ainda não tem avaliação inicial.')
+    ).toBeInTheDocument();
   });
 
   it('keeps step 1 when going back and does not ask to leave between steps', async () => {
@@ -218,5 +248,77 @@ describe('Training plan editor (two steps)', () => {
     await waitFor(() =>
       expect(screen.queryByRole('button', { name: 'Adicionar série' })).not.toBeInTheDocument()
     );
+  });
+});
+
+describe('Training plan editor, blocked exercises', () => {
+  const EDIT_STRUCTURE = `/trainer/training-plans/${PLAN_ID}/edit/structure`;
+
+  function useBlockedPlan(puts: PlanBody[]) {
+    server.use(
+      ...restorableSession(),
+      clientHandler,
+      http.get(API + '/training-plans/:id', () => HttpResponse.json(detailsWithBlockedExercise())),
+      http.get(API + '/exercises', () =>
+        HttpResponse.json({
+          items: [{ id: OTHER_EXERCISE_ID, name: 'Press de peito', scope: 'global' }],
+          total_count: 1,
+          page_number: 1,
+          page_size: 25,
+        })
+      ),
+      http.put(API + '/training-plans/:id', async ({ request }) => {
+        puts.push((await request.json()) as PlanBody);
+        return HttpResponse.json(details());
+      })
+    );
+  }
+
+  /** Exercícios do primeiro dia do corpo enviado, só com os IDs. */
+  function sentExercises(body: PlanBody) {
+    return (
+      body.structure.days[0]!.exercises as unknown as { id: string | null; exercise_id: string }[]
+    ).map(({ id, exercise_id }) => ({ id, exercise_id }));
+  }
+
+  it('marks the blocked exercise with the reason and note', async () => {
+    useBlockedPlan([]);
+    renderApp({ initialEntries: [EDIT_STRUCTURE] });
+
+    expect(await screen.findByText('Bloqueado')).toBeInTheDocument();
+    expect(
+      screen.getByText('Motivo: Informação perigosa · Nota: Técnica sem segurança')
+    ).toBeInTheDocument();
+  });
+
+  it('keeps the blocked exercise, with its original ids, when it is not replaced', async () => {
+    const puts: PlanBody[] = [];
+    useBlockedPlan(puts);
+    renderApp({ initialEntries: [EDIT_STRUCTURE] });
+
+    await screen.findByText('Bloqueado');
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await waitFor(() => expect(puts).toHaveLength(1));
+    expect(sentExercises(puts[0]!)).toEqual([{ id: DAY_EXERCISE_ID, exercise_id: EXERCISE_ID }]);
+  });
+
+  it('drops the mark when the exercise is replaced, and the PUT carries the new exercise', async () => {
+    const puts: PlanBody[] = [];
+    useBlockedPlan(puts);
+    renderApp({ initialEntries: [EDIT_STRUCTURE] });
+
+    await screen.findByText('Bloqueado');
+    await userEvent.click(screen.getByRole('combobox', { name: 'Exercício 1' }));
+    await userEvent.type(screen.getByPlaceholderText('Pesquisar no catálogo'), 'Press');
+    await userEvent.click(await screen.findByText('Press de peito'));
+
+    await waitFor(() => expect(screen.queryByText('Bloqueado')).not.toBeInTheDocument());
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await waitFor(() => expect(puts).toHaveLength(1));
+    expect(sentExercises(puts[0]!)).toEqual([
+      { id: DAY_EXERCISE_ID, exercise_id: OTHER_EXERCISE_ID },
+    ]);
   });
 });

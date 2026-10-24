@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using Application.Features.Jobs.Dispatching;
 using Application.Features.Billing.Notifications;
 using Application.Features.Notifications.Delivery;
+using Application.Features.Notifications.SessionReminders;
 using Infrastructure.Identity;
 using Infrastructure.Email;
 using Infrastructure.Jobs.QStash;
@@ -48,18 +49,46 @@ public static class JobDispatchInfrastructureExtensions
         services.AddScoped<IOutboxMessageHandler, BillingNotificationOutboxHandler>();
         services.AddScoped<IOutboxMessageHandler, TrainerLogoDeletionOutboxHandler>();
         services.AddScoped<IOutboxMessageHandler, ClientAvatarDeletionOutboxHandler>();
+        services.AddScoped<IOutboxMessageHandler, AccountAccessNotificationOutboxHandler>();
 
-        services.AddHttpClient<INotificationDeliveryGateway, ResendNotificationDeliveryGateway>(
-            (provider, client) =>
-            {
-                var options = provider.GetRequiredService<IOptions<ResendOptions>>().Value;
-                client.BaseAddress = options.BaseAddress;
-                client.Timeout = options.Timeout;
-                client.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Bearer", options.ApiKey);
-                client.DefaultRequestHeaders.Accept.Add(
-                    new MediaTypeWithQualityHeaderValue("application/json"));
-            });
+        services.AddSingleton<ISessionReminderScanner, SessionReminderScanner>();
+
+        // Em desenvolvimento, com LogLinks, os lembretes vão para o log, como os emails de
+        // autenticação. O validador da Api recusa LogLinks fora de Development.
+        var logLinks = configuration.GetValue<bool>(
+            $"{DevelopmentEmailOptions.SectionName}:{nameof(DevelopmentEmailOptions.LogLinks)}");
+        if (logLinks)
+        {
+            services.AddScoped<INotificationDeliveryGateway, LoggingNotificationDeliveryGateway>();
+            services.AddScoped<IRenderedEmailSender, LoggingRenderedEmailSender>();
+        }
+        else
+        {
+            services.AddHttpClient<INotificationDeliveryGateway, ResendNotificationDeliveryGateway>(
+                (provider, client) =>
+                {
+                    var options = provider.GetRequiredService<IOptions<ResendOptions>>().Value;
+                    client.BaseAddress = options.BaseAddress;
+                    client.Timeout = options.Timeout;
+                    client.DefaultRequestHeaders.Authorization =
+                        new AuthenticationHeaderValue("Bearer", options.ApiKey);
+                    client.DefaultRequestHeaders.Accept.Add(
+                        new MediaTypeWithQualityHeaderValue("application/json"));
+                });
+        }
+
+        if (!logLinks)
+            services.AddHttpClient<IRenderedEmailSender, ResendRenderedEmailSender>(
+                (provider, client) =>
+                {
+                    var options = provider.GetRequiredService<IOptions<ResendOptions>>().Value;
+                    client.BaseAddress = options.BaseAddress;
+                    client.Timeout = options.Timeout;
+                    client.DefaultRequestHeaders.Authorization =
+                        new AuthenticationHeaderValue("Bearer", options.ApiKey);
+                    client.DefaultRequestHeaders.Accept.Add(
+                        new MediaTypeWithQualityHeaderValue("application/json"));
+                });
 
         services.AddHttpClient<IBillingNotificationGateway, ResendBillingNotificationGateway>(
             (provider, client) =>

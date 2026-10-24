@@ -57,6 +57,8 @@ app.UseAuthentication();
 app.UseRateLimiter();
 app.UseMiddleware<TenantContextMiddleware>();
 app.UseAuthorization();
+// Depois da autorização: um papel errado continua a dar 403 antes de se ler a conta.
+app.UseMiddleware<AccountAccessMiddleware>();
 
 // A UI e o documento ficam restritos a Development: expor a superfície completa
 // da API, incluindo as rotas administrativas, é reconhecimento gratuito para
@@ -70,6 +72,7 @@ if (app.Environment.IsDevelopment())
         .AddPreferredSecuritySchemes("Bearer")
         .DisableAgent()
         .WithNonce());
+    app.MapDevelopmentSessionReminders();
 }
 
 app.MapApiHealthChecks();

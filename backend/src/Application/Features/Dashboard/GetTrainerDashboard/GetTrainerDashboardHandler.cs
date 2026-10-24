@@ -80,6 +80,7 @@ public sealed class GetTrainerDashboardHandler
             localToday,
             data.ActiveClientCount,
             data.CheckInsPendingReview,
+            data.InitialAssessmentsPendingReview,
             data.PacksEnding,
             data.PlansExpiring,
             data.SessionsToday,

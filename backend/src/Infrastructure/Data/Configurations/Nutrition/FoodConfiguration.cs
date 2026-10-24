@@ -84,6 +84,10 @@ internal sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
         builder.Property(food => food.PlatformEnforcedAt)
             .HasColumnName("platform_enforced_at");
 
+        builder.Property(food => food.PlatformEnforcementNote)
+            .HasColumnName("platform_enforcement_note")
+            .HasMaxLength(500);
+
         builder.Property(food => food.CreatedAt)
             .HasColumnName("created_at")
             .HasDefaultValueSql("now()")

@@ -7,7 +7,13 @@ public enum NotificationDeliveryPreparationStatus
     AlreadyDelivered,
     NotFound,
     InvalidState,
-    LeaseLost
+    LeaseLost,
+
+    /// <summary>
+    /// O lembrete deixou de se aplicar (sessão cancelada, apagada, noutro dia ou já hoje, ou
+    /// personal trainer bloqueado). Não sai email e a chave fica livre para uma nova véspera.
+    /// </summary>
+    Skipped
 }
 
 /// <summary>Resultado da preparação protegida pelo lease do durable job.</summary>

@@ -13,6 +13,7 @@ import type { components } from '@/shared/api/schema';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState';
 import { PageHeader } from '@/shared/components/PageHeader';
+import { PlatformEnforcementFields } from '@/shared/components/PlatformEnforcementFields';
 import { Button } from '@/shared/components/ui/button';
 import {
   Dialog,
@@ -30,12 +31,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { formatCount, formatDateTime } from '@/shared/lib/format';
 import {
-  PLATFORM_ENFORCEMENT_REASONS,
+  platformEnforcementNoteOrNull,
   platformEnforcementReasonLabel,
   type PlatformEnforcementReason,
 } from '@/shared/lib/platformEnforcement';
 
 type QueueItem = components['schemas']['ModerationQueueItemResponse'];
+const KINDS = ['foods', 'exercises', 'supplements'] as const;
 const STATUS = ['all', 'allowed', 'blocked'] as const;
 const STATUS_LABEL = { all: 'Todos', allowed: 'Permitidos', blocked: 'Bloqueados' } as const;
 
@@ -49,7 +51,8 @@ export function ModerationPage() {
   });
   const [selected, setSelected] = useState<QueueItem | null>(null);
   const [reason, setReason] = useState<PlatformEnforcementReason | ''>('');
-  const kind: ModerationKind = url.kind === 'exercises' ? 'exercises' : 'foods';
+  const [note, setNote] = useState('');
+  const kind: ModerationKind = KINDS.find((value) => value === url.kind) ?? 'foods';
   const status: ModerationStatus = STATUS.find((value) => value === url.status) ?? 'all';
   const page = Math.max(1, url.page);
   const query = useModerationQuery(kind, status, useDebounce(url.search.trim(), 300), page);
@@ -59,6 +62,7 @@ export function ModerationPage() {
   function close() {
     setSelected(null);
     setReason('');
+    setNote('');
   }
 
   async function submit() {
@@ -73,6 +77,7 @@ export function ModerationPage() {
         id: selected.id,
         action: isBlocked ? 'unblock' : 'block',
         reason: isBlocked ? undefined : reason,
+        note: isBlocked ? null : platformEnforcementNoteOrNull(note),
       });
       toast.success(
         isBlocked ? 'Conteúdo desbloqueado com sucesso.' : 'Conteúdo bloqueado com sucesso.'
@@ -97,6 +102,7 @@ export function ModerationPage() {
         <TabsList aria-label="Tipo de conteúdo">
           <TabsTrigger value="foods">Alimentos</TabsTrigger>
           <TabsTrigger value="exercises">Exercícios</TabsTrigger>
+          <TabsTrigger value="supplements">Suplementos</TabsTrigger>
         </TabsList>
         {/* O painel do separador ativo envolve filtros, tabela e diálogo: sem ele o aria-controls
             dos separadores apontava para um id inexistente. */}
@@ -140,7 +146,7 @@ export function ModerationPage() {
               description="Não há conteúdos para este filtro."
             />
           ) : (
-            <div className="border-border bg-card overflow-x-auto rounded-xl border">
+            <div className="border-border bg-card overflow-x-auto overflow-y-hidden rounded-xl border">
               <table className="w-full min-w-2xl text-sm">
                 <thead className="bg-muted text-left">
                   <tr>
@@ -165,6 +171,11 @@ export function ModerationPage() {
                       </td>
                       <td className="p-3">
                         {platformEnforcementReasonLabel(item.platform_enforcement_reason)}
+                        {item.platform_enforcement_note !== null && (
+                          <p className="text-muted-foreground mt-1 max-w-xs text-xs wrap-break-word">
+                            Nota: {item.platform_enforcement_note}
+                          </p>
+                        )}
                       </td>
                       <td className="p-3">
                         {item.platform_enforced_at
@@ -208,7 +219,7 @@ export function ModerationPage() {
           <Dialog
             open={selected !== null}
             onOpenChange={(open) => {
-              if (!open) close();
+              if (!open && !action.isPending) close();
             }}
           >
             <DialogContent>
@@ -223,24 +234,16 @@ export function ModerationPage() {
                 </DialogDescription>
               </DialogHeader>
               {selected?.platform_enforcement_status !== 'blocked' && (
-                <fieldset className="space-y-2">
-                  <legend className="text-sm font-medium">Motivo obrigatório</legend>
-                  {Object.entries(PLATFORM_ENFORCEMENT_REASONS).map(([code, label]) => (
-                    <label key={code} className="flex items-center gap-2 text-sm">
-                      <input
-                        type="radio"
-                        name="reason"
-                        value={code}
-                        checked={reason === code}
-                        onChange={() => setReason(code as PlatformEnforcementReason)}
-                      />
-                      {label}
-                    </label>
-                  ))}
-                </fieldset>
+                <PlatformEnforcementFields
+                  reason={reason}
+                  note={note}
+                  onReasonChange={setReason}
+                  onNoteChange={setNote}
+                  disabled={action.isPending}
+                />
               )}
               <DialogFooter>
-                <Button variant="outline" onClick={close}>
+                <Button variant="outline" disabled={action.isPending} onClick={close}>
                   Cancelar
                 </Button>
                 <Button

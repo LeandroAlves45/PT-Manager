@@ -1,3 +1,5 @@
+using Application.Features.Assessments.InitialAssessments.Dtos;
+
 namespace Application.Features.Dashboard.Dtos;
 
 /// <summary>Dashboard agregado ao personal trainer (só leitura, só clientes ativos).</summary>
@@ -5,6 +7,7 @@ public sealed record TrainerDashboardDto(
     DateOnly LocalToday,
     int ActiveClientCount,
     TrainerDashboardDto.CheckInsPendingReviewDto CheckInsPendingReview,
+    TrainerDashboardDto.InitialAssessmentsPendingReviewDto InitialAssessmentsPendingReview,
     TrainerDashboardDto.PacksEndingDto PacksEnding,
     TrainerDashboardDto.PlansExpiringDto PlansExpiring,
     TrainerDashboardDto.SessionsTodayDto SessionsToday,
@@ -24,6 +27,14 @@ public sealed record TrainerDashboardDto(
         string ClientName,
         DateOnly CheckInDate,
         DateTime RespondedAt);
+
+    /// <summary>
+    /// Avaliações iniciais gravadas pelos clientes e ainda por rever. Quem ainda não preencheu
+    /// não entra.
+    /// </summary>
+    public sealed record InitialAssessmentsPendingReviewDto(
+        int TotalCount,
+        IReadOnlyList<InitialAssessmentPendingReviewDto> Items);
 
     /// <summary>Packs utilizáveis com poucas sessões ou fim previsto próximo.</summary>
     public sealed record PacksEndingDto(int TotalCount, IReadOnlyList<EndingPackItemDto> Items);

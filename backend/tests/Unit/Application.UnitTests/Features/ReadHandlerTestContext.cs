@@ -1,3 +1,6 @@
+using Application.Features.ClientPortal.PlanSupplementIntakes;
+using Application.Features.Assessments.InitialAssessments.Dtos;
+using Application.Features.Assessments.InitialAssessments.Abstractions;
 using Application.Common.Time;
 using Application.Common.Abstractions;
 using Application.Features.Administration.ContentModeration.Abstractions;
@@ -37,7 +40,9 @@ public abstract class ReadHandlerTestContext
     protected static GetMyPortalHomeHandler CreateHomeHandler(
         IntakeQueriesFake intakes,
         MyNextCheckInDto? nextCheckIn = null,
-        NutritionQueriesFake? nutrition = null) =>
+        NutritionQueriesFake? nutrition = null,
+        bool? initialAssessmentPending = false,
+        DateTime? trainerBlockedAt = null) =>
         new(
             new TenantStub(TrainerId, ClientUserId, "client"),
             new ClockStub(NowUtc),
@@ -47,7 +52,20 @@ public abstract class ReadHandlerTestContext
                 new WorkoutTodayQueriesFake()),
             nutrition ?? new NutritionQueriesFake(),
             intakes,
-            new CheckInQueriesFake { Next = nextCheckIn });
+            new CheckInQueriesFake { Next = nextCheckIn },
+            new InitialAssessmentQueriesFake { Pending = initialAssessmentPending },
+            new PlanSupplementQueriesFake(),
+            new AccessQueriesFake(trainerBlockedAt));
+
+    protected sealed class AccessQueriesFake(DateTime? blockedAt) : IAccountAccessQueries
+    {
+        public Task<AccountAccessState> GetAsync(
+            Guid userId, string role, Guid? trainerId, DateTime now, CancellationToken cancellationToken) =>
+            Task.FromResult(AccountAccessState.Allowed);
+
+        public Task<DateTime?> GetTrainerBlockedAtAsync(Guid trainerId, CancellationToken cancellationToken) =>
+            Task.FromResult(blockedAt);
+    }
 
     protected static MyTrainingPlanDto PlanWith(int dayOfWeek) =>
         new(
@@ -70,7 +88,6 @@ public abstract class ReadHandlerTestContext
                             CatalogExerciseId,
                             1,
                             "Supino",
-                            false,
                             true,
                             null,
                             null,
@@ -129,6 +146,7 @@ public abstract class ReadHandlerTestContext
             return Task.FromResult(new TrainerDashboardData(
                 4,
                 new TrainerDashboardDto.CheckInsPendingReviewDto(7, 3, []),
+                new TrainerDashboardDto.InitialAssessmentsPendingReviewDto(2, []),
                 new TrainerDashboardDto.PacksEndingDto(2, []),
                 new TrainerDashboardDto.PlansExpiringDto(4, 3, 1, [], []),
                 new TrainerDashboardDto.SessionsTodayDto(5, null, []),
@@ -136,6 +154,39 @@ public abstract class ReadHandlerTestContext
                 WithoutPlan,
                 PackSales));
         }
+    }
+
+    protected sealed class PlanSupplementQueriesFake : IMyPlanSupplementIntakeQueries
+    {
+        public Task<MyPlanSupplementsRead> GetForDateAsync(
+            Guid trainerId,
+            Guid clientUserId,
+            DateOnly localDate,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new MyPlanSupplementsRead(MyPlanSupplementsReadStatus.PlanNotSelected, null));
+    }
+
+    protected sealed class InitialAssessmentQueriesFake : IInitialAssessmentQueries
+    {
+        public bool? Pending { get; init; }
+
+        public Task<InitialAssessmentDto?> GetByClientAsync(
+            Guid trainerId,
+            Guid clientId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<InitialAssessmentDto?>(null);
+
+        public Task<bool?> IsPendingForClientUserAsync(
+            Guid trainerId,
+            Guid clientUserId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(Pending);
+
+        public Task<PageResult<InitialAssessmentPendingReviewDto>> ListPendingReviewAsync(
+            Guid trainerId,
+            PageRequest page,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new PageResult<InitialAssessmentPendingReviewDto>([], 0));
     }
 
     protected sealed class ClientSummaryQueriesFake : IClientProgressSummaryQueries
@@ -241,6 +292,7 @@ public abstract class ReadHandlerTestContext
                         [],
                         [])
                 ],
+                [],
                 new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Utc)));
     }
 
@@ -326,7 +378,8 @@ public abstract class ReadHandlerTestContext
                 new AdminOverviewDto.CatalogCountsDto(0, 0, 0),
                 new AdminOverviewDto.ModerationCountsDto(5, 0),
                 new AdminOverviewDto.ModerationCountsDto(4, 1),
-                new AdminOverviewDto.TrainerCountsDto(2, 1, 1, 2789)));
+                new AdminOverviewDto.ModerationCountsDto(0, 0),
+                new AdminOverviewDto.TrainerCountsDto(2, 1, 1, 0, 2789)));
         }
     }
 }

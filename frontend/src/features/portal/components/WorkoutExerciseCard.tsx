@@ -3,7 +3,7 @@ import { useId, useState } from 'react';
 
 import { PortalExerciseVideo } from '@/features/portal/components/PortalExerciseVideo';
 import { WorkoutSetRow } from '@/features/portal/components/WorkoutSetRow';
-import { exerciseDisplayName, prescriptionSummary } from '@/features/portal/lib/workout';
+import { prescriptionSummary } from '@/features/portal/lib/workout';
 import type { components } from '@/shared/api/schema';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/lib/utils';
@@ -28,7 +28,7 @@ export function WorkoutExerciseCard({
 }) {
   const panelId = useId();
   const [expanded, setExpanded] = useState(!exercise.is_completed);
-  const name = exerciseDisplayName(exercise);
+  const name = exercise.exercise_name;
 
   return (
     <section aria-label={name} className="border-border bg-card rounded-xl border">

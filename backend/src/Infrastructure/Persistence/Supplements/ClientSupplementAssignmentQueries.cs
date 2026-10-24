@@ -61,6 +61,11 @@ internal sealed class ClientSupplementAssignmentQueries : IClientSupplementAssig
         if (clientId.HasValue)
             query = query.Where(item => item.assignment.ClientId == clientId.Value);
 
+        // A lista ativa geral não mostra atribuições de clientes arquivados; os dados ficam, e a
+        // ficha do cliente (com cliente indicado) continua a mostrá-las.
+        if (activity == SupplementAssignmentActivityFilter.Active && !clientId.HasValue)
+            query = query.Where(item => item.client.IsActive);
+
         var totalCount = await query.CountAsync(cancellationToken);
         var rows = await query
             .OrderByDescending(item => item.assignment.UpdatedAt)

@@ -43,6 +43,8 @@ public sealed record InitialAssessmentResponse(
     string? Profession,
     BodyMeasurementsPayload BodyMeasurements,
     NutritionIntakePayload NutritionIntake,
+    bool SubmittedByClient,
+    DateTime? ReviewedAt,
     DateTime CreatedAt,
     DateTime UpdatedAt)
 {
@@ -64,6 +66,8 @@ public sealed record InitialAssessmentResponse(
             assessment.Profession,
             BodyMeasurementsPayload.From(assessment.BodyMeasurements),
             NutritionIntakePayload.From(assessment.NutritionIntake),
+            assessment.SubmittedByClient,
+            assessment.ReviewedAt,
             assessment.CreatedAt,
             assessment.UpdatedAt);
     }

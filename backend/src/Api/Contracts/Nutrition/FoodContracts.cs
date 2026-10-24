@@ -37,6 +37,7 @@ public sealed record FoodResponse(
     bool IsActive,
     string PlatformEnforcementStatus,
     string? PlatformEnforcementReason,
+    string? PlatformEnforcementNote,
     DateTime CreatedAt,
     DateTime UpdatedAt)
 {
@@ -59,6 +60,7 @@ public sealed record FoodResponse(
             food.IsActive,
             food.PlatformEnforcementStatus,
             food.PlatformEnforcementReason,
+            food.PlatformEnforcementNote,
             food.CreatedAt,
             food.UpdatedAt
         );

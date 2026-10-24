@@ -29,6 +29,7 @@ public static class ExerciseMappings
             exercise.IsActive,
             exercise.PlatformEnforcementStatus.Value,
             exercise.PlatformEnforcementReason?.Value,
+            exercise.PlatformEnforcementNote,
             exercise.CreatedAt,
             exercise.UpdatedAt
         );

@@ -110,8 +110,8 @@ public sealed class MealPlanQueriesTests
         var owner = await NutritionPlanTestData.SeedPlanAsync(_fixture, token);
         var requester = await _fixture.SeedTenantWithClientAsync(
             $"meal-query-requester-{Guid.NewGuid():N}",
-            token
-        );
+            token,
+            withInitialAssessment: true);
         await using var context = _fixture.CreateContext(requester.TrainerId);
 
         var details = await new MealPlanQueries(context).GetDetailsAsync(owner.MealPlanId, token);
@@ -184,8 +184,8 @@ public sealed class MealPlanQueriesTests
         var owner = await NutritionPlanTestData.SeedPlanAsync(_fixture, token);
         var foreign = await _fixture.SeedTenantWithClientAsync(
             $"meal-query-foreign-{Guid.NewGuid():N}",
-            token
-        );
+            token,
+            withInitialAssessment: true);
         await using var context = _fixture.CreateContext(owner.TrainerId);
 
         var page = await new MealPlanQueries(context).ListAsync(
@@ -207,7 +207,7 @@ public sealed class MealPlanQueriesTests
     {
         var token = TestContext.Current.CancellationToken;
         var seed = await _fixture.SeedTenantWithClientAsync(
-            $"meal-ends-{Guid.NewGuid():N}", token);
+            $"meal-ends-{Guid.NewGuid():N}", token, withInitialAssessment: true);
         var rangeStart = new DateOnly(2026, 9, 3);
 
         await using (var context = _fixture.CreateContext(seed.TrainerId))

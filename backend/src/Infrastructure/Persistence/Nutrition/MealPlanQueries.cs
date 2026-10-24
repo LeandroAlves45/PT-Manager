@@ -73,8 +73,10 @@ internal sealed class MealPlanQueries : IMealPlanQueries
                 item.Inner.Fats,
                 item.Inner.Kcal,
                 item.Inner.Fiber,
-                item.Inner.PlatformEnforcementStatus ==
-                    Domain.ValueObjects.PlatformEnforcementStatus.Blocked
+                PlatformEnforcementProjection.From(
+                    item.Inner.PlatformEnforcementStatus,
+                    item.Inner.PlatformEnforcementReason,
+                    item.Inner.PlatformEnforcementNote)
             ))
             .ToListAsync(cancellationToken);
 
@@ -101,7 +103,37 @@ internal sealed class MealPlanQueries : IMealPlanQueries
                 item.Inner.UnitOfMeasure,
                 item.Outer.Notes,
                 item.Outer.Quantity,
-                item.Outer.OrderNumber
+                item.Outer.OrderNumber,
+                PlatformEnforcementProjection.From(
+                    item.Inner.PlatformEnforcementStatus,
+                    item.Inner.PlatformEnforcementReason,
+                    item.Inner.PlatformEnforcementNote)
+            ))
+            .ToListAsync(cancellationToken);
+
+        var planSupplements = await _dbContext.MealPlanSupplements
+            .AsNoTracking()
+            .Where(item => item.MealPlanId == mealPlanId)
+            .Join(
+                _dbContext.Supplements.AsNoTracking(),
+                item => item.SupplementId,
+                supplement => supplement.Id,
+                (item, supplement) => new { Outer = item, Inner = supplement }
+            )
+            .OrderBy(item => item.Outer.OrderNumber)
+            .ThenBy(item => item.Outer.Id)
+            .Select(item => new MealPlanDetailsDto.MealSupplementDto(
+                item.Outer.Id,
+                item.Outer.SupplementId,
+                item.Inner.Name,
+                item.Inner.UnitOfMeasure,
+                item.Outer.Notes,
+                item.Outer.Quantity,
+                item.Outer.OrderNumber,
+                PlatformEnforcementProjection.From(
+                    item.Inner.PlatformEnforcementStatus,
+                    item.Inner.PlatformEnforcementReason,
+                    item.Inner.PlatformEnforcementNote)
             ))
             .ToListAsync(cancellationToken);
 
@@ -118,7 +150,8 @@ internal sealed class MealPlanQueries : IMealPlanQueries
                 item.Fats,
                 item.Kcal,
                 item.Fiber,
-                CalculateContribution(item)
+                CalculateContribution(item),
+                item.PlatformEnforcement
             )
         );
 
@@ -129,7 +162,8 @@ internal sealed class MealPlanQueries : IMealPlanQueries
                 meal.Id,
                 meal.MealType,
                 meal.OrderNumber,
-                CalculateTotals(mealItems),
+                // O item bloqueado fica à vista do personal trainer, mas fora das somas.
+                CalculateTotals(mealItems.Where(item => item.PlatformEnforcement is null)),
                 mealItems.Select(item => itemsDtos[item.Id])
                     .OrderBy(item => item.OrderNumber).ThenBy(item => item.Id).ToArray(),
                 supplements.Where(item => item.MealPlanMealId == meal.Id)
@@ -141,7 +175,8 @@ internal sealed class MealPlanQueries : IMealPlanQueries
                         item.UnitOfMeasure,
                         item.Notes,
                         item.Quantity,
-                        item.OrderNumber
+                        item.OrderNumber,
+                        item.PlatformEnforcement
                     )).ToArray()
             );
         }).ToArray();
@@ -154,11 +189,14 @@ internal sealed class MealPlanQueries : IMealPlanQueries
             plan.StartsDate,
             plan.EndsDate,
             MapSnapshot(plan.CalculationSnapshot),
-            CalculateTotals(items),
+            CalculateTotals(items.Where(item => item.PlatformEnforcement is null)),
             plan.IsActive,
             plan.IsArchived,
-            items.Any(item => item.IsPlatformBlocked),
+            items.Any(item => item.PlatformEnforcement is not null) ||
+                supplements.Any(item => item.PlatformEnforcement is not null) ||
+                planSupplements.Any(item => item.PlatformEnforcement is not null),
             mealDtos,
+            planSupplements,
             plan.CreatedAt,
             plan.UpdatedAt
         );
@@ -185,6 +223,12 @@ internal sealed class MealPlanQueries : IMealPlanQueries
             MealPlanActivityFilter.All => query,
             _ => throw new ArgumentOutOfRangeException(nameof(activity))
         };
+
+        // A vista ativa geral não mostra planos de clientes arquivados. Na ficha do cliente
+        // (com cliente indicado) continuam visíveis, só para ler.
+        if (activity == MealPlanActivityFilter.Active && !clientId.HasValue)
+            query = query.Where(plan => _dbContext.Clients.Any(
+                client => client.Id == plan.ClientId && client.IsActive));
 
         if (endsFrom.HasValue)
             query = query.Where(
@@ -237,7 +281,18 @@ internal sealed class MealPlanQueries : IMealPlanQueries
                     _dbContext.Foods.Any(food =>
                         food.Id == item.FoodId &&
                         food.PlatformEnforcementStatus ==
-                            Domain.ValueObjects.PlatformEnforcementStatus.Blocked)),
+                            Domain.ValueObjects.PlatformEnforcementStatus.Blocked)) ||
+                _dbContext.MealPlanMealSupplements.Any(link =>
+                    _dbContext.MealPlanMeals.Any(meal =>
+                        meal.Id == link.MealPlanMealId && meal.MealPlanId == plan.Id) &&
+                    _dbContext.Supplements.Any(supplement =>
+                        supplement.Id == link.SupplementId &&
+                        supplement.PlatformEnforcementStatus == Domain.ValueObjects.PlatformEnforcementStatus.Blocked)) ||
+                _dbContext.MealPlanSupplements.Any(item =>
+                    item.MealPlanId == plan.Id &&
+                    _dbContext.Supplements.Any(supplement =>
+                        supplement.Id == item.SupplementId &&
+                        supplement.PlatformEnforcementStatus == Domain.ValueObjects.PlatformEnforcementStatus.Blocked)),
                 plan.CreatedAt,
                 plan.UpdatedAt
             ))
@@ -331,7 +386,7 @@ internal sealed class MealPlanQueries : IMealPlanQueries
         decimal Fats,
         decimal Kcal,
         decimal? Fiber,
-        bool IsPlatformBlocked
+        Application.Common.PlatformEnforcementDto? PlatformEnforcement
     );
 
     private sealed record SupplementRow(
@@ -342,6 +397,7 @@ internal sealed class MealPlanQueries : IMealPlanQueries
         string UnitOfMeasure,
         string? Notes,
         decimal Quantity,
-        int OrderNumber
+        int OrderNumber,
+        Application.Common.PlatformEnforcementDto? PlatformEnforcement
     );
 }

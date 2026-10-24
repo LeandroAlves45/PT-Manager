@@ -86,6 +86,7 @@ internal sealed class FoodQueries : IFoodQueries
         food.IsActive,
         food.PlatformEnforcementStatus.Value,
         food.PlatformEnforcementReason == null ? null : food.PlatformEnforcementReason.Value,
+        food.PlatformEnforcementNote,
         food.CreatedAt,
         food.UpdatedAt
     );

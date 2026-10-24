@@ -404,6 +404,7 @@ describe('Trainer library', () => {
         food({
           platform_enforcement_status: 'blocked',
           platform_enforcement_reason: 'dangerous_information',
+          platform_enforcement_note: 'Quantidades fora do seguro',
         }),
       ]),
     });
@@ -412,13 +413,91 @@ describe('Trainer library', () => {
 
     const row = await rowOf('Batido pós-treino');
     expect(within(row).getByText('Bloqueado')).toBeInTheDocument();
+    expect(
+      within(row).getByText('Motivo: Informação perigosa · Nota: Quantidades fora do seguro')
+    ).toBeInTheDocument();
     expect(within(row).getByRole('button', { name: 'Arquivar Batido pós-treino' })).toBeVisible();
     await user.click(within(row).getByRole('link', { name: 'Ver Batido pós-treino' }));
 
     expect(await screen.findByRole('note')).toHaveTextContent(
-      'Bloqueado pela moderação da plataforma. Motivo: Informação perigosa.'
+      'Bloqueado pela moderação da plataforma. Motivo: Informação perigosa. Nota: Quantidades fora do seguro.'
     );
     expect(screen.queryByLabelText('Proteína (g)')).toBeNull();
+  }, 15000);
+
+  it('shows the reason and note of a blocked exercise in the list and in the read-only page', async () => {
+    libraryHandlers({
+      exercises: libraryPage([
+        exercise({
+          platform_enforcement_status: 'blocked',
+          platform_enforcement_reason: 'prohibited_content',
+          platform_enforcement_note: 'Vídeo impróprio',
+        }),
+      ]),
+    });
+    const user = userEvent.setup();
+    renderApp({ initialEntries: [ROUTE] });
+
+    const row = await rowOf('Remada curvada');
+    expect(within(row).getByText('Bloqueado')).toBeInTheDocument();
+    expect(
+      within(row).getByText('Motivo: Conteúdo proibido · Nota: Vídeo impróprio')
+    ).toBeInTheDocument();
+    expect(within(row).queryByRole('link', { name: /^Editar/ })).toBeNull();
+    await user.click(within(row).getByRole('link', { name: 'Ver Remada curvada' }));
+
+    expect(await screen.findByRole('note')).toHaveTextContent(
+      'Bloqueado pela moderação da plataforma. Motivo: Conteúdo proibido. Nota: Vídeo impróprio.'
+    );
+    expect(screen.queryByRole('button', { name: 'Guardar' })).toBeNull();
+  }, 15000);
+
+  it('treats a blocked supplement like a blocked food: reason, note and no editing', async () => {
+    libraryHandlers({
+      supplements: libraryPage([
+        supplement({
+          platform_enforcement_status: 'blocked',
+          platform_enforcement_reason: 'deliberately_false_information',
+          platform_enforcement_note: 'Promete resultados falsos',
+        }),
+      ]),
+    });
+    const user = userEvent.setup();
+    renderApp({ initialEntries: [`${ROUTE}?tab=supplements`] });
+
+    const row = await rowOf('Multivitamínico');
+    expect(within(row).getByText('Bloqueado')).toBeInTheDocument();
+    expect(
+      within(row).getByText(
+        'Motivo: Informação deliberadamente falsa · Nota: Promete resultados falsos'
+      )
+    ).toBeInTheDocument();
+    expect(within(row).queryByRole('link', { name: /^Editar/ })).toBeNull();
+    expect(within(row).getByRole('button', { name: 'Arquivar Multivitamínico' })).toBeVisible();
+    await user.click(within(row).getByRole('link', { name: 'Ver Multivitamínico' }));
+
+    expect(await screen.findByRole('note')).toHaveTextContent(
+      'Bloqueado pela moderação da plataforma. Motivo: Informação deliberadamente falsa. Nota: Promete resultados falsos.'
+    );
+    expect(screen.getByText('Só de leitura.')).toBeVisible();
+    expect(screen.queryByLabelText('Dose')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Guardar' })).toBeNull();
+  }, 15000);
+
+  it('shows a blocked item without a note with only the reason', async () => {
+    libraryHandlers({
+      foods: libraryPage([
+        food({
+          platform_enforcement_status: 'blocked',
+          platform_enforcement_reason: 'malicious_content',
+        }),
+      ]),
+    });
+    renderApp({ initialEntries: [`${ROUTE}?tab=foods`] });
+
+    const row = await rowOf('Batido pós-treino');
+    expect(within(row).getByText('Motivo: Conteúdo malicioso')).toBeInTheDocument();
+    expect(within(row).queryByText(/Nota:/)).toBeNull();
   }, 15000);
 
   it('plays the video of a global exercise through the trainer route, without upload', async () => {

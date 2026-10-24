@@ -173,7 +173,8 @@ public sealed class JobDispatchArchitectureTests
             [
                 "Infrastructure.Jobs.BillingNotificationOutboxHandler",
                 "Infrastructure.Jobs.ClientAvatarDeletionOutboxHandler",
-                "Infrastructure.Jobs.TrainerLogoDeletionOutboxHandler"
+                "Infrastructure.Jobs.TrainerLogoDeletionOutboxHandler",
+                "Infrastructure.Notifications.AccountAccessNotificationOutboxHandler"
             ],
             handlers);
     }

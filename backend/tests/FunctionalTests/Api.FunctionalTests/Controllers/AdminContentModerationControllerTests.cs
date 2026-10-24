@@ -162,7 +162,7 @@ public sealed class AdminContentModerationControllerTests
     }
 
     [Fact]
-    public void Controller_ExposesFourModerationRoutes()
+    public void Controller_ExposesSixModerationRoutes()
     {
         var routes = typeof(AdminContentModerationController)
             .GetMethods()
@@ -178,7 +178,9 @@ public sealed class AdminContentModerationControllerTests
                 "exercises/{exerciseId:guid}/block",
                 "exercises/{exerciseId:guid}/unblock",
                 "foods/{foodId:guid}/block",
-                "foods/{foodId:guid}/unblock"
+                "foods/{foodId:guid}/unblock",
+                "supplements/{supplementId:guid}/block",
+                "supplements/{supplementId:guid}/unblock"
             },
             routes);
     }
@@ -197,10 +199,12 @@ public sealed class AdminContentModerationControllerTests
 
     private sealed class StubStore(PrivateCatalogModerationStoreResult outcome) : IPrivateCatalogModerationStore
     {
-        public Task<PrivateCatalogModerationStoreResult> BlockFoodAsync(Guid actorUserId, Guid foodId, PlatformEnforcementReason reason, DateTime now, CancellationToken cancellationToken) => Task.FromResult(outcome);
+        public Task<PrivateCatalogModerationStoreResult> BlockFoodAsync(Guid actorUserId, Guid foodId, PlatformEnforcementReason reason, string? note, DateTime now, CancellationToken cancellationToken) => Task.FromResult(outcome);
         public Task<PrivateCatalogModerationStoreResult> UnblockFoodAsync(Guid actorUserId, Guid foodId, DateTime now, CancellationToken cancellationToken) => Task.FromResult(outcome);
-        public Task<PrivateCatalogModerationStoreResult> BlockExerciseAsync(Guid actorUserId, Guid exerciseId, PlatformEnforcementReason reason, DateTime now, CancellationToken cancellationToken) => Task.FromResult(outcome);
+        public Task<PrivateCatalogModerationStoreResult> BlockExerciseAsync(Guid actorUserId, Guid exerciseId, PlatformEnforcementReason reason, string? note, DateTime now, CancellationToken cancellationToken) => Task.FromResult(outcome);
         public Task<PrivateCatalogModerationStoreResult> UnblockExerciseAsync(Guid actorUserId, Guid exerciseId, DateTime now, CancellationToken cancellationToken) => Task.FromResult(outcome);
+        public Task<PrivateCatalogModerationStoreResult> BlockSupplementAsync(Guid actorUserId, Guid supplementId, PlatformEnforcementReason reason, string? note, DateTime now, CancellationToken cancellationToken) => Task.FromResult(outcome);
+        public Task<PrivateCatalogModerationStoreResult> UnblockSupplementAsync(Guid actorUserId, Guid supplementId, DateTime now, CancellationToken cancellationToken) => Task.FromResult(outcome);
     }
 
     private sealed class TestClock : IClock

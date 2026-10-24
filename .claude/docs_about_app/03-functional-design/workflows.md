@@ -117,7 +117,7 @@ Passos, confirmados em 2026-10-14:
 4. Reativar só ocupa lugar se houver, mesmo que a pessoa nunca tenha aceite um convite. Não devolve planos nem saldo. Quem já tinha conta volta a entrar, sem convite novo. A sessão que foi cortada não volta. Não há email de reativação. Quem nunca aceitou precisa de um convite novo.
 5. O treinador dono vê sessões feitas e planos antigos em leitura. Outro treinador não os vê. O cliente não os leva. Um convite ainda não usado deixa de servir. Reativar não o recupera.
 
-O limite ao reativar já está na app. O resto entra no bloco depois da 6GB e antes do Sprint 7.
+O limite ao reativar já está na app. O resto entrou no bloco pré-Sprint 7 (2026-10-24).
 
 ## FL-008 — Bloquear um treinador
 
@@ -132,6 +132,6 @@ Passos, confirmados em 2026-10-14:
 5. Os dados não se apagam e ficam desse treinador.
 6. Quando o bloqueio é levantado, esteja o prazo a meio ou já passado, o acesso volta. Os dois recebem email. A sessão que foi cortada não volta. Entram outra vez.
 
-Isto entra no bloco depois da 6GB e antes do Sprint 7. Hoje só alimentos e exercícios têm bloqueio. Bloquear um alimento, um exercício ou um suplemento não tira o acesso, não tem os 7 dias e não envia email. O treinador vê o motivo e a nota no item. Se o item já estiver num plano, sai do portal do cliente. No plano do treinador fica visível como bloqueado, para o treinador o substituir. Desbloquear não o repõe no plano do cliente. Sai do plano e fica na biblioteca, outra vez utilizável. O treinador volta a pô-lo se quiser.
+Isto entrou no bloco pré-Sprint 7 (2026-10-24). Bloquear um alimento, um exercício ou um suplemento não tira o acesso, não tem os 7 dias e não envia email. O treinador vê o motivo e a nota no item. Se o item já estiver num plano, sai do portal do cliente. No plano do treinador fica visível como bloqueado, para o treinador o substituir. Desbloquear não o repõe no plano do cliente. Sai do plano e fica na biblioteca, outra vez utilizável. O treinador volta a pô-lo se quiser.
 
 ## FL-009 — **por preencher**

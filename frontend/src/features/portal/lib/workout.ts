@@ -131,17 +131,6 @@ export function isWorkoutDayUnavailable(error: unknown): boolean {
 }
 
 /**
- * Nome a mostrar. Um exercício bloqueado pela plataforma chega mascarado em inglês
- * (`"Unavailable exercise"`, `PortalContentMasking`); o cliente vê a versão PT.
- */
-export function exerciseDisplayName(exercise: {
-  exercise_name: string;
-  is_unavailable: boolean;
-}): string {
-  return exercise.is_unavailable ? 'Exercício indisponível' : exercise.exercise_name;
-}
-
-/**
  * Verdadeiro quando a leitura do treino ou do plano falhou por um estado de negócio e não por
  * uma falha técnica. Nesse caso os dados em cache já não valem: o ecrã mostra o estado vazio,
  * não o treino antigo.

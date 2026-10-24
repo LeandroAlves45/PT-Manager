@@ -125,7 +125,7 @@ public sealed class TrainingConcurrencyTests
         var token = TestContext.Current.CancellationToken;
         var seed = await SeedPlanAsync(token, withLog: true);
         var other = await _fixture.SeedTenantWithClientAsync(
-            $"training-other-{Guid.NewGuid():N}", token);
+            $"training-other-{Guid.NewGuid():N}", token, withInitialAssessment: true);
         await using var context = _fixture.CreateContext(other.TrainerId);
         var planStore = CreatePlanStore(context);
         var logStore = new ExerciseSetLogStore(context);
@@ -321,7 +321,7 @@ public sealed class TrainingConcurrencyTests
     private async Task<CatalogSeed> SeedCatalogAsync(CancellationToken token)
     {
         var tenant = await _fixture.SeedTenantWithClientAsync(
-            $"training-concurrency-{Guid.NewGuid():N}", token);
+            $"training-concurrency-{Guid.NewGuid():N}", token, withInitialAssessment: true);
         await using var context = _fixture.CreateContext(tenant.TrainerId);
         var exercise = new Exercise(
             tenant.TrainerId,

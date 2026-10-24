@@ -23,10 +23,15 @@ public sealed class ApplicationRegistrationTests
         // anular, estado e registo do convite de treinador).
         // + 2 do trainer (estado do convite na ficha, conclusões de treino).
         // + 4 do portal do cliente (dias passados, dia passado, lista e escolha do plano alimentar).
-        Assert.Equal(170, handlerCount);
+        // + 4 da avaliação inicial (estado e gravação no portal, revista, lista por rever).
+        // + 3 das tomas dos suplementos do plano (ler, marcar, desmarcar).
+        // + 4 da moderação (bloquear e desbloquear suplemento, bloquear e levantar personal trainer).
+        Assert.Equal(181, handlerCount);
         // 82 anteriores + 5 validators 6GB-SU (procura, isentos, convidar, estado e registo).
         // + 1 do trainer (conclusões de treino).
-        Assert.Equal(88, validatorCount);
+        // + 2 da avaliação inicial (gravação no portal, lista por rever).
+        // + 2 da moderação (bloquear suplemento, bloquear personal trainer).
+        Assert.Equal(92, validatorCount);
     }
 
     [Fact]

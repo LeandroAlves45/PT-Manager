@@ -25,7 +25,7 @@ public sealed class GlobalSupplementPersistenceTests
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(
-            Guid.NewGuid().ToString("N"), cancellationToken);
+            Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         await using var context = CreateAdminContext(tenant.TrainerId);
         var store = new GlobalSupplementStore(
             context, new PostgresConstraintTranslator());
@@ -45,7 +45,7 @@ public sealed class GlobalSupplementPersistenceTests
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(
-            Guid.NewGuid().ToString("N"), cancellationToken);
+            Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         await using var context = CreateAdminContext(tenant.TrainerId);
         var store = new GlobalSupplementStore(
             context, new PostgresConstraintTranslator());
@@ -71,7 +71,7 @@ public sealed class GlobalSupplementPersistenceTests
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(
-            Guid.NewGuid().ToString("N"), cancellationToken);
+            Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         Guid supplementId;
         await using (var admin = CreateAdminContext(tenant.TrainerId))
         {
@@ -107,7 +107,7 @@ public sealed class GlobalSupplementPersistenceTests
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(
-            Guid.NewGuid().ToString("N"), cancellationToken);
+            Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         await using var context = CreateAdminContext(tenant.TrainerId);
         var store = new GlobalSupplementStore(
             context, new PostgresConstraintTranslator());
@@ -131,7 +131,7 @@ public sealed class GlobalSupplementPersistenceTests
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(
-            Guid.NewGuid().ToString("N"), cancellationToken);
+            Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         Guid supplementId;
         await using (var seed = CreateAdminContext(tenant.TrainerId))
         {
@@ -182,7 +182,7 @@ public sealed class GlobalSupplementPersistenceTests
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(
-            Guid.NewGuid().ToString("N"), cancellationToken);
+            Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         await using var context = CreateAdminContext(tenant.TrainerId);
         var entry = new AdministrativeAuditEntry(
             tenant.TrainerId, "create", "supplement", Guid.NewGuid(),

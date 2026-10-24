@@ -1,4 +1,4 @@
-using System.Data;
+using Application.Validation;
 using FluentValidation;
 
 namespace Application.Features.Nutrition.MealPlans;
@@ -9,6 +9,13 @@ public sealed class MealPlanStructureInputValidator : AbstractValidator<MealPlan
     private const int MaximumMeals = 20;
     private const int MaximumItemsPerMeal = 50;
     private const int MaximumSupplementsPerMeal = 20;
+    private const int MaximumPlanSupplements = 20;
+
+    /// <summary>
+    /// Teto das quantidades (gramas de um alimento, dose de um suplemento). As colunas são
+    /// <c>numeric(10,2)</c>: sem teto nem escala, um valor grande rebentava a escrita com um 500.
+    /// </summary>
+    internal const decimal MaximumQuantity = 10000m;
 
     /// <summary>Configura regras recursivas para criação e reconciliação.</summary>
     public MealPlanStructureInputValidator(bool requireNewIdentifiers)
@@ -34,7 +41,30 @@ public sealed class MealPlanStructureInputValidator : AbstractValidator<MealPlan
             .Must(meals => meals is null
                 || HaveUniqueNonNullIds(meals.Select(meal => meal.Id)))
             .WithErrorCode("meal_plan_meal_id_duplicate");
+
+        RuleFor(structure => structure.PlanSupplements)
+            .NotNull()
+            .WithErrorCode("meal_plan_plan_supplements_required")
+            .Must(supplements => supplements is null || supplements.Count <= MaximumPlanSupplements)
+            .WithErrorCode("meal_plan_plan_supplements_limit");
+        RuleForEach(structure => structure.PlanSupplements)
+            .SetValidator(new SupplementInputValidator(requireNewIdentifiers));
+        RuleFor(structure => structure.PlanSupplements)
+            .Must(supplements => supplements is null
+                || HaveUniqueNonNullIds(supplements.Select(supplement => supplement.Id)))
+            .WithErrorCode("meal_plan_supplement_id_duplicate");
+        RuleFor(structure => structure.PlanSupplements)
+            .Must(supplements => supplements is null
+                || HaveUniqueValues(supplements.Select(supplement => supplement.OrderNumber)))
+            .WithErrorCode("meal_plan_supplement_order_duplicate");
+        RuleFor(structure => structure.PlanSupplements)
+            .Must(supplements => supplements is null
+                || HaveUniqueValues(supplements.Select(supplement => supplement.SupplementId)))
+            .WithErrorCode("meal_plan_supplement_reference_duplicate");
     }
+
+    private static bool IsValidQuantity(decimal value) =>
+        value is > 0m and <= MaximumQuantity && decimal.Round(value, 2) == value;
 
     private static bool HaveUniqueNonNullIds(IEnumerable<Guid?> values)
     {
@@ -143,7 +173,7 @@ public sealed class MealPlanStructureInputValidator : AbstractValidator<MealPlan
                 .NotEmpty()
                 .WithErrorCode("meal_plan_food_id_required");
             RuleFor(item => item.QuantityInGrams)
-                .GreaterThan(0m)
+                .Must(IsValidQuantity)
                 .WithErrorCode("meal_plan_item_quantity_invalid");
             RuleFor(item => item.OrderNumber)
                 .GreaterThan(0)
@@ -173,9 +203,10 @@ public sealed class MealPlanStructureInputValidator : AbstractValidator<MealPlan
                 .WithErrorCode("meal_plan_supplement_id_required");
             RuleFor(supplement => supplement.Notes)
                 .MaximumLength(500)
-                .WithErrorCode("meal_plan_supplement_notes_too_long");
+                .WithErrorCode("meal_plan_supplement_notes_too_long")
+                .WithoutNullCharacter();
             RuleFor(supplement => supplement.Quantity)
-                .GreaterThan(0m)
+                .Must(IsValidQuantity)
                 .WithErrorCode("meal_plan_supplement_quantity_invalid");
             RuleFor(supplement => supplement.OrderNumber)
                 .GreaterThan(0)

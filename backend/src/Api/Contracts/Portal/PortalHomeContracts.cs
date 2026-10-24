@@ -65,7 +65,9 @@ public sealed record MyPortalHomeResponse(
     MyHomeNutritionResponse? Nutrition,
     int ActiveMealPlanCount,
     MyHomeSupplementsResponse Supplements,
-    MyNextCheckInResponse? NextCheckIn)
+    MyNextCheckInResponse? NextCheckIn,
+    bool InitialAssessmentPending,
+    MyAccessNoticeResponse? AccessNotice)
 {
     /// <summary>Converte o DTO da Application.</summary>
     public static MyPortalHomeResponse From(MyPortalHomeDto dto)
@@ -80,6 +82,16 @@ public sealed record MyPortalHomeResponse(
             dto.NextCheckIn is null
                 ? null
                 : new MyNextCheckInResponse(
-                    dto.NextCheckIn.Id, dto.NextCheckIn.CheckInDate, dto.NextCheckIn.IsToday));
+                    dto.NextCheckIn.Id, dto.NextCheckIn.CheckInDate, dto.NextCheckIn.IsToday),
+            dto.InitialAssessmentPending,
+            dto.AccessNotice is null
+                ? null
+                : new MyAccessNoticeResponse(dto.AccessNotice.EndsAt, dto.AccessNotice.TimeZone));
     }
 }
+
+/// <summary>
+/// Aviso de que o acesso ao portal acaba: o instante em UTC e o fuso do personal trainer em
+/// que o dia e a hora se mostram. Só existe durante os dias de acesso.
+/// </summary>
+public sealed record MyAccessNoticeResponse(DateTime EndsAt, string TimeZone);

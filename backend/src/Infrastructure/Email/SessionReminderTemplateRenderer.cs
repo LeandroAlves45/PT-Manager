@@ -4,11 +4,16 @@ using Application.Features.Notifications.Delivery;
 
 namespace Infrastructure.Email;
 
-/// <summary>Renderiza o único template de negócio.</summary>
+/// <summary>
+/// Renderiza os dois lembretes de sessão da véspera: o do cliente e o do personal trainer. A
+/// data e a hora mostram-se no fuso do personal trainer.
+/// </summary>
 internal static partial class SessionReminderTemplateRenderer
 {
-    private const string ResourceName =
+    private const string ClientResourceName =
         "Infrastructure.Email.Templates.Notifications.session-reminder.html";
+    private const string TrainerResourceName =
+        "Infrastructure.Email.Templates.Notifications.session-reminder-trainer.html";
 
     private static readonly string[] RequiredPlaceholders =
     [
@@ -19,11 +24,16 @@ internal static partial class SessionReminderTemplateRenderer
         "{{trainer_timezone}}"
     ];
 
-    private static readonly Lazy<string> Template =
-        new(LoadTemplate, LazyThreadSafetyMode.ExecutionAndPublication);
+    private static readonly Lazy<string> ClientTemplate =
+        new(() => LoadTemplate(ClientResourceName), LazyThreadSafetyMode.ExecutionAndPublication);
 
-    /// <summary>Valida os dados e produz duas representações independentes.</summary>
-    public static RenderedNotificationEmail Render(SessionReminderTemplateData data)
+    private static readonly Lazy<string> TrainerTemplate =
+        new(() => LoadTemplate(TrainerResourceName), LazyThreadSafetyMode.ExecutionAndPublication);
+
+    /// <summary>Valida os dados e produz o assunto e as duas representações do email.</summary>
+    /// <param name="data">Dados do template, iguais nas duas versões.</param>
+    /// <param name="forTrainer">Verdadeiro para o email do personal trainer.</param>
+    public static RenderedNotificationEmail Render(SessionReminderTemplateData data, bool forTrainer = false)
     {
         ArgumentNullException.ThrowIfNull(data);
 
@@ -40,34 +50,49 @@ internal static partial class SessionReminderTemplateRenderer
         var localDate = localStart.ToString("dd/MM/yyyy");
         var localTime = localStart.ToString("HH:mm");
 
-        var html = Template.Value
-            .Replace("{{client_name}}", WebUtility.HtmlEncode(clientName), StringComparison.Ordinal)
-            .Replace("{{trainer_name}}", WebUtility.HtmlEncode(trainerName), StringComparison.Ordinal)
-            .Replace("{{session_local_date}}", WebUtility.HtmlEncode(localDate), StringComparison.Ordinal)
-            .Replace("{{session_local_time}}", WebUtility.HtmlEncode(localTime), StringComparison.Ordinal)
-            .Replace("{{trainer_timezone}}", WebUtility.HtmlEncode(timezoneId), StringComparison.Ordinal);
+        var template = forTrainer ? TrainerTemplate.Value : ClientTemplate.Value;
+        var values = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["{{client_name}}"] = WebUtility.HtmlEncode(clientName),
+            ["{{trainer_name}}"] = WebUtility.HtmlEncode(trainerName),
+            ["{{session_local_date}}"] = WebUtility.HtmlEncode(localDate),
+            ["{{session_local_time}}"] = WebUtility.HtmlEncode(localTime),
+            ["{{trainer_timezone}}"] = WebUtility.HtmlEncode(timezoneId)
+        };
 
-        if (UnresolvedPlaceholders().IsMatch(html))
-            throw new InvalidOperationException("Session reminder contains an unresolved placeholder.");
+        // Uma só passagem sobre o template: um nome escrito como «{{x}}» entra como texto e
+        // não volta a ser lido como placeholder.
+        var html = Placeholders().Replace(
+            template,
+            match => values.TryGetValue(match.Value, out var value)
+                ? value
+                : throw new InvalidOperationException(
+                    "Session reminder contains an unresolved placeholder."));
 
-        var text =
-            $"Olá {clientName},{Environment.NewLine}{Environment.NewLine}" +
-            $"Lembramos que tem uma sessão com {trainerName} no dia {localDate} " +
-            $"às {localTime} ({timezoneId}).{Environment.NewLine}{Environment.NewLine}" +
-            "PT Manager - email automático. Por favor, não responda a este email.";
+        const string footer = "PT Manager - email automático. Por favor, não responda a este email.";
+        var newLine = Environment.NewLine;
 
-        return new RenderedNotificationEmail(
-            "Lembrete da sua sessão",
-            html,
-            text);
+        return forTrainer
+            ? new RenderedNotificationEmail(
+                "Sessão marcada para amanhã",
+                html,
+                $"Olá {trainerName},{newLine}{newLine}" +
+                $"Amanhã tem uma sessão marcada com {clientName} no dia {localDate} " +
+                $"às {localTime} ({timezoneId}).{newLine}{newLine}{footer}")
+            : new RenderedNotificationEmail(
+                "Lembrete da sua sessão",
+                html,
+                $"Olá {clientName},{newLine}{newLine}" +
+                $"Lembramos que tem uma sessão com {trainerName} no dia {localDate} " +
+                $"às {localTime} ({timezoneId}).{newLine}{newLine}{footer}");
     }
 
-    private static string LoadTemplate()
+    private static string LoadTemplate(string resourceName)
     {
         var assembly = typeof(SessionReminderTemplateRenderer).Assembly;
-        using var stream = assembly.GetManifestResourceStream(ResourceName)
+        using var stream = assembly.GetManifestResourceStream(resourceName)
             ?? throw new InvalidOperationException(
-                "Embedded session reminder template was not found.");
+                $"Embedded session reminder template {resourceName} was not found.");
 
         using var reader = new StreamReader(stream);
         var content = reader.ReadToEnd();
@@ -92,7 +117,7 @@ internal static partial class SessionReminderTemplateRenderer
     }
 
     [GeneratedRegex("\\{\\{[a-z_]+\\}\\}", RegexOptions.CultureInvariant)]
-    private static partial Regex UnresolvedPlaceholders();
+    private static partial Regex Placeholders();
 }
 
 /// <summary>Assunto e corpos completos de uma notificação renderizada.</summary>

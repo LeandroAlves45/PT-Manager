@@ -178,10 +178,39 @@ public sealed class SessionReminderTemplateRendererTests
     }
 
     [Fact]
+    public void Render_ForTrainer_GreetsTheTrainerAndNamesTheClient()
+    {
+        var rendered = SessionReminderTemplateRenderer.Render(
+            CreateData(clientName: "Ana <b>", trainerName: "Rui"),
+            forTrainer: true);
+
+        Assert.Equal("Sessão marcada para amanhã", rendered.Subject);
+        Assert.Contains("Olá <strong>Rui</strong>", rendered.Html, StringComparison.Ordinal);
+        Assert.Contains("Ana &lt;b&gt;", rendered.Html, StringComparison.Ordinal);
+        Assert.Contains("Amanhã tem uma sessão marcada com Ana <b> no dia 15/07/2026 às 16:30", rendered.Text, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Render_RejectsNullData()
     {
         Assert.Throws<ArgumentNullException>(
             () => SessionReminderTemplateRenderer.Render(null!));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Render_WhenNameLooksLikeAPlaceholder_KeepsItAsText(bool forTrainer)
+    {
+        // Os nomes são escritos pelo personal trainer: um «{{x}}» ou um nome igual a outro
+        // placeholder não pode partir o lembrete nem ser trocado por outro valor.
+        var rendered = SessionReminderTemplateRenderer.Render(
+            CreateData(clientName: "{{trainer_name}}", trainerName: "{{x}}"),
+            forTrainer);
+
+        Assert.Contains("{{trainer_name}}", rendered.Html, StringComparison.Ordinal);
+        Assert.Contains("{{x}}", rendered.Html, StringComparison.Ordinal);
+        Assert.Contains("{{trainer_name}}", rendered.Text, StringComparison.Ordinal);
     }
 
     private static SessionReminderTemplateData CreateData(
@@ -189,5 +218,5 @@ public sealed class SessionReminderTemplateRendererTests
         string trainerName = "Rui",
         DateTimeOffset? startsAt = null,
         string timezone = "Europe/Lisbon") =>
-        new(clientName, trainerName, startsAt ?? SummerUtc, timezone);
+        new(Guid.NewGuid(), new DateOnly(2026, 7, 15), clientName, trainerName, startsAt ?? SummerUtc, timezone);
 }

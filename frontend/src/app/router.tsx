@@ -172,6 +172,11 @@ const applicationRoutes: RouteObject[] = [
                 default: (await import('@/features/clients/pages/InitialAssessmentPage'))
                   .InitialAssessmentPage,
               })),
+              lazyPage('initial-assessments', async () => ({
+                default: (
+                  await import('@/features/initial-assessment/pages/PendingInitialAssessmentsPage')
+                ).PendingInitialAssessmentsPage,
+              })),
               lazyPage('clients/:clientId/sell-pack', async () => ({
                 default: (await import('@/features/packs/pages/SellPackPage')).SellPackPage,
               })),
@@ -396,6 +401,10 @@ const applicationRoutes: RouteObject[] = [
               lazyPage('check-ins', async () => ({
                 default: (await import('@/features/portal/pages/PortalCheckInsPage'))
                   .PortalCheckInsPage,
+              })),
+              lazyPage('initial-assessment', async () => ({
+                default: (await import('@/features/portal/pages/PortalInitialAssessmentPage'))
+                  .PortalInitialAssessmentPage,
               })),
               lazyPage('profile', async () => ({
                 default: (await import('@/features/portal/pages/PortalProfilePage'))

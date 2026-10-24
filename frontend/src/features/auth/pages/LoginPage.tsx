@@ -8,7 +8,7 @@ import { useLoginMutation } from '@/features/auth/api/auth';
 import { AuthHeading } from '@/features/auth/components/AuthHeading';
 import { GoogleSignInSection } from '@/features/auth/components/GoogleSignInSection';
 import { PasswordField } from '@/features/auth/components/PasswordField';
-import { consumePendingAuthNotice, peekPendingAuthNotice } from '@/features/auth/lib/auth-notice';
+import { consumePendingAuthNotice, peekPendingAuthNotice } from '@/shared/lib/auth-notice';
 import { authErrorMessage } from '@/features/auth/lib/auth-errors';
 import { applyProblemToForm } from '@/features/auth/lib/form-errors';
 import { readNotice } from '@/features/auth/lib/location-state';

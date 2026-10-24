@@ -13,7 +13,8 @@ public sealed class InitialAssessmentStoreResult
         ClientNotFound,
         ClientInactive,
         AssessmentNotFound,
-        AssessmentAlreadyExists
+        AssessmentAlreadyExists,
+        NotReviewable
     }
 
     public Status Kind { get; }
@@ -30,3 +31,16 @@ public sealed class InitialAssessmentStoreResult
         InitialAssessment? assessment = null
     ) => new(kind, assessment);
 }
+
+/// <summary>Valores já convertidos para o domínio de uma avaliação inicial a gravar.</summary>
+public sealed record InitialAssessmentWriteValues(
+    decimal WeightKg,
+    int HeightCm,
+    decimal? BodyFatPercentage,
+    string? MedicalConditions,
+    string FitnessLevel,
+    Domain.ValueObjects.ActivityLevel ActivityLevel,
+    string Goals,
+    string? Profession,
+    Domain.ValueObjects.BodyMeasurements BodyMeasurements,
+    Domain.ValueObjects.NutritionIntake NutritionIntake);

@@ -3,6 +3,7 @@ import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-q
 import { clientKeys } from '@/features/clients/api/keys';
 import { trainerDashboardKeys } from '@/features/trainer-dashboard';
 import { apiClient, unwrap } from '@/shared/api/client';
+import { initialAssessmentKeys } from '@/features/initial-assessment';
 import type { components } from '@/shared/api/schema';
 
 type ClientRequest = components['schemas']['CreateClientRequest'];
@@ -118,5 +119,30 @@ export function useSaveInitialAssessmentMutation(clientId: string, assessmentId:
             })
           ),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: clientKeys.detail(clientId) }),
+  });
+}
+
+/**
+ * Marca como revista a avaliação inicial que o cliente preencheu (idempotente).
+ *
+ * Depois de gravar, volta a ler a ficha e a avaliação, o painel e a lista de avaliações
+ * iniciais por rever (inclui o contador da navegação).
+ */
+export function useReviewInitialAssessmentMutation(clientId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (assessmentId: string) =>
+      unwrap(
+        await apiClient.POST('/api/v1/initial-assessments/{assessmentId}/review', {
+          params: { path: { assessmentId } },
+        })
+      ),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: clientKeys.detail(clientId) }),
+        queryClient.invalidateQueries({ queryKey: trainerDashboardKeys.all }),
+        queryClient.invalidateQueries({ queryKey: initialAssessmentKeys.all }),
+      ]),
   });
 }

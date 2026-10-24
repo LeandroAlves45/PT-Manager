@@ -166,7 +166,7 @@ describe('PortalNutritionPage', () => {
     expect(within(main).queryByRole('button')).not.toBeInTheDocument();
   });
 
-  it('translates a blocked food and flags a supplement that is no longer available', async () => {
+  it('flags a supplement that is no longer available', async () => {
     const plan = nutritionPlan();
     const [breakfast, lunch] = plan.meals;
     useNutrition({
@@ -174,10 +174,6 @@ describe('PortalNutritionPage', () => {
       meals: [
         {
           ...breakfast!,
-          items: [
-            { ...breakfast!.items[0]!, food_name: 'Unavailable food', is_unavailable: true },
-            breakfast!.items[1]!,
-          ],
           supplements: [{ ...breakfast!.supplements[0]!, is_unavailable: true, notes: null }],
         },
         lunch!,
@@ -187,12 +183,6 @@ describe('PortalNutritionPage', () => {
     await openNutrition();
 
     const card = screen.getByRole('article', { name: 'Pequeno-almoço' });
-    expect(within(card).getByText('Alimento indisponível')).toBeInTheDocument();
-    expect(screen.queryByText('Unavailable food')).not.toBeInTheDocument();
-    // As gramas e as kcal do alimento bloqueado continuam a contar nos totais do backend.
-    expect(within(card).getByText('Alimento indisponível').closest('li')).toHaveTextContent(
-      '80 g · 298 kcal'
-    );
     expect(within(card).getByText('Indisponível')).toBeInTheDocument();
     // A etiqueta sozinha não diz o que fazer: a frase diz.
     expect(
@@ -235,7 +225,12 @@ describe('PortalNutritionPage', () => {
           items: [meal.items[0]!, { ...meal.items[1]!, order_number: 1 }],
           supplements: [
             meal.supplements[0]!,
-            { ...meal.supplements[0]!, supplement_name: 'Magnésio', notes: null },
+            {
+              ...meal.supplements[0]!,
+              id: 'c0a80101-0000-4000-8000-0000000000a2',
+              supplement_name: 'Magnésio',
+              notes: null,
+            },
           ],
         },
       ],
@@ -336,12 +331,64 @@ describe('PortalNutritionPage', () => {
     expect(requests).toBe(0);
   });
 
-  it('only reads the supplements of a meal: no link to register intakes', async () => {
+  it('links the supplements of a meal to the plan section of the supplements page', async () => {
     await openNutrition();
 
     const breakfast = screen.getByRole('article', { name: 'Pequeno-almoço' });
     expect(within(breakfast).getByText('Creatina · 5 g')).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Registar tomas' })).not.toBeInTheDocument();
+    expect(within(breakfast).getByRole('link', { name: 'Registar tomas' })).toHaveAttribute(
+      'href',
+      '/portal/supplements#plano-alimentar'
+    );
+    // Uma refeição sem suplementos não tem link.
+    const lunch = screen.getByRole('article', { name: 'Almoço' });
+    expect(within(lunch).queryByRole('link', { name: 'Registar tomas' })).not.toBeInTheDocument();
+  });
+
+  it('lists the supplements outside the meals of the chosen plan', async () => {
+    useNutrition({
+      ...nutritionPlan(),
+      plan_supplements: [
+        {
+          id: '5d8f2a64-8a7b-4c0e-9f3a-1b2c3d4e5f60',
+          order_number: 1,
+          supplement_name: 'Vitamina D',
+          is_unavailable: false,
+          unit_of_measure: 'cápsula',
+          quantity: 1,
+          notes: 'Com a refeição mais gorda.',
+        },
+      ],
+    });
+
+    await openNutrition();
+
+    const section = screen.getByRole('region', { name: 'Fora das refeições' });
+    expect(within(section).getByText('Vitamina D · 1 cápsula')).toBeInTheDocument();
+    expect(within(section).getByText('Com a refeição mais gorda.')).toBeInTheDocument();
+    expect(within(section).getByRole('link', { name: 'Registar tomas' })).toBeInTheDocument();
+  });
+
+  it('hides the outside-meals section when the plan has no such supplements', async () => {
+    await openNutrition();
+
+    expect(screen.queryByRole('region', { name: 'Fora das refeições' })).not.toBeInTheDocument();
+  });
+
+  it('does not list a blocked food: the backend no longer sends it', async () => {
+    const plan = nutritionPlan();
+    const [breakfast, lunch] = plan.meals;
+    useNutrition({
+      ...plan,
+      meals: [{ ...breakfast!, items: [breakfast!.items[1]!] }, lunch!],
+    });
+
+    await openNutrition();
+
+    const card = screen.getByRole('article', { name: 'Pequeno-almoço' });
+    expect(within(card).queryByText('Aveia')).not.toBeInTheDocument();
+    expect(within(card).getByText('Iogurte natural')).toBeInTheDocument();
+    expect(screen.queryByText('Alimento indisponível')).not.toBeInTheDocument();
   });
 
   it('keeps what was on screen and warns when a refresh fails, then recovers on retry', async () => {

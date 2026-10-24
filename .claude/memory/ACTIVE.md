@@ -1,6 +1,19 @@
-# Estado ativo: Sprint 6 FINALIZADO (6GB-CL fechada a 2026-10-22); segue o bloco pós-6GB
+# Estado ativo: bloco pré-Sprint 7 FINALIZADO (2026-10-24); falta o merge e depois o Sprint 7
 
-Atualizado: 2026-10-22
+Atualizado: 2026-10-24
+
+## Bloco pré-Sprint 7 (RN-020, RN-016, RN-005, RN-014, RN-013 + RN-018)
+
+- **FINALIZADO (2026-10-24)**, na branch `feat/pre-sprint7-block` (commits de backend, frontend e docs); **merge só com aprovação do Leandro**.
+- Números:
+  - backend 3388 + 1 skip, frontend 1078/1078 em 96 ficheiros;
+  - mutações 8/8 + 5/5;
+  - `design-is` 22/30 REFINE;
+  - app real validada no Chrome.
+- Gates `QGPRE7-*` fechados.
+- Ver `Sessions/2026-10-24-bloco-pre-sprint7-fecho.md` e `sprint_6GB/08_relatorio_fecho_bloco_pre_sprint7.md`.
+- **Próximo:** merge e CI, depois o Sprint 7 (mede a app já com estas regras).
+- **Ponto em aberto:** exercício bloqueado em plano de treino com histórico (só num plano novo).
 
 ## Sprint 6G: 6GA Auth UX + 6GB análise visual e correção
 

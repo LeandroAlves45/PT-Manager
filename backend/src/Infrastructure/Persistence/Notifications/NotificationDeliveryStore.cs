@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Application.Common.Abstractions;
+using Application.Common.Time;
 using Application.Features.Notifications.Delivery;
 using Domain.ValueObjects;
 using Infrastructure.Data;
@@ -9,15 +11,23 @@ namespace Infrastructure.Persistence.Notifications;
 /// <summary>Persiste o estado de entrega condicionado pelo lease do durable job.</summary>
 internal sealed class NotificationDeliveryStore : INotificationDeliveryStore
 {
+    private static readonly JsonSerializerOptions TemplateDataOptions = new()
+    {
+        PropertyNameCaseInsensitive = false
+    };
+
     private readonly PtManagerDbContext _dbContext;
     private readonly IClock _clock;
+    private readonly ITrainerTimeZoneProvider _timeZoneProvider;
 
     public NotificationDeliveryStore(
         PtManagerDbContext dbContext,
-        IClock clock)
+        IClock clock,
+        ITrainerTimeZoneProvider timeZoneProvider)
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _timeZoneProvider = timeZoneProvider ?? throw new ArgumentNullException(nameof(timeZoneProvider));
     }
 
     public async Task<NotificationDeliveryPreparation> PrepareAsync(
@@ -39,6 +49,7 @@ internal sealed class NotificationDeliveryStore : INotificationDeliveryStore
             .Select(notification => new
             {
                 notification.Id,
+                notification.OwnerTrainerId,
                 notification.RecipientEmail,
                 notification.TemplateKey,
                 notification.TemplateData,
@@ -83,6 +94,11 @@ internal sealed class NotificationDeliveryStore : INotificationDeliveryStore
         else if (stored.Status != "pending")
             return NotificationDeliveryPreparation.FromStatus(
                 NotificationDeliveryPreparationStatus.InvalidState);
+
+        if (SessionReminderTemplates.IsSessionReminder(stored.TemplateKey) &&
+            !await SessionReminderStillAppliesAsync(
+                stored.OwnerTrainerId, stored.TemplateData, now, cancellationToken))
+            return await SkipAsync(notificationId, jobId, leaseOwnerId, now, cancellationToken);
 
         return NotificationDeliveryPreparation.Ready(new NotificationDeliveryMessage(
             stored.Id,
@@ -165,6 +181,122 @@ internal sealed class NotificationDeliveryStore : INotificationDeliveryStore
                 "failed",
                 now,
                 cancellationToken);
+    }
+
+    /// <summary>
+    /// Confirma, no momento do envio, que o lembrete da véspera ainda se aplica: a sessão
+    /// continua marcada, do cliente ativo, no mesmo dia local, e esse dia ainda é amanhã no
+    /// fuso do personal trainer. Uma sessão cancelada, apagada, mudada de dia ou que já é
+    /// hoje não recebe email.
+    /// </summary>
+    private async Task<bool> SessionReminderStillAppliesAsync(
+        Guid trainerId,
+        string? templateDataJson,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        // Bloqueado entre o scan e o envio: salta e liberta a chave, para a véspera voltar a
+        // aplicar-se se o bloqueio for levantado a tempo.
+        if (await _dbContext.TrainerAccessBlocks.AnyAsync(block => block.TrainerId == trainerId, cancellationToken))
+            return false;
+
+        var data = ReadTemplateData(templateDataJson);
+        // Dados ilegíveis seguem para o gateway, que os recusa como falha permanente.
+        if (data is null)
+            return true;
+
+        var session = await _dbContext.Sessions
+            .AsNoTracking()
+            .Where(item =>
+                item.Id == data.SessionId &&
+                item.OwnerTrainerId == trainerId &&
+                !item.IsDeleted &&
+                item.Status == SessionStatus.Scheduled &&
+                _dbContext.Clients.Any(client =>
+                    client.Id == item.ClientId &&
+                    client.OwnerTrainerId == trainerId &&
+                    client.IsActive))
+            .Select(item => new { item.StartsAt })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (session is null)
+            return false;
+
+        var timeZone = await _timeZoneProvider.GetRequiredAsync(trainerId, cancellationToken);
+        return LocalDates.ToLocalDate(session.StartsAt, timeZone) == data.SessionLocalDate &&
+            LocalDates.Today(now, timeZone) < data.SessionLocalDate;
+    }
+
+    /// <summary>
+    /// Marca o lembrete como saltado e liberta a chave de idempotência do job, para que uma
+    /// nova véspera (sessão que volta a ficar para amanhã) possa voltar a enfileirá-lo.
+    /// </summary>
+    private async Task<NotificationDeliveryPreparation> SkipAsync(
+        Guid notificationId,
+        Guid jobId,
+        Guid leaseOwnerId,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var releasedKeySuffix = ":skipped:" + jobId.ToString("N");
+        var strategy = _dbContext.Database.CreateExecutionStrategy();
+        var skipped = await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await _dbContext.Database
+                .BeginTransactionAsync(cancellationToken);
+
+            var notifications = await _dbContext.Notifications
+                .Where(notification =>
+                    notification.Id == notificationId &&
+                    notification.Status == "pending" &&
+                    _dbContext.DurableJobs.Any(job =>
+                        job.Id == jobId &&
+                        job.LeaseOwnerId == leaseOwnerId &&
+                        job.Status == JobStatus.Processing &&
+                        job.LeaseExpiresAt > now))
+                .ExecuteUpdateAsync(update => update
+                    .SetProperty(notification => notification.Status, "skipped")
+                    .SetProperty(notification => notification.UpdatedAt, now),
+                cancellationToken);
+            if (notifications != 1)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return false;
+            }
+
+            await _dbContext.DurableJobs
+                .Where(job => job.Id == jobId && job.LeaseOwnerId == leaseOwnerId)
+                .ExecuteUpdateAsync(update => update
+                    .SetProperty(job => job.IdempotencyKey, job => job.IdempotencyKey + releasedKeySuffix),
+                cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
+            return true;
+        });
+
+        if (skipped)
+            return NotificationDeliveryPreparation.FromStatus(
+                NotificationDeliveryPreparationStatus.Skipped);
+
+        return NotificationDeliveryPreparation.FromStatus(
+            await HasValidLeaseAsync(jobId, leaseOwnerId, now, cancellationToken)
+                ? NotificationDeliveryPreparationStatus.InvalidState
+                : NotificationDeliveryPreparationStatus.LeaseLost);
+    }
+
+    private static SessionReminderTemplateData? ReadTemplateData(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return null;
+
+        try
+        {
+            var data = JsonSerializer.Deserialize<SessionReminderTemplateData>(json, TemplateDataOptions);
+            return data is null || data.SessionId == Guid.Empty ? null : data;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     private async Task<NotificationDeliveryMutationStatus> ClassifyRejectedMutationAsync(

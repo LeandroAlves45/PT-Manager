@@ -162,7 +162,12 @@ internal sealed class JobDispatcher
         else
         {
             var tenantValidator = itemScope.ServiceProvider.GetRequiredService<JobTenantValidator>();
-            if (!await tenantValidator.IsAvailableAsync(job.TrainerId, activationCancellationToken))
+            // Os jobs de tenant são emails ao personal trainer e aos clientes, que continuam a usar
+            // a app com a subscrição inativa, suspensa ou cancelada.
+            if (!await tenantValidator.IsAvailableAsync(
+                    job.TrainerId,
+                    activationCancellationToken,
+                    requireActiveSubscription: false))
             {
                 _logger.LogWarning(
                     JobDispatchLogEvents.TenantRejected,

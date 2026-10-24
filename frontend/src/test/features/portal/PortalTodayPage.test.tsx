@@ -569,7 +569,7 @@ describe('PortalTodayPage', () => {
     expect(screen.queryByRole('button', { name: /Tentar novamente/ })).not.toBeInTheDocument();
   });
 
-  it('collapses completed exercises and shows a blocked one in Portuguese', async () => {
+  it('collapses completed exercises', async () => {
     useToday(
       workoutToday({
         day: {
@@ -579,12 +579,6 @@ describe('PortalTodayPage', () => {
             workoutExercise({
               is_completed: true,
               sets: [workoutSet({ logged: loggedSet() })],
-            }),
-            workoutExercise({
-              id: '6b7c8d9e-0f1a-4b2c-8d3e-4f5a6b7c8d9e',
-              exercise_name: 'Unavailable exercise',
-              is_unavailable: true,
-              sets: [workoutSet({ id: 'b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d09' })],
             }),
           ],
         },
@@ -599,9 +593,6 @@ describe('PortalTodayPage', () => {
     expect(screen.getByLabelText('Exercício completo')).toBeInTheDocument();
     await user.click(done);
     expect(done).toHaveAttribute('aria-expanded', 'true');
-
-    expect(screen.getByRole('region', { name: 'Exercício indisponível' })).toBeInTheDocument();
-    expect(screen.queryByText('Unavailable exercise')).not.toBeInTheDocument();
   });
 
   it('keeps what was on screen and warns when a refresh fails, then recovers on retry', async () => {

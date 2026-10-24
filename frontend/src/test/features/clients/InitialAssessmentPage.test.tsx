@@ -1,12 +1,19 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
+import { toast } from 'sonner';
 import type * as Sonner from 'sonner';
 import { describe, expect, it, vi } from 'vitest';
 
 import { API, problem, restorableSession } from '@/test/msw/handlers';
 import { server } from '@/test/msw/server';
-import { CLIENT_ID, clientDetails, clientSummaryOverview } from '@/test/msw/trainer-fixtures';
+import type { components } from '@/shared/api/schema';
+import {
+  CLIENT_ID,
+  clientDetails,
+  clientSummaryOverview,
+  initialAssessment,
+} from '@/test/msw/trainer-fixtures';
 import { renderApp } from '@/test/render';
 
 vi.mock('sonner', async (importOriginal) => ({
@@ -14,53 +21,15 @@ vi.mock('sonner', async (importOriginal) => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
+type Schemas = components['schemas'];
+
 const DETAIL = `/trainer/clients/${CLIENT_ID}`;
 const ROUTE = `${DETAIL}/initial-assessment`;
 const ASSESSMENT_ID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 
 /** Avaliação guardada com valores reais do domínio. */
-function savedAssessment() {
-  return {
-    id: ASSESSMENT_ID,
-    client_id: CLIENT_ID,
-    weight_kg: 66,
-    height_cm: 168,
-    body_fat_percentage: null,
-    medical_conditions: null,
-    fitness_level: 'recreational',
-    activity_level: 'moderately_active',
-    goals: 'Força',
-    profession: null,
-    body_measurements: {
-      waist_cm: null,
-      hip_cm: null,
-      chest_cm: null,
-      right_arm_cm: null,
-      left_arm_cm: null,
-      right_thigh_cm: null,
-      left_thigh_cm: null,
-      right_calf_cm: null,
-      left_calf_cm: null,
-    },
-    nutrition_intake: {
-      food_preferences: null,
-      disliked_foods: null,
-      food_intolerances: null,
-      food_allergies: null,
-      dietary_restrictions: null,
-      daily_routine: null,
-      sleep_quality: null,
-      mood: null,
-      stress_level: null,
-      avg_water_liters_per_day: null,
-      hungriest_time_of_day: null,
-      uses_supplements: null,
-      current_supplements: null,
-      other_notes: null,
-    },
-    created_at: '2026-09-01T10:00:00Z',
-    updated_at: '2026-09-01T10:00:00Z',
-  };
+function savedAssessment(overrides: Partial<Schemas['InitialAssessmentResponse']> = {}) {
+  return initialAssessment({ id: ASSESSMENT_ID, ...overrides });
 }
 
 /** Ficha e convite (a ficha é o destino ao guardar); a avaliação é opcional por teste. */
@@ -208,5 +177,73 @@ describe('InitialAssessmentPage', () => {
       'Indica uma percentagem entre 0 e 100.'
     );
     expect(posts).toBe(0);
+  }, 25000);
+
+  it('refuses a weight above 1000 kg and more than two decimals before sending', async () => {
+    let posts = 0;
+    handlers(null);
+    server.use(
+      http.post(`${API}/initial-assessments`, () => {
+        posts += 1;
+        return HttpResponse.json({}, { status: 201 });
+      })
+    );
+    const user = userEvent.setup();
+    renderApp({ initialEntries: [ROUTE] });
+
+    const weight = await screen.findByLabelText('Peso (kg)');
+    await user.type(weight, '1000.01');
+    await user.type(screen.getByLabelText('Altura (cm)'), '168');
+    await user.type(screen.getByLabelText('Objetivos'), 'Força');
+    await user.click(screen.getByRole('button', { name: 'Guardar avaliação' }));
+    expect(await screen.findByText('O peso não pode exceder 1000 kg.')).toBeInTheDocument();
+
+    await user.clear(weight);
+    await user.type(weight, '64.855');
+    await user.click(screen.getByRole('button', { name: 'Guardar avaliação' }));
+    expect(await screen.findByText('Usa no máximo duas casas decimais.')).toBeInTheDocument();
+    expect(posts).toBe(0);
+  }, 25000);
+
+  it('marks a client-submitted assessment as reviewed and then shows the review date', async () => {
+    let reviewed = false;
+    handlers(null);
+    server.use(
+      http.get(`${API}/clients/:clientId/initial-assessment`, () =>
+        HttpResponse.json(
+          savedAssessment({
+            submitted_by_client: true,
+            reviewed_at: reviewed ? '2026-10-20T09:00:00Z' : null,
+          })
+        )
+      ),
+      http.post(`${API}/initial-assessments/:assessmentId/review`, ({ params }) => {
+        expect(params.assessmentId).toBe(ASSESSMENT_ID);
+        reviewed = true;
+        return HttpResponse.json(
+          savedAssessment({ submitted_by_client: true, reviewed_at: '2026-10-20T09:00:00Z' })
+        );
+      })
+    );
+    const user = userEvent.setup();
+    renderApp({ initialEntries: [ROUTE] });
+
+    expect(await screen.findByText('Preenchida pelo cliente')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Marcar como revista' }));
+
+    expect(await screen.findByText('Revista a 20/10/2026')).toBeInTheDocument();
+    expect(toast.success).toHaveBeenCalledWith('Avaliação inicial marcada como revista.');
+    expect(screen.queryByRole('button', { name: 'Marcar como revista' })).not.toBeInTheDocument();
+  }, 25000);
+
+  it('offers no review for an assessment made by the trainer', async () => {
+    handlers(savedAssessment());
+    renderApp({ initialEntries: [ROUTE] });
+
+    expect(
+      await screen.findByRole('heading', { name: 'Corrigir avaliação inicial' })
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Preenchida pelo cliente')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Marcar como revista' })).not.toBeInTheDocument();
   }, 25000);
 });

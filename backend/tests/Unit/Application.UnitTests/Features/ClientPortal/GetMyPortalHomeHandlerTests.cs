@@ -41,4 +41,33 @@ public sealed class GetMyPortalHomeHandlerTests : ReadHandlerTestContext
         Assert.False(result.Value.NextCheckIn!.IsToday);
     }
 
+    [Fact]
+    public async Task PortalHome_DuringTrainerBlock_ShowsAccessEndInTrainerTimeZone()
+    {
+        var blockedAt = NowUtc.AddDays(-2);
+        var handler = CreateHomeHandler(
+            new IntakeQueriesFake { Result = new MyTodaySupplementIntakesDto(new DateOnly(2026, 9, 3), 0, 0, []) },
+            trainerBlockedAt: blockedAt);
+
+        var result = await handler.HandleAsync(new GetMyPortalHomeQuery(), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(blockedAt.AddDays(7), result.Value.AccessNotice!.EndsAt);
+        Assert.Equal(Lisbon.Id, result.Value.AccessNotice.TimeZone);
+    }
+
+    [Fact]
+    public async Task PortalHome_WithoutBlockOrAfterAccessEnded_HasNoNotice()
+    {
+        var intakes = new MyTodaySupplementIntakesDto(new DateOnly(2026, 9, 3), 0, 0, []);
+
+        var none = await CreateHomeHandler(new IntakeQueriesFake { Result = intakes })
+            .HandleAsync(new GetMyPortalHomeQuery(), CancellationToken.None);
+        var ended = await CreateHomeHandler(
+                new IntakeQueriesFake { Result = intakes }, trainerBlockedAt: NowUtc.AddDays(-7))
+            .HandleAsync(new GetMyPortalHomeQuery(), CancellationToken.None);
+
+        Assert.Null(none.Value.AccessNotice);
+        Assert.Null(ended.Value.AccessNotice);
+    }
 }

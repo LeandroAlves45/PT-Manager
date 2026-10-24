@@ -11,6 +11,7 @@ import {
   clientHandler,
   DAY_ID,
   details,
+  detailsWithBlockedExercise,
   logPage,
   LOG_ID,
   PLAN_ID,
@@ -62,6 +63,38 @@ describe('Training plan page', () => {
       'href',
       `${VIEW}/edit/structure`
     );
+  });
+
+  it('marks a blocked exercise with the reason and note', async () => {
+    server.use(
+      ...restorableSession(),
+      clientHandler,
+      http.get(API + '/training-plans/:id', () => HttpResponse.json(detailsWithBlockedExercise())),
+      http.get(API + '/exercise-set-logs', () => HttpResponse.json(logPage([]))),
+      completions([])
+    );
+    renderApp({ initialEntries: [VIEW] });
+
+    const structure = within(await screen.findByRole('region', { name: 'Estrutura' }));
+    expect(await structure.findByText('Bloqueado')).toBeInTheDocument();
+    expect(
+      structure.getByText('Motivo: Informação perigosa · Nota: Técnica sem segurança')
+    ).toBeInTheDocument();
+  });
+
+  it('shows no mark on an exercise the moderation has not blocked', async () => {
+    server.use(
+      ...restorableSession(),
+      clientHandler,
+      http.get(API + '/training-plans/:id', () => HttpResponse.json(details())),
+      http.get(API + '/exercise-set-logs', () => HttpResponse.json(logPage([]))),
+      completions([])
+    );
+    renderApp({ initialEntries: [VIEW] });
+
+    const structure = within(await screen.findByRole('region', { name: 'Estrutura' }));
+    expect(await structure.findByText('Agachamento')).toBeInTheDocument();
+    expect(structure.queryByText('Bloqueado')).not.toBeInTheDocument();
   });
 
   it('has no correction or edit actions on an archived plan', async () => {

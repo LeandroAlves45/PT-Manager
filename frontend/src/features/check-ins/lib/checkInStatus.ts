@@ -68,6 +68,7 @@ export const CHECK_IN_ERRORS: Readonly<Record<string, string>> = {
   check_in_not_answered: 'Esta avaliação ainda não foi respondida.',
   check_in_cancelled: 'Esta avaliação foi cancelada.',
   assessment_client_inactive: 'Reativa o cliente antes de agendar avaliações.',
+  initial_assessment_required: 'Este cliente ainda não tem avaliação inicial.',
   client_not_found: 'Este cliente já não existe.',
   target_date_before_check_in: 'A data-alvo não pode ser anterior à avaliação.',
   rate_limit_exceeded: 'Foram feitos demasiados pedidos. Aguarda e tenta novamente.',

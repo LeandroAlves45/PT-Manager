@@ -1,11 +1,14 @@
-import { UtensilsCrossed } from 'lucide-react';
+import { Pill, UtensilsCrossed } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 
+import { WithInitialAssessmentNotice } from '@/features/portal/components/InitialAssessmentMissingNotice';
 import { usePortalMealPlansQuery, usePortalNutritionQuery } from '@/features/portal/api/portal';
 import { MacroBars } from '@/features/portal/components/MacroBars';
 import { MealCard } from '@/features/portal/components/MealCard';
+import { MealSupplementList } from '@/features/portal/components/MealSupplementList';
 import { MealPlanList } from '@/features/portal/components/MealPlanList';
+import { PortalCard } from '@/features/portal/components/PortalCard';
 import { StaleDataNotice } from '@/features/portal/components/StaleDataNotice';
 import { goalLabel, planPeriodLabel } from '@/features/portal/lib/nutrition';
 import { isApiProblem } from '@/shared/api/problem';
@@ -25,7 +28,7 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
  *   (o backend responde o mesmo sem plano ativo e com a ficha arquivada);
  * - sem erro: o plano, com o link "Trocar de plano" quando há mais de um plano ativo.
  */
-export function PortalNutritionPage() {
+function PortalNutritionPageContent() {
   const query = usePortalNutritionQuery();
   const plansQuery = usePortalMealPlansQuery();
   const choosing =
@@ -141,6 +144,12 @@ export function PortalNutritionPage() {
           ))}
         </div>
       )}
+
+      {plan.plan_supplements.length > 0 && (
+        <PortalCard tone="supplements" icon={Pill} title="Fora das refeições">
+          <MealSupplementList title="Suplementos do plano" supplements={plan.plan_supplements} />
+        </PortalCard>
+      )}
     </section>
   );
 }
@@ -177,4 +186,13 @@ function PlanChoice() {
     );
 
   return <MealPlanList plans={plansQuery.data.items} />;
+}
+
+/** Nutrição do portal, com o aviso de avaliação inicial em falta acima do conteúdo. */
+export function PortalNutritionPage() {
+  return (
+    <WithInitialAssessmentNotice>
+      <PortalNutritionPageContent />
+    </WithInitialAssessmentNotice>
+  );
 }

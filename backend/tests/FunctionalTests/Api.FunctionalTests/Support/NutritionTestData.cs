@@ -97,6 +97,21 @@ internal static class NutritionTestData
                 now);
 
             dbContext.Clients.Add(client);
+            // Sem avaliação inicial o plano alimentar é recusado (initial_assessment_required).
+            dbContext.InitialAssessments.Add(new Domain.Entities.Assessments.InitialAssessment(
+                trainer.TrainerId,
+                client.Id,
+                70m,
+                165,
+                null,
+                null,
+                "intermediate",
+                ActivityLevel.ModeratelyActive,
+                "Perder massa gorda",
+                null,
+                BodyMeasurements.Empty,
+                NutritionIntake.Empty,
+                now));
             dbContext.Foods.Add(food);
             dbContext.Supplements.Add(supplement);
             await dbContext.SaveChangesAsync(cancellationToken);

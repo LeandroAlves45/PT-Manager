@@ -12,6 +12,7 @@ const catalogs = {
   global_supplements: { total_count: 10, active_count: 9, archived_count: 1 },
   private_foods: { total_count: 3, blocked_count: 1 },
   private_exercises: { total_count: 4, blocked_count: 2 },
+  private_supplements: { total_count: 6, blocked_count: 1 },
 };
 const emptyCatalogs = {
   global_foods: { total_count: 0, active_count: 0, archived_count: 0 },
@@ -19,6 +20,7 @@ const emptyCatalogs = {
   global_supplements: { total_count: 0, active_count: 0, archived_count: 0 },
   private_foods: { total_count: 0, blocked_count: 0 },
   private_exercises: { total_count: 0, blocked_count: 0 },
+  private_supplements: { total_count: 0, blocked_count: 0 },
 };
 
 function trainers(over: Partial<Record<string, number>> = {}) {
@@ -26,6 +28,7 @@ function trainers(over: Partial<Record<string, number>> = {}) {
     active_subscription_count: 5,
     suspended_subscription_count: 0,
     exempt_count: 2,
+    blocked_account_count: 4,
     revenue_this_month_cents: 2789,
     ...over,
   };
@@ -41,6 +44,7 @@ function overview(body: Record<string, unknown>) {
 const TRAINER_CARDS = [
   'Subscrições ativas',
   'Suspensas por pagamento',
+  'Contas bloqueadas',
   'Isentos',
   'Recebido este mês',
 ];
@@ -64,7 +68,7 @@ describe('AdminOverviewPage', () => {
     await waitFor(() => expect(requests).toBe(1));
   }, 15000);
 
-  it('shows the four trainer figures, euro formatted, and none is a link', async () => {
+  it('shows the five trainer figures, euro formatted, and none is a link', async () => {
     server.use(...overview({ ...catalogs, trainers: trainers() }));
     renderApp({ initialEntries: ['/admin'] });
     const active = await screen.findByRole('region', { name: 'Subscrições ativas' });
@@ -77,6 +81,11 @@ describe('AdminOverviewPage', () => {
     ).toBeInTheDocument();
     expect(
       within(screen.getByRole('region', { name: 'Isentos' })).getByText('2 treinadores isentos')
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('region', { name: 'Contas bloqueadas' })).getByText(
+        '4 contas bloqueadas'
+      )
     ).toBeInTheDocument();
     const revenue = screen.getByRole('region', { name: 'Recebido este mês' });
     // O Intl pt-PT usa espaço não separável; o matcher do Testing Library normaliza-o.
@@ -135,12 +144,53 @@ describe('AdminOverviewPage', () => {
     }
   }, 15000);
 
+  it('never highlights the blocked accounts card, even when there are some', async () => {
+    server.use(...overview({ ...catalogs, trainers: trainers({ blocked_account_count: 9 }) }));
+    renderApp({ initialEntries: ['/admin'] });
+    const blocked = await screen.findByRole('region', { name: 'Contas bloqueadas' });
+    expect(within(blocked).getByText('9 contas bloqueadas')).toBeInTheDocument();
+    expect(blocked).not.toHaveAttribute('data-attention');
+    expect(within(blocked).queryByRole('link')).not.toBeInTheDocument();
+  }, 15000);
+
+  it('uses the singular for one blocked account', async () => {
+    server.use(...overview({ ...catalogs, trainers: trainers({ blocked_account_count: 1 }) }));
+    renderApp({ initialEntries: ['/admin'] });
+    expect(
+      within(await screen.findByRole('region', { name: 'Contas bloqueadas' })).getByText(
+        '1 conta bloqueada'
+      )
+    ).toBeInTheDocument();
+  }, 15000);
+
+  it('links the private supplements card to the supplements moderation tab', async () => {
+    server.use(...overview({ ...catalogs, trainers: trainers() }));
+    renderApp({ initialEntries: ['/admin'] });
+    const card = await screen.findByRole('link', { name: /Suplementos privados/ });
+    expect(card).toHaveAttribute('href', '/admin/moderation?kind=supplements');
+    expect(within(card).getByText('6')).toBeInTheDocument();
+    expect(within(card).getByText('1 bloqueado')).toBeInTheDocument();
+  }, 15000);
+
   it('does not highlight the suspended card when there are none', async () => {
     server.use(...overview({ ...catalogs, trainers: trainers() }));
     renderApp({ initialEntries: ['/admin'] });
     expect(
       await screen.findByRole('region', { name: 'Suspensas por pagamento' })
     ).not.toHaveAttribute('data-attention');
+  }, 15000);
+
+  it('shows the empty state only when the private supplements are empty too', async () => {
+    server.use(
+      ...overview({
+        ...emptyCatalogs,
+        private_supplements: { total_count: 2, blocked_count: 0 },
+        trainers: trainers(),
+      })
+    );
+    renderApp({ initialEntries: ['/admin'] });
+    expect(await screen.findByRole('link', { name: /Suplementos privados/ })).toBeInTheDocument();
+    expect(screen.queryByText('Plataforma sem conteúdo')).not.toBeInTheDocument();
   }, 15000);
 
   it('keeps the trainer section when the catalogs are empty', async () => {

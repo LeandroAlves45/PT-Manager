@@ -2,6 +2,7 @@ using Application.Features.Nutrition.MealPlans;
 using Application.Features.Nutrition.MealPlans.Abstractions;
 using Domain.Entities.Nutrition;
 using Infrastructure.Data;
+using Infrastructure.Persistence.Assessments;
 using Infrastructure.Persistence.Common;
 using Microsoft.EntityFrameworkCore;
 
@@ -46,11 +47,19 @@ internal sealed class MealPlanStore : IMealPlanStore
                     return MealPlanStoreResult.ForClientNotFound();
                 }
 
+                if (!await InitialAssessmentRequirement.IsMetAsync(
+                        _dbContext, trainerId, model.ClientId, cancellationToken))
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    return MealPlanStoreResult.ForInitialAssessmentRequired();
+                }
+
                 var referenceStatus = await ValidateCatalogReferencesAsync(
                     trainerId,
                     model.Structure.Meals.SelectMany(meal => meal.Items)
                         .Select(item => item.FoodId).Distinct().ToArray(),
                     model.Structure.Meals.SelectMany(meal => meal.Supplements)
+                        .Concat(model.Structure.PlanSupplements)
                         .Select(item => item.SupplementId).Distinct().ToArray(),
                     cancellationToken
                 );
@@ -125,6 +134,7 @@ internal sealed class MealPlanStore : IMealPlanStore
                         .ThenInclude(meal => meal.Items)
                     .Include(candidate => candidate.Meals)
                         .ThenInclude(meal => meal.Supplements)
+                    .Include(candidate => candidate.PlanSupplements)
                     .AsSplitQuery()
                     .SingleAsync(cancellationToken);
 
@@ -242,10 +252,15 @@ internal sealed class MealPlanStore : IMealPlanStore
             .Select(input => input.FoodId)
             .Distinct()
             .ToArray();
+        var planSupplements = plan.PlanSupplements.ToDictionary(item => item.Id);
         var changedSupplementIds = structure.Meals.SelectMany(meal => meal.Supplements)
             .Where(input => !input.Id.HasValue
                 || associations[input.Id.Value].SupplementId != input.SupplementId)
             .Select(input => input.SupplementId)
+            .Concat(structure.PlanSupplements
+                .Where(input => !input.Id.HasValue
+                    || planSupplements[input.Id.Value].SupplementId != input.SupplementId)
+                .Select(input => input.SupplementId))
             .Distinct()
             .ToArray();
 
@@ -283,7 +298,8 @@ internal sealed class MealPlanStore : IMealPlanStore
         {
             return foods.Any(food => !food.IsActive ||
                     food.PlatformEnforcementStatus == Domain.ValueObjects.PlatformEnforcementStatus.Blocked)
-                || supplements.Any(item => !item.IsActive)
+                || supplements.Any(item => !item.IsActive ||
+                    item.PlatformEnforcementStatus == Domain.ValueObjects.PlatformEnforcementStatus.Blocked)
                 ? CatalogReferenceStatus.Inactive
                 : CatalogReferenceStatus.Valid;
         }
@@ -296,6 +312,11 @@ internal sealed class MealPlanStore : IMealPlanStore
         MealPlanStructureInput structure
     )
     {
+        var planSupplementIds = plan.PlanSupplements.Select(item => item.Id).ToHashSet();
+        if (structure.PlanSupplements.Any(item =>
+                item.Id.HasValue && !planSupplementIds.Contains(item.Id.Value)))
+            return false;
+
         var meals = plan.Meals.ToDictionary(meal => meal.Id);
         foreach (var input in structure.Meals.Where(meal => meal.Id.HasValue))
         {
@@ -344,6 +365,36 @@ internal sealed class MealPlanStore : IMealPlanStore
             var meal = plan.AddMeal(input.MealType, input.OrderNumber, now);
             AddChildren(meal, input, now);
         }
+
+        ReconcilePlanSupplements(plan, model.Structure.PlanSupplements, now);
+    }
+
+    /// <summary>
+    /// Suplementos fora das refeições: tira os que saíram, reordena e atualiza os que ficam,
+    /// acrescenta os novos. Os ids mantêm-se, e com eles as tomas de hoje.
+    /// </summary>
+    private static void ReconcilePlanSupplements(
+        MealPlan plan,
+        IReadOnlyList<MealPlanStructureInput.SupplementInput> inputs,
+        DateTime now)
+    {
+        var desiredIds = inputs.Where(item => item.Id.HasValue)
+            .Select(item => item.Id!.Value)
+            .ToHashSet();
+        foreach (var existing in plan.PlanSupplements.Where(item => !desiredIds.Contains(item.Id)).ToArray())
+            plan.RemovePlanSupplement(existing.Id, now);
+
+        plan.ReorderPlanSupplements(
+            inputs.Where(item => item.Id.HasValue)
+                .ToDictionary(item => item.Id!.Value, item => item.OrderNumber),
+            now);
+
+        foreach (var item in inputs.Where(item => item.Id.HasValue))
+            plan.UpdatePlanSupplement(
+                item.Id!.Value, item.SupplementId, item.Notes, item.Quantity, item.OrderNumber, now);
+
+        foreach (var item in inputs.Where(item => !item.Id.HasValue).OrderBy(item => item.OrderNumber))
+            plan.AddPlanSupplement(item.SupplementId, item.Notes, item.Quantity, item.OrderNumber, now);
     }
 
     private async Task StageExistingOrdersAsync(
@@ -372,6 +423,11 @@ internal sealed class MealPlanStore : IMealPlanStore
                 now
             );
         }
+
+        plan.ReorderPlanSupplements(
+            CreateTemporaryOrders(plan.PlanSupplements.Select(item => (item.Id, item.OrderNumber))),
+            now
+        );
 
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
@@ -475,6 +531,9 @@ internal sealed class MealPlanStore : IMealPlanStore
             var meal = plan.AddMeal(input.MealType, input.OrderNumber, now);
             AddChildren(meal, input, now);
         }
+
+        foreach (var item in structure.PlanSupplements.OrderBy(item => item.OrderNumber))
+            plan.AddPlanSupplement(item.SupplementId, item.Notes, item.Quantity, item.OrderNumber, now);
     }
 
     private static void AddChildren(

@@ -16,6 +16,7 @@ import {
 import { isApiProblem } from '@/shared/api/problem';
 import { ErrorState } from '@/shared/components/ErrorState';
 import { FormField } from '@/shared/components/FormField';
+import { PlatformEnforcementBadge } from '@/shared/components/PlatformEnforcementBadge';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -25,11 +26,14 @@ import { formatCount, formatDate, formatLisbonDateTime } from '@/shared/lib/form
 function TrainerCard({
   trainer,
   onToggleExemption,
+  onToggleBlock,
 }: {
   trainer: AdminTrainer;
   onToggleExemption: (trainer: AdminTrainer) => void;
+  onToggleBlock: (trainer: AdminTrainer) => void;
 }) {
   const exempt = trainer.is_exempt_from_billing;
+  const block = trainer.access_block;
 
   return (
     <article
@@ -41,7 +45,17 @@ function TrainerCard({
           <h3 className="font-medium">{trainer.full_name ?? 'Sem nome'}</h3>
           <p className="text-muted-foreground text-sm break-all">{trainer.email}</p>
         </div>
-        {exempt && <Badge variant="secondary">Isento</Badge>}
+        {(exempt || block !== null) && (
+          <div className="flex min-w-0 flex-col items-start gap-2 sm:items-end">
+            {exempt && <Badge variant="secondary">Isento</Badge>}
+            {block !== null && (
+              <PlatformEnforcementBadge
+                enforcement={{ reason: block.reason, note: block.note }}
+                className="sm:justify-end"
+              />
+            )}
+          </div>
+        )}
       </header>
 
       <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
@@ -67,15 +81,31 @@ function TrainerCard({
             <dd>Isento desde {formatLisbonDateTime(trainer.billing_exempt_since)}</dd>
           </div>
         )}
+        {block !== null && (
+          <div className="sm:col-span-2">
+            <dt className="text-muted-foreground">Bloqueio</dt>
+            <dd>Bloqueada a {formatLisbonDateTime(block.blocked_at)}</dd>
+            <dd>Clientes com acesso até {formatLisbonDateTime(block.client_access_ends_at)}</dd>
+          </div>
+        )}
       </dl>
 
-      <Button
-        variant={exempt ? 'outline' : 'default'}
-        className="min-h-11"
-        onClick={() => onToggleExemption(trainer)}
-      >
-        {exempt ? 'Tirar isenção' : 'Isentar de pagamento'}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant={exempt ? 'outline' : 'default'}
+          className="min-h-11"
+          onClick={() => onToggleExemption(trainer)}
+        >
+          {exempt ? 'Tirar isenção' : 'Isentar de pagamento'}
+        </Button>
+        <Button
+          variant={block !== null ? 'outline' : 'destructive'}
+          className="min-h-11"
+          onClick={() => onToggleBlock(trainer)}
+        >
+          {block !== null ? 'Levantar bloqueio' : 'Bloquear conta'}
+        </Button>
+      </div>
     </article>
   );
 }
@@ -123,6 +153,7 @@ function PendingInvitationResult({
  * @param outcome Último resultado da procura, ou `null`.
  * @param onOutcome Guarda o resultado de uma nova procura.
  * @param onToggleExemption Abre a confirmação de isentar / tirar a isenção.
+ * @param onToggleBlock Abre o diálogo de bloquear a conta / levantar o bloqueio.
  * @param onResend Reenvia o convite pendente.
  * @param onRevoke Abre a confirmação de anular o convite.
  * @param resendBusy Há um reenvio a decorrer.
@@ -138,6 +169,7 @@ export function TrainerLookup({
   outcome,
   onOutcome,
   onToggleExemption,
+  onToggleBlock,
   onResend,
   onRevoke,
   resendBusy,
@@ -145,6 +177,7 @@ export function TrainerLookup({
   outcome: LookupOutcome | null;
   onOutcome: (outcome: LookupOutcome | null) => void;
   onToggleExemption: (trainer: AdminTrainer) => void;
+  onToggleBlock: (trainer: AdminTrainer) => void;
   onResend: (invitation: PendingInvitation) => void;
   onRevoke: (invitation: PendingInvitation) => void;
   resendBusy: boolean;
@@ -218,7 +251,11 @@ export function TrainerLookup({
         {failed && <ErrorState error={lookup.error} onRetry={() => void search()} />}
 
         {outcome?.status === 'found' && (
-          <TrainerCard trainer={outcome.trainer} onToggleExemption={onToggleExemption} />
+          <TrainerCard
+            trainer={outcome.trainer}
+            onToggleExemption={onToggleExemption}
+            onToggleBlock={onToggleBlock}
+          />
         )}
 
         {outcome?.status === 'not_found' && (

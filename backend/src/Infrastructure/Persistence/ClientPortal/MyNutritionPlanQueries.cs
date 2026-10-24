@@ -94,16 +94,13 @@ internal sealed class MyNutritionPlanQueries : IMyNutritionPlanQueries
                                 item => item.FoodId,
                                 food => food.Id,
                                 (item, food) => new { item, food })
+                            // O alimento bloqueado sai do plano do cliente e das kcal e macros.
+                            .Where(row => row.food.PlatformEnforcementStatus != PlatformEnforcementStatus.Blocked)
                             .OrderBy(row => row.item.OrderNumber)
                             .ThenBy(row => row.item.Id)
                             .Select(row => new ItemRow(
                                 row.item.OrderNumber,
-                                row.food.PlatformEnforcementStatus ==
-                                    PlatformEnforcementStatus.Blocked
-                                    ? PortalContentMasking.UnavailableFoodName
-                                    : row.food.Name,
-                                row.food.PlatformEnforcementStatus ==
-                                    PlatformEnforcementStatus.Blocked,
+                                row.food.Name,
                                 row.item.QuantityInGrams,
                                 row.food.Protein,
                                 row.food.Carbs,
@@ -118,9 +115,11 @@ internal sealed class MyNutritionPlanQueries : IMyNutritionPlanQueries
                                 link => link.SupplementId,
                                 supplement => supplement.Id,
                                 (link, supplement) => new { link, supplement })
+                            .Where(row => row.supplement.PlatformEnforcementStatus != PlatformEnforcementStatus.Blocked)
                             .OrderBy(row => row.link.OrderNumber)
                             .ThenBy(row => row.link.Id)
                             .Select(row => new MyNutritionPlanDto.SupplementDto(
+                                row.link.Id,
                                 row.link.OrderNumber,
                                 row.supplement.Name,
                                 !row.supplement.IsActive,
@@ -128,6 +127,25 @@ internal sealed class MyNutritionPlanQueries : IMyNutritionPlanQueries
                                 row.link.Quantity,
                                 row.link.Notes))
                             .ToList()))
+                    .ToList(),
+                _dbContext.MealPlanSupplements
+                    .Where(item => item.MealPlanId == candidate.Id)
+                    .Join(
+                        _dbContext.Supplements,
+                        item => item.SupplementId,
+                        supplement => supplement.Id,
+                        (item, supplement) => new { item, supplement })
+                    .Where(row => row.supplement.PlatformEnforcementStatus != PlatformEnforcementStatus.Blocked)
+                    .OrderBy(row => row.item.OrderNumber)
+                    .ThenBy(row => row.item.Id)
+                    .Select(row => new MyNutritionPlanDto.SupplementDto(
+                        row.item.Id,
+                        row.item.OrderNumber,
+                        row.supplement.Name,
+                        !row.supplement.IsActive,
+                        row.supplement.UnitOfMeasure,
+                        row.item.Quantity,
+                        row.item.Notes))
                     .ToList()))
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -143,7 +161,6 @@ internal sealed class MyNutritionPlanQueries : IMyNutritionPlanQueries
                     .Select(item => new MyNutritionPlanDto.ItemDto(
                         item.OrderNumber,
                         item.FoodName,
-                        item.IsUnavailable,
                         item.QuantityInGrams,
                         CalculateContribution(item)))
                     .ToArray(),
@@ -163,6 +180,7 @@ internal sealed class MyNutritionPlanQueries : IMyNutritionPlanQueries
             plan.GoalType,
             CalculateTotals(plan.Meals.SelectMany(meal => meal.Items)),
             meals,
+            plan.PlanSupplements,
             plan.UpdatedAt);
     }
 
@@ -203,7 +221,8 @@ internal sealed class MyNutritionPlanQueries : IMyNutritionPlanQueries
         decimal FatsTargetGrams,
         string? GoalType,
         DateTime UpdatedAt,
-        IReadOnlyList<MealRow> Meals);
+        IReadOnlyList<MealRow> Meals,
+        IReadOnlyList<MyNutritionPlanDto.SupplementDto> PlanSupplements);
 
     /// <summary>Linha de refeição, antes de os totais serem calculados.</summary>
     private sealed record MealRow(
@@ -218,7 +237,6 @@ internal sealed class MyNutritionPlanQueries : IMyNutritionPlanQueries
     private sealed record ItemRow(
         int OrderNumber,
         string FoodName,
-        bool IsUnavailable,
         decimal QuantityInGrams,
         decimal Protein,
         decimal Carbs,

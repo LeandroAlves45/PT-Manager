@@ -241,7 +241,7 @@ public sealed class ClientPortalControllerTests
     }
 
     // Um cliente arquivado com o token ainda válido não lê as atribuições nem as notas do
-    // personal trainer, como já acontecia nas tomas, no treino e no perfil.
+    // personal trainer: a sessão acaba no pedido seguinte, sem explicar porquê.
     [Fact]
     public async Task MySupplements_ForArchivedClient_AreNotReturned()
     {
@@ -257,11 +257,11 @@ public sealed class ClientPortalControllerTests
         var single = await client.GetAsync(
             $"/api/v1/portal/my-supplements/{assignmentId}", Token);
 
-        var listBody = await ReadJsonAsync(list);
-        Assert.True(list.StatusCode == HttpStatusCode.OK, listBody.ToString());
-        Assert.Equal(0, listBody.GetProperty("items").GetArrayLength());
-        Assert.Equal(0, listBody.GetProperty("total_count").GetInt32());
-        Assert.Equal(HttpStatusCode.NotFound, single.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, list.StatusCode);
+        Assert.Equal(
+            "authentication_session_ended",
+            (await ReadJsonAsync(list)).GetProperty("title").GetString());
+        Assert.Equal(HttpStatusCode.Unauthorized, single.StatusCode);
     }
 
     [Fact]

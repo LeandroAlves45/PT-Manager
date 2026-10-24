@@ -6,12 +6,15 @@ using Api.Contracts.Portal;
 using Api.Http;
 using Application.Features.Assessments.CheckIns.GetMyDueCheckIn;
 using Application.Features.Assessments.CheckIns.GetMyNextCheckIn;
+using Application.Features.ClientPortal.GetMyInitialAssessment;
 using Application.Features.ClientPortal.GetMyPortalHome;
+using Application.Features.ClientPortal.SubmitMyInitialAssessment;
 using Application.Features.ClientPortal.GetMyWorkoutDay;
 using Application.Features.ClientPortal.GetMyWorkoutToday;
 using Application.Features.ClientPortal.ListMyMealPlans;
 using Application.Features.ClientPortal.SelectMyMealPlan;
 using Application.Features.ClientPortal.ListMyWorkoutDays;
+using Application.Features.ClientPortal.PlanSupplementIntakes;
 using Application.Features.Assessments.CheckIns.SubmitCheckInResponse;
 using Application.Features.ClientPortal.GetMyNutritionPlan;
 using Application.Features.ClientPortal.GetMyProfile;
@@ -60,6 +63,47 @@ public sealed class ClientPortalController : ApiControllerBase
         RespondAsync(
             handler.HandleAsync(new GetMyPortalHomeQuery(), cancellationToken),
             MyPortalHomeResponse.From);
+
+    /// <summary>
+    /// Diz se o cliente ainda tem de preencher a avaliação inicial. Nunca devolve os dados:
+    /// depois de gravada, só o personal trainer a vê.
+    /// </summary>
+    [HttpGet("my-initial-assessment")]
+    [ProducesResponseType<MyInitialAssessmentStatusResponse>(StatusCodes.Status200OK)]
+    public Task<IActionResult> GetMyInitialAssessmentStatusAsync(
+        [FromServices] GetMyInitialAssessmentStatusHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(
+            handler.HandleAsync(new GetMyInitialAssessmentStatusQuery(), cancellationToken),
+            MyInitialAssessmentStatusResponse.From);
+
+    /// <summary>
+    /// Grava a avaliação inicial preenchida pelo cliente. 409
+    /// <c>initial_assessment_already_exists</c> se já houver uma, dele ou do personal trainer.
+    /// </summary>
+    [HttpPost("my-initial-assessment")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public Task<IActionResult> SubmitMyInitialAssessmentAsync(
+        [FromBody] SubmitMyInitialAssessmentRequest request,
+        [FromServices] SubmitMyInitialAssessmentHandler handler,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return RespondAsync(
+            handler.HandleAsync(
+                new SubmitMyInitialAssessmentCommand(
+                    request.WeightKg,
+                    request.HeightCm,
+                    request.BodyFatPercentage,
+                    request.MedicalConditions,
+                    request.FitnessLevel,
+                    request.ActivityLevel,
+                    request.Goals,
+                    request.Profession,
+                    request.BodyMeasurements?.ToInput(),
+                    request.NutritionIntake?.ToInput()),
+                cancellationToken));
+    }
 
     /// <summary>Devolve o treino de hoje do cliente, com o que já registou.</summary>
     [HttpGet("my-workout/today")]
@@ -363,6 +407,38 @@ public sealed class ClientPortalController : ApiControllerBase
                 cancellationToken),
             MyWorkoutCompletionResponse.From);
     }
+
+    /// <summary>
+    /// Suplementos do plano alimentar escolhido (refeições e fora delas) com a toma de hoje.
+    /// Sem escolha, 404 <c>portal_nutrition_plan_not_selected</c>: antes da primeira escolha
+    /// não há tomas do plano.
+    /// </summary>
+    [HttpGet("my-plan-supplements/today")]
+    [ProducesResponseType<MyPlanSupplementsTodayResponse>(StatusCodes.Status200OK)]
+    public Task<IActionResult> GetMyPlanSupplementsTodayAsync(
+        [FromServices] GetMyPlanSupplementsTodayHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(handler.HandleAsync(cancellationToken), MyPlanSupplementsTodayResponse.From);
+
+    /// <summary>Marca a toma de hoje de um suplemento do plano escolhido; repetir devolve a mesma.</summary>
+    [HttpPut("my-plan-supplements/{itemId:guid}/intakes/today")]
+    [ProducesResponseType<MyPlanSupplementIntakeResponse>(StatusCodes.Status200OK)]
+    public Task<IActionResult> MarkMyPlanSupplementIntakeAsync(
+        Guid itemId,
+        [FromServices] MarkMyPlanSupplementIntakeHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(
+            handler.HandleAsync(new MyPlanSupplementIntakeCommand(itemId), cancellationToken),
+            MyPlanSupplementIntakeResponse.From);
+
+    /// <summary>Desmarca a toma de hoje de um suplemento do plano escolhido.</summary>
+    [HttpDelete("my-plan-supplements/{itemId:guid}/intakes/today")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public Task<IActionResult> UnmarkMyPlanSupplementIntakeAsync(
+        Guid itemId,
+        [FromServices] UnmarkMyPlanSupplementIntakeHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(handler.HandleAsync(new MyPlanSupplementIntakeCommand(itemId), cancellationToken));
 
     /// <summary>Devolve os suplementos ativos com o estado da toma de hoje.</summary>
     [HttpGet("my-supplements/intakes/today")]

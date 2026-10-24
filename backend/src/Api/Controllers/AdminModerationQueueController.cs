@@ -62,6 +62,23 @@ public sealed class AdminModerationQueueController : ApiControllerBase
             handler,
             cancellationToken);
 
+    /// <summary>Lista suplementos privados de todos os personal trainers.</summary>
+    [HttpGet("supplements")]
+    [ProducesResponseType<PagedResponse<ModerationQueueItemResponse>>(StatusCodes.Status200OK)]
+    public Task<IActionResult> ListSupplementsAsync(
+        [FromQuery(Name = "status")] ModerationStatusFilter status,
+        [FromQuery(Name = "search")] string? search,
+        [FromQuery] PageParameters pageParameters,
+        [FromServices] ListModerationQueueHandler handler,
+        CancellationToken cancellationToken) =>
+        ListAsync(
+            ModerationContentKind.Supplement,
+            status,
+            search,
+            pageParameters,
+            handler,
+            cancellationToken);
+
     private Task<IActionResult> ListAsync(
         ModerationContentKind kind,
         ModerationStatusFilter status,

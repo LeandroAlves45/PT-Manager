@@ -4,6 +4,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest';
 
 import { clearSession } from '@/shared/api/session';
 import { setViewport } from '@/test/browser-fakes';
+import { resetPendingAuthNotice } from '@/shared/lib/auth-notice';
 import { server } from '@/test/msw/server';
 
 // O primeiro render de uma árvore com o AppShell completo passa de 1 s em máquinas lentas;
@@ -35,6 +36,7 @@ afterEach(() => {
   document.body.removeAttribute('style');
   server.resetHandlers();
   clearSession();
+  resetPendingAuthNotice();
   // Limpeza entre testes (tema guardado pelo ThemeProvider), não dados de sessão.
   // eslint-disable-next-line no-restricted-globals
   sessionStorage.clear();

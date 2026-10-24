@@ -103,6 +103,40 @@ export function useBillingExemptionMutation() {
   });
 }
 
+/** Motivo e nota de um bloqueio de conta; a nota é `null` quando vazia. */
+export interface AccessBlockInput {
+  reasonCode: string;
+  note: string | null;
+}
+
+/**
+ * Bloqueia a conta de um treinador (`block` com motivo e nota) ou levanta o bloqueio
+ * (`block: null`); devolve a ficha atualizada e invalida listas e visão geral.
+ */
+export function useAccessBlockMutation() {
+  const invalidate = useInvalidateTrainers();
+  return useMutation({
+    mutationFn: async ({
+      trainerId,
+      block,
+    }: {
+      trainerId: string;
+      block: AccessBlockInput | null;
+    }): Promise<AdminTrainer> => {
+      const path = { params: { path: { trainerId } } };
+      return block !== null
+        ? unwrap(
+            await apiClient.POST('/api/v1/admin/trainers/{trainerId}/access-block', {
+              ...path,
+              body: { reason_code: block.reasonCode, note: block.note },
+            })
+          )
+        : unwrap(await apiClient.DELETE('/api/v1/admin/trainers/{trainerId}/access-block', path));
+    },
+    onSuccess: invalidate,
+  });
+}
+
 /** Envia (ou reenvia, revogando o link anterior) um convite de treinador. */
 export function useSendTrainerInvitationMutation() {
   const invalidate = useInvalidateTrainers();

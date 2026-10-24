@@ -16,6 +16,7 @@ public sealed class CheckInStoreResult
         AlreadyInRequestedState,
         ClientNotFound,
         ClientInactive,
+        InitialAssessmentRequired,
         CheckInNotFound,
         DateConflict,
         DateNotAllowed,

@@ -13,7 +13,8 @@ public sealed record AdminTrainerResponse(
     DateTime? BillingExemptSince,
     bool HasPaidSubscription,
     int ActiveClientCount,
-    DateTime CreatedAt)
+    DateTime CreatedAt,
+    TrainerAccessBlockResponse? AccessBlock)
 {
     public static AdminTrainerResponse From(AdminTrainerDto dto)
     {
@@ -28,9 +29,30 @@ public sealed record AdminTrainerResponse(
             dto.BillingExemptSince,
             dto.HasPaidSubscription,
             dto.ActiveClientCount,
-            dto.CreatedAt);
+            dto.CreatedAt,
+            dto.AccessBlock is null ? null : TrainerAccessBlockResponse.From(dto.AccessBlock));
     }
 }
+
+/// <summary>
+/// Bloqueio ativo da conta: o motivo e a nota que o personal trainer vê e até quando os
+/// clientes continuam a entrar no portal.
+/// </summary>
+public sealed record TrainerAccessBlockResponse(
+    string Reason,
+    string? Note,
+    DateTime BlockedAt,
+    DateTime ClientAccessEndsAt)
+{
+    public static TrainerAccessBlockResponse From(TrainerAccessBlockDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+        return new TrainerAccessBlockResponse(dto.Reason, dto.Note, dto.BlockedAt, dto.ClientAccessEndsAt);
+    }
+}
+
+/// <summary>Um dos quatro motivos e uma nota livre opcional para bloquear a conta.</summary>
+public sealed record BlockTrainerRequest(string ReasonCode, string? Note = null);
 
 /// <summary>Convite isento pendente; pode já ter expirado.</summary>
 public sealed record PendingTrainerInvitationResponse(

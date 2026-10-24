@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  foodDisplayName,
   formatGrams,
   formatKcal,
   goalLabel,
@@ -105,18 +104,6 @@ describe('planPeriodLabel', () => {
   it('writes an open plan from its start and a closed one as a range', () => {
     expect(planPeriodLabel('2026-10-05', null)).toBe('Desde 05/10/2026');
     expect(planPeriodLabel('2026-10-05', '2026-11-01')).toBe('05/10/2026 a 01/11/2026');
-  });
-});
-
-describe('foodDisplayName', () => {
-  it('keeps the name of an available food', () => {
-    expect(foodDisplayName({ food_name: 'Aveia', is_unavailable: false })).toBe('Aveia');
-  });
-
-  it('translates the masked name of a blocked food', () => {
-    expect(foodDisplayName({ food_name: 'Unavailable food', is_unavailable: true })).toBe(
-      'Alimento indisponível'
-    );
   });
 });
 

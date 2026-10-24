@@ -172,7 +172,9 @@ public sealed class SecurityLoggingTests : IAsyncLifetime
     [Fact]
     public async Task AdministrativeModeration_LogsContextAndRejectedOutcome()
     {
-        var bearerToken = TestJwtFactory.IssueSuperuser(Guid.NewGuid());
+        var superuserId = await TrainingTestData.SeedSuperuserAsync(
+            _factory, TestContext.Current.CancellationToken);
+        var bearerToken = TestJwtFactory.IssueSuperuser(superuserId);
         var client = _factory.CreateOriginClient().WithBearer(bearerToken);
         _logs.Clear();
 
@@ -181,7 +183,7 @@ public sealed class SecurityLoggingTests : IAsyncLifetime
             new { reason_code = "malicious_content" },
             TestContext.Current.CancellationToken);
 
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Single(_logs.Snapshot(), log =>
             log.EventId == SecurityLogEvents.AdministrativeContext);
         var moderation = Assert.Single(_logs.Snapshot(), log =>

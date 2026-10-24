@@ -22,7 +22,7 @@ export {
   consumePendingAuthNotice,
   resetPendingAuthNotice,
   setPendingAuthNotice,
-} from '@/features/auth/lib/auth-notice';
+} from '@/shared/lib/auth-notice';
 export { applyProblemToForm } from '@/features/auth/lib/form-errors';
 export { endLocalSession } from '@/features/auth/lib/local-session';
 export {

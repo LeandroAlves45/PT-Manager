@@ -67,7 +67,6 @@ public sealed record MyDayExerciseResponse(
     Guid ExerciseId,
     int OrderNumber,
     string ExerciseName,
-    bool IsUnavailable,
     bool HasReadyVideo,
     Guid? ExerciseGroupId,
     int? GroupPosition,
@@ -84,7 +83,6 @@ public sealed record MyDayExerciseResponse(
             exercise.ExerciseId,
             exercise.OrderNumber,
             exercise.ExerciseName,
-            exercise.IsUnavailable,
             exercise.HasReadyVideo,
             exercise.ExerciseGroupId,
             exercise.GroupPosition,
@@ -167,11 +165,10 @@ public sealed record MyNutritionTotalsResponse(
     }
 }
 
-/// <summary>Alimento prescrito, com marcador de indisponibilidade.</summary>
+/// <summary>Alimento prescrito; o bloqueado pela moderação não aparece.</summary>
 public sealed record MyMealItemResponse(
     int OrderNumber,
     string FoodName,
-    bool IsUnavailable,
     decimal QuantityInGrams,
     MyNutritionTotalsResponse Contribution)
 {
@@ -183,14 +180,17 @@ public sealed record MyMealItemResponse(
         return new(
             item.OrderNumber,
             item.FoodName,
-            item.IsUnavailable,
             item.QuantityInGrams,
             MyNutritionTotalsResponse.From(item.Contribution));
     }
 }
 
-/// <summary>Suplemento associado a uma refeição.</summary>
+/// <summary>
+/// Suplemento de uma refeição ou do plano fora das refeições. <c>id</c> é o da prescrição,
+/// o mesmo das tomas de hoje.
+/// </summary>
 public sealed record MyMealSupplementResponse(
+    Guid Id,
     int OrderNumber,
     string SupplementName,
     bool IsUnavailable,
@@ -204,6 +204,7 @@ public sealed record MyMealSupplementResponse(
         ArgumentNullException.ThrowIfNull(supplement);
 
         return new(
+            supplement.Id,
             supplement.OrderNumber,
             supplement.SupplementName,
             supplement.IsUnavailable,
@@ -252,6 +253,7 @@ public sealed record MyNutritionPlanResponse(
     string? GoalType,
     MyNutritionTotalsResponse ActualTotals,
     IReadOnlyList<MyMealResponse> Meals,
+    IReadOnlyList<MyMealSupplementResponse> PlanSupplements,
     DateTime UpdatedAt)
 {
     /// <summary>Projeta o plano do DTO de portal.</summary>
@@ -272,6 +274,7 @@ public sealed record MyNutritionPlanResponse(
             plan.GoalType,
             MyNutritionTotalsResponse.From(plan.ActualTotals),
             plan.Meals.Select(MyMealResponse.From).ToArray(),
+            plan.PlanSupplements.Select(MyMealSupplementResponse.From).ToArray(),
             plan.UpdatedAt);
     }
 }

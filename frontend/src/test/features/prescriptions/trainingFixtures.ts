@@ -7,6 +7,7 @@ export const CLIENT_ID = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
 export const DAY_ID = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
 export const DAY_EXERCISE_ID = 'dddddddd-dddd-dddd-dddd-dddddddddddd';
 export const EXERCISE_ID = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee';
+export const OTHER_EXERCISE_ID = '12345678-1234-1234-1234-123456789abc';
 export const SET_ID = 'ffffffff-ffff-ffff-ffff-ffffffffffff';
 export const LOG_ID = '99999999-9999-9999-9999-999999999999';
 
@@ -58,6 +59,7 @@ export function details(overrides: Record<string, unknown> = {}) {
             exercise_group_id: null,
             group_position: null,
             notes: null,
+            platform_enforcement: null,
             sets: [
               {
                 id: SET_ID,
@@ -76,6 +78,29 @@ export function details(overrides: Record<string, unknown> = {}) {
     ],
     ...overrides,
   };
+}
+
+/** Bloqueio da moderação com motivo e nota, como a API o devolve num exercício do plano. */
+export const BLOCKED_ENFORCEMENT = {
+  reason: 'dangerous_information',
+  note: 'Técnica sem segurança',
+};
+
+/** Detalhe de um plano cujo único exercício (Agachamento) foi bloqueado pela moderação. */
+export function detailsWithBlockedExercise() {
+  const base = details();
+  const [day] = base.days;
+  return details({
+    days: [
+      {
+        ...day!,
+        exercises: day!.exercises.map((exercise) => ({
+          ...exercise,
+          platform_enforcement: BLOCKED_ENFORCEMENT,
+        })),
+      },
+    ],
+  });
 }
 
 /** Ficha mínima do cliente: só `id` e `name` interessam às páginas de treino. */

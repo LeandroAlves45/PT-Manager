@@ -1,3 +1,4 @@
+using Application.Features.Assessments;
 using Application.Features.Clients;
 using Application.Features.Supplements.Abstractions;
 using Application.Features.Supplements.Dtos;
@@ -24,6 +25,8 @@ internal static class ClientSupplementAssignmentStoreResultMapper
                 Result<ClientSupplementAssignmentDto>.Failure(ClientErrors.ClientNotFound),
             ClientSupplementAssignmentStoreResult.Status.ClientInactive =>
                 Result<ClientSupplementAssignmentDto>.Failure(SupplementErrors.ClientInactive),
+            ClientSupplementAssignmentStoreResult.Status.InitialAssessmentRequired =>
+                Result<ClientSupplementAssignmentDto>.Failure(AssessmentErrors.InitialAssessmentRequired),
             ClientSupplementAssignmentStoreResult.Status.SupplementNotFound =>
                 Result<ClientSupplementAssignmentDto>.Failure(SupplementErrors.SupplementNotFound),
             ClientSupplementAssignmentStoreResult.Status.SupplementInactive =>

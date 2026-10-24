@@ -57,11 +57,16 @@ public sealed class AddExerciseVideosMigrationTests : IAsyncLifetime
         var migrator = context.GetService<IMigrator>();
         await migrator.MigrateAsync(PostgresContainerFixture.AddExerciseVideosMigration, Token);
 
-        var exercise = IntegrationTestData.Exercise(null, Now);
-        var video = new ExerciseVideo(exercise.Id, null, "video/mp4", 1024, Guid.NewGuid(), Now.AddMinutes(15), Now);
+        // O exercício entra por SQL, só com as colunas que existiam nesta migration: o modelo EF
+        // atual tem colunas mais recentes e a escrita falharia num schema antigo.
+        var exerciseId = Guid.NewGuid();
+        await context.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO exercises (id, name, is_active, platform_enforcement_status, created_at, updated_at)
+            VALUES ({exerciseId}, 'Rollback squat', true, 'allowed', {Now}, {Now})
+            """, Token);
+        var video = new ExerciseVideo(exerciseId, null, "video/mp4", 1024, Guid.NewGuid(), Now.AddMinutes(15), Now);
         video.MarkUploaded(1024, "etag", Now);
         video.MarkReady(1000, 1280, 720, "avc1", null, Now);
-        context.Exercises.Add(exercise);
         context.ExerciseVideos.Add(video);
         await context.SaveChangesAsync(Token);
 

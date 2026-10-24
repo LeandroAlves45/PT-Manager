@@ -2,12 +2,13 @@ using Application.Features.Dashboard;
 using Application.Features.Dashboard.Abstractions;
 using Application.Features.Dashboard.Dtos;
 using Infrastructure.Data;
+using Infrastructure.Persistence.Assessments;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Dashboard;
 
 /// <summary>
-/// Lê os blocos do dashboard com um número fixo de comandos (14), independente do número de
+/// Lê os blocos do dashboard com um número fixo de comandos (16), independente do número de
 /// clientes: cada bloco faz uma agregação e, quando mostra itens, um segundo SELECT com
 /// <c>Take(5)</c>. Todos os blocos são limitados a clientes ativos do tenant.
 /// </summary>
@@ -64,6 +65,16 @@ internal sealed class TrainerDashboardQueries : ITrainerDashboardQueries
                     .First(),
                 checkIn.CheckInDate,
                 checkIn.RespondedAt!.Value))
+            .ToListAsync(cancellationToken);
+
+        var pendingInitialAssessments = InitialAssessmentQueries.PendingReview(_dbContext, trainerId);
+        var pendingInitialAssessmentCount = await pendingInitialAssessments.CountAsync(cancellationToken);
+        var pendingInitialAssessmentItems = await InitialAssessmentQueries.ToPendingReviewItems(
+                _dbContext,
+                pendingInitialAssessments
+                    .OrderBy(assessment => assessment.CreatedAt)
+                    .ThenBy(assessment => assessment.Id)
+                    .Take(DashboardThresholds.TopCount))
             .ToListAsync(cancellationToken);
 
         var packsEnding = _dbContext.ClientSessionPacks
@@ -242,6 +253,9 @@ internal sealed class TrainerDashboardQueries : ITrainerDashboardQueries
                 pendingCounts?.Total ?? 0,
                 pendingCounts?.Overdue ?? 0,
                 pendingItems),
+            new TrainerDashboardDto.InitialAssessmentsPendingReviewDto(
+                pendingInitialAssessmentCount,
+                pendingInitialAssessmentItems),
             new TrainerDashboardDto.PacksEndingDto(packsEndingCount, packItems),
             new TrainerDashboardDto.PlansExpiringDto(
                 trainingPlanCount + mealPlanCount,

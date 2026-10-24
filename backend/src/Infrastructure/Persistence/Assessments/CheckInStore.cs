@@ -169,6 +169,10 @@ internal sealed class CheckInStore : ICheckInStore
             return CheckInStoreResult.For(CheckInStoreResult.Status.ClientNotFound);
         if (!client.IsActive)
             return CheckInStoreResult.For(CheckInStoreResult.Status.ClientInactive);
+        // A avaliação periódica só existe depois da avaliação inicial (RN-009).
+        if (!await InitialAssessmentRequirement.IsMetAsync(
+                _dbContext, trainerId, clientId, cancellationToken))
+            return CheckInStoreResult.For(CheckInStoreResult.Status.InitialAssessmentRequired);
 
         var exists = await _dbContext.CheckIns
             .AnyAsync(checkIn => checkIn.OwnerTrainerId == trainerId

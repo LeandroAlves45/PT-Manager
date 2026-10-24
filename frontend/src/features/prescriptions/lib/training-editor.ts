@@ -1,6 +1,7 @@
 import { useOutletContext } from 'react-router';
 
 import type { ClientChoice } from '@/features/clients';
+import type { BlockedItems } from '@/features/prescriptions/lib/blocked-items';
 import type { DetailsErrors, TrainingStructure } from '@/features/prescriptions/lib/training-draft';
 
 /** Rascunho do plano: o que os dois passos editam e uma só gravação envia. */
@@ -30,6 +31,8 @@ export interface TrainingEditorContext {
   changeStructure: (change: (structure: TrainingStructure) => void) => void;
   exerciseNames: Readonly<Record<string, string>>;
   rememberExercise: (id: string, label: string) => void;
+  /** Exercícios do plano gravado bloqueados pela moderação, por ID da linha. */
+  blocked: BlockedItems;
   /** Plano arquivado: só consulta. */
   readOnly: boolean;
   /** O plano já tem histórico: estrutura e datas são só de consulta. */

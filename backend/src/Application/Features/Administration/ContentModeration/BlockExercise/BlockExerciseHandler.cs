@@ -44,6 +44,7 @@ public sealed class BlockExerciseHandler
             actor.Value.UserId,
             command.ExerciseId,
             PlatformEnforcementReason.FromString(command.ReasonCode),
+            command.Note,
             _clock.UtcNow,
             cancellationToken);
 

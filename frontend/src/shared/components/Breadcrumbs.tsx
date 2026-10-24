@@ -31,6 +31,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   structure: 'Estrutura',
   meals: 'Refeições',
   'initial-assessment': 'Avaliação inicial',
+  'initial-assessments': 'Avaliações iniciais por rever',
   'sell-pack': 'Vender pack',
   'pack-types': 'Tipos de pack',
   reschedule: 'Reagendar',

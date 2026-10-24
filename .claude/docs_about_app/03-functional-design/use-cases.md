@@ -100,7 +100,7 @@ Copia o bloco vazio para um caso novo e usa o próximo `UC-`.
 - Alternativa: o treinador cria a avaliação antes. O cliente não a preenche.
 - Erro: uma segunda avaliação inicial do mesmo cliente é recusada.
 - Pós-condições: a avaliação fica do treinador, por rever. Os planos já podem ser criados.
-- Estado: o registo pelo trainer está implementado. O preenchimento pelo client entra no bloco depois da 6GB e antes do Sprint 7.
+- Estado: o registo pelo trainer está implementado. O preenchimento pelo client entrou no bloco pré-Sprint 7 (2026-10-24).
 
 ## UC-009 — **por preencher**
 

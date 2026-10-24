@@ -40,7 +40,6 @@ public sealed record MyWorkoutTodayDto(
         Guid ExerciseId,
         int OrderNumber,
         string ExerciseName,
-        bool IsUnavailable,
         bool HasReadyVideo,
         Guid? ExerciseGroupId,
         int? GroupPosition,

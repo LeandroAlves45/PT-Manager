@@ -11,7 +11,6 @@ namespace Infrastructure.Notifications;
 /// <summary>Entrega notificações de negócio através do Resend.</summary>
 internal sealed class ResendNotificationDeliveryGateway : INotificationDeliveryGateway
 {
-    private const string SessionReminderTemplate = "session_reminder";
     private const int MaximumTemplateDataLength = 8 * 1024;
 
     private static readonly JsonSerializerOptions TemplateDataOptions = new()
@@ -43,7 +42,7 @@ internal sealed class ResendNotificationDeliveryGateway : INotificationDeliveryG
     {
         ArgumentNullException.ThrowIfNull(message);
 
-        if (!string.Equals(message.TemplateKey, SessionReminderTemplate, StringComparison.Ordinal))
+        if (!SessionReminderTemplates.IsSessionReminder(message.TemplateKey))
             return NotificationDeliveryOutcome.PermanentFailure(
                 "notification_template_not_supported");
 
@@ -55,7 +54,9 @@ internal sealed class ResendNotificationDeliveryGateway : INotificationDeliveryG
         RenderedNotificationEmail rendered;
         try
         {
-            rendered = SessionReminderTemplateRenderer.Render(data);
+            rendered = SessionReminderTemplateRenderer.Render(
+                data,
+                forTrainer: message.TemplateKey == SessionReminderTemplates.Trainer);
         }
         catch (ArgumentException)
         {

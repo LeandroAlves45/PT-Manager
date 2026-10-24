@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Link,
   Navigate,
@@ -17,6 +17,10 @@ import { useFixedClientQuery, useTrainingPlanQuery } from '@/features/prescripti
 import { prescriptionKeys } from '@/features/prescriptions/api/keys';
 import { StepIndicator } from '@/features/prescriptions/components/StepIndicator';
 import { TrainingStructureEditor } from '@/features/prescriptions/components/TrainingStructureEditor';
+import {
+  blockedExercisesFromDetails,
+  NO_BLOCKED_ITEMS,
+} from '@/features/prescriptions/lib/blocked-items';
 import {
   EMPTY_STRUCTURE,
   hasEmptyExercise,
@@ -202,6 +206,11 @@ function TrainingPlanEditorShell({
     setExerciseNames((previous) => ({ ...previous, ...namesFromPlan(plan) }));
   }, [plan]);
 
+  const blocked = useMemo(
+    () => (plan === null ? NO_BLOCKED_ITEMS : blockedExercisesFromDetails(plan)),
+    [plan]
+  );
+
   const hasHistory = plan?.has_history === true || historyConflict;
   const readOnly = plan?.is_archived === true;
   const canChangeStructure = !readOnly && !hasHistory;
@@ -299,6 +308,7 @@ function TrainingPlanEditorShell({
     },
     exerciseNames,
     rememberExercise: (id, label) => setExerciseNames((previous) => ({ ...previous, [id]: label })),
+    blocked,
     readOnly,
     hasHistory,
     canChangeStructure,
@@ -531,6 +541,7 @@ export function TrainingPlanStructureStep() {
         structure={editor.draft.structure}
         canChange={editor.canChangeStructure}
         exerciseNames={editor.exerciseNames}
+        blocked={editor.blocked}
         onExerciseChosen={editor.rememberExercise}
         onChange={editor.changeStructure}
         showErrors={attempted}

@@ -828,6 +828,20 @@ regras. O Sprint 8 testa-as. O Sprint 9
 só liga o horário do email. O detalhe está em `.claude/docs_about_app/`, regras `RN-005`,
 `RN-008`, `RN-013`, `RN-016`, `RN-018` e `RN-020`.
 
+**Fecho do bloco (2026-10-24, branch `feat/pre-sprint7-block`).** As quatro partes estão feitas,
+mais o resto da `RN-014` (suplementos do plano fora das refeições e tomas por plano). Gates
+`QGPRE7-*` em `backlogs/QualityGates.md`. Relatório:
+`docs/blueprints/frontend-files/sprint_6/sprint_6G/sprint_6GB/08_relatorio_fecho_bloco_pre_sprint7.md`.
+- Backend 3388 testes + 1 skip; frontend 1078/1078 em 96 ficheiros; mutações backend 8/8 e
+  frontend 5/5; app real validada no Chrome (bloqueio e levantamento, emails, véspera, avaliação
+  inicial pelo cliente, suplemento do plano, arquivo com corte de sessão).
+- **Pontos em aberto:**
+  - um exercício bloqueado num plano de treino com séries registadas só se substitui num plano novo
+    (a estrutura desse plano é só de leitura; decisão de 2026-10-24);
+  - o endpoint dev da véspera é um POST anónimo em loopback (só Development);
+  - a deduplicação da véspera regista o `23505` da chave única como erro do EF antes de o apanhar;
+  - a cobrança Stripe durante o bloqueio fica para o Sprint 10C (U93).
+
 ### Fora do Sprint 6 (decisão de 2026-09-16)
 
 | Item do mockup | Decisão |

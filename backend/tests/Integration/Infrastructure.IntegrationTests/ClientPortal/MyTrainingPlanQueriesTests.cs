@@ -72,17 +72,15 @@ public sealed class MyTrainingPlanQueriesTests : ReadQueriesIntegrationTestConte
         var myPlan = await new MyTrainingPlanQueries(readContext)
             .GetActiveAsync(seed.TrainerId, seed.ClientUserId, token);
 
+        // O exercício bloqueado sai do plano do cliente; os outros mantêm o id do catálogo.
         var exercises = Assert.Single(myPlan!.Days).Exercises;
-        Assert.Equal(catalogIds, exercises.Select(exercise => exercise.ExerciseId));
+        Assert.Equal(
+            catalogIds.Where(id => id != blockedWithVideo),
+            exercises.Select(exercise => exercise.ExerciseId));
         Assert.All(exercises, exercise => Assert.NotEqual(exercise.ExerciseId, exercise.Id));
         Assert.Equal(
-            [true, true, false, false, false, false],
+            [true, true, false, false, false],
             exercises.Select(exercise => exercise.HasReadyVideo));
-
-        // O exercício bloqueado continua com o id do catálogo (U11), mas mascarado.
-        var blocked = exercises[4];
-        Assert.True(blocked.IsUnavailable);
-        Assert.Equal(blockedWithVideo, blocked.ExerciseId);
     }
 
     private async Task<Guid> SeedGlobalExerciseAsync(CancellationToken token)

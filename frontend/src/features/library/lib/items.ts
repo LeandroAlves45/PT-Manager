@@ -4,8 +4,12 @@ export interface LibraryItem {
   readonly name: string;
   readonly scope: string;
   readonly is_active: boolean;
-  // Ausente nos suplementos (a moderação só cobre exercícios e alimentos)
-  readonly platform_enforcement_status?: string;
+  /** Estado da moderação da plataforma; `blocked` é um item bloqueado. */
+  readonly platform_enforcement_status: string;
+  /** Código do motivo do bloqueio (`null` enquanto não está bloqueado). */
+  readonly platform_enforcement_reason: string | null;
+  /** Nota do superuser sobre o bloqueio, quando existe. */
+  readonly platform_enforcement_note: string | null;
 }
 
 /**

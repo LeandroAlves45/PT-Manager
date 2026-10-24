@@ -23,6 +23,11 @@ public sealed class AssessmentValidatorsTests
             { ValidInitialCreate() with { FitnessLevel = string.Empty }, "fitness_level_invalid" },
             { ValidInitialCreate() with { ActivityLevel = "unknown" }, "activity_level_invalid" },
             { ValidInitialCreate() with { Goals = string.Empty }, "goals_required" },
+            { ValidInitialCreate() with { Goals = new string('a', 2001) }, "goals_too_long" },
+            {
+                ValidInitialCreate() with { MedicalConditions = new string('a', 2001) },
+                "medical_conditions_too_long"
+            },
             { ValidInitialCreate() with { Profession = new string('a', 256) }, "profession_too_long" }
         };
 

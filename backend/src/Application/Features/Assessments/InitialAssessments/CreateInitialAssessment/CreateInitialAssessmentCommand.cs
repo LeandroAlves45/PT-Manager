@@ -13,4 +13,4 @@ public sealed record CreateInitialAssessmentCommand(
     string? Profession,
     AssessmentValueInput.BodyMeasurements? BodyMeasurements,
     AssessmentValueInput.NutritionIntake? NutritionIntake
-);
+) : IInitialAssessmentValues;

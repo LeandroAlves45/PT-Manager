@@ -16,7 +16,8 @@ public sealed class AdminOverviewControllerTests : ApiReadEndpointsTestContext
         await PortalTestData.SeedActiveClientAsync(_fixture.Factory, token);
 
         var client = _fixture.Factory.CreateOriginClient()
-            .WithBearer(TestJwtFactory.IssueSuperuser(Guid.NewGuid()));
+            .WithBearer(TestJwtFactory.IssueSuperuser(
+                await TrainingTestData.SeedSuperuserAsync(_fixture.Factory, token)));
 
         var response = await client.GetAsync("/api/v1/admin/overview", token);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

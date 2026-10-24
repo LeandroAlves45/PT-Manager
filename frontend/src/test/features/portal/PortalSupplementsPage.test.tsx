@@ -315,7 +315,9 @@ describe('PortalSupplementsPage', () => {
     await openSupplements();
 
     expect(screen.getByRole('heading', { name: 'Sem suplementos' })).toBeInTheDocument();
-    expect(screen.getByText('Não tens suplementos atribuídos.')).toBeInTheDocument();
+    expect(
+      screen.getByText('O teu personal trainer não te atribuiu suplementos diretamente.')
+    ).toBeInTheDocument();
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     expect(screen.queryByText(/tomadas hoje/)).not.toBeInTheDocument();
   });

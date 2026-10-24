@@ -12,6 +12,7 @@ public sealed record ModerationQueueItemDto(
     bool IsActive,
     string PlatformEnforcementStatus,
     string? PlatformEnforcementReason,
+    string? PlatformEnforcementNote,
     DateTime? PlatformEnforcedAt,
     DateTime CreatedAt,
     DateTime UpdatedAt);

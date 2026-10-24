@@ -417,3 +417,27 @@ com um corpo real.
 - `/auth/csrf` 400 no browser real não é CORS: é `authentication_refresh_token_required` (sem cookie
   de refresh, ou seja, sem sessão nesse perfil do Chrome). O login tem de ser feito no separador do
   grupo do Claude in Chrome; o browser integrado continua a recusar o certificado do Vite.
+
+## 2026-10-24 — bloco pré-Sprint 7: corte na resposta repetida, 200 vs 204, página vazia
+
+- A repetição depois do refresh (`fetch(retry)` em `shared/api/client.ts`) sai **fora** do middleware:
+  o `onResponse` não a vê. Um cliente fora do prazo podia renovar (o refresh não verifica o acesso) e
+  receber o 401 `client_access_period_ended` na repetição sem a sessão ser cortada. **Regra:** toda a
+  verificação que o `onResponse` faz sobre uma resposta (`cutIfAccessEnded`) corre também sobre a
+  resposta da repetição; teste com 401 vazio → refresh 200 → repetição com o código de corte.
+- Rotas de bloqueio com respostas diferentes: o bloqueio de conteúdo (`content-moderation/*/block`,
+  `unblock`) responde **204** sem corpo; o bloqueio de treinador (`admin/trainers/{id}/access-block`,
+  POST e DELETE) responde **200 com a ficha** (`AdminTrainerResponse`). **Regra:** confirmar o status
+  no `schema.d.ts` antes de escrever a mutation e o handler MSW; o `unwrap` aceita os dois.
+- Lista paginada que fica vazia depois de uma ação noutra página (rever a última avaliação da página
+  2): o refetch traz `items: []` com `total_count > 0`. **Regra** (já valia para a moderação, agora
+  também para as avaliações por rever): se `page > última página`, repor a última página e mostrar o
+  carregamento, nunca o `EmptyState`; `Math.max(1, page)` contra `?page=0`.
+- Texto livre do cliente com limite no backend: o zod do portal tem de ter o mesmo máximo (2000 em
+  objetivos e condições médicas) e o mapa `SERVER_MESSAGES`/`SERVER_FIELDS` o código novo.
+- Efeito de um filho para avisar o pai do fim de um envio (`useEffect(() => onFinished(outcome))`)
+  falha quando a mutation invalida uma query de que o **pai** depende para decidir se mostra o filho:
+  o refetch chega antes de o `mutateAsync` resolver, o pai troca o filho pela mensagem e o efeito
+  nunca corre (o avaliação inicial ficava em «já foi entregue» em vez de voltar ao Início). No jsdom
+  o teste passava nas duas versões. **Regra:** chamar o callback do pai no mesmo sítio onde se muda o
+  estado local (os dois updates juntam-se no mesmo render); provar no browser real.

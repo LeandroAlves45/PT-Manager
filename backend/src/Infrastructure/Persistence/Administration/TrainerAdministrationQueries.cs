@@ -1,6 +1,7 @@
 using Application.Features.Administration.Trainers.Abstractions;
 using Application.Features.Administration.Trainers.Dtos;
 using Application.Pagination;
+using Domain.Entities.Administration;
 using Domain.Entities.Billing;
 using Domain.Entities.Identity;
 using Domain.ValueObjects;
@@ -127,7 +128,15 @@ internal sealed class TrainerAdministrationQueries : ITrainerAdministrationQueri
                 row.Subscription.Status != SubscriptionStatus.Inactive,
             _dbContext.Clients.IgnoreQueryFilters().Count(client =>
                 client.OwnerTrainerId == row.User.Id && client.IsActive && !client.IsDeleted),
-            row.User.CreatedAt));
+            row.User.CreatedAt,
+            _dbContext.TrainerAccessBlocks
+                .Where(block => block.TrainerId == row.User.Id)
+                .Select(block => new TrainerAccessBlockDto(
+                    block.Reason.Value,
+                    block.Note,
+                    block.BlockedAt,
+                    block.BlockedAt.AddDays(TrainerAccessBlock.ClientGraceDays)))
+                .FirstOrDefault()));
 
     private IQueryable<TrainerInvitation> PendingInvitations(string? normalizedEmail) =>
         _dbContext.TrainerInvitations

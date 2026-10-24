@@ -25,6 +25,8 @@ internal static class CheckInStoreResultMapper
 
             CheckInStoreResult.Status.ClientInactive =>
                 Result<CheckInDto>.Failure(AssessmentErrors.ClientInactive),
+            CheckInStoreResult.Status.InitialAssessmentRequired =>
+                Result<CheckInDto>.Failure(AssessmentErrors.InitialAssessmentRequired),
 
             CheckInStoreResult.Status.CheckInNotFound =>
                 Result<CheckInDto>.Failure(AssessmentErrors.CheckInNotFound),

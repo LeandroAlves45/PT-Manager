@@ -13,6 +13,7 @@ public sealed record ModerationQueueItemResponse(
     bool IsActive,
     string PlatformEnforcementStatus,
     string? PlatformEnforcementReason,
+    string? PlatformEnforcementNote,
     DateTime? PlatformEnforcedAt,
     DateTime CreatedAt,
     DateTime UpdatedAt)
@@ -28,6 +29,7 @@ public sealed record ModerationQueueItemResponse(
             dto.IsActive,
             dto.PlatformEnforcementStatus,
             dto.PlatformEnforcementReason,
+            dto.PlatformEnforcementNote,
             dto.PlatformEnforcedAt,
             dto.CreatedAt,
             dto.UpdatedAt);

@@ -3,10 +3,12 @@ import {
   Apple,
   Ban,
   Banknote,
+  LockKeyhole,
   Dumbbell,
   Pill,
   ShieldCheck,
   ShieldOff,
+  Syringe,
   Users,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -33,9 +35,9 @@ export function AdminOverviewPage() {
         <PageHeader title="Visão geral" />
         <div
           aria-label="A carregar visão geral..."
-          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
         >
-          {Array.from({ length: 9 }, (_, index) => (
+          {Array.from({ length: 11 }, (_, index) => (
             <Skeleton key={index} className="h-28" />
           ))}
         </div>
@@ -80,6 +82,13 @@ export function AdminOverviewPage() {
       href: '/admin/moderation?kind=exercises',
       icon: Activity,
     },
+    {
+      label: 'Suplementos privados',
+      count: data.private_supplements.total_count,
+      detail: formatCount(data.private_supplements.blocked_count, 'bloqueado', 'bloqueados'),
+      href: '/admin/moderation?kind=supplements',
+      icon: Syringe,
+    },
   ];
 
   const trainers = data.trainers;
@@ -94,7 +103,7 @@ export function AdminOverviewPage() {
         <h2 id="overview-trainers" className="font-display text-xl">
           Treinadores e faturação
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <TrainerStatCard
             label="Subscrições ativas"
             icon={Users}
@@ -106,6 +115,15 @@ export function AdminOverviewPage() {
             icon={Ban}
             value={formatCount(trainers.suspended_subscription_count, 'treinador', 'treinadores')}
             attention={trainers.suspended_subscription_count > 0}
+          />
+          <TrainerStatCard
+            label="Contas bloqueadas"
+            icon={LockKeyhole}
+            value={formatCount(
+              trainers.blocked_account_count,
+              'conta bloqueada',
+              'contas bloqueadas'
+            )}
           />
           <TrainerStatCard
             label="Isentos"
@@ -131,7 +149,7 @@ export function AdminOverviewPage() {
             description="Os catálogos e a fila de moderação ainda estão vazios."
           />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {cards.map(({ label, count, detail, href, icon: Icon }) => (
               <Link
                 key={label}

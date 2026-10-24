@@ -38,4 +38,24 @@ public interface IInitialAssessmentStore
         DateTime now,
         CancellationToken cancellationToken
     );
+
+    /// <summary>
+    /// Grava a avaliação inicial preenchida pelo próprio cliente no portal. A ficha resolve-se
+    /// pela conta autenticada e tem de estar ativa.
+    /// </summary>
+    Task<InitialAssessmentStoreResult> SubmitByClientAsync(
+        Guid trainerId,
+        Guid clientUserId,
+        InitialAssessmentWriteValues values,
+        DateTime now,
+        CancellationToken cancellationToken
+    );
+
+    /// <summary>Marca como revista a avaliação inicial gravada pelo cliente.</summary>
+    Task<InitialAssessmentStoreResult> MarkReviewedAsync(
+        Guid trainerId,
+        Guid assessmentId,
+        DateTime now,
+        CancellationToken cancellationToken
+    );
 }

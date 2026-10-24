@@ -1,3 +1,4 @@
+using Application.Features.Assessments;
 using Application.Features.Training.TrainingPlans.Abstractions;
 using Application.Features.Training.TrainingPlans.Dtos;
 using Application.Results;
@@ -27,6 +28,8 @@ internal static class TrainingPlanStoreResultMapper
                 Result<TrainingPlanDetailsDto>.Failure(TrainingErrors.TrainingPlanInactive),
             TrainingPlanStoreResult.Status.ClientNotFound =>
                 Result<TrainingPlanDetailsDto>.Failure(TrainingErrors.ClientNotFound),
+            TrainingPlanStoreResult.Status.InitialAssessmentRequired =>
+                Result<TrainingPlanDetailsDto>.Failure(AssessmentErrors.InitialAssessmentRequired),
             TrainingPlanStoreResult.Status.ExerciseReferenceNotFound =>
                 Result<TrainingPlanDetailsDto>.Failure(
                     TrainingErrors.ExerciseReferenceNotFound),

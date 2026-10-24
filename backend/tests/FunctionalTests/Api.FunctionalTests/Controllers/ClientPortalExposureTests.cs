@@ -109,7 +109,7 @@ public sealed class ClientPortalExposureTests
     }
 
     [Fact]
-    public async Task GetMyPlan_WithBlockedExercise_MasksContentWithoutReason()
+    public async Task GetMyPlan_WithBlockedExercise_HidesItWithoutReason()
     {
         var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(
             _fixture.Factory, TestContext.Current.CancellationToken);
@@ -128,27 +128,19 @@ public sealed class ClientPortalExposureTests
             TestContext.Current.CancellationToken);
 
         using var document = JsonDocument.Parse(body);
-        var exercise = document.RootElement
+        // O exercício bloqueado sai do plano do cliente, sem motivo nem nota (RN-013).
+        Assert.Empty(document.RootElement
             .GetProperty("days")[0]
-            .GetProperty("exercises")[0];
-
-        Assert.True(exercise.GetProperty("is_unavailable").GetBoolean());
-        Assert.Equal(
-            "Unavailable exercise",
-            exercise.GetProperty("exercise_name").GetString());
-        // O id do catálogo continua presente (U11), mas sem vídeo reproduzível.
-        Assert.NotEqual(Guid.Empty, exercise.GetProperty("exercise_id").GetGuid());
-        Assert.NotEqual(
-            exercise.GetProperty("id").GetGuid(),
-            exercise.GetProperty("exercise_id").GetGuid());
-        Assert.False(exercise.GetProperty("has_ready_video").GetBoolean());
+            .GetProperty("exercises")
+            .EnumerateArray());
+        Assert.DoesNotContain("Portal squat", body);
         Assert.False(
             ContainsProperty(document.RootElement, "platform_enforcement_reason"),
             "Portal response exposed the administrative moderation reason.");
     }
 
     [Fact]
-    public async Task GetMyNutrition_WithBlockedFood_MasksContentWithoutReason()
+    public async Task GetMyNutrition_WithBlockedFood_HidesItWithoutReason()
     {
         var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(
             _fixture.Factory, TestContext.Current.CancellationToken);
@@ -167,14 +159,12 @@ public sealed class ClientPortalExposureTests
             TestContext.Current.CancellationToken);
 
         using var document = JsonDocument.Parse(body);
-        var item = document.RootElement
+        // O alimento bloqueado sai do plano do cliente e das kcal, sem motivo nem nota (RN-013).
+        Assert.Empty(document.RootElement
             .GetProperty("meals")[0]
-            .GetProperty("items")[0];
-
-        Assert.True(item.GetProperty("is_unavailable").GetBoolean());
-        Assert.Equal(
-            "Unavailable food",
-            item.GetProperty("food_name").GetString());
+            .GetProperty("items")
+            .EnumerateArray());
+        Assert.DoesNotContain("Portal rice", body);
         Assert.False(
             ContainsProperty(document.RootElement, "platform_enforcement_reason"),
             "Portal response exposed the administrative moderation reason.");

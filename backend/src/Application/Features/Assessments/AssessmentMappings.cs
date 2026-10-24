@@ -21,6 +21,8 @@ public static class AssessmentMappings
         assessment.Profession,
         assessment.BodyMeasurements.ToDto(),
         assessment.NutritionIntake.ToDto(),
+        assessment.SubmittedByClient,
+        assessment.ReviewedAt,
         assessment.CreatedAt,
         assessment.UpdatedAt
     );

@@ -1,3 +1,4 @@
+using Application.Features.Assessments.InitialAssessments.Dtos;
 using Application.Features.Dashboard.Dtos;
 
 namespace Api.Contracts.Dashboard;
@@ -37,6 +38,43 @@ public sealed record CheckInsPendingReviewResponse(
             dto.TotalCount,
             dto.OverdueCount,
             dto.Items.Select(PendingReviewCheckInResponse.From).ToList());
+    }
+}
+
+/// <summary>Avaliação inicial gravada pelo cliente e ainda por rever.</summary>
+public sealed record PendingReviewInitialAssessmentResponse(
+    Guid AssessmentId,
+    Guid ClientId,
+    string ClientName,
+    DateTime SubmittedAt)
+{
+    /// <summary>Converte o DTO da Application.</summary>
+    public static PendingReviewInitialAssessmentResponse From(InitialAssessmentPendingReviewDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        return new PendingReviewInitialAssessmentResponse(
+            dto.AssessmentId,
+            dto.ClientId,
+            dto.ClientName,
+            dto.SubmittedAt);
+    }
+}
+
+/// <summary>Bloco "avaliações iniciais por rever" no Dashboard.</summary>
+public sealed record InitialAssessmentsPendingReviewResponse(
+    int TotalCount,
+    IReadOnlyList<PendingReviewInitialAssessmentResponse> Items)
+{
+    /// <summary>Converte o DTO da Application.</summary>
+    public static InitialAssessmentsPendingReviewResponse From(
+        TrainerDashboardDto.InitialAssessmentsPendingReviewDto dto)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+
+        return new InitialAssessmentsPendingReviewResponse(
+            dto.TotalCount,
+            dto.Items.Select(PendingReviewInitialAssessmentResponse.From).ToList());
     }
 }
 
@@ -240,6 +278,7 @@ public sealed record TrainerDashboardResponse(
     DateOnly LocalToday,
     int ActiveClientCount,
     CheckInsPendingReviewResponse CheckInsPendingReview,
+    InitialAssessmentsPendingReviewResponse InitialAssessmentsPendingReview,
     PacksEndingResponse PacksEnding,
     PlansExpiringResponse PlansExpiring,
     SessionsTodayResponse SessionsToday,
@@ -254,6 +293,7 @@ public sealed record TrainerDashboardResponse(
             dto.LocalToday,
             dto.ActiveClientCount,
             CheckInsPendingReviewResponse.From(dto.CheckInsPendingReview),
+            InitialAssessmentsPendingReviewResponse.From(dto.InitialAssessmentsPendingReview),
             PacksEndingResponse.From(dto.PacksEnding),
             PlansExpiringResponse.From(dto.PlansExpiring),
             SessionsTodayResponse.From(dto.SessionsToday),

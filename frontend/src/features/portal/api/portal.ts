@@ -8,6 +8,7 @@ type LoggedSet = components['schemas']['MyLoggedSetResponse'];
 type CheckInAnswer = components['schemas']['CheckInAnswerRequest'];
 type ProfileUpdate = components['schemas']['UpdateMyProfileRequest'];
 type Profile = components['schemas']['MyProfileResponse'];
+type InitialAssessmentSubmission = components['schemas']['SubmitMyInitialAssessmentRequest'];
 
 /**
  * Query keys do portal do cliente.
@@ -27,9 +28,11 @@ export const portalKeys = {
   mealPlans: () => [...portalKeys.all, 'mealPlans'] as const,
   supplementIntakes: () => [...portalKeys.all, 'supplementIntakes'] as const,
   supplements: () => [...portalKeys.all, 'supplements'] as const,
+  planSupplements: () => [...portalKeys.all, 'planSupplements'] as const,
   checkInDue: () => [...portalKeys.all, 'checkInDue'] as const,
   checkInNext: () => [...portalKeys.all, 'checkInNext'] as const,
   profile: () => [...portalKeys.all, 'profile'] as const,
+  initialAssessment: () => [...portalKeys.all, 'initialAssessment'] as const,
 };
 
 /**
@@ -249,6 +252,7 @@ export function useSelectMealPlanMutation() {
       Promise.all([
         queryClient.invalidateQueries({ queryKey: portalKeys.mealPlans() }),
         queryClient.invalidateQueries({ queryKey: portalKeys.nutrition() }),
+        queryClient.invalidateQueries({ queryKey: portalKeys.planSupplements() }),
         queryClient.invalidateQueries({ queryKey: portalKeys.home() }),
       ]),
   });
@@ -328,6 +332,58 @@ export function useToggleIntakeMutation() {
     onSettled: () =>
       Promise.all([
         queryClient.invalidateQueries({ queryKey: portalKeys.supplementIntakes() }),
+        queryClient.invalidateQueries({ queryKey: portalKeys.home() }),
+      ]),
+  });
+}
+
+/**
+ * Suplementos do plano alimentar escolhido (nas refeições e fora delas) com a toma de hoje.
+ *
+ * Sem plano escolhido o backend responde 404 `portal_nutrition_plan_not_selected`: é um estado
+ * do ecrã («Escolhe o teu plano»), não uma falha, e a página trata-o pelo código do erro.
+ */
+export function usePortalPlanSupplementsQuery() {
+  return useQuery({
+    queryKey: portalKeys.planSupplements(),
+    queryFn: async ({ signal }) =>
+      unwrap(await apiClient.GET('/api/v1/portal/my-plan-supplements/today', { signal })),
+  });
+}
+
+/** Toma de hoje de um suplemento do plano a marcar (`taken: true`) ou a desmarcar. */
+export interface TogglePlanIntakeInput {
+  itemId: string;
+  taken: boolean;
+}
+
+/**
+ * Marca (`PUT`) ou desmarca (`DELETE`) a toma de hoje de um suplemento do plano escolhido.
+ *
+ * Os dois pedidos são idempotentes. Em `onSettled` voltam a ler-se as tomas do plano e a home,
+ * também quando a escrita falha: um 404 ou 409 quer dizer que o plano mudou.
+ */
+export function useTogglePlanIntakeMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ itemId, taken }: TogglePlanIntakeInput) => {
+      const options = { params: { path: { itemId } } };
+
+      if (taken) {
+        unwrap(
+          await apiClient.PUT('/api/v1/portal/my-plan-supplements/{itemId}/intakes/today', options)
+        );
+        return;
+      }
+
+      unwrap(
+        await apiClient.DELETE('/api/v1/portal/my-plan-supplements/{itemId}/intakes/today', options)
+      );
+    },
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: portalKeys.planSupplements() }),
         queryClient.invalidateQueries({ queryKey: portalKeys.home() }),
       ]),
   });
@@ -471,4 +527,35 @@ export function useRemoveAvatarMutation() {
   return useProfileMutation(async () =>
     unwrap(await apiClient.DELETE('/api/v1/portal/my-profile/avatar'))
   );
+}
+
+/**
+ * Se a avaliação inicial do cliente ainda falta (`pending`). Nunca devolve os dados dela.
+ *
+ * Responde 404 `portal_profile_not_available` com a ficha arquivada.
+ */
+export function usePortalInitialAssessmentStatusQuery() {
+  return useQuery({
+    queryKey: portalKeys.initialAssessment(),
+    queryFn: async ({ signal }) =>
+      unwrap(await apiClient.GET('/api/v1/portal/my-initial-assessment', { signal })),
+  });
+}
+
+/**
+ * Entrega a avaliação inicial (204). Em `onSettled` voltam a ler-se o estado e o Início, também
+ * quando falha: um 409 quer dizer que a avaliação já existe e o ecrã estava desatualizado.
+ */
+export function useSubmitInitialAssessmentMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (body: InitialAssessmentSubmission) =>
+      unwrap(await apiClient.POST('/api/v1/portal/my-initial-assessment', { body })),
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: portalKeys.initialAssessment() }),
+        queryClient.invalidateQueries({ queryKey: portalKeys.home() }),
+      ]),
+  });
 }

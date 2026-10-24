@@ -94,7 +94,8 @@ public sealed class ListingFilterBindingTests : ApiReadEndpointsTestContext
     {
         var token = TestContext.Current.CancellationToken;
         var client = _fixture.Factory.CreateOriginClient()
-            .WithBearer(TestJwtFactory.IssueSuperuser(Guid.NewGuid()));
+            .WithBearer(TestJwtFactory.IssueSuperuser(
+                await TrainingTestData.SeedSuperuserAsync(_fixture.Factory, token)));
 
         var response = await client.GetAsync(
             $"/api/v1/admin/content-moderation/foods?status={status}&page_size=5", token);

@@ -94,6 +94,99 @@ internal sealed class InitialAssessmentStore : IInitialAssessmentStore
             cancellationToken
         );
 
+    public Task<InitialAssessmentStoreResult> SubmitByClientAsync(
+        Guid trainerId,
+        Guid clientUserId,
+        InitialAssessmentWriteValues values,
+        DateTime now,
+        CancellationToken cancellationToken) =>
+        ExecuteTransactionAsync(
+            () => SubmitByClientOnceAsync(trainerId, clientUserId, values, now, cancellationToken),
+            cancellationToken
+        );
+
+    public Task<InitialAssessmentStoreResult> MarkReviewedAsync(
+        Guid trainerId,
+        Guid assessmentId,
+        DateTime now,
+        CancellationToken cancellationToken) =>
+        ExecuteTransactionAsync(
+            () => MarkReviewedOnceAsync(trainerId, assessmentId, now, cancellationToken),
+            cancellationToken
+        );
+
+    private async Task<InitialAssessmentStoreResult> SubmitByClientOnceAsync(
+        Guid trainerId,
+        Guid clientUserId,
+        InitialAssessmentWriteValues values,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        // A ficha resolve-se pela conta: só a ativa do próprio cliente, bloqueada até ao fim,
+        // para que duas gravações seguidas não criem duas avaliações.
+        var client = await _dbContext.Clients
+            .FromSqlInterpolated($"""
+                SELECT *
+                FROM clients
+                WHERE owner_trainer_id = {trainerId}
+                    AND user_id = {clientUserId}
+                    AND is_active = true
+                    AND is_deleted = false
+                FOR UPDATE
+            """)
+            .SingleOrDefaultAsync(cancellationToken);
+        if (client is null)
+            return InitialAssessmentStoreResult.For(
+                InitialAssessmentStoreResult.Status.ClientNotFound
+            );
+
+        return await AddAsync(
+            trainerId,
+            client.Id,
+            values.WeightKg,
+            values.HeightCm,
+            values.BodyFatPercentage,
+            values.MedicalConditions,
+            values.FitnessLevel,
+            values.ActivityLevel,
+            values.Goals,
+            values.Profession,
+            values.BodyMeasurements,
+            values.NutritionIntake,
+            now,
+            submittedByClient: true,
+            cancellationToken);
+    }
+
+    private async Task<InitialAssessmentStoreResult> MarkReviewedOnceAsync(
+        Guid trainerId,
+        Guid assessmentId,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var assessment = await LockAssessmentAsync(trainerId, assessmentId, cancellationToken);
+        if (assessment is null)
+            return InitialAssessmentStoreResult.For(
+                InitialAssessmentStoreResult.Status.AssessmentNotFound
+            );
+        if (!assessment.SubmittedByClient)
+            return InitialAssessmentStoreResult.For(
+                InitialAssessmentStoreResult.Status.NotReviewable
+            );
+
+        if (!assessment.MarkReviewed(now))
+            return InitialAssessmentStoreResult.For(
+                InitialAssessmentStoreResult.Status.AlreadyInRequestedState,
+                assessment
+            );
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return InitialAssessmentStoreResult.For(
+            InitialAssessmentStoreResult.Status.Updated,
+            assessment
+        );
+    }
+
     private async Task<InitialAssessmentStoreResult> CreateOnceAsync(
         Guid trainerId,
         Guid clientId,
@@ -120,6 +213,41 @@ internal sealed class InitialAssessmentStore : IInitialAssessmentStore
                 InitialAssessmentStoreResult.Status.ClientInactive
             );
 
+        return await AddAsync(
+            trainerId,
+            clientId,
+            weightKg,
+            heightCm,
+            bodyFatPercentage,
+            medicalConditions,
+            fitnessLevel,
+            activityLevel,
+            goals,
+            profession,
+            bodyMeasurements,
+            nutritionIntake,
+            now,
+            submittedByClient: false,
+            cancellationToken);
+    }
+
+    private async Task<InitialAssessmentStoreResult> AddAsync(
+        Guid trainerId,
+        Guid clientId,
+        decimal weightKg,
+        int heightCm,
+        decimal? bodyFatPercentage,
+        string? medicalConditions,
+        string fitnessLevel,
+        ActivityLevel activityLevel,
+        string goals,
+        string? profession,
+        BodyMeasurements bodyMeasurements,
+        NutritionIntake nutritionIntake,
+        DateTime now,
+        bool submittedByClient,
+        CancellationToken cancellationToken)
+    {
         var alreadyExists = await _dbContext.InitialAssessments
             .AnyAsync(
                 assessment => assessment.OwnerTrainerId == trainerId &&
@@ -143,7 +271,8 @@ internal sealed class InitialAssessmentStore : IInitialAssessmentStore
             profession,
             bodyMeasurements,
             nutritionIntake,
-            now
+            now,
+            submittedByClient
         );
         _dbContext.InitialAssessments.Add(assessment);
 
@@ -197,6 +326,11 @@ internal sealed class InitialAssessmentStore : IInitialAssessmentStore
         if (client is null)
             return InitialAssessmentStoreResult.For(
                 InitialAssessmentStoreResult.Status.AssessmentNotFound
+            );
+        // O cliente arquivado fica só para ler: o personal trainer não corrige a avaliação dele.
+        if (!client.IsActive)
+            return InitialAssessmentStoreResult.For(
+                InitialAssessmentStoreResult.Status.ClientInactive
             );
 
         var assessment = await LockAssessmentAsync(trainerId, assessmentId, cancellationToken);

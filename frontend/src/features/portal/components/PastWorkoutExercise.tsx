@@ -1,9 +1,5 @@
 import { PlannedSetChips } from '@/features/portal/components/PlannedSetChips';
-import {
-  exerciseDisplayName,
-  loggedSetLabel,
-  prescriptionSummary,
-} from '@/features/portal/lib/workout';
+import { loggedSetLabel, prescriptionSummary } from '@/features/portal/lib/workout';
 import type { components } from '@/shared/api/schema';
 import { Badge } from '@/shared/components/ui/badge';
 import { formatNumber } from '@/shared/lib/format';
@@ -15,7 +11,7 @@ type WorkoutExercise = components['schemas']['MyWorkoutExerciseResponse'];
  * da série. Uma série sem registo diz «Sem registo». Não tem campos nem botões de escrita.
  */
 export function PastWorkoutExercise({ exercise }: { exercise: WorkoutExercise }) {
-  const name = exerciseDisplayName(exercise);
+  const name = exercise.exercise_name;
 
   return (
     <section aria-label={name} className="border-border bg-card space-y-3 rounded-xl border p-3">

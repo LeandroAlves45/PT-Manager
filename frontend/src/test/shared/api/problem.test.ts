@@ -40,6 +40,29 @@ describe('toApiProblem', () => {
     }
   );
 
+  it('reads the block reason and note extensions of a blocked account', () => {
+    const error = toApiProblem(
+      403,
+      problem('trainer_account_blocked', { block_reason: 'malicious_content', block_note: 'Nota.' })
+    );
+
+    expect(error.blockReason).toBe('malicious_content');
+    expect(error.blockNote).toBe('Nota.');
+  });
+
+  it('has no block reason or note when the extensions are missing or not text', () => {
+    const plain = toApiProblem(403, problem('forbidden'));
+    const odd = toApiProblem(
+      403,
+      problem('trainer_account_blocked', { block_reason: 7, block_note: null })
+    );
+
+    expect(plain.blockReason).toBeNull();
+    expect(plain.blockNote).toBeNull();
+    expect(odd.blockReason).toBeNull();
+    expect(odd.blockNote).toBeNull();
+  });
+
   it('does not treat plain errors as API problems', () => {
     expect(isApiProblem(new Error('boom'))).toBe(false);
   });

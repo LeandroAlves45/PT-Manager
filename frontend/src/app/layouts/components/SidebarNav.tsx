@@ -1,8 +1,40 @@
 import { NavLink } from 'react-router';
 
-import type { NavigationGroup } from '@/shared/config/navigation';
+import { usePendingInitialAssessmentsQuery } from '@/features/initial-assessment';
+import type { NavigationGroup, NavigationItem } from '@/shared/config/navigation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip';
 import { cn } from '@/shared/lib/utils';
+
+/**
+ * Contador de avaliações iniciais por rever junto a «Clientes». Pede só `total_count`
+ * (página de 1 item) e volta a pedir ao regressar à janela. A zero, ou sem resposta, não
+ * mostra nada.
+ */
+function PendingBadge({ collapsed }: { collapsed: boolean }) {
+  const pending = usePendingInitialAssessmentsQuery(1, 1);
+  const count = pending.data?.total_count ?? 0;
+  if (count === 0) return null;
+
+  return (
+    <span
+      role="img"
+      aria-label={`${count} ${count === 1 ? 'avaliação inicial por rever' : 'avaliações iniciais por rever'}`}
+      className={cn(
+        'bg-primary text-primary-foreground flex min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums',
+        collapsed ? 'absolute top-0.5 right-1' : 'ms-auto'
+      )}
+    >
+      {count}
+    </span>
+  );
+}
+
+/** Contador de um item, quando o item tem um. */
+function ItemBadge({ item, collapsed }: { item: NavigationItem; collapsed: boolean }) {
+  return item.badge === 'initial-assessments-pending' ? (
+    <PendingBadge collapsed={collapsed} />
+  ) : null;
+}
 
 /**
  * Lista de navegação da sidebar.
@@ -50,6 +82,7 @@ export function SidebarNav({
                 <item.icon aria-hidden className="size-4 shrink-0" />
                 {!collapsed && <span>{item.label}</span>}
                 {collapsed && <span className="sr-only">{item.label}</span>}
+                <ItemBadge item={item} collapsed={collapsed} />
               </NavLink>
             );
 

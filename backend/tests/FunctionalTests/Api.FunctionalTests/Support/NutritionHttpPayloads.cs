@@ -80,7 +80,8 @@ internal static class NutritionHttpPayloads
         Guid foodId,
         Guid supplementId,
         int mealCount = 2,
-        object? calculation = null) => new
+        object? calculation = null,
+        IReadOnlyList<object>? planSupplements = null) => new
         {
             client_id = clientId,
             name = "Plano funcional",
@@ -118,7 +119,8 @@ internal static class NutritionHttpPayloads
                         }
                     }
                 })
-                .ToArray()
+                .ToArray(),
+                plan_supplements = planSupplements ?? Array.Empty<object>()
             }
         };
 
@@ -126,13 +128,14 @@ internal static class NutritionHttpPayloads
         Guid foodId,
         Guid supplementId,
         IReadOnlyList<object> meals,
-        string name = "Plano actualizado") => new
+        string name = "Plano actualizado",
+        IReadOnlyList<object>? planSupplements = null) => new
         {
             name,
             description = (string?)null,
             starts_date = "2026-08-10",
             ends_date = (string?)null,
             calculation = (object?)null,
-            structure = new { meals }
+            structure = new { meals, plan_supplements = planSupplements ?? Array.Empty<object>() }
         };
 }

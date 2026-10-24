@@ -122,6 +122,23 @@ public static class AuthenticationErrors
         "The client relationship is not compatible with this invitation."
     );
 
+    /// <summary>
+    /// O personal trainer bloqueado pelo superuser: só depois da credencial validada, com o
+    /// motivo e a nota em <c>block_reason</c> e <c>block_note</c>.
+    /// </summary>
+    public static Error TrainerBlocked(string? reason, string? note) => Error.Create(
+        "trainer_account_blocked",
+        ErrorCategory.Forbidden,
+        "The personal trainer account is blocked.",
+        new Dictionary<string, object?> { ["block_reason"] = reason, ["block_note"] = note });
+
+    /// <summary>O cliente de um personal trainer bloqueado já passou os dias de acesso.</summary>
+    public static readonly Error ClientAccessPeriodEnded = Error.Create(
+        "client_access_period_ended",
+        ErrorCategory.Unauthorized,
+        "The access period has ended."
+    );
+
     public static readonly Error InvalidCredentials = Error.Create(
         "authentication_invalid_credentials",
         ErrorCategory.Unauthorized,

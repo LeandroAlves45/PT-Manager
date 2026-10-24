@@ -47,3 +47,29 @@ export function pastDayOptionLabel(localDate: string, weekNumber: number): strin
   const weekday = format(date, 'EEE', { locale: pt });
   return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${format(date, 'dd/MM')} · Semana ${weekNumber}`;
 }
+
+/**
+ * Instante em que o acesso ao portal acaba, escrito no fuso do personal trainer
+ * ("sexta-feira, 30 de outubro de 2026, 14:30").
+ *
+ * `endsAt` vem em UTC e `timeZone` é o nome IANA do personal trainer. Um fuso que o browser não
+ * conhece cai para UTC e diz-o, em vez de mostrar a hora do browser como se fosse a do
+ * personal trainer.
+ */
+export function accessEndLabel(endsAt: string, timeZone: string): string {
+  const date = new Date(endsAt);
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  };
+
+  try {
+    return new Intl.DateTimeFormat('pt-PT', { ...options, timeZone }).format(date);
+  } catch {
+    return `${new Intl.DateTimeFormat('pt-PT', { ...options, timeZone: 'UTC' }).format(date)} (UTC)`;
+  }
+}

@@ -7,6 +7,7 @@ namespace Application.Features.Dashboard.Dtos;
 public sealed record TrainerDashboardData(
     int ActiveClientCount,
     TrainerDashboardDto.CheckInsPendingReviewDto CheckInsPendingReview,
+    TrainerDashboardDto.InitialAssessmentsPendingReviewDto InitialAssessmentsPendingReview,
     TrainerDashboardDto.PacksEndingDto PacksEnding,
     TrainerDashboardDto.PlansExpiringDto PlansExpiring,
     TrainerDashboardDto.SessionsTodayDto SessionsToday,

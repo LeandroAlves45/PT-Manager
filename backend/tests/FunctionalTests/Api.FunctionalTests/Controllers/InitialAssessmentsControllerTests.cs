@@ -19,7 +19,7 @@ public sealed class InitialAssessmentsControllerTests
     [Fact]
     public async Task Create_WithTrainerToken_ReturnsCreated()
     {
-        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token, withInitialAssessment: false);
         var client = TrainerClient(tenant.TrainerId);
 
         var response = await ApiJsonPayload.PostAsync(
@@ -35,7 +35,7 @@ public sealed class InitialAssessmentsControllerTests
     [Fact]
     public async Task Create_WithoutToken_ReturnsUnauthorized()
     {
-        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token, withInitialAssessment: false);
 
         var response = await ApiJsonPayload.PostAsync(
             _fixture.Factory.CreateOriginClient(),
@@ -49,7 +49,7 @@ public sealed class InitialAssessmentsControllerTests
     [Fact]
     public async Task Create_WithClientToken_ReturnsForbidden()
     {
-        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token, withInitialAssessment: false);
         var client = _fixture.Factory.CreateOriginClient()
             .WithBearer(TestJwtFactory.IssueClient(Guid.NewGuid(), tenant.TrainerId));
 
@@ -65,7 +65,7 @@ public sealed class InitialAssessmentsControllerTests
     [Fact]
     public async Task Create_WithEmptyGoals_ReturnsBadRequest()
     {
-        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token, withInitialAssessment: false);
         var client = TrainerClient(tenant.TrainerId);
 
         var response = await ApiJsonPayload.PostAsync(
@@ -80,7 +80,7 @@ public sealed class InitialAssessmentsControllerTests
     [Fact]
     public async Task Get_WhenAssessmentDoesNotExist_ReturnsNotFound()
     {
-        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token, withInitialAssessment: false);
         var client = TrainerClient(tenant.TrainerId);
 
         var response = await client.GetAsync(
@@ -93,8 +93,8 @@ public sealed class InitialAssessmentsControllerTests
     [Fact]
     public async Task Get_WithClientFromAnotherTenant_ReturnsNotFound()
     {
-        var owner = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
-        var intruder = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        var owner = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token, withInitialAssessment: false);
+        var intruder = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token, withInitialAssessment: false);
         var client = TrainerClient(intruder.TrainerId);
 
         var response = await client.GetAsync(
@@ -107,7 +107,7 @@ public sealed class InitialAssessmentsControllerTests
     [Fact]
     public async Task Update_WithTrainerToken_ReturnsOk()
     {
-        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        var tenant = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token, withInitialAssessment: false);
         var trainer = TrainerClient(tenant.TrainerId);
 
         var created = await ApiJsonPayload.PostAsync(
@@ -129,7 +129,7 @@ public sealed class InitialAssessmentsControllerTests
     [Fact]
     public async Task Update_WithAssessmentFromAnotherTenant_ReturnsNotFound()
     {
-        var owner = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        var owner = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token, withInitialAssessment: false);
         var trainer = TrainerClient(owner.TrainerId);
         var created = await ApiJsonPayload.PostAsync(
             trainer,
@@ -138,7 +138,7 @@ public sealed class InitialAssessmentsControllerTests
             Token);
         var assessmentId = (await ReadJsonAsync(created)).GetProperty("id").GetGuid();
 
-        var intruder = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token);
+        var intruder = await TrainingTestData.SeedTenantAsync(_fixture.Factory, Token, withInitialAssessment: false);
         var response = await ApiJsonPayload.PutAsync(
             TrainerClient(intruder.TrainerId),
             $"/api/v1/initial-assessments/{assessmentId}",

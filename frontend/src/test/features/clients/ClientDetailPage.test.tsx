@@ -12,6 +12,7 @@ import {
   clientPack,
   clientPackPage,
   clientSummaryOverview,
+  initialAssessment,
   sessionPage,
   trainingSession,
 } from '@/test/msw/trainer-fixtures';
@@ -56,7 +57,7 @@ describe('ClientDetailPage', () => {
     toastMock.error.mockClear();
   });
 
-  it('shows header and summary KPIs without requesting the assessment', async () => {
+  it('shows header and summary KPIs and reads the assessment once', async () => {
     const { assessmentRequests } = detailHandlers();
     renderApp({ initialEntries: [ROUTE] });
 
@@ -72,7 +73,77 @@ describe('ClientDetailPage', () => {
     expect(screen.getByText('fim previsto 30/09/2026')).toBeInTheDocument();
     expect(screen.getByText('válido até 30/09/2026')).toBeInTheDocument();
     expect(screen.getByText(/64,8 kg · 168 cm · cliente desde 04\/02\/2026/)).toBeInTheDocument();
+    await waitFor(() => expect(assessmentRequests()).toBe(1));
+  }, 15000);
+
+  it('warns that the client has no initial assessment, and stays quiet when there is one', async () => {
+    detailHandlers();
+    const { unmount } = renderApp({ initialEntries: [ROUTE] });
+
+    expect(
+      await screen.findByText(/Sem avaliação inicial\. O cliente preenche-a no portal/)
+    ).toHaveTextContent(
+      'Até lá não podes criar planos, atribuir suplementos nem marcar avaliações periódicas.'
+    );
+    unmount();
+
+    detailHandlers();
+    server.use(
+      http.get(`${API}/clients/:clientId/initial-assessment`, () =>
+        HttpResponse.json(initialAssessment())
+      )
+    );
+    renderApp({ initialEntries: [ROUTE] });
+
+    await screen.findByRole('heading', { name: 'Marta Figueiredo' });
+    await waitFor(() => expect(screen.getByRole('tab', { name: 'Resumo' })).toBeInTheDocument());
+    expect(screen.queryByText(/Sem avaliação inicial\./)).not.toBeInTheDocument();
+  }, 15000);
+
+  it('does not ask for the assessment of an archived client', async () => {
+    const { assessmentRequests } = detailHandlers(clientDetails({ is_active: false }));
+    renderApp({ initialEntries: [ROUTE] });
+
+    await screen.findByRole('heading', { name: 'Marta Figueiredo' });
     expect(assessmentRequests()).toBe(0);
+    expect(screen.queryByText(/Sem avaliação inicial\./)).not.toBeInTheDocument();
+  }, 15000);
+
+  it('says what archiving does before asking to confirm', async () => {
+    detailHandlers();
+    const user = userEvent.setup();
+    renderApp({ initialEntries: [ROUTE] });
+
+    await user.click(await screen.findByRole('button', { name: 'Arquivar cliente' }));
+    const dialog = await screen.findByRole('alertdialog');
+
+    expect(within(dialog).getByText(/as sessões futuras são canceladas/)).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/o saldo que resta nos packs é dado como consumido/)
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText(/o acesso ao portal termina já/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/o convite por aceitar deixa de servir/)).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        /quem já tinha conta volta a entrar, mas as sessões canceladas, o saldo consumido e o convite anulado não voltam/
+      )
+    ).toBeInTheDocument();
+  }, 15000);
+
+  it('keeps the short text when reactivating', async () => {
+    detailHandlers(clientDetails({ is_active: false }));
+    const user = userEvent.setup();
+    renderApp({ initialEntries: [ROUTE] });
+
+    await user.click(await screen.findByRole('button', { name: 'Reativar cliente' }));
+    const dialog = await screen.findByRole('alertdialog');
+
+    expect(
+      within(dialog).getByText(
+        'Marta Figueiredo volta às listas ativas e conta para o limite do plano.'
+      )
+    ).toBeInTheDocument();
+    expect(within(dialog).queryByText(/sessões futuras/)).not.toBeInTheDocument();
   }, 15000);
 
   it('links to the editor pages instead of opening side panels', async () => {

@@ -15,9 +15,9 @@
     "semantic_hash": "79759de1d4726cdc8f6f7ab0d6b551c4"
   },
   "backend/src/Api/Program.cs": {
-    "mtime": 1790000546.103976,
-    "ast_hash": "ccf923c8a26339bcff580109ed1410c7",
-    "semantic_hash": "ccf923c8a26339bcff580109ed1410c7"
+    "mtime": 1792694053.4910698,
+    "ast_hash": "9453e463153c24c98257ff104ed514c4",
+    "semantic_hash": "9453e463153c24c98257ff104ed514c4"
   },
   "backend/src/Api/Properties/launchSettings.json": {
     "mtime": 1784986593.1689394,
@@ -70,14 +70,14 @@
     "semantic_hash": "3dadd4417a89e6345adb32ca1161544e"
   },
   "backend/src/Domain/Entities/Assessments/InitialAssessment.cs": {
-    "mtime": 1791922534.3710997,
-    "ast_hash": "3e9c46e8e292bcd05fdfe2cc75ac7c8d",
-    "semantic_hash": "3e9c46e8e292bcd05fdfe2cc75ac7c8d"
+    "mtime": 1792683863.4175715,
+    "ast_hash": "da5a2d8116e6c8301984191a0d3940a6",
+    "semantic_hash": "da5a2d8116e6c8301984191a0d3940a6"
   },
   "backend/src/Domain/Entities/Billing/ClientSessionPack.cs": {
-    "mtime": 1786810133.078273,
-    "ast_hash": "72132f9dd3ac80846eeabe276b503b07",
-    "semantic_hash": "72132f9dd3ac80846eeabe276b503b07"
+    "mtime": 1792693873.1301966,
+    "ast_hash": "e74259130a67e0d234a362910bb13fc4",
+    "semantic_hash": "e74259130a67e0d234a362910bb13fc4"
   },
   "backend/src/Domain/Entities/Billing/PackType.cs": {
     "mtime": 1786722587.2534525,
@@ -95,7 +95,7 @@
     "semantic_hash": "d387be5c026d671b40cceb9d442923a2"
   },
   "backend/src/Domain/Entities/Clients/Client.cs": {
-    "mtime": 1792658999.8472507,
+    "mtime": 1792674688.0257864,
     "ast_hash": "a6545dd4918b11d18461b2609fdeb8a4",
     "semantic_hash": "a6545dd4918b11d18461b2609fdeb8a4"
   },
@@ -130,14 +130,14 @@
     "semantic_hash": "d157d1af9a68c642ff8fb4e363f43efb"
   },
   "backend/src/Domain/Entities/Nutrition/Food.cs": {
-    "mtime": 1789659024.7369835,
-    "ast_hash": "c282ce6458b4f23aa3626c9c8ab6ae11",
-    "semantic_hash": "c282ce6458b4f23aa3626c9c8ab6ae11"
+    "mtime": 1792822066.974486,
+    "ast_hash": "a93ecef7534ed8acc3b6c6cfe32737c7",
+    "semantic_hash": "a93ecef7534ed8acc3b6c6cfe32737c7"
   },
   "backend/src/Domain/Entities/Nutrition/MealPlan.cs": {
-    "mtime": 1786723484.8798559,
-    "ast_hash": "e21a0cabc5b8ff7be91a2d5b438ed028",
-    "semantic_hash": "e21a0cabc5b8ff7be91a2d5b438ed028"
+    "mtime": 1792695204.508111,
+    "ast_hash": "6bb9413ed2b9de13c9928f1a16b83251",
+    "semantic_hash": "6bb9413ed2b9de13c9928f1a16b83251"
   },
   "backend/src/Domain/Entities/Nutrition/MealPlanMeal.cs": {
     "mtime": 1786723490.2831576,
@@ -160,9 +160,9 @@
     "semantic_hash": "fdef82c3f8712b91f01b2023388034d2"
   },
   "backend/src/Domain/Entities/Supplements/Supplement.cs": {
-    "mtime": 1792607442.8209999,
-    "ast_hash": "4149572e2a14808d9751e0d4deda9dcb",
-    "semantic_hash": "4149572e2a14808d9751e0d4deda9dcb"
+    "mtime": 1792822067.1053464,
+    "ast_hash": "d405188a0b3bbf888df85c7de3e4012a",
+    "semantic_hash": "d405188a0b3bbf888df85c7de3e4012a"
   },
   "backend/src/Domain/Entities/TrainerSettings/TrainerSettings.cs": {
     "mtime": 1787406815.3352058,
@@ -175,9 +175,9 @@
     "semantic_hash": "3ef8322fe7a11fe7a7e686c2b5340020"
   },
   "backend/src/Domain/Entities/Training/Exercise.cs": {
-    "mtime": 1788265318.5932732,
-    "ast_hash": "d7fb89d583ec182c5300e3392a3d46aa",
-    "semantic_hash": "d7fb89d583ec182c5300e3392a3d46aa"
+    "mtime": 1792822067.0582416,
+    "ast_hash": "c8c3ca478651ff86992a6aa31a3a202f",
+    "semantic_hash": "c8c3ca478651ff86992a6aa31a3a202f"
   },
   "backend/src/Domain/Entities/Training/ExerciseSet.cs": {
     "mtime": 1792607442.8393512,
@@ -195,9 +195,9 @@
     "semantic_hash": "8cfd4a7f88af9b0e0767a373ab61fd79"
   },
   "backend/src/Domain/Entities/Training/TrainingPlanDayExercise.cs": {
-    "mtime": 1792607442.856054,
-    "ast_hash": "9792eca2a09cb5729cf611ee26c1f885",
-    "semantic_hash": "9792eca2a09cb5729cf611ee26c1f885"
+    "mtime": 1792822218.771094,
+    "ast_hash": "b10c75adfb7dcadff7b2e3043e503717",
+    "semantic_hash": "b10c75adfb7dcadff7b2e3043e503717"
   },
   "backend/src/Domain/Exceptions/DomainException.cs": {
     "mtime": 1785172107.005486,
@@ -300,9 +300,9 @@
     "semantic_hash": "7ec6f1992712f667c17e672f4e5a1a5d"
   },
   "backend/tests/Unit/Domain.UnitTests/Entities/Billing/ClientSessionPackTests.cs": {
-    "mtime": 1786810272.1093469,
-    "ast_hash": "730dfeed05887f9269f7a15c2fcb7583",
-    "semantic_hash": "730dfeed05887f9269f7a15c2fcb7583"
+    "mtime": 1792695028.8171313,
+    "ast_hash": "4d8ce59f65296acb23a1305ac464f770",
+    "semantic_hash": "4d8ce59f65296acb23a1305ac464f770"
   },
   "backend/tests/Unit/Domain.UnitTests/Entities/Billing/PackTypeTests.cs": {
     "mtime": 1786810262.2108495,
@@ -595,14 +595,14 @@
     "semantic_hash": "5d77ea20304191be5fa78833a1d4879c"
   },
   "backend/src/Infrastructure/Data/Configurations/Assessments/InitialAssessmentsConfiguration.cs": {
-    "mtime": 1787059294.2545617,
-    "ast_hash": "dfe949ebbbd450c6b46f5926831a6ac3",
-    "semantic_hash": "dfe949ebbbd450c6b46f5926831a6ac3"
+    "mtime": 1792683890.7100222,
+    "ast_hash": "071dd980500d4f22a1e5c5cbdecf9e41",
+    "semantic_hash": "071dd980500d4f22a1e5c5cbdecf9e41"
   },
   "backend/src/Infrastructure/Data/Configurations/Billing/ClientSessionPackConfiguration.cs": {
-    "mtime": 1786811505.6136715,
-    "ast_hash": "d7758bd40f2e2cdd7b0133c12b649fb6",
-    "semantic_hash": "d7758bd40f2e2cdd7b0133c12b649fb6"
+    "mtime": 1792693873.141378,
+    "ast_hash": "c1b415ffda0674ed78dac7348b93a7ef",
+    "semantic_hash": "c1b415ffda0674ed78dac7348b93a7ef"
   },
   "backend/src/Infrastructure/Data/Configurations/Billing/PackTypeConfiguration.cs": {
     "mtime": 1786808006.315229,
@@ -620,7 +620,7 @@
     "semantic_hash": "8c8aca2106f20958b289ceef810f2604"
   },
   "backend/src/Infrastructure/Data/Configurations/Clients/ClientConfiguration.cs": {
-    "mtime": 1792658999.9392512,
+    "mtime": 1792674688.049832,
     "ast_hash": "474fb34cb921e8d1864ce0234dd7ff49",
     "semantic_hash": "474fb34cb921e8d1864ce0234dd7ff49"
   },
@@ -655,14 +655,14 @@
     "semantic_hash": "a3443273d498789c2262405a0579d79c"
   },
   "backend/src/Infrastructure/Data/Configurations/Notifications/NotificationConfiguration.cs": {
-    "mtime": 1785507696.533088,
-    "ast_hash": "70810a4097a414657013238124e02207",
-    "semantic_hash": "70810a4097a414657013238124e02207"
+    "mtime": 1792689056.7794771,
+    "ast_hash": "b6892c638b9fc368f7cde9c5e254c659",
+    "semantic_hash": "b6892c638b9fc368f7cde9c5e254c659"
   },
   "backend/src/Infrastructure/Data/Configurations/Nutrition/FoodConfiguration.cs": {
-    "mtime": 1789904766.221419,
-    "ast_hash": "298ae986b8664c6a5e2ecbd16ecbfdf7",
-    "semantic_hash": "298ae986b8664c6a5e2ecbd16ecbfdf7"
+    "mtime": 1792822067.1298008,
+    "ast_hash": "247e06feb009eaf9d95a42586bed1778",
+    "semantic_hash": "247e06feb009eaf9d95a42586bed1778"
   },
   "backend/src/Infrastructure/Data/Configurations/Nutrition/MealPlanConfiguration.cs": {
     "mtime": 1785948474.00082,
@@ -695,9 +695,9 @@
     "semantic_hash": "aafdb8988b5ca5bca23c9e38397377f1"
   },
   "backend/src/Infrastructure/Data/Configurations/Supplements/SupplementConfiguration.cs": {
-    "mtime": 1792435918.6934335,
-    "ast_hash": "760d43027a609419341602e57778f628",
-    "semantic_hash": "760d43027a609419341602e57778f628"
+    "mtime": 1792822067.1986,
+    "ast_hash": "ac8309fdf51aa95eacf9d67bf59e5f4f",
+    "semantic_hash": "ac8309fdf51aa95eacf9d67bf59e5f4f"
   },
   "backend/src/Infrastructure/Data/Configurations/Training/ClientExerciseSetLogConfiguration.cs": {
     "mtime": 1789639106.2589798,
@@ -705,9 +705,9 @@
     "semantic_hash": "3ccb779e3d60086ca7d639bfa1649627"
   },
   "backend/src/Infrastructure/Data/Configurations/Training/ExerciseConfiguration.cs": {
-    "mtime": 1789904766.2354288,
-    "ast_hash": "630e92c5cfd5cb8cd61f82a0859f0691",
-    "semantic_hash": "630e92c5cfd5cb8cd61f82a0859f0691"
+    "mtime": 1792822067.141596,
+    "ast_hash": "827e9fa73f795e2cc8751fb533f9f585",
+    "semantic_hash": "827e9fa73f795e2cc8751fb533f9f585"
   },
   "backend/src/Infrastructure/Data/Configurations/Training/ExerciseSetConfiguration.cs": {
     "mtime": 1792607442.9024363,
@@ -725,19 +725,19 @@
     "semantic_hash": "4f02c3e8f3ac06b649002cff90c2230e"
   },
   "backend/src/Infrastructure/Data/Configurations/Training/TrainingPlanDayExerciseConfiguration.cs": {
-    "mtime": 1787406815.3926575,
-    "ast_hash": "73a7a3637ade2f15355b47e8b7fca562",
-    "semantic_hash": "73a7a3637ade2f15355b47e8b7fca562"
+    "mtime": 1792822218.7870314,
+    "ast_hash": "30ad3eb0cf750a06bcfdde9fd69b0201",
+    "semantic_hash": "30ad3eb0cf750a06bcfdde9fd69b0201"
   },
   "backend/src/Infrastructure/Data/Interceptors/TenantWriteValidationInterceptor.cs": {
-    "mtime": 1792436489.4184456,
-    "ast_hash": "c401d2484e989d49eac8df8064062564",
-    "semantic_hash": "c401d2484e989d49eac8df8064062564"
+    "mtime": 1792695433.4298954,
+    "ast_hash": "e269cb37d534f4bb1e6481ca4b6b81fc",
+    "semantic_hash": "e269cb37d534f4bb1e6481ca4b6b81fc"
   },
   "backend/src/Infrastructure/Data/PtManagerDbContext.cs": {
-    "mtime": 1792436558.540852,
-    "ast_hash": "5313c1cec6a3f2b8b5117a3c9a294c3d",
-    "semantic_hash": "5313c1cec6a3f2b8b5117a3c9a294c3d"
+    "mtime": 1792822512.7565856,
+    "ast_hash": "84c0a8bf675742c38d685c4db08ca3b3",
+    "semantic_hash": "84c0a8bf675742c38d685c4db08ca3b3"
   },
   "backend/src/Infrastructure/Data/TenantContext.cs": {
     "mtime": 1785502557.612785,
@@ -745,9 +745,9 @@
     "semantic_hash": "670f3219176eaece32a6eefefb51fb98"
   },
   "backend/src/Infrastructure/DependencyInjection.cs": {
-    "mtime": 1792659243.6827633,
-    "ast_hash": "5b723dc994a0783e72479ea239fe36e9",
-    "semantic_hash": "5b723dc994a0783e72479ea239fe36e9"
+    "mtime": 1792695955.502774,
+    "ast_hash": "7566628c6db35cb6888225012693d423",
+    "semantic_hash": "7566628c6db35cb6888225012693d423"
   },
   "backend/src/Infrastructure/Persistence/DurableJobRepository.cs": {
     "mtime": 1789463890.0770767,
@@ -785,9 +785,9 @@
     "semantic_hash": "99ddbb70178161fdd19daac3f27055be"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Support/PostgresContainerFixture.cs": {
-    "mtime": 1789905141.468425,
-    "ast_hash": "266d180d0b44623fad3634a1d1534e8a",
-    "semantic_hash": "266d180d0b44623fad3634a1d1534e8a"
+    "mtime": 1792687646.7008486,
+    "ast_hash": "27525b387fdf8af8b68b8c94cdb25b82",
+    "semantic_hash": "27525b387fdf8af8b68b8c94cdb25b82"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Support/TestTenantContext.cs": {
     "mtime": 1787156113.3377469,
@@ -1075,9 +1075,9 @@
     "semantic_hash": "3bde834990dd599e68536a6c8837f612"
   },
   "backend/src/Infrastructure/Data/Migrations/PtManagerDbContextModelSnapshot.cs": {
-    "mtime": 1792660204.594179,
-    "ast_hash": "7877519a937b0651e6747d458c2fe915",
-    "semantic_hash": "7877519a937b0651e6747d458c2fe915"
+    "mtime": 1792825850.156732,
+    "ast_hash": "b4bb2c04dc714241e3b0e23750fabc07",
+    "semantic_hash": "b4bb2c04dc714241e3b0e23750fabc07"
   },
   "backend/src/Infrastructure/Persistence/Clients/ClientQueries.cs": {
     "mtime": 1792607443.067149,
@@ -1085,9 +1085,9 @@
     "semantic_hash": "addaa55141349d4a9a57be4a6f18ceb8"
   },
   "backend/src/Infrastructure/Persistence/Clients/ClientStore.cs": {
-    "mtime": 1788960902.288581,
-    "ast_hash": "917bee5437ddfef17fb1f46ef002f6e2",
-    "semantic_hash": "917bee5437ddfef17fb1f46ef002f6e2"
+    "mtime": 1792693873.2066658,
+    "ast_hash": "7e6693c61c16ffbdf70ada04e3f33bc0",
+    "semantic_hash": "7e6693c61c16ffbdf70ada04e3f33bc0"
   },
   "backend/src/Infrastructure/Persistence/Errors/PersistenceOperation.cs": {
     "mtime": 1789400541.7866788,
@@ -1110,9 +1110,9 @@
     "semantic_hash": "423e9398d5a21872087a9b764d8bd9e3"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Catalogs/ClientSupplementAssignmentTests.cs": {
-    "mtime": 1787156273.750244,
-    "ast_hash": "b8cd9c0a54296ef0b38d65bd9cf08155",
-    "semantic_hash": "b8cd9c0a54296ef0b38d65bd9cf08155"
+    "mtime": 1792687910.4002502,
+    "ast_hash": "5a68ecaca8904123484a5701e3e20421",
+    "semantic_hash": "5a68ecaca8904123484a5701e3e20421"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Clients/ClientPersistenceTestData.cs": {
     "mtime": 1789049941.768919,
@@ -1365,9 +1365,9 @@
     "semantic_hash": "0f5fe0444324d57415a8beb5beafbc3a"
   },
   "backend/src/Api/Contracts/Administration/BlockContentRequest.cs": {
-    "mtime": 1788286134.8812969,
-    "ast_hash": "7d6d861c2907b54b6b3668c692f6046c",
-    "semantic_hash": "7d6d861c2907b54b6b3668c692f6046c"
+    "mtime": 1792822218.7976663,
+    "ast_hash": "47c51e21b824e929c6774bffadf75d3e",
+    "semantic_hash": "47c51e21b824e929c6774bffadf75d3e"
   },
   "backend/src/Api/Contracts/Authentication/AuthenticationContracts.cs": {
     "mtime": 1792607442.1019666,
@@ -1375,9 +1375,9 @@
     "semantic_hash": "bdbe6ed643d54446e52d661e8aca4d9e"
   },
   "backend/src/Api/Controllers/AdminContentModerationController.cs": {
-    "mtime": 1790004220.9577155,
-    "ast_hash": "93e534fde6588030f4e37576ba244aeb",
-    "semantic_hash": "93e534fde6588030f4e37576ba244aeb"
+    "mtime": 1792822218.9433053,
+    "ast_hash": "a8f99d11d1d0587733c4564b6c500abe",
+    "semantic_hash": "a8f99d11d1d0587733c4564b6c500abe"
   },
   "backend/src/Api/Controllers/AuthController.cs": {
     "mtime": 1792607442.296744,
@@ -1390,9 +1390,9 @@
     "semantic_hash": "e15cb2b9ebd882169e96ade78076ae80"
   },
   "backend/src/Api/Http/ApiResultMapper.cs": {
-    "mtime": 1788286134.9027207,
-    "ast_hash": "94c5f2c73d1d4752da34b86b72173bf4",
-    "semantic_hash": "94c5f2c73d1d4752da34b86b72173bf4"
+    "mtime": 1792822666.3154838,
+    "ast_hash": "0b3af999aad72b403411bf752f004199",
+    "semantic_hash": "0b3af999aad72b403411bf752f004199"
   },
   "backend/src/Api/Middlewares/CorrelationIdMiddleware.cs": {
     "mtime": 1787861969.3826995,
@@ -1410,9 +1410,9 @@
     "semantic_hash": "a57b499bd237d51c8d66e115ef67383a"
   },
   "backend/src/Api/Middlewares/ProblemDetailsResponseWriter.cs": {
-    "mtime": 1787862325.164583,
-    "ast_hash": "b67508b8211f193c64824890d58393b5",
-    "semantic_hash": "b67508b8211f193c64824890d58393b5"
+    "mtime": 1792822512.6526127,
+    "ast_hash": "a947a3a37e9ad7ab395fc2bb7b0dfd61",
+    "semantic_hash": "a947a3a37e9ad7ab395fc2bb7b0dfd61"
   },
   "backend/src/Api/Middlewares/SecurityHeadersMiddleware.cs": {
     "mtime": 1788188286.7396078,
@@ -1460,14 +1460,14 @@
     "semantic_hash": "1af2ceb55afd22f9dfe6d193450c326c"
   },
   "backend/src/Application/DependencyInjection.cs": {
-    "mtime": 1792659243.6662538,
-    "ast_hash": "bb144463ca842b2a9f1fa8e94689446b",
-    "semantic_hash": "bb144463ca842b2a9f1fa8e94689446b"
+    "mtime": 1792824030.5141969,
+    "ast_hash": "63a30cfae5f29ea8f22c623777e7d79c",
+    "semantic_hash": "63a30cfae5f29ea8f22c623777e7d79c"
   },
   "backend/src/Application/Features/Administration/ContentModeration/Abstractions/IPrivateCatalogModerationStore.cs": {
-    "mtime": 1788272150.80507,
-    "ast_hash": "fc5bcdf5d95da9f2829e7a711aa96a84",
-    "semantic_hash": "fc5bcdf5d95da9f2829e7a711aa96a84"
+    "mtime": 1792822218.7389033,
+    "ast_hash": "6915efc6268a24c877e65f643d2d88f4",
+    "semantic_hash": "6915efc6268a24c877e65f643d2d88f4"
   },
   "backend/src/Application/Features/Administration/ContentModeration/Abstractions/PrivateCatalogModerationStoreResult.cs": {
     "mtime": 1788272150.809991,
@@ -1475,34 +1475,34 @@
     "semantic_hash": "b6bd41ef2dc1aa5449fbb5ac25516b03"
   },
   "backend/src/Application/Features/Administration/ContentModeration/BlockExercise/BlockExerciseCommand.cs": {
-    "mtime": 1788272150.815707,
-    "ast_hash": "17801f6ec29e78414e82a7b0af1ffa17",
-    "semantic_hash": "17801f6ec29e78414e82a7b0af1ffa17"
+    "mtime": 1792822218.642213,
+    "ast_hash": "ddfb0e81f954ffe80f913b62c26b3351",
+    "semantic_hash": "ddfb0e81f954ffe80f913b62c26b3351"
   },
   "backend/src/Application/Features/Administration/ContentModeration/BlockExercise/BlockExerciseCommandValidator.cs": {
-    "mtime": 1788272150.8207061,
-    "ast_hash": "fab401ab0ce4ccc6d5bcdb4442ea29ca",
-    "semantic_hash": "fab401ab0ce4ccc6d5bcdb4442ea29ca"
+    "mtime": 1792822218.7077832,
+    "ast_hash": "2060d1988fa48e627dea8516274f8279",
+    "semantic_hash": "2060d1988fa48e627dea8516274f8279"
   },
   "backend/src/Application/Features/Administration/ContentModeration/BlockExercise/BlockExerciseHandler.cs": {
-    "mtime": 1788272150.8267066,
-    "ast_hash": "416cdc40adc73596e8d7481a5bb83280",
-    "semantic_hash": "416cdc40adc73596e8d7481a5bb83280"
+    "mtime": 1792822218.721298,
+    "ast_hash": "168a8e7a1618a767cd5b18cfdf20e95d",
+    "semantic_hash": "168a8e7a1618a767cd5b18cfdf20e95d"
   },
   "backend/src/Application/Features/Administration/ContentModeration/BlockFood/BlockFoodCommand.cs": {
-    "mtime": 1788272150.8354335,
-    "ast_hash": "9461f91b03e46ef2ce7a01a4236f1972",
-    "semantic_hash": "9461f91b03e46ef2ce7a01a4236f1972"
+    "mtime": 1792822218.5457537,
+    "ast_hash": "b99297952a2ce3f2c46ea57377473a9a",
+    "semantic_hash": "b99297952a2ce3f2c46ea57377473a9a"
   },
   "backend/src/Application/Features/Administration/ContentModeration/BlockFood/BlockFoodCommandValidator.cs": {
-    "mtime": 1788272150.840798,
-    "ast_hash": "04304066627c013498201f1e54124334",
-    "semantic_hash": "04304066627c013498201f1e54124334"
+    "mtime": 1792822218.6083424,
+    "ast_hash": "7549313de634f2736d2191beafbacd62",
+    "semantic_hash": "7549313de634f2736d2191beafbacd62"
   },
   "backend/src/Application/Features/Administration/ContentModeration/BlockFood/BlockFoodHandler.cs": {
-    "mtime": 1788272150.845798,
-    "ast_hash": "e974604c7e583aafdb71819c3103bd3d",
-    "semantic_hash": "e974604c7e583aafdb71819c3103bd3d"
+    "mtime": 1792822218.6238558,
+    "ast_hash": "63d2f33cbec4bf59e156f9c7655bf24d",
+    "semantic_hash": "63d2f33cbec4bf59e156f9c7655bf24d"
   },
   "backend/src/Application/Features/Administration/ContentModeration/ContentModerationErrors.cs": {
     "mtime": 1788272150.852602,
@@ -1540,19 +1540,19 @@
     "semantic_hash": "a010bf94db5b24c137123d87e9a93e9e"
   },
   "backend/src/Application/Features/Assessments/AssessmentErrors.cs": {
-    "mtime": 1789646742.896466,
-    "ast_hash": "882280d74bd6b5404f1c56f47e3aa43f",
-    "semantic_hash": "882280d74bd6b5404f1c56f47e3aa43f"
+    "mtime": 1792683999.019403,
+    "ast_hash": "690d661df50f3476e3ca6c579ab1e33d",
+    "semantic_hash": "690d661df50f3476e3ca6c579ab1e33d"
   },
   "backend/src/Application/Features/Assessments/AssessmentInputValidators.cs": {
-    "mtime": 1791922051.6530266,
-    "ast_hash": "2e1316c6e19e0a0f307823fb4f8a15ee",
-    "semantic_hash": "2e1316c6e19e0a0f307823fb4f8a15ee"
+    "mtime": 1792683924.9299836,
+    "ast_hash": "b95cfa7e9c8ff20f2d4dea09739ccf91",
+    "semantic_hash": "b95cfa7e9c8ff20f2d4dea09739ccf91"
   },
   "backend/src/Application/Features/Assessments/AssessmentMappings.cs": {
-    "mtime": 1791028028.1854882,
-    "ast_hash": "5eaf352381c487cac21b5629a32f2a60",
-    "semantic_hash": "5eaf352381c487cac21b5629a32f2a60"
+    "mtime": 1792686133.9206078,
+    "ast_hash": "77306972f722618197ffad612a635375",
+    "semantic_hash": "77306972f722618197ffad612a635375"
   },
   "backend/src/Application/Features/Assessments/AssessmentValueDto.cs": {
     "mtime": 1787061286.1858325,
@@ -1570,9 +1570,9 @@
     "semantic_hash": "de62953c769950dca7d264f447f6b463"
   },
   "backend/src/Application/Features/Assessments/CheckIns/Abstractions/CheckInStoreResult.cs": {
-    "mtime": 1791030931.5456932,
-    "ast_hash": "a6c221053bf94eb881c8816a3ead2b01",
-    "semantic_hash": "a6c221053bf94eb881c8816a3ead2b01"
+    "mtime": 1792686566.664437,
+    "ast_hash": "d13bb152b649121adac23076559d0934",
+    "semantic_hash": "d13bb152b649121adac23076559d0934"
   },
   "backend/src/Application/Features/Assessments/CheckIns/Abstractions/ICheckInQueries.cs": {
     "mtime": 1789827663.1407754,
@@ -1595,9 +1595,9 @@
     "semantic_hash": "7667dd0933cd3adcf372945d0005eab1"
   },
   "backend/src/Application/Features/Assessments/CheckIns/CheckInStoreResultMapper.cs": {
-    "mtime": 1791028250.9771206,
-    "ast_hash": "3d14dea0bf3348fc48c2ad2c1502d9d8",
-    "semantic_hash": "3d14dea0bf3348fc48c2ad2c1502d9d8"
+    "mtime": 1792686566.6764238,
+    "ast_hash": "f5c5656cc56028f1ac062da766a650f8",
+    "semantic_hash": "f5c5656cc56028f1ac062da766a650f8"
   },
   "backend/src/Application/Features/Assessments/CheckIns/CorrectCheckIn/CorrectCheckInCommand.cs": {
     "mtime": 1787061286.2493804,
@@ -1705,29 +1705,29 @@
     "semantic_hash": "fd5779da1270ba3691addd2539c8a72c"
   },
   "backend/src/Application/Features/Assessments/InitialAssessments/Abstractions/IInitialAssessmentQueries.cs": {
-    "mtime": 1787061286.4183233,
-    "ast_hash": "3307450fac76553e69ab07aaccfdc4b6",
-    "semantic_hash": "3307450fac76553e69ab07aaccfdc4b6"
+    "mtime": 1792686169.7535524,
+    "ast_hash": "c1085af7c2d9e0dfc2b5b2f442e648a3",
+    "semantic_hash": "c1085af7c2d9e0dfc2b5b2f442e648a3"
   },
   "backend/src/Application/Features/Assessments/InitialAssessments/Abstractions/IInitialAssessmentStore.cs": {
-    "mtime": 1787061286.4249053,
-    "ast_hash": "50de3a5d9a492a3419edb410ff5fee86",
-    "semantic_hash": "50de3a5d9a492a3419edb410ff5fee86"
+    "mtime": 1792683998.97259,
+    "ast_hash": "ec0c28c6d5061223a05dac1b8f15a9d2",
+    "semantic_hash": "ec0c28c6d5061223a05dac1b8f15a9d2"
   },
   "backend/src/Application/Features/Assessments/InitialAssessments/Abstractions/InitialAssessmentStoreResult.cs": {
-    "mtime": 1787061286.4317336,
-    "ast_hash": "9a7af3f1238a5dc42fa31661b1d05000",
-    "semantic_hash": "9a7af3f1238a5dc42fa31661b1d05000"
+    "mtime": 1792683998.9839451,
+    "ast_hash": "c5b4a2e146a722b3d16ad779d8143157",
+    "semantic_hash": "c5b4a2e146a722b3d16ad779d8143157"
   },
   "backend/src/Application/Features/Assessments/InitialAssessments/CreateInitialAssessment/CreateInitialAssessmentCommand.cs": {
-    "mtime": 1787061286.4391437,
-    "ast_hash": "a41cdd99732e71b3b4815656f5b38acf",
-    "semantic_hash": "a41cdd99732e71b3b4815656f5b38acf"
+    "mtime": 1792683976.157693,
+    "ast_hash": "0e50e7917a64bace4b906b293db41c67",
+    "semantic_hash": "0e50e7917a64bace4b906b293db41c67"
   },
   "backend/src/Application/Features/Assessments/InitialAssessments/CreateInitialAssessment/CreateInitialAssessmentCommandValidator.cs": {
-    "mtime": 1791921971.5449502,
-    "ast_hash": "40dfe1c86d97d038cd32a0c21597d062",
-    "semantic_hash": "40dfe1c86d97d038cd32a0c21597d062"
+    "mtime": 1792683973.6532362,
+    "ast_hash": "9db8f0ec136961e8d475b86b84f6e89e",
+    "semantic_hash": "9db8f0ec136961e8d475b86b84f6e89e"
   },
   "backend/src/Application/Features/Assessments/InitialAssessments/CreateInitialAssessment/CreateInitialAssessmentHandler.cs": {
     "mtime": 1787239900.0078583,
@@ -1735,9 +1735,9 @@
     "semantic_hash": "2d2641c82159bc84c91a28a55e5d9709"
   },
   "backend/src/Application/Features/Assessments/InitialAssessments/Dtos/InitialAssessmentDto.cs": {
-    "mtime": 1787061286.462945,
-    "ast_hash": "28777786d94ed8e9f83089c5b74e847f",
-    "semantic_hash": "28777786d94ed8e9f83089c5b74e847f"
+    "mtime": 1792686133.8986533,
+    "ast_hash": "1faf816e534bd862891211edd375d04b",
+    "semantic_hash": "1faf816e534bd862891211edd375d04b"
   },
   "backend/src/Application/Features/Assessments/InitialAssessments/GetInitialAssessment/GetInitialAssessmentHandler.cs": {
     "mtime": 1787240083.6651652,
@@ -1750,19 +1750,19 @@
     "semantic_hash": "61c0d6e973412c43342c5e2c76051859"
   },
   "backend/src/Application/Features/Assessments/InitialAssessments/InitialAssessmentStoreResultMapper.cs": {
-    "mtime": 1787061286.4880419,
-    "ast_hash": "6cd7437977826f0263c5b649ea629400",
-    "semantic_hash": "6cd7437977826f0263c5b649ea629400"
+    "mtime": 1792683998.9987292,
+    "ast_hash": "5df0d25ccbc261369cf6800524bb8e8c",
+    "semantic_hash": "5df0d25ccbc261369cf6800524bb8e8c"
   },
   "backend/src/Application/Features/Assessments/InitialAssessments/UpdateInitialAssessment/UpdateInitialAssessmentCommand.cs": {
-    "mtime": 1787061286.495154,
-    "ast_hash": "1d70dff880f00dc63ba537d47fdc194a",
-    "semantic_hash": "1d70dff880f00dc63ba537d47fdc194a"
+    "mtime": 1792683976.1692233,
+    "ast_hash": "7d36c41943e5f94c9a45ec9777714594",
+    "semantic_hash": "7d36c41943e5f94c9a45ec9777714594"
   },
   "backend/src/Application/Features/Assessments/InitialAssessments/UpdateInitialAssessment/UpdateInitialAssessmentCommandValidator.cs": {
-    "mtime": 1791921971.5563776,
-    "ast_hash": "3907be30a50051e7fe2fbfebf62c5cc7",
-    "semantic_hash": "3907be30a50051e7fe2fbfebf62c5cc7"
+    "mtime": 1792683973.9655616,
+    "ast_hash": "1df38e74e83be0a91bbf3f5662d1e9a2",
+    "semantic_hash": "1df38e74e83be0a91bbf3f5662d1e9a2"
   },
   "backend/src/Application/Features/Assessments/InitialAssessments/UpdateInitialAssessment/UpdateInitialAssessmentHandler.cs": {
     "mtime": 1787240101.3967533,
@@ -1960,9 +1960,9 @@
     "semantic_hash": "d73fc410d8b2543b3a5af240229477d7"
   },
   "backend/src/Application/Features/Authentication/AuthenticationErrors.cs": {
-    "mtime": 1792056937.8828106,
-    "ast_hash": "1c92b0bdd13e74d461c0ccdfd218f920",
-    "semantic_hash": "1c92b0bdd13e74d461c0ccdfd218f920"
+    "mtime": 1792822666.2976336,
+    "ast_hash": "f6065df9b84635e33180ebf4ec3d6b12",
+    "semantic_hash": "f6065df9b84635e33180ebf4ec3d6b12"
   },
   "backend/src/Application/Features/Authentication/AuthenticationPolicy.cs": {
     "mtime": 1787664544.5503037,
@@ -2050,9 +2050,9 @@
     "semantic_hash": "ab3c3d81b81b64d24aed415f34c913e1"
   },
   "backend/src/Application/Features/Authentication/Login/LoginHandler.cs": {
-    "mtime": 1787664544.6533,
-    "ast_hash": "bbecd655a089f0a7a43b744fcb36787d",
-    "semantic_hash": "bbecd655a089f0a7a43b744fcb36787d"
+    "mtime": 1792822666.391099,
+    "ast_hash": "3ecfe8769f6ebb24a7e9d8952a3f8bc9",
+    "semantic_hash": "3ecfe8769f6ebb24a7e9d8952a3f8bc9"
   },
   "backend/src/Application/Features/Authentication/Logout/LogoutCommand.cs": {
     "mtime": 1788091265.3205507,
@@ -2440,9 +2440,9 @@
     "semantic_hash": "9e4b2e81140b1c9399e3375c81ad322e"
   },
   "backend/src/Application/Features/Nutrition/Foods/Dtos/FoodDto.cs": {
-    "mtime": 1789646196.3005228,
-    "ast_hash": "567c4252ab4c2a8f05b2e5d3cb5d6f12",
-    "semantic_hash": "567c4252ab4c2a8f05b2e5d3cb5d6f12"
+    "mtime": 1792825711.0029037,
+    "ast_hash": "3702da0414aad26909367a6f7ff58995",
+    "semantic_hash": "3702da0414aad26909367a6f7ff58995"
   },
   "backend/src/Application/Features/Nutrition/Foods/Dtos/GlobalFoodDto.cs": {
     "mtime": 1789646206.9668486,
@@ -2450,9 +2450,9 @@
     "semantic_hash": "0b2805983c1e160659c80cbd4b38dffb"
   },
   "backend/src/Application/Features/Nutrition/Foods/FoodMappings.cs": {
-    "mtime": 1789646266.901649,
-    "ast_hash": "cbee3ebf6031419858af25086fbe2f1b",
-    "semantic_hash": "cbee3ebf6031419858af25086fbe2f1b"
+    "mtime": 1792825711.102636,
+    "ast_hash": "9adcba5eb3ac56d29a77bdd5530112a0",
+    "semantic_hash": "9adcba5eb3ac56d29a77bdd5530112a0"
   },
   "backend/src/Application/Features/Nutrition/Foods/FoodStoreResultMapper.cs": {
     "mtime": 1786973277.0326953,
@@ -2590,9 +2590,9 @@
     "semantic_hash": "b13cf8b1c2f132f2c75c2462d614600a"
   },
   "backend/src/Application/Features/Nutrition/MealPlans/Abstractions/MealPlanStoreResult.cs": {
-    "mtime": 1786466455.7489169,
-    "ast_hash": "1a81287a93595267fffef673195531cc",
-    "semantic_hash": "1a81287a93595267fffef673195531cc"
+    "mtime": 1792686525.1377025,
+    "ast_hash": "b8c5935ad5f675202539a22d545e57cb",
+    "semantic_hash": "b8c5935ad5f675202539a22d545e57cb"
   },
   "backend/src/Application/Features/Nutrition/MealPlans/Abstractions/UpdateMealPlanWriteModel.cs": {
     "mtime": 1786466455.7549167,
@@ -2625,9 +2625,9 @@
     "semantic_hash": "195909d4a44fa7df534602e61eb2ffaf"
   },
   "backend/src/Application/Features/Nutrition/MealPlans/Dtos/MealPlanDetailsDto.cs": {
-    "mtime": 1788271256.3865614,
-    "ast_hash": "2a1a8ee0e53494f2978c4f6eedb9c250",
-    "semantic_hash": "2a1a8ee0e53494f2978c4f6eedb9c250"
+    "mtime": 1792825463.1598659,
+    "ast_hash": "91955008e1c64425534e3d6768f68671",
+    "semantic_hash": "91955008e1c64425534e3d6768f68671"
   },
   "backend/src/Application/Features/Nutrition/MealPlans/Dtos/MealPlanSummaryDto.cs": {
     "mtime": 1790852119.594453,
@@ -2670,19 +2670,19 @@
     "semantic_hash": "f9e79d255b1fa864182215a20ee20b03"
   },
   "backend/src/Application/Features/Nutrition/MealPlans/MealPlanStoreResultMapper.cs": {
-    "mtime": 1786973279.9988334,
-    "ast_hash": "bcf6abb32ef329314e98ef2e9a08bb05",
-    "semantic_hash": "bcf6abb32ef329314e98ef2e9a08bb05"
+    "mtime": 1792686525.1680677,
+    "ast_hash": "134f269c04d8ad7312310693be6e44bb",
+    "semantic_hash": "134f269c04d8ad7312310693be6e44bb"
   },
   "backend/src/Application/Features/Nutrition/MealPlans/MealPlanStructureInput.cs": {
-    "mtime": 1786379171.435235,
-    "ast_hash": "39503396b0a61ed3611741171b3cf921",
-    "semantic_hash": "39503396b0a61ed3611741171b3cf921"
+    "mtime": 1792695510.289295,
+    "ast_hash": "bcca68423d02226af0b593f3a0153fbf",
+    "semantic_hash": "bcca68423d02226af0b593f3a0153fbf"
   },
   "backend/src/Application/Features/Nutrition/MealPlans/MealPlanStructureInputValidator.cs": {
-    "mtime": 1786465597.0016322,
-    "ast_hash": "13ee0584d4dd77add44d13bac439cb8d",
-    "semantic_hash": "13ee0584d4dd77add44d13bac439cb8d"
+    "mtime": 1792695510.4115422,
+    "ast_hash": "43e5f6b2988d3a152bfa690e276e26d2",
+    "semantic_hash": "43e5f6b2988d3a152bfa690e276e26d2"
   },
   "backend/src/Application/Features/Nutrition/MealPlans/MealPlanValidationRules.cs": {
     "mtime": 1786466455.8295164,
@@ -3125,9 +3125,9 @@
     "semantic_hash": "8b39859ab862ed0c821501094942d520"
   },
   "backend/src/Application/Features/Supplements/Abstractions/ClientSupplementAssignmentStoreResult.cs": {
-    "mtime": 1787155563.7065215,
-    "ast_hash": "f80bb7edb044057653955def2d29e624",
-    "semantic_hash": "f80bb7edb044057653955def2d29e624"
+    "mtime": 1792686555.0823674,
+    "ast_hash": "d268e61c0cbbf539453f85ff7002b23e",
+    "semantic_hash": "d268e61c0cbbf539453f85ff7002b23e"
   },
   "backend/src/Application/Features/Supplements/Abstractions/GlobalSupplementStoreResult.cs": {
     "mtime": 1787155563.7155216,
@@ -3205,9 +3205,9 @@
     "semantic_hash": "7a693991dbdd6594157562e7eee97c1d"
   },
   "backend/src/Application/Features/Supplements/ClientSupplementAssignmentStoreResultMapper.cs": {
-    "mtime": 1787155564.0035057,
-    "ast_hash": "3543a966fdc986cc164b2fde7e1f7919",
-    "semantic_hash": "3543a966fdc986cc164b2fde7e1f7919"
+    "mtime": 1792686555.1178045,
+    "ast_hash": "e0860e18d18e1b68cb94a5bd82c0dd83",
+    "semantic_hash": "e0860e18d18e1b68cb94a5bd82c0dd83"
   },
   "backend/src/Application/Features/Supplements/CreateGlobalSupplement/CreateGlobalSupplementCommand.cs": {
     "mtime": 1792435806.198062,
@@ -3275,9 +3275,9 @@
     "semantic_hash": "bf9529c1f94d2c960fb84e5b69a6f647"
   },
   "backend/src/Application/Features/Supplements/Dtos/SupplementDto.cs": {
-    "mtime": 1792435807.9393327,
-    "ast_hash": "94b0fc2fa765c0781ac3e0909433ba30",
-    "semantic_hash": "94b0fc2fa765c0781ac3e0909433ba30"
+    "mtime": 1792825711.1821427,
+    "ast_hash": "fed2451181fc0b0dc16130fe6d5ddcb1",
+    "semantic_hash": "fed2451181fc0b0dc16130fe6d5ddcb1"
   },
   "backend/src/Application/Features/Supplements/GetGlobalSupplement/GetGlobalSupplementHandler.cs": {
     "mtime": 1787155564.209622,
@@ -3440,9 +3440,9 @@
     "semantic_hash": "f7b5995ad5fe5db66077cadf3ece67d9"
   },
   "backend/src/Application/Features/Supplements/SupplementMappings.cs": {
-    "mtime": 1790856625.4527144,
-    "ast_hash": "ebdbc82d0ce14ddd4fad88940e170bb3",
-    "semantic_hash": "ebdbc82d0ce14ddd4fad88940e170bb3"
+    "mtime": 1792825733.3243244,
+    "ast_hash": "5359e5acef46672babc70e8005f885ce",
+    "semantic_hash": "5359e5acef46672babc70e8005f885ce"
   },
   "backend/src/Application/Features/Supplements/SupplementStoreResultMapper.cs": {
     "mtime": 1787155564.6788633,
@@ -3770,9 +3770,9 @@
     "semantic_hash": "7052148428da3c9cf1047b9358ced090"
   },
   "backend/src/Application/Features/Training/Exercises/Dtos/ExerciseDto.cs": {
-    "mtime": 1790700677.8962715,
-    "ast_hash": "26020c264ff82073265ed60ffa404e7f",
-    "semantic_hash": "26020c264ff82073265ed60ffa404e7f"
+    "mtime": 1792825711.007164,
+    "ast_hash": "43c2f4148df841d37c64ee3bc7545285",
+    "semantic_hash": "43c2f4148df841d37c64ee3bc7545285"
   },
   "backend/src/Application/Features/Training/Exercises/Dtos/GlobalExerciseDto.cs": {
     "mtime": 1790241397.9490383,
@@ -3780,9 +3780,9 @@
     "semantic_hash": "0ab4d3179802e3567d5e6437656007c4"
   },
   "backend/src/Application/Features/Training/Exercises/ExerciseMappings.cs": {
-    "mtime": 1790700687.8835356,
-    "ast_hash": "d934de46a3b33b198776f61fe665e398",
-    "semantic_hash": "d934de46a3b33b198776f61fe665e398"
+    "mtime": 1792825711.1197956,
+    "ast_hash": "065082db8427f628418ee560e1e11e69",
+    "semantic_hash": "065082db8427f628418ee560e1e11e69"
   },
   "backend/src/Application/Features/Training/Exercises/ExerciseStoreResultMapper.cs": {
     "mtime": 1786973470.8483922,
@@ -3930,9 +3930,9 @@
     "semantic_hash": "72aca976b20719746f0f0e6e0a2a9bab"
   },
   "backend/src/Application/Features/Training/TrainingPlans/Abstractions/TrainingPlanStoreResult.cs": {
-    "mtime": 1786629422.1625338,
-    "ast_hash": "db43d4bcd651c28bc26d2d065be03e8f",
-    "semantic_hash": "db43d4bcd651c28bc26d2d065be03e8f"
+    "mtime": 1792686502.671858,
+    "ast_hash": "65ec5246ae9dc309b0442a091d81bc75",
+    "semantic_hash": "65ec5246ae9dc309b0442a091d81bc75"
   },
   "backend/src/Application/Features/Training/TrainingPlans/Abstractions/UpdateTrainingPlanMetadataWriteModel.cs": {
     "mtime": 1786629422.1673503,
@@ -3970,9 +3970,9 @@
     "semantic_hash": "5018af3c39129bed1711116db2d9af04"
   },
   "backend/src/Application/Features/Training/TrainingPlans/Dtos/TrainingPlanDetailsDto.cs": {
-    "mtime": 1792607442.6470609,
-    "ast_hash": "10ed47e4067e14aff6e85914689a20d9",
-    "semantic_hash": "10ed47e4067e14aff6e85914689a20d9"
+    "mtime": 1792825463.1960864,
+    "ast_hash": "696e0c3593936af3066573048b2bb42b",
+    "semantic_hash": "696e0c3593936af3066573048b2bb42b"
   },
   "backend/src/Application/Features/Training/TrainingPlans/Dtos/TrainingPlanSummaryDto.cs": {
     "mtime": 1790852837.9291754,
@@ -4025,9 +4025,9 @@
     "semantic_hash": "ebfd5a607767b7a0d762d329f9d6e483"
   },
   "backend/src/Application/Features/Training/TrainingPlans/TrainingPlanStoreResultMapper.cs": {
-    "mtime": 1786973476.9633594,
-    "ast_hash": "56c8cbaaa7ef9ba89ada303fce8e1623",
-    "semantic_hash": "56c8cbaaa7ef9ba89ada303fce8e1623"
+    "mtime": 1792686502.703015,
+    "ast_hash": "103964c4fcedd1f4dbd1ef47a8eed987",
+    "semantic_hash": "103964c4fcedd1f4dbd1ef47a8eed987"
   },
   "backend/src/Application/Features/Training/TrainingPlans/TrainingPlanStructureInput.cs": {
     "mtime": 1792607442.6671233,
@@ -4245,9 +4245,9 @@
     "semantic_hash": "ac1dfde4caa8fab13ea7f0d01223e888"
   },
   "backend/src/Infrastructure/Persistence/Administration/PrivateCatalogModerationStore.cs": {
-    "mtime": 1788272150.8995476,
-    "ast_hash": "1b2adbff2ebdf666926bff54469f4a95",
-    "semantic_hash": "1b2adbff2ebdf666926bff54469f4a95"
+    "mtime": 1792850064.7930129,
+    "ast_hash": "9287a0c8ba583c359f4a4c8d1a47345b",
+    "semantic_hash": "9287a0c8ba583c359f4a4c8d1a47345b"
   },
   "backend/src/Infrastructure/Persistence/Assessments/CheckInQueries.cs": {
     "mtime": 1791031663.4098291,
@@ -4255,19 +4255,19 @@
     "semantic_hash": "32e36a53dc4273e1166261cc620a6e39"
   },
   "backend/src/Infrastructure/Persistence/Assessments/CheckInStore.cs": {
-    "mtime": 1791028998.5424438,
-    "ast_hash": "b1857600bc837dee7f9774530e565008",
-    "semantic_hash": "b1857600bc837dee7f9774530e565008"
+    "mtime": 1792686566.6872218,
+    "ast_hash": "edc5b993bbae4a1d452bc8af658b4c71",
+    "semantic_hash": "edc5b993bbae4a1d452bc8af658b4c71"
   },
   "backend/src/Infrastructure/Persistence/Assessments/InitialAssessmentQueries.cs": {
-    "mtime": 1787061286.5347433,
-    "ast_hash": "4f4a98495bff0ecc8c774315f7a24d67",
-    "semantic_hash": "4f4a98495bff0ecc8c774315f7a24d67"
+    "mtime": 1792686307.2122154,
+    "ast_hash": "29a74c577059d5fd1a24190bf7f47fff",
+    "semantic_hash": "29a74c577059d5fd1a24190bf7f47fff"
   },
   "backend/src/Infrastructure/Persistence/Assessments/InitialAssessmentStore.cs": {
-    "mtime": 1787150520.8869412,
-    "ast_hash": "bd4b1fab369c1b72705917f90f7eabd5",
-    "semantic_hash": "bd4b1fab369c1b72705917f90f7eabd5"
+    "mtime": 1792684024.483345,
+    "ast_hash": "24e60dd85566085a71a6f2057484e518",
+    "semantic_hash": "24e60dd85566085a71a6f2057484e518"
   },
   "backend/src/Infrastructure/Persistence/Billing/BillingCheckoutStore.cs": {
     "mtime": 1791031575.2561352,
@@ -4330,9 +4330,9 @@
     "semantic_hash": "bcc45f9f03888c2c85f888a919bae1cd"
   },
   "backend/src/Infrastructure/Persistence/Nutrition/FoodQueries.cs": {
-    "mtime": 1789653505.6400397,
-    "ast_hash": "399cb48db15def728f9299913ac0581f",
-    "semantic_hash": "399cb48db15def728f9299913ac0581f"
+    "mtime": 1792825711.1253443,
+    "ast_hash": "1c45266c93028b511cef8a97d77a9f43",
+    "semantic_hash": "1c45266c93028b511cef8a97d77a9f43"
   },
   "backend/src/Infrastructure/Persistence/Nutrition/FoodStore.cs": {
     "mtime": 1789653337.334041,
@@ -4350,14 +4350,14 @@
     "semantic_hash": "884a30623d2e249ab10796b1ff8b8fac"
   },
   "backend/src/Infrastructure/Persistence/Nutrition/MealPlanQueries.cs": {
-    "mtime": 1790859386.48218,
-    "ast_hash": "619afc38c311dccfbf0cfd2528e9a70c",
-    "semantic_hash": "619afc38c311dccfbf0cfd2528e9a70c"
+    "mtime": 1792825463.7482522,
+    "ast_hash": "1e5c8e641171a8da5b77c1e8b7a4bfd7",
+    "semantic_hash": "1e5c8e641171a8da5b77c1e8b7a4bfd7"
   },
   "backend/src/Infrastructure/Persistence/Nutrition/MealPlanStore.cs": {
-    "mtime": 1792666853.138683,
-    "ast_hash": "719a1d11c2a6a91db670b5b29b07321d",
-    "semantic_hash": "719a1d11c2a6a91db670b5b29b07321d"
+    "mtime": 1792825463.9439511,
+    "ast_hash": "c7b8d5c91bf6f7c871b37a045f2798bc",
+    "semantic_hash": "c7b8d5c91bf6f7c871b37a045f2798bc"
   },
   "backend/src/Infrastructure/Persistence/Packs/ClientSessionPackQueries.cs": {
     "mtime": 1790520262.207923,
@@ -4390,14 +4390,14 @@
     "semantic_hash": "e9a276a005036df634c93144b7ac84c9"
   },
   "backend/src/Infrastructure/Persistence/Supplements/ClientSupplementAssignmentQueries.cs": {
-    "mtime": 1791922355.084795,
-    "ast_hash": "f3e51a19357327fc1e2fa04c755ba7d1",
-    "semantic_hash": "f3e51a19357327fc1e2fa04c755ba7d1"
+    "mtime": 1792694717.842299,
+    "ast_hash": "4eb4609603c74ce3d69d2765affb9fd8",
+    "semantic_hash": "4eb4609603c74ce3d69d2765affb9fd8"
   },
   "backend/src/Infrastructure/Persistence/Supplements/ClientSupplementAssignmentStore.cs": {
-    "mtime": 1792435809.748346,
-    "ast_hash": "f793e14921a15562289054a0ce0bcd65",
-    "semantic_hash": "f793e14921a15562289054a0ce0bcd65"
+    "mtime": 1792825463.9578407,
+    "ast_hash": "37e650c5cd812ce185b07d0a694c8c99",
+    "semantic_hash": "37e650c5cd812ce185b07d0a694c8c99"
   },
   "backend/src/Infrastructure/Persistence/Supplements/GlobalSupplementQueries.cs": {
     "mtime": 1787155564.8994045,
@@ -4415,9 +4415,9 @@
     "semantic_hash": "3c07653865fa60019505e6d22e16fb2b"
   },
   "backend/src/Infrastructure/Persistence/Supplements/SupplementQueries.cs": {
-    "mtime": 1787155564.9569218,
-    "ast_hash": "ffda827edb254fe60fe0a4fa22e2721e",
-    "semantic_hash": "ffda827edb254fe60fe0a4fa22e2721e"
+    "mtime": 1792825733.3412416,
+    "ast_hash": "141ef53902267f8a2dadb2164a5e1b90",
+    "semantic_hash": "141ef53902267f8a2dadb2164a5e1b90"
   },
   "backend/src/Infrastructure/Persistence/Supplements/SupplementStore.cs": {
     "mtime": 1792435810.4077895,
@@ -4440,9 +4440,9 @@
     "semantic_hash": "732cf8b024a7b40a3d1252bfb1103b1b"
   },
   "backend/src/Infrastructure/Persistence/Training/ExerciseQueries.cs": {
-    "mtime": 1790859386.5190063,
-    "ast_hash": "1446468f04d9226cbb0a347c3c21f48f",
-    "semantic_hash": "1446468f04d9226cbb0a347c3c21f48f"
+    "mtime": 1792825711.1345944,
+    "ast_hash": "79aa49dccf665ba6f5fa595f4e6ab33a",
+    "semantic_hash": "79aa49dccf665ba6f5fa595f4e6ab33a"
   },
   "backend/src/Infrastructure/Persistence/Training/ExerciseSetLogQueries.cs": {
     "mtime": 1790859386.5370338,
@@ -4470,14 +4470,14 @@
     "semantic_hash": "4a89915dd93dba04375f26eccfc5c48d"
   },
   "backend/src/Infrastructure/Persistence/Training/TrainingPlanQueries.cs": {
-    "mtime": 1792607443.0908794,
-    "ast_hash": "59f4b8ecc6a2c47fd41db38ac64c540a",
-    "semantic_hash": "59f4b8ecc6a2c47fd41db38ac64c540a"
+    "mtime": 1792825463.9186504,
+    "ast_hash": "a10aa04bf25fa9dc71974bfea805ba0d",
+    "semantic_hash": "a10aa04bf25fa9dc71974bfea805ba0d"
   },
   "backend/src/Infrastructure/Persistence/Training/TrainingPlanStore.cs": {
-    "mtime": 1790859386.8847005,
-    "ast_hash": "73a004f391b5313e2d161f8926c80aaa",
-    "semantic_hash": "73a004f391b5313e2d161f8926c80aaa"
+    "mtime": 1792850938.9739256,
+    "ast_hash": "5c4bd9b84dd4b29d9e9df5fb4889b86e",
+    "semantic_hash": "5c4bd9b84dd4b29d9e9df5fb4889b86e"
   },
   "backend/src/Infrastructure/Persistence/Training/TrainingPlanStructureCoordinator.cs": {
     "mtime": 1792607443.1194792,
@@ -4520,9 +4520,9 @@
     "semantic_hash": "f6c14a2a2e98fda30f1d3a010bd4f759"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Configuration/ApplicationRegistrationTests.cs": {
-    "mtime": 1792661410.8524716,
-    "ast_hash": "b774113cde65b23bfb18254f3a0e4ff4",
-    "semantic_hash": "b774113cde65b23bfb18254f3a0e4ff4"
+    "mtime": 1792827137.0967245,
+    "ast_hash": "653e1bff478e0eac21f9a6a240d82c78",
+    "semantic_hash": "653e1bff478e0eac21f9a6a240d82c78"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Configuration/OpenApiEndpointTests.cs": {
     "mtime": 1790011243.3216095,
@@ -4530,9 +4530,9 @@
     "semantic_hash": "590607a42b3fe951c5b53c7a8242d796"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/AdminContentModerationControllerTests.cs": {
-    "mtime": 1788720727.6246905,
-    "ast_hash": "d4e4b549af272ecf40c1e24994f69896",
-    "semantic_hash": "d4e4b549af272ecf40c1e24994f69896"
+    "mtime": 1792827137.030991,
+    "ast_hash": "e9851b704ee72f06d2832d8cb6105315",
+    "semantic_hash": "e9851b704ee72f06d2832d8cb6105315"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Http/ApiPipelineTests.cs": {
     "mtime": 1788187862.3736756,
@@ -4605,14 +4605,14 @@
     "semantic_hash": "81e6f6372e590625dda94ad1bbc807fc"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Administration/PrivateCatalogModerationStoreTests.cs": {
-    "mtime": 1788719455.5294802,
-    "ast_hash": "d04f5a66404eaf0e6fb0da8a1638f07c",
-    "semantic_hash": "d04f5a66404eaf0e6fb0da8a1638f07c"
+    "mtime": 1792822320.7219126,
+    "ast_hash": "afbfad44db7ea2a6d4120ec5f7db490b",
+    "semantic_hash": "afbfad44db7ea2a6d4120ec5f7db490b"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Assessments/AssessmentConcurrencyTests.cs": {
-    "mtime": 1787412831.0618021,
-    "ast_hash": "4ac6c020bee046aa4ca0b999dcbb3ac6",
-    "semantic_hash": "4ac6c020bee046aa4ca0b999dcbb3ac6"
+    "mtime": 1792687646.781474,
+    "ast_hash": "37e1ddf883f8ed5fe6e87651077ecb43",
+    "semantic_hash": "37e1ddf883f8ed5fe6e87651077ecb43"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Billing/BillingCheckoutStoreTests.cs": {
     "mtime": 1791031366.3061855,
@@ -4685,14 +4685,14 @@
     "semantic_hash": "9bb479736c7ee7678796b5bd1ae2ee79"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Nutrition/MealPlanQueriesTests.cs": {
-    "mtime": 1789905141.47691,
-    "ast_hash": "7580c9ea3a8daa29f0e0681738f5fbc8",
-    "semantic_hash": "7580c9ea3a8daa29f0e0681738f5fbc8"
+    "mtime": 1792687886.303596,
+    "ast_hash": "9b3984d48788610cfdfa8af3a684ef6d",
+    "semantic_hash": "9b3984d48788610cfdfa8af3a684ef6d"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Nutrition/MealPlanStoreTests.cs": {
-    "mtime": 1787156239.920056,
-    "ast_hash": "bf5ca07d40685f2f86e24d121d0be645",
-    "semantic_hash": "bf5ca07d40685f2f86e24d121d0be645"
+    "mtime": 1792695723.5294743,
+    "ast_hash": "e07b1bf46d2238e92bbd40b0d6062b0b",
+    "semantic_hash": "e07b1bf46d2238e92bbd40b0d6062b0b"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Packs/PackPersistenceTests.cs": {
     "mtime": 1787412731.4753058,
@@ -4715,9 +4715,9 @@
     "semantic_hash": "685871ac64d5f22640c3ed0e85f669ca"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Supplements/GlobalSupplementPersistenceTests.cs": {
-    "mtime": 1787156183.3898497,
-    "ast_hash": "e7cebc7c70d6527013b4f9d4a2f1f36e",
-    "semantic_hash": "e7cebc7c70d6527013b4f9d4a2f1f36e"
+    "mtime": 1792687646.7393622,
+    "ast_hash": "8744126974038b7b742944c0f396e73e",
+    "semantic_hash": "8744126974038b7b742944c0f396e73e"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Supplements/SupplementQueryBudgetTests.cs": {
     "mtime": 1791922985.2652597,
@@ -4755,9 +4755,9 @@
     "semantic_hash": "cc6b575e297bec903a2b84fb614c742b"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Training/TrainingConcurrencyTests.cs": {
-    "mtime": 1789905349.7032702,
-    "ast_hash": "b305a195c521fcf0f1f296f3d1a3e708",
-    "semantic_hash": "b305a195c521fcf0f1f296f3d1a3e708"
+    "mtime": 1792687646.747881,
+    "ast_hash": "9f242dfcbcbb1ef08443f36fa506864a",
+    "semantic_hash": "9f242dfcbcbb1ef08443f36fa506864a"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Training/TrainingPlanStoreTests.cs": {
     "mtime": 1786707230.3841143,
@@ -4780,9 +4780,9 @@
     "semantic_hash": "40f7f18470203e60dcd715a406035c49"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Administration/ContentModerationHandlerTests.cs": {
-    "mtime": 1788284413.3008268,
-    "ast_hash": "10cd141f164e3c3097e443afc0cace7b",
-    "semantic_hash": "10cd141f164e3c3097e443afc0cace7b"
+    "mtime": 1792822366.9305527,
+    "ast_hash": "afd520a85af64afcca26b18a57719bd0",
+    "semantic_hash": "afd520a85af64afcca26b18a57719bd0"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Assessments/AssessmentOutcomeMapperTests.cs": {
     "mtime": 1791030931.5582027,
@@ -4790,9 +4790,9 @@
     "semantic_hash": "b519760db9b224d62e3a95fc257c22f1"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Assessments/AssessmentValidatorsTests.cs": {
-    "mtime": 1787061984.9215415,
-    "ast_hash": "dbdf73d04ac3f55f02247c8420397d9c",
-    "semantic_hash": "dbdf73d04ac3f55f02247c8420397d9c"
+    "mtime": 1792848194.1013663,
+    "ast_hash": "c007a8415144759f21117684240e6eaa",
+    "semantic_hash": "c007a8415144759f21117684240e6eaa"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Assessments/CheckInHandlersTests.cs": {
     "mtime": 1791030931.8181622,
@@ -4800,9 +4800,9 @@
     "semantic_hash": "87bc8789ce126eca8204d5ab037d831b"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Assessments/InitialAssessmentHandlersTests.cs": {
-    "mtime": 1787061008.3111267,
-    "ast_hash": "a192bc38ce1dd8b2fd71dd73ad5a5d3a",
-    "semantic_hash": "a192bc38ce1dd8b2fd71dd73ad5a5d3a"
+    "mtime": 1792686861.1369784,
+    "ast_hash": "1dbf01ec3d5961c5e362cfd6f1628210",
+    "semantic_hash": "1dbf01ec3d5961c5e362cfd6f1628210"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Authentication/AuthLinkHandlerTests.cs": {
     "mtime": 1792607443.4934788,
@@ -4810,9 +4810,9 @@
     "semantic_hash": "8a2776f0175d2b73d0abb408de0defae"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Authentication/AuthenticationTestDoubles.cs": {
-    "mtime": 1792607443.519033,
-    "ast_hash": "5db8472e01139b1b6c9b6303d478f9db",
-    "semantic_hash": "5db8472e01139b1b6c9b6303d478f9db"
+    "mtime": 1792824717.656767,
+    "ast_hash": "28421c7f9fabc9052c342260bc55131e",
+    "semantic_hash": "28421c7f9fabc9052c342260bc55131e"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Authentication/AuthenticationValidatorTests.cs": {
     "mtime": 1792081370.4332695,
@@ -4830,9 +4830,9 @@
     "semantic_hash": "1df94017c8340119826f92019da27eef"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Authentication/SessionHandlerTests.cs": {
-    "mtime": 1788181346.822053,
-    "ast_hash": "86cef964b1773464dada6879c6a31bd4",
-    "semantic_hash": "86cef964b1773464dada6879c6a31bd4"
+    "mtime": 1792823586.1313694,
+    "ast_hash": "46f67e660e87748dea9883b1ac048f17",
+    "semantic_hash": "46f67e660e87748dea9883b1ac048f17"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Billing/BillingHandlerTests.cs": {
     "mtime": 1789049941.7769253,
@@ -4885,9 +4885,9 @@
     "semantic_hash": "c9a3b94786529f82b6643c4b7d0ad443"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Nutrition/MealPlanHandlersTests.cs": {
-    "mtime": 1790856191.4213428,
-    "ast_hash": "e23414ec81672831069a853a7fa67bc0",
-    "semantic_hash": "e23414ec81672831069a853a7fa67bc0"
+    "mtime": 1792695736.0550485,
+    "ast_hash": "a95994aced904a73e3463fdbb9f6bd76",
+    "semantic_hash": "a95994aced904a73e3463fdbb9f6bd76"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Nutrition/NutritionCalculationTests.cs": {
     "mtime": 1786468837.8793893,
@@ -5015,9 +5015,9 @@
     "semantic_hash": "dcbf0a6baccb4e6e2d85dd42c3a028a1"
   },
   "backend/src/Api/Contracts/Assessments/InitialAssessmentContracts.cs": {
-    "mtime": 1788436078.654251,
-    "ast_hash": "df9b086936bad9802ef99f6ae5129931",
-    "semantic_hash": "df9b086936bad9802ef99f6ae5129931"
+    "mtime": 1792686133.9616482,
+    "ast_hash": "f9636268fcf7cfefd1d8ec4d1bcf2a2e",
+    "semantic_hash": "f9636268fcf7cfefd1d8ec4d1bcf2a2e"
   },
   "backend/src/Api/Contracts/Authentication/GoogleAuthenticationContracts.cs": {
     "mtime": 1792080011.6095881,
@@ -5045,9 +5045,9 @@
     "semantic_hash": "8fecee724f71fb89c7b61af414bab4ee"
   },
   "backend/src/Api/Contracts/Nutrition/FoodContracts.cs": {
-    "mtime": 1789655560.0210686,
-    "ast_hash": "5aa151ebc63fc804f50a7b244d419cab",
-    "semantic_hash": "5aa151ebc63fc804f50a7b244d419cab"
+    "mtime": 1792825711.0669506,
+    "ast_hash": "2cffa62d1607b154ea9215238c7d4196",
+    "semantic_hash": "2cffa62d1607b154ea9215238c7d4196"
   },
   "backend/src/Api/Contracts/Nutrition/GlobalFoodContracts.cs": {
     "mtime": 1789655598.3667967,
@@ -5055,9 +5055,9 @@
     "semantic_hash": "bb0f9d9f2e8f7b1476def462b61bb31a"
   },
   "backend/src/Api/Contracts/Nutrition/MealPlanContracts.cs": {
-    "mtime": 1790851657.324287,
-    "ast_hash": "82ebc163cbca553af480d88b23a17a7b",
-    "semantic_hash": "82ebc163cbca553af480d88b23a17a7b"
+    "mtime": 1792825515.4286768,
+    "ast_hash": "53cfc9e3af387ad6872ed52cdd08f68d",
+    "semantic_hash": "53cfc9e3af387ad6872ed52cdd08f68d"
   },
   "backend/src/Api/Contracts/Nutrition/NutritionCalculationContracts.cs": {
     "mtime": 1790851888.7218373,
@@ -5075,9 +5075,9 @@
     "semantic_hash": "44b474d430a3bc8e0920eefd661caa33"
   },
   "backend/src/Api/Contracts/Portal/PortalContracts.cs": {
-    "mtime": 1792659169.808221,
-    "ast_hash": "02df49ad3a68ed570cafa0fa0b0a9c9f",
-    "semantic_hash": "02df49ad3a68ed570cafa0fa0b0a9c9f"
+    "mtime": 1792824972.2258832,
+    "ast_hash": "0383276229d89f562b0d1d5f20863178",
+    "semantic_hash": "0383276229d89f562b0d1d5f20863178"
   },
   "backend/src/Api/Contracts/Sessions/SessionContracts.cs": {
     "mtime": 1790518470.132667,
@@ -5085,9 +5085,9 @@
     "semantic_hash": "5f84e538dc04f009779584b7a0277afb"
   },
   "backend/src/Api/Contracts/Supplements/SupplementContracts.cs": {
-    "mtime": 1792435805.0563347,
-    "ast_hash": "1f92bdc0859da5faca4918d71189ab91",
-    "semantic_hash": "1f92bdc0859da5faca4918d71189ab91"
+    "mtime": 1792825711.2189307,
+    "ast_hash": "57e39d26b3c8be7abc55683eb7a52b57",
+    "semantic_hash": "57e39d26b3c8be7abc55683eb7a52b57"
   },
   "backend/src/Api/Contracts/TrainerSettings/TrainerSettingsContracts.cs": {
     "mtime": 1788358965.3243425,
@@ -5095,9 +5095,9 @@
     "semantic_hash": "b39564f54b5be72edf49a745aea07486"
   },
   "backend/src/Api/Contracts/Training/ExerciseContracts.cs": {
-    "mtime": 1790701165.7950554,
-    "ast_hash": "27a3e5889001ddd88d8309d075c1b53c",
-    "semantic_hash": "27a3e5889001ddd88d8309d075c1b53c"
+    "mtime": 1792825711.0987039,
+    "ast_hash": "d75b57b0cdf14a4bb405fa88c433b907",
+    "semantic_hash": "d75b57b0cdf14a4bb405fa88c433b907"
   },
   "backend/src/Api/Contracts/Training/ExerciseSetLogContracts.cs": {
     "mtime": 1789655418.6870518,
@@ -5105,9 +5105,9 @@
     "semantic_hash": "f0394864b9cdce57282b1ff66cc41b39"
   },
   "backend/src/Api/Contracts/Training/TrainingPlanContracts.cs": {
-    "mtime": 1792607442.247684,
-    "ast_hash": "c799d30b4a6929c8111f135f476c0b30",
-    "semantic_hash": "c799d30b4a6929c8111f135f476c0b30"
+    "mtime": 1792825517.5805283,
+    "ast_hash": "346123390b4e4086b261193b60cf459b",
+    "semantic_hash": "346123390b4e4086b261193b60cf459b"
   },
   "backend/src/Api/Controllers/ApiControllerBase.cs": {
     "mtime": 1790009835.0159018,
@@ -5125,9 +5125,9 @@
     "semantic_hash": "fc6cfdbfb95417089777358948b64c04"
   },
   "backend/src/Api/Controllers/ClientPortalController.cs": {
-    "mtime": 1792659243.7487671,
-    "ast_hash": "e8baee46d6d363f1d256fbb4db12bbbb",
-    "semantic_hash": "e8baee46d6d363f1d256fbb4db12bbbb"
+    "mtime": 1792695955.4820554,
+    "ast_hash": "0250bbf109b9f30d3296e9d8a44fe380",
+    "semantic_hash": "0250bbf109b9f30d3296e9d8a44fe380"
   },
   "backend/src/Api/Controllers/ClientSessionPacksController.cs": {
     "mtime": 1790003288.1249368,
@@ -5180,9 +5180,9 @@
     "semantic_hash": "41e58f336c397b909922187cbd62bc0d"
   },
   "backend/src/Api/Controllers/InitialAssessmentsController.cs": {
-    "mtime": 1790003288.5635707,
-    "ast_hash": "5f053616cd8121d3dbd4ceb3b4036f6c",
-    "semantic_hash": "5f053616cd8121d3dbd4ceb3b4036f6c"
+    "mtime": 1792686412.8708754,
+    "ast_hash": "51a463d0d1aa75d7169a907b3ae77420",
+    "semantic_hash": "51a463d0d1aa75d7169a907b3ae77420"
   },
   "backend/src/Api/Controllers/MealPlansController.cs": {
     "mtime": 1790003288.673992,
@@ -5315,12 +5315,12 @@
     "semantic_hash": "72173547b25f24a8f22fa906c39abe3a"
   },
   "backend/src/Application/Features/Authentication/Google/SignIn/GoogleSignInHandler.cs": {
-    "mtime": 1792075221.0176492,
-    "ast_hash": "1ae0b792a53a9e77266d025d4a78272a",
-    "semantic_hash": "1ae0b792a53a9e77266d025d4a78272a"
+    "mtime": 1792822666.5020933,
+    "ast_hash": "3d30e2321f1e0bf216e33ee820610222",
+    "semantic_hash": "3d30e2321f1e0bf216e33ee820610222"
   },
   "backend/src/Application/Features/ClientPortal/Abstractions/IClientPortalQueries.cs": {
-    "mtime": 1792659169.513467,
+    "mtime": 1792674687.6124632,
     "ast_hash": "c1bf61cb40d3f5536b5c96be62c10aec",
     "semantic_hash": "c1bf61cb40d3f5536b5c96be62c10aec"
   },
@@ -5330,42 +5330,42 @@
     "semantic_hash": "df08783f3d7eb3398509cf526c0796f6"
   },
   "backend/src/Application/Features/ClientPortal/Abstractions/UpdateMyProfileOutcome.cs": {
-    "mtime": 1792658666.467524,
+    "mtime": 1792674687.649194,
     "ast_hash": "6b30711b227ad5b074db6e1b3a7d54aa",
     "semantic_hash": "6b30711b227ad5b074db6e1b3a7d54aa"
   },
   "backend/src/Application/Features/ClientPortal/Abstractions/UpdateMyProfileStatus.cs": {
-    "mtime": 1792658666.4813647,
+    "mtime": 1792674687.664821,
     "ast_hash": "e47717448eebe2d74e52475c88c669c0",
     "semantic_hash": "e47717448eebe2d74e52475c88c669c0"
   },
   "backend/src/Application/Features/ClientPortal/Abstractions/UpdateMyProfileWriteModel.cs": {
-    "mtime": 1792658616.3185492,
+    "mtime": 1792674687.68357,
     "ast_hash": "5bdff25f7c5915a2d2c1dbd150b263c4",
     "semantic_hash": "5bdff25f7c5915a2d2c1dbd150b263c4"
   },
   "backend/src/Application/Features/ClientPortal/ClientPortalErrors.cs": {
-    "mtime": 1792660821.7716699,
-    "ast_hash": "c5b49c135ca0ef4c287182c69793d597",
-    "semantic_hash": "c5b49c135ca0ef4c287182c69793d597"
+    "mtime": 1792695858.1657896,
+    "ast_hash": "db20b8d613e1de1c91a5da0a3f8da87a",
+    "semantic_hash": "db20b8d613e1de1c91a5da0a3f8da87a"
   },
   "backend/src/Application/Features/ClientPortal/Dtos/MyNutritionPlanDto.cs": {
-    "mtime": 1792659169.4944828,
-    "ast_hash": "8ff7318fcf255c7bedf812d8eb881073",
-    "semantic_hash": "8ff7318fcf255c7bedf812d8eb881073"
+    "mtime": 1792824972.0989046,
+    "ast_hash": "7e22aeb5c634aa2a2bcf400de162a8aa",
+    "semantic_hash": "7e22aeb5c634aa2a2bcf400de162a8aa"
   },
   "backend/src/Application/Features/ClientPortal/Dtos/MyProfileDto.cs": {
-    "mtime": 1792658616.5999582,
+    "mtime": 1792674687.772626,
     "ast_hash": "e98e3d758f714ac3b1e6717df0d8df2b",
     "semantic_hash": "e98e3d758f714ac3b1e6717df0d8df2b"
   },
   "backend/src/Application/Features/ClientPortal/Dtos/MyTrainingPlanDto.cs": {
-    "mtime": 1792607442.4777172,
-    "ast_hash": "704709dfb93bcaa9ad0d611a621aa992",
-    "semantic_hash": "704709dfb93bcaa9ad0d611a621aa992"
+    "mtime": 1792824972.091691,
+    "ast_hash": "bfe082e27c1f9f5a3b7b2bc2909423a2",
+    "semantic_hash": "bfe082e27c1f9f5a3b7b2bc2909423a2"
   },
   "backend/src/Application/Features/ClientPortal/GetMyNutritionPlan/GetMyNutritionPlanHandler.cs": {
-    "mtime": 1792665986.8159506,
+    "mtime": 1792674687.8128314,
     "ast_hash": "fbd23e9c3ce1898d726c6d2ebee0b849",
     "semantic_hash": "fbd23e9c3ce1898d726c6d2ebee0b849"
   },
@@ -5380,17 +5380,17 @@
     "semantic_hash": "fef053cb6b296cfde596fafc80f78d13"
   },
   "backend/src/Application/Features/ClientPortal/UpdateMyProfile/UpdateMyProfileCommand.cs": {
-    "mtime": 1792658616.3093696,
+    "mtime": 1792674687.9654775,
     "ast_hash": "a06b0c6a8114db13b6a0811cb1f7b8f8",
     "semantic_hash": "a06b0c6a8114db13b6a0811cb1f7b8f8"
   },
   "backend/src/Application/Features/ClientPortal/UpdateMyProfile/UpdateMyProfileCommandValidator.cs": {
-    "mtime": 1792666021.800177,
+    "mtime": 1792674687.9830327,
     "ast_hash": "22db4a50c56f44e112428b16174f5500",
     "semantic_hash": "22db4a50c56f44e112428b16174f5500"
   },
   "backend/src/Application/Features/ClientPortal/UpdateMyProfile/UpdateMyProfileHandler.cs": {
-    "mtime": 1792658616.4604025,
+    "mtime": 1792674688.0013704,
     "ast_hash": "ebc04c36667da57c21da8d8da2af4f3f",
     "semantic_hash": "ebc04c36667da57c21da8d8da2af4f3f"
   },
@@ -5460,29 +5460,24 @@
     "semantic_hash": "127d31afc986439091a767ed2052d44e"
   },
   "backend/src/Infrastructure/Persistence/ClientPortal/MyNutritionPlanQueries.cs": {
-    "mtime": 1792665765.7231438,
-    "ast_hash": "bbc68e49fe2ee39670b80f0feaf2dd31",
-    "semantic_hash": "bbc68e49fe2ee39670b80f0feaf2dd31"
+    "mtime": 1792850006.773409,
+    "ast_hash": "39f426dde95482f0503bb7b5ee475f94",
+    "semantic_hash": "39f426dde95482f0503bb7b5ee475f94"
   },
   "backend/src/Infrastructure/Persistence/ClientPortal/MyProfileQueries.cs": {
-    "mtime": 1792658616.5766916,
+    "mtime": 1792674688.1938722,
     "ast_hash": "e50a12c118c5b0b36c92396925c57bbe",
     "semantic_hash": "e50a12c118c5b0b36c92396925c57bbe"
   },
   "backend/src/Infrastructure/Persistence/ClientPortal/MyProfileStore.cs": {
-    "mtime": 1792658616.5524406,
+    "mtime": 1792674688.2148714,
     "ast_hash": "f424ff99548d4c18f1ac30e1ee7c7e20",
     "semantic_hash": "f424ff99548d4c18f1ac30e1ee7c7e20"
   },
   "backend/src/Infrastructure/Persistence/ClientPortal/MyTrainingPlanQueries.cs": {
-    "mtime": 1792607443.045552,
-    "ast_hash": "6db59d40bbb2a2cdf1f8d3ebde18d236",
-    "semantic_hash": "6db59d40bbb2a2cdf1f8d3ebde18d236"
-  },
-  "backend/src/Infrastructure/Persistence/ClientPortal/PortalContentMasking.cs": {
-    "mtime": 1788453797.6041288,
-    "ast_hash": "858227e91a9176a41d0f7cee46378ff9",
-    "semantic_hash": "858227e91a9176a41d0f7cee46378ff9"
+    "mtime": 1792824972.5002391,
+    "ast_hash": "8677eb240d91dbab38b569e564900bfc",
+    "semantic_hash": "8677eb240d91dbab38b569e564900bfc"
   },
   "backend/tests/ArchitectureTests/GoogleAuthenticationArchitectureTests.cs": {
     "mtime": 1788709901.5749593,
@@ -5490,12 +5485,12 @@
     "semantic_hash": "ab325f789dcf802e0f410a6b8e4be1b2"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Contract/ActorMatrixTests.cs": {
-    "mtime": 1792661410.8600214,
+    "mtime": 1792674688.3699627,
     "ast_hash": "4c33abc03b5b68e0b31bed0a46f65ead",
     "semantic_hash": "4c33abc03b5b68e0b31bed0a46f65ead"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Contract/ApiSurfaceSnapshotTests.cs": {
-    "mtime": 1792661455.5128913,
+    "mtime": 1792827324.0421708,
     "ast_hash": "20ab17bb3408f69d96bedd1240227308",
     "semantic_hash": "20ab17bb3408f69d96bedd1240227308"
   },
@@ -5510,9 +5505,9 @@
     "semantic_hash": "24da931591cbc6d71cff4e5978d4e0da"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/BillingControllerTests.cs": {
-    "mtime": 1789049941.7049646,
-    "ast_hash": "7b8a1871b635bf2679e0f1ae90c21946",
-    "semantic_hash": "7b8a1871b635bf2679e0f1ae90c21946"
+    "mtime": 1792694570.8069668,
+    "ast_hash": "859c09f8172729d06f63da9b332788b5",
+    "semantic_hash": "859c09f8172729d06f63da9b332788b5"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/CheckInsControllerTests.cs": {
     "mtime": 1791031342.7463539,
@@ -5520,14 +5515,14 @@
     "semantic_hash": "4638af4117f21da2147e71584a3536ef"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/ClientPortalControllerTests.cs": {
-    "mtime": 1792660649.4780152,
-    "ast_hash": "2d9a79c394111d6f5aca05a40a0f8178",
-    "semantic_hash": "2d9a79c394111d6f5aca05a40a0f8178"
+    "mtime": 1792694598.048998,
+    "ast_hash": "60035494a73c5013b5842a039d2269c3",
+    "semantic_hash": "60035494a73c5013b5842a039d2269c3"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/ClientPortalExposureTests.cs": {
-    "mtime": 1791635050.9443262,
-    "ast_hash": "277dedb0bb025e3e96f7a978a81caa25",
-    "semantic_hash": "277dedb0bb025e3e96f7a978a81caa25"
+    "mtime": 1792827135.4924512,
+    "ast_hash": "8d5e1f7cdbbc96c9be9985a95a01371c",
+    "semantic_hash": "8d5e1f7cdbbc96c9be9985a95a01371c"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/ClientSessionPacksControllerTests.cs": {
     "mtime": 1790518470.4107468,
@@ -5555,9 +5550,9 @@
     "semantic_hash": "02912e342f7c5d174bfa7f4049621fa0"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/FoodsControllerTests.cs": {
-    "mtime": 1788369098.3337746,
-    "ast_hash": "427e03fe17cd77a16d3eee85ef6aaa96",
-    "semantic_hash": "427e03fe17cd77a16d3eee85ef6aaa96"
+    "mtime": 1792694570.7918515,
+    "ast_hash": "aa3f534d891c23ac5d815899f555d23b",
+    "semantic_hash": "aa3f534d891c23ac5d815899f555d23b"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/GlobalExercisesControllerTests.cs": {
     "mtime": 1790242575.946093,
@@ -5580,9 +5575,9 @@
     "semantic_hash": "0aa8f3a22d0c697255640b0db8f49833"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/InitialAssessmentsControllerTests.cs": {
-    "mtime": 1788457122.6158125,
-    "ast_hash": "7585912d65d9f6dd9e3a8c4a9197f298",
-    "semantic_hash": "7585912d65d9f6dd9e3a8c4a9197f298"
+    "mtime": 1792687702.7309783,
+    "ast_hash": "2eba2073fa05a105f90a8205a31b8e43",
+    "semantic_hash": "2eba2073fa05a105f90a8205a31b8e43"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/MealPlansControllerTests.cs": {
     "mtime": 1790856290.7041686,
@@ -5590,9 +5585,9 @@
     "semantic_hash": "dcc57fb8f9a20b37459e014d6e45c63e"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/NutritionPreviewControllerTests.cs": {
-    "mtime": 1790856369.5837739,
-    "ast_hash": "26b364e9c6f0c7429d52be9dcb326fa9",
-    "semantic_hash": "26b364e9c6f0c7429d52be9dcb326fa9"
+    "mtime": 1792694570.7772918,
+    "ast_hash": "20914e3358e4d38e2c5c96b73cded98e",
+    "semantic_hash": "20914e3358e4d38e2c5c96b73cded98e"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/PackTypesControllerTests.cs": {
     "mtime": 1788457595.72408,
@@ -5665,19 +5660,19 @@
     "semantic_hash": "3bcbd9dc4f2153321c9437a68948dccd"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Support/NutritionHttpPayloads.cs": {
-    "mtime": 1790856264.5655272,
-    "ast_hash": "b17d01da8959dc16ca7f17402acce3a9",
-    "semantic_hash": "b17d01da8959dc16ca7f17402acce3a9"
+    "mtime": 1792696410.5698316,
+    "ast_hash": "aed2060121600e55ce75ea3eed20a308",
+    "semantic_hash": "aed2060121600e55ce75ea3eed20a308"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Support/NutritionTestData.cs": {
-    "mtime": 1789658161.231443,
-    "ast_hash": "1edfe4bb3bb9e88244d948e30766ce42",
-    "semantic_hash": "1edfe4bb3bb9e88244d948e30766ce42"
+    "mtime": 1792687702.6811862,
+    "ast_hash": "84e72e01fb8e4e8f3fd91572f08a8951",
+    "semantic_hash": "84e72e01fb8e4e8f3fd91572f08a8951"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Support/PortalTestData.cs": {
-    "mtime": 1792666876.8582244,
-    "ast_hash": "8c9dc8b784bfa1c2e4a3ab54fb3a98bf",
-    "semantic_hash": "8c9dc8b784bfa1c2e4a3ab54fb3a98bf"
+    "mtime": 1792687924.3137097,
+    "ast_hash": "f80c482b98b53b74bbe145591fd0d2fd",
+    "semantic_hash": "f80c482b98b53b74bbe145591fd0d2fd"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Support/TestJwtFactory.cs": {
     "mtime": 1788353728.3380506,
@@ -5685,14 +5680,14 @@
     "semantic_hash": "53cbaf7ef9d5311be9c2dfd26abdc043"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Support/TrainerTenantSeeder.cs": {
-    "mtime": 1792607443.3571389,
-    "ast_hash": "120bb97a570af3b5446ee99a5c5559d6",
-    "semantic_hash": "120bb97a570af3b5446ee99a5c5559d6"
+    "mtime": 1792687060.2584026,
+    "ast_hash": "685363081b445aacaf4e20b16911fb37",
+    "semantic_hash": "685363081b445aacaf4e20b16911fb37"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Support/TrainingTestData.cs": {
-    "mtime": 1790856488.7266138,
-    "ast_hash": "8c9447f350ed81148b7847a3ef197a81",
-    "semantic_hash": "8c9447f350ed81148b7847a3ef197a81"
+    "mtime": 1792688080.1354694,
+    "ast_hash": "61ddcd18e55fc51a2892a5889184bc8c",
+    "semantic_hash": "61ddcd18e55fc51a2892a5889184bc8c"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Identity/ExternalIdentityPersistenceTests.cs": {
     "mtime": 1788709412.3896601,
@@ -5705,9 +5700,9 @@
     "semantic_hash": "996ef29d1f9991cfc5e93f7e6534e2ba"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Authentication/Google/GoogleAuthenticationHandlerTests.cs": {
-    "mtime": 1792081644.1432674,
-    "ast_hash": "3f15c1bb545b068409eda4635e420dde",
-    "semantic_hash": "3f15c1bb545b068409eda4635e420dde"
+    "mtime": 1792823586.1547537,
+    "ast_hash": "2f431e7a0f1eb7d93ed6cda25e41b0b5",
+    "semantic_hash": "2f431e7a0f1eb7d93ed6cda25e41b0b5"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Authentication/Google/GoogleAuthenticationTestDoubles.cs": {
     "mtime": 1792081535.3361962,
@@ -5770,19 +5765,19 @@
     "semantic_hash": "151d45e5b4d9da3e9e48702e1d356322"
   },
   "backend/src/Api/Contracts/Administration/AdminOverviewContracts.cs": {
-    "mtime": 1792517471.7867608,
-    "ast_hash": "68ede1392365ede3eafbee061b96315c",
-    "semantic_hash": "68ede1392365ede3eafbee061b96315c"
+    "mtime": 1792824503.8991802,
+    "ast_hash": "ce9f0613b2f8dad728dd1d3b2eaa9dbd",
+    "semantic_hash": "ce9f0613b2f8dad728dd1d3b2eaa9dbd"
   },
   "backend/src/Api/Contracts/Administration/AdminTrainerContracts.cs": {
-    "mtime": 1792441625.6071606,
-    "ast_hash": "b2d0082a53eae66c92847c1a73dc0ebc",
-    "semantic_hash": "b2d0082a53eae66c92847c1a73dc0ebc"
+    "mtime": 1792824458.837785,
+    "ast_hash": "5975390a91a1ea6a7e3a74cd0c6c44e2",
+    "semantic_hash": "5975390a91a1ea6a7e3a74cd0c6c44e2"
   },
   "backend/src/Api/Contracts/Administration/ModerationQueueContracts.cs": {
-    "mtime": 1789902212.223253,
-    "ast_hash": "c4ba684e8ceff10cba0b6ccc0fc0a312",
-    "semantic_hash": "c4ba684e8ceff10cba0b6ccc0fc0a312"
+    "mtime": 1792825609.377602,
+    "ast_hash": "2933f733eb56e7343d04c7344dea2235",
+    "semantic_hash": "2933f733eb56e7343d04c7344dea2235"
   },
   "backend/src/Api/Contracts/Authentication/TrainerInviteContracts.cs": {
     "mtime": 1792437650.116176,
@@ -5800,9 +5795,9 @@
     "semantic_hash": "5ce71a81fc5162e74051488be936c6bf"
   },
   "backend/src/Api/Contracts/Dashboard/DashboardContracts.cs": {
-    "mtime": 1789902212.2412584,
-    "ast_hash": "4ae2db558e454f3449b61c9c3871360d",
-    "semantic_hash": "4ae2db558e454f3449b61c9c3871360d"
+    "mtime": 1792686329.453697,
+    "ast_hash": "bf63c3c25ac647e7434bbd3bf79003b2",
+    "semantic_hash": "bf63c3c25ac647e7434bbd3bf79003b2"
   },
   "backend/src/Api/Contracts/Portal/PortalCheckInContracts.cs": {
     "mtime": 1789902212.253875,
@@ -5810,14 +5805,14 @@
     "semantic_hash": "5dbd55787adc23b704e9e2d0dbb75de2"
   },
   "backend/src/Api/Contracts/Portal/PortalHomeContracts.cs": {
-    "mtime": 1792659169.7124038,
-    "ast_hash": "b44b224f0b97e8d3877524222a8e8f99",
-    "semantic_hash": "b44b224f0b97e8d3877524222a8e8f99"
+    "mtime": 1792824673.3961813,
+    "ast_hash": "6169054e168e5e8fcc301ece4af34a52",
+    "semantic_hash": "6169054e168e5e8fcc301ece4af34a52"
   },
   "backend/src/Api/Contracts/Portal/PortalWorkoutContracts.cs": {
-    "mtime": 1792658908.9122088,
-    "ast_hash": "03e5f32f60c634ada58e21fd36238401",
-    "semantic_hash": "03e5f32f60c634ada58e21fd36238401"
+    "mtime": 1792824972.2843068,
+    "ast_hash": "910cf2458836af0bb7e737b1e60adc72",
+    "semantic_hash": "910cf2458836af0bb7e737b1e60adc72"
   },
   "backend/src/Api/Contracts/Training/ExerciseVideoContracts.cs": {
     "mtime": 1789558994.622353,
@@ -5840,9 +5835,9 @@
     "semantic_hash": "cabad0acf3b1c6c37b2edc20e8f34d3e"
   },
   "backend/src/Api/Controllers/AdminModerationQueueController.cs": {
-    "mtime": 1790003287.7331972,
-    "ast_hash": "6a31686c70550eb7a316d3383d76fb02",
-    "semantic_hash": "6a31686c70550eb7a316d3383d76fb02"
+    "mtime": 1792825609.38158,
+    "ast_hash": "74cef21a77ebcfd75bff65957506e85e",
+    "semantic_hash": "74cef21a77ebcfd75bff65957506e85e"
   },
   "backend/src/Api/Controllers/AdminOverviewController.cs": {
     "mtime": 1790003287.750922,
@@ -5855,9 +5850,9 @@
     "semantic_hash": "b4b3144253b8eed5f2fbb242974d9c04"
   },
   "backend/src/Api/Controllers/AdminTrainersController.cs": {
-    "mtime": 1792441625.5918615,
-    "ast_hash": "5db47a4ee3c824de69c75b1109fa968e",
-    "semantic_hash": "5db47a4ee3c824de69c75b1109fa968e"
+    "mtime": 1792824458.925741,
+    "ast_hash": "b9f7619f3bc2a44c99c3df1dfe45c41c",
+    "semantic_hash": "b9f7619f3bc2a44c99c3df1dfe45c41c"
   },
   "backend/src/Api/Controllers/DashboardController.cs": {
     "mtime": 1790003288.2030675,
@@ -6005,9 +6000,9 @@
     "semantic_hash": "221987ec2b8f3e79dbc9582f200774e1"
   },
   "backend/src/Application/Features/Administration/ContentModeration/Dtos/ModerationQueueItemDto.cs": {
-    "mtime": 1789902211.9137928,
-    "ast_hash": "4d5c645cf28ccc2ad1bc9ae8334fa8f7",
-    "semantic_hash": "4d5c645cf28ccc2ad1bc9ae8334fa8f7"
+    "mtime": 1792825609.3277845,
+    "ast_hash": "8c8e186dcd40af7a886f1bfc57c3e11e",
+    "semantic_hash": "8c8e186dcd40af7a886f1bfc57c3e11e"
   },
   "backend/src/Application/Features/Administration/ContentModeration/ListModerationQueue/ListModerationQueueHandler.cs": {
     "mtime": 1789902211.921793,
@@ -6025,14 +6020,14 @@
     "semantic_hash": "000e5aea64d6ba829a7881926ff38620"
   },
   "backend/src/Application/Features/Administration/ContentModeration/ListModerationQueue/ModerationQueueFilters.cs": {
-    "mtime": 1789902211.943794,
-    "ast_hash": "58e9f32a73cf74e99220602be477f428",
-    "semantic_hash": "58e9f32a73cf74e99220602be477f428"
+    "mtime": 1792825609.3124652,
+    "ast_hash": "fea86bef8ea95950e014592a0805165a",
+    "semantic_hash": "fea86bef8ea95950e014592a0805165a"
   },
   "backend/src/Application/Features/Administration/Overview/AdminOverviewDto.cs": {
-    "mtime": 1792436830.7797108,
-    "ast_hash": "f3ea9454feec7ba91743b42444c45097",
-    "semantic_hash": "f3ea9454feec7ba91743b42444c45097"
+    "mtime": 1792824503.8057413,
+    "ast_hash": "701d670a878713277dd656a5c824de64",
+    "semantic_hash": "701d670a878713277dd656a5c824de64"
   },
   "backend/src/Application/Features/Administration/Overview/AdminOverviewErrors.cs": {
     "mtime": 1789902211.9587932,
@@ -6055,14 +6050,14 @@
     "semantic_hash": "5ab35fc320bad184ad5894a09529ac92"
   },
   "backend/src/Application/Features/Administration/Trainers/Abstractions/ITrainerAdministrationStore.cs": {
-    "mtime": 1792437193.708332,
-    "ast_hash": "3e79c9760157b4ca97d710b02d875092",
-    "semantic_hash": "3e79c9760157b4ca97d710b02d875092"
+    "mtime": 1792824030.5003202,
+    "ast_hash": "2b6441b533109d22d3020e856e6fd8f4",
+    "semantic_hash": "2b6441b533109d22d3020e856e6fd8f4"
   },
   "backend/src/Application/Features/Administration/Trainers/Dtos/AdminTrainerDto.cs": {
-    "mtime": 1792437447.4426749,
-    "ast_hash": "70d2013c97183d9c46d74f2f64e516b2",
-    "semantic_hash": "70d2013c97183d9c46d74f2f64e516b2"
+    "mtime": 1792824030.464343,
+    "ast_hash": "5fa89a60ea935f9533a15a20f9a07e17",
+    "semantic_hash": "5fa89a60ea935f9533a15a20f9a07e17"
   },
   "backend/src/Application/Features/Administration/Trainers/Dtos/PendingTrainerInvitationDto.cs": {
     "mtime": 1792437193.125867,
@@ -6330,7 +6325,7 @@
     "semantic_hash": "0ee05651084ade2dfadf5e4856e4b9d1"
   },
   "backend/src/Application/Features/ClientPortal/Abstractions/IMyWorkoutTodayQueries.cs": {
-    "mtime": 1792658816.9340868,
+    "mtime": 1792674687.6305177,
     "ast_hash": "87f708585e4e3518b095909e99c5aebe",
     "semantic_hash": "87f708585e4e3518b095909e99c5aebe"
   },
@@ -6345,47 +6340,47 @@
     "semantic_hash": "7652e016766f3ed4cdde5f39cdb9a202"
   },
   "backend/src/Application/Features/ClientPortal/Dtos/MyMealPlanSummaryDto.cs": {
-    "mtime": 1792659169.5016465,
+    "mtime": 1792674687.7173214,
     "ast_hash": "381ca58b2bc16d2cd413c8f76d5b6210",
     "semantic_hash": "381ca58b2bc16d2cd413c8f76d5b6210"
   },
   "backend/src/Application/Features/ClientPortal/Dtos/MyPortalHomeDto.cs": {
-    "mtime": 1792659169.6540775,
-    "ast_hash": "4a089d5edce824bfed84c16a602bb26b",
-    "semantic_hash": "4a089d5edce824bfed84c16a602bb26b"
+    "mtime": 1792824673.2338226,
+    "ast_hash": "114d0f77acfdacabe1ee432948d5d338",
+    "semantic_hash": "114d0f77acfdacabe1ee432948d5d338"
   },
   "backend/src/Application/Features/ClientPortal/Dtos/MyWorkoutTodayDto.cs": {
-    "mtime": 1792658817.083563,
-    "ast_hash": "003200c9a8a463834f2473cc754ff9a3",
-    "semantic_hash": "003200c9a8a463834f2473cc754ff9a3"
+    "mtime": 1792824972.114352,
+    "ast_hash": "b4827555b86f39d6bd598e4e41ea87a5",
+    "semantic_hash": "b4827555b86f39d6bd598e4e41ea87a5"
   },
   "backend/src/Application/Features/ClientPortal/GetMyPortalHome/GetMyPortalHomeHandler.cs": {
-    "mtime": 1792666853.2018337,
-    "ast_hash": "ae140ef127db8a1fc1edb36144da4893",
-    "semantic_hash": "ae140ef127db8a1fc1edb36144da4893"
+    "mtime": 1792824673.356681,
+    "ast_hash": "50a1c9fd88e0332ca79a49f870dd8873",
+    "semantic_hash": "50a1c9fd88e0332ca79a49f870dd8873"
   },
   "backend/src/Application/Features/ClientPortal/GetMyWorkoutDay/GetMyWorkoutDayHandler.cs": {
-    "mtime": 1792666853.077457,
+    "mtime": 1792674687.8517566,
     "ast_hash": "c08d0983253610da7267dc5a157fed0f",
     "semantic_hash": "c08d0983253610da7267dc5a157fed0f"
   },
   "backend/src/Application/Features/ClientPortal/GetMyWorkoutToday/GetMyWorkoutTodayHandler.cs": {
-    "mtime": 1792666853.067689,
+    "mtime": 1792674687.8689187,
     "ast_hash": "65562c4c02015f5df54170e18ac5bcd8",
     "semantic_hash": "65562c4c02015f5df54170e18ac5bcd8"
   },
   "backend/src/Application/Features/ClientPortal/GetMyWorkoutToday/MyWorkoutTodayReader.cs": {
-    "mtime": 1792666852.904339,
-    "ast_hash": "677a071cb4a7cbc720faf59f1cf82433",
-    "semantic_hash": "677a071cb4a7cbc720faf59f1cf82433"
+    "mtime": 1792824972.1259835,
+    "ast_hash": "b27207af68b633c14f48b83a8593f8f1",
+    "semantic_hash": "b27207af68b633c14f48b83a8593f8f1"
   },
   "backend/src/Application/Features/ClientPortal/ListMyMealPlans/ListMyMealPlansHandler.cs": {
-    "mtime": 1792659243.6541965,
+    "mtime": 1792674687.9102087,
     "ast_hash": "50bba80f095581ecf8e0600cbbe1b6b0",
     "semantic_hash": "50bba80f095581ecf8e0600cbbe1b6b0"
   },
   "backend/src/Application/Features/ClientPortal/ListMyWorkoutDays/ListMyWorkoutDaysHandler.cs": {
-    "mtime": 1792665957.6651888,
+    "mtime": 1792674687.930236,
     "ast_hash": "0675eab88154e233a95cd761bd9702be",
     "semantic_hash": "0675eab88154e233a95cd761bd9702be"
   },
@@ -6410,7 +6405,7 @@
     "semantic_hash": "d5639cc325f5689537ffa202239e9a06"
   },
   "backend/src/Application/Features/ClientPortal/SelectMyMealPlan/SelectMyMealPlanHandler.cs": {
-    "mtime": 1792659243.6378572,
+    "mtime": 1792674687.947575,
     "ast_hash": "d71bdc94efc4a3869c6433c1f6d2ccab",
     "semantic_hash": "d71bdc94efc4a3869c6433c1f6d2ccab"
   },
@@ -6475,19 +6470,19 @@
     "semantic_hash": "d492f2c89da769acc514977a2b90cf0f"
   },
   "backend/src/Application/Features/Dashboard/Dtos/TrainerDashboardData.cs": {
-    "mtime": 1789902212.12828,
-    "ast_hash": "9f6c5c7bf2fae69ac3f3b23f7dda0014",
-    "semantic_hash": "9f6c5c7bf2fae69ac3f3b23f7dda0014"
+    "mtime": 1792686307.3079255,
+    "ast_hash": "8ae754ba650883f8436ead7953cf1f0c",
+    "semantic_hash": "8ae754ba650883f8436ead7953cf1f0c"
   },
   "backend/src/Application/Features/Dashboard/Dtos/TrainerDashboardDto.cs": {
-    "mtime": 1789902212.1342816,
-    "ast_hash": "fa9be03065d3397096a4984a1572ec3a",
-    "semantic_hash": "fa9be03065d3397096a4984a1572ec3a"
+    "mtime": 1792686307.2996857,
+    "ast_hash": "1da6ba1d88a213e8da128b8b3ef555b3",
+    "semantic_hash": "1da6ba1d88a213e8da128b8b3ef555b3"
   },
   "backend/src/Application/Features/Dashboard/GetTrainerDashboard/GetTrainerDashboardHandler.cs": {
-    "mtime": 1789904576.3540113,
-    "ast_hash": "3832511014475940180aadbd9fd8420a",
-    "semantic_hash": "3832511014475940180aadbd9fd8420a"
+    "mtime": 1792686307.3355143,
+    "ast_hash": "3da5563a3853c3a942b99765738a26c9",
+    "semantic_hash": "3da5563a3853c3a942b99765738a26c9"
   },
   "backend/src/Application/Features/Dashboard/GetTrainerDashboard/GetTrainerDashboardQuery.cs": {
     "mtime": 1789902212.1499107,
@@ -6565,19 +6560,19 @@
     "semantic_hash": "08b436787db3f6e17776a30ac3c5443c"
   },
   "backend/src/Application/Features/Notifications/Delivery/NotificationDeliveryPreparation.cs": {
-    "mtime": 1788798607.2405753,
-    "ast_hash": "00e7fcd19ab39cf0447926046e23b63c",
-    "semantic_hash": "00e7fcd19ab39cf0447926046e23b63c"
+    "mtime": 1792688904.2132528,
+    "ast_hash": "2be1c2ec9633bd14dfc456483433fb8f",
+    "semantic_hash": "2be1c2ec9633bd14dfc456483433fb8f"
   },
   "backend/src/Application/Features/Notifications/Delivery/SendNotificationJobHandler.cs": {
-    "mtime": 1788798607.2474563,
-    "ast_hash": "5e7dbddbc2845960407e43f2d33324ff",
-    "semantic_hash": "5e7dbddbc2845960407e43f2d33324ff"
+    "mtime": 1792688904.230052,
+    "ast_hash": "3f09298a9af998471b6e6abee3ffbf81",
+    "semantic_hash": "3f09298a9af998471b6e6abee3ffbf81"
   },
   "backend/src/Application/Features/Notifications/Delivery/SessionReminderTemplateData.cs": {
-    "mtime": 1788798607.2528021,
-    "ast_hash": "eff6262212ff06b9930c7ec7ebade4ca",
-    "semantic_hash": "eff6262212ff06b9930c7ec7ebade4ca"
+    "mtime": 1792688902.0775912,
+    "ast_hash": "cfb4dda71e2fa4ef327e5b65ec9ad693",
+    "semantic_hash": "cfb4dda71e2fa4ef327e5b65ec9ad693"
   },
   "backend/src/Application/Features/Supplements/Abstractions/ISupplementIntakeQueries.cs": {
     "mtime": 1789657501.1885612,
@@ -6930,9 +6925,9 @@
     "semantic_hash": "52db8135e2308a1665ea165f1792cf59"
   },
   "backend/src/Domain/Entities/Assessments/AssessmentLimits.cs": {
-    "mtime": 1791921971.5646784,
-    "ast_hash": "02a20291713ca568c79a6463c95b48ab",
-    "semantic_hash": "02a20291713ca568c79a6463c95b48ab"
+    "mtime": 1792683935.3676522,
+    "ast_hash": "3565d05ace1a3010b82b92816047e618",
+    "semantic_hash": "3565d05ace1a3010b82b92816047e618"
   },
   "backend/src/Domain/Entities/Billing/BillingCheckoutOperation.cs": {
     "mtime": 1788971219.7845225,
@@ -7115,12 +7110,12 @@
     "semantic_hash": "4a9b3fa910f93e16c748bc71a4cc4b5b"
   },
   "backend/src/Infrastructure/Data/Migrations/20261022091004_AddClientSelectedMealPlan.Designer.cs": {
-    "mtime": 1792660204.5789456,
-    "ast_hash": "7f2c434ac515e6ec46e8413d0a03f522",
-    "semantic_hash": "7f2c434ac515e6ec46e8413d0a03f522"
+    "mtime": 1792674688.0664258,
+    "ast_hash": "eefd3fb8c1ff81ab631c1098820f6b95",
+    "semantic_hash": "eefd3fb8c1ff81ab631c1098820f6b95"
   },
   "backend/src/Infrastructure/Data/Migrations/20261022091004_AddClientSelectedMealPlan.cs": {
-    "mtime": 1792661947.6750405,
+    "mtime": 1792674688.0782228,
     "ast_hash": "5eff9596b294bfd10e3a42de32acd102",
     "semantic_hash": "5eff9596b294bfd10e3a42de32acd102"
   },
@@ -7140,9 +7135,9 @@
     "semantic_hash": "52a95550ed7f82fd55bbef20b8928655"
   },
   "backend/src/Infrastructure/Email/SessionReminderTemplateRenderer.cs": {
-    "mtime": 1788876430.7786,
-    "ast_hash": "1bb835eee10e2bf99963997120535e21",
-    "semantic_hash": "1bb835eee10e2bf99963997120535e21"
+    "mtime": 1792848039.0072932,
+    "ast_hash": "d6ef4c899550dd590cf7e407c4ca36cf",
+    "semantic_hash": "d6ef4c899550dd590cf7e407c4ca36cf"
   },
   "backend/src/Infrastructure/Identity/AccountSecurityQueries.cs": {
     "mtime": 1792084624.9363885,
@@ -7185,14 +7180,14 @@
     "semantic_hash": "a874e275102d263fdd1f7588e6b4b715"
   },
   "backend/src/Infrastructure/Jobs/JobDispatchActivation.cs": {
-    "mtime": 1788881260.236419,
-    "ast_hash": "5e8a42b66fc37ab9b3f35243bd329c71",
-    "semantic_hash": "5e8a42b66fc37ab9b3f35243bd329c71"
+    "mtime": 1792693320.0395792,
+    "ast_hash": "aee4cf6949d15ebf149c1b0d3485cdfb",
+    "semantic_hash": "aee4cf6949d15ebf149c1b0d3485cdfb"
   },
   "backend/src/Infrastructure/Jobs/JobDispatchInfrastructureExtensions.cs": {
-    "mtime": 1789220413.762537,
-    "ast_hash": "e620d3c3897704bea3fc474cb04bb1ff",
-    "semantic_hash": "e620d3c3897704bea3fc474cb04bb1ff"
+    "mtime": 1792824163.9849863,
+    "ast_hash": "d289b5464dc217713d9e8e03f95a60f1",
+    "semantic_hash": "d289b5464dc217713d9e8e03f95a60f1"
   },
   "backend/src/Infrastructure/Jobs/JobDispatchLogEvents.cs": {
     "mtime": 1788881272.2862048,
@@ -7205,9 +7200,9 @@
     "semantic_hash": "c0c3c8dc9d0cb3c9b8b7495473b90e32"
   },
   "backend/src/Infrastructure/Jobs/JobDispatcher.cs": {
-    "mtime": 1789556098.8024065,
-    "ast_hash": "7a574060db4718b1c2b00737a15bc22b",
-    "semantic_hash": "7a574060db4718b1c2b00737a15bc22b"
+    "mtime": 1792693067.8580585,
+    "ast_hash": "9c8b49d1fd9f018436a4ad7afa0c3c85",
+    "semantic_hash": "9c8b49d1fd9f018436a4ad7afa0c3c85"
   },
   "backend/src/Infrastructure/Jobs/JobTenantValidator.cs": {
     "mtime": 1789464760.480302,
@@ -7370,9 +7365,9 @@
     "semantic_hash": "027ebec67f4513f7b867db463fdde43d"
   },
   "backend/src/Infrastructure/Notifications/ResendNotificationDeliveryGateway.cs": {
-    "mtime": 1788876430.8375726,
-    "ast_hash": "c2b83fe31656c8f04c7507bf89b0cc37",
-    "semantic_hash": "c2b83fe31656c8f04c7507bf89b0cc37"
+    "mtime": 1792688978.3591328,
+    "ast_hash": "4c3acc641ee3738d3a34f0a122137144",
+    "semantic_hash": "4c3acc641ee3738d3a34f0a122137144"
   },
   "backend/src/Infrastructure/Payments/Stripe/StripeCheckoutGateway.cs": {
     "mtime": 1789049941.5845437,
@@ -7425,24 +7420,24 @@
     "semantic_hash": "7ac14da58e8af48721158e89471dd25f"
   },
   "backend/src/Infrastructure/Persistence/Administration/AdminOverviewQueries.cs": {
-    "mtime": 1792519600.3537507,
-    "ast_hash": "e36bf441d3a64d246a51a36aae822ec3",
-    "semantic_hash": "e36bf441d3a64d246a51a36aae822ec3"
+    "mtime": 1792824503.999437,
+    "ast_hash": "78ba4381b9c98539e21caf35928f1721",
+    "semantic_hash": "78ba4381b9c98539e21caf35928f1721"
   },
   "backend/src/Infrastructure/Persistence/Administration/ModerationQueueQueries.cs": {
-    "mtime": 1789908460.8803296,
-    "ast_hash": "e7dee335f1890898bbaa492376d09983",
-    "semantic_hash": "e7dee335f1890898bbaa492376d09983"
+    "mtime": 1792825609.4942477,
+    "ast_hash": "af71836f61e0c4e174b5f87c46080e74",
+    "semantic_hash": "af71836f61e0c4e174b5f87c46080e74"
   },
   "backend/src/Infrastructure/Persistence/Administration/TrainerAdministrationQueries.cs": {
-    "mtime": 1792520301.3984737,
-    "ast_hash": "862f46219625e4065369295108800b5d",
-    "semantic_hash": "862f46219625e4065369295108800b5d"
+    "mtime": 1792824240.7270265,
+    "ast_hash": "d00832a93ca719f0c47c60feab22968a",
+    "semantic_hash": "d00832a93ca719f0c47c60feab22968a"
   },
   "backend/src/Infrastructure/Persistence/Administration/TrainerAdministrationStore.cs": {
-    "mtime": 1792519905.83807,
-    "ast_hash": "03484624e416f8644f48352d5191897d",
-    "semantic_hash": "03484624e416f8644f48352d5191897d"
+    "mtime": 1792824240.6872602,
+    "ast_hash": "2969d9352ef0af21b5a7c2a202e2c122",
+    "semantic_hash": "2969d9352ef0af21b5a7c2a202e2c122"
   },
   "backend/src/Infrastructure/Persistence/Billing/BillingNotificationRecipientStore.cs": {
     "mtime": 1788971220.0965376,
@@ -7455,17 +7450,17 @@
     "semantic_hash": "c91f687e2f75e4f9f74fa48810cb3978"
   },
   "backend/src/Infrastructure/Persistence/ClientPortal/MyMealPlanSelectionStore.cs": {
-    "mtime": 1792666124.5768244,
+    "mtime": 1792674688.1308732,
     "ast_hash": "21708a28af1e5333c8ebd1f116712881",
     "semantic_hash": "21708a28af1e5333c8ebd1f116712881"
   },
   "backend/src/Infrastructure/Persistence/ClientPortal/MyProfileMapping.cs": {
-    "mtime": 1792658616.5667243,
+    "mtime": 1792674688.1722677,
     "ast_hash": "b4c082a465a6b82c5e0a1e68018fdf59",
     "semantic_hash": "b4c082a465a6b82c5e0a1e68018fdf59"
   },
   "backend/src/Infrastructure/Persistence/ClientPortal/MyWorkoutTodayQueries.cs": {
-    "mtime": 1792658817.0152142,
+    "mtime": 1792674688.2657075,
     "ast_hash": "c30567ebf7dc323b5adfdd66826bea65",
     "semantic_hash": "c30567ebf7dc323b5adfdd66826bea65"
   },
@@ -7485,14 +7480,14 @@
     "semantic_hash": "6d8f5bd85166e18e8806e0fa47972a2c"
   },
   "backend/src/Infrastructure/Persistence/Dashboard/TrainerDashboardQueries.cs": {
-    "mtime": 1789908462.04525,
-    "ast_hash": "a851f2e1d7cd0597334a9ea617dd63e2",
-    "semantic_hash": "a851f2e1d7cd0597334a9ea617dd63e2"
+    "mtime": 1792686323.737857,
+    "ast_hash": "9e592ec161dfc5859c852bba23d3ce5c",
+    "semantic_hash": "9e592ec161dfc5859c852bba23d3ce5c"
   },
   "backend/src/Infrastructure/Persistence/Notifications/NotificationDeliveryStore.cs": {
-    "mtime": 1788876430.8500862,
-    "ast_hash": "a4be0429d3127bc31f010b9db36be0a9",
-    "semantic_hash": "a4be0429d3127bc31f010b9db36be0a9"
+    "mtime": 1792824673.1797872,
+    "ast_hash": "f3f54d9ddf19c68a0301800bbbe0dc30",
+    "semantic_hash": "f3f54d9ddf19c68a0301800bbbe0dc30"
   },
   "backend/src/Infrastructure/Persistence/PostgresTimestamps.cs": {
     "mtime": 1789657501.6382203,
@@ -7500,14 +7495,14 @@
     "semantic_hash": "455fe7d8273b6d5df7a815e923bf830a"
   },
   "backend/src/Infrastructure/Persistence/Supplements/SupplementIntakeQueries.cs": {
-    "mtime": 1789657501.65022,
-    "ast_hash": "c7a96df14ce3c76e6fd0c9d4021bd712",
-    "semantic_hash": "c7a96df14ce3c76e6fd0c9d4021bd712"
+    "mtime": 1792825041.9095187,
+    "ast_hash": "ffd30eda2099ed4cd89fda8244d6a741",
+    "semantic_hash": "ffd30eda2099ed4cd89fda8244d6a741"
   },
   "backend/src/Infrastructure/Persistence/Supplements/SupplementIntakeStore.cs": {
-    "mtime": 1789659577.3209052,
-    "ast_hash": "e4cff5bb7edd3d123d44e501737e362d",
-    "semantic_hash": "e4cff5bb7edd3d123d44e501737e362d"
+    "mtime": 1792825041.9216886,
+    "ast_hash": "7b3b2f99d90c1a81f5d53ecfeabb44e5",
+    "semantic_hash": "7b3b2f99d90c1a81f5d53ecfeabb44e5"
   },
   "backend/src/Infrastructure/Persistence/Training/ExerciseVideoLocking.cs": {
     "mtime": 1790859386.5985627,
@@ -7530,9 +7525,9 @@
     "semantic_hash": "fde05d82d7165e62151de11ca9bdbb95"
   },
   "backend/src/Infrastructure/Persistence/Training/MyExerciseSetLogStore.cs": {
-    "mtime": 1790859386.7670941,
-    "ast_hash": "e288782d2a6797ef6784a212557c47de",
-    "semantic_hash": "e288782d2a6797ef6784a212557c47de"
+    "mtime": 1792825206.1090543,
+    "ast_hash": "d8a39a5789f8911f6d97e5d991cc65fa",
+    "semantic_hash": "d8a39a5789f8911f6d97e5d991cc65fa"
   },
   "backend/src/Infrastructure/Persistence/Training/TrainingPlanHistory.cs": {
     "mtime": 1790859386.7832997,
@@ -7565,9 +7560,9 @@
     "semantic_hash": "b79174cb74752a5aacbcf8768d0609c7"
   },
   "backend/tests/ArchitectureTests/ApiContractArchitectureTests.cs": {
-    "mtime": 1792661421.8841095,
-    "ast_hash": "caada9aa8bc0c7a7a8af7c03b5619714",
-    "semantic_hash": "caada9aa8bc0c7a7a8af7c03b5619714"
+    "mtime": 1792827586.3173962,
+    "ast_hash": "15d6b243c80dbc88bafb10f16d9fd727",
+    "semantic_hash": "15d6b243c80dbc88bafb10f16d9fd727"
   },
   "backend/tests/ArchitectureTests/BackendProjects.cs": {
     "mtime": 1789224349.8178873,
@@ -7585,9 +7580,9 @@
     "semantic_hash": "27b7710a1261c93d5593e52a53eefd16"
   },
   "backend/tests/ArchitectureTests/JobDispatchArchitectureTests.cs": {
-    "mtime": 1789560518.3278828,
-    "ast_hash": "d837b1b5a2cc984feaca6899a7be2a39",
-    "semantic_hash": "d837b1b5a2cc984feaca6899a7be2a39"
+    "mtime": 1792827137.0411122,
+    "ast_hash": "a6eec7f920a63e0c8fdf7b8bc49a71ab",
+    "semantic_hash": "a6eec7f920a63e0c8fdf7b8bc49a71ab"
   },
   "backend/tests/ArchitectureTests/MediaArchitectureTests.cs": {
     "mtime": 1789224349.8546488,
@@ -7610,9 +7605,9 @@
     "semantic_hash": "7e7163d54da22b580ca3ab4a6c3e49d4"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Contract/JobDispatchCompositionTests.cs": {
-    "mtime": 1789560518.398884,
-    "ast_hash": "89bd22da43c351e485390aaabfb2a389",
-    "semantic_hash": "89bd22da43c351e485390aaabfb2a389"
+    "mtime": 1792827137.0365996,
+    "ast_hash": "cf86cd3e7e4ab64ce98ad784f60e2f1c",
+    "semantic_hash": "cf86cd3e7e4ab64ce98ad784f60e2f1c"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Contract/RepositoryRootTests.cs": {
     "mtime": 1790007167.7742994,
@@ -7620,19 +7615,19 @@
     "semantic_hash": "595b2e8e8a537b8d355505b24897f46d"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Contracts/PortalWorkoutContractsTests.cs": {
-    "mtime": 1791635442.891139,
-    "ast_hash": "bf5fcd5400ce85ff476a02d657d15d9d",
-    "semantic_hash": "bf5fcd5400ce85ff476a02d657d15d9d"
+    "mtime": 1792825098.8008375,
+    "ast_hash": "487ada021c37807f376a51a9e214c641",
+    "semantic_hash": "487ada021c37807f376a51a9e214c641"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/AdminModerationQueueControllerTests.cs": {
-    "mtime": 1792081964.3438094,
-    "ast_hash": "919bcd253b809b82ade1a7ac269501d8",
-    "semantic_hash": "919bcd253b809b82ade1a7ac269501d8"
+    "mtime": 1792694570.714542,
+    "ast_hash": "3bd0d5127ae324a4cb766a5acf76243e",
+    "semantic_hash": "3bd0d5127ae324a4cb766a5acf76243e"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/AdminOverviewControllerTests.cs": {
-    "mtime": 1789905141.4249609,
-    "ast_hash": "d5d3f0a3dc0ce51ebbe98d1eee0b6722",
-    "semantic_hash": "d5d3f0a3dc0ce51ebbe98d1eee0b6722"
+    "mtime": 1792694570.7283256,
+    "ast_hash": "ca7ce35f1f45e7c0c32b9a1280f4d006",
+    "semantic_hash": "ca7ce35f1f45e7c0c32b9a1280f4d006"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/AdminTrainersControllerTests.cs": {
     "mtime": 1792518231.9542425,
@@ -7640,9 +7635,9 @@
     "semantic_hash": "0e713f847849de00b4fa6b31f01be3bb"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/AuthAccountControllerTests.cs": {
-    "mtime": 1792085720.1342638,
-    "ast_hash": "35bfecb17978cb3899defcebd9bdfc68",
-    "semantic_hash": "35bfecb17978cb3899defcebd9bdfc68"
+    "mtime": 1792694570.8223898,
+    "ast_hash": "f5cc85fe344bc2bb53c6bcb8a7ea93e4",
+    "semantic_hash": "f5cc85fe344bc2bb53c6bcb8a7ea93e4"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/AuthEmailConfirmationRequestTests.cs": {
     "mtime": 1792085720.1427739,
@@ -7670,19 +7665,19 @@
     "semantic_hash": "ef1d812e03b90d6fab63f108c0005746"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/ClientPortalInputLimitsTests.cs": {
-    "mtime": 1792660649.5511491,
+    "mtime": 1792674688.413784,
     "ast_hash": "0d61e833b90a0bcf3db9e8b95ac5363e",
     "semantic_hash": "0d61e833b90a0bcf3db9e8b95ac5363e"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/ClientPortalMealPlansAndDaysTests.cs": {
-    "mtime": 1792666870.9640653,
+    "mtime": 1792674688.428638,
     "ast_hash": "fafefddc3e7b8db4e4c830d83fbe8846",
     "semantic_hash": "fafefddc3e7b8db4e4c830d83fbe8846"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/ClientPortalReadControllerTests.cs": {
-    "mtime": 1789906646.384957,
-    "ast_hash": "02779a9eca4ad681cd674c435f61b80c",
-    "semantic_hash": "02779a9eca4ad681cd674c435f61b80c"
+    "mtime": 1792696714.6499183,
+    "ast_hash": "39dd2fee7fcc8459ead619a9f05cef22",
+    "semantic_hash": "39dd2fee7fcc8459ead619a9f05cef22"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/ClientPortalSupplementIntakesTests.cs": {
     "mtime": 1789658159.7805521,
@@ -7720,9 +7715,9 @@
     "semantic_hash": "7438455a4fe17cac399b7e8b3841756d"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/ListingFilterBindingTests.cs": {
-    "mtime": 1790518470.4367557,
-    "ast_hash": "568b01b4e4daff98ab05516e17944f62",
-    "semantic_hash": "568b01b4e4daff98ab05516e17944f62"
+    "mtime": 1792694570.7456138,
+    "ast_hash": "a82da2b215efce33f947279fc356e1c6",
+    "semantic_hash": "a82da2b215efce33f947279fc356e1c6"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/MediaUploadControllerTests.cs": {
     "mtime": 1789225741.7357466,
@@ -7765,9 +7760,9 @@
     "semantic_hash": "3dd72c5dcb191aed7a38b64ce8e937c3"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Security/SecurityLoggingTests.cs": {
-    "mtime": 1788720250.8649356,
-    "ast_hash": "513ca4945fa2b78a8f97f51ef0cfb275",
-    "semantic_hash": "513ca4945fa2b78a8f97f51ef0cfb275"
+    "mtime": 1792694570.764704,
+    "ast_hash": "4a976e3842f7f158e2ee7a77e4c0f94b",
+    "semantic_hash": "4a976e3842f7f158e2ee7a77e4c0f94b"
   },
   "backend/tests/FunctionalTests/Api.FunctionalTests/Seeding/DevelopmentSeedTests.cs": {
     "mtime": 1791396769.058385,
@@ -7850,9 +7845,9 @@
     "semantic_hash": "eeef12c7676e4ac412b8c0ed135e9a7c"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/ClientPortal/MyTrainingPlanQueriesTests.cs": {
-    "mtime": 1791638728.67606,
-    "ast_hash": "d41654b43972f970fb24453e4be2462c",
-    "semantic_hash": "d41654b43972f970fb24453e4be2462c"
+    "mtime": 1792825098.7116573,
+    "ast_hash": "97566b792baf6c54abde605f1041e3ab",
+    "semantic_hash": "97566b792baf6c54abde605f1041e3ab"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/ClientPortal/MyWorkoutTodayQueriesTests.cs": {
     "mtime": 1789905141.329704,
@@ -7865,9 +7860,9 @@
     "semantic_hash": "92fcedd89d9f27fbca9ca2e7d2c6b973"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Dashboard/TrainerDashboardQueriesTests.cs": {
-    "mtime": 1789905141.2765083,
-    "ast_hash": "49f7d91628b4ee31c6d0b143a2faadea",
-    "semantic_hash": "49f7d91628b4ee31c6d0b143a2faadea"
+    "mtime": 1792686338.2843647,
+    "ast_hash": "8bdede95450f4ef069ac9b3952cb93dc",
+    "semantic_hash": "8bdede95450f4ef069ac9b3952cb93dc"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Email/BillingNotificationTemplateRendererTests.cs": {
     "mtime": 1789042450.1141024,
@@ -8035,12 +8030,12 @@
     "semantic_hash": "8050cb318c561fa5da7507e0b1b34a24"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Migrations/AddExerciseVideosMigrationTests.cs": {
-    "mtime": 1789560518.6689024,
-    "ast_hash": "4ca6984e13996b44fb6f886269901b7f",
-    "semantic_hash": "4ca6984e13996b44fb6f886269901b7f"
+    "mtime": 1792827221.0251648,
+    "ast_hash": "1aed864d8ea0bb152ca7712394bf8951",
+    "semantic_hash": "1aed864d8ea0bb152ca7712394bf8951"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Migrations/AddManagedImageAssetsMigrationTests.cs": {
-    "mtime": 1792661110.4328964,
+    "mtime": 1792674688.4795916,
     "ast_hash": "9f6e917ab7f2479ce5a2b1fec7b38db7",
     "semantic_hash": "9f6e917ab7f2479ce5a2b1fec7b38db7"
   },
@@ -8070,9 +8065,9 @@
     "semantic_hash": "a26aa7e3a1fbb7d811680b57210d7054"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Notifications/NotificationDeliveryStoreTests.cs": {
-    "mtime": 1788877828.9436612,
-    "ast_hash": "1f7109b1b6d28c15733a69ce6a4736ed",
-    "semantic_hash": "1f7109b1b6d28c15733a69ce6a4736ed"
+    "mtime": 1792693577.5392067,
+    "ast_hash": "87f1d6c3b509a20065d2311beaf314db",
+    "semantic_hash": "87f1d6c3b509a20065d2311beaf314db"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Notifications/ResendEmailTransportTests.cs": {
     "mtime": 1788878473.7171164,
@@ -8080,9 +8075,9 @@
     "semantic_hash": "ce71e767c395a87440fc950d07e2a049"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Notifications/SessionReminderTemplateRendererTests.cs": {
-    "mtime": 1788877779.898347,
-    "ast_hash": "9efe502d39c1d69de58039711cbc372f",
-    "semantic_hash": "9efe502d39c1d69de58039711cbc372f"
+    "mtime": 1792848216.7653031,
+    "ast_hash": "9c0f3633849e5d4d977e8e08248eceac",
+    "semantic_hash": "9c0f3633849e5d4d977e8e08248eceac"
   },
   "backend/tests/Integration/Infrastructure.IntegrationTests/Support/ReadQueriesIntegrationTestContext.cs": {
     "mtime": 1789905886.770572,
@@ -8130,9 +8125,9 @@
     "semantic_hash": "e12835241ef96cacded81840e74e515e"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Administration/SetBillingExemptionHandlerTests.cs": {
-    "mtime": 1792438871.0927682,
-    "ast_hash": "2541046aca42193f07a51306e925e7b5",
-    "semantic_hash": "2541046aca42193f07a51306e925e7b5"
+    "mtime": 1792824350.5100842,
+    "ast_hash": "53ac356cc104954d9f14711b09fc4e2d",
+    "semantic_hash": "53ac356cc104954d9f14711b09fc4e2d"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Assessments/AssessmentWeightLimitTests.cs": {
     "mtime": 1791922459.3040144,
@@ -8160,32 +8155,32 @@
     "semantic_hash": "94144bf02b9ab464f34914a8cb507c27"
   },
   "backend/tests/Unit/Application.UnitTests/Features/ClientPortal/GetMyPortalHomeHandlerTests.cs": {
-    "mtime": 1789905141.2081962,
-    "ast_hash": "01900083882d4e16383afb4f49df6580",
-    "semantic_hash": "01900083882d4e16383afb4f49df6580"
+    "mtime": 1792824798.1904829,
+    "ast_hash": "7d2acbe7307dff10eab4b22087975172",
+    "semantic_hash": "7d2acbe7307dff10eab4b22087975172"
   },
   "backend/tests/Unit/Application.UnitTests/Features/ClientPortal/MyAvatarHandlerTests.cs": {
-    "mtime": 1792660109.1665685,
+    "mtime": 1792674688.5116246,
     "ast_hash": "6ad4f5fc76ef7d6a7e5fbc077374bd46",
     "semantic_hash": "6ad4f5fc76ef7d6a7e5fbc077374bd46"
   },
   "backend/tests/Unit/Application.UnitTests/Features/ClientPortal/MyMealPlanSelectionHandlersTests.cs": {
-    "mtime": 1792659990.5737705,
+    "mtime": 1792674688.5261388,
     "ast_hash": "82d7f7a9fb8b326dd12d1c066309288c",
     "semantic_hash": "82d7f7a9fb8b326dd12d1c066309288c"
   },
   "backend/tests/Unit/Application.UnitTests/Features/ClientPortal/MyWorkoutDayHandlersTests.cs": {
-    "mtime": 1792666756.8180747,
+    "mtime": 1792674688.5406542,
     "ast_hash": "dfdb788baf05fab26b0fedbe9314bdb3",
     "semantic_hash": "dfdb788baf05fab26b0fedbe9314bdb3"
   },
   "backend/tests/Unit/Application.UnitTests/Features/ClientPortal/MyWorkoutTodayReaderTests.cs": {
-    "mtime": 1792660013.0649943,
+    "mtime": 1792674688.5591862,
     "ast_hash": "8d64de16fe69e5090e687eaa6ba62ff0",
     "semantic_hash": "8d64de16fe69e5090e687eaa6ba62ff0"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Clients/ContactEmailValidationTests.cs": {
-    "mtime": 1792660873.903749,
+    "mtime": 1792674688.5802298,
     "ast_hash": "3880854e6220a3bc8474c5f4d62e5be5",
     "semantic_hash": "3880854e6220a3bc8474c5f4d62e5be5"
   },
@@ -8230,9 +8225,9 @@
     "semantic_hash": "2cb6022f430dcc30657c866136e32bb1"
   },
   "backend/tests/Unit/Application.UnitTests/Features/ReadHandlerTestContext.cs": {
-    "mtime": 1792660012.861,
-    "ast_hash": "b704bef084740eeb914f29ed31227101",
-    "semantic_hash": "b704bef084740eeb914f29ed31227101"
+    "mtime": 1792825100.323453,
+    "ast_hash": "5f62e2038cb52125376664cc9a069492",
+    "semantic_hash": "5f62e2038cb52125376664cc9a069492"
   },
   "backend/tests/Unit/Application.UnitTests/Features/Training/ExerciseSetLogWeightValidatorsTests.cs": {
     "mtime": 1791638728.6410067,
@@ -8395,9 +8390,9 @@
     "semantic_hash": "8765d9a72936cdead3f0054241d0f30f"
   },
   "frontend/src/app/layouts/AppShell.tsx": {
-    "mtime": 1792661796.2506702,
-    "ast_hash": "7c5dbcc4b1ba69df4640906ab9db5900",
-    "semantic_hash": "7c5dbcc4b1ba69df4640906ab9db5900"
+    "mtime": 1792674688.6537476,
+    "ast_hash": "2dd77324efe1bed0f10aed376e0827f6",
+    "semantic_hash": "2dd77324efe1bed0f10aed376e0827f6"
   },
   "frontend/src/app/layouts/AuthLayout.tsx": {
     "mtime": 1792243021.2308047,
@@ -8405,7 +8400,7 @@
     "semantic_hash": "ed6f547e53aecf4dfd1e708f2be4f1a3"
   },
   "frontend/src/app/layouts/PortalLayout.tsx": {
-    "mtime": 1792666542.1222456,
+    "mtime": 1792674688.666257,
     "ast_hash": "bc50fc7e7103127d13d558ceab0fd67c",
     "semantic_hash": "bc50fc7e7103127d13d558ceab0fd67c"
   },
@@ -8420,9 +8415,9 @@
     "semantic_hash": "e079c5c079e9713f141f0689780cd838"
   },
   "frontend/src/app/layouts/components/SidebarNav.tsx": {
-    "mtime": 1790168466.2354095,
-    "ast_hash": "7083df60e237c74bce62e7919099049a",
-    "semantic_hash": "7083df60e237c74bce62e7919099049a"
+    "mtime": 1792694446.4131384,
+    "ast_hash": "8f7932fe0c499beadbd435688ea4cbc8",
+    "semantic_hash": "8f7932fe0c499beadbd435688ea4cbc8"
   },
   "frontend/src/app/layouts/components/SubscriptionCard.tsx": {
     "mtime": 1791109723.3886821,
@@ -8470,9 +8465,9 @@
     "semantic_hash": "66d314aaea3cd0eaff92085ccb261dc5"
   },
   "frontend/src/app/router.tsx": {
-    "mtime": 1792662371.4549963,
-    "ast_hash": "86dc581f5020150e01130be9068d3bb7",
-    "semantic_hash": "86dc581f5020150e01130be9068d3bb7"
+    "mtime": 1792694446.508135,
+    "ast_hash": "8873c6e7cbc6b7d17553f0d194465213",
+    "semantic_hash": "8873c6e7cbc6b7d17553f0d194465213"
   },
   "frontend/src/features/account/api/account.ts": {
     "mtime": 1792328566.2183256,
@@ -8480,7 +8475,7 @@
     "semantic_hash": "bb738d5037a19416a61e125ec27dcfa7"
   },
   "frontend/src/features/account/components/ChangePasswordForm.tsx": {
-    "mtime": 1792328565.4308796,
+    "mtime": 1792828293.5879898,
     "ast_hash": "45fda969b1fab43fa9f2b2dc8d5a52c8",
     "semantic_hash": "45fda969b1fab43fa9f2b2dc8d5a52c8"
   },
@@ -8530,14 +8525,14 @@
     "semantic_hash": "13e3a546ce756e5d551429a1d3fb1833"
   },
   "frontend/src/features/admin-moderation/api/moderation.ts": {
-    "mtime": 1790252021.7596543,
-    "ast_hash": "c566855453cacbf9eec803a3774c25f5",
-    "semantic_hash": "c566855453cacbf9eec803a3774c25f5"
+    "mtime": 1792845866.6133783,
+    "ast_hash": "ff1c0311fa95a3edbe2b9efe6a40ecbc",
+    "semantic_hash": "ff1c0311fa95a3edbe2b9efe6a40ecbc"
   },
   "frontend/src/features/admin-moderation/pages/ModerationPage.tsx": {
-    "mtime": 1792518308.3735523,
-    "ast_hash": "35eb7bfaa6b4b2f2c06300d4fe3fc36c",
-    "semantic_hash": "35eb7bfaa6b4b2f2c06300d4fe3fc36c"
+    "mtime": 1792851632.621998,
+    "ast_hash": "53d03b753200bc0925d56b6c46df89bb",
+    "semantic_hash": "53d03b753200bc0925d56b6c46df89bb"
   },
   "frontend/src/features/admin-overview/components/TrainerStatCard.tsx": {
     "mtime": 1792440651.9934218,
@@ -8545,14 +8540,14 @@
     "semantic_hash": "a12fab7347f07f8f06e4a2f79ac9563b"
   },
   "frontend/src/features/admin-overview/pages/AdminOverviewPage.tsx": {
-    "mtime": 1792520526.377782,
-    "ast_hash": "53fb3873d82a94ac546dbde826f0a003",
-    "semantic_hash": "53fb3873d82a94ac546dbde826f0a003"
+    "mtime": 1792845867.1851597,
+    "ast_hash": "b02b9362ee9a94fe2f9fba3b2d104256",
+    "semantic_hash": "b02b9362ee9a94fe2f9fba3b2d104256"
   },
   "frontend/src/features/admin-trainers/api/trainers.ts": {
-    "mtime": 1792520997.4346626,
-    "ast_hash": "32dc5497436d3c0908d2c2504e320883",
-    "semantic_hash": "32dc5497436d3c0908d2c2504e320883"
+    "mtime": 1792851432.5949178,
+    "ast_hash": "aacd5bb275b32fbbf18e42a9d6630978",
+    "semantic_hash": "aacd5bb275b32fbbf18e42a9d6630978"
   },
   "frontend/src/features/admin-trainers/components/ExemptTrainersSection.tsx": {
     "mtime": 1792442102.6716402,
@@ -8575,19 +8570,19 @@
     "semantic_hash": "b0a84c7de7934be8be95366fe273c970"
   },
   "frontend/src/features/admin-trainers/components/TrainerLookup.tsx": {
-    "mtime": 1792518034.6554215,
-    "ast_hash": "ba56e3f6de6ab90c3bc947a296226eb1",
-    "semantic_hash": "ba56e3f6de6ab90c3bc947a296226eb1"
+    "mtime": 1792845787.4074838,
+    "ast_hash": "c78e8478bfc615ca273952cc18ef9bb8",
+    "semantic_hash": "c78e8478bfc615ca273952cc18ef9bb8"
   },
   "frontend/src/features/admin-trainers/lib/trainer-labels.ts": {
-    "mtime": 1792441070.528852,
-    "ast_hash": "0968fb131aa82a472944a2599ac3e059",
-    "semantic_hash": "0968fb131aa82a472944a2599ac3e059"
+    "mtime": 1792845867.0180728,
+    "ast_hash": "62216febcb22f1e4c974912cc09ecbf1",
+    "semantic_hash": "62216febcb22f1e4c974912cc09ecbf1"
   },
   "frontend/src/features/admin-trainers/pages/AdminTrainersPage.tsx": {
-    "mtime": 1792441203.1524997,
-    "ast_hash": "e7c732665a53b1fed0f6966f0bcec9ea",
-    "semantic_hash": "e7c732665a53b1fed0f6966f0bcec9ea"
+    "mtime": 1792845787.4145951,
+    "ast_hash": "af46e1af090b2819969d62c64046c3af",
+    "semantic_hash": "af46e1af090b2819969d62c64046c3af"
   },
   "frontend/src/features/admin-trainers/pages/InviteTrainerPage.tsx": {
     "mtime": 1792441170.945707,
@@ -8655,19 +8650,14 @@
     "semantic_hash": "01c5708a8d7c690244dd5d2329f31a60"
   },
   "frontend/src/features/auth/index.ts": {
-    "mtime": 1792440325.3676019,
-    "ast_hash": "6a39b767d2dd6833eb9e59bfdd94722b",
-    "semantic_hash": "6a39b767d2dd6833eb9e59bfdd94722b"
+    "mtime": 1792828293.4582176,
+    "ast_hash": "a86f679ff24e2b390a2dc434236b73f5",
+    "semantic_hash": "a86f679ff24e2b390a2dc434236b73f5"
   },
   "frontend/src/features/auth/lib/auth-errors.ts": {
-    "mtime": 1792440892.0611782,
-    "ast_hash": "00dfea2898ed9805ec12d4994432de86",
-    "semantic_hash": "00dfea2898ed9805ec12d4994432de86"
-  },
-  "frontend/src/features/auth/lib/auth-notice.ts": {
-    "mtime": 1792323426.881049,
-    "ast_hash": "8fa4fd5f3395d842207b28ede89f7e53",
-    "semantic_hash": "8fa4fd5f3395d842207b28ede89f7e53"
+    "mtime": 1792828597.4540527,
+    "ast_hash": "d5d87ac5867b7037ce081f8ecbe135c5",
+    "semantic_hash": "d5d87ac5867b7037ce081f8ecbe135c5"
   },
   "frontend/src/features/auth/lib/confirm-email.ts": {
     "mtime": 1792323426.9405704,
@@ -8725,9 +8715,9 @@
     "semantic_hash": "687a270216a285550b39c02afa540a61"
   },
   "frontend/src/features/auth/pages/LoginPage.tsx": {
-    "mtime": 1792328565.0339372,
-    "ast_hash": "2ec76f34374bcc15fb2e5f46941d2ecb",
-    "semantic_hash": "2ec76f34374bcc15fb2e5f46941d2ecb"
+    "mtime": 1792828293.5044916,
+    "ast_hash": "940c45e3e9d51491a4b329de472008e0",
+    "semantic_hash": "940c45e3e9d51491a4b329de472008e0"
   },
   "frontend/src/features/auth/pages/ResendConfirmationPage.tsx": {
     "mtime": 1792323427.504912,
@@ -8820,9 +8810,9 @@
     "semantic_hash": "4171806fb518db43616cc10a630ec930"
   },
   "frontend/src/features/check-ins/components/ScheduleCheckInForm.tsx": {
-    "mtime": 1792607444.1522243,
-    "ast_hash": "645376a101fc7756fb68339086ca2ab1",
-    "semantic_hash": "645376a101fc7756fb68339086ca2ab1"
+    "mtime": 1792694446.618108,
+    "ast_hash": "6e89a0c9829761cb77f09bc41ee7f08e",
+    "semantic_hash": "6e89a0c9829761cb77f09bc41ee7f08e"
   },
   "frontend/src/features/check-ins/index.ts": {
     "mtime": 1791917460.6450336,
@@ -8835,9 +8825,9 @@
     "semantic_hash": "184a0c6b8aadfea69a135f1287004f81"
   },
   "frontend/src/features/check-ins/lib/checkInStatus.ts": {
-    "mtime": 1792607444.1953938,
-    "ast_hash": "f7fa0a035aaf2ecb028f41e67ab84983",
-    "semantic_hash": "f7fa0a035aaf2ecb028f41e67ab84983"
+    "mtime": 1792694446.6700206,
+    "ast_hash": "b63a3534f7ddc4f1a12cf3ab8baf4bea",
+    "semantic_hash": "b63a3534f7ddc4f1a12cf3ab8baf4bea"
   },
   "frontend/src/features/check-ins/lib/dates.ts": {
     "mtime": 1791110481.407595,
@@ -8865,9 +8855,9 @@
     "semantic_hash": "94b7cda0abba579b99628b5a3a95a6a8"
   },
   "frontend/src/features/clients/api/mutations.ts": {
-    "mtime": 1792607444.366465,
-    "ast_hash": "25642808c0bbb07f89093e5e4f8f8c43",
-    "semantic_hash": "25642808c0bbb07f89093e5e4f8f8c43"
+    "mtime": 1792694446.73934,
+    "ast_hash": "6fff39bba72e0b860969f1a78af9362b",
+    "semantic_hash": "6fff39bba72e0b860969f1a78af9362b"
   },
   "frontend/src/features/clients/api/queries.ts": {
     "mtime": 1792607444.3975184,
@@ -8885,9 +8875,9 @@
     "semantic_hash": "c3d7c66e105e4f32e3c23cfa8ad7a037"
   },
   "frontend/src/features/clients/components/InitialAssessmentForm.tsx": {
-    "mtime": 1792607444.4685194,
-    "ast_hash": "e2aa6d8e095384c7dfc13b06fcbe8ed3",
-    "semantic_hash": "e2aa6d8e095384c7dfc13b06fcbe8ed3"
+    "mtime": 1792694446.7944748,
+    "ast_hash": "0c1bcdda269d9ece2e72a6e11880d1a8",
+    "semantic_hash": "0c1bcdda269d9ece2e72a6e11880d1a8"
   },
   "frontend/src/features/clients/index.ts": {
     "mtime": 1791032389.3054378,
@@ -8905,9 +8895,9 @@
     "semantic_hash": "53bad4fb718090f90eaa41101471c675"
   },
   "frontend/src/features/clients/pages/ClientDetailPage.tsx": {
-    "mtime": 1792607444.5418718,
-    "ast_hash": "bb1d9b0ac59afffc576ec213ef56328c",
-    "semantic_hash": "bb1d9b0ac59afffc576ec213ef56328c"
+    "mtime": 1792848892.391353,
+    "ast_hash": "cd37bcc102dec645735045c65b4fbaa8",
+    "semantic_hash": "cd37bcc102dec645735045c65b4fbaa8"
   },
   "frontend/src/features/clients/pages/ClientEditorPage.tsx": {
     "mtime": 1792607444.5755873,
@@ -8920,9 +8910,9 @@
     "semantic_hash": "62e5104c50f61d29627173ed8b34e0f9"
   },
   "frontend/src/features/clients/pages/InitialAssessmentPage.tsx": {
-    "mtime": 1792607444.6384566,
-    "ast_hash": "ee1e3e98e148f98acd13823c48cddc83",
-    "semantic_hash": "ee1e3e98e148f98acd13823c48cddc83"
+    "mtime": 1792694446.9241652,
+    "ast_hash": "55a7dff9a162ee5ec0af07bd2508efc4",
+    "semantic_hash": "55a7dff9a162ee5ec0af07bd2508efc4"
   },
   "frontend/src/features/exercise-video/api/exerciseVideo.ts": {
     "mtime": 1791649821.404,
@@ -8980,9 +8970,9 @@
     "semantic_hash": "b092d2a5050985b104c350b3c0f4c058"
   },
   "frontend/src/features/library/components/LibraryItemDetails.tsx": {
-    "mtime": 1790781937.649124,
-    "ast_hash": "d935acbd9f4eb492ff01d4e21d2a3278",
-    "semantic_hash": "d935acbd9f4eb492ff01d4e21d2a3278"
+    "mtime": 1792845417.0044134,
+    "ast_hash": "556e897dbb91664caeaeaed5f20afd40",
+    "semantic_hash": "556e897dbb91664caeaeaed5f20afd40"
   },
   "frontend/src/features/library/components/LibraryItemView.tsx": {
     "mtime": 1792607444.8699498,
@@ -8990,9 +8980,9 @@
     "semantic_hash": "6621d7cdf0fac5f41b18a5178b9f8106"
   },
   "frontend/src/features/library/components/LibraryPanel.tsx": {
-    "mtime": 1792607444.8993266,
-    "ast_hash": "362cef37d7fc91b0118e97fd519ecd7a",
-    "semantic_hash": "362cef37d7fc91b0118e97fd519ecd7a"
+    "mtime": 1792844964.9890485,
+    "ast_hash": "0e8db373ef5154a26542501ab1ba72e4",
+    "semantic_hash": "0e8db373ef5154a26542501ab1ba72e4"
   },
   "frontend/src/features/library/components/SupplementForm.tsx": {
     "mtime": 1792607444.9322834,
@@ -9000,9 +8990,9 @@
     "semantic_hash": "672dd61a9ca8675fd0232fb83e49b79d"
   },
   "frontend/src/features/library/components/SupplementsPanel.tsx": {
-    "mtime": 1792607444.9669793,
-    "ast_hash": "f425bc0e3f3c6f770f91a721c0c79f6b",
-    "semantic_hash": "f425bc0e3f3c6f770f91a721c0c79f6b"
+    "mtime": 1792844965.0566816,
+    "ast_hash": "5bee2524932cf42b65b62de3111c2530",
+    "semantic_hash": "5bee2524932cf42b65b62de3111c2530"
   },
   "frontend/src/features/library/components/UnsavedChangesDialog.tsx": {
     "mtime": 1792607444.9891193,
@@ -9020,9 +9010,9 @@
     "semantic_hash": "d5aba9c5865897b63752cb3d6f8d21f9"
   },
   "frontend/src/features/library/lib/items.ts": {
-    "mtime": 1790782822.9349782,
-    "ast_hash": "acb66e04984cf54bc3ce15b3716c5b09",
-    "semantic_hash": "acb66e04984cf54bc3ce15b3716c5b09"
+    "mtime": 1792844817.5637586,
+    "ast_hash": "7f8edb9f86114053ec601df319c7424a",
+    "semantic_hash": "7f8edb9f86114053ec601df319c7424a"
   },
   "frontend/src/features/library/lib/labels.ts": {
     "mtime": 1792607445.0233889,
@@ -9105,17 +9095,17 @@
     "semantic_hash": "5a01500923acef5c6a4ce0ba019c7fee"
   },
   "frontend/src/features/portal/api/portal.ts": {
-    "mtime": 1792661866.2418015,
-    "ast_hash": "4f971d240a74cd938a8e928e453e466b",
-    "semantic_hash": "4f971d240a74cd938a8e928e453e466b"
+    "mtime": 1792828593.5098624,
+    "ast_hash": "7d767405ea0a841c4c97c8621fc48dca",
+    "semantic_hash": "7d767405ea0a841c4c97c8621fc48dca"
   },
   "frontend/src/features/portal/components/AvatarSection.tsx": {
-    "mtime": 1792662626.8766842,
+    "mtime": 1792828593.5555618,
     "ast_hash": "ce4d078579db1fd541cfb260cf16400b",
     "semantic_hash": "ce4d078579db1fd541cfb260cf16400b"
   },
   "frontend/src/features/portal/components/CheckInForm.tsx": {
-    "mtime": 1792662678.8697548,
+    "mtime": 1792828593.6161156,
     "ast_hash": "f88ca640cbeb69729d78d1cdee3a789e",
     "semantic_hash": "f88ca640cbeb69729d78d1cdee3a789e"
   },
@@ -9130,37 +9120,37 @@
     "semantic_hash": "b539ee925659f7252c1542cd8a264f2d"
   },
   "frontend/src/features/portal/components/MacroBars.tsx": {
-    "mtime": 1792662473.7906556,
+    "mtime": 1792828593.741478,
     "ast_hash": "7f6e6c50091a54cd28b321e8eb77e30d",
     "semantic_hash": "7f6e6c50091a54cd28b321e8eb77e30d"
   },
   "frontend/src/features/portal/components/MacroChips.tsx": {
-    "mtime": 1792662479.3122478,
+    "mtime": 1792828593.7613993,
     "ast_hash": "f3431bcc1a2402719370e0c05480d0a5",
     "semantic_hash": "f3431bcc1a2402719370e0c05480d0a5"
   },
   "frontend/src/features/portal/components/MealCard.tsx": {
-    "mtime": 1792662485.045271,
-    "ast_hash": "772eb3c85ce9ab8a455177d43ba6842e",
-    "semantic_hash": "772eb3c85ce9ab8a455177d43ba6842e"
+    "mtime": 1792828593.7912,
+    "ast_hash": "f1c3715b306fa22fd0cd655147ec79a6",
+    "semantic_hash": "f1c3715b306fa22fd0cd655147ec79a6"
   },
   "frontend/src/features/portal/components/MealPlanList.tsx": {
-    "mtime": 1792662520.5680733,
+    "mtime": 1792828593.8223102,
     "ast_hash": "25cfe309ec78e1ae3f18ae5f3d040583",
     "semantic_hash": "25cfe309ec78e1ae3f18ae5f3d040583"
   },
   "frontend/src/features/portal/components/PastWorkoutExercise.tsx": {
-    "mtime": 1792662646.3388593,
-    "ast_hash": "e8b059a28831b0aea68d24ab622c73ea",
-    "semantic_hash": "e8b059a28831b0aea68d24ab622c73ea"
+    "mtime": 1792828593.8716552,
+    "ast_hash": "dc7eda62289ec4dcd9e0115f6842e547",
+    "semantic_hash": "dc7eda62289ec4dcd9e0115f6842e547"
   },
   "frontend/src/features/portal/components/PlannedSetChips.tsx": {
-    "mtime": 1792662628.8886693,
+    "mtime": 1792828593.888997,
     "ast_hash": "fc678e860add04b8df8c321352852713",
     "semantic_hash": "fc678e860add04b8df8c321352852713"
   },
   "frontend/src/features/portal/components/PortalCard.tsx": {
-    "mtime": 1792661720.658615,
+    "mtime": 1792828593.9404292,
     "ast_hash": "89098ff076b6384aebddaf3694f90814",
     "semantic_hash": "89098ff076b6384aebddaf3694f90814"
   },
@@ -9170,12 +9160,12 @@
     "semantic_hash": "faa5e0db72a222540ddc58502ae139b1"
   },
   "frontend/src/features/portal/components/PortalUnavailable.tsx": {
-    "mtime": 1792672383.8181963,
+    "mtime": 1792828593.9725175,
     "ast_hash": "e147fa2d036b67d92182fdecf5681319",
     "semantic_hash": "e147fa2d036b67d92182fdecf5681319"
   },
   "frontend/src/features/portal/components/ProfileContactsForm.tsx": {
-    "mtime": 1792667278.7097435,
+    "mtime": 1792828594.005588,
     "ast_hash": "8a1e160c01e7a748246b62a8b203fde2",
     "semantic_hash": "8a1e160c01e7a748246b62a8b203fde2"
   },
@@ -9185,27 +9175,27 @@
     "semantic_hash": "539be943549e12edb54b9c35c90a874d"
   },
   "frontend/src/features/portal/components/SupplementIntakeRow.tsx": {
-    "mtime": 1792662755.6911573,
+    "mtime": 1792828594.049446,
     "ast_hash": "6cace32316e58243b76e30b0ec5c5d29",
     "semantic_hash": "6cace32316e58243b76e30b0ec5c5d29"
   },
   "frontend/src/features/portal/components/TrainingPlanError.tsx": {
-    "mtime": 1792672383.809132,
+    "mtime": 1792828594.0732672,
     "ast_hash": "4dbc7cb29960e146c4de7df64e403661",
     "semantic_hash": "4dbc7cb29960e146c4de7df64e403661"
   },
   "frontend/src/features/portal/components/WorkoutDayPicker.tsx": {
-    "mtime": 1792667118.485413,
+    "mtime": 1792828594.1062694,
     "ast_hash": "fbd664032dcc6d90506352281811bc55",
     "semantic_hash": "fbd664032dcc6d90506352281811bc55"
   },
   "frontend/src/features/portal/components/WorkoutExerciseCard.tsx": {
-    "mtime": 1792662647.219597,
-    "ast_hash": "33ca630a67e7c9645e3270b3c143b560",
-    "semantic_hash": "33ca630a67e7c9645e3270b3c143b560"
+    "mtime": 1792828594.1390076,
+    "ast_hash": "85290cfc638521c4850bffc70eb23e36",
+    "semantic_hash": "85290cfc638521c4850bffc70eb23e36"
   },
   "frontend/src/features/portal/components/WorkoutProgress.tsx": {
-    "mtime": 1792662628.4446921,
+    "mtime": 1792828594.1605108,
     "ast_hash": "da81d936fe9da91bde06b13f56222a60",
     "semantic_hash": "da81d936fe9da91bde06b13f56222a60"
   },
@@ -9215,79 +9205,79 @@
     "semantic_hash": "1afffba1ed72a05b922c61d12dd2ddad"
   },
   "frontend/src/features/portal/index.ts": {
-    "mtime": 1792661829.7955923,
+    "mtime": 1792828594.222163,
     "ast_hash": "ecb0be309489d0b511110a085bce245b",
     "semantic_hash": "ecb0be309489d0b511110a085bce245b"
   },
   "frontend/src/features/portal/lib/checkIn.ts": {
-    "mtime": 1792662678.8793368,
+    "mtime": 1792828594.2890174,
     "ast_hash": "58445baa2c3b0e1b115062b473db3775",
     "semantic_hash": "58445baa2c3b0e1b115062b473db3775"
   },
   "frontend/src/features/portal/lib/nutrition.ts": {
-    "mtime": 1792662668.8627841,
-    "ast_hash": "10186dcef88e6befbd6b57966e66e2a6",
-    "semantic_hash": "10186dcef88e6befbd6b57966e66e2a6"
+    "mtime": 1792828594.3221402,
+    "ast_hash": "64bf665ff4eb9f8582ae16b01b46d352",
+    "semantic_hash": "64bf665ff4eb9f8582ae16b01b46d352"
   },
   "frontend/src/features/portal/lib/profile.ts": {
-    "mtime": 1792667118.3599422,
+    "mtime": 1792828594.3562534,
     "ast_hash": "afd31bb5d4035e67fcf46782b7301522",
     "semantic_hash": "afd31bb5d4035e67fcf46782b7301522"
   },
   "frontend/src/features/portal/lib/schedule.ts": {
-    "mtime": 1792662593.834473,
-    "ast_hash": "64bbd5ad2c896370ef3883305faf351d",
-    "semantic_hash": "64bbd5ad2c896370ef3883305faf351d"
+    "mtime": 1792828842.6202235,
+    "ast_hash": "e0e55a072f5c82f334cdf56ddaddc471",
+    "semantic_hash": "e0e55a072f5c82f334cdf56ddaddc471"
   },
   "frontend/src/features/portal/lib/workout.ts": {
-    "mtime": 1792667118.3949914,
-    "ast_hash": "f530d2cfe7e84992d9536aa112614338",
-    "semantic_hash": "f530d2cfe7e84992d9536aa112614338"
+    "mtime": 1792828594.4247239,
+    "ast_hash": "e74fcc6d4efc681c8e5166f3b23189c6",
+    "semantic_hash": "e74fcc6d4efc681c8e5166f3b23189c6"
   },
   "frontend/src/features/portal/pages/PortalCheckInsPage.tsx": {
-    "mtime": 1792672383.8280885,
-    "ast_hash": "8581584238728b5ba16e93960114ac0d",
-    "semantic_hash": "8581584238728b5ba16e93960114ac0d"
+    "mtime": 1792694447.081183,
+    "ast_hash": "037743a2b1110321ed5f56baf44c8bf8",
+    "semantic_hash": "037743a2b1110321ed5f56baf44c8bf8"
   },
   "frontend/src/features/portal/pages/PortalHomePage.tsx": {
-    "mtime": 1792672383.8376002,
-    "ast_hash": "281ae9425bf699577a9e5726a7c27538",
-    "semantic_hash": "281ae9425bf699577a9e5726a7c27538"
+    "mtime": 1792828962.1652975,
+    "ast_hash": "c0208bd8261e2a881dc7f7d30c415aeb",
+    "semantic_hash": "c0208bd8261e2a881dc7f7d30c415aeb"
   },
   "frontend/src/features/portal/pages/PortalMealPlansPage.tsx": {
-    "mtime": 1792672383.849187,
-    "ast_hash": "24b0c35d6f259c18eba16443b3525bc6",
-    "semantic_hash": "24b0c35d6f259c18eba16443b3525bc6"
+    "mtime": 1792694447.1931014,
+    "ast_hash": "9a979eee37f7496030ae3f52109e1fae",
+    "semantic_hash": "9a979eee37f7496030ae3f52109e1fae"
   },
   "frontend/src/features/portal/pages/PortalNutritionPage.tsx": {
-    "mtime": 1792672383.8581858,
-    "ast_hash": "34c94e721a2ebbed6fa525472a9417b8",
-    "semantic_hash": "34c94e721a2ebbed6fa525472a9417b8"
+    "mtime": 1792828594.555478,
+    "ast_hash": "14729a3461465994b0af651998903335",
+    "semantic_hash": "14729a3461465994b0af651998903335"
   },
   "frontend/src/features/portal/pages/PortalPlanPage.tsx": {
-    "mtime": 1792662785.0226686,
-    "ast_hash": "9f84dd19a150aa0f9e8e73f66fa4699f",
-    "semantic_hash": "9f84dd19a150aa0f9e8e73f66fa4699f"
+    "mtime": 1792828594.605597,
+    "ast_hash": "c0ec7a20c93d6575c782f7654ee3e04e",
+    "semantic_hash": "c0ec7a20c93d6575c782f7654ee3e04e"
   },
   "frontend/src/features/portal/pages/PortalProfilePage.tsx": {
-    "mtime": 1792672383.8676407,
+    "mtime": 1792828594.6324556,
     "ast_hash": "1faeaee33757b14849ba2f166fe947ef",
     "semantic_hash": "1faeaee33757b14849ba2f166fe947ef"
   },
   "frontend/src/features/portal/pages/PortalSupplementsPage.tsx": {
-    "mtime": 1792672383.8758178,
-    "ast_hash": "686715f0ade3737dbd94944cc4645098",
-    "semantic_hash": "686715f0ade3737dbd94944cc4645098"
+    "mtime": 1792828594.6746643,
+    "ast_hash": "a5f3d4f1d011e587fffd560bb88ea0e5",
+    "semantic_hash": "a5f3d4f1d011e587fffd560bb88ea0e5"
   },
   "frontend/src/features/portal/pages/PortalTodayPage.tsx": {
-    "mtime": 1792672383.882261,
-    "ast_hash": "cb158b6ced31df4ca6ca2160dc0dfeb4",
-    "semantic_hash": "cb158b6ced31df4ca6ca2160dc0dfeb4"
+    "mtime": 1792694447.427544,
+    "ast_hash": "36cdf17b2a8daa7265b75cd80178668f",
+    "semantic_hash": "36cdf17b2a8daa7265b75cd80178668f"
   },
   "frontend/src/features/prescriptions/api/assignments.ts": {
-    "mtime": 1792607445.5188918,
-    "ast_hash": "32dee07f93933943e49d7daf360bb648",
-    "semantic_hash": "32dee07f93933943e49d7daf360bb648"
+    "mtime": 1792828594.7909253,
+    "ast_hash": "bf28d7160292572c2faf88fdcfc5bf73",
+    "semantic_hash": "bf28d7160292572c2faf88fdcfc5bf73"
   },
   "frontend/src/features/prescriptions/api/keys.ts": {
     "mtime": 1790943645.8426545,
@@ -9295,14 +9285,14 @@
     "semantic_hash": "bbbd313d809a00cd5e6386aef9ec9f24"
   },
   "frontend/src/features/prescriptions/api/meal-plans.ts": {
-    "mtime": 1792607445.5434167,
-    "ast_hash": "ddc634cb19b468bcf488e44fdfe6488c",
-    "semantic_hash": "ddc634cb19b468bcf488e44fdfe6488c"
+    "mtime": 1792828594.827342,
+    "ast_hash": "e24f295c14d989a8e6964ad366c6bee7",
+    "semantic_hash": "e24f295c14d989a8e6964ad366c6bee7"
   },
   "frontend/src/features/prescriptions/api/training.ts": {
-    "mtime": 1792607445.569289,
-    "ast_hash": "f2425f6c676895600bd2685003bbcb78",
-    "semantic_hash": "f2425f6c676895600bd2685003bbcb78"
+    "mtime": 1792828594.8579302,
+    "ast_hash": "17f76af492def86c3a32313286103fdb",
+    "semantic_hash": "17f76af492def86c3a32313286103fdb"
   },
   "frontend/src/features/prescriptions/components/CatalogPicker.tsx": {
     "mtime": 1792440159.5965476,
@@ -9310,39 +9300,39 @@
     "semantic_hash": "510d04db83103bfb6a659a08ec8d32a6"
   },
   "frontend/src/features/prescriptions/components/MealStructureEditor.tsx": {
-    "mtime": 1792607445.6092682,
-    "ast_hash": "efd68f0d7487ad01fcada3904e743278",
-    "semantic_hash": "efd68f0d7487ad01fcada3904e743278"
+    "mtime": 1792843482.8543887,
+    "ast_hash": "6434ce06dd91da172468abf1324f97e3",
+    "semantic_hash": "6434ce06dd91da172468abf1324f97e3"
   },
   "frontend/src/features/prescriptions/components/NutritionBalance.tsx": {
-    "mtime": 1792607445.6383927,
-    "ast_hash": "cdcae459656f3a5b227a6b4a62b0a34c",
-    "semantic_hash": "cdcae459656f3a5b227a6b4a62b0a34c"
+    "mtime": 1792828594.975093,
+    "ast_hash": "198e71924b9a7d75c484c1b1122d102f",
+    "semantic_hash": "198e71924b9a7d75c484c1b1122d102f"
   },
   "frontend/src/features/prescriptions/components/NutritionCalculationFields.tsx": {
-    "mtime": 1792607445.6745234,
-    "ast_hash": "af7bd8e5f09d3f6e597cdf0464ea3845",
-    "semantic_hash": "af7bd8e5f09d3f6e597cdf0464ea3845"
+    "mtime": 1792828595.0136402,
+    "ast_hash": "ffd1555711bd7eae1b1f8121fdf931ad",
+    "semantic_hash": "ffd1555711bd7eae1b1f8121fdf931ad"
   },
   "frontend/src/features/prescriptions/components/PerformedSetsSection.tsx": {
-    "mtime": 1792607445.715496,
-    "ast_hash": "e4355d4940b45ef5752d398d29e61775",
-    "semantic_hash": "e4355d4940b45ef5752d398d29e61775"
+    "mtime": 1792828595.0489833,
+    "ast_hash": "940b94f3e2c91a5ad0c032ba7d84757a",
+    "semantic_hash": "940b94f3e2c91a5ad0c032ba7d84757a"
   },
   "frontend/src/features/prescriptions/components/StepIndicator.tsx": {
-    "mtime": 1792607445.742151,
-    "ast_hash": "2fc12c0a7115e05cd705ffa552a75db1",
-    "semantic_hash": "2fc12c0a7115e05cd705ffa552a75db1"
+    "mtime": 1792828595.07062,
+    "ast_hash": "a7d91a4631c650e6bd5c5c9ec6123651",
+    "semantic_hash": "a7d91a4631c650e6bd5c5c9ec6123651"
   },
   "frontend/src/features/prescriptions/components/SupplementAssignmentForm.tsx": {
-    "mtime": 1792607445.7719557,
-    "ast_hash": "f52b63a6efbcf900208da6b053d60bc9",
-    "semantic_hash": "f52b63a6efbcf900208da6b053d60bc9"
+    "mtime": 1792828595.1206076,
+    "ast_hash": "fe68dd4b49c6b365a40a7c625e3d8657",
+    "semantic_hash": "fe68dd4b49c6b365a40a7c625e3d8657"
   },
   "frontend/src/features/prescriptions/components/TrainingStructureEditor.tsx": {
-    "mtime": 1792607445.7998886,
-    "ast_hash": "7c5a7eebcb8b875fd61584392362e0df",
-    "semantic_hash": "7c5a7eebcb8b875fd61584392362e0df"
+    "mtime": 1792844964.8839626,
+    "ast_hash": "ad192a0c9c0ddb8d5b8fca09a11e1a9d",
+    "semantic_hash": "ad192a0c9c0ddb8d5b8fca09a11e1a9d"
   },
   "frontend/src/features/prescriptions/index.ts": {
     "mtime": 1790936200.553946,
@@ -9350,84 +9340,84 @@
     "semantic_hash": "83ac26804afb4b58465bae9c3c5382be"
   },
   "frontend/src/features/prescriptions/lib/errors.ts": {
-    "mtime": 1790936200.5933144,
-    "ast_hash": "8dbec82d1dc9f86ce0ae17aef1ed9aeb",
-    "semantic_hash": "8dbec82d1dc9f86ce0ae17aef1ed9aeb"
+    "mtime": 1792694447.4934008,
+    "ast_hash": "b76bbb43eea371c42a101bb2c7fdecef",
+    "semantic_hash": "b76bbb43eea371c42a101bb2c7fdecef"
   },
   "frontend/src/features/prescriptions/lib/meal-plan-draft.ts": {
-    "mtime": 1792607445.8360212,
-    "ast_hash": "8df0776a8606dcb82705688c317149c4",
-    "semantic_hash": "8df0776a8606dcb82705688c317149c4"
+    "mtime": 1792843328.086028,
+    "ast_hash": "821cf9859e894071c2bacf41e87a48c2",
+    "semantic_hash": "821cf9859e894071c2bacf41e87a48c2"
   },
   "frontend/src/features/prescriptions/lib/meal-structure.ts": {
-    "mtime": 1790943645.9259055,
-    "ast_hash": "3d89b96c1d20cf44be0d703d0b246d9c",
-    "semantic_hash": "3d89b96c1d20cf44be0d703d0b246d9c"
+    "mtime": 1792828595.271644,
+    "ast_hash": "7916e2d8ee9d09b08b2e5989fe9fa3b4",
+    "semantic_hash": "7916e2d8ee9d09b08b2e5989fe9fa3b4"
   },
   "frontend/src/features/prescriptions/lib/nutrition.ts": {
-    "mtime": 1792607445.863652,
-    "ast_hash": "88d1c03e3486103fc96632d8e4b71b94",
-    "semantic_hash": "88d1c03e3486103fc96632d8e4b71b94"
+    "mtime": 1792828595.3057754,
+    "ast_hash": "16b2c0fd60e63177ba28236eb4050689",
+    "semantic_hash": "16b2c0fd60e63177ba28236eb4050689"
   },
   "frontend/src/features/prescriptions/lib/training-draft.ts": {
-    "mtime": 1792607445.887725,
-    "ast_hash": "3ff57d85a5c42e9d5edb8d7e9e4e430b",
-    "semantic_hash": "3ff57d85a5c42e9d5edb8d7e9e4e430b"
+    "mtime": 1792828595.331212,
+    "ast_hash": "141ab004efaf10d9059c2b8c2e133b3f",
+    "semantic_hash": "141ab004efaf10d9059c2b8c2e133b3f"
   },
   "frontend/src/features/prescriptions/lib/training-editor.ts": {
-    "mtime": 1792607445.911687,
-    "ast_hash": "12b53f7cb1c1ab86c76668743894fbe0",
-    "semantic_hash": "12b53f7cb1c1ab86c76668743894fbe0"
+    "mtime": 1792844817.531545,
+    "ast_hash": "5f8bd0dbf7f97f4204f5910d89af7a04",
+    "semantic_hash": "5f8bd0dbf7f97f4204f5910d89af7a04"
   },
   "frontend/src/features/prescriptions/lib/training-logs.ts": {
-    "mtime": 1792607445.9454844,
-    "ast_hash": "3df0bb1bec56255d4eb344498fadfd99",
-    "semantic_hash": "3df0bb1bec56255d4eb344498fadfd99"
+    "mtime": 1792828595.3855298,
+    "ast_hash": "a1a6a2bafad67389cebde1a8c8894199",
+    "semantic_hash": "a1a6a2bafad67389cebde1a8c8894199"
   },
   "frontend/src/features/prescriptions/pages/MealPlanEditorPage.tsx": {
-    "mtime": 1792607445.9805317,
-    "ast_hash": "20c535b318307aa501af1fd49856c00c",
-    "semantic_hash": "20c535b318307aa501af1fd49856c00c"
+    "mtime": 1792843352.9523249,
+    "ast_hash": "2dd475ff23dd51ff5b9f465c902b74c0",
+    "semantic_hash": "2dd475ff23dd51ff5b9f465c902b74c0"
   },
   "frontend/src/features/prescriptions/pages/MealPlanViewPage.tsx": {
-    "mtime": 1792607446.0067394,
-    "ast_hash": "d60c118b04e40f685915bc459987cc3a",
-    "semantic_hash": "d60c118b04e40f685915bc459987cc3a"
+    "mtime": 1792843712.3181047,
+    "ast_hash": "d93227ce9cd03d769873e55cc16050a5",
+    "semantic_hash": "d93227ce9cd03d769873e55cc16050a5"
   },
   "frontend/src/features/prescriptions/pages/MealPlansPage.tsx": {
-    "mtime": 1792607446.0369604,
-    "ast_hash": "6ae21c8c916d944ccff93ebd0370f20e",
-    "semantic_hash": "6ae21c8c916d944ccff93ebd0370f20e"
+    "mtime": 1792828595.5324092,
+    "ast_hash": "2eedf3a37eb2fae519eb2084de1e4a96",
+    "semantic_hash": "2eedf3a37eb2fae519eb2084de1e4a96"
   },
   "frontend/src/features/prescriptions/pages/SetLogCorrectionPage.tsx": {
-    "mtime": 1792607446.061675,
-    "ast_hash": "fa4f29166aba554d95568ef2e66029d0",
-    "semantic_hash": "fa4f29166aba554d95568ef2e66029d0"
+    "mtime": 1792828595.6095788,
+    "ast_hash": "c90254e40c190a9dd1315ea585837f09",
+    "semantic_hash": "c90254e40c190a9dd1315ea585837f09"
   },
   "frontend/src/features/prescriptions/pages/SupplementAssignmentEditorPage.tsx": {
-    "mtime": 1792607446.0909126,
-    "ast_hash": "a75fb0bc6d40813bfb35cb61bcb684c2",
-    "semantic_hash": "a75fb0bc6d40813bfb35cb61bcb684c2"
+    "mtime": 1792828595.6338973,
+    "ast_hash": "439b13a107b772ab268858f350f4cec4",
+    "semantic_hash": "439b13a107b772ab268858f350f4cec4"
   },
   "frontend/src/features/prescriptions/pages/SupplementAssignmentsPage.tsx": {
-    "mtime": 1792607446.127207,
-    "ast_hash": "2fd5b10afccc30d73587cdf6ea287f27",
-    "semantic_hash": "2fd5b10afccc30d73587cdf6ea287f27"
+    "mtime": 1792828595.6580687,
+    "ast_hash": "78e711ecb44c67ac53db2b4d61b93b5b",
+    "semantic_hash": "78e711ecb44c67ac53db2b4d61b93b5b"
   },
   "frontend/src/features/prescriptions/pages/TrainingPlanEditorPage.tsx": {
-    "mtime": 1792607446.1511347,
-    "ast_hash": "22cef12c56a89148e13b8f86a86d5341",
-    "semantic_hash": "22cef12c56a89148e13b8f86a86d5341"
+    "mtime": 1792844817.5395422,
+    "ast_hash": "342b20ed0f813c15407e0aa5707ba11a",
+    "semantic_hash": "342b20ed0f813c15407e0aa5707ba11a"
   },
   "frontend/src/features/prescriptions/pages/TrainingPlanViewPage.tsx": {
-    "mtime": 1792607446.180744,
-    "ast_hash": "e33202883cb3502f6c5b28eccecda4ff",
-    "semantic_hash": "e33202883cb3502f6c5b28eccecda4ff"
+    "mtime": 1792844817.5537498,
+    "ast_hash": "40c1771cd51e9a81747a2e25663b6524",
+    "semantic_hash": "40c1771cd51e9a81747a2e25663b6524"
   },
   "frontend/src/features/prescriptions/pages/TrainingPlansPage.tsx": {
-    "mtime": 1792607446.212022,
-    "ast_hash": "55579aecc7419f61508e60c651b73705",
-    "semantic_hash": "55579aecc7419f61508e60c651b73705"
+    "mtime": 1792828595.7219982,
+    "ast_hash": "fb33c8c99d6cb258cce7c8bb8f6a9a1e",
+    "semantic_hash": "fb33c8c99d6cb258cce7c8bb8f6a9a1e"
   },
   "frontend/src/features/sessions/api/keys.ts": {
     "mtime": 1792607446.2651553,
@@ -9530,9 +9520,9 @@
     "semantic_hash": "cd0440a8be8014ba2268a69b58514e9c"
   },
   "frontend/src/features/trainer-dashboard/pages/TrainerDashboardPage.tsx": {
-    "mtime": 1792607446.545144,
-    "ast_hash": "eb17513a50d2ec3602c484f25ce3e175",
-    "semantic_hash": "eb17513a50d2ec3602c484f25ce3e175"
+    "mtime": 1792694447.5907688,
+    "ast_hash": "5f395fbdccd7b4bdcddbbb2811efbcbb",
+    "semantic_hash": "5f395fbdccd7b4bdcddbbb2811efbcbb"
   },
   "frontend/src/features/trainer-settings/api/settings.ts": {
     "mtime": 1791116001.9306588,
@@ -9570,19 +9560,19 @@
     "semantic_hash": "fa3899e3e8447bef4de3acb7aa6fa793"
   },
   "frontend/src/shared/api/client.ts": {
-    "mtime": 1792323432.0845487,
-    "ast_hash": "32e2fbc87e8c6b4320e995536a05a78b",
-    "semantic_hash": "32e2fbc87e8c6b4320e995536a05a78b"
+    "mtime": 1792851457.26855,
+    "ast_hash": "2fbab8f1c0d6692fea9d7921a7eb4008",
+    "semantic_hash": "2fbab8f1c0d6692fea9d7921a7eb4008"
   },
   "frontend/src/shared/api/problem.ts": {
-    "mtime": 1790168467.3151379,
-    "ast_hash": "db567ffd1b5138cf39a95b0654d3efdc",
-    "semantic_hash": "db567ffd1b5138cf39a95b0654d3efdc"
+    "mtime": 1792828595.8407223,
+    "ast_hash": "8124f733fed032c670809ce6a8f09b7f",
+    "semantic_hash": "8124f733fed032c670809ce6a8f09b7f"
   },
   "frontend/src/shared/api/schema.d.ts": {
-    "mtime": 1792661586.613704,
-    "ast_hash": "7ab7daef29e7af57fe5346f99e1fa787",
-    "semantic_hash": "7ab7daef29e7af57fe5346f99e1fa787"
+    "mtime": 1792827975.9882376,
+    "ast_hash": "0cda92abd1d7d827fa046d38ddb24a93",
+    "semantic_hash": "0cda92abd1d7d827fa046d38ddb24a93"
   },
   "frontend/src/shared/api/session-events.ts": {
     "mtime": 1790174473.4005365,
@@ -9595,19 +9585,19 @@
     "semantic_hash": "136d5712ed53ed362a068098f6c9bda9"
   },
   "frontend/src/shared/components/BrandMark.tsx": {
-    "mtime": 1792607446.7043753,
-    "ast_hash": "dca9e3d074aacd945522fbaae085ea13",
-    "semantic_hash": "dca9e3d074aacd945522fbaae085ea13"
+    "mtime": 1792828595.905575,
+    "ast_hash": "0e27773e268062b8c5eeea72c9f7f7ad",
+    "semantic_hash": "0e27773e268062b8c5eeea72c9f7f7ad"
   },
   "frontend/src/shared/components/Breadcrumbs.tsx": {
-    "mtime": 1792607446.7238896,
-    "ast_hash": "5b3605b57ddb4bd667ac10e3084094b3",
-    "semantic_hash": "5b3605b57ddb4bd667ac10e3084094b3"
+    "mtime": 1792694447.658004,
+    "ast_hash": "ad5332e8f997f72797e1b0ea3432c550",
+    "semantic_hash": "ad5332e8f997f72797e1b0ea3432c550"
   },
   "frontend/src/shared/components/Combobox.tsx": {
-    "mtime": 1792607446.7460506,
-    "ast_hash": "dcaddd0f34c5e32ee1a2898fb722a1b5",
-    "semantic_hash": "dcaddd0f34c5e32ee1a2898fb722a1b5"
+    "mtime": 1792828595.9578757,
+    "ast_hash": "97048689f0c99a5751ed863dc86c0e98",
+    "semantic_hash": "97048689f0c99a5751ed863dc86c0e98"
   },
   "frontend/src/shared/components/ConfirmDialog.tsx": {
     "mtime": 1792440828.4493759,
@@ -9615,12 +9605,12 @@
     "semantic_hash": "66d5dd1deb15994b36b98181c879d8c9"
   },
   "frontend/src/shared/components/EmptyState.tsx": {
-    "mtime": 1792672383.7477767,
+    "mtime": 1792828595.994112,
     "ast_hash": "702d27146788c6f2ee9afe79e9f878f8",
     "semantic_hash": "702d27146788c6f2ee9afe79e9f878f8"
   },
   "frontend/src/shared/components/ErrorState.tsx": {
-    "mtime": 1792672383.7991261,
+    "mtime": 1792828596.020658,
     "ast_hash": "fb8a4fe45cbc9df002b9d11e6ae67bdd",
     "semantic_hash": "fb8a4fe45cbc9df002b9d11e6ae67bdd"
   },
@@ -9690,9 +9680,9 @@
     "semantic_hash": "12cb96d72163b0c208aa9fcf0de8d441"
   },
   "frontend/src/shared/components/ui/input.tsx": {
-    "mtime": 1792607446.7716858,
-    "ast_hash": "83138a460ef5341f31025d56b1662153",
-    "semantic_hash": "83138a460ef5341f31025d56b1662153"
+    "mtime": 1792828596.3052597,
+    "ast_hash": "0cc3e21860c2cd7ed4c5214786aa1ccd",
+    "semantic_hash": "0cc3e21860c2cd7ed4c5214786aa1ccd"
   },
   "frontend/src/shared/components/ui/label.tsx": {
     "mtime": 1790168468.035979,
@@ -9700,9 +9690,9 @@
     "semantic_hash": "1190bce273e7522a976ff38ccaf8326a"
   },
   "frontend/src/shared/components/ui/native-select.tsx": {
-    "mtime": 1792607446.7897105,
-    "ast_hash": "c02701e43cd14f0d4d9e388a5ac61c80",
-    "semantic_hash": "c02701e43cd14f0d4d9e388a5ac61c80"
+    "mtime": 1792828596.3475468,
+    "ast_hash": "7c69d8cceae4d5faa6e4ea7ac0b3bccf",
+    "semantic_hash": "7c69d8cceae4d5faa6e4ea7ac0b3bccf"
   },
   "frontend/src/shared/components/ui/popover.tsx": {
     "mtime": 1790679622.6203527,
@@ -9735,9 +9725,9 @@
     "semantic_hash": "f433d32df2fec477b37fdc4b4500374e"
   },
   "frontend/src/shared/components/ui/tabs.tsx": {
-    "mtime": 1792607446.8077104,
-    "ast_hash": "41f9d3cef784154431283f14121d9644",
-    "semantic_hash": "41f9d3cef784154431283f14121d9644"
+    "mtime": 1792828596.4421842,
+    "ast_hash": "2962fcf874e388f9f3b1f42032fc0b5f",
+    "semantic_hash": "2962fcf874e388f9f3b1f42032fc0b5f"
   },
   "frontend/src/shared/components/ui/textarea.tsx": {
     "mtime": 1790354940.5534027,
@@ -9760,14 +9750,14 @@
     "semantic_hash": "ef82efc53bbe005dfc5f40678bdb790c"
   },
   "frontend/src/shared/config/navigation.ts": {
-    "mtime": 1792607446.8284743,
-    "ast_hash": "ddaf780004931b66efaef48e0b27a31e",
-    "semantic_hash": "ddaf780004931b66efaef48e0b27a31e"
+    "mtime": 1792694447.7263832,
+    "ast_hash": "d99e212d0a23b7ebd973ac0814a57585",
+    "semantic_hash": "d99e212d0a23b7ebd973ac0814a57585"
   },
   "frontend/src/shared/hooks/useBrandVariables.ts": {
-    "mtime": 1792607446.8444736,
-    "ast_hash": "75a324fb78df9941df9e6ae996039ac2",
-    "semantic_hash": "75a324fb78df9941df9e6ae996039ac2"
+    "mtime": 1792828596.5567155,
+    "ast_hash": "8fe3ad845b054e28b6596730cd3fc5df",
+    "semantic_hash": "8fe3ad845b054e28b6596730cd3fc5df"
   },
   "frontend/src/shared/hooks/useDebounce.ts": {
     "mtime": 1790168468.4373524,
@@ -9775,7 +9765,7 @@
     "semantic_hash": "49eba7627e0f1f2ee3590df179ad3878"
   },
   "frontend/src/shared/hooks/useDocumentTitle.ts": {
-    "mtime": 1792661716.0038376,
+    "mtime": 1792828596.594076,
     "ast_hash": "912cd8a82cae38a3215cb9792841ac21",
     "semantic_hash": "912cd8a82cae38a3215cb9792841ac21"
   },
@@ -9815,19 +9805,19 @@
     "semantic_hash": "24eebd128f25fae975ca8e6c3e562ffe"
   },
   "frontend/src/shared/lib/pending-video.ts": {
-    "mtime": 1792607446.8604813,
-    "ast_hash": "51c9a2a7a2f5042fb72a9c12ed1d282c",
-    "semantic_hash": "51c9a2a7a2f5042fb72a9c12ed1d282c"
+    "mtime": 1792828596.7959292,
+    "ast_hash": "22441302a70c46da01ce40ee6cabb213",
+    "semantic_hash": "22441302a70c46da01ce40ee6cabb213"
   },
   "frontend/src/shared/lib/platformEnforcement.ts": {
-    "mtime": 1790784689.3511245,
-    "ast_hash": "76eedd409d615f44c5535f043dc64680",
-    "semantic_hash": "76eedd409d615f44c5535f043dc64680"
+    "mtime": 1792845595.0828128,
+    "ast_hash": "41810a28e31afd0e99147ac6aa15cfd5",
+    "semantic_hash": "41810a28e31afd0e99147ac6aa15cfd5"
   },
   "frontend/src/shared/lib/reps.ts": {
-    "mtime": 1792607446.8766024,
-    "ast_hash": "ce6e5c9db0df27c51003e240dffbedd1",
-    "semantic_hash": "ce6e5c9db0df27c51003e240dffbedd1"
+    "mtime": 1792828596.8438916,
+    "ast_hash": "7b2ae0f5da9fc4b49bbfe2b4e6ef872c",
+    "semantic_hash": "7b2ae0f5da9fc4b49bbfe2b4e6ef872c"
   },
   "frontend/src/shared/lib/utils.ts": {
     "mtime": 1790168468.5787523,
@@ -9870,12 +9860,12 @@
     "semantic_hash": "a5fe8e6d2d625a44cc5cc5878e7ed2da"
   },
   "frontend/src/test/app/layouts/AppShell.test.tsx": {
-    "mtime": 1792607446.928227,
-    "ast_hash": "0e7278bc5704f1009a0b34437136071b",
-    "semantic_hash": "0e7278bc5704f1009a0b34437136071b"
+    "mtime": 1792828710.4118714,
+    "ast_hash": "b5cb9da5c6f23bcb9b1750b7d387c42f",
+    "semantic_hash": "b5cb9da5c6f23bcb9b1750b7d387c42f"
   },
   "frontend/src/test/app/layouts/PortalLayout.test.tsx": {
-    "mtime": 1792662516.011023,
+    "mtime": 1792828710.5046892,
     "ast_hash": "07756fefb4aee584a69099cc6da75937",
     "semantic_hash": "07756fefb4aee584a69099cc6da75937"
   },
@@ -9905,9 +9895,9 @@
     "semantic_hash": "b2ef81f358278f66638f5575adeed6ee"
   },
   "frontend/src/test/features/admin-catalog/CatalogEditorPage.test.tsx": {
-    "mtime": 1792607446.9523602,
-    "ast_hash": "d7a81f7079524e98e9dd2a144cc1725b",
-    "semantic_hash": "d7a81f7079524e98e9dd2a144cc1725b"
+    "mtime": 1792828710.7416756,
+    "ast_hash": "b19fbb2263522df4c369f171d532a082",
+    "semantic_hash": "b19fbb2263522df4c369f171d532a082"
   },
   "frontend/src/test/features/admin-catalog/CatalogPage.test.tsx": {
     "mtime": 1792441257.141714,
@@ -9915,19 +9905,19 @@
     "semantic_hash": "2ae2bac909f0dd881eae51d7a8ae9a50"
   },
   "frontend/src/test/features/admin-moderation/ModerationPage.test.tsx": {
-    "mtime": 1792518383.7372136,
-    "ast_hash": "16de5f03a7f83991522b41cfd92ce457",
-    "semantic_hash": "16de5f03a7f83991522b41cfd92ce457"
+    "mtime": 1792845957.59299,
+    "ast_hash": "c02dc204293c1563c71aaf7b33bf1a3b",
+    "semantic_hash": "c02dc204293c1563c71aaf7b33bf1a3b"
   },
   "frontend/src/test/features/admin-overview/AdminOverviewPage.test.tsx": {
-    "mtime": 1792441618.546054,
-    "ast_hash": "2014bbd4918170e31a6f12cef62c555b",
-    "semantic_hash": "2014bbd4918170e31a6f12cef62c555b"
+    "mtime": 1792846015.2634287,
+    "ast_hash": "fdcb98b9464bd3ddaa958f2aa145868b",
+    "semantic_hash": "fdcb98b9464bd3ddaa958f2aa145868b"
   },
   "frontend/src/test/features/admin-trainers/AdminTrainersPage.test.tsx": {
-    "mtime": 1792518383.6013162,
-    "ast_hash": "ff7538919bb527d49b3ac70781f36f36",
-    "semantic_hash": "ff7538919bb527d49b3ac70781f36f36"
+    "mtime": 1792846380.0987263,
+    "ast_hash": "d6ea33d8cf569b8621d762c808033088",
+    "semantic_hash": "d6ea33d8cf569b8621d762c808033088"
   },
   "frontend/src/test/features/admin-trainers/InviteTrainerPage.test.tsx": {
     "mtime": 1792441962.5437293,
@@ -9985,9 +9975,9 @@
     "semantic_hash": "d8f83a3386dcfec900903d1844dece9c"
   },
   "frontend/src/test/features/auth/pages/LoginPage.test.tsx": {
-    "mtime": 1792323143.2178552,
-    "ast_hash": "e616f245a2c12d5cfa2ac7a4322aea90",
-    "semantic_hash": "e616f245a2c12d5cfa2ac7a4322aea90"
+    "mtime": 1792828957.8123806,
+    "ast_hash": "fe2cd4fa19e0ec3b7d53f414f6a79cf3",
+    "semantic_hash": "fe2cd4fa19e0ec3b7d53f414f6a79cf3"
   },
   "frontend/src/test/features/auth/pages/ResendConfirmationPage.test.tsx": {
     "mtime": 1792323434.48168,
@@ -10025,39 +10015,39 @@
     "semantic_hash": "34261fcec877c42d0a0740a6bc1421c1"
   },
   "frontend/src/test/features/check-ins/CheckInPages.test.tsx": {
-    "mtime": 1792607446.9696047,
-    "ast_hash": "42d779c94004faefeaf94dd432846bae",
-    "semantic_hash": "42d779c94004faefeaf94dd432846bae"
+    "mtime": 1792828711.4951508,
+    "ast_hash": "eef721a7ddd0ed86da2423a8b453008c",
+    "semantic_hash": "eef721a7ddd0ed86da2423a8b453008c"
   },
   "frontend/src/test/features/check-ins/CheckInsPage.test.tsx": {
-    "mtime": 1792607446.9868393,
-    "ast_hash": "52c5459a44f7eb0d8dd24b0790fc70b6",
-    "semantic_hash": "52c5459a44f7eb0d8dd24b0790fc70b6"
+    "mtime": 1792828711.5522556,
+    "ast_hash": "36322e524287372013ccc5bacd4bd82a",
+    "semantic_hash": "36322e524287372013ccc5bacd4bd82a"
   },
   "frontend/src/test/features/check-ins/ClientCheckInsTab.test.tsx": {
-    "mtime": 1792607447.0043564,
-    "ast_hash": "febc979694af1a9588567b37cb8494dd",
-    "semantic_hash": "febc979694af1a9588567b37cb8494dd"
+    "mtime": 1792695788.55239,
+    "ast_hash": "4a822f4a358df99fa538b26bb1abaada",
+    "semantic_hash": "4a822f4a358df99fa538b26bb1abaada"
   },
   "frontend/src/test/features/clients/ClientDetailPage.test.tsx": {
-    "mtime": 1792607447.0273552,
-    "ast_hash": "db5270501dead337b2e3c2b0714c9b2d",
-    "semantic_hash": "db5270501dead337b2e3c2b0714c9b2d"
+    "mtime": 1792848934.2081919,
+    "ast_hash": "ea41106a296e1de8ed929d4ba2ba51f8",
+    "semantic_hash": "ea41106a296e1de8ed929d4ba2ba51f8"
   },
   "frontend/src/test/features/clients/ClientEditorPage.test.tsx": {
-    "mtime": 1792607447.0434537,
-    "ast_hash": "b190a5a88bc9bb4ca2bdbed405c394af",
-    "semantic_hash": "b190a5a88bc9bb4ca2bdbed405c394af"
+    "mtime": 1792694938.0444715,
+    "ast_hash": "185dc43410d70832b330390d8231b14d",
+    "semantic_hash": "185dc43410d70832b330390d8231b14d"
   },
   "frontend/src/test/features/clients/ClientsPage.test.tsx": {
-    "mtime": 1792607447.066459,
-    "ast_hash": "b11fb91c6f2a1aa05368f07cfe222aab",
-    "semantic_hash": "b11fb91c6f2a1aa05368f07cfe222aab"
+    "mtime": 1792694938.1419287,
+    "ast_hash": "ea6e653c71737505762c4ab673de27a7",
+    "semantic_hash": "ea6e653c71737505762c4ab673de27a7"
   },
   "frontend/src/test/features/clients/InitialAssessmentPage.test.tsx": {
-    "mtime": 1792607447.0826094,
-    "ast_hash": "ca157b255e2ca51aa65949872209db20",
-    "semantic_hash": "ca157b255e2ca51aa65949872209db20"
+    "mtime": 1792694938.228429,
+    "ast_hash": "771c3b7782362e552235876b8cbe690d",
+    "semantic_hash": "771c3b7782362e552235876b8cbe690d"
   },
   "frontend/src/test/features/exercise-video/ExerciseVideoPanel.test.tsx": {
     "mtime": 1792441257.2671487,
@@ -10070,164 +10060,164 @@
     "semantic_hash": "ae721437e2f5deadb1f8deaa46e6fadb"
   },
   "frontend/src/test/features/library/LibraryEditorPage.test.tsx": {
-    "mtime": 1792607447.1013138,
-    "ast_hash": "6c7bbdb16c9d05a6c50aed0110a6b4bc",
-    "semantic_hash": "6c7bbdb16c9d05a6c50aed0110a6b4bc"
+    "mtime": 1792828711.8848946,
+    "ast_hash": "07367bcda627c081cef913b644c3fd5a",
+    "semantic_hash": "07367bcda627c081cef913b644c3fd5a"
   },
   "frontend/src/test/features/library/LibraryPage.test.tsx": {
-    "mtime": 1792607447.121348,
-    "ast_hash": "21612864de0f310959a12d0c11b8ed26",
-    "semantic_hash": "21612864de0f310959a12d0c11b8ed26"
+    "mtime": 1792844950.9395144,
+    "ast_hash": "3630ffda3cf32112ddb931ed5e0d86fa",
+    "semantic_hash": "3630ffda3cf32112ddb931ed5e0d86fa"
   },
   "frontend/src/test/features/packs/PackPages.test.tsx": {
-    "mtime": 1792607447.143677,
-    "ast_hash": "343a2d3fa0cb4c0a85b4818fe7bb3d6a",
-    "semantic_hash": "343a2d3fa0cb4c0a85b4818fe7bb3d6a"
+    "mtime": 1792828712.0145867,
+    "ast_hash": "e670c1a1c7c6dfe61504d5c0dc2eaca0",
+    "semantic_hash": "e670c1a1c7c6dfe61504d5c0dc2eaca0"
   },
   "frontend/src/test/features/packs/PacksPanels.test.tsx": {
-    "mtime": 1792607447.1651905,
-    "ast_hash": "4dac3029acf825cccd072f2d5717e3c1",
-    "semantic_hash": "4dac3029acf825cccd072f2d5717e3c1"
+    "mtime": 1792828712.0630093,
+    "ast_hash": "255fed0cc25e905cc0f754c4d20cc4c6",
+    "semantic_hash": "255fed0cc25e905cc0f754c4d20cc4c6"
   },
   "frontend/src/test/features/portal/PortalCheckInsPage.test.tsx": {
-    "mtime": 1792663007.7611594,
+    "mtime": 1792828712.1930187,
     "ast_hash": "40898c93af05237c0927947da1f8e5c4",
     "semantic_hash": "40898c93af05237c0927947da1f8e5c4"
   },
   "frontend/src/test/features/portal/PortalHomePage.test.tsx": {
-    "mtime": 1792672396.201827,
-    "ast_hash": "df9af2ee5461aede668f52547365e24d",
-    "semantic_hash": "df9af2ee5461aede668f52547365e24d"
+    "mtime": 1792828959.1189034,
+    "ast_hash": "ddb7d36bfdc8fd91d077a7a0fa9da240",
+    "semantic_hash": "ddb7d36bfdc8fd91d077a7a0fa9da240"
   },
   "frontend/src/test/features/portal/PortalMealPlansPage.test.tsx": {
-    "mtime": 1792667236.4148002,
+    "mtime": 1792828712.3127773,
     "ast_hash": "5e59c1d44c4a8ae2dd3845f0f4bf73b3",
     "semantic_hash": "5e59c1d44c4a8ae2dd3845f0f4bf73b3"
   },
   "frontend/src/test/features/portal/PortalNutritionPage.test.tsx": {
-    "mtime": 1792662628.4219246,
-    "ast_hash": "d4ff05585e25577e08390a53c921f62b",
-    "semantic_hash": "d4ff05585e25577e08390a53c921f62b"
+    "mtime": 1792829039.7078135,
+    "ast_hash": "69f626bf6689b910e380739991d38fce",
+    "semantic_hash": "69f626bf6689b910e380739991d38fce"
   },
   "frontend/src/test/features/portal/PortalPlanPage.test.tsx": {
-    "mtime": 1792663388.9037502,
+    "mtime": 1792828712.392869,
     "ast_hash": "d42db408b22979565c8dd4ff6d01833b",
     "semantic_hash": "d42db408b22979565c8dd4ff6d01833b"
   },
   "frontend/src/test/features/portal/PortalProfilePage.test.tsx": {
-    "mtime": 1792667154.7052886,
+    "mtime": 1792828712.4595468,
     "ast_hash": "94450bdf9c7da0dc9e77703df0aaf5ee",
     "semantic_hash": "94450bdf9c7da0dc9e77703df0aaf5ee"
   },
   "frontend/src/test/features/portal/PortalSupplementsPage.test.tsx": {
-    "mtime": 1792663026.9715807,
-    "ast_hash": "b9dad61f7319b947277c361a5e9f617a",
-    "semantic_hash": "b9dad61f7319b947277c361a5e9f617a"
+    "mtime": 1792828712.5297885,
+    "ast_hash": "6e3291a4b8e79c5bb9c1f828f1ed7ee6",
+    "semantic_hash": "6e3291a4b8e79c5bb9c1f828f1ed7ee6"
   },
   "frontend/src/test/features/portal/PortalTodayPage.test.tsx": {
-    "mtime": 1791962193.180134,
-    "ast_hash": "90321bbb0c5e1452c3fcb4929141f851",
-    "semantic_hash": "90321bbb0c5e1452c3fcb4929141f851"
+    "mtime": 1792828712.5821168,
+    "ast_hash": "c72e62001d601a59ccfe2a031ab495e3",
+    "semantic_hash": "c72e62001d601a59ccfe2a031ab495e3"
   },
   "frontend/src/test/features/portal/WorkoutDayFilter.test.tsx": {
-    "mtime": 1792672412.6902368,
+    "mtime": 1792828712.708036,
     "ast_hash": "9b073284653d186d05aca92e7ac1e286",
     "semantic_hash": "9b073284653d186d05aca92e7ac1e286"
   },
   "frontend/src/test/features/portal/checkIn.test.ts": {
-    "mtime": 1792662786.9857213,
+    "mtime": 1792828712.1038606,
     "ast_hash": "ffbebfc5b378ff7a3f3f272b4794d17b",
     "semantic_hash": "ffbebfc5b378ff7a3f3f272b4794d17b"
   },
   "frontend/src/test/features/portal/nutrition.test.ts": {
-    "mtime": 1792662669.069119,
-    "ast_hash": "5df8910cbd26aceeab19430eb8f26910",
-    "semantic_hash": "5df8910cbd26aceeab19430eb8f26910"
+    "mtime": 1792828712.12712,
+    "ast_hash": "f0347e94c533314e5e4eb4331b74b658",
+    "semantic_hash": "f0347e94c533314e5e4eb4331b74b658"
   },
   "frontend/src/test/features/portal/profile.test.ts": {
-    "mtime": 1792667118.373281,
+    "mtime": 1792828712.6096337,
     "ast_hash": "1a8abf48f9aad044d1f2574787108f6f",
     "semantic_hash": "1a8abf48f9aad044d1f2574787108f6f"
   },
   "frontend/src/test/features/portal/schedule.test.ts": {
-    "mtime": 1792662922.1026144,
+    "mtime": 1792828712.6367538,
     "ast_hash": "4f2fc90129a602130eb5e17f283892bb",
     "semantic_hash": "4f2fc90129a602130eb5e17f283892bb"
   },
   "frontend/src/test/features/portal/workout.test.ts": {
-    "mtime": 1792667714.1425838,
-    "ast_hash": "46123d4d1093b7bbbdb95ffa746dc02e",
-    "semantic_hash": "46123d4d1093b7bbbdb95ffa746dc02e"
+    "mtime": 1792828712.6783233,
+    "ast_hash": "cccb495322dd46a8f219ad8122b63080",
+    "semantic_hash": "cccb495322dd46a8f219ad8122b63080"
   },
   "frontend/src/test/features/prescriptions/MealPlanEditorPage.test.tsx": {
-    "mtime": 1792607447.2120888,
-    "ast_hash": "79417aaee9d0137b35c45f55d32052a6",
-    "semantic_hash": "79417aaee9d0137b35c45f55d32052a6"
+    "mtime": 1792844138.105332,
+    "ast_hash": "e8f73a5aec86ac65cca2a8368d360240",
+    "semantic_hash": "e8f73a5aec86ac65cca2a8368d360240"
   },
   "frontend/src/test/features/prescriptions/MealPlansPage.test.tsx": {
-    "mtime": 1792607447.2359128,
-    "ast_hash": "9bb126eb75026d0ec47cabae254fb9bc",
-    "semantic_hash": "9bb126eb75026d0ec47cabae254fb9bc"
+    "mtime": 1792828712.797196,
+    "ast_hash": "c3f36286283e1a5d301eb0fd121762a3",
+    "semantic_hash": "c3f36286283e1a5d301eb0fd121762a3"
   },
   "frontend/src/test/features/prescriptions/SupplementAssignmentsPage.test.tsx": {
-    "mtime": 1792607447.2545679,
-    "ast_hash": "273e155ab236bf347191a53e3423b57e",
-    "semantic_hash": "273e155ab236bf347191a53e3423b57e"
+    "mtime": 1792828712.8761556,
+    "ast_hash": "40f3c93f06405e6d2bf88fb575ab93b4",
+    "semantic_hash": "40f3c93f06405e6d2bf88fb575ab93b4"
   },
   "frontend/src/test/features/prescriptions/TrainingPlanEditor.test.tsx": {
-    "mtime": 1792607447.269658,
-    "ast_hash": "803ea4432199ca35b268947309491b16",
-    "semantic_hash": "803ea4432199ca35b268947309491b16"
+    "mtime": 1792844918.5713296,
+    "ast_hash": "3b44fc5bfba9dc5529b8cbe986d65ef1",
+    "semantic_hash": "3b44fc5bfba9dc5529b8cbe986d65ef1"
   },
   "frontend/src/test/features/prescriptions/TrainingPlanViewPage.test.tsx": {
-    "mtime": 1792607447.2883909,
-    "ast_hash": "dc4574b12807791bfecc76d91ce88309",
-    "semantic_hash": "dc4574b12807791bfecc76d91ce88309"
+    "mtime": 1792844918.5761018,
+    "ast_hash": "00a0f907c9b06bf65a3fb7e2b860d3b9",
+    "semantic_hash": "00a0f907c9b06bf65a3fb7e2b860d3b9"
   },
   "frontend/src/test/features/prescriptions/TrainingPlansPage.test.tsx": {
-    "mtime": 1792607447.3104098,
-    "ast_hash": "61820508b89bb72dcb790720de94f668",
-    "semantic_hash": "61820508b89bb72dcb790720de94f668"
+    "mtime": 1792828712.9714925,
+    "ast_hash": "49458e06d141d724ac0990007fec0fb9",
+    "semantic_hash": "49458e06d141d724ac0990007fec0fb9"
   },
   "frontend/src/test/features/prescriptions/mealPlanFixtures.ts": {
-    "mtime": 1792607447.3275137,
-    "ast_hash": "ddef88f3634b351205ad3b81e233a4ed",
-    "semantic_hash": "ddef88f3634b351205ad3b81e233a4ed"
+    "mtime": 1792843579.6985278,
+    "ast_hash": "a1d143c651faeb19d094915fd093c31c",
+    "semantic_hash": "a1d143c651faeb19d094915fd093c31c"
   },
   "frontend/src/test/features/prescriptions/nutrition.test.ts": {
-    "mtime": 1792607447.3477125,
-    "ast_hash": "2e34397b6b2e0c7b38f1556bcd045d1e",
-    "semantic_hash": "2e34397b6b2e0c7b38f1556bcd045d1e"
+    "mtime": 1792828712.8255632,
+    "ast_hash": "9df3fd2d3c952fcd1706923cc86c3c15",
+    "semantic_hash": "9df3fd2d3c952fcd1706923cc86c3c15"
   },
   "frontend/src/test/features/prescriptions/trainingFixtures.ts": {
-    "mtime": 1792607447.3682485,
-    "ast_hash": "274ab588bb7833f7a9e2a5692a1f9ea8",
-    "semantic_hash": "274ab588bb7833f7a9e2a5692a1f9ea8"
+    "mtime": 1792844860.4242718,
+    "ast_hash": "a20a074cc518a48332561a90ae24cdfb",
+    "semantic_hash": "a20a074cc518a48332561a90ae24cdfb"
   },
   "frontend/src/test/features/prescriptions/trainingLogs.test.ts": {
-    "mtime": 1792607447.3869512,
-    "ast_hash": "0706aade3963e69b87d725b224d7ecf7",
-    "semantic_hash": "0706aade3963e69b87d725b224d7ecf7"
+    "mtime": 1792828712.9154465,
+    "ast_hash": "91cd32517d8e215ef0ec7fac7e31c6e5",
+    "semantic_hash": "91cd32517d8e215ef0ec7fac7e31c6e5"
   },
   "frontend/src/test/features/sessions/SessionEditorPage.test.tsx": {
-    "mtime": 1792607447.4088502,
-    "ast_hash": "48bf4c0525bc6296faf3908862c25d03",
-    "semantic_hash": "48bf4c0525bc6296faf3908862c25d03"
+    "mtime": 1792828713.0553632,
+    "ast_hash": "5cba6f80c897a89017017451bacff5ce",
+    "semantic_hash": "5cba6f80c897a89017017451bacff5ce"
   },
   "frontend/src/test/features/sessions/SessionsPage.test.tsx": {
-    "mtime": 1792607447.431029,
-    "ast_hash": "d9e496a7a676512d46c46fd44651ea64",
-    "semantic_hash": "d9e496a7a676512d46c46fd44651ea64"
+    "mtime": 1792828713.147674,
+    "ast_hash": "3029cec6f796c7019d12bc493c829bbd",
+    "semantic_hash": "3029cec6f796c7019d12bc493c829bbd"
   },
   "frontend/src/test/features/trainer-dashboard/TrainerDashboardPage.test.tsx": {
-    "mtime": 1792607447.4545681,
-    "ast_hash": "33db4d7ccaf1db2642d3a96f0191d752",
-    "semantic_hash": "33db4d7ccaf1db2642d3a96f0191d752"
+    "mtime": 1792828713.195478,
+    "ast_hash": "fc4d8ba3130c7e709300b34eea049754",
+    "semantic_hash": "fc4d8ba3130c7e709300b34eea049754"
   },
   "frontend/src/test/features/trainer-settings/SettingsPage.test.tsx": {
-    "mtime": 1792607447.4790978,
-    "ast_hash": "af8baf64dd1624d5f99bfe4b553c17cc",
-    "semantic_hash": "af8baf64dd1624d5f99bfe4b553c17cc"
+    "mtime": 1792828713.2595618,
+    "ast_hash": "a94eaa6f38a3f38a60a325fc07eaab43",
+    "semantic_hash": "a94eaa6f38a3f38a60a325fc07eaab43"
   },
   "frontend/src/test/google-fake.ts": {
     "mtime": 1792323435.8796866,
@@ -10245,14 +10235,14 @@
     "semantic_hash": "5c3b643dacac568ce04c930e4450ea58"
   },
   "frontend/src/test/msw/handlers.ts": {
-    "mtime": 1792662150.3265326,
-    "ast_hash": "e90a32f3c074024b2247720341e34baa",
-    "semantic_hash": "e90a32f3c074024b2247720341e34baa"
+    "mtime": 1792828713.36203,
+    "ast_hash": "d98eb669e92548c37c91dec9c411b932",
+    "semantic_hash": "d98eb669e92548c37c91dec9c411b932"
   },
   "frontend/src/test/msw/portal-fixtures.ts": {
-    "mtime": 1792662122.4507701,
-    "ast_hash": "4b2cfd2bdf65f5d4657c0c289038c3bc",
-    "semantic_hash": "4b2cfd2bdf65f5d4657c0c289038c3bc"
+    "mtime": 1792828713.3930137,
+    "ast_hash": "16cdafe451d31d1cc53c51cff6381d93",
+    "semantic_hash": "16cdafe451d31d1cc53c51cff6381d93"
   },
   "frontend/src/test/msw/server.ts": {
     "mtime": 1790170669.8747978,
@@ -10260,29 +10250,29 @@
     "semantic_hash": "d22b79215b3b5879ea78f949a5ebe665"
   },
   "frontend/src/test/msw/trainer-fixtures.ts": {
-    "mtime": 1790781074.5598936,
-    "ast_hash": "7256411e42f8bdd01fe4369bb339f263",
-    "semantic_hash": "7256411e42f8bdd01fe4369bb339f263"
+    "mtime": 1792828597.1221766,
+    "ast_hash": "ffcd1bfb23ee4c349ccea88d90a1d738",
+    "semantic_hash": "ffcd1bfb23ee4c349ccea88d90a1d738"
   },
   "frontend/src/test/render.tsx": {
-    "mtime": 1792607447.5604758,
-    "ast_hash": "578146c3fae3bd87b56caa0b49456f7f",
-    "semantic_hash": "578146c3fae3bd87b56caa0b49456f7f"
+    "mtime": 1792828713.4594352,
+    "ast_hash": "6909a923986fe0ebdcec728e29f3f301",
+    "semantic_hash": "6909a923986fe0ebdcec728e29f3f301"
   },
   "frontend/src/test/setup.ts": {
-    "mtime": 1792322373.3957696,
-    "ast_hash": "18c92b4641ad0d4b8dda081feaa221b4",
-    "semantic_hash": "18c92b4641ad0d4b8dda081feaa221b4"
+    "mtime": 1792828960.6900072,
+    "ast_hash": "0d2c4e7467030863a1a93813e74ab7d8",
+    "semantic_hash": "0d2c4e7467030863a1a93813e74ab7d8"
   },
   "frontend/src/test/shared/api/client.test.ts": {
-    "mtime": 1792323436.197088,
-    "ast_hash": "416e555fa80f2e885bdfacb3829ed138",
-    "semantic_hash": "416e555fa80f2e885bdfacb3829ed138"
+    "mtime": 1792848804.086599,
+    "ast_hash": "86bc98c23f1d0178672c7aa0b57d5250",
+    "semantic_hash": "86bc98c23f1d0178672c7aa0b57d5250"
   },
   "frontend/src/test/shared/api/problem.test.ts": {
-    "mtime": 1790170771.753193,
-    "ast_hash": "3dbf778f2aaffef2bfbe2f61735ec652",
-    "semantic_hash": "3dbf778f2aaffef2bfbe2f61735ec652"
+    "mtime": 1792829872.8206346,
+    "ast_hash": "8943367519955a115f7dc92014997030",
+    "semantic_hash": "8943367519955a115f7dc92014997030"
   },
   "frontend/src/test/shared/api/session.test.ts": {
     "mtime": 1790170771.4665265,
@@ -10290,9 +10280,9 @@
     "semantic_hash": "412e50404b45c3c5529803e53929e777"
   },
   "frontend/src/test/shared/components/Breadcrumbs.test.tsx": {
-    "mtime": 1792607447.5908258,
-    "ast_hash": "8a4b59f9422b956b472bd1818dfda02e",
-    "semantic_hash": "8a4b59f9422b956b472bd1818dfda02e"
+    "mtime": 1792828713.6120238,
+    "ast_hash": "035a84c24297ca5038cc6730c3c92b4b",
+    "semantic_hash": "035a84c24297ca5038cc6730c3c92b4b"
   },
   "frontend/src/test/shared/components/ErrorState.test.tsx": {
     "mtime": 1790173305.7824438,
@@ -10330,9 +10320,9 @@
     "semantic_hash": "ee8c1351695ee814cb3c031b7516a8bc"
   },
   "frontend/src/test/shared/lib/reps.test.ts": {
-    "mtime": 1792607447.619311,
-    "ast_hash": "337f03c390399da735673fbc7d7f410c",
-    "semantic_hash": "337f03c390399da735673fbc7d7f410c"
+    "mtime": 1792828713.78336,
+    "ast_hash": "e74079dd6c77066b1ccdb851743e650c",
+    "semantic_hash": "e74079dd6c77066b1ccdb851743e650c"
   },
   "frontend/src/test/video-fakes.ts": {
     "mtime": 1790781074.590245,
@@ -10588,5 +10578,410 @@
     "mtime": 1790342397.6813433,
     "ast_hash": "64a82e2479973a6d745c598de7d9080d",
     "semantic_hash": "64a82e2479973a6d745c598de7d9080d"
+  },
+  "backend/src/Api/Configuration/DevelopmentSessionReminderEndpoint.cs": {
+    "mtime": 1792693140.8502412,
+    "ast_hash": "688be9490459fb0d3353098de9273802",
+    "semantic_hash": "688be9490459fb0d3353098de9273802"
+  },
+  "backend/src/Api/Contracts/Common/PlatformEnforcementResponse.cs": {
+    "mtime": 1792825456.7306838,
+    "ast_hash": "a81fb80ea0a1f40e4b06bca229952d43",
+    "semantic_hash": "a81fb80ea0a1f40e4b06bca229952d43"
+  },
+  "backend/src/Api/Contracts/Portal/PortalInitialAssessmentContracts.cs": {
+    "mtime": 1792686395.0274854,
+    "ast_hash": "da41f5c700aad8bce2b78293c9858bbf",
+    "semantic_hash": "da41f5c700aad8bce2b78293c9858bbf"
+  },
+  "backend/src/Api/Contracts/Portal/PortalPlanSupplementContracts.cs": {
+    "mtime": 1792695942.267998,
+    "ast_hash": "0bc9efa89b7d1015d639d14f51f7b918",
+    "semantic_hash": "0bc9efa89b7d1015d639d14f51f7b918"
+  },
+  "backend/src/Api/Middlewares/AccountAccessMiddleware.cs": {
+    "mtime": 1792849806.3299737,
+    "ast_hash": "b7525258a969b69037e1162fa9b1f57e",
+    "semantic_hash": "b7525258a969b69037e1162fa9b1f57e"
+  },
+  "backend/src/Application/Common/Abstractions/IAccountAccessQueries.cs": {
+    "mtime": 1792824673.1797872,
+    "ast_hash": "32ec26401fa9864d0b6e4e1c80cf10d9",
+    "semantic_hash": "32ec26401fa9864d0b6e4e1c80cf10d9"
+  },
+  "backend/src/Application/Common/PlatformEnforcementDto.cs": {
+    "mtime": 1792825402.3219588,
+    "ast_hash": "5f10b9966047c0313e7de2a7e9d96ae4",
+    "semantic_hash": "5f10b9966047c0313e7de2a7e9d96ae4"
+  },
+  "backend/src/Application/Features/Administration/ContentModeration/SupplementModeration/SupplementModerationHandlers.cs": {
+    "mtime": 1792822159.4657063,
+    "ast_hash": "e8ac9473768f3f5d4ce648b488ece032",
+    "semantic_hash": "e8ac9473768f3f5d4ce648b488ece032"
+  },
+  "backend/src/Application/Features/Administration/Trainers/TrainerAccess/TrainerAccessBlockHandlers.cs": {
+    "mtime": 1792824009.0895908,
+    "ast_hash": "ca07cc1fdec0715d9e43f16417cb55f1",
+    "semantic_hash": "ca07cc1fdec0715d9e43f16417cb55f1"
+  },
+  "backend/src/Application/Features/Assessments/InitialAssessments/Dtos/InitialAssessmentPendingReviewDto.cs": {
+    "mtime": 1792686168.1609557,
+    "ast_hash": "2f4071ad9a7a6d457d0c60d2c6c4e0d2",
+    "semantic_hash": "2f4071ad9a7a6d457d0c60d2c6c4e0d2"
+  },
+  "backend/src/Application/Features/Assessments/InitialAssessments/InitialAssessmentValuesValidator.cs": {
+    "mtime": 1792848188.817967,
+    "ast_hash": "942d5905a43074a9046421b4289b70bb",
+    "semantic_hash": "942d5905a43074a9046421b4289b70bb"
+  },
+  "backend/src/Application/Features/Assessments/InitialAssessments/ListInitialAssessmentsPendingReview/ListInitialAssessmentsPendingReviewHandler.cs": {
+    "mtime": 1792686168.454553,
+    "ast_hash": "e075a0930197c70cae88b212a4676504",
+    "semantic_hash": "e075a0930197c70cae88b212a4676504"
+  },
+  "backend/src/Application/Features/Assessments/InitialAssessments/MarkInitialAssessmentReviewed/MarkInitialAssessmentReviewedHandler.cs": {
+    "mtime": 1792686167.9095438,
+    "ast_hash": "47bb7fdd6f7c0f2f11c2a48c790f5102",
+    "semantic_hash": "47bb7fdd6f7c0f2f11c2a48c790f5102"
+  },
+  "backend/src/Application/Features/Authentication/AccountAccessGate.cs": {
+    "mtime": 1792822654.6926825,
+    "ast_hash": "c98449dc1c614acfa3bb0efaff575fdd",
+    "semantic_hash": "c98449dc1c614acfa3bb0efaff575fdd"
+  },
+  "backend/src/Application/Features/ClientPortal/GetMyInitialAssessment/GetMyInitialAssessmentStatusHandler.cs": {
+    "mtime": 1792686195.6158967,
+    "ast_hash": "34fafd2102ed35fd7638246d20653058",
+    "semantic_hash": "34fafd2102ed35fd7638246d20653058"
+  },
+  "backend/src/Application/Features/ClientPortal/PlanSupplementIntakes/MyPlanSupplementIntakeContracts.cs": {
+    "mtime": 1792695844.975022,
+    "ast_hash": "57c1009c08c5e29470c341b6d2f28d5c",
+    "semantic_hash": "57c1009c08c5e29470c341b6d2f28d5c"
+  },
+  "backend/src/Application/Features/ClientPortal/PlanSupplementIntakes/MyPlanSupplementIntakeHandlers.cs": {
+    "mtime": 1792695849.4961965,
+    "ast_hash": "eee83099ee6d54df93ad3eb7f4a4bcc2",
+    "semantic_hash": "eee83099ee6d54df93ad3eb7f4a4bcc2"
+  },
+  "backend/src/Application/Features/ClientPortal/SubmitMyInitialAssessment/SubmitMyInitialAssessmentCommand.cs": {
+    "mtime": 1792686195.854324,
+    "ast_hash": "e7eb3522420617999cff14881b95b1f1",
+    "semantic_hash": "e7eb3522420617999cff14881b95b1f1"
+  },
+  "backend/src/Application/Features/ClientPortal/SubmitMyInitialAssessment/SubmitMyInitialAssessmentCommandValidator.cs": {
+    "mtime": 1792686196.1065035,
+    "ast_hash": "277bf9afb7b5adaff139f3374ddd352a",
+    "semantic_hash": "277bf9afb7b5adaff139f3374ddd352a"
+  },
+  "backend/src/Application/Features/ClientPortal/SubmitMyInitialAssessment/SubmitMyInitialAssessmentHandler.cs": {
+    "mtime": 1792686196.393372,
+    "ast_hash": "e20ca919a2c3b1fce463e88017d75fa6",
+    "semantic_hash": "e20ca919a2c3b1fce463e88017d75fa6"
+  },
+  "backend/src/Application/Features/Notifications/SessionReminders/ISessionReminderScanner.cs": {
+    "mtime": 1792688901.723012,
+    "ast_hash": "e62b77cacdab98ffb8a5e504e3662903",
+    "semantic_hash": "e62b77cacdab98ffb8a5e504e3662903"
+  },
+  "backend/src/Domain/Entities/Administration/TrainerAccessBlock.cs": {
+    "mtime": 1792849862.6577017,
+    "ast_hash": "275c0dbd8eaa15098888713de6a40816",
+    "semantic_hash": "275c0dbd8eaa15098888713de6a40816"
+  },
+  "backend/src/Domain/Entities/Nutrition/MealPlanSupplement.cs": {
+    "mtime": 1792695184.0993807,
+    "ast_hash": "f88ba32ba5015c498bb0958d1ffee27b",
+    "semantic_hash": "f88ba32ba5015c498bb0958d1ffee27b"
+  },
+  "backend/src/Domain/Entities/Supplements/ClientMealPlanSupplementIntake.cs": {
+    "mtime": 1792695372.8976061,
+    "ast_hash": "8b46cd57469e37f8ee17251439346dd6",
+    "semantic_hash": "8b46cd57469e37f8ee17251439346dd6"
+  },
+  "backend/src/Domain/ValueObjects/PlatformEnforcementNotes.cs": {
+    "mtime": 1792822067.1153796,
+    "ast_hash": "c005ed57d8ed4ae8272982155be1d9be",
+    "semantic_hash": "c005ed57d8ed4ae8272982155be1d9be"
+  },
+  "backend/src/Infrastructure/Data/Configurations/Administration/TrainerAccessBlockConfiguration.cs": {
+    "mtime": 1792822453.808049,
+    "ast_hash": "429ba23ac77092de8d9f977b30163861",
+    "semantic_hash": "429ba23ac77092de8d9f977b30163861"
+  },
+  "backend/src/Infrastructure/Data/Configurations/Nutrition/MealPlanSupplementConfiguration.cs": {
+    "mtime": 1792695377.3806653,
+    "ast_hash": "a31ba5e558a4d213ffc36499dbce3f03",
+    "semantic_hash": "a31ba5e558a4d213ffc36499dbce3f03"
+  },
+  "backend/src/Infrastructure/Data/Configurations/Supplements/ClientMealPlanSupplementIntakeConfiguration.cs": {
+    "mtime": 1792695382.350413,
+    "ast_hash": "f6b2c32c41979e9e6182d29addffca11",
+    "semantic_hash": "f6b2c32c41979e9e6182d29addffca11"
+  },
+  "backend/src/Infrastructure/Data/Migrations/20261022163233_AddInitialAssessmentClientSubmission.Designer.cs": {
+    "mtime": 1792686754.127195,
+    "ast_hash": "e042862502c93990fb4a8e66f56e26b6",
+    "semantic_hash": "e042862502c93990fb4a8e66f56e26b6"
+  },
+  "backend/src/Infrastructure/Data/Migrations/20261022163233_AddInitialAssessmentClientSubmission.cs": {
+    "mtime": 1792827810.8716667,
+    "ast_hash": "ca8bd1989114969b8b66669eab9a6efe",
+    "semantic_hash": "ca8bd1989114969b8b66669eab9a6efe"
+  },
+  "backend/src/Infrastructure/Data/Migrations/20261022182144_AddNotificationSkippedStatus.Designer.cs": {
+    "mtime": 1792693304.8296225,
+    "ast_hash": "0b93b67921e6bf000b2898c4dbb291aa",
+    "semantic_hash": "0b93b67921e6bf000b2898c4dbb291aa"
+  },
+  "backend/src/Infrastructure/Data/Migrations/20261022182144_AddNotificationSkippedStatus.cs": {
+    "mtime": 1792827810.8730867,
+    "ast_hash": "25fcdc9239952e5efb65c33b2f8d887a",
+    "semantic_hash": "25fcdc9239952e5efb65c33b2f8d887a"
+  },
+  "backend/src/Infrastructure/Data/Migrations/20261022183625_AddClientSessionPackForfeit.Designer.cs": {
+    "mtime": 1792694185.658232,
+    "ast_hash": "aa94f18bde3c0f3654d2935b787e1dbe",
+    "semantic_hash": "aa94f18bde3c0f3654d2935b787e1dbe"
+  },
+  "backend/src/Infrastructure/Data/Migrations/20261022183625_AddClientSessionPackForfeit.cs": {
+    "mtime": 1792827810.8730867,
+    "ast_hash": "ab45b6024aeb4b37b1dd6788c89716b3",
+    "semantic_hash": "ab45b6024aeb4b37b1dd6788c89716b3"
+  },
+  "backend/src/Infrastructure/Data/Migrations/20261022190915_AddMealPlanSupplementsAndPlanIntakes.Designer.cs": {
+    "mtime": 1792696155.5264523,
+    "ast_hash": "367885747744da3e26a2d6a207dc149c",
+    "semantic_hash": "367885747744da3e26a2d6a207dc149c"
+  },
+  "backend/src/Infrastructure/Data/Migrations/20261022190915_AddMealPlanSupplementsAndPlanIntakes.cs": {
+    "mtime": 1792827810.890772,
+    "ast_hash": "bc8ec4c728e56d9c5fb85a08a070b194",
+    "semantic_hash": "bc8ec4c728e56d9c5fb85a08a070b194"
+  },
+  "backend/src/Infrastructure/Data/Migrations/20261024071049_AddTrainerAccessBlocksAndModerationNotes.Designer.cs": {
+    "mtime": 1792825850.1448872,
+    "ast_hash": "b108c0543162ef8edcf5653733f41f36",
+    "semantic_hash": "b108c0543162ef8edcf5653733f41f36"
+  },
+  "backend/src/Infrastructure/Data/Migrations/20261024071049_AddTrainerAccessBlocksAndModerationNotes.cs": {
+    "mtime": 1792827810.890772,
+    "ast_hash": "b6dbdeed7b8ddc25008bd6103d54e87d",
+    "semantic_hash": "b6dbdeed7b8ddc25008bd6103d54e87d"
+  },
+  "backend/src/Infrastructure/Email/AccountAccessTemplateRenderer.cs": {
+    "mtime": 1792853946.7438178,
+    "ast_hash": "42d11d861a9883e647c994787084b3c6",
+    "semantic_hash": "42d11d861a9883e647c994787084b3c6"
+  },
+  "backend/src/Infrastructure/Email/RenderedEmailSenders.cs": {
+    "mtime": 1792824114.7072048,
+    "ast_hash": "ad7e112213de2c356b5f3e79309948e3",
+    "semantic_hash": "ad7e112213de2c356b5f3e79309948e3"
+  },
+  "backend/src/Infrastructure/Identity/AccountAccessQueries.cs": {
+    "mtime": 1792824673.19649,
+    "ast_hash": "1bb39d3f869caf256c2408d682c544d6",
+    "semantic_hash": "1bb39d3f869caf256c2408d682c544d6"
+  },
+  "backend/src/Infrastructure/Notifications/AccountAccessNotificationOutboxHandler.cs": {
+    "mtime": 1792824382.8949387,
+    "ast_hash": "753d2111dcaee02612df84145d980530",
+    "semantic_hash": "753d2111dcaee02612df84145d980530"
+  },
+  "backend/src/Infrastructure/Notifications/LoggingNotificationDeliveryGateway.cs": {
+    "mtime": 1792693022.462734,
+    "ast_hash": "bcc3d5a227915de43d85a531b5dbe3bf",
+    "semantic_hash": "bcc3d5a227915de43d85a531b5dbe3bf"
+  },
+  "backend/src/Infrastructure/Notifications/SessionReminderScanner.cs": {
+    "mtime": 1792849751.5204144,
+    "ast_hash": "4d99935ea4923c83001de0122ee0a787",
+    "semantic_hash": "4d99935ea4923c83001de0122ee0a787"
+  },
+  "backend/src/Infrastructure/Persistence/Assessments/InitialAssessmentRequirement.cs": {
+    "mtime": 1792851141.322023,
+    "ast_hash": "0e0c2e279fcc2b0712e228be66c4989a",
+    "semantic_hash": "0e0c2e279fcc2b0712e228be66c4989a"
+  },
+  "backend/src/Infrastructure/Persistence/ClientPortal/MyPlanSupplementIntakeQueries.cs": {
+    "mtime": 1792825041.854039,
+    "ast_hash": "2a2279bead9fb22150fdd7bb1aed4f1b",
+    "semantic_hash": "2a2279bead9fb22150fdd7bb1aed4f1b"
+  },
+  "backend/src/Infrastructure/Persistence/ClientPortal/MyPlanSupplementIntakeStore.cs": {
+    "mtime": 1792849930.8267863,
+    "ast_hash": "2bbfe1c52539a4b67b869acdb4fd5ba5",
+    "semantic_hash": "2bbfe1c52539a4b67b869acdb4fd5ba5"
+  },
+  "backend/src/Infrastructure/Persistence/PlatformEnforcementProjection.cs": {
+    "mtime": 1792825406.8165534,
+    "ast_hash": "c8638d1f0b176826aa6d975f5dcb2730",
+    "semantic_hash": "c8638d1f0b176826aa6d975f5dcb2730"
+  },
+  "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/BlockedCatalogItemTests.cs": {
+    "mtime": 1792826510.5083175,
+    "ast_hash": "5a864239645fcc02dbe380470b3a4510",
+    "semantic_hash": "5a864239645fcc02dbe380470b3a4510"
+  },
+  "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/ClientArchiveTests.cs": {
+    "mtime": 1792694926.5171466,
+    "ast_hash": "3151b8bc555dc516e2b258ef2630c7fe",
+    "semantic_hash": "3151b8bc555dc516e2b258ef2630c7fe"
+  },
+  "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/InitialAssessmentByClientTests.cs": {
+    "mtime": 1792851030.442524,
+    "ast_hash": "5d8e8cfd6ca041d215133c76c3979bf0",
+    "semantic_hash": "5d8e8cfd6ca041d215133c76c3979bf0"
+  },
+  "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/PlanSupplementIntakeTests.cs": {
+    "mtime": 1792696850.355187,
+    "ast_hash": "9e331fe8aaab6c6f26478477c3fff1e9",
+    "semantic_hash": "9e331fe8aaab6c6f26478477c3fff1e9"
+  },
+  "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/SessionReminderTests.cs": {
+    "mtime": 1792826741.8744578,
+    "ast_hash": "072a4d22581da4d7fe1ce3296a615608",
+    "semantic_hash": "072a4d22581da4d7fe1ce3296a615608"
+  },
+  "backend/tests/FunctionalTests/Api.FunctionalTests/Controllers/TrainerAccessBlockTests.cs": {
+    "mtime": 1792826301.9598699,
+    "ast_hash": "cb4490f894046ab022a0a951828cff3a",
+    "semantic_hash": "cb4490f894046ab022a0a951828cff3a"
+  },
+  "backend/tests/Integration/Infrastructure.IntegrationTests/Notifications/AccountAccessTemplateRendererTests.cs": {
+    "mtime": 1792853951.083155,
+    "ast_hash": "63d367defb1bc5f2fa21c22364486049",
+    "semantic_hash": "63d367defb1bc5f2fa21c22364486049"
+  },
+  "frontend/src/features/admin-trainers/components/AccessBlockDialog.tsx": {
+    "mtime": 1792845866.8207955,
+    "ast_hash": "9f61a643eef1caea95ea8ce074020c12",
+    "semantic_hash": "9f61a643eef1caea95ea8ce074020c12"
+  },
+  "frontend/src/features/initial-assessment/api/pendingReview.ts": {
+    "mtime": 1792693244.93826,
+    "ast_hash": "e66c6ee283376043295fb8343e2a316b",
+    "semantic_hash": "e66c6ee283376043295fb8343e2a316b"
+  },
+  "frontend/src/features/initial-assessment/components/AssessmentFields.tsx": {
+    "mtime": 1792694448.018607,
+    "ast_hash": "af5dba51a67f944773c7c625f0d18138",
+    "semantic_hash": "af5dba51a67f944773c7c625f0d18138"
+  },
+  "frontend/src/features/initial-assessment/index.ts": {
+    "mtime": 1792693245.2792163,
+    "ast_hash": "d981f39e948252ab2a66d0d27bc950c0",
+    "semantic_hash": "d981f39e948252ab2a66d0d27bc950c0"
+  },
+  "frontend/src/features/initial-assessment/lib/initialAssessmentSchema.ts": {
+    "mtime": 1792848248.8109493,
+    "ast_hash": "a19ece29b12183d4fe7d705580147682",
+    "semantic_hash": "a19ece29b12183d4fe7d705580147682"
+  },
+  "frontend/src/features/initial-assessment/pages/PendingInitialAssessmentsPage.tsx": {
+    "mtime": 1792848823.66705,
+    "ast_hash": "ee533f469f7443a90987022df5b50f45",
+    "semantic_hash": "ee533f469f7443a90987022df5b50f45"
+  },
+  "frontend/src/features/portal/components/AccessEndNotice.tsx": {
+    "mtime": 1792828842.9115887,
+    "ast_hash": "298b13574cccd676887a60e1848de149",
+    "semantic_hash": "298b13574cccd676887a60e1848de149"
+  },
+  "frontend/src/features/portal/components/InitialAssessmentCard.tsx": {
+    "mtime": 1792693960.5445657,
+    "ast_hash": "63d7d00d54f52d4b5106e45cf38af100",
+    "semantic_hash": "63d7d00d54f52d4b5106e45cf38af100"
+  },
+  "frontend/src/features/portal/components/InitialAssessmentMissingNotice.tsx": {
+    "mtime": 1792694448.231605,
+    "ast_hash": "a2f48b5f01cfabf3b034b90621eefc02",
+    "semantic_hash": "a2f48b5f01cfabf3b034b90621eefc02"
+  },
+  "frontend/src/features/portal/components/InitialAssessmentWizard.tsx": {
+    "mtime": 1792854377.6852686,
+    "ast_hash": "4516495337f9378a1aba575ff055ba18",
+    "semantic_hash": "4516495337f9378a1aba575ff055ba18"
+  },
+  "frontend/src/features/portal/components/MealSupplementList.tsx": {
+    "mtime": 1792828593.840906,
+    "ast_hash": "dba10b223ca58532322b96cd23ffacc7",
+    "semantic_hash": "dba10b223ca58532322b96cd23ffacc7"
+  },
+  "frontend/src/features/portal/components/PlanSupplementRow.tsx": {
+    "mtime": 1792828593.907012,
+    "ast_hash": "591d7087544d49f6d1992e4c9cbaf405",
+    "semantic_hash": "591d7087544d49f6d1992e4c9cbaf405"
+  },
+  "frontend/src/features/portal/pages/PortalInitialAssessmentPage.tsx": {
+    "mtime": 1792694208.7717867,
+    "ast_hash": "c1d99e8113e7c6c605c099394d6d6fb3",
+    "semantic_hash": "c1d99e8113e7c6c605c099394d6d6fb3"
+  },
+  "frontend/src/features/prescriptions/lib/blocked-items.ts": {
+    "mtime": 1792851548.9842334,
+    "ast_hash": "91a351de5e53f4fd45c7369b884794ca",
+    "semantic_hash": "91a351de5e53f4fd45c7369b884794ca"
+  },
+  "frontend/src/shared/components/PlatformEnforcementBadge.tsx": {
+    "mtime": 1792843286.1588075,
+    "ast_hash": "d87036f550a04234bbc2d26013484ecc",
+    "semantic_hash": "d87036f550a04234bbc2d26013484ecc"
+  },
+  "frontend/src/shared/components/PlatformEnforcementFields.tsx": {
+    "mtime": 1792848933.6166208,
+    "ast_hash": "5f73868b50c354fab39063e49c7fad64",
+    "semantic_hash": "5f73868b50c354fab39063e49c7fad64"
+  },
+  "frontend/src/shared/lib/accessNotices.ts": {
+    "mtime": 1792848892.402556,
+    "ast_hash": "829a6a5ad2d798a8f6aac419a502adec",
+    "semantic_hash": "829a6a5ad2d798a8f6aac419a502adec"
+  },
+  "frontend/src/shared/lib/auth-notice.ts": {
+    "mtime": 1792323426.881049,
+    "ast_hash": "8fa4fd5f3395d842207b28ede89f7e53",
+    "semantic_hash": "8fa4fd5f3395d842207b28ede89f7e53"
+  },
+  "frontend/src/test/features/initial-assessment/PendingInitialAssessmentsPage.test.tsx": {
+    "mtime": 1792848833.3225546,
+    "ast_hash": "0d2b54aa8baa73934d701f811045eb4a",
+    "semantic_hash": "0d2b54aa8baa73934d701f811045eb4a"
+  },
+  "frontend/src/test/features/initial-assessment/initialAssessmentSchema.test.ts": {
+    "mtime": 1792848298.7559395,
+    "ast_hash": "ea4797138e37c80143456a39ead29e93",
+    "semantic_hash": "ea4797138e37c80143456a39ead29e93"
+  },
+  "frontend/src/test/features/portal/PortalInitialAssessmentPage.test.tsx": {
+    "mtime": 1792854168.8468118,
+    "ast_hash": "4152b96ac61f600cc205233f221c9d54",
+    "semantic_hash": "4152b96ac61f600cc205233f221c9d54"
+  },
+  "frontend/src/test/features/portal/PortalPlanSupplements.test.tsx": {
+    "mtime": 1792828712.4255555,
+    "ast_hash": "269d3ba10aa88242c11727895475dd86",
+    "semantic_hash": "269d3ba10aa88242c11727895475dd86"
+  },
+  "frontend/src/test/features/prescriptions/MealPlanViewPage.test.tsx": {
+    "mtime": 1792843829.610578,
+    "ast_hash": "6959d2106e7f38bf1825d55f3a74b1a8",
+    "semantic_hash": "6959d2106e7f38bf1825d55f3a74b1a8"
+  },
+  "frontend/src/test/features/prescriptions/blockedItems.test.ts": {
+    "mtime": 1792845106.430632,
+    "ast_hash": "c82b8414690aa63e657dfc5af54b414e",
+    "semantic_hash": "c82b8414690aa63e657dfc5af54b414e"
+  },
+  "frontend/src/test/shared/components/PlatformEnforcementBadge.test.tsx": {
+    "mtime": 1792843690.8975966,
+    "ast_hash": "c65a3937a24518baa7aa9abc603cbf7f",
+    "semantic_hash": "c65a3937a24518baa7aa9abc603cbf7f"
+  },
+  "frontend/src/test/shared/lib/accessNotices.test.ts": {
+    "mtime": 1792848910.274188,
+    "ast_hash": "0eabe4c93c55b594bfd3b0b250e3ac92",
+    "semantic_hash": "0eabe4c93c55b594bfd3b0b250e3ac92"
   }
 }

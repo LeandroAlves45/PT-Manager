@@ -1,4 +1,5 @@
 using Application.Validation;
+using Domain.Entities.Assessments;
 using FluentValidation;
 
 namespace Application.Features.Assessments;
@@ -21,7 +22,9 @@ internal sealed class BodyMeasurementsInputValidator
                 x.RightCalfCm,
                 x.LeftCalfCm
             })
-            .Must(value => !value.HasValue || value.Value > 0)
+            .Must(value => !value.HasValue ||
+                (value.Value is > 0 and <= AssessmentLimits.MaxMeasurementCm &&
+                    AssessmentLimits.FitsDecimalPlaces(value.Value)))
             .WithErrorCode("body_measurement_invalid");
     }
 }
@@ -45,7 +48,8 @@ internal sealed class NutritionIntakeInputValidator
                 x.OtherNotes
             })
             .MaximumLength(2000)
-            .WithErrorCode("nutrition_text_too_long");
+            .WithErrorCode("nutrition_text_too_long")
+            .WithoutNullCharacter();
 
         RuleFor(x => x.SleepQuality)
             .InclusiveBetween(1, 5)
@@ -63,7 +67,8 @@ internal sealed class NutritionIntakeInputValidator
             .WithErrorCode("stress_level_invalid");
 
         RuleFor(x => x.AvgWaterLitersPerDay)
-            .GreaterThan(0)
+            .Must(value => value!.Value is > 0 and <= AssessmentLimits.MaxWaterLitersPerDay &&
+                AssessmentLimits.FitsDecimalPlaces(value.Value))
             .When(x => x.AvgWaterLitersPerDay.HasValue)
             .WithErrorCode("average_water_invalid");
     }

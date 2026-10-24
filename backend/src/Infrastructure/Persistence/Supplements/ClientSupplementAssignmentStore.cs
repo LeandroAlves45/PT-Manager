@@ -1,6 +1,7 @@
 using Application.Features.Supplements.Abstractions;
 using Domain.Entities.Supplements;
 using Infrastructure.Data;
+using Infrastructure.Persistence.Assessments;
 using Infrastructure.Persistence.Errors;
 using Microsoft.EntityFrameworkCore;
 
@@ -89,6 +90,12 @@ internal sealed class ClientSupplementAssignmentStore : IClientSupplementAssignm
                     transaction,
                     ClientSupplementAssignmentStoreResult.Status.ClientInactive
                 );
+            if (!await InitialAssessmentRequirement.IsMetAsync(
+                    _dbContext, trainerId, clientId, cancellationToken))
+                return await RollbackAsync(
+                    transaction,
+                    ClientSupplementAssignmentStoreResult.Status.InitialAssessmentRequired
+                );
 
             var supplement = await _dbContext.LockVisibleSupplementAsync(
                 trainerId, supplementId, cancellationToken);
@@ -97,7 +104,7 @@ internal sealed class ClientSupplementAssignmentStore : IClientSupplementAssignm
                     transaction,
                     ClientSupplementAssignmentStoreResult.Status.SupplementNotFound
                 );
-            if (!supplement.IsActive)
+            if (!supplement.IsActive || supplement.PlatformEnforcementStatus == Domain.ValueObjects.PlatformEnforcementStatus.Blocked)
                 return await RollbackAsync(
                     transaction,
                     ClientSupplementAssignmentStoreResult.Status.SupplementInactive
@@ -190,7 +197,7 @@ internal sealed class ClientSupplementAssignmentStore : IClientSupplementAssignm
                     transaction,
                     ClientSupplementAssignmentStoreResult.Status.SupplementNotFound
                 );
-            if (!supplement.IsActive)
+            if (!supplement.IsActive || supplement.PlatformEnforcementStatus == Domain.ValueObjects.PlatformEnforcementStatus.Blocked)
                 return await RollbackAsync(
                     transaction,
                     ClientSupplementAssignmentStoreResult.Status.SupplementInactive
@@ -274,7 +281,7 @@ internal sealed class ClientSupplementAssignmentStore : IClientSupplementAssignm
                     transaction,
                     ClientSupplementAssignmentStoreResult.Status.ClientInactive
                 );
-            if (isActive && !supplement.IsActive)
+            if (isActive && (!supplement.IsActive || supplement.PlatformEnforcementStatus == Domain.ValueObjects.PlatformEnforcementStatus.Blocked))
                 return await RollbackAsync(
                     transaction,
                     ClientSupplementAssignmentStoreResult.Status.SupplementInactive

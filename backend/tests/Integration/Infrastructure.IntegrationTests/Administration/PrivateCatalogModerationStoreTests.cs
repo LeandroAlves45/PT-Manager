@@ -29,14 +29,14 @@ public sealed class PrivateCatalogModerationStoreTests
     public async Task BlockFood_ChangesStateAndAuditAtomically()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken);
+        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var actor = await SeedSuperuserAsync(cancellationToken);
         var foodId = await SeedPrivateFoodAsync(tenant.TrainerId, cancellationToken);
         await using var context = _fixture.CreateAdministrativeContext(actor.Id);
         var store = new PrivateCatalogModerationStore(context);
 
         var outcome = await store.BlockFoodAsync(actor.Id, foodId,
-            PlatformEnforcementReason.MaliciousContent, Now, cancellationToken);
+            PlatformEnforcementReason.MaliciousContent, null, Now, cancellationToken);
 
         var state = await context.Foods.IgnoreQueryFilters().Where(food => food.Id == foodId)
             .Select(food => food.PlatformEnforcementStatus.Value).SingleAsync(cancellationToken);
@@ -51,13 +51,13 @@ public sealed class PrivateCatalogModerationStoreTests
     public async Task BlockFood_PersistsReasonAndTimestamp()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken);
+        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var actor = await SeedSuperuserAsync(cancellationToken);
         var foodId = await SeedPrivateFoodAsync(tenant.TrainerId, cancellationToken);
         await using var context = _fixture.CreateAdministrativeContext(actor.Id);
 
         await new PrivateCatalogModerationStore(context).BlockFoodAsync(actor.Id, foodId,
-            PlatformEnforcementReason.DangerousInformation, Now, cancellationToken);
+            PlatformEnforcementReason.DangerousInformation, null, Now, cancellationToken);
 
         var persisted = await context.Foods.IgnoreQueryFilters().AsNoTracking()
             .Where(food => food.Id == foodId)
@@ -76,16 +76,16 @@ public sealed class PrivateCatalogModerationStoreTests
     public async Task BlockFood_WithSameReason_IsNoOpWithoutSecondAudit()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken);
+        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var actor = await SeedSuperuserAsync(cancellationToken);
         var foodId = await SeedPrivateFoodAsync(tenant.TrainerId, cancellationToken);
         await using var context = _fixture.CreateAdministrativeContext(actor.Id);
         var store = new PrivateCatalogModerationStore(context);
         await store.BlockFoodAsync(actor.Id, foodId,
-            PlatformEnforcementReason.ProhibitedContent, Now, cancellationToken);
+            PlatformEnforcementReason.ProhibitedContent, null, Now, cancellationToken);
 
         var outcome = await store.BlockFoodAsync(actor.Id, foodId,
-            PlatformEnforcementReason.ProhibitedContent, Now.AddMinutes(1), cancellationToken);
+            PlatformEnforcementReason.ProhibitedContent, null, Now.AddMinutes(1), cancellationToken);
 
         var audits = await context.AdministrativeAuditEntries.CountAsync(
             entry => entry.ResourceId == foodId, cancellationToken);
@@ -97,16 +97,16 @@ public sealed class PrivateCatalogModerationStoreTests
     public async Task BlockFood_WithDifferentReason_CreatesSecondAudit()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken);
+        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var actor = await SeedSuperuserAsync(cancellationToken);
         var foodId = await SeedPrivateFoodAsync(tenant.TrainerId, cancellationToken);
         await using var context = _fixture.CreateAdministrativeContext(actor.Id);
         var store = new PrivateCatalogModerationStore(context);
         await store.BlockFoodAsync(actor.Id, foodId,
-            PlatformEnforcementReason.ProhibitedContent, Now, cancellationToken);
+            PlatformEnforcementReason.ProhibitedContent, null, Now, cancellationToken);
 
         var outcome = await store.BlockFoodAsync(actor.Id, foodId,
-            PlatformEnforcementReason.MaliciousContent, Now.AddMinutes(1), cancellationToken);
+            PlatformEnforcementReason.MaliciousContent, null, Now.AddMinutes(1), cancellationToken);
 
         var audits = await context.AdministrativeAuditEntries.CountAsync(
             entry => entry.ResourceId == foodId, cancellationToken);
@@ -117,7 +117,7 @@ public sealed class PrivateCatalogModerationStoreTests
     public async Task UnblockFood_WhenAlreadyAllowed_IsNoOpWithoutAudit()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken);
+        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var actor = await SeedSuperuserAsync(cancellationToken);
         var foodId = await SeedPrivateFoodAsync(tenant.TrainerId, cancellationToken);
         await using var context = _fixture.CreateAdministrativeContext(actor.Id);
@@ -135,13 +135,13 @@ public sealed class PrivateCatalogModerationStoreTests
     public async Task UnblockFood_AfterBlock_RestoresAllowedState()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken);
+        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var actor = await SeedSuperuserAsync(cancellationToken);
         var foodId = await SeedPrivateFoodAsync(tenant.TrainerId, cancellationToken);
         await using var context = _fixture.CreateAdministrativeContext(actor.Id);
         var store = new PrivateCatalogModerationStore(context);
         await store.BlockFoodAsync(actor.Id, foodId,
-            PlatformEnforcementReason.MaliciousContent, Now, cancellationToken);
+            PlatformEnforcementReason.MaliciousContent, null, Now, cancellationToken);
 
         var outcome = await store.UnblockFoodAsync(actor.Id, foodId, Now.AddMinutes(1), cancellationToken);
 
@@ -169,7 +169,7 @@ public sealed class PrivateCatalogModerationStoreTests
         await using var context = _fixture.CreateAdministrativeContext(actor.Id);
 
         var outcome = await new PrivateCatalogModerationStore(context).BlockFoodAsync(
-            actor.Id, foodId, PlatformEnforcementReason.MaliciousContent, Now, cancellationToken);
+            actor.Id, foodId, PlatformEnforcementReason.MaliciousContent, null, Now, cancellationToken);
 
         Assert.Equal(PrivateCatalogModerationStoreResult.NotPrivate, outcome);
     }
@@ -182,7 +182,7 @@ public sealed class PrivateCatalogModerationStoreTests
         await using var context = _fixture.CreateAdministrativeContext(actor.Id);
 
         var outcome = await new PrivateCatalogModerationStore(context).BlockFoodAsync(
-            actor.Id, Guid.NewGuid(), PlatformEnforcementReason.MaliciousContent, Now, cancellationToken);
+            actor.Id, Guid.NewGuid(), PlatformEnforcementReason.MaliciousContent, null, Now, cancellationToken);
 
         Assert.Equal(PrivateCatalogModerationStoreResult.NotFound, outcome);
     }
@@ -191,12 +191,12 @@ public sealed class PrivateCatalogModerationStoreTests
     public async Task BlockFood_WhenActorIsNotSuperuser_IsRejectedWithoutChange()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken);
+        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var foodId = await SeedPrivateFoodAsync(tenant.TrainerId, cancellationToken);
         await using var context = _fixture.CreateAdministrativeContext(tenant.TrainerId);
 
         var outcome = await new PrivateCatalogModerationStore(context).BlockFoodAsync(
-            tenant.TrainerId, foodId, PlatformEnforcementReason.MaliciousContent, Now, cancellationToken);
+            tenant.TrainerId, foodId, PlatformEnforcementReason.MaliciousContent, null, Now, cancellationToken);
 
         var status = await context.Foods.IgnoreQueryFilters().AsNoTracking()
             .Where(food => food.Id == foodId)
@@ -208,7 +208,7 @@ public sealed class PrivateCatalogModerationStoreTests
     public async Task BlockFood_WhenActorIsDeactivatedSuperuser_IsRejected()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken);
+        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var actor = await SeedSuperuserAsync(cancellationToken);
         var foodId = await SeedPrivateFoodAsync(tenant.TrainerId, cancellationToken);
         await _fixture.ExecuteSqlAsync(
@@ -218,7 +218,7 @@ public sealed class PrivateCatalogModerationStoreTests
         await using var context = _fixture.CreateAdministrativeContext(actor.Id);
 
         var outcome = await new PrivateCatalogModerationStore(context).BlockFoodAsync(
-            actor.Id, foodId, PlatformEnforcementReason.MaliciousContent, Now, cancellationToken);
+            actor.Id, foodId, PlatformEnforcementReason.MaliciousContent, null, Now, cancellationToken);
 
         Assert.Equal(PrivateCatalogModerationStoreResult.ActorInvalid, outcome);
     }
@@ -227,7 +227,7 @@ public sealed class PrivateCatalogModerationStoreTests
     public async Task BlockFood_WhenActorIsDeletedSuperuser_IsRejected()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken);
+        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var actor = await SeedSuperuserAsync(cancellationToken);
         var foodId = await SeedPrivateFoodAsync(tenant.TrainerId, cancellationToken);
         await _fixture.ExecuteSqlAsync(
@@ -237,7 +237,7 @@ public sealed class PrivateCatalogModerationStoreTests
         await using var context = _fixture.CreateAdministrativeContext(actor.Id);
 
         var outcome = await new PrivateCatalogModerationStore(context).BlockFoodAsync(
-            actor.Id, foodId, PlatformEnforcementReason.MaliciousContent, Now, cancellationToken);
+            actor.Id, foodId, PlatformEnforcementReason.MaliciousContent, null, Now, cancellationToken);
 
         Assert.Equal(PrivateCatalogModerationStoreResult.ActorInvalid, outcome);
     }
@@ -246,13 +246,13 @@ public sealed class PrivateCatalogModerationStoreTests
     public async Task BlockExercise_ChangesStateAndAudit()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken);
+        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var actor = await SeedSuperuserAsync(cancellationToken);
         var exerciseId = await SeedPrivateExerciseAsync(tenant.TrainerId, cancellationToken);
         await using var context = _fixture.CreateAdministrativeContext(actor.Id);
 
         var outcome = await new PrivateCatalogModerationStore(context).BlockExerciseAsync(
-            actor.Id, exerciseId, PlatformEnforcementReason.ProhibitedContent, Now, cancellationToken);
+            actor.Id, exerciseId, PlatformEnforcementReason.ProhibitedContent, null, Now, cancellationToken);
 
         var audits = await context.AdministrativeAuditEntries.CountAsync(
             entry => entry.ResourceId == exerciseId && entry.Action == "exercise_platform_blocked",
@@ -264,12 +264,12 @@ public sealed class PrivateCatalogModerationStoreTests
     public async Task NewMealPlanReference_ToBlockedFood_IsRejected()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken);
+        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var actor = await SeedSuperuserAsync(cancellationToken);
         var foodId = await SeedPrivateFoodAsync(tenant.TrainerId, cancellationToken);
         await using (var admin = _fixture.CreateAdministrativeContext(actor.Id))
             await new PrivateCatalogModerationStore(admin).BlockFoodAsync(actor.Id, foodId,
-                PlatformEnforcementReason.DangerousInformation, Now, cancellationToken);
+                PlatformEnforcementReason.DangerousInformation, null, Now, cancellationToken);
 
         await using var trainer = _fixture.CreateContext(tenant.TrainerId);
         var action = () => IntegrationTestData.SeedMealPlanReferencingFoodAsync(
@@ -290,7 +290,7 @@ public sealed class PrivateCatalogModerationStoreTests
             actor.Id,
             catalog.FoodId,
             PlatformEnforcementReason.DangerousInformation,
-            Now,
+            null, Now,
             CancellationToken.None);
 
         await pause.WaitUntilPersistedAsync(cancellationToken);
@@ -339,12 +339,12 @@ public sealed class PrivateCatalogModerationStoreTests
     public async Task NewTrainingPlanReference_ToBlockedExercise_IsRejected()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken);
+        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var actor = await SeedSuperuserAsync(cancellationToken);
         var exerciseId = await SeedPrivateExerciseAsync(tenant.TrainerId, cancellationToken);
         await using (var admin = _fixture.CreateAdministrativeContext(actor.Id))
             await new PrivateCatalogModerationStore(admin).BlockExerciseAsync(actor.Id, exerciseId,
-                PlatformEnforcementReason.DangerousInformation, Now, cancellationToken);
+                PlatformEnforcementReason.DangerousInformation, null, Now, cancellationToken);
 
         await using var trainer = _fixture.CreateContext(tenant.TrainerId);
         var action = () => IntegrationTestData.SeedTrainingPlanReferencingExerciseAsync(
@@ -357,7 +357,7 @@ public sealed class PrivateCatalogModerationStoreTests
     public async Task HistoricalMealPlanReference_SurvivesLaterBlock()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken);
+        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var actor = await SeedSuperuserAsync(cancellationToken);
         var foodId = await SeedPrivateFoodAsync(tenant.TrainerId, cancellationToken);
         await using (var trainer = _fixture.CreateContext(tenant.TrainerId))
@@ -366,7 +366,7 @@ public sealed class PrivateCatalogModerationStoreTests
 
         await using (var admin = _fixture.CreateAdministrativeContext(actor.Id))
             await new PrivateCatalogModerationStore(admin).BlockFoodAsync(actor.Id, foodId,
-                PlatformEnforcementReason.MaliciousContent, Now.AddMinutes(1), cancellationToken);
+                PlatformEnforcementReason.MaliciousContent, null, Now.AddMinutes(1), cancellationToken);
 
         var remaining = await _fixture.QueryScalarAsync<long>(
             "SELECT COUNT(*) FROM meal_plan_meal_items WHERE food_id = @id",
@@ -399,7 +399,7 @@ public sealed class PrivateCatalogModerationStoreTests
     public async Task BlockedFoodWithoutReason_IsRejectedByCheckConstraint()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken);
+        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var foodId = await SeedPrivateFoodAsync(tenant.TrainerId, cancellationToken);
 
         var action = () => _fixture.ExecuteSqlAsync(
@@ -420,7 +420,7 @@ public sealed class PrivateCatalogModerationStoreTests
     public async Task AllowedFoodWithReason_IsRejectedByCheckConstraint()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken);
+        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var foodId = await SeedPrivateFoodAsync(tenant.TrainerId, cancellationToken);
 
         var action = () => _fixture.ExecuteSqlAsync(
@@ -441,7 +441,7 @@ public sealed class PrivateCatalogModerationStoreTests
     public async Task UnknownReasonCode_IsRejectedByCheckConstraint()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken);
+        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var foodId = await SeedPrivateFoodAsync(tenant.TrainerId, cancellationToken);
 
         var action = () => _fixture.ExecuteSqlAsync(
@@ -462,7 +462,7 @@ public sealed class PrivateCatalogModerationStoreTests
     public async Task ExistingRowsAfterMigration_AreAllowedByDefault()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken);
+        var tenant = await _fixture.SeedTenantWithClientAsync(Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var foodId = await SeedPrivateFoodAsync(tenant.TrainerId, cancellationToken);
 
         var status = await _fixture.QueryScalarAsync<string>(

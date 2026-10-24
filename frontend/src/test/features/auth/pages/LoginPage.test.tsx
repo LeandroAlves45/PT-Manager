@@ -4,7 +4,13 @@ import { http, HttpResponse } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
 
 import { installGoogleFake } from '@/test/google-fake';
-import { API, pendingRestore, problem, sessionResponse } from '@/test/msw/handlers';
+import {
+  API,
+  pendingRestore,
+  problem,
+  restorableSession,
+  sessionResponse,
+} from '@/test/msw/handlers';
 import { server } from '@/test/msw/server';
 import { renderApp } from '@/test/render';
 
@@ -244,5 +250,87 @@ describe('LoginPage', () => {
         expect.objectContaining({ nonce: 'n-2', client_id: 'client-1' })
       );
     });
+  });
+});
+
+describe('LoginPage: blocked and ended accounts', () => {
+  it('shows the reason and the note of a blocked personal trainer after the password was accepted', async () => {
+    useLoginAnswer(
+      403,
+      problem('trainer_account_blocked', {
+        status: 403,
+        block_reason: 'deliberately_false_information',
+        block_note: 'Prescrições sem base.',
+      })
+    );
+    openLogin();
+
+    await submit();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'A tua conta está bloqueada. Motivo: Informação deliberadamente falsa. Nota: Prescrições sem base.'
+    );
+  });
+
+  it('shows only the ended-period message to a client, without reason or note', async () => {
+    useLoginAnswer(401, problem('client_access_period_ended', { status: 401 }));
+    openLogin();
+
+    await submit();
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('O prazo de acesso terminou.');
+    expect(alert).not.toHaveTextContent(/motivo|nota/i);
+  });
+
+  it('keeps a wrong password generic', async () => {
+    useLoginAnswer(401, problem('authentication_invalid_credentials', { status: 401 }));
+    openLogin();
+
+    await submit();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Email ou palavra-passe inválidos.');
+    expect(screen.getByRole('alert')).not.toHaveTextContent(/bloqueada|prazo/i);
+  });
+
+  it('sends a signed-in trainer to the sign-in page with the reason when a request is refused as blocked', async () => {
+    server.use(
+      ...restorableSession({ role: 'trainer' }),
+      http.get(`${API}/dashboard`, () =>
+        HttpResponse.json(
+          problem('trainer_account_blocked', {
+            status: 403,
+            block_reason: 'prohibited_content',
+            block_note: null,
+          }),
+          { status: 403 }
+        )
+      )
+    );
+
+    const { router } = renderApp({ initialEntries: ['/trainer'] });
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/entrar'));
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'A tua conta está bloqueada. Motivo: Conteúdo proibido.'
+    );
+  });
+
+  it('sends a signed-in client to the sign-in page with the generic message when the session ended', async () => {
+    server.use(
+      ...restorableSession({ role: 'client' }),
+      http.get(`${API}/portal/home`, () =>
+        HttpResponse.json(problem('authentication_session_ended', { status: 401 }), {
+          status: 401,
+        })
+      )
+    );
+
+    const { router } = renderApp({ initialEntries: ['/portal'] });
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/entrar'));
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'A tua sessão terminou. Entra novamente.'
+    );
   });
 });

@@ -125,14 +125,6 @@ export function planPeriodLabel(startsDate: string, endsDate: string | null): st
     : `${formatDate(startsDate)} a ${formatDate(endsDate)}`;
 }
 
-/**
- * Nome a mostrar. Um alimento bloqueado pela plataforma chega mascarado em inglês
- * (`"Unavailable food"`, `PortalContentMasking`); o cliente vê a versão PT.
- */
-export function foodDisplayName(item: { food_name: string; is_unavailable: boolean }): string {
-  return item.is_unavailable ? 'Alimento indisponível' : item.food_name;
-}
-
 /** Dose de um suplemento associado a uma refeição: "5 g", "2,5 ml". */
 export function mealSupplementDose(supplement: {
   quantity: number;

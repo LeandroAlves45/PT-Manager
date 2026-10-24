@@ -115,8 +115,10 @@ public sealed class BillingControllerTests
     [Fact]
     public async Task GetSubscription_ForATrainerWithoutSubscription_ReturnsNotFound()
     {
-        // Nenhum seed: o tenant do token não tem linha de subscrição.
-        var response = await TrainerClient(Guid.NewGuid())
+        // A conta existe, mas o tenant não tem linha de subscrição.
+        var trainerId = await AuthTestData.SeedAccountAsync(
+            _factory, $"billing-no-subscription-{Guid.NewGuid():N}@trainer.test");
+        var response = await TrainerClient(trainerId)
             .GetAsync("/api/v1/billing/subscription", Token);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
