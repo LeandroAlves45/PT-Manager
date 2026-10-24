@@ -71,7 +71,7 @@ Branch `feat/pre-sprint7-block`, base `31f9a69` (main). Instruções em `.claude
 - [x] `design-is` nos ecrãs novos; roadmap, `QualityGates.md` (`QGPRE7-*`), `01_API_ENDPOINTS.md`
 - [x] Gotcha D11 em GOTCHAS_FRONTEND; memória (`obsidian-ptmanager`, nota em `Sessions/`); graphify
 - [x] Commits (backend, frontend e docs, com o formato aprovado pelo Leandro); `.claude/SPEC.md` apagado
-- [ ] Push e merge para a `main` — **à espera da aprovação do Leandro**; depois, CI verde
+- [x] Push e merge para a `main` com aprovação do Leandro (merge `56a9e1f`); **CI #53 verde** (Frontend, Backend, Site, Contrato OpenAPI)
 
 ## Review
 - Bloco **Finalizado**: backend 3388 + 1 skip, frontend 1078 em 96 ficheiros, mutações 8/8 + 5/5, revisões sem P1/HIGH, `design-is` 22/30 REFINE, app real no Chrome.

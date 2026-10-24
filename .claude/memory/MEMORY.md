@@ -6,7 +6,7 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
-**2026-10-24: bloco pré-Sprint 7 FINALIZADO (branch `feat/pre-sprint7-block`, merge por aprovar).**
+**2026-10-24: bloco pré-Sprint 7 FINALIZADO (na `main`, merge `56a9e1f`, CI #53 verde).**
 - **RN-020:** avaliação inicial pelo cliente, com guarda 409 `initial_assessment_required` por cliente.
 - **RN-016:** véspera idempotente, com endpoint dev.
 - **RN-005:** arquivo com corte por pedido (`AccountAccessMiddleware`).
