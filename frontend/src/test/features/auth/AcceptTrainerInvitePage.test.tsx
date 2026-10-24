@@ -266,7 +266,9 @@ describe('AcceptTrainerInvitePage', () => {
     server.use(...restorableSession({ role: 'trainer' }));
     renderApp({ initialEntries: [INVITE] });
 
-    expect(await screen.findByRole('heading', { name: 'Já tens sessão iniciada' })).toHaveFocus();
+    // O foco chega num efeito depois do render: esperar por ele, não só pelo título.
+    const heading = await screen.findByRole('heading', { name: 'Já tens sessão iniciada' });
+    await waitFor(() => expect(heading).toHaveFocus());
     expect(screen.getByText('Termina a sessão para criar a conta de treinador.')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Terminar sessão' })).toBeVisible();
     expect(screen.queryByLabelText('Nome')).not.toBeInTheDocument();

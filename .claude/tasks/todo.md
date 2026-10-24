@@ -70,7 +70,8 @@ Branch `feat/pre-sprint7-block`, base `31f9a69` (main). Instruções em `.claude
 - [x] App real: passos 1–5 de «Falta fazer» no relatório 08 §6 (cliente «Teste Bloco» já criado e convidado)
 - [x] `design-is` nos ecrãs novos; roadmap, `QualityGates.md` (`QGPRE7-*`), `01_API_ENDPOINTS.md`
 - [x] Gotcha D11 em GOTCHAS_FRONTEND; memória (`obsidian-ptmanager`, nota em `Sessions/`); graphify
-- [x] Commits (backend, frontend); apagar `.claude/SPEC.md`; checklist «Finalizado»; merge só com aprovação
+- [x] Commits (backend, frontend e docs, com o formato aprovado pelo Leandro); `.claude/SPEC.md` apagado
+- [ ] Push e merge para a `main` — **à espera da aprovação do Leandro**; depois, CI verde
 
 ## Review
 - Bloco **Finalizado**: backend 3388 + 1 skip, frontend 1078 em 96 ficheiros, mutações 8/8 + 5/5, revisões sem P1/HIGH, `design-is` 22/30 REFINE, app real no Chrome.
