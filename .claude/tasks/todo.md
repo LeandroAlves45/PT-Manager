@@ -1,61 +1,78 @@
-# TODO: Sprint 6GB · fase do Cliente (6GB-CL) — **Finalizado** (2026-10-22)
+# TODO: Bloco pré-Sprint 7 (fecho da 6GB) — **Finalizado** (2026-10-24)
 
-Plano aprovado a 2026-10-22 em `~/.claude/plans/dapper-swimming-dove.md`. Decisões U68–U83.
-Branch `feat/6gb-client`, base `8a65094` (main). Resumo em
-`docs/blueprints/frontend-files/sprint_6/sprint_6G/sprint_6GB/04_plano_6GB_cliente.md`; fecho em `05_relatorio_fecho_6GB_cliente.md`.
+Plano aprovado a 2026-10-22 em `~/.claude/plans/luminous-beaming-wirth.md`. Decisões U84–U99.
+Branch `feat/pre-sprint7-block`, base `31f9a69` (main). Instruções em `.claude/SPEC.md`. Resumo em
+`docs/blueprints/frontend-files/sprint_6/sprint_6G/sprint_6GB/06_plano_bloco_pre_sprint7.md`; fecho em
+`07_relatorio_fecho_bloco_pre_sprint7.md`.
 
-## 0. Arranque (CL-0)
-- [x] Prints do cliente, `docs_about_app`, `sprint_6G/00` §4.3, gotchas e lições lidos
-- [x] Decisões U68–U83 com o Leandro
-- [x] Branch, `todo.md`, `SPEC.md`, `04_plano_6GB_cliente.md`
-- [x] Baseline: backend 3266 + 1 skip; frontend 900/900 em 85 ficheiros
+## F0. Arranque
+- [x] `docs_about_app`, gotchas, lições e plano da 6GB-CL lidos; código mapeado (3 agentes Sonnet)
+- [x] Decisões U84–U99 com o Leandro
+- [x] Branch, `todo.md`, `SPEC.md`, `06_plano_bloco_pre_sprint7.md`
+- [x] Baseline: backend 3298 + 1 skip; frontend 952/952 em 88 ficheiros
 
-## 1. Backend (CL-1) — `7ae35dd`
-- [x] B1 plano alimentar escolhido: `Client.SelectedMealPlanId` + migration `AddClientSelectedMealPlan` (aplicada, `Down` verificado)
-- [x] B1 `GET /portal/my-meal-plans` e `PUT /portal/my-meal-plans/selection`
-- [x] B1 `my-nutrition` e home leem a escolha; arquivar (e reativar) limpa a escolha
-- [x] B2 `GET /portal/my-workout/days` e `GET /portal/my-workout/day?date=`
-- [x] B2 notas das séries e nota de conclusão no treino do portal
-- [x] B3 perfil: nome obrigatório, sem email de contacto (telefone continua obrigatório, U83)
-- [x] B4 testes unitários e funcionais, `schema.d.ts`, snapshot da superfície
+## F1. RN-020 avaliação inicial pelo cliente
+- [x] Domain: `SubmittedByClient`, `ReviewedAt`, `MarkReviewed`; migration
+- [x] Portal: `GET/POST /portal/my-initial-assessment`; `initial_assessment_pending` no Início
+- [x] Guarda `initial_assessment_required` em planos de treino, alimentares, atribuições e check-ins
+- [x] Trainer: rever, painel «Avaliações iniciais por rever», `has_initial_assessment`, correção de arquivado recusada
+- [x] Testes backend (helper que semeia a avaliação nos testes existentes)
+- [x] Frontend: esquema partilhado, cartão + página em 3 passos, avisos nas 4 páginas, painel e botão rever
+- [x] Testes frontend, commit
 
-## 2. Fundações do frontend (CL-2) — `5b4e38f`
-- [x] Rotas lazy do portal + pré-carregamento nos testes
-- [x] `useDocumentTitle` partilhado no portal
-- [x] Cabeçalho: nome da marca em 2 linhas, sem cortes
-- [x] Coluna larga no desktop, fundo com a cor da marca
-- [x] Tokens de secção (AA, claro/escuro) + cópia para `site/`
-- [x] `PortalCard` partilhado
-- [x] Textos «Avaliações» no portal
+## F2. RN-016 email da véspera
+- [x] Scanner na ativação do dispatcher; chave idempotente por sessão, dia e destinatário
+- [x] Template do personal trainer; gateway com as duas chaves; revalidação e estado `skipped`
+- [x] Lembretes sem exigir subscrição ativa; endpoint só em Development
+- [x] Testes backend (11 da véspera); commit no fecho
 
-## 3. Páginas (CL-3) — `5b4e38f`
-- [x] Treino: progresso, filtro de dia, plano recolhível
-- [x] Nutrição: lista + escolha, barras das macros, chips, «Indisponível», sem link de tomas
-- [x] Perfil, Avaliações e Suplementos: nome sem email, «Dados guardados», avaliação já não pendente, motivo do bloqueio
-- [x] Início: cores por secção, progresso, «Escolhe o teu plano»
-- [x] MSW handlers e fixtures
+## F3. RN-005 resto do arquivo
+- [x] Arquivar: sessões futuras canceladas, saldo consumido (`ForfeitedAt`), convites anulados, refresh revogados
+- [x] Listas ativas sem arquivados; ficha só de leitura
+- [x] Middleware de acesso por pedido; `authentication_session_ended`
+- [x] Frontend: diálogo, corte de sessão; testes, commit
 
-## 4. Verificação (CL-4) — `5a63fc4`, `16cd359`
-- [x] Vitest 952/952 (88 ficheiros), lint, typecheck, Prettier, build, `api:types:check`; `site/` 44/44
-- [x] Backend 3298 + 1 skip, 0 avisos, format limpo
-- [x] Mutações 14/14 mortas
-- [x] Browser: arnês MSW (375/1440, claro e escuro) + app real no Chrome (Marta e João)
-- [x] Gates `QG6F4-ISOLAMENTO-UI-001` e `QG6F-GATE-001` passam; `QG6F4-UI-001` e `QG6F4-AVATAR-001` ficam com o Leandro
-- [x] `code-review-leandro` (0 altas, 3 médias corrigidas), `security-reviewer` (sem achados)
-- [x] `design-is` 21/30 REFINE (o `h1` em falta nos estados de exceção foi corrigido em `44e70cb`)
+## F4. RN-014 suplementos do plano e tomas
+- [x] `MealPlanSupplement`, `ClientMealPlanSupplementIntake`, migration
+- [x] Editor do personal trainer; portal com duas secções, tomas por plano, «Registar tomas» na refeição
+- [x] Testes, commit
 
-## 5. Fecho (CL-4)
-- [x] Relatório `05_relatorio_fecho_6GB_cliente.md`
-- [x] `docs_about_app` atualizado (anunciado antes)
-- [x] `sprint_6G/00` §4.3, `QG6GB-LISTA-001`, `QG6GB-GATE-001`
-- [x] Gotchas e lições
-- [x] Graphify regenerado (15 535 nós, `bc7fb28`)
-- [x] Memória: `ACTIVE.md`, `Sessions/`, `MEMORY.md`
-- [x] Commit da documentação; `SPEC.md` apagado; checklist «Finalizado»
+## F5. RN-013 + RN-018 bloqueio e moderação
+- [x] Nota livre; bloqueio de suplementos; bloqueio de treinadores com 7 dias
+- [x] Login e corte por pedido com motivo e nota; prazo terminado
+- [x] Item bloqueado sai do portal e dos totais; desbloquear tira-o do plano
+- [x] Backend: emails (outbox), painel, ficha, aviso no Início; migration aplicada à dev
+- [x] Frontend: emails (4), painel «Contas bloqueadas», ficha do superuser, aviso no Início
+- [x] Testes, commit
+
+## F6. Verificação e fecho
+- [x] Suites completas, lint, typecheck, build, contrato (`api:types:check` verde)
+- [x] Mutações
+- [x] Browser (arnês MSW e app real)
+- [x] `code-review-leandro`, `security-reviewer`, `design-is`
+- [x] Relatório 08, `docs_about_app` (anunciado antes), roadmap, gates, gotchas, lições
+- [x] Graphify, memória, `SPEC.md` apagado, checklist «Finalizado»
+
+## Estado a 2026-10-24
+- Backend F1–F5 completo: 3380 testes verdes + 1 skip, `dotnet format` limpo, 5 migrations aplicadas à dev, snapshot da API regenerado (+12 rotas), `schema.d.ts` regenerado.
+- Defeito apanhado pelos testes de ponta a ponta: desbloquear no contexto administrativo não tirava o item dos planos (filtros globais sem tenant). Corrigido, registado em GOTCHAS_BACKEND.
+- Commits por fase não separáveis (as fases tocam os mesmos ficheiros): um commit no fecho, com a lista por fase na mensagem.
+- Frontend: fatia do portal e da autenticação feita e verde (1010/1010 em 91 ficheiros, lint e typecheck limpos). Falta a fatia do personal trainer e do admin.
+- Estado e o que falta: `docs/blueprints/.../sprint_6GB/07_estado_bloco_pre_sprint7.md`; prompt para a conversa nova em `07b_prompt_continuacao_bloco_pre_sprint7.md`. O relatório de fecho passa a ser o 08.
+
+## Fecho a 2026-10-24
+- [x] Frontend do personal trainer e do admin (agentes A, B, C), diálogo de arquivar
+- [x] Revisões (code-review 3 P2 + P3, security 3 LOW) corrigidas; mutações backend 8/8, frontend 5/5
+- [x] Suites: backend 3388 + 1 skip, format limpo; frontend 1078/1078 em 96 ficheiros, lint, typecheck, build
+- [x] Arnês MSW (ficheiros temporários apagados); `docs_about_app` atualizado (aprovado); relatório 08 escrito
+- [x] Decisões: commits backend + frontend; exercício bloqueado com histórico fica para plano novo (ponto em aberto)
+- [x] Compilar e testar a correção D10 (`AccountAccessTemplateRenderer` + 3 testes) e a D11 (`InitialAssessmentWizard`) — parar a API antes
+- [x] App real: passos 1–5 de «Falta fazer» no relatório 08 §6 (cliente «Teste Bloco» já criado e convidado)
+- [x] `design-is` nos ecrãs novos; roadmap, `QualityGates.md` (`QGPRE7-*`), `01_API_ENDPOINTS.md`
+- [x] Gotcha D11 em GOTCHAS_FRONTEND; memória (`obsidian-ptmanager`, nota em `Sessions/`); graphify
+- [x] Commits (backend, frontend); apagar `.claude/SPEC.md`; checklist «Finalizado»; merge só com aprovação
 
 ## Review
-- Entregue: U68–U83 (portal por secções e cores, escolha do plano alimentar, filtro de dia, perfil
-  com nome, «Avaliação periódica», rotas lazy, marca no separador e no cabeçalho).
-- Defeitos encontrados e corrigidos: 4 da implementação (testes de migrations, mutação mal apontada,
-  lint do perfil, foco só no jsdom) e 7 da revisão. Detalhe no §3 do relatório.
-- Pendente documentado (RN-014): suplementos fora de refeição e tomas por plano, para o bloco seguinte.
+- Bloco **Finalizado**: backend 3388 + 1 skip, frontend 1078 em 96 ficheiros, mutações 8/8 + 5/5, revisões sem P1/HIGH, `design-is` 22/30 REFINE, app real no Chrome.
+- Defeitos D1–D11 no relatório 08 §3 e §6; pontos em aberto no §8.
+- Commits: backend, frontend e `docs(claude)` na branch `feat/pre-sprint7-block`; merge só com aprovação do Leandro.

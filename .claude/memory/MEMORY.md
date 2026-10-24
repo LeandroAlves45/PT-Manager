@@ -6,6 +6,18 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-24: bloco pré-Sprint 7 FINALIZADO (branch `feat/pre-sprint7-block`, merge por aprovar).**
+- **RN-020:** avaliação inicial pelo cliente, com guarda 409 `initial_assessment_required` por cliente.
+- **RN-016:** véspera idempotente, com endpoint dev.
+- **RN-005:** arquivo com corte por pedido (`AccountAccessMiddleware`).
+- **RN-014:** suplementos do plano fora das refeições e tomas por plano.
+- **RN-013/018:**
+  - bloqueio de treinadores (200 com a ficha) e de suplementos (204), nota livre, 7 dias para os clientes;
+  - item bloqueado fora do portal e dos totais;
+  - painel «Contas bloqueadas».
+- **Números:** backend 3388 + 1 skip, frontend 1078/1078, mutações 8/8 + 5/5, `design-is` 22/30, app real no Chrome.
+- **Defeitos só vistos no browser:** D11, o wizard desmontado pelo refetch; D10, «de o seu» nos emails. Ver `Sessions/2026-10-24-bloco-pre-sprint7-fecho.md`.
+
 **2026-10-22: Sprint 6GB, fase do cliente FINALIZADA e Sprint 6 FECHADO (na `main`, merge `11cd70d`, CI #51 verde).**
 - U68–U83:
   - escolha do plano alimentar na conta (`Client.SelectedMealPlanId`; arquivar e reativar limpam a escolha);

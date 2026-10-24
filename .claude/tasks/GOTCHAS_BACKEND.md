@@ -219,3 +219,25 @@ o PostgreSQL antes de corrigir:
   LMT; no Linux (Render/CI) tem, e o comportamento difere.
 - Depois do reinício da máquina o Docker Desktop fica parado e o daemon responde 500 enquanto arranca:
   esperar `docker ps` listar o contentor antes dos testes funcionais.
+
+## 2026-10-24 — Bloco pré-Sprint 7 (RN-013)
+
+- `ExecuteDelete`/`ExecuteUpdate` num store administrativo (superuser, sem tenant) sobre entidades
+  com Global Query Filter não afetam nenhuma linha e não dão erro: o filtro esconde tudo. Desbloquear
+  um alimento não o tirava dos planos; só um teste funcional de ponta a ponta o mostrou.
+  **Regra:** em escritas sem tenant, `IgnoreQueryFilters()` explícito em cada query (também nas
+  subconsultas `Any`), com o filtro pelo id do recurso.
+- Testes de login com um personal trainer do `TrainerTenantSeeder`: o email não está confirmado e a
+  palavra-passe é opaca, por isso a entrada falha com 401 genérico. Confirmar o email e gravar o hash
+  real com `IPasswordHasher<User>` antes de testar a entrada.
+- Heredocs longos no Git Bash voltam a partir com aspas e `$` em código C#: escrever o script com a
+  ferramenta Write e corrê-lo com node (o `python3` do Git Bash é o atalho da Store e encrava à
+  espera do stdin).
+- Template de email com `Replace` em cadeia: o valor inserido por um placeholder volta a ser lido
+  pelos seguintes. Um nome escrito «{{x}}» fazia a verificação de placeholders por resolver lançar e
+  o lembrete falhava sempre. **Regra:** substituição numa só passagem (`Regex.Replace` com avaliador
+  sobre o template), com teste de um nome igual a um placeholder.
+- Campo de texto livre que passa a ser escrito pelo cliente (avaliação inicial no portal): rever o
+  validador partilhado, que vinha só do personal trainer. `Goals` e `MedicalConditions` não tinham
+  máximo; ficaram com 2000, como os textos da nutrição (`goals_too_long`,
+  `medical_conditions_too_long`).

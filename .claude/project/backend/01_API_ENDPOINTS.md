@@ -344,6 +344,38 @@
 | `GET` | `/portal/my-supplements` | client | q:page_number?, q:page_size? | `global` | paginado |
 | `GET` | `/portal/my-supplements/{assignmentId}` | client | p:assignmentId! | `global` |  |
 
+<a id="pre-sprint7"></a>
+
+## Bloco pré-Sprint 7 (2026-10-24)
+
+Rotas novas do bloco (snapshot `docs/api/api-surface.v1.txt` regenerado). Respostas de erro e corpo
+em `frontend/src/shared/api/schema.d.ts`.
+
+| Método | Rota | Role | Parâmetros | Rate limit | Notas |
+|---|---|---|---|---|---|
+| `GET` | `/portal/my-initial-assessment` | client | — | `global` | só `{ pending }`, nunca os dados; `[SensitiveResponse]` |
+| `POST` | `/portal/my-initial-assessment` | client | — | `global` | 204; 409 `initial_assessment_already_exists` |
+| `GET` | `/portal/my-plan-supplements/today` | client | — | `global` | só o plano escolhido; 404 `portal_nutrition_plan_not_selected` |
+| `PUT` | `/portal/my-plan-supplements/{itemId}/intakes/today` | client | p:itemId! | `global` | toma de hoje no fuso do personal trainer |
+| `DELETE` | `/portal/my-plan-supplements/{itemId}/intakes/today` | client | p:itemId! | `global` | desmarca a toma de hoje |
+| `GET` | `/initial-assessments/pending-review` | trainer | q:page_number?, q:page_size? | `global` | paginado; só as preenchidas pelo cliente e por rever |
+| `POST` | `/initial-assessments/{assessmentId}/review` | trainer | p:assessmentId! | `global` | idempotente; 409 `initial_assessment_not_reviewable` |
+| `POST` | `/admin/trainers/{trainerId}/access-block` | superuser (contexto administrativo) | p:trainerId!; body `{ reason_code, note? }` | `admin_moderation` | **200 com a ficha**; auditoria; emails pelo outbox |
+| `DELETE` | `/admin/trainers/{trainerId}/access-block` | superuser (contexto administrativo) | p:trainerId! | `admin_moderation` | **200 com a ficha**; auditoria; emails de acesso reposto |
+| `GET` | `/admin/content-moderation/supplements` | superuser (contexto administrativo) | q:status?, q:search?, q:page_number?, q:page_size? | `admin_moderation` | paginado |
+| `POST` | `/admin/content-moderation/supplements/{supplementId}/block` | superuser (contexto administrativo) | p:supplementId!; body `{ reason_code, note? }` | `admin_moderation` | **204**; auditoria |
+| `POST` | `/admin/content-moderation/supplements/{supplementId}/unblock` | superuser (contexto administrativo) | p:supplementId! | `admin_moderation` | **204**; tira o suplemento dos planos |
+
+Mudanças em rotas existentes: `block` de alimentos e exercícios aceita `note` (até 500);
+`MealPlanStructureRequest.plan_supplements` é obrigatório; criar plano de treino, plano alimentar,
+atribuição de suplemento ou avaliação periódica sem avaliação inicial dá 409
+`initial_assessment_required`. Todos os pedidos autenticados passam pelo `AccountAccessMiddleware`:
+401 `authentication_session_ended`, 403 `trainer_account_blocked` (extensões `block_reason`,
+`block_note`) ou 401 `client_access_period_ended`.
+
+Em Development há ainda `POST /api/internal/dev/session-reminders/run` (só loopback, fora do
+OpenAPI): corre o scan da véspera e a ativação do dispatcher.
+
 <a id="internal"></a>
 
 ## Interno (jobs)

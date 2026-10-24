@@ -413,3 +413,16 @@ Lições capturadas depois de correções do utilizador.
   o Leandro decidiu (U83) e o doc foi corrigido.
 - **Heredocs longos no Bash do Windows partem** (`unexpected EOF`): scripts Python ou TS em ficheiro
   (Write) e corridos depois.
+
+## 2026-10-24 — bloco pré-Sprint 7 (fecho)
+
+- **`python3` no Git Bash é o atalho da Microsoft Store**: fica à espera do stdin e o processo
+  encrava sem saída (dois agentes deixaram shells pendurados). Scripts de edição em Node, escritos
+  com Write e corridos com `node <ficheiro>`; nunca `python3 - <<EOF`.
+- **Crases dentro de `node -e "..."` no Bash** são substituição de comandos: o JSDoc perdeu o
+  `` `true` ``. Texto com crases vai por Edit ou por script em ficheiro.
+- **As duas revisões a frio apanharam o que os testes não viam**: corte de acesso na resposta
+  repetida, página vazia na lista paginada, texto do arquivo que contradizia a RN-005, texto livre do
+  cliente sem máximo e placeholder no nome que partia o email da véspera.
+- **Mutações com cópia e hash dos ficheiros-alvo antes de correr**: o trabalho não estava commitado,
+  por isso `git checkout` não servia para repor.
