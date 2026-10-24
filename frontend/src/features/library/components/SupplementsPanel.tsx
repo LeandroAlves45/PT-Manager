@@ -13,7 +13,7 @@ const COLUMNS: readonly LibraryColumn<Supplement>[] = [
   { header: 'Quando tomar', cell: (supplement) => supplement.timing ?? '—' },
 ];
 
-/** Separador "Suplementos": globais e privados (sem moderação de plataforma). */
+/** Separador "Suplementos": globais e privados, com o estado da moderação da plataforma. */
 export function SupplementsPanel({ controls }: { controls: LibraryControls }) {
   const { filters, filtered } = useLibraryFilters(controls);
   const query = useSupplementListQuery(filters);

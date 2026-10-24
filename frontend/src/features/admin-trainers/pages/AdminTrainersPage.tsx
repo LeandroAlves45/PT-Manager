@@ -9,6 +9,10 @@ import {
   type PendingInvitation,
 } from '@/features/admin-trainers/api/trainers';
 import {
+  AccessBlockDialog,
+  type AccessBlockTarget,
+} from '@/features/admin-trainers/components/AccessBlockDialog';
+import {
   ExemptionDialog,
   type ExemptionTarget,
 } from '@/features/admin-trainers/components/ExemptionDialog';
@@ -21,7 +25,7 @@ import { PageHeader } from '@/shared/components/PageHeader';
 import { Button } from '@/shared/components/ui/button';
 
 /**
- * Treinadores (superuser): procurar por email, isentar de pagamento e convidar.
+ * Treinadores (superuser): procurar por email, isentar de pagamento, bloquear e convidar.
  *
  * A página é dona do resultado da procura e dos dois diálogos de confirmação, porque a mesma
  * ação (tirar a isenção, anular um convite) se pede de três sítios: o resultado da procura e
@@ -30,11 +34,25 @@ import { Button } from '@/shared/components/ui/button';
 export function AdminTrainersPage() {
   const [outcome, setOutcome] = useState<LookupOutcome | null>(null);
   const [exemption, setExemption] = useState<ExemptionTarget | null>(null);
+  const [accessBlock, setAccessBlock] = useState<AccessBlockTarget | null>(null);
   const [revoking, setRevoking] = useState<PendingInvitation | null>(null);
   const send = useSendTrainerInvitationMutation();
 
   function openExemption(trainer: AdminTrainer): void {
     setExemption({ trainer, exempt: !trainer.is_exempt_from_billing });
+  }
+
+  function openAccessBlock(trainer: AdminTrainer): void {
+    setAccessBlock({ trainer, block: trainer.access_block === null });
+  }
+
+  /** Troca a ficha mostrada pela devolvida pelo servidor, se ainda for a do mesmo treinador. */
+  function replaceFound(trainer: AdminTrainer): void {
+    setOutcome((current) =>
+      current?.status === 'found' && current.trainer.trainer_id === trainer.trainer_id
+        ? { status: 'found', trainer }
+        : current
+    );
   }
 
   async function resend(invitation: PendingInvitation): Promise<void> {
@@ -67,6 +85,7 @@ export function AdminTrainersPage() {
         outcome={outcome}
         onOutcome={setOutcome}
         onToggleExemption={openExemption}
+        onToggleBlock={openAccessBlock}
         onResend={(invitation) => void resend(invitation)}
         onRevoke={setRevoking}
         resendBusy={send.isPending}
@@ -83,13 +102,13 @@ export function AdminTrainersPage() {
       <ExemptionDialog
         target={exemption}
         onClose={() => setExemption(null)}
-        onDone={(trainer) =>
-          setOutcome((current) =>
-            current?.status === 'found' && current.trainer.trainer_id === trainer.trainer_id
-              ? { status: 'found', trainer }
-              : current
-          )
-        }
+        onDone={replaceFound}
+      />
+
+      <AccessBlockDialog
+        target={accessBlock}
+        onClose={() => setAccessBlock(null)}
+        onDone={replaceFound}
       />
 
       <RevokeInvitationDialog

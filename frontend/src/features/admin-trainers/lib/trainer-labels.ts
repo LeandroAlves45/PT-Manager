@@ -56,3 +56,24 @@ export function invitationValidityText(expiresAt: string): string {
   const when = formatLisbonDateTime(expiresAt);
   return isInvitationExpired(expiresAt) ? `Expirou a ${when}` : `Válido até ${when}`;
 }
+
+export const TRAINER_GONE_MESSAGE = 'Este treinador já não existe.';
+export const ACCESS_BLOCK_CONFLICT_MESSAGE = 'A conta foi alterada entretanto. Tenta novamente.';
+export const ACCESS_BLOCK_REASON_MESSAGE = 'Escolhe um dos motivos da lista.';
+export const ACCESS_BLOCK_NOTE_MESSAGE = 'A nota não pode ter mais de 500 caracteres.';
+
+/**
+ * Mensagem de uma falha ao bloquear ou levantar o bloqueio de uma conta.
+ *
+ * O 400 de validação traz o código real em `errors[0]` (o `title` é sempre
+ * `validation_failed`); os restantes códigos chegam no `title`.
+ */
+export function accessBlockFailureMessage(error: unknown): string {
+  if (!isApiProblem(error)) return GENERIC_ERROR_MESSAGE;
+  const code = error.fieldErrors[0]?.code ?? error.code;
+  if (code === 'admin_trainer_not_found') return TRAINER_GONE_MESSAGE;
+  if (code === 'admin_trainer_concurrency_conflict') return ACCESS_BLOCK_CONFLICT_MESSAGE;
+  if (code === 'platform_enforcement_reason_invalid') return ACCESS_BLOCK_REASON_MESSAGE;
+  if (code === 'platform_enforcement_note_too_long') return ACCESS_BLOCK_NOTE_MESSAGE;
+  return GENERIC_ERROR_MESSAGE;
+}

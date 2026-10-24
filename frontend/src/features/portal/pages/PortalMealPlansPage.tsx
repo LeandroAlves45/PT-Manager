@@ -1,6 +1,7 @@
 import { UtensilsCrossed } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 
+import { WithInitialAssessmentNotice } from '@/features/portal/components/InitialAssessmentMissingNotice';
 import { usePortalMealPlansQuery } from '@/features/portal/api/portal';
 import { MealPlanList } from '@/features/portal/components/MealPlanList';
 import { EmptyState } from '@/shared/components/EmptyState';
@@ -11,7 +12,7 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
  * Planos alimentares ativos (`/portal/nutrition/planos`): o cliente vê todos e escolhe qual
  * seguir. Escolher grava na conta e volta ao plano em `/portal/nutrition`.
  */
-export function PortalMealPlansPage() {
+function PortalMealPlansPageContent() {
   const query = usePortalMealPlansQuery();
   const navigate = useNavigate();
 
@@ -61,5 +62,14 @@ export function PortalMealPlansPage() {
         Voltar à nutrição
       </Link>
     </section>
+  );
+}
+
+/** Planos alimentares do portal, com o aviso de avaliação inicial em falta acima do conteúdo. */
+export function PortalMealPlansPage() {
+  return (
+    <WithInitialAssessmentNotice>
+      <PortalMealPlansPageContent />
+    </WithInitialAssessmentNotice>
   );
 }

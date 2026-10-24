@@ -1,13 +1,8 @@
 import { MacroChips } from '@/features/portal/components/MacroChips';
+import { MealSupplementList } from '@/features/portal/components/MealSupplementList';
 import { PortalCard } from '@/features/portal/components/PortalCard';
-import {
-  foodDisplayName,
-  formatGrams,
-  formatKcal,
-  mealSupplementDose,
-} from '@/features/portal/lib/nutrition';
+import { formatGrams, formatKcal } from '@/features/portal/lib/nutrition';
 import type { components } from '@/shared/api/schema';
-import { Badge } from '@/shared/components/ui/badge';
 
 type Meal = components['schemas']['MyMealResponse'];
 
@@ -16,7 +11,7 @@ type Meal = components['schemas']['MyMealResponse'];
  *
  * Cada alimento mostra gramas e kcal; proteína, hidratos e gordura aparecem em chips só no
  * total da refeição. `meal_type` é texto livre do personal trainer e mostra-se tal como veio.
- * Os suplementos da refeição são informação do plano, para ler.
+ * Os suplementos da refeição são informação do plano; as tomas registam-se na página de suplementos.
  */
 export function MealCard({ meal }: { meal: Meal }) {
   return (
@@ -43,7 +38,7 @@ export function MealCard({ meal }: { meal: Meal }) {
                 key={`${item.order_number}-${index}`}
                 className="flex justify-between gap-3 py-2 text-sm"
               >
-                <span className="min-w-0 wrap-break-word">{foodDisplayName(item)}</span>
+                <span className="min-w-0 wrap-break-word">{item.food_name}</span>
                 <span className="text-muted-foreground shrink-0 tabular-nums">
                   {formatGrams(item.quantity_in_grams)} · {formatKcal(item.contribution.kcal)}
                 </span>
@@ -52,32 +47,7 @@ export function MealCard({ meal }: { meal: Meal }) {
           </ul>
         )}
 
-        {meal.supplements.length > 0 && (
-          <div className="space-y-1 pt-2">
-            <h3 className="text-sm font-medium">Suplementos</h3>
-            <ul className="space-y-1 text-sm">
-              {meal.supplements.map((supplement, index) => (
-                <li key={`${supplement.order_number}-${index}`} className="space-y-0.5">
-                  <p className="flex flex-wrap items-center gap-2">
-                    <span className="min-w-0 wrap-break-word">
-                      {supplement.supplement_name} · {mealSupplementDose(supplement)}
-                    </span>
-                    {supplement.is_unavailable && <Badge variant="secondary">Indisponível</Badge>}
-                  </p>
-                  {supplement.is_unavailable && (
-                    <p className="text-muted-foreground">
-                      Este suplemento já não está disponível. Confirma com o teu personal trainer o
-                      que fazer.
-                    </p>
-                  )}
-                  {supplement.notes !== null && (
-                    <p className="text-muted-foreground">{supplement.notes}</p>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <MealSupplementList title="Suplementos" supplements={meal.supplements} />
       </PortalCard>
     </article>
   );

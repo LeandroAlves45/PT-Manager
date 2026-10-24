@@ -2,6 +2,7 @@ import { CalendarDays, CalendarX, CheckCircle2, Moon } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 
+import { InitialAssessmentMissingNotice } from '@/features/portal/components/InitialAssessmentMissingNotice';
 import { usePortalWorkoutDayQuery, usePortalWorkoutTodayQuery } from '@/features/portal/api/portal';
 import { CompleteWorkoutDialog } from '@/features/portal/components/CompleteWorkoutDialog';
 import { PastWorkoutExercise } from '@/features/portal/components/PastWorkoutExercise';
@@ -69,6 +70,7 @@ export function PortalTodayPage() {
 
   return (
     <section className="mx-auto w-full max-w-xl space-y-4">
+      <InitialAssessmentMissingNotice />
       <WorkoutDayPicker selected={selected} onSelect={select} />
       {selected === null ? <TodayWorkout /> : <PastWorkout date={selected} />}
     </section>

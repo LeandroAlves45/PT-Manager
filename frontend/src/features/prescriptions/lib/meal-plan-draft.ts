@@ -1,6 +1,7 @@
 import { useOutletContext } from 'react-router';
 
 import type { ClientChoice } from '@/features/clients';
+import type { BlockedItems } from '@/features/prescriptions/lib/blocked-items';
 import type {
   Calculation,
   CalculationResult,
@@ -69,6 +70,8 @@ export interface MealPlanEditorContext {
   readonly names: Readonly<Record<string, string>>;
   /** Regista o nome de um alimento ou suplemento acabado de escolher. */
   readonly nameItem: (id: string, name: string) => void;
+  /** Linhas do plano gravado cujo item a moderação bloqueou: ficam fora dos totais. */
+  readonly blocked: BlockedItems;
 
   /** Há preview do cálculo atual (ou o snapshot gravado continua válido). */
   readonly hasValidTargets: boolean;

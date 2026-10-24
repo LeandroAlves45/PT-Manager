@@ -9,6 +9,7 @@ const MESSAGES: Readonly<Record<string, string>> = {
   meal_plan_active_conflict: 'O cliente já tem um plano alimentar ativo.',
   supplement_assignment_already_exists: 'Este suplemento já foi atribuído ao cliente.',
   supplement_assignment_inactive: 'Reativa a atribuição antes de a editar.',
+  initial_assessment_required: 'Este cliente ainda não tem avaliação inicial.',
   rate_limit_exceeded: 'Foram feitos demasiados pedidos. Aguarda e tenta novamente.',
 };
 

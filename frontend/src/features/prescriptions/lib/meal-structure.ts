@@ -25,5 +25,14 @@ export function mealStructureFromDetails(
         order_number: item.order_number,
       })),
     })),
+    // O plano carregado devolve os suplementos fora das refeições; o pedido repete-os
+    // para que gravar o plano não os apague.
+    plan_supplements: details.plan_supplements.map((item) => ({
+      id: item.id,
+      supplement_id: item.supplement_id,
+      quantity: item.quantity,
+      notes: item.notes,
+      order_number: item.order_number,
+    })),
   };
 }

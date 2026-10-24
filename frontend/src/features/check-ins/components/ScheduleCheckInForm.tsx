@@ -62,6 +62,7 @@ const CONFLICT_FIELDS: Readonly<Record<string, keyof ScheduleValues>> = {
   check_in_date_not_allowed: 'check_in_date',
   check_in_cannot_be_rescheduled: 'check_in_date',
   assessment_client_inactive: 'client',
+  initial_assessment_required: 'client',
 };
 
 /**

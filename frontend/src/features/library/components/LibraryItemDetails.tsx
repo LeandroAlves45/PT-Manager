@@ -4,9 +4,16 @@ import { LibraryItemBadges } from '@/features/library/components/LibraryPanel';
 import type { LibraryItem } from '@/features/library/lib/items';
 import { platformEnforcementReasonLabel } from '@/shared/lib/platformEnforcement';
 
+/** Nota do bloqueio em frase (« Nota: …»), ou `''` quando não há nota. */
+function enforcementNote(item: LibraryItem): string {
+  const note = item.platform_enforcement_note?.trim() ?? '';
+  if (note === '') return '';
+  return /[.!?…]$/.test(note) ? ` Nota: ${note}` : ` Nota: ${note}.`;
+}
+
 /**
  * Leitura de um item que não se edita: global (só da plataforma), arquivado (reativa-se na
- * lista) ou bloqueado pela moderação (com o motivo).
+ * lista) ou bloqueado pela moderação (com o motivo e a nota do superuser, quando existe).
  *
  * @param rows Campos do item, por ordem; um valor vazio aparece como "—".
  * @param children Conteúdo extra no fim (o vídeo do exercício, em modo de leitura).
@@ -16,13 +23,13 @@ export function LibraryItemDetails({
   rows,
   children,
 }: {
-  item: LibraryItem & { readonly platform_enforcement_reason?: string | null };
+  item: LibraryItem;
   rows: readonly { readonly label: string; readonly value: ReactNode }[];
   children?: ReactNode;
 }) {
   return (
     <div className="space-y-4">
-      <LibraryItemBadges item={item} />
+      <LibraryItemBadges item={item} withEnforcementDetail={false} />
       {item.scope === 'global' ? (
         <p className="text-muted-foreground text-sm">
           Item global da plataforma: podes usá-lo nos planos, mas não o podes editar.
@@ -30,8 +37,8 @@ export function LibraryItemDetails({
       ) : item.platform_enforcement_status === 'blocked' ? (
         <p role="note" className="text-destructive text-sm">
           {`Bloqueado pela moderação da plataforma. Motivo: ${platformEnforcementReasonLabel(
-            item.platform_enforcement_reason ?? null
-          )}. Enquanto estiver bloqueado, não o podes editar.`}
+            item.platform_enforcement_reason
+          )}.${enforcementNote(item)} Enquanto estiver bloqueado, não o podes editar.`}
         </p>
       ) : (
         !item.is_active && (

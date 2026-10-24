@@ -13,6 +13,8 @@ import {
 } from '@/shared/api/session';
 import { publishSessionInvalidated } from '@/shared/api/session-events';
 import { env } from '@/shared/config/env';
+import { accessCutMessage } from '@/shared/lib/accessNotices';
+import { setPendingAuthNotice } from '@/shared/lib/auth-notice';
 
 /**
  * Cliente HTTP único da aplicação.
@@ -152,6 +154,44 @@ async function carriesDomainCode(response: Response): Promise<boolean> {
   }
 }
 
+/**
+ * Se a resposta é um corte de acesso a meio da sessão, devolve o aviso para o login.
+ *
+ * Lê o corpo de um clone. Cobre `authentication_session_ended`, `trainer_account_blocked`
+ * (com motivo e nota) e `client_access_period_ended`.
+ */
+async function readAccessCutNotice(response: Response): Promise<string | null> {
+  if (response.status !== 401 && response.status !== 403) return null;
+
+  try {
+    const body = (await response.clone().json()) as Record<string, unknown> | null;
+    if (typeof body?.title !== 'string') return null;
+
+    const reason = typeof body.block_reason === 'string' ? body.block_reason : null;
+    const note = typeof body.block_note === 'string' ? body.block_note : null;
+    return accessCutMessage(body.title, reason, note);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Aplica o corte de acesso: limpa a sessão sem renovar e deixa o aviso para o login.
+ * Devolve `true` quando a resposta era um corte. Sem sessão (um login falhado) não há nada a
+ * cortar: a página de entrada mostra o erro.
+ */
+async function cutIfAccessEnded(response: Response): Promise<boolean> {
+  if (getSession() === null) return false;
+
+  const notice = await readAccessCutNotice(response);
+  if (notice === null) return false;
+
+  setPendingAuthNotice(notice);
+  clearSession();
+  publishSessionInvalidated();
+  return true;
+}
+
 function isSessionEndpoint(url: string): boolean {
   return SESSION_ENDPOINTS.has(new URL(url, env.apiBaseUrl).pathname);
 }
@@ -177,6 +217,12 @@ const authMiddleware: Middleware = {
   },
 
   async onResponse({ request, response }) {
+    // Corte de acesso a meio da sessão.
+    if (await cutIfAccessEnded(response)) {
+      retryableRequests.delete(request);
+      return response;
+    }
+
     if (response.status !== 401 || isSessionEndpoint(request.url)) {
       retryableRequests.delete(request);
       return response;
@@ -198,7 +244,11 @@ const authMiddleware: Middleware = {
     const accessToken = getAccessToken();
     if (accessToken !== null) retry.headers.set('Authorization', `Bearer ${accessToken}`);
 
-    return fetch(retry);
+    // A repetição sai fora do middleware: o corte também tem de valer para a resposta dela
+    // (o refresh pode suceder e o pedido repetido já dar com o acesso terminado).
+    const retried = await fetch(retry);
+    await cutIfAccessEnded(retried);
+    return retried;
   },
 };
 

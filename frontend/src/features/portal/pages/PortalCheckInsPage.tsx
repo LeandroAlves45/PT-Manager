@@ -1,6 +1,7 @@
 import { CalendarCheck, CheckCircle2, ClipboardCheck, TriangleAlert } from 'lucide-react';
 import { useState } from 'react';
 
+import { InitialAssessmentMissingNotice } from '@/features/portal/components/InitialAssessmentMissingNotice';
 import { usePortalDueCheckInQuery, usePortalNextCheckInQuery } from '@/features/portal/api/portal';
 import { CheckInForm } from '@/features/portal/components/CheckInForm';
 import { PortalCard } from '@/features/portal/components/PortalCard';
@@ -59,6 +60,8 @@ export function PortalCheckInsPage() {
         )}
         <h1 className="font-display pe-1 text-3xl leading-none">Avaliação periódica</h1>
       </header>
+
+      <InitialAssessmentMissingNotice />
 
       {due.isError && (
         <StaleDataNotice onRetry={() => void due.refetch()} retrying={due.isFetching} />

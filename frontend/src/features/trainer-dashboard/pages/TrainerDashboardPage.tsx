@@ -1,6 +1,14 @@
 import { format, parseISO } from 'date-fns';
 import { pt } from 'date-fns/locale';
-import { AlertTriangle, CalendarRange, ClipboardCheck, Plus, UserPlus, Users } from 'lucide-react';
+import {
+  AlertTriangle,
+  CalendarRange,
+  ClipboardCheck,
+  ClipboardList,
+  Plus,
+  UserPlus,
+  Users,
+} from 'lucide-react';
 import { Link } from 'react-router';
 
 import { useTrainerDashboardQuery } from '@/features/trainer-dashboard/api/dashboard';
@@ -45,6 +53,7 @@ const SKELETON_SPANS = [
   'lg:col-span-5',
   'lg:col-span-4',
   'lg:col-span-3',
+  'lg:col-span-12',
 ] as const;
 
 /**
@@ -117,6 +126,8 @@ export function TrainerDashboardPage() {
   const reviewsNeedAction = reviews.total_count > 0;
   const packsNeedAction = data.packs_ending.total_count > 0;
   const plansNeedAction = plans.total_count > 0;
+  const assessments = data.initial_assessments_pending_review;
+  const assessmentsNeedAction = assessments.total_count > 0;
 
   return (
     <section className="space-y-6">
@@ -260,6 +271,50 @@ export function TrainerDashboardPage() {
         </BentoCard>
 
         <PackSalesBlock data={data.pack_sales} className="lg:col-span-3" />
+
+        <BentoCard
+          title="Avaliações iniciais por rever"
+          icon={ClipboardList}
+          highlight={assessmentsNeedAction}
+          className="lg:col-span-12"
+          action={
+            <Button
+              asChild
+              variant={assessmentsNeedAction ? 'default' : 'outline'}
+              className="min-h-11 md:min-h-9"
+            >
+              <Link to="/trainer/initial-assessments">Ver todas</Link>
+            </Button>
+          }
+        >
+          <div className="flex flex-wrap items-start gap-x-8 gap-y-3">
+            <p className="font-display text-5xl leading-none tabular-nums">
+              {formatNumber(assessments.total_count)}
+            </p>
+            {assessments.items.length === 0 ? (
+              <p className="text-muted-foreground text-sm">Nenhuma avaliação inicial por rever.</p>
+            ) : (
+              <ul className="divide-border min-w-0 flex-1 divide-y">
+                {assessments.items.map((item) => (
+                  <li
+                    key={item.assessment_id}
+                    className="flex items-center justify-between gap-3 py-2"
+                  >
+                    <Link
+                      to={`/trainer/clients/${item.client_id}/initial-assessment`}
+                      className="min-w-0 truncate text-sm font-medium hover:underline"
+                    >
+                      {item.client_name}
+                    </Link>
+                    <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
+                      {formatDate(item.submitted_at)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </BentoCard>
       </div>
     </section>
   );

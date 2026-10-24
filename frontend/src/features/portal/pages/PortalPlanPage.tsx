@@ -2,6 +2,7 @@ import { ArrowLeft, ChevronDown } from 'lucide-react';
 import { useId, useState } from 'react';
 import { Link } from 'react-router';
 
+import { WithInitialAssessmentNotice } from '@/features/portal/components/InitialAssessmentMissingNotice';
 import { usePortalPlanQuery, usePortalWorkoutTodayQuery } from '@/features/portal/api/portal';
 import { PlannedSetChips } from '@/features/portal/components/PlannedSetChips';
 import { PortalCard } from '@/features/portal/components/PortalCard';
@@ -10,7 +11,6 @@ import { StaleDataNotice } from '@/features/portal/components/StaleDataNotice';
 import { TrainingPlanError } from '@/features/portal/components/TrainingPlanError';
 import { weekdayLabel } from '@/features/portal/lib/schedule';
 import {
-  exerciseDisplayName,
   isTrainingPlanUnavailable,
   prescriptionSummary,
   workoutSize,
@@ -45,7 +45,7 @@ interface TodayInPlan {
  * Não regista nada: o registo é só no treino de hoje. O vídeo aparece onde a API diz
  * `has_ready_video`.
  */
-export function PortalPlanPage() {
+function PortalPlanPageContent() {
   const query = usePortalPlanQuery();
   const todayQuery = usePortalWorkoutTodayQuery();
 
@@ -221,7 +221,7 @@ function PlanDay({ day, isToday }: { day: TrainingDay; isToday: boolean }) {
 
           <ol className="space-y-3">
             {day.exercises.map((exercise) => {
-              const name = exerciseDisplayName(exercise);
+              const name = exercise.exercise_name;
 
               return (
                 <li key={exercise.id} className="border-border space-y-2 border-t pt-3">
@@ -257,5 +257,14 @@ function PlanDay({ day, isToday }: { day: TrainingDay; isToday: boolean }) {
         </div>
       </article>
     </PortalCard>
+  );
+}
+
+/** Plano de treino do portal, com o aviso de avaliação inicial em falta acima do conteúdo. */
+export function PortalPlanPage() {
+  return (
+    <WithInitialAssessmentNotice>
+      <PortalPlanPageContent />
+    </WithInitialAssessmentNotice>
   );
 }

@@ -1,6 +1,8 @@
 import { ClipboardCheck, Dumbbell, Pill, UtensilsCrossed } from 'lucide-react';
 
 import { usePortalHomeQuery } from '@/features/portal/api/portal';
+import { AccessEndNotice } from '@/features/portal/components/AccessEndNotice';
+import { InitialAssessmentCard } from '@/features/portal/components/InitialAssessmentCard';
 import { PortalCard } from '@/features/portal/components/PortalCard';
 import { PortalUnavailable } from '@/features/portal/components/PortalUnavailable';
 import { StaleDataNotice } from '@/features/portal/components/StaleDataNotice';
@@ -22,7 +24,8 @@ function count(value: number, singular: string, plural: string): string {
 }
 
 /**
- * Início do portal: quatro cartões a partir de `GET /portal/home`.
+ * Início do portal: quatro cartões a partir de `GET /portal/home`, precedidos do aviso de fim de
+ * acesso (quando existe) e do cartão da avaliação inicial (enquanto ela falta).
  *
  * Cada cartão tem o seu estado vazio, porque o backend devolve `null` por bloco (sem plano
  * de treino, sem plano alimentar escolhido, sem avaliação), e um só pedido alimenta o ecrã
@@ -69,6 +72,9 @@ export function PortalHomePage() {
       {query.isError && (
         <StaleDataNotice onRetry={() => void query.refetch()} retrying={query.isFetching} />
       )}
+
+      {home.access_notice !== null && <AccessEndNotice notice={home.access_notice} />}
+      {home.initial_assessment_pending && <InitialAssessmentCard />}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <WorkoutCard workout={home.workout} />

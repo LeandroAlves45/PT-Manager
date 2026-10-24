@@ -6,11 +6,16 @@ import { describe, expect, it } from 'vitest';
 import {
   CLIENT_ID,
   FOOD_ID,
+  OTHER_FOOD_ID,
   PLAN_ID,
+  PLAN_SUPPLEMENT_ID,
   SUPPLEMENT_ID,
+  blockedEnforcement,
+  blockedFoodPlan,
   catalogHandlers,
   clientHandlers,
   problem,
+  replacementFoodHandlers,
   savedCalculation,
   savedPlan,
 } from '@/test/features/prescriptions/mealPlanFixtures';
@@ -46,7 +51,8 @@ async function fillTargets() {
 async function pick(group: HTMLElement, label: string, term: string, option: string) {
   await userEvent.click(within(group).getByRole('combobox', { name: label }));
   await userEvent.type(screen.getByPlaceholderText('Pesquisar no catálogo'), term);
-  await userEvent.click(await screen.findByText(option));
+  const list = await screen.findByRole('listbox');
+  await userEvent.click(await within(list).findByText(option));
 }
 
 describe('Meal plan editor, step 1', () => {
@@ -222,6 +228,19 @@ describe('Meal plan editor, existing plan', () => {
       calculation: null,
       structure: { meals: [{ supplements: [{ supplement_id: SUPPLEMENT_ID, quantity: 5 }] }] },
     });
+    // Gravar não apaga os suplementos de fora das refeições que o plano já tinha.
+    expect(saves[0]).toMatchObject({
+      structure: {
+        plan_supplements: [
+          {
+            id: PLAN_SUPPLEMENT_ID,
+            supplement_id: SUPPLEMENT_ID,
+            quantity: 3,
+            order_number: 1,
+          },
+        ],
+      },
+    });
   });
 
   it('shows the plan page with totals, what is missing and the edit buttons', async () => {
@@ -258,5 +277,236 @@ describe('Meal plan editor, existing plan', () => {
     );
     renderApp({ initialEntries: [`/trainer/meal-plans/${PLAN_ID}`] });
     expect(await screen.findByText('Plano alimentar não encontrado')).toBeInTheDocument();
+  });
+});
+
+const EDIT_MEALS = `/trainer/meal-plans/${PLAN_ID}/edit/meals`;
+
+/** Servidor com o plano dado e um PUT que guarda os corpos recebidos. */
+function useExistingPlan(
+  plan: ReturnType<typeof savedPlan>,
+  saves: Array<Record<string, unknown>>
+) {
+  server.use(
+    ...restorableSession(),
+    ...replacementFoodHandlers(),
+    ...catalogHandlers(),
+    ...clientHandlers(),
+    http.get(API + '/meal-plans/:id', () => HttpResponse.json(plan)),
+    http.put(API + '/meal-plans/:id', async ({ request }) => {
+      saves.push(JSON.parse(await request.text()) as Record<string, unknown>);
+      return HttpResponse.json(plan);
+    })
+  );
+}
+
+describe('Meal plan editor, supplements outside the meals', () => {
+  it('adds a plan supplement to a new plan and sends it in the POST body', async () => {
+    const saves: Array<Record<string, unknown>> = [];
+    server.use(
+      ...restorableSession(),
+      ...catalogHandlers(),
+      ...clientHandlers(),
+      previewHandler(),
+      http.post(API + '/meal-plans', async ({ request }) => {
+        saves.push(JSON.parse(await request.text()) as Record<string, unknown>);
+        return HttpResponse.json({ id: PLAN_ID }, { status: 201 });
+      })
+    );
+    renderApp({ initialEntries: [NEW] });
+    await fillTargets();
+    await userEvent.click(await screen.findByRole('button', { name: 'Seguinte' }));
+
+    const section = await screen.findByRole('region', { name: 'Suplementos do plano' });
+    expect(
+      within(section).getByRole('heading', { name: 'Suplementos do plano (fora das refeições)' })
+    ).toBeInTheDocument();
+    await userEvent.click(
+      within(section).getByRole('button', { name: 'Adicionar suplemento ao plano' })
+    );
+    const row = within(section).getByRole('group', { name: 'Suplemento 1 do plano' });
+    await pick(row, 'Suplemento', 'Cre', 'Creatina');
+    await userEvent.type(within(row).getByLabelText('Quantidade'), '7');
+    await userEvent.type(within(row).getByLabelText('Notas'), 'ao deitar');
+    await waitFor(() => expect(within(row).getByTestId('quantity-suffix')).toHaveTextContent('g'));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Criar' }));
+    await waitFor(() => expect(saves).toHaveLength(1));
+    expect((saves[0]!.structure as Record<string, unknown>).plan_supplements).toEqual([
+      { id: null, supplement_id: SUPPLEMENT_ID, quantity: 7, notes: 'ao deitar', order_number: 1 },
+    ]);
+  });
+
+  it('does not save a plan supplement without an item or quantity', async () => {
+    const saves: Array<Record<string, unknown>> = [];
+    useExistingPlan(savedPlan(), saves);
+    renderApp({ initialEntries: [EDIT_MEALS] });
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Adicionar suplemento ao plano' })
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Escolhe o alimento ou suplemento e indica a quantidade em todas as linhas'
+    );
+    expect(saves).toHaveLength(0);
+  });
+
+  it('edits one plan supplement and adds another with a sequential order_number', async () => {
+    const saves: Array<Record<string, unknown>> = [];
+    useExistingPlan(savedPlan(), saves);
+    renderApp({ initialEntries: [EDIT_MEALS] });
+
+    const first = await screen.findByRole('group', { name: 'Suplemento 1 do plano' });
+    const quantity = within(first).getByLabelText('Quantidade');
+    await userEvent.clear(quantity);
+    await userEvent.type(quantity, '4');
+    await userEvent.type(within(first).getByLabelText('Notas'), 'com água');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Adicionar suplemento ao plano' }));
+    const second = screen.getByRole('group', { name: 'Suplemento 2 do plano' });
+    await pick(second, 'Suplemento', 'Cre', 'Creatina');
+    await userEvent.type(within(second).getByLabelText('Quantidade'), '2');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() => expect(saves).toHaveLength(1));
+    expect((saves[0]!.structure as Record<string, unknown>).plan_supplements).toEqual([
+      {
+        id: PLAN_SUPPLEMENT_ID,
+        supplement_id: SUPPLEMENT_ID,
+        quantity: 4,
+        notes: 'com água',
+        order_number: 1,
+      },
+      { id: null, supplement_id: SUPPLEMENT_ID, quantity: 2, notes: null, order_number: 2 },
+    ]);
+  });
+
+  it('removes the plan supplement and sends an empty list', async () => {
+    const saves: Array<Record<string, unknown>> = [];
+    useExistingPlan(savedPlan(), saves);
+    renderApp({ initialEntries: [EDIT_MEALS] });
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Remover suplemento 1 do plano' })
+    );
+    expect(screen.queryByRole('group', { name: 'Suplemento 1 do plano' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await waitFor(() => expect(saves).toHaveLength(1));
+    const structure = saves[0]!.structure as Record<string, unknown>;
+    expect(structure.plan_supplements).toEqual([]);
+    // As refeições seguem intactas: só a lista do plano mudou.
+    expect(structure.meals).toHaveLength(1);
+  });
+
+  it('keeps an archived plan read-only, with the plan supplements listed and no buttons', async () => {
+    useExistingPlan(savedPlan({ is_archived: true }), []);
+    renderApp({ initialEntries: [EDIT_MEALS] });
+
+    const row = await screen.findByRole('group', { name: 'Suplemento 1 do plano' });
+    expect(within(row).getByLabelText('Quantidade')).toBeDisabled();
+    expect(
+      screen.queryByRole('button', { name: 'Adicionar suplemento ao plano' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Remover suplemento 1 do plano' })
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe('Meal plan editor, blocked items', () => {
+  it('marks a blocked food with the reason and note, leaves it out of the totals, and counts the replacement', async () => {
+    const saves: Array<Record<string, unknown>> = [];
+    useExistingPlan(blockedFoodPlan(), saves);
+    renderApp({ initialEntries: [EDIT_MEALS] });
+
+    const food = await screen.findByRole('group', { name: 'Alimento 1 da refeição 1' });
+    expect(within(food).getByText('Bloqueado')).toBeInTheDocument();
+    expect(
+      within(food).getByText('Motivo: Informação perigosa · Nota: Quantidades fora do seguro')
+    ).toBeInTheDocument();
+    // A linha continua no plano, mas o arroz (195 kcal) fica fora do total.
+    const balance = screen.getByTestId('nutrition-balance');
+    expect(within(balance).getByText('faltam 2000 kcal')).toBeInTheDocument();
+    expect(within(food).queryByText(/Este alimento:/)).not.toBeInTheDocument();
+    // Os itens sem bloqueio não levam a marca.
+    expect(
+      within(screen.getByRole('group', { name: 'Suplemento 1 da refeição 1' })).queryByText(
+        'Bloqueado'
+      )
+    ).not.toBeInTheDocument();
+
+    // Trocar o alimento tira a marca e passa a contar nos totais: 150 g × 110 kcal / 100 g.
+    await pick(food, 'Alimento', 'Pe', 'Peito de peru');
+    await waitFor(() => expect(within(food).queryByText('Bloqueado')).not.toBeInTheDocument());
+    expect(await within(balance).findByText('faltam 1835 kcal')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() => expect(saves).toHaveLength(1));
+    const meals = (saves[0]!.structure as { meals: Array<{ items: unknown[] }> }).meals;
+    expect(meals[0]!.items).toEqual([
+      {
+        id: expect.any(String) as string,
+        food_id: OTHER_FOOD_ID,
+        quantity_in_grams: 150,
+        order_number: 1,
+      },
+    ]);
+  });
+
+  it('keeps a blocked food that is not replaced in the PUT, with its original ids', async () => {
+    const saves: Array<Record<string, unknown>> = [];
+    useExistingPlan(blockedFoodPlan(), saves);
+    renderApp({ initialEntries: [EDIT_MEALS] });
+
+    await screen.findByRole('group', { name: 'Alimento 1 da refeição 1' });
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() => expect(saves).toHaveLength(1));
+    const meals = (saves[0]!.structure as { meals: Array<{ items: unknown[] }> }).meals;
+    expect(meals[0]!.items).toEqual([
+      {
+        id: expect.any(String) as string,
+        food_id: FOOD_ID,
+        quantity_in_grams: 150,
+        order_number: 1,
+      },
+    ]);
+  });
+
+  it('marks a blocked meal supplement and a blocked plan supplement, with and without a note', async () => {
+    const base = savedPlan();
+    const [meal] = base.meals;
+    useExistingPlan(
+      savedPlan({
+        meals: [
+          {
+            ...meal!,
+            supplements: meal!.supplements.map((item) => ({
+              ...item,
+              platform_enforcement: blockedEnforcement,
+            })),
+          },
+        ],
+        plan_supplements: base.plan_supplements.map((item) => ({
+          ...item,
+          platform_enforcement: { reason: 'prohibited_content', note: null },
+        })),
+      }),
+      []
+    );
+    renderApp({ initialEntries: [EDIT_MEALS] });
+
+    const inMeal = await screen.findByRole('group', { name: 'Suplemento 1 da refeição 1' });
+    expect(within(inMeal).getByText('Bloqueado')).toBeInTheDocument();
+    expect(
+      within(inMeal).getByText('Motivo: Informação perigosa · Nota: Quantidades fora do seguro')
+    ).toBeInTheDocument();
+
+    const inPlan = screen.getByRole('group', { name: 'Suplemento 1 do plano' });
+    expect(within(inPlan).getByText('Bloqueado')).toBeInTheDocument();
+    expect(within(inPlan).getByText('Motivo: Conteúdo proibido')).toBeInTheDocument();
+    expect(within(inPlan).queryByText(/Nota:/)).not.toBeInTheDocument();
   });
 });

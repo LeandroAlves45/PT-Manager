@@ -12,6 +12,7 @@ import {
   useClientInvitationQuery,
   useClientQuery,
   useClientSummaryQuery,
+  useInitialAssessmentQuery,
 } from '@/features/clients/api/queries';
 import { formatInviteMoment, invitationNote } from '@/features/clients/lib/invitation';
 import { activityErrorMessage, ageFrom, initialsOf } from '@/features/clients/lib/labels';
@@ -75,7 +76,8 @@ const TABS = ['summary', 'sessions', 'training', 'nutrition', 'supplements', 'ch
  *
  * Orçamento de pedidos: `GET /clients/{id}` e `GET /clients/{id}/summary` em paralelo ao
  * montar; a ficha e a avaliação inicial editam-se em páginas próprias; o estado do convite
- * (`GET /clients/{id}/invitation`) só se pede enquanto o cliente não tem conta; cada
+ * (`GET /clients/{id}/invitation`) só se pede enquanto o cliente não tem conta; a avaliação
+ * inicial (`GET /clients/{id}/initial-assessment`) só se pede a clientes ativos, para avisar quando falta; cada
  * separador só pede os seus dados quando está aberto (o Radix não monta separadores
  * inativos).
  */
@@ -91,6 +93,8 @@ export function ClientDetailPage() {
   const invite = useInviteClientMutation();
   const invitation = useClientInvitationQuery(clientId, client.data?.user_id === null);
   const activity = useClientActivityMutation();
+  // Só para clientes ativos: um arquivado não recebe planos nem avaliações de qualquer forma.
+  const assessment = useInitialAssessmentQuery(clientId, client.isSuccess && client.data.is_active);
 
   if (client.isPending)
     return (
@@ -219,6 +223,13 @@ export function ClientDetailPage() {
         }
       />
 
+      {assessment.isSuccess && assessment.data === null && (
+        <p role="status" className="border-border bg-card rounded-lg border p-3 text-sm">
+          Sem avaliação inicial. O cliente preenche-a no portal ou podes criá-la tu. Até lá não
+          podes criar planos, atribuir suplementos nem marcar avaliações periódicas.
+        </p>
+      )}
+
       <Tabs
         value={tab}
         onValueChange={(value) => {
@@ -294,9 +305,26 @@ export function ClientDetailPage() {
         }}
         title={data.is_active ? 'Arquivar cliente?' : 'Reativar cliente?'}
         description={
-          data.is_active
-            ? `${data.name} deixa de contar para o limite do plano e sai das listas ativas. Podes reativá-lo mais tarde.`
-            : `${data.name} volta às listas ativas e conta para o limite do plano.`
+          data.is_active ? (
+            <span className="flex flex-col gap-2">
+              <span>
+                {data.name} deixa de contar para o limite do plano e sai das listas ativas. Ao
+                arquivar:
+              </span>
+              <span className="flex flex-col gap-1 ps-4">
+                <span>• as sessões futuras são canceladas;</span>
+                <span>• o saldo que resta nos packs é dado como consumido;</span>
+                <span>• o acesso ao portal termina já;</span>
+                <span>• o convite por aceitar deixa de servir.</span>
+              </span>
+              <span>
+                Podes reativá-lo mais tarde: quem já tinha conta volta a entrar, mas as sessões
+                canceladas, o saldo consumido e o convite anulado não voltam.
+              </span>
+            </span>
+          ) : (
+            `${data.name} volta às listas ativas e conta para o limite do plano.`
+          )
         }
         confirmLabel={data.is_active ? 'Arquivar' : 'Reativar'}
         destructive={data.is_active}

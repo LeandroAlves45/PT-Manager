@@ -28,7 +28,8 @@ async function loadTab() {
   const client = await import('@/shared/api/client');
   const session = await import('@/shared/api/session');
   const events = await import('@/shared/api/session-events');
-  return { ...client, ...session, ...events };
+  const notice = await import('@/shared/lib/auth-notice');
+  return { ...client, ...session, ...events, ...notice };
 }
 
 type Tab = Awaited<ReturnType<typeof loadTab>>;
@@ -335,5 +336,139 @@ describe('refreshSession', () => {
     expect(remoteListener).toHaveBeenCalledTimes(1);
     expect(FakeBroadcastChannel.published).toEqual([{ type: 'session-invalidated' }]);
     expect(JSON.stringify(FakeBroadcastChannel.published)).not.toMatch(/access|csrf|token/i);
+  });
+});
+
+describe('apiClient access cut in the middle of a session', () => {
+  it('ends the session without a refresh when the account was archived or deactivated', async () => {
+    const tab = await loadTab();
+    signIn(tab);
+    useRotatingRefresh();
+    server.use(
+      http.get(SUBSCRIPTION, () =>
+        HttpResponse.json(problem('authentication_session_ended'), { status: 401 })
+      )
+    );
+
+    const result = await tab.apiClient.GET('/api/v1/billing/subscription');
+
+    expect(result.response.status).toBe(401);
+    expect(count('POST /api/v1/auth/refresh')).toBe(0);
+    expect(count('POST /api/v1/auth/csrf')).toBe(0);
+    expect(tab.getSession()).toBeNull();
+    // A mensagem é genérica: não diz que o cliente foi arquivado.
+    expect(tab.peekPendingAuthNotice()).toBe('A tua sessão terminou. Entra novamente.');
+  });
+
+  it('ends the session on a blocked trainer account and keeps the reason and note for sign-in', async () => {
+    const tab = await loadTab();
+    signIn(tab);
+    server.use(
+      http.get(SUBSCRIPTION, () =>
+        HttpResponse.json(
+          {
+            ...problem('trainer_account_blocked'),
+            status: 403,
+            block_reason: 'dangerous_information',
+            block_note: 'Plano com doses perigosas.',
+          },
+          { status: 403 }
+        )
+      )
+    );
+
+    const result = await tab.apiClient.GET('/api/v1/billing/subscription');
+
+    expect(result.response.status).toBe(403);
+    expect(tab.getSession()).toBeNull();
+    expect(tab.peekPendingAuthNotice()).toBe(
+      'A tua conta está bloqueada. Motivo: Informação perigosa. Nota: Plano com doses perigosas.'
+    );
+  });
+
+  it('writes a blocked account without a note when the note is null', async () => {
+    const tab = await loadTab();
+    signIn(tab);
+    server.use(
+      http.get(SUBSCRIPTION, () =>
+        HttpResponse.json(
+          {
+            ...problem('trainer_account_blocked'),
+            block_reason: 'malicious_content',
+            block_note: null,
+          },
+          { status: 403 }
+        )
+      )
+    );
+
+    await tab.apiClient.GET('/api/v1/billing/subscription');
+
+    expect(tab.peekPendingAuthNotice()).toBe(
+      'A tua conta está bloqueada. Motivo: Conteúdo malicioso.'
+    );
+  });
+
+  it('tells a client whose access period ended nothing but that it ended', async () => {
+    const tab = await loadTab();
+    signIn(tab);
+    useRotatingRefresh();
+    server.use(
+      http.get(SUBSCRIPTION, () =>
+        HttpResponse.json(problem('client_access_period_ended'), { status: 401 })
+      )
+    );
+
+    await tab.apiClient.GET('/api/v1/billing/subscription');
+
+    expect(count('POST /api/v1/auth/refresh')).toBe(0);
+    expect(tab.getSession()).toBeNull();
+    expect(tab.peekPendingAuthNotice()).toBe('O prazo de acesso terminou.');
+  });
+
+  it('cuts the session when the request repeated after a refresh finds the access ended', async () => {
+    const tab = await loadTab();
+    signIn(tab);
+    useRotatingRefresh();
+    let calls = 0;
+    server.use(
+      http.get(SUBSCRIPTION, () => {
+        calls += 1;
+        return calls === 1
+          ? new HttpResponse(null, { status: 401 })
+          : HttpResponse.json(problem('client_access_period_ended'), { status: 401 });
+      })
+    );
+
+    const result = await tab.apiClient.GET('/api/v1/billing/subscription');
+
+    expect(count('POST /api/v1/auth/refresh')).toBe(1);
+    expect(calls).toBe(2);
+    expect(result.response.status).toBe(401);
+    expect(tab.getSession()).toBeNull();
+    expect(tab.peekPendingAuthNotice()).toBe('O prazo de acesso terminou.');
+  });
+
+  it('leaves a failed sign-in alone: no session to cut and no notice left behind', async () => {
+    const tab = await loadTab();
+    server.use(
+      http.post(`${API}/auth/login`, () =>
+        HttpResponse.json(
+          {
+            ...problem('trainer_account_blocked'),
+            block_reason: 'prohibited_content',
+            block_note: null,
+          },
+          { status: 403 }
+        )
+      )
+    );
+
+    const result = await tab.apiClient.POST('/api/v1/auth/login', {
+      body: { email: 'ana@ptmanager.test', password: 'correct-horse-1' },
+    });
+
+    expect(result.response.status).toBe(403);
+    expect(tab.peekPendingAuthNotice()).toBeNull();
   });
 });

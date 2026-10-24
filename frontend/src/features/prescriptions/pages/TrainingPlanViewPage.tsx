@@ -12,6 +12,7 @@ import { isApiProblem } from '@/shared/api/problem';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState';
 import { PageHeader } from '@/shared/components/PageHeader';
+import { PlatformEnforcementBadge } from '@/shared/components/PlatformEnforcementBadge';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
@@ -164,6 +165,9 @@ export function TrainingPlanViewPage() {
                         </Badge>
                       )}
                     </p>
+                    {exercise.platform_enforcement !== null && (
+                      <PlatformEnforcementBadge enforcement={exercise.platform_enforcement} />
+                    )}
                     <ul className="text-muted-foreground space-y-0.5 text-sm">
                       {exercise.sets.map((set) => (
                         <li key={set.id}>

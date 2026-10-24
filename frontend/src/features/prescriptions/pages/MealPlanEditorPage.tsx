@@ -28,6 +28,11 @@ import {
   TargetsSummary,
 } from '@/features/prescriptions/components/NutritionBalance';
 import { NutritionCalculationFields } from '@/features/prescriptions/components/NutritionCalculationFields';
+import {
+  blockedItemsFromDetails,
+  NO_BLOCKED_ITEMS,
+  sumUnblockedFoods,
+} from '@/features/prescriptions/lib/blocked-items';
 import { prescriptionError } from '@/features/prescriptions/lib/errors';
 import { mealStructureFromDetails } from '@/features/prescriptions/lib/meal-structure';
 import {
@@ -43,7 +48,6 @@ import {
   calculationFromAssessment,
   calculationFromResult,
   normalizeCalculation,
-  sumFoods,
   targetsFromResult,
   type Calculation,
   type FoodNutrients,
@@ -77,7 +81,7 @@ function initialDraft(detail: PlanDetails | null, fixedClientId: string | null):
       calculation: EMPTY_CALCULATION,
       calculationDirty: false,
       preview: null,
-      structure: { meals: [] },
+      structure: { meals: [], plan_supplements: [] },
     };
   }
   return {
@@ -114,6 +118,10 @@ function seedFromDetail(detail: PlanDetails | null) {
       names[item.supplement_id] = item.supplement_name;
     }
   }
+  for (const item of detail?.plan_supplements ?? []) {
+    units[item.supplement_id] = item.unit_of_measure;
+    names[item.supplement_id] = item.supplement_name;
+  }
   return { foods, units, names };
 }
 
@@ -124,13 +132,18 @@ function previewFailure(failure: unknown): string {
     : 'Não foi possível contactar o servidor. Tenta novamente.';
 }
 
-/** `true` quando todos os alimentos e suplementos têm item do catálogo e quantidade. */
+/**
+ * `true` quando todos os alimentos e suplementos (das refeições e do plano) têm item do
+ * catálogo e quantidade, e cada refeição tem nome.
+ */
 function structureComplete(structure: MealPlanDraft['structure']): boolean {
-  return structure.meals.every(
-    (meal) =>
-      meal.meal_type.trim() !== '' &&
-      meal.items.every((item) => item.food_id !== '' && item.quantity_in_grams > 0) &&
-      meal.supplements.every((item) => item.supplement_id !== '' && item.quantity > 0)
+  return (
+    structure.meals.every(
+      (meal) =>
+        meal.meal_type.trim() !== '' &&
+        meal.items.every((item) => item.food_id !== '' && item.quantity_in_grams > 0) &&
+        meal.supplements.every((item) => item.supplement_id !== '' && item.quantity > 0)
+    ) && structure.plan_supplements.every((item) => item.supplement_id !== '' && item.quantity > 0)
   );
 }
 
@@ -225,6 +238,10 @@ function EditorBody({
   const location = useLocation();
   const queryClient = useQueryClient();
   const seed = useMemo(() => seedFromDetail(detail), [detail]);
+  const blocked = useMemo(
+    () => (detail === null ? NO_BLOCKED_ITEMS : blockedItemsFromDetails(detail)),
+    [detail]
+  );
   const [draft, setDraft] = useState<MealPlanDraft>(() => initialDraft(detail, fixedClientId));
   const [names, setNames] = useState<Record<string, string>>(seed.names);
   const [dirty, setDirty] = useState(false);
@@ -242,9 +259,10 @@ function EditorBody({
     client.data === undefined ? null : ageOnDate(client.data.birth_date, new Date());
 
   const foodIds = draft.structure.meals.flatMap((meal) => meal.items.map((item) => item.food_id));
-  const supplementIds = draft.structure.meals.flatMap((meal) =>
-    meal.supplements.map((item) => item.supplement_id)
-  );
+  const supplementIds = [
+    ...draft.structure.meals.flatMap((meal) => meal.supplements.map((item) => item.supplement_id)),
+    ...draft.structure.plan_supplements.map((item) => item.supplement_id),
+  ];
   const foods = useFoodNutrients(foodIds, seed.foods);
   const units = useSupplementUnits(supplementIds, seed.units);
 
@@ -381,6 +399,7 @@ function EditorBody({
     foods,
     units,
     names,
+    blocked,
     nameItem: (id, name) => setNames((current) => ({ ...current, [id]: name })),
     hasValidTargets: draft.preview !== null,
     runPreview: () => {
@@ -618,7 +637,7 @@ export function MealPlanMealsStep() {
   }
 
   const allItems = draft.structure.meals.flatMap((meal) => meal.items);
-  const totals = sumFoods(allItems, editor.foods);
+  const totals = sumUnblockedFoods(allItems, editor.foods, editor.blocked);
 
   return (
     <div className="space-y-6">
@@ -633,6 +652,7 @@ export function MealPlanMealsStep() {
         onNamed={editor.nameItem}
         foods={editor.foods}
         units={editor.units}
+        blocked={editor.blocked}
       />
       {editor.saveError !== '' && (
         <p role="alert" className="text-destructive text-sm">

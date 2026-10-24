@@ -68,6 +68,8 @@ export function portalHome(
       check_in_date: '2026-10-04',
       is_today: true,
     },
+    initial_assessment_pending: false,
+    access_notice: null,
     ...overrides,
   };
 }
@@ -124,7 +126,6 @@ export function workoutExercise(
     exercise_id: CATALOG_EXERCISE_ID,
     order_number: 1,
     exercise_name: 'Agachamento',
-    is_unavailable: false,
     has_ready_video: false,
     exercise_group_id: null,
     group_position: null,
@@ -234,7 +235,6 @@ export function trainingPlan(
             exercise_id: CATALOG_EXERCISE_ID,
             order_number: 1,
             exercise_name: 'Agachamento',
-            is_unavailable: false,
             has_ready_video: false,
             exercise_group_id: null,
             group_position: null,
@@ -257,7 +257,6 @@ export function trainingPlan(
             exercise_id: '9f0a1b2c-3d4e-4f5a-8b6c-7d8e9f0a1b2c',
             order_number: 1,
             exercise_name: 'Supino',
-            is_unavailable: false,
             has_ready_video: false,
             exercise_group_id: null,
             group_position: null,
@@ -318,7 +317,6 @@ export function nutritionPlan(
           {
             order_number: 1,
             food_name: 'Aveia',
-            is_unavailable: false,
             quantity_in_grams: 80,
             contribution: {
               protein_grams: 10.8,
@@ -331,7 +329,6 @@ export function nutritionPlan(
           {
             order_number: 2,
             food_name: 'Iogurte natural',
-            is_unavailable: false,
             quantity_in_grams: 200,
             contribution: {
               protein_grams: 8.6,
@@ -344,6 +341,7 @@ export function nutritionPlan(
         ],
         supplements: [
           {
+            id: 'c0a80101-0000-4000-8000-0000000000a1',
             order_number: 1,
             supplement_name: 'Creatina',
             is_unavailable: false,
@@ -367,7 +365,6 @@ export function nutritionPlan(
           {
             order_number: 1,
             food_name: 'Arroz basmati cozido',
-            is_unavailable: false,
             quantity_in_grams: 150,
             contribution: {
               protein_grams: 4.05,
@@ -380,7 +377,6 @@ export function nutritionPlan(
           {
             order_number: 2,
             food_name: 'Peito de frango',
-            is_unavailable: false,
             quantity_in_grams: 180,
             contribution: {
               protein_grams: 55.8,
@@ -394,6 +390,7 @@ export function nutritionPlan(
         supplements: [],
       },
     ],
+    plan_supplements: [],
     updated_at: '2026-10-05T10:00:00Z',
     ...overrides,
   };
@@ -425,6 +422,42 @@ export function supplementIntakesToday(
         taken_at: null,
       },
     ],
+    ...overrides,
+  };
+}
+
+export const PLAN_MEAL_SUPPLEMENT_ID = '5d8f2a64-8a7b-4c0e-9f3a-1b2c3d4e5f61';
+export const PLAN_OUTSIDE_SUPPLEMENT_ID = '5d8f2a64-8a7b-4c0e-9f3a-1b2c3d4e5f62';
+
+/** Item de suplemento do plano alimentar; por omissão, a creatina do pequeno-almoço por tomar. */
+export function planSupplementItem(
+  overrides: Partial<Schemas['MyPlanSupplementItemResponse']> = {}
+): Schemas['MyPlanSupplementItemResponse'] {
+  return {
+    id: PLAN_MEAL_SUPPLEMENT_ID,
+    placement: 'meal',
+    meal_type: 'Pequeno-almoço',
+    meal_order_number: 1,
+    order_number: 1,
+    supplement_name: 'Creatina do plano',
+    unit_of_measure: 'g',
+    quantity: 5,
+    notes: null,
+    is_unavailable: false,
+    taken_at: null,
+    ...overrides,
+  };
+}
+
+/** Suplementos do plano escolhido, sem nenhum item; os testes juntam os itens que precisam. */
+export function planSupplementsToday(
+  overrides: Partial<Schemas['MyPlanSupplementsTodayResponse']> = {}
+): Schemas['MyPlanSupplementsTodayResponse'] {
+  return {
+    meal_plan_id: '6b4f8f5e-4d3c-4f1d-9d8e-0a1b2c3d4e5f',
+    meal_plan_name: 'Manutenção - 2400 kcal',
+    local_date: '2026-10-06',
+    items: [],
     ...overrides,
   };
 }

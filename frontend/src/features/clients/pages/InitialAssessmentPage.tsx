@@ -1,13 +1,18 @@
 import { ArrowLeft } from 'lucide-react';
 import { useCallback } from 'react';
+import { toast } from 'sonner';
 import { Link, useNavigate, useParams } from 'react-router';
 
+import { useReviewInitialAssessmentMutation } from '@/features/clients/api/mutations';
 import { useClientQuery, useInitialAssessmentQuery } from '@/features/clients/api/queries';
 import { InitialAssessmentForm } from '@/features/clients/components/InitialAssessmentForm';
+import { isApiProblem } from '@/shared/api/problem';
 import { ErrorState } from '@/shared/components/ErrorState';
 import { PageHeader } from '@/shared/components/PageHeader';
+import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
+import { formatDate } from '@/shared/lib/format';
 
 /**
  * Avaliação inicial do cliente numa página própria (`/trainer/clients/:clientId/initial-assessment`).
@@ -20,11 +25,26 @@ export function InitialAssessmentPage() {
   const navigate = useNavigate();
   const client = useClientQuery(clientId);
   const assessment = useInitialAssessmentQuery(clientId, client.isSuccess);
+  const current = assessment.data ?? null;
+  const review = useReviewInitialAssessmentMutation(clientId);
   const detailPath = `/trainer/clients/${clientId}`;
   const onSaved = useCallback(
     () => void navigate(detailPath, { replace: true }),
     [navigate, detailPath]
   );
+
+  async function markReviewed(assessmentId: string) {
+    try {
+      await review.mutateAsync(assessmentId);
+      toast.success('Avaliação inicial marcada como revista.');
+    } catch (error) {
+      toast.error(
+        isApiProblem(error) && error.code === 'initial_assessment_not_reviewable'
+          ? 'Esta avaliação foi criada por ti e não precisa de revisão.'
+          : 'Não foi possível marcar a avaliação como revista. Tenta novamente.'
+      );
+    }
+  }
 
   return (
     <section className="space-y-6">
@@ -50,6 +70,28 @@ export function InitialAssessmentPage() {
             }
             description={client.data.name}
           />
+          {current?.submitted_by_client === true && (
+            <div className="border-border bg-card flex max-w-3xl flex-wrap items-center justify-between gap-3 rounded-lg border p-3 text-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="secondary">Preenchida pelo cliente</Badge>
+                {current.reviewed_at !== null && (
+                  <span className="text-muted-foreground">
+                    Revista a {formatDate(current.reviewed_at)}
+                  </span>
+                )}
+              </div>
+              {current.reviewed_at === null && (
+                <Button
+                  type="button"
+                  className="min-h-11 md:min-h-9"
+                  disabled={review.isPending}
+                  onClick={() => void markReviewed(current.id)}
+                >
+                  {review.isPending ? 'A marcar…' : 'Marcar como revista'}
+                </Button>
+              )}
+            </div>
+          )}
           <div className="max-w-3xl">
             <InitialAssessmentForm
               clientId={clientId}

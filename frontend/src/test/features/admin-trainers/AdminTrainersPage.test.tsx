@@ -33,6 +33,7 @@ function trainer(overrides: Partial<Trainer> = {}): Trainer {
     has_paid_subscription: false,
     active_client_count: 12,
     created_at: '2026-03-02T12:00:00Z',
+    access_block: null,
     ...overrides,
   };
 }
@@ -43,6 +44,18 @@ function exemptTrainer(overrides: Partial<Trainer> = {}): Trainer {
     subscription_tier: 'PRO',
     is_exempt_from_billing: true,
     billing_exempt_since: '2026-09-14T09:00:00Z',
+    ...overrides,
+  });
+}
+
+function blocked(overrides: Partial<Trainer> = {}): Trainer {
+  return trainer({
+    access_block: {
+      reason: 'malicious_content',
+      note: 'Link para um site falso',
+      blocked_at: '2026-10-20T09:00:00Z',
+      client_access_ends_at: '2026-10-27T09:00:00Z',
+    },
     ...overrides,
   });
 }
@@ -554,6 +567,330 @@ describe('AdminTrainersPage', () => {
 
       await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
       expect(toastMock.error).toHaveBeenCalledWith('Este treinador já não existe.');
+    });
+  });
+
+  describe('access block', () => {
+    function serveLookup(found: Trainer) {
+      serveLists();
+      server.use(
+        http.post(`${API}/admin/trainers/lookup`, () =>
+          HttpResponse.json(lookupBody('found', { trainer: found }))
+        )
+      );
+    }
+
+    it('shows the block with reason, note and both dates in Lisbon time', async () => {
+      serveLookup(blocked());
+      const user = userEvent.setup();
+      renderApp({ initialEntries: ['/admin/trainers'] });
+
+      await search(user);
+
+      const card = await screen.findByRole('article', { name: 'Ana Silva' });
+      expect(within(card).getByText('Bloqueado')).toBeVisible();
+      expect(
+        within(card).getByText('Motivo: Conteúdo malicioso · Nota: Link para um site falso')
+      ).toBeVisible();
+      expect(within(card).getByText('Bloqueio')).toBeVisible();
+      expect(within(card).getByText(/Bloqueada a 20\/10\/2026.*10:00/)).toBeVisible();
+      expect(within(card).getByText(/Clientes com acesso até 27\/10\/2026.*09:00/)).toBeVisible();
+      expect(within(card).getByRole('button', { name: 'Levantar bloqueio' })).toBeVisible();
+      expect(
+        within(card).queryByRole('button', { name: 'Bloquear conta' })
+      ).not.toBeInTheDocument();
+    });
+
+    it('shows no block information for an account without a block', async () => {
+      serveLookup(trainer());
+      const user = userEvent.setup();
+      renderApp({ initialEntries: ['/admin/trainers'] });
+
+      await search(user);
+
+      const card = await screen.findByRole('article', { name: 'Ana Silva' });
+      expect(within(card).queryByText('Bloqueado')).not.toBeInTheDocument();
+      expect(within(card).queryByText('Bloqueio')).not.toBeInTheDocument();
+      expect(within(card).getByRole('button', { name: 'Bloquear conta' })).toBeVisible();
+    });
+
+    it('keeps the exempt badge next to the block badge', async () => {
+      serveLookup(
+        blocked({ is_exempt_from_billing: true, billing_exempt_since: '2026-09-14T09:00:00Z' })
+      );
+      const user = userEvent.setup();
+      renderApp({ initialEntries: ['/admin/trainers'] });
+
+      await search(user);
+
+      const card = await screen.findByRole('article', { name: 'Ana Silva' });
+      expect(within(card).getByText('Isento')).toBeVisible();
+      expect(within(card).getByText('Bloqueado')).toBeVisible();
+    });
+
+    it('needs a reason, sends the exact body and swaps the card for the blocked one', async () => {
+      const lists = serveLists();
+      const bodies: unknown[] = [];
+      const posted: string[] = [];
+      server.use(
+        http.post(`${API}/admin/trainers/lookup`, () =>
+          HttpResponse.json(lookupBody('found', { trainer: trainer() }))
+        ),
+        http.post(`${API}/admin/trainers/:trainerId/access-block`, async ({ params, request }) => {
+          posted.push(String(params['trainerId']));
+          bodies.push(await request.json());
+          return HttpResponse.json(blocked());
+        })
+      );
+      const user = userEvent.setup();
+      renderApp({ initialEntries: ['/admin/trainers'] });
+      expect(await screen.findByText('Ainda não há treinadores isentos.')).toBeVisible();
+      const listCalls = lists.exemptQueries.length;
+
+      await search(user);
+      await user.click(await screen.findByRole('button', { name: 'Bloquear conta' }));
+
+      const dialog = await screen.findByRole('dialog');
+      expect(
+        within(dialog).getByText(/Os clientes com conta continuam a entrar durante 7 dias/)
+      ).toBeVisible();
+      const confirm = within(dialog).getByRole('button', { name: 'Bloquear conta' });
+      expect(confirm).toBeDisabled();
+      expect(within(dialog).getAllByRole('radio')).toHaveLength(4);
+
+      await user.click(within(dialog).getByLabelText('Conteúdo malicioso'));
+      expect(confirm).toBeEnabled();
+      await user.type(within(dialog).getByLabelText('Nota (opcional)'), 'Link para um site falso');
+      expect(within(dialog).getByText('23/500')).toBeVisible();
+      await user.click(confirm);
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(posted).toEqual([TRAINER_ID]);
+      expect(bodies).toEqual([
+        { reason_code: 'malicious_content', note: 'Link para um site falso' },
+      ]);
+      const card = await screen.findByRole('article', { name: 'Ana Silva' });
+      expect(within(card).getByText('Bloqueado')).toBeVisible();
+      expect(within(card).getByRole('button', { name: 'Levantar bloqueio' })).toBeVisible();
+      expect(toastMock.success).toHaveBeenCalledWith('Conta bloqueada.');
+      await waitFor(() => expect(lists.exemptQueries.length).toBeGreaterThan(listCalls));
+    });
+
+    it('sends note null when the note is empty or only spaces', async () => {
+      const bodies: unknown[] = [];
+      serveLookup(trainer());
+      server.use(
+        http.post(`${API}/admin/trainers/:trainerId/access-block`, async ({ request }) => {
+          bodies.push(await request.json());
+          return HttpResponse.json(
+            blocked({ access_block: { ...blocked().access_block!, note: null } })
+          );
+        })
+      );
+      const user = userEvent.setup();
+      renderApp({ initialEntries: ['/admin/trainers'] });
+
+      await search(user);
+      await user.click(await screen.findByRole('button', { name: 'Bloquear conta' }));
+      const dialog = await screen.findByRole('dialog');
+      await user.click(within(dialog).getByLabelText('Informação perigosa'));
+      await user.type(within(dialog).getByLabelText('Nota (opcional)'), '   ');
+      await user.click(within(dialog).getByRole('button', { name: 'Bloquear conta' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(bodies).toEqual([{ reason_code: 'dangerous_information', note: null }]);
+      const card = await screen.findByRole('article', { name: 'Ana Silva' });
+      expect(within(card).getByText('Motivo: Conteúdo malicioso')).toBeVisible();
+    });
+
+    it('stops the note at 500 characters', async () => {
+      serveLookup(trainer());
+      const user = userEvent.setup();
+      renderApp({ initialEntries: ['/admin/trainers'] });
+
+      await search(user);
+      await user.click(await screen.findByRole('button', { name: 'Bloquear conta' }));
+      const note = within(await screen.findByRole('dialog')).getByLabelText('Nota (opcional)');
+      await user.click(note);
+      await user.paste('a'.repeat(520));
+
+      expect(note).toHaveValue('a'.repeat(500));
+      expect(screen.getByText('500/500')).toBeVisible();
+    });
+
+    it('starts the next block without the reason and note of a cancelled one', async () => {
+      serveLookup(trainer());
+      const user = userEvent.setup();
+      renderApp({ initialEntries: ['/admin/trainers'] });
+
+      await search(user);
+      await user.click(await screen.findByRole('button', { name: 'Bloquear conta' }));
+      let dialog = await screen.findByRole('dialog');
+      await user.click(within(dialog).getByLabelText('Conteúdo proibido'));
+      await user.type(within(dialog).getByLabelText('Nota (opcional)'), 'rascunho');
+      await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+      await user.click(screen.getByRole('button', { name: 'Bloquear conta' }));
+      dialog = await screen.findByRole('dialog');
+      expect(within(dialog).getByLabelText('Conteúdo proibido')).not.toBeChecked();
+      expect(within(dialog).getByLabelText('Nota (opcional)')).toHaveValue('');
+      expect(within(dialog).getByRole('button', { name: 'Bloquear conta' })).toBeDisabled();
+    });
+
+    it('lifts the block with a DELETE and refreshes the card', async () => {
+      const deleted: string[] = [];
+      serveLookup(blocked());
+      server.use(
+        http.delete(`${API}/admin/trainers/:trainerId/access-block`, ({ params }) => {
+          deleted.push(String(params['trainerId']));
+          return HttpResponse.json(trainer());
+        })
+      );
+      const user = userEvent.setup();
+      renderApp({ initialEntries: ['/admin/trainers'] });
+
+      await search(user);
+      await user.click(await screen.findByRole('button', { name: 'Levantar bloqueio' }));
+
+      const dialog = await screen.findByRole('alertdialog');
+      expect(
+        within(dialog).getByText(/O acesso volta já, para o personal trainer e para os clientes/)
+      ).toBeVisible();
+      await user.click(within(dialog).getByRole('button', { name: 'Levantar bloqueio' }));
+
+      await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+      expect(deleted).toEqual([TRAINER_ID]);
+      const card = await screen.findByRole('article', { name: 'Ana Silva' });
+      expect(within(card).queryByText('Bloqueado')).not.toBeInTheDocument();
+      expect(within(card).getByRole('button', { name: 'Bloquear conta' })).toBeVisible();
+      expect(toastMock.success).toHaveBeenCalledWith('Bloqueio levantado.');
+    });
+
+    it('closes the dialog and warns when the trainer no longer exists', async () => {
+      serveLookup(trainer());
+      server.use(
+        http.post(`${API}/admin/trainers/:trainerId/access-block`, () =>
+          HttpResponse.json(problem('admin_trainer_not_found'), { status: 404 })
+        )
+      );
+      const user = userEvent.setup();
+      renderApp({ initialEntries: ['/admin/trainers'] });
+
+      await search(user);
+      await user.click(await screen.findByRole('button', { name: 'Bloquear conta' }));
+      const dialog = await screen.findByRole('dialog');
+      await user.click(within(dialog).getByLabelText('Conteúdo malicioso'));
+      await user.click(within(dialog).getByRole('button', { name: 'Bloquear conta' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(toastMock.error).toHaveBeenCalledWith('Este treinador já não existe.');
+    });
+
+    it('keeps the dialog open and explains a concurrency conflict', async () => {
+      serveLookup(trainer());
+      server.use(
+        http.post(`${API}/admin/trainers/:trainerId/access-block`, () =>
+          HttpResponse.json(problem('admin_trainer_concurrency_conflict'), { status: 409 })
+        )
+      );
+      const user = userEvent.setup();
+      renderApp({ initialEntries: ['/admin/trainers'] });
+
+      await search(user);
+      await user.click(await screen.findByRole('button', { name: 'Bloquear conta' }));
+      const dialog = await screen.findByRole('dialog');
+      await user.click(within(dialog).getByLabelText('Conteúdo malicioso'));
+      await user.click(within(dialog).getByRole('button', { name: 'Bloquear conta' }));
+
+      await waitFor(() =>
+        expect(toastMock.error).toHaveBeenCalledWith(
+          'A conta foi alterada entretanto. Tenta novamente.'
+        )
+      );
+      expect(screen.getByRole('dialog')).toBeVisible();
+      expect(within(screen.getByRole('dialog')).getByLabelText('Conteúdo malicioso')).toBeChecked();
+    });
+
+    it('reads the real code of a 400 from errors[0] for the note length', async () => {
+      serveLookup(trainer());
+      server.use(
+        http.post(`${API}/admin/trainers/:trainerId/access-block`, () =>
+          HttpResponse.json(
+            problem('validation_failed', {
+              errors: [{ field: 'note', code: 'platform_enforcement_note_too_long', message: 'x' }],
+            }),
+            { status: 400 }
+          )
+        )
+      );
+      const user = userEvent.setup();
+      renderApp({ initialEntries: ['/admin/trainers'] });
+
+      await search(user);
+      await user.click(await screen.findByRole('button', { name: 'Bloquear conta' }));
+      const dialog = await screen.findByRole('dialog');
+      await user.click(within(dialog).getByLabelText('Conteúdo malicioso'));
+      await user.click(within(dialog).getByRole('button', { name: 'Bloquear conta' }));
+
+      await waitFor(() =>
+        expect(toastMock.error).toHaveBeenCalledWith('A nota não pode ter mais de 500 caracteres.')
+      );
+      expect(screen.getByRole('dialog')).toBeVisible();
+    });
+
+    it('explains an invalid reason from the server', async () => {
+      serveLookup(trainer());
+      server.use(
+        http.post(`${API}/admin/trainers/:trainerId/access-block`, () =>
+          HttpResponse.json(
+            problem('validation_failed', {
+              errors: [
+                { field: 'reason_code', code: 'platform_enforcement_reason_invalid', message: 'x' },
+              ],
+            }),
+            { status: 400 }
+          )
+        )
+      );
+      const user = userEvent.setup();
+      renderApp({ initialEntries: ['/admin/trainers'] });
+
+      await search(user);
+      await user.click(await screen.findByRole('button', { name: 'Bloquear conta' }));
+      const dialog = await screen.findByRole('dialog');
+      await user.click(within(dialog).getByLabelText('Conteúdo malicioso'));
+      await user.click(within(dialog).getByRole('button', { name: 'Bloquear conta' }));
+
+      await waitFor(() =>
+        expect(toastMock.error).toHaveBeenCalledWith('Escolhe um dos motivos da lista.')
+      );
+    });
+
+    it('shows the generic message on a 403 and keeps the lift dialog open', async () => {
+      serveLookup(blocked());
+      server.use(
+        http.delete(`${API}/admin/trainers/:trainerId/access-block`, () =>
+          HttpResponse.json(problem('trainer_administration_administrator_only'), { status: 403 })
+        )
+      );
+      const user = userEvent.setup();
+      renderApp({ initialEntries: ['/admin/trainers'] });
+
+      await search(user);
+      await user.click(await screen.findByRole('button', { name: 'Levantar bloqueio' }));
+      await user.click(
+        within(await screen.findByRole('alertdialog')).getByRole('button', {
+          name: 'Levantar bloqueio',
+        })
+      );
+
+      await waitFor(() =>
+        expect(toastMock.error).toHaveBeenCalledWith(
+          'Não foi possível concluir a ação. Tenta novamente.'
+        )
+      );
+      expect(screen.getByRole('alertdialog')).toBeVisible();
     });
   });
 

@@ -25,6 +25,7 @@ import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState';
 import { Pagination } from '@/shared/components/Pagination';
+import { PlatformEnforcementBadge } from '@/shared/components/PlatformEnforcementBadge';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -36,28 +37,54 @@ export interface LibraryColumn<T> {
   readonly cell: (item: T) => ReactNode;
 }
 
-/** Origem e estado do item: cor + ícone + texto (design system, badges de estado). */
-export function LibraryItemBadges({ item }: { item: LibraryItem }) {
+/**
+ * Origem e estado do item: cor + ícone + texto (design system, badges de estado).
+ *
+ * Um item bloqueado pela moderação mostra «Bloqueado» com o motivo e a nota numa linha própria
+ * (que quebra de linha a 375 px). Nos detalhes, onde o motivo e a nota já vêm na frase de
+ * aviso, `withEnforcementDetail` fica falso e sobra só o selo «Bloqueado».
+ *
+ * @param withEnforcementDetail Mostra o motivo e a nota do bloqueio junto ao selo (por omissão, sim).
+ */
+export function LibraryItemBadges({
+  item,
+  withEnforcementDetail = true,
+}: {
+  item: LibraryItem;
+  withEnforcementDetail?: boolean;
+}) {
+  const blocked = item.platform_enforcement_status === 'blocked';
+
   return (
-    <span className="flex flex-wrap gap-1">
-      {item.scope === 'global' ? (
-        <Badge variant="outline">
-          <Globe aria-hidden /> Global
-        </Badge>
-      ) : (
-        <Badge variant="secondary">
-          <Lock aria-hidden /> Privado
-        </Badge>
-      )}
-      {!item.is_active && (
-        <Badge variant="outline">
-          <Archive aria-hidden /> Arquivado
-        </Badge>
-      )}
-      {item.platform_enforcement_status === 'blocked' && (
-        <Badge variant="destructive">
-          <Ban aria-hidden /> Bloqueado
-        </Badge>
+    <span className="flex flex-col items-start gap-1">
+      <span className="flex flex-wrap gap-1">
+        {item.scope === 'global' ? (
+          <Badge variant="outline">
+            <Globe aria-hidden /> Global
+          </Badge>
+        ) : (
+          <Badge variant="secondary">
+            <Lock aria-hidden /> Privado
+          </Badge>
+        )}
+        {!item.is_active && (
+          <Badge variant="outline">
+            <Archive aria-hidden /> Arquivado
+          </Badge>
+        )}
+        {blocked && !withEnforcementDetail && (
+          <Badge variant="destructive">
+            <Ban aria-hidden /> Bloqueado
+          </Badge>
+        )}
+      </span>
+      {blocked && withEnforcementDetail && (
+        <PlatformEnforcementBadge
+          enforcement={{
+            reason: item.platform_enforcement_reason ?? '',
+            note: item.platform_enforcement_note,
+          }}
+        />
       )}
     </span>
   );

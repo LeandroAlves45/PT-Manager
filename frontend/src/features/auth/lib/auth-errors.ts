@@ -1,4 +1,12 @@
 import { isApiProblem, type ApiFieldError, type ApiProblem } from '@/shared/api/problem';
+import {
+  CLIENT_ACCESS_ENDED_CODE,
+  CLIENT_ACCESS_ENDED_MESSAGE,
+  SESSION_ENDED_CODE,
+  SESSION_ENDED_MESSAGE,
+  TRAINER_BLOCKED_CODE,
+  trainerBlockedMessage,
+} from '@/shared/lib/accessNotices';
 
 /**
  * Mensagens PT-PT dos erros de autenticação, num só mapa.
@@ -18,6 +26,8 @@ const MESSAGES: Readonly<Record<string, string>> = {
     'Email ou palavra-passe inválidos. Se acabaste de criar conta, confirma primeiro o email.',
   authentication_registration_rejected:
     'Não foi possível criar a conta com estes dados. Verifica-os e tenta novamente.',
+  [SESSION_ENDED_CODE]: SESSION_ENDED_MESSAGE,
+  [CLIENT_ACCESS_ENDED_CODE]: CLIENT_ACCESS_ENDED_MESSAGE,
   authentication_account_inactive: 'Esta conta está desativada. Contacta o suporte.',
   authentication_email_delivery_unavailable:
     'Não foi possível enviar o email neste momento. Tenta novamente daqui a pouco.',
@@ -101,6 +111,9 @@ export function authErrorMessage(error: unknown): string {
 
 function problemMessage(problem: ApiProblem): string {
   if (problem.status === 429) return RATE_LIMIT_MESSAGE;
+
+  if (problem.code === TRAINER_BLOCKED_CODE)
+    return trainerBlockedMessage(problem.blockReason, problem.blockNote);
 
   const byCode = authCodeMessage(problem.code);
   if (byCode !== undefined) return byCode;

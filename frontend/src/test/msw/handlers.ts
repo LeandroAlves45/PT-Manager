@@ -11,6 +11,7 @@ import {
   pastWorkoutDay,
   portalBranding,
   portalHome,
+  planSupplementsToday,
   portalProfile,
   supplementAssignmentsPage,
   supplementIntakesToday,
@@ -18,7 +19,11 @@ import {
   workoutDays,
   workoutToday,
 } from '@/test/msw/portal-fixtures';
-import { dashboardResponse } from '@/test/msw/trainer-fixtures';
+import {
+  dashboardResponse,
+  initialAssessment,
+  pendingReviewPage,
+} from '@/test/msw/trainer-fixtures';
 
 /**
  * Handlers base do MSW: o caminho feliz da API usada pelas fundações da 6C.
@@ -106,6 +111,13 @@ export const handlers = [
   http.get(`${API}/dashboard`, () =>
     HttpResponse.json(dashboardResponse({ active_client_count: 0 }))
   ),
+  // A ficha do cliente lê a avaliação inicial; a shell lê o contador por rever.
+  http.get(`${API}/clients/:clientId/initial-assessment`, () =>
+    HttpResponse.json(initialAssessment())
+  ),
+  http.get(`${API}/initial-assessments/pending-review`, () =>
+    HttpResponse.json(pendingReviewPage())
+  ),
   // A ficha do cliente lê o estado do convite (U63). Por omissão, nunca enviado.
   http.get(`${API}/clients/:clientId/invitation`, () =>
     HttpResponse.json({ state: 'none', email: null, expires_at: null })
@@ -116,6 +128,7 @@ export const handlers = [
   ),
   http.get(`${API}/portal/branding`, () => HttpResponse.json(portalBranding())),
   http.get(`${API}/portal/home`, () => HttpResponse.json(portalHome())),
+  http.get(`${API}/portal/my-initial-assessment`, () => HttpResponse.json({ pending: false })),
   http.get(`${API}/portal/my-workout/today`, () => HttpResponse.json(workoutToday())),
   http.get(`${API}/portal/my-workout/days`, () => HttpResponse.json(workoutDays())),
   http.get(`${API}/portal/my-workout/day`, () => HttpResponse.json(pastWorkoutDay())),
@@ -125,6 +138,9 @@ export const handlers = [
   http.get(`${API}/portal/my-nutrition`, () => HttpResponse.json(nutritionPlan())),
   http.get(`${API}/portal/my-supplements/intakes/today`, () =>
     HttpResponse.json(supplementIntakesToday())
+  ),
+  http.get(`${API}/portal/my-plan-supplements/today`, () =>
+    HttpResponse.json(planSupplementsToday())
   ),
   http.get(`${API}/portal/my-supplements`, () => HttpResponse.json(supplementAssignmentsPage())),
   // O menu de perfil do portal lê o perfil em todas as páginas do cliente.

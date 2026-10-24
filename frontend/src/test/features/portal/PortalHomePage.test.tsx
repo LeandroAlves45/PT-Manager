@@ -348,3 +348,55 @@ describe('PortalHomePage', () => {
     expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument();
   });
 });
+
+describe('PortalHomePage: end-of-access notice', () => {
+  it('shows the notice first, above the initial assessment card, in the trainer time zone', async () => {
+    useHome(
+      portalHome({
+        initial_assessment_pending: true,
+        access_notice: { ends_at: '2026-10-14T14:30:00Z', time_zone: 'America/New_York' },
+      })
+    );
+
+    await openHome();
+
+    const notice = screen
+      .getByText(/O teu acesso ao portal continua até/)
+      .closest('[role="status"]');
+    expect(notice).not.toBeNull();
+    // 14:30 UTC são 10:30 em Nova Iorque (verão): o fuso é o do personal trainer, não o do browser.
+    expect(notice).toHaveTextContent(/14 de outubro de 2026.*10:30/);
+    expect(notice).toHaveTextContent('Depois dessa hora o acesso termina.');
+    // Nunca diz porquê.
+    expect(notice).not.toHaveTextContent(/bloque|motivo|nota/i);
+
+    const assessment = card('Avaliação inicial');
+    expect(
+      notice!.compareDocumentPosition(assessment) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    // Os outros cartões ficam por baixo.
+    expect(
+      notice!.compareDocumentPosition(card('O meu treino de hoje')) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  });
+
+  it('shows no notice when the home has none', async () => {
+    useHome(portalHome({ access_notice: null }));
+
+    await openHome();
+
+    expect(screen.queryByText(/O teu acesso ao portal continua/)).not.toBeInTheDocument();
+  });
+
+  it('does not show the notice on the other portal pages', async () => {
+    useHome(
+      portalHome({ access_notice: { ends_at: '2026-10-14T14:30:00Z', time_zone: 'Europe/Lisbon' } })
+    );
+    server.use(...restorableSession({ role: 'client' }));
+    renderApp({ initialEntries: ['/portal/supplements'] });
+    await screen.findByRole('heading', { name: 'Suplementos' });
+
+    expect(screen.queryByText(/O teu acesso ao portal continua/)).not.toBeInTheDocument();
+  });
+});

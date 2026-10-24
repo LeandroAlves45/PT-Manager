@@ -99,6 +99,26 @@ describe('ClientCheckInsTab', () => {
     ).toBeInTheDocument();
   });
 
+  it('explains that the client needs an initial assessment before scheduling', async () => {
+    handlers();
+    server.use(
+      http.post(`${API}/check-ins`, () =>
+        HttpResponse.json(problem('initial_assessment_required'), { status: 409 })
+      )
+    );
+    const user = userEvent.setup();
+    renderApp({ initialEntries: [ROUTE] });
+
+    await user.click(await screen.findByRole('link', { name: 'Agendar avaliação' }));
+    await screen.findByRole('heading', { name: 'Agendar avaliação periódica' });
+    await user.type(screen.getByLabelText('Dia da avaliação'), dayFromToday(0));
+    await user.click(screen.getByRole('button', { name: 'Agendar' }));
+
+    expect(
+      await screen.findByText('Este cliente ainda não tem avaliação inicial.')
+    ).toBeInTheDocument();
+  });
+
   it('does not offer scheduling for an archived client', async () => {
     handlers(clientDetails({ is_active: false }));
     renderApp({ initialEntries: [ROUTE] });

@@ -33,6 +33,8 @@ export interface NavigationItem {
   readonly route: string;
   readonly icon: LucideIcon;
   readonly exact?: boolean;
+  /** Contador mostrado ao lado do item; o `SidebarNav` sabe lê-lo. */
+  readonly badge?: 'initial-assessments-pending';
 }
 
 export interface NavigationGroup {
@@ -45,7 +47,12 @@ const TRAINER_NAVIGATION: readonly NavigationGroup[] = [
     label: 'Principal',
     items: [
       { label: 'Painel', route: '/trainer', icon: LayoutDashboard, exact: true },
-      { label: 'Clientes', route: '/trainer/clients', icon: Users },
+      {
+        label: 'Clientes',
+        route: '/trainer/clients',
+        icon: Users,
+        badge: 'initial-assessments-pending',
+      },
       { label: 'Sessões e packs', route: '/trainer/sessions', icon: CalendarDays },
       { label: 'Avaliações', route: '/trainer/check-ins', icon: ClipboardCheck },
     ],

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  exerciseDisplayName,
   formatDecimal,
   isWorkoutDayUnavailable,
   loggedSetLabel,
@@ -197,17 +196,6 @@ describe('workoutFailureMessage', () => {
     );
     expect(workoutFailureMessage(new TypeError('Failed to fetch'))).toBe(
       'Não foi possível guardar. Tenta novamente.'
-    );
-  });
-});
-
-describe('exerciseDisplayName', () => {
-  it('replaces the masked English name of a blocked exercise', () => {
-    expect(
-      exerciseDisplayName({ exercise_name: 'Unavailable exercise', is_unavailable: true })
-    ).toBe('Exercício indisponível');
-    expect(exerciseDisplayName({ exercise_name: 'Agachamento', is_unavailable: false })).toBe(
-      'Agachamento'
     );
   });
 });

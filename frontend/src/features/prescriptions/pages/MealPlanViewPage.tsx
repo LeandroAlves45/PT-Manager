@@ -14,9 +14,11 @@ import {
   unitLabel,
 } from '@/features/prescriptions/lib/nutrition';
 import { isApiProblem } from '@/shared/api/problem';
+import type { components } from '@/shared/api/schema';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState';
 import { PageHeader } from '@/shared/components/PageHeader';
+import { PlatformEnforcementBadge } from '@/shared/components/PlatformEnforcementBadge';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
@@ -25,6 +27,38 @@ import { formatDate } from '@/shared/lib/format';
 /** Gramas ou quantidade com até 2 casas, em PT-PT. */
 function formatQuantity(value: number): string {
   return new Intl.NumberFormat('pt-PT', { maximumFractionDigits: 2 }).format(value);
+}
+
+/**
+ * Lista de suplementos de uma refeição ou do plano: nome, quantidade com a unidade, notas e,
+ * se a moderação bloqueou o item, a marca «Bloqueado» com o motivo.
+ */
+function SupplementList({
+  supplements,
+}: {
+  supplements: readonly components['schemas']['MealSupplementResponse'][];
+}) {
+  return (
+    <ul className="divide-border divide-y text-sm">
+      {supplements.map((item) => (
+        <li key={item.id} className="space-y-1 py-1.5">
+          <p>
+            {item.supplement_name}{' '}
+            <span className="text-muted-foreground">
+              {formatQuantity(item.quantity)}
+              {unitLabel(item.unit_of_measure) === null
+                ? ''
+                : ` ${unitLabel(item.unit_of_measure)}`}
+              {item.notes !== null && item.notes !== '' ? ` · ${item.notes}` : ''}
+            </span>
+          </p>
+          {item.platform_enforcement !== null && (
+            <PlatformEnforcementBadge enforcement={item.platform_enforcement} />
+          )}
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 /**
@@ -139,9 +173,16 @@ export function MealPlanViewPage() {
                           {formatQuantity(item.quantity_in_grams)} g
                         </span>
                       </span>
-                      <span className="text-primary tabular-nums">
-                        {formatQuantity(item.contribution.kcal)} kcal
-                      </span>
+                      {item.platform_enforcement === null ? (
+                        <span className="text-primary tabular-nums">
+                          {formatQuantity(item.contribution.kcal)} kcal
+                        </span>
+                      ) : (
+                        <PlatformEnforcementBadge
+                          enforcement={item.platform_enforcement}
+                          className="basis-full pt-1"
+                        />
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -149,26 +190,22 @@ export function MealPlanViewPage() {
               {meal.supplements.length > 0 && (
                 <div className="space-y-1">
                   <h4 className="text-muted-foreground text-xs">Suplementos nesta refeição</h4>
-                  <ul className="divide-border divide-y text-sm">
-                    {meal.supplements.map((item) => (
-                      <li key={item.id} className="py-1.5">
-                        {item.supplement_name}{' '}
-                        <span className="text-muted-foreground">
-                          {formatQuantity(item.quantity)}
-                          {unitLabel(item.unit_of_measure) === null
-                            ? ''
-                            : ` ${unitLabel(item.unit_of_measure)}`}
-                          {item.notes !== null && item.notes !== '' ? ` · ${item.notes}` : ''}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                  <SupplementList supplements={meal.supplements} />
                 </div>
               )}
             </article>
           ))
         )}
       </section>
+
+      {data.plan_supplements.length > 0 && (
+        <section aria-label="Suplementos do plano" className="space-y-3">
+          <h2 className="font-display text-xl">Suplementos do plano (fora das refeições)</h2>
+          <div className="border-border bg-card rounded-xl border p-4">
+            <SupplementList supplements={data.plan_supplements} />
+          </div>
+        </section>
+      )}
     </section>
   );
 }

@@ -20,3 +20,12 @@ export function platformEnforcementReasonLabel(reason: string | null): string {
     ? PLATFORM_ENFORCEMENT_REASONS[reason as PlatformEnforcementReason]
     : '—';
 }
+
+/** Tamanho máximo da nota livre de um bloqueio (o servidor recusa mais com 400). */
+export const PLATFORM_ENFORCEMENT_NOTE_MAX = 500;
+
+/** Nota a enviar ao servidor: `null` quando está vazia ou só tem espaços. */
+export function platformEnforcementNoteOrNull(note: string): string | null {
+  const trimmed = note.trim();
+  return trimmed === '' ? null : trimmed;
+}

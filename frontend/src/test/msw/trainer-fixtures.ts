@@ -39,6 +39,23 @@ export function dashboardResponse(
         },
       ],
     },
+    initial_assessments_pending_review: {
+      total_count: 2,
+      items: [
+        {
+          assessment_id: '99999999-9999-9999-9999-999999999991',
+          client_id: CLIENT_ID,
+          client_name: 'Ana Ribeiro',
+          submitted_at: '2026-09-12T10:00:00Z',
+        },
+        {
+          assessment_id: '99999999-9999-9999-9999-999999999992',
+          client_id: '33333333-3333-3333-3333-333333333334',
+          client_name: 'Bruno Costa',
+          submitted_at: '2026-09-14T18:30:00Z',
+        },
+      ],
+    },
     packs_ending: {
       total_count: 1,
       items: [
@@ -338,6 +355,7 @@ export function exercise(
     is_active: true,
     platform_enforcement_status: 'allowed',
     platform_enforcement_reason: null,
+    platform_enforcement_note: null,
     created_at: '2026-09-01T10:00:00Z',
     updated_at: '2026-09-01T10:00:00Z',
     ...overrides,
@@ -360,13 +378,14 @@ export function food(overrides: Partial<Schemas['FoodResponse']> = {}): Schemas[
     is_active: true,
     platform_enforcement_status: 'allowed',
     platform_enforcement_reason: null,
+    platform_enforcement_note: null,
     created_at: '2026-09-01T10:00:00Z',
     updated_at: '2026-09-01T10:00:00Z',
     ...overrides,
   };
 }
 
-/** Suplemento privado ativo (sem campos de moderação: o contrato não os tem). */
+/** Suplemento privado ativo, sem bloqueio da plataforma. */
 export function supplement(
   overrides: Partial<Schemas['SupplementResponse']> = {}
 ): Schemas['SupplementResponse'] {
@@ -380,6 +399,9 @@ export function supplement(
     timing: 'Ao pequeno-almoço',
     trainer_notes: null,
     is_active: true,
+    platform_enforcement_status: 'allowed',
+    platform_enforcement_reason: null,
+    platform_enforcement_note: null,
     created_at: '2026-09-01T10:00:00Z',
     updated_at: '2026-09-01T10:00:00Z',
     ...overrides,
@@ -389,4 +411,65 @@ export function supplement(
 /** Qualquer página da biblioteca no envelope `PagedResponse`. */
 export function libraryPage<T>(items: T[], total = items.length, pageNumber = 1) {
   return { items, total_count: total, page_number: pageNumber, page_size: 25 };
+}
+
+export const INITIAL_ASSESSMENT_ID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+
+/** Avaliação inicial completa (valores `null` onde a API envia `null`), feita pelo trainer. */
+export function initialAssessment(
+  overrides: Partial<Schemas['InitialAssessmentResponse']> = {}
+): Schemas['InitialAssessmentResponse'] {
+  return {
+    id: INITIAL_ASSESSMENT_ID,
+    client_id: CLIENT_ID,
+    weight_kg: 66,
+    height_cm: 168,
+    body_fat_percentage: null,
+    medical_conditions: null,
+    fitness_level: 'recreational',
+    activity_level: 'moderately_active',
+    goals: 'Força',
+    profession: null,
+    body_measurements: {
+      waist_cm: null,
+      hip_cm: null,
+      chest_cm: null,
+      right_arm_cm: null,
+      left_arm_cm: null,
+      right_thigh_cm: null,
+      left_thigh_cm: null,
+      right_calf_cm: null,
+      left_calf_cm: null,
+    },
+    nutrition_intake: {
+      food_preferences: null,
+      disliked_foods: null,
+      food_intolerances: null,
+      food_allergies: null,
+      dietary_restrictions: null,
+      daily_routine: null,
+      sleep_quality: null,
+      mood: null,
+      stress_level: null,
+      avg_water_liters_per_day: null,
+      hungriest_time_of_day: null,
+      uses_supplements: null,
+      current_supplements: null,
+      other_notes: null,
+    },
+    submitted_by_client: false,
+    reviewed_at: null,
+    created_at: '2026-09-01T10:00:00Z',
+    updated_at: '2026-09-01T10:00:00Z',
+    ...overrides,
+  };
+}
+
+/** Página de avaliações iniciais por rever. */
+export function pendingReviewPage(
+  items: Schemas['PendingReviewInitialAssessmentResponse'][] = [],
+  total = items.length,
+  pageNumber = 1
+) {
+  return { items, page_number: pageNumber, page_size: 25, total_count: total };
 }

@@ -31,12 +31,20 @@ export class ApiProblem extends Error {
   // Erros por campo; vazio quando a falha não é a validação
   readonly fieldErrors: readonly ApiFieldError[];
 
+  // Motivo do bloqueio da conta (extensão `block_reason` de `trainer_account_blocked`)
+  readonly blockReason: string | null;
+
+  // Nota livre do bloqueio (extensão `block_note`); `null` quando não existe
+  readonly blockNote: string | null;
+
   constructor(init: {
     status: number;
     code: string;
     detail: string;
     correlationId: string | null;
     fieldErrors: readonly ApiFieldError[];
+    blockReason?: string | null;
+    blockNote?: string | null;
   }) {
     super(init.detail);
     this.name = 'ApiProblem';
@@ -44,6 +52,8 @@ export class ApiProblem extends Error {
     this.code = init.code;
     this.correlationId = init.correlationId;
     this.fieldErrors = init.fieldErrors;
+    this.blockReason = init.blockReason ?? null;
+    this.blockNote = init.blockNote ?? null;
   }
 
   /** Verdadeiro quando há erros por campo para devolver ao formulário. */
@@ -78,7 +88,18 @@ export function toApiProblem(status: number, body: unknown): ApiProblem {
     detail: problem.detail ?? 'Ocorreu um erro inesperado.',
     correlationId: problem.correlation_id ?? null,
     fieldErrors,
+    blockReason: readStringExtension(body, 'block_reason'),
+    blockNote: readStringExtension(body, 'block_note'),
   });
+}
+
+/**
+ * Lê uma extensão do ProblemDetails que o contrato OpenAPI não declara (o `schema.d.ts`
+ * só conhece os campos base). Qualquer outro tipo que não texto conta como ausente.
+ */
+function readStringExtension(body: unknown, key: string): string | null {
+  const value = (body as Record<string, unknown> | null | undefined)?.[key];
+  return typeof value === 'string' ? value : null;
 }
 
 /** Estreita um 'unknown' apanhado num 'catch' para um 'ApiProblem'. */
