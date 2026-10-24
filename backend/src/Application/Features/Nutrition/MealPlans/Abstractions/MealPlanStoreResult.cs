@@ -11,6 +11,7 @@ public sealed class MealPlanStoreResult
         AlreadyInRequestedState,
         NotFound,
         ClientNotFound,
+        InitialAssessmentRequired,
         StructureReferenceNotFound,
         CatalogReferenceNotFound,
         CatalogReferenceInactive
@@ -35,6 +36,8 @@ public sealed class MealPlanStoreResult
     public static MealPlanStoreResult ForNotFound() => new(Status.NotFound, null);
     public static MealPlanStoreResult ForClientNotFound() =>
         new(Status.ClientNotFound, null);
+    public static MealPlanStoreResult ForInitialAssessmentRequired() =>
+        new(Status.InitialAssessmentRequired, null);
     public static MealPlanStoreResult ForStructureReferenceNotFound() =>
         new(Status.StructureReferenceNotFound, null);
     public static MealPlanStoreResult ForCatalogReferenceNotFound() =>

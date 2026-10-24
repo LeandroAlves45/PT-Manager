@@ -96,7 +96,8 @@ public sealed class FoodsControllerTests
             Token);
 
         var client = _fixture.Factory.CreateOriginClient()
-            .WithBearer(TestJwtFactory.IssueTrainer(Guid.NewGuid()));
+            .WithBearer(TestJwtFactory.IssueTrainer(
+                (await NutritionTestData.SeedTrainerAsync(_fixture.Factory, Token)).TrainerId));
 
         var response = await client.GetAsync($"/api/v1/foods/{foodId}", Token);
 
@@ -114,7 +115,8 @@ public sealed class FoodsControllerTests
             Token);
 
         var client = _fixture.Factory.CreateOriginClient()
-            .WithBearer(TestJwtFactory.IssueTrainer(Guid.NewGuid()));
+            .WithBearer(TestJwtFactory.IssueTrainer(
+                (await NutritionTestData.SeedTrainerAsync(_fixture.Factory, Token)).TrainerId));
 
         var response = await client.PatchAsJsonAsync(
             $"/api/v1/foods/{foodId}",

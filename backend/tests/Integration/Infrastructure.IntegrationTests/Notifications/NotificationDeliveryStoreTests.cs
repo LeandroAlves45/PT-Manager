@@ -4,6 +4,7 @@ using Domain.Entities.Notifications;
 using Domain.ValueObjects;
 using Infrastructure.IntegrationTests.Support;
 using Infrastructure.Persistence.Notifications;
+using Infrastructure.Time;
 using Npgsql;
 
 namespace Infrastructure.IntegrationTests.Notifications;
@@ -209,7 +210,7 @@ public sealed class NotificationDeliveryStoreTests
         // O contexto é aberto no tenant errado: o Global Query Filter tem de
         // esconder a notificação em vez de a devolver.
         await using var context = _fixture.CreateContext(otherTenant.TrainerId);
-        var store = new NotificationDeliveryStore(context, new TestClock(Now));
+        var store = new NotificationDeliveryStore(context, new TestClock(Now), new TrainerTimeZoneProvider(context));
 
         var preparation = await store.PrepareAsync(
             owner.NotificationId,
@@ -226,7 +227,7 @@ public sealed class NotificationDeliveryStoreTests
         Guid? leaseOwnerId = null)
     {
         await using var context = _fixture.CreateContext(scenario.TrainerId);
-        var store = new NotificationDeliveryStore(context, new TestClock(Now));
+        var store = new NotificationDeliveryStore(context, new TestClock(Now), new TrainerTimeZoneProvider(context));
 
         return await store.PrepareAsync(
             scenario.NotificationId,
@@ -240,7 +241,7 @@ public sealed class NotificationDeliveryStoreTests
         Guid? leaseOwnerId = null)
     {
         await using var context = _fixture.CreateContext(scenario.TrainerId);
-        var store = new NotificationDeliveryStore(context, new TestClock(Now));
+        var store = new NotificationDeliveryStore(context, new TestClock(Now), new TrainerTimeZoneProvider(context));
 
         return await store.MarkSentAsync(
             scenario.NotificationId,
@@ -255,7 +256,7 @@ public sealed class NotificationDeliveryStoreTests
         Guid? leaseOwnerId = null)
     {
         await using var context = _fixture.CreateContext(scenario.TrainerId);
-        var store = new NotificationDeliveryStore(context, new TestClock(Now));
+        var store = new NotificationDeliveryStore(context, new TestClock(Now), new TrainerTimeZoneProvider(context));
 
         return await store.MarkFailedAsync(
             scenario.NotificationId,

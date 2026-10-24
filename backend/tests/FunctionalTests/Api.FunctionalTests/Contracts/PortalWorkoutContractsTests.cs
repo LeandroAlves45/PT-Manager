@@ -15,14 +15,13 @@ public sealed class PortalWorkoutContractsTests
     {
         var prescriptionId = Guid.NewGuid();
         var catalogExerciseId = Guid.NewGuid();
-        // Três booleanos seguidos num record posicional: só HasReadyVideo é verdadeiro, para
-        // uma troca de posição com IsUnavailable ou IsCompleted ser visível.
+        // Dois booleanos num record posicional: só HasReadyVideo é verdadeiro, para uma troca
+        // de posição com IsCompleted ser visível.
         var dto = new MyWorkoutTodayDto.ExerciseDto(
             prescriptionId,
             catalogExerciseId,
             2,
             "Supino",
-            IsUnavailable: false,
             HasReadyVideo: true,
             null,
             null,
@@ -35,7 +34,6 @@ public sealed class PortalWorkoutContractsTests
         Assert.Equal(prescriptionId, response.Id);
         Assert.Equal(catalogExerciseId, response.ExerciseId);
         Assert.True(response.HasReadyVideo);
-        Assert.False(response.IsUnavailable);
         Assert.False(response.IsCompleted);
     }
 }

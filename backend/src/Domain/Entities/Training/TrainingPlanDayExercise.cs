@@ -16,6 +16,11 @@ public sealed class TrainingPlanDayExercise
     /// <summary>Posição interna no grupo; null num exercício isolado.</summary>
     public int? GroupPosition { get; private set; }
     public string? Notes { get; private set; }
+    /// <summary>
+    /// Instante em que o exercício foi retirado do plano por o bloqueio ter sido levantado
+    /// quando o cliente já tinha séries registadas. Fica para o histórico; o portal não o mostra.
+    /// </summary>
+    public DateTime? RetiredAt { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
     public IReadOnlyCollection<ExerciseSet> Sets => _sets;

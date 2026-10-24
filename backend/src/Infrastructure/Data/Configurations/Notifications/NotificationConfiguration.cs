@@ -77,7 +77,7 @@ internal sealed class NotificationConfiguration : IEntityTypeConfiguration<Notif
             .HasDefaultValueSql("now()")
             .IsRequired();
 
-        builder.ToTable(tb => tb.HasCheckConstraint("status_check", "status IN ('pending', 'sent', 'failed', 'bounced')"));
+        builder.ToTable(tb => tb.HasCheckConstraint("status_check", "status IN ('pending', 'sent', 'failed', 'bounced', 'skipped')"));
 
         builder.HasIndex(n => n.OwnerTrainerId).HasDatabaseName("idx_notifications_trainer");
         builder.HasIndex(n => n.Status).HasDatabaseName("idx_notifications_status");

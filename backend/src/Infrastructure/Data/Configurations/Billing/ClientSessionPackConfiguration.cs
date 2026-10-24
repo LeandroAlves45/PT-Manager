@@ -87,6 +87,10 @@ internal sealed class ClientSessionPackConfiguration : IEntityTypeConfiguration<
             .HasColumnName("completed_at")
             .HasColumnType("timestamptz");
 
+        builder.Property(csp => csp.ForfeitedAt)
+            .HasColumnName("forfeited_at")
+            .HasColumnType("timestamptz");
+
         builder.Ignore(csp => csp.IsCompleted);
         builder.Ignore(csp => csp.IsUsable);
 

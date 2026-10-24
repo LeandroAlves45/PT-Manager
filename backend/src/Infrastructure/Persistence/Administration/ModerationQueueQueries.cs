@@ -34,6 +34,7 @@ internal sealed class ModerationQueueQueries : IModerationQueueQueries
         {
             ModerationContentKind.Food => ListFoodAsync(status, search, page, cancellationToken),
             ModerationContentKind.Exercise => ListExerciseAsync(status, search, page, cancellationToken),
+            ModerationContentKind.Supplement => ListSupplementAsync(status, search, page, cancellationToken),
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
     }
@@ -86,6 +87,7 @@ internal sealed class ModerationQueueQueries : IModerationQueueQueries
                 food.PlatformEnforcementReason != null
                     ? food.PlatformEnforcementReason.Value
                     : null,
+                food.PlatformEnforcementNote,
                 food.PlatformEnforcedAt,
                 food.CreatedAt,
                 food.UpdatedAt))
@@ -141,9 +143,66 @@ internal sealed class ModerationQueueQueries : IModerationQueueQueries
                 exercise.PlatformEnforcementReason != null
                     ? exercise.PlatformEnforcementReason.Value
                     : null,
+                exercise.PlatformEnforcementNote,
                 exercise.PlatformEnforcedAt,
                 exercise.CreatedAt,
                 exercise.UpdatedAt))
+            .ToListAsync(cancellationToken);
+
+        return new PageResult<ModerationQueueItemDto>(items, totalCount);
+    }
+
+    private async Task<PageResult<ModerationQueueItemDto>> ListSupplementAsync(
+        ModerationStatusFilter status,
+        string? search,
+        PageRequest page,
+        CancellationToken cancellationToken)
+    {
+        var query = _dbContext.Supplements
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(supplement => supplement.OwnerTrainerId != null);
+
+        query = status switch
+        {
+            ModerationStatusFilter.Blocked => query.Where(supplement =>
+                supplement.PlatformEnforcementStatus == PlatformEnforcementStatus.Blocked),
+            ModerationStatusFilter.Allowed => query.Where(supplement =>
+                supplement.PlatformEnforcementStatus == PlatformEnforcementStatus.Allowed),
+            ModerationStatusFilter.All => query,
+            _ => throw new ArgumentOutOfRangeException(nameof(status))
+        };
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var pattern = LikeSearchPattern.Build(search);
+            query = query.Where(supplement => EF.Functions.ILike(
+                supplement.Name, pattern, LikeSearchPattern.LikeEscapeCharacter));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderByDescending(supplement => supplement.UpdatedAt)
+            .ThenBy(supplement => supplement.Id)
+            .Skip((page.PageNumber - 1) * page.PageSize)
+            .Take(page.PageSize)
+            .Select(supplement => new ModerationQueueItemDto(
+                supplement.Id,
+                supplement.Name,
+                supplement.OwnerTrainerId!.Value,
+                _dbContext.Users
+                    .Where(user => user.Id == supplement.OwnerTrainerId!.Value)
+                    .Select(user => user.FullName)
+                    .FirstOrDefault(),
+                supplement.IsActive,
+                supplement.PlatformEnforcementStatus.Value,
+                supplement.PlatformEnforcementReason != null
+                    ? supplement.PlatformEnforcementReason.Value
+                    : null,
+                supplement.PlatformEnforcementNote,
+                supplement.PlatformEnforcedAt,
+                supplement.CreatedAt,
+                supplement.UpdatedAt))
             .ToListAsync(cancellationToken);
 
         return new PageResult<ModerationQueueItemDto>(items, totalCount);

@@ -13,6 +13,7 @@ public sealed class ClientSupplementAssignmentStoreResult
         AlreadyInRequestedState,
         ClientNotFound,
         ClientInactive,
+        InitialAssessmentRequired,
         SupplementNotFound,
         SupplementInactive,
         AssignmentNotFound,

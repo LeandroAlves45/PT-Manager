@@ -1,3 +1,4 @@
+using Application.Common;
 using Application.Features.Nutrition.Calculations;
 
 namespace Application.Features.Nutrition.MealPlans.Dtos;
@@ -16,6 +17,7 @@ public sealed record MealPlanDetailsDto(
     bool IsArchived,
     bool NeedsReview,
     IReadOnlyList<MealPlanDetailsDto.MealDto> Meals,
+    IReadOnlyList<MealPlanDetailsDto.MealSupplementDto> PlanSupplements,
     DateTime CreatedAt,
     DateTime UpdatedAt
 )
@@ -30,7 +32,10 @@ public sealed record MealPlanDetailsDto(
         IReadOnlyList<MealSupplementDto> Supplements
     );
 
-    /// <summary>Alimento preescrito e respetiva contribuição nutricional.</summary>
+    /// <summary>
+    /// Alimento prescrito e respetiva contribuição nutricional. O bloqueado pela moderação traz
+    /// o motivo e a nota e não conta nos totais da refeição nem do plano.
+    /// </summary>
     public sealed record MealItemDto(
         Guid Id,
         Guid FoodId,
@@ -42,10 +47,11 @@ public sealed record MealPlanDetailsDto(
         decimal FatsPer100G,
         decimal KcalPer100G,
         decimal? FiberPer100G,
-        NutritionTotalsDto Contribution
+        NutritionTotalsDto Contribution,
+        PlatformEnforcementDto? PlatformEnforcement
     );
 
-    /// <summary>Suplemento associado sem contribuição para totais nutricionais.</summary>
+    /// <summary>Suplemento associado sem contribuição para totais nutricionais; o bloqueado traz o motivo e a nota.</summary>
     public sealed record MealSupplementDto(
         Guid Id,
         Guid SupplementId,
@@ -53,6 +59,7 @@ public sealed record MealPlanDetailsDto(
         string UnitOfMeasure,
         string? Notes,
         decimal Quantity,
-        int OrderNumber
+        int OrderNumber,
+        PlatformEnforcementDto? PlatformEnforcement
     );
 }

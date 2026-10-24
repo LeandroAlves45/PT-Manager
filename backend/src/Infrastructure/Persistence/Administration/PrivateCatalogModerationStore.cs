@@ -24,6 +24,7 @@ internal sealed class PrivateCatalogModerationStore : IPrivateCatalogModerationS
         Guid actorUserId,
         Guid foodId,
         PlatformEnforcementReason reason,
+        string? note,
         DateTime now,
         CancellationToken cancellationToken)
     {
@@ -34,6 +35,7 @@ internal sealed class PrivateCatalogModerationStore : IPrivateCatalogModerationS
             actorUserId,
             foodId,
             reason,
+            note,
             shouldBlock: true,
             now,
             attempt,
@@ -53,6 +55,7 @@ internal sealed class PrivateCatalogModerationStore : IPrivateCatalogModerationS
             actorUserId,
             foodId,
             reason: null,
+            note: null,
             shouldBlock: false,
             now,
             attempt,
@@ -65,6 +68,7 @@ internal sealed class PrivateCatalogModerationStore : IPrivateCatalogModerationS
         Guid actorUserId,
         Guid exerciseId,
         PlatformEnforcementReason reason,
+        string? note,
         DateTime now,
         CancellationToken cancellationToken)
     {
@@ -75,6 +79,7 @@ internal sealed class PrivateCatalogModerationStore : IPrivateCatalogModerationS
             actorUserId,
             exerciseId,
             reason,
+            note,
             shouldBlock: true,
             now,
             attempt,
@@ -94,6 +99,7 @@ internal sealed class PrivateCatalogModerationStore : IPrivateCatalogModerationS
             actorUserId,
             exerciseId,
             reason: null,
+            note: null,
             shouldBlock: false,
             now,
             attempt,
@@ -106,6 +112,7 @@ internal sealed class PrivateCatalogModerationStore : IPrivateCatalogModerationS
         Guid actorUserId,
         Guid foodId,
         PlatformEnforcementReason? reason,
+        string? note,
         bool shouldBlock,
         DateTime now,
         MutationAttempt attempt,
@@ -127,9 +134,11 @@ internal sealed class PrivateCatalogModerationStore : IPrivateCatalogModerationS
             return PrivateCatalogModerationStoreResult.NotPrivate;
 
         var before = Snapshot(food);
-        var changed = shouldBlock ? food.Block(reason!, now) : food.Unblock(now);
+        var changed = shouldBlock ? food.Block(reason!, now, note) : food.Unblock(now);
         if (!changed)
             return PrivateCatalogModerationStoreResult.AlreadyInRequestedState;
+        if (!shouldBlock)
+            await RemoveFoodFromPlansAsync(food.Id, cancellationToken);
 
         attempt.AuditEntry = AddAudit(
             actorUserId,
@@ -148,6 +157,7 @@ internal sealed class PrivateCatalogModerationStore : IPrivateCatalogModerationS
         Guid actorUserId,
         Guid exerciseId,
         PlatformEnforcementReason? reason,
+        string? note,
         bool shouldBlock,
         DateTime now,
         MutationAttempt attempt,
@@ -168,9 +178,11 @@ internal sealed class PrivateCatalogModerationStore : IPrivateCatalogModerationS
             return PrivateCatalogModerationStoreResult.NotPrivate;
 
         var before = Snapshot(exercise);
-        var changed = shouldBlock ? exercise.Block(reason!, now) : exercise.Unblock(now);
+        var changed = shouldBlock ? exercise.Block(reason!, now, note) : exercise.Unblock(now);
         if (!changed)
             return PrivateCatalogModerationStoreResult.AlreadyInRequestedState;
+        if (!shouldBlock)
+            await RemoveExerciseFromPlansAsync(exercise.Id, now, cancellationToken);
 
         attempt.AuditEntry = AddAudit(
             actorUserId,
@@ -183,6 +195,138 @@ internal sealed class PrivateCatalogModerationStore : IPrivateCatalogModerationS
         );
         await _dbContext.SaveChangesAsync(cancellationToken);
         return PrivateCatalogModerationStoreResult.Changed;
+    }
+
+    public Task<PrivateCatalogModerationStoreResult> BlockSupplementAsync(
+        Guid actorUserId,
+        Guid supplementId,
+        PlatformEnforcementReason reason,
+        string? note,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(reason);
+
+        var attempt = new MutationAttempt();
+        return ExecuteAsync(token => ChangeSupplementOnceAsync(
+            actorUserId, supplementId, reason, note, shouldBlock: true, now, attempt, token),
+        attempt,
+        cancellationToken);
+    }
+
+    public Task<PrivateCatalogModerationStoreResult> UnblockSupplementAsync(
+        Guid actorUserId,
+        Guid supplementId,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var attempt = new MutationAttempt();
+        return ExecuteAsync(token => ChangeSupplementOnceAsync(
+            actorUserId, supplementId, reason: null, note: null, shouldBlock: false, now, attempt, token),
+        attempt,
+        cancellationToken);
+    }
+
+    private async Task<PrivateCatalogModerationStoreResult> ChangeSupplementOnceAsync(
+        Guid actorUserId,
+        Guid supplementId,
+        PlatformEnforcementReason? reason,
+        string? note,
+        bool shouldBlock,
+        DateTime now,
+        MutationAttempt attempt,
+        CancellationToken cancellationToken)
+    {
+        if (!await IsActiveSuperuserAsync(actorUserId, cancellationToken))
+            return PrivateCatalogModerationStoreResult.ActorInvalid;
+
+        var supplement = await _dbContext.Supplements
+            .FromSqlInterpolated($"""
+                SELECT * FROM supplements WHERE id = {supplementId} FOR UPDATE
+            """)
+            .IgnoreQueryFilters()
+            .SingleOrDefaultAsync(cancellationToken);
+        if (supplement is null)
+            return PrivateCatalogModerationStoreResult.NotFound;
+        if (!supplement.OwnerTrainerId.HasValue)
+            return PrivateCatalogModerationStoreResult.NotPrivate;
+
+        var before = Snapshot(supplement);
+        var changed = shouldBlock ? supplement.Block(reason!, now, note) : supplement.Unblock(now);
+        if (!changed)
+            return PrivateCatalogModerationStoreResult.AlreadyInRequestedState;
+        if (!shouldBlock)
+            await RemoveSupplementFromPlansAsync(supplement.Id, now, cancellationToken);
+
+        attempt.AuditEntry = AddAudit(
+            actorUserId,
+            shouldBlock ? "supplement_platform_blocked" : "supplement_platform_unblocked",
+            "supplement",
+            supplement.Id,
+            before,
+            Snapshot(supplement),
+            now
+        );
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return PrivateCatalogModerationStoreResult.Changed;
+    }
+
+    // Levantar o bloqueio torna o item outra vez utilizável na biblioteca e tira-o dos planos
+    // onde estava: o cliente não o vê até o personal trainer o voltar a pôr. O contexto
+    // administrativo não tem tenant: sem IgnoreQueryFilters os filtros escondem todas as linhas
+    // e o ExecuteDelete não apaga nada, sem erro.
+    private Task RemoveFoodFromPlansAsync(Guid foodId, CancellationToken cancellationToken) =>
+        _dbContext.MealPlanMealItems
+            .IgnoreQueryFilters()
+            .Where(item => item.FoodId == foodId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+    /// <summary>
+    /// Tira o exercício dos planos. Onde o cliente já registou séries, a linha fica no plano
+    /// marcada como retirada, para o histórico não se perder; nas outras sai (com as séries
+    /// planeadas).
+    /// </summary>
+    private async Task RemoveExerciseFromPlansAsync(Guid exerciseId, DateTime now, CancellationToken cancellationToken)
+    {
+        var withHistory = _dbContext.TrainingPlanDayExercises
+            .IgnoreQueryFilters()
+            .Where(item => item.ExerciseId == exerciseId &&
+                _dbContext.ClientExerciseSetLogs.IgnoreQueryFilters()
+                    .Any(log => log.TrainingPlanDayExerciseId == item.Id));
+
+        await withHistory
+            .Where(item => item.RetiredAt == null)
+            .ExecuteUpdateAsync(set => set.SetProperty(item => item.RetiredAt, now), cancellationToken);
+
+        await _dbContext.TrainingPlanDayExercises
+            .IgnoreQueryFilters()
+            .Where(item => item.ExerciseId == exerciseId &&
+                !_dbContext.ClientExerciseSetLogs.IgnoreQueryFilters()
+                    .Any(log => log.TrainingPlanDayExerciseId == item.Id))
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Tira o suplemento das refeições e do plano fora das refeições (as tomas ficam, sem a
+    /// prescrição) e desativa as atribuições diretas.
+    /// </summary>
+    private async Task RemoveSupplementFromPlansAsync(Guid supplementId, DateTime now, CancellationToken cancellationToken)
+    {
+        await _dbContext.MealPlanMealSupplements
+            .IgnoreQueryFilters()
+            .Where(item => item.SupplementId == supplementId)
+            .ExecuteDeleteAsync(cancellationToken);
+        await _dbContext.MealPlanSupplements
+            .IgnoreQueryFilters()
+            .Where(item => item.SupplementId == supplementId)
+            .ExecuteDeleteAsync(cancellationToken);
+        await _dbContext.ClientSupplementAssignments
+            .IgnoreQueryFilters()
+            .Where(item => item.SupplementId == supplementId && item.IsActive)
+            .ExecuteUpdateAsync(set => set
+                .SetProperty(item => item.IsActive, false)
+                .SetProperty(item => item.UpdatedAt, now),
+            cancellationToken);
     }
 
     private Task<bool> IsActiveSuperuserAsync(Guid actorUserId, CancellationToken cancellationToken) =>
@@ -223,6 +367,7 @@ internal sealed class PrivateCatalogModerationStore : IPrivateCatalogModerationS
         owner_trainer_id = food.OwnerTrainerId,
         platform_enforcement_status = food.PlatformEnforcementStatus.Value,
         platform_enforcement_reason = food.PlatformEnforcementReason?.Value,
+        platform_enforcement_note = food.PlatformEnforcementNote,
         platform_enforced_at = food.PlatformEnforcedAt
     });
 
@@ -232,7 +377,18 @@ internal sealed class PrivateCatalogModerationStore : IPrivateCatalogModerationS
         owner_trainer_id = exercise.OwnerTrainerId,
         platform_enforcement_status = exercise.PlatformEnforcementStatus.Value,
         platform_enforcement_reason = exercise.PlatformEnforcementReason?.Value,
+        platform_enforcement_note = exercise.PlatformEnforcementNote,
         platform_enforced_at = exercise.PlatformEnforcedAt
+    });
+
+    private static string Snapshot(Domain.Entities.Supplements.Supplement supplement) => JsonSerializer.Serialize(new
+    {
+        id = supplement.Id,
+        owner_trainer_id = supplement.OwnerTrainerId,
+        platform_enforcement_status = supplement.PlatformEnforcementStatus.Value,
+        platform_enforcement_reason = supplement.PlatformEnforcementReason?.Value,
+        platform_enforcement_note = supplement.PlatformEnforcementNote,
+        platform_enforced_at = supplement.PlatformEnforcedAt
     });
 
     private Task<PrivateCatalogModerationStoreResult> ExecuteAsync(

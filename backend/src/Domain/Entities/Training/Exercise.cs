@@ -21,6 +21,9 @@ public sealed class Exercise
         PlatformEnforcementStatus.Allowed;
     public PlatformEnforcementReason? PlatformEnforcementReason { get; private set; }
     public DateTime? PlatformEnforcedAt { get; private set; }
+
+    /// <summary>Nota livre do superuser que acompanha o motivo; o personal trainer vê-a no item.</summary>
+    public string? PlatformEnforcementNote { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -76,20 +79,26 @@ public sealed class Exercise
         UpdatedAt = now;
     }
 
-    /// <summary>Bloqueia conteúdo privado; o mesmo motivo não cria uma nova transição.</summary>
-    public bool Block(PlatformEnforcementReason reason, DateTime now)
+    /// <summary>
+    /// Bloqueia conteúdo privado com um motivo e uma nota livre opcional. O mesmo motivo e a
+    /// mesma nota não criam uma nova transição.
+    /// </summary>
+    public bool Block(PlatformEnforcementReason reason, DateTime now, string? note = null)
     {
         ArgumentNullException.ThrowIfNull(reason);
 
         if (!OwnerTrainerId.HasValue)
             throw new DomainException("Only private catalog exercise can be blocked by platform enforcement.");
 
+        var normalizedNote = PlatformEnforcementNotes.Normalize(note);
         if (PlatformEnforcementStatus == PlatformEnforcementStatus.Blocked &&
-            PlatformEnforcementReason == reason)
+            PlatformEnforcementReason == reason &&
+            PlatformEnforcementNote == normalizedNote)
             return false;
 
         PlatformEnforcementStatus = PlatformEnforcementStatus.Blocked;
         PlatformEnforcementReason = reason;
+        PlatformEnforcementNote = normalizedNote;
         PlatformEnforcedAt = now;
         UpdatedAt = now;
         return true;
@@ -103,6 +112,7 @@ public sealed class Exercise
 
         PlatformEnforcementStatus = PlatformEnforcementStatus.Allowed;
         PlatformEnforcementReason = null;
+        PlatformEnforcementNote = null;
         PlatformEnforcedAt = null;
         UpdatedAt = now;
         return true;

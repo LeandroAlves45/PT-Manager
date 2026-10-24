@@ -34,6 +34,10 @@ public sealed class MealPlan
     public IReadOnlyCollection<MealPlanMeal> Meals => _meals;
     private readonly List<MealPlanMeal> _meals = new();
 
+    /// <summary>Suplementos do plano fora de uma refeição.</summary>
+    public IReadOnlyCollection<MealPlanSupplement> PlanSupplements => _planSupplements;
+    private readonly List<MealPlanSupplement> _planSupplements = new();
+
     private MealPlan() { } // EF Core
 
     /// <summary>
@@ -159,6 +163,74 @@ public sealed class MealPlan
         UpdatedAt = now;
     }
 
+    /// <summary>
+    /// Adiciona um suplemento ao plano, fora das refeições. O mesmo suplemento só aparece uma
+    /// vez fora das refeições; dentro de uma refeição é outra prescrição.
+    /// </summary>
+    public MealPlanSupplement AddPlanSupplement(
+        Guid supplementId,
+        string? notes,
+        decimal quantity,
+        int orderNumber,
+        DateTime now)
+    {
+        EnsureNotDeleted();
+        if (_planSupplements.Any(item => item.SupplementId == supplementId))
+            throw new DomainException("Supplement already exists outside the meals of this plan");
+        if (_planSupplements.Any(item => item.OrderNumber == orderNumber))
+            throw new DomainException("Supplement order number already exists outside the meals of this plan");
+
+        var supplement = new MealPlanSupplement(Id, supplementId, notes, quantity, orderNumber, now);
+        _planSupplements.Add(supplement);
+        UpdatedAt = now;
+        return supplement;
+    }
+
+    /// <summary>Atualiza um suplemento do plano fora das refeições.</summary>
+    public void UpdatePlanSupplement(
+        Guid planSupplementId,
+        Guid supplementId,
+        string? notes,
+        decimal quantity,
+        int orderNumber,
+        DateTime now)
+    {
+        EnsureNotDeleted();
+        var supplement = RequirePlanSupplement(planSupplementId);
+        if (_planSupplements.Any(other => other.Id != planSupplementId && other.SupplementId == supplementId))
+            throw new DomainException("Supplement already exists outside the meals of this plan");
+        if (_planSupplements.Any(other => other.Id != planSupplementId && other.OrderNumber == orderNumber))
+            throw new DomainException("Supplement order number already exists outside the meals of this plan");
+
+        supplement.Update(supplementId, notes, quantity, orderNumber, now);
+        UpdatedAt = now;
+    }
+
+    /// <summary>Aplica em lote a ordem final dos suplementos fora das refeições.</summary>
+    public void ReorderPlanSupplements(IReadOnlyDictionary<Guid, int> finalOrders, DateTime now)
+    {
+        EnsureNotDeleted();
+        ArgumentNullException.ThrowIfNull(finalOrders);
+        ValidateFinalOrders(
+            _planSupplements.Select(item => (item.Id, item.OrderNumber)),
+            finalOrders,
+            "Plan supplement"
+        );
+
+        foreach (var (planSupplementId, orderNumber) in finalOrders)
+            RequirePlanSupplement(planSupplementId).ChangeOrder(orderNumber, now);
+
+        UpdatedAt = now;
+    }
+
+    /// <summary>Retira um suplemento do plano fora das refeições.</summary>
+    public void RemovePlanSupplement(Guid planSupplementId, DateTime now)
+    {
+        EnsureNotDeleted();
+        _planSupplements.Remove(RequirePlanSupplement(planSupplementId));
+        UpdatedAt = now;
+    }
+
     /// <summary>Obtém uma refeição pertencente ao agregado.</summary>
     public MealPlanMeal GetMeal(Guid mealId)
     {
@@ -214,6 +286,10 @@ public sealed class MealPlan
             snapshot.FatsTargetGrams
         );
     }
+
+    private MealPlanSupplement RequirePlanSupplement(Guid planSupplementId) =>
+        _planSupplements.SingleOrDefault(item => item.Id == planSupplementId)
+        ?? throw new DomainException("Supplement does not belong to this plan");
 
     private MealPlanMeal RequireMeal(Guid mealId)
     {

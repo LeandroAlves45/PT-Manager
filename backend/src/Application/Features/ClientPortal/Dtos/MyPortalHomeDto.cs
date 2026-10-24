@@ -3,6 +3,9 @@ namespace Application.Features.ClientPortal.Dtos;
 /// <summary>
 /// Resumo dos quatro cartões da home do portal num só pedido. Cada cartão é o
 /// mínimo para o cartão do ecrã; o detalhe continua nos endpoints dedicados.
+/// <c>InitialAssessmentPending</c> mostra o cartão da avaliação inicial no topo, até ser gravada.
+/// <c>AccessNotice</c> existe só durante os dias de acesso de um personal trainer bloqueado e
+/// fica antes desse cartão.
 /// </summary>
 public sealed record MyPortalHomeDto(
     DateOnly LocalDate,
@@ -10,8 +13,16 @@ public sealed record MyPortalHomeDto(
     MyPortalHomeDto.NutritionCardDto? Nutrition,
     int ActiveMealPlanCount,
     MyPortalHomeDto.SupplementsCardDto Supplements,
-    MyPortalHomeDto.NextCheckInCardDto? NextCheckIn)
+    MyPortalHomeDto.NextCheckInCardDto? NextCheckIn,
+    bool InitialAssessmentPending,
+    MyPortalHomeDto.AccessNoticeDto? AccessNotice)
 {
+    /// <summary>
+    /// Aviso do fim do acesso (RN-013): o instante em UTC e o fuso do personal trainer em que
+    /// se mostra o dia e a hora. Nunca traz o motivo nem a nota.
+    /// </summary>
+    public sealed record AccessNoticeDto(DateTime EndsAt, string TimeZone);
+
     /// <summary>Cartão "O meu treino de hoje".</summary>
     public sealed record WorkoutCardDto(
         MyWorkoutTodayStatus Status,

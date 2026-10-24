@@ -76,6 +76,41 @@ namespace Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Domain.Entities.Administration.TrainerAccessBlock", b =>
+                {
+                    b.Property<Guid>("TrainerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("trainer_id");
+
+                    b.Property<DateTime>("BlockedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("blocked_at");
+
+                    b.Property<Guid>("BlockedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("blocked_by_user_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("note");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("reason");
+
+                    b.HasKey("TrainerId");
+
+                    b.HasIndex("BlockedByUserId");
+
+                    b.ToTable("trainer_access_blocks", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_trainer_access_blocks_reason", "reason IN ('malicious_content', 'dangerous_information', 'deliberately_false_information', 'prohibited_content')");
+                        });
+                });
+
             modelBuilder.Entity("Domain.Entities.Assessments.CheckIn", b =>
                 {
                     b.Property<Guid>("Id")
@@ -320,6 +355,16 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("character varying(255)")
                         .HasColumnName("profession");
 
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reviewed_at");
+
+                    b.Property<bool>("SubmittedByClient")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("submitted_by_client");
+
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -446,6 +491,8 @@ namespace Infrastructure.Data.Migrations
 
                             t.HasCheckConstraint("ck_initial_assessments_height_positive", "height_cm > 0");
 
+                            t.HasCheckConstraint("ck_initial_assessments_review_requires_client_submission", "reviewed_at IS NULL OR submitted_by_client");
+
                             t.HasCheckConstraint("ck_initial_assessments_weight_positive", "weight_kg > 0");
                         });
                 });
@@ -565,6 +612,10 @@ namespace Infrastructure.Data.Migrations
                     b.Property<DateOnly?>("ExpectedEndDate")
                         .HasColumnType("date")
                         .HasColumnName("expected_end_date");
+
+                    b.Property<DateTime?>("ForfeitedAt")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("forfeited_at");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -1856,7 +1907,7 @@ namespace Infrastructure.Data.Migrations
 
                     b.ToTable("notifications", null, t =>
                         {
-                            t.HasCheckConstraint("status_check", "status IN ('pending', 'sent', 'failed', 'bounced')");
+                            t.HasCheckConstraint("status_check", "status IN ('pending', 'sent', 'failed', 'bounced', 'skipped')");
                         });
                 });
 
@@ -1922,6 +1973,11 @@ namespace Infrastructure.Data.Migrations
                     b.Property<DateTime?>("PlatformEnforcedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("platform_enforced_at");
+
+                    b.Property<string>("PlatformEnforcementNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("platform_enforcement_note");
 
                     b.Property<string>("PlatformEnforcementReason")
                         .HasMaxLength(50)
@@ -2368,6 +2424,62 @@ namespace Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Domain.Entities.Nutrition.MealPlanSupplement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<Guid>("MealPlanId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("meal_plan_id");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("notes");
+
+                    b.Property<int>("OrderNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("order_number");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)")
+                        .HasColumnName("quantity");
+
+                    b.Property<Guid>("SupplementId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("supplement_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SupplementId");
+
+                    b.HasIndex("MealPlanId", "SupplementId")
+                        .IsUnique()
+                        .HasDatabaseName("uq_meal_plan_supplements_plan_supplement");
+
+                    b.ToTable("meal_plan_supplements", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_meal_plan_supplements_order_positive", "order_number > 0");
+
+                            t.HasCheckConstraint("ck_meal_plan_supplements_quantity_positive", "quantity > 0");
+                        });
+                });
+
             modelBuilder.Entity("Domain.Entities.Sessions.Session", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2453,6 +2565,71 @@ namespace Infrastructure.Data.Migrations
                             t.HasCheckConstraint("ck_sessions_duration", "duration_minutes > 0");
 
                             t.HasCheckConstraint("ck_sessions_status", "status IN ('scheduled', 'completed', 'cancelled_by_client', 'cancelled_by_trainer', 'no_show')");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Entities.Supplements.ClientMealPlanSupplementIntake", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("client_id");
+
+                    b.Property<DateOnly>("LocalDate")
+                        .HasColumnType("date")
+                        .HasColumnName("local_date");
+
+                    b.Property<Guid>("MealPlanId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("meal_plan_id");
+
+                    b.Property<Guid?>("MealPlanMealSupplementId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("meal_plan_meal_supplement_id");
+
+                    b.Property<Guid?>("MealPlanSupplementId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("meal_plan_supplement_id");
+
+                    b.Property<Guid>("OwnerTrainerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_trainer_id");
+
+                    b.Property<Guid>("SupplementId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("supplement_id");
+
+                    b.Property<DateTime>("TakenAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("taken_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MealPlanId");
+
+                    b.HasIndex("SupplementId");
+
+                    b.HasIndex("MealPlanMealSupplementId", "LocalDate")
+                        .IsUnique()
+                        .HasDatabaseName("uq_client_meal_plan_supplement_intakes_meal_supplement_date")
+                        .HasFilter("meal_plan_meal_supplement_id IS NOT NULL");
+
+                    b.HasIndex("MealPlanSupplementId", "LocalDate")
+                        .IsUnique()
+                        .HasDatabaseName("uq_client_meal_plan_supplement_intakes_plan_supplement_date")
+                        .HasFilter("meal_plan_supplement_id IS NOT NULL");
+
+                    b.HasIndex("OwnerTrainerId", "ClientId", "MealPlanId", "LocalDate")
+                        .HasDatabaseName("idx_client_meal_plan_supplement_intakes_client_plan_date");
+
+                    b.ToTable("client_meal_plan_supplement_intakes", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_client_meal_plan_supplement_intakes_single_reference", "num_nonnulls(meal_plan_meal_supplement_id, meal_plan_supplement_id) <= 1");
                         });
                 });
 
@@ -2604,6 +2781,28 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("owner_trainer_id");
 
+                    b.Property<DateTime?>("PlatformEnforcedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("platform_enforced_at");
+
+                    b.Property<string>("PlatformEnforcementNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("platform_enforcement_note");
+
+                    b.Property<string>("PlatformEnforcementReason")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("platform_enforcement_reason");
+
+                    b.Property<string>("PlatformEnforcementStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("allowed")
+                        .HasColumnName("platform_enforcement_status");
+
                     b.Property<string>("ServingSize")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -2647,6 +2846,8 @@ namespace Infrastructure.Data.Migrations
                     b.ToTable("supplements", null, t =>
                         {
                             t.HasCheckConstraint("ck_supplements_name", "btrim(name) <> ''");
+
+                            t.HasCheckConstraint("ck_supplements_platform_enforcement", "(platform_enforcement_status = 'allowed' AND platform_enforcement_reason IS NULL AND platform_enforced_at IS NULL AND platform_enforcement_note IS NULL) OR (platform_enforcement_status = 'blocked' AND owner_trainer_id IS NOT NULL AND platform_enforcement_reason IN ('malicious_content', 'dangerous_information', 'deliberately_false_information', 'prohibited_content') AND platform_enforced_at IS NOT NULL)");
 
                             t.HasCheckConstraint("ck_supplements_serving_size", "btrim(serving_size) <> ''");
 
@@ -2867,6 +3068,11 @@ namespace Infrastructure.Data.Migrations
                     b.Property<DateTime?>("PlatformEnforcedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("platform_enforced_at");
+
+                    b.Property<string>("PlatformEnforcementNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("platform_enforcement_note");
 
                     b.Property<string>("PlatformEnforcementReason")
                         .HasMaxLength(50)
@@ -3311,6 +3517,10 @@ namespace Infrastructure.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("order_number");
 
+                    b.Property<DateTime?>("RetiredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("retired_at");
+
                     b.Property<Guid>("TrainingPlanDayId")
                         .HasColumnType("uuid")
                         .HasColumnName("training_plan_day_id");
@@ -3423,6 +3633,23 @@ namespace Infrastructure.Data.Migrations
                         .HasDatabaseName("ix_qstash_dispatch_receipts_token_expires_at");
 
                     b.ToTable("qstash_dispatch_receipts", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Administration.TrainerAccessBlock", b =>
+                {
+                    b.HasOne("Domain.Entities.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("BlockedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_trainer_access_blocks_blocked_by");
+
+                    b.HasOne("Domain.Entities.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("TrainerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_trainer_access_blocks_trainer");
                 });
 
             modelBuilder.Entity("Domain.Entities.Assessments.CheckIn", b =>
@@ -3758,6 +3985,23 @@ namespace Infrastructure.Data.Migrations
                         .HasConstraintName("fk_meal_plan_meal_supplements_supplement");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Nutrition.MealPlanSupplement", b =>
+                {
+                    b.HasOne("Domain.Entities.Nutrition.MealPlan", null)
+                        .WithMany("PlanSupplements")
+                        .HasForeignKey("MealPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_meal_plan_supplements_meal_plan");
+
+                    b.HasOne("Domain.Entities.Supplements.Supplement", null)
+                        .WithMany()
+                        .HasForeignKey("SupplementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_meal_plan_supplements_supplement");
+                });
+
             modelBuilder.Entity("Domain.Entities.Sessions.Session", b =>
                 {
                     b.HasOne("Domain.Entities.Identity.User", null)
@@ -3781,6 +4025,43 @@ namespace Infrastructure.Data.Migrations
                         .HasPrincipalKey("OwnerTrainerId", "ClientId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_sessions_client_pack_tenant");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Supplements.ClientMealPlanSupplementIntake", b =>
+                {
+                    b.HasOne("Domain.Entities.Nutrition.MealPlan", null)
+                        .WithMany()
+                        .HasForeignKey("MealPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_client_meal_plan_supplement_intakes_meal_plan");
+
+                    b.HasOne("Domain.Entities.Nutrition.MealPlanMealSupplement", null)
+                        .WithMany()
+                        .HasForeignKey("MealPlanMealSupplementId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_client_meal_plan_supplement_intakes_meal_supplement");
+
+                    b.HasOne("Domain.Entities.Nutrition.MealPlanSupplement", null)
+                        .WithMany()
+                        .HasForeignKey("MealPlanSupplementId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_client_meal_plan_supplement_intakes_plan_supplement");
+
+                    b.HasOne("Domain.Entities.Supplements.Supplement", null)
+                        .WithMany()
+                        .HasForeignKey("SupplementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_client_meal_plan_supplement_intakes_supplement");
+
+                    b.HasOne("Domain.Entities.Clients.Client", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerTrainerId", "ClientId")
+                        .HasPrincipalKey("OwnerTrainerId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_client_meal_plan_supplement_intakes_client_tenant");
                 });
 
             modelBuilder.Entity("Domain.Entities.Supplements.ClientSupplementAssignment", b =>
@@ -3962,6 +4243,8 @@ namespace Infrastructure.Data.Migrations
             modelBuilder.Entity("Domain.Entities.Nutrition.MealPlan", b =>
                 {
                     b.Navigation("Meals");
+
+                    b.Navigation("PlanSupplements");
                 });
 
             modelBuilder.Entity("Domain.Entities.Nutrition.MealPlanMeal", b =>

@@ -172,14 +172,14 @@ public sealed class MealPlanHandlersTests
 
     private static CreateMealPlanCommand CreateCommand() => new(
         Guid.NewGuid(), "Plan", null, new DateOnly(2026, 8, 10), null,
-        CalculationInput(), new MealPlanStructureInput([])
+        CalculationInput(), new MealPlanStructureInput([], [])
     );
 
     private static UpdateMealPlanCommand UpdateCommand(
         Guid id,
         Application.Features.Nutrition.Calculations.NutritionCalculationInput? calculation
     ) => new(id, "Plan", null, new DateOnly(2026, 8, 10), null, calculation,
-        new MealPlanStructureInput([]));
+        new MealPlanStructureInput([], []));
 
     private static Application.Features.Nutrition.Calculations.NutritionCalculationInput CalculationInput() =>
         new("manual_energy", null, 80m, null, null, null, null, null, null, null,
@@ -190,7 +190,7 @@ public sealed class MealPlanHandlersTests
         new(1, "manual_energy", Now, null, 80m, null, null, null, null, null, null,
             null, null, null, null, 2000m, "percentage", 30m, 40m, 30m, null, null, 150m, 200m, 66.67m,
             30m, 40m, 30m, 2000m, 0m),
-        NutritionTotalsDto.Zero, true, false, false, [], Now, Now
+        NutritionTotalsDto.Zero, true, false, false, [], [], Now, Now
     );
 
     private static MealPlanStoreResult CreateFailure(MealPlanStoreResult.Status status) => status switch

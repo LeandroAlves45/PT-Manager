@@ -26,6 +26,8 @@ internal static class InitialAssessmentStoreResultMapper
                 Result<InitialAssessmentDto>.Failure(AssessmentErrors.InitialAssessmentNotFound),
             InitialAssessmentStoreResult.Status.AssessmentAlreadyExists =>
                 Result<InitialAssessmentDto>.Failure(AssessmentErrors.InitialAssessmentAlreadyExists),
+            InitialAssessmentStoreResult.Status.NotReviewable =>
+                Result<InitialAssessmentDto>.Failure(AssessmentErrors.InitialAssessmentNotReviewable),
             _ => throw new ArgumentOutOfRangeException(nameof(outcome.Kind))
         };
 }

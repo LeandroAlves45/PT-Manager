@@ -61,7 +61,8 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
         var entries = context.ChangeTracker.Entries()
             .Where(entry =>
                 entry.State is EntityState.Added or EntityState.Modified ||
-                (entry.State == EntityState.Deleted && entry.Entity is ExerciseVideo or ClientSupplementIntake))
+                (entry.State == EntityState.Deleted &&
+                    entry.Entity is ExerciseVideo or ClientSupplementIntake or ClientMealPlanSupplementIntake))
             .ToList();
 
         Guid? tenantId = null;
@@ -82,6 +83,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 case ClientSupplementAssignment:
                 case PackType:
                 case ClientSupplementIntake:
+                case ClientMealPlanSupplementIntake:
                 case WorkoutCompletion:
                     tenantId ??= context.RequireTenant();
                     ValidateRequiredOwnership(entry, "OwnerTrainerId", tenantId.Value);
@@ -146,6 +148,7 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
         CancellationToken cancellationToken)
     {
         await ValidateMealPlanOwnershipAsync(context, tenantId, cancellationToken);
+        await ValidatePlanSupplementOwnershipAsync(context, tenantId, cancellationToken);
         await ValidateTrainingPlanOwnershipAsync(context, tenantId, cancellationToken);
     }
 
@@ -224,6 +227,46 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
             if (!plans.TryGetValue(meal.MealPlanId, out var plan))
                 throw new DomainException("Referenced meal plan does not exist.");
 
+            if (plan.OwnerTrainerId != tenantId || plan.IsDeleted)
+                throw new DomainException("Cannot write to another tenant's meal plan.");
+        }
+    }
+
+    private static async Task ValidatePlanSupplementOwnershipAsync(
+        PtManagerDbContext context,
+        Guid tenantId,
+        CancellationToken cancellationToken)
+    {
+        var planIds = context.ChangeTracker.Entries<MealPlanSupplement>()
+            .Where(entry => entry.State is EntityState.Added or EntityState.Modified)
+            .Select(entry => entry.Entity.MealPlanId)
+            .Distinct()
+            .ToList();
+        if (planIds.Count == 0)
+            return;
+
+        var plans = context.ChangeTracker.Entries<MealPlan>()
+            .Select(entry => entry.Entity)
+            .Where(plan => planIds.Contains(plan.Id))
+            .ToDictionary(plan => plan.Id, plan => (plan.OwnerTrainerId, plan.IsDeleted));
+
+        var missing = planIds.Where(id => !plans.ContainsKey(id)).ToList();
+        if (missing.Count > 0)
+        {
+            var persisted = await context.MealPlans
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(plan => missing.Contains(plan.Id))
+                .Select(plan => new { plan.Id, plan.OwnerTrainerId, plan.IsDeleted })
+                .ToListAsync(cancellationToken);
+            foreach (var plan in persisted)
+                plans.Add(plan.Id, (plan.OwnerTrainerId, plan.IsDeleted));
+        }
+
+        foreach (var planId in planIds)
+        {
+            if (!plans.TryGetValue(planId, out var plan))
+                throw new DomainException("Referenced meal plan does not exist.");
             if (plan.OwnerTrainerId != tenantId || plan.IsDeleted)
                 throw new DomainException("Cannot write to another tenant's meal plan.");
         }
@@ -395,6 +438,31 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
             }
         }
 
+        var planIntakes = context.ChangeTracker.Entries<ClientMealPlanSupplementIntake>()
+            .Where(entry => entry.State == EntityState.Added)
+            .Select(entry => entry.Entity)
+            .ToList();
+
+        if (planIntakes.Count > 0)
+        {
+            var mealPlanIds = planIntakes.Select(intake => intake.MealPlanId).Distinct().ToList();
+            var mealPlans = await context.MealPlans
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(plan => mealPlanIds.Contains(plan.Id))
+                .Select(plan => new { plan.Id, plan.OwnerTrainerId, plan.ClientId, plan.IsDeleted })
+                .ToDictionaryAsync(item => item.Id, cancellationToken);
+
+            foreach (var intake in planIntakes)
+            {
+                if (!mealPlans.TryGetValue(intake.MealPlanId, out var plan) ||
+                    plan.OwnerTrainerId != tenantId ||
+                    plan.IsDeleted ||
+                    plan.ClientId != intake.ClientId)
+                    throw new DomainException("Supplement intake does not match the meal plan client.");
+            }
+        }
+
         var intakes = context.ChangeTracker.Entries<ClientSupplementIntake>()
             .Where(entry => entry.State == EntityState.Added)
             .Select(entry => entry.Entity)
@@ -450,6 +518,11 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 entry.Property(item => item.SupplementId).IsModified)
             .Select(entry => entry.Entity.SupplementId)
             .Concat(context.ChangeTracker.Entries<ClientSupplementAssignment>()
+                .Where(entry => entry.State == EntityState.Added ||
+                    entry.State == EntityState.Modified &&
+                    entry.Property(item => item.SupplementId).IsModified)
+                .Select(entry => entry.Entity.SupplementId))
+            .Concat(context.ChangeTracker.Entries<MealPlanSupplement>()
                 .Where(entry => entry.State == EntityState.Added ||
                     entry.State == EntityState.Modified &&
                     entry.Property(item => item.SupplementId).IsModified)
@@ -833,6 +906,8 @@ public sealed class TenantWriteValidationInterceptor : SaveChangesInterceptor
                 MealPlanMeal
                 or MealPlanMealItem
                 or MealPlanMealSupplement
+                or MealPlanSupplement
+                or ClientMealPlanSupplementIntake
                 or TrainingPlanDay
                 or TrainingPlanDayExercise
                 or ExerciseSet

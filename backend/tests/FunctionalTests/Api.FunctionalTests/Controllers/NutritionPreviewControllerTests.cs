@@ -19,7 +19,8 @@ public sealed class NutritionPreviewControllerTests
     public async Task Preview_WithTrainerToken_ReturnsCalculation()
     {
         var client = _fixture.Factory.CreateOriginClient()
-            .WithBearer(TestJwtFactory.IssueTrainer(Guid.NewGuid()));
+            .WithBearer(TestJwtFactory.IssueTrainer(
+                (await NutritionTestData.SeedTrainerAsync(_fixture.Factory, Token)).TrainerId));
 
         var response = await client.PostAsJsonAsync(
             "/api/v1/nutrition/preview",
@@ -39,7 +40,8 @@ public sealed class NutritionPreviewControllerTests
     public async Task Preview_InPercentageMode_ReturnsPercentageInputs()
     {
         var client = _fixture.Factory.CreateOriginClient()
-            .WithBearer(TestJwtFactory.IssueTrainer(Guid.NewGuid()));
+            .WithBearer(TestJwtFactory.IssueTrainer(
+                (await NutritionTestData.SeedTrainerAsync(_fixture.Factory, Token)).TrainerId));
 
         var response = await client.PostAsJsonAsync(
             "/api/v1/nutrition/preview",
@@ -73,7 +75,8 @@ public sealed class NutritionPreviewControllerTests
     public async Task Preview_ExecutesNoDatabaseCommands()
     {
         var client = _fixture.Factory.CreateOriginClient()
-            .WithBearer(TestJwtFactory.IssueTrainer(Guid.NewGuid()));
+            .WithBearer(TestJwtFactory.IssueTrainer(
+                (await NutritionTestData.SeedTrainerAsync(_fixture.Factory, Token)).TrainerId));
 
         using var scope = CommandCountingInterceptor.BeginScope();
 

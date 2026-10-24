@@ -40,6 +40,13 @@ internal sealed class SupplementIntakeStore : ISupplementIntakeStore
             if (!locked.Assignment.IsActive)
                 return SupplementIntakeStoreResult.For(
                     SupplementIntakeStoreResult.Status.AssignmentInactive);
+            // Bloqueado: o portal não o mostra, por isso responde como inexistente.
+            if (await _dbContext.Supplements.AnyAsync(
+                    supplement => supplement.Id == locked.Assignment.SupplementId &&
+                        supplement.PlatformEnforcementStatus == Domain.ValueObjects.PlatformEnforcementStatus.Blocked,
+                    cancellationToken))
+                return SupplementIntakeStoreResult.For(
+                    SupplementIntakeStoreResult.Status.AssignmentNotFound);
 
             var existing = await _dbContext.ClientSupplementIntakes
                 .AsNoTracking()

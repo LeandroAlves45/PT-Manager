@@ -40,6 +40,7 @@ public sealed record ExerciseResponse(
     bool IsActive,
     string PlatformEnforcementStatus,
     string? PlatformEnforcementReason,
+    string? PlatformEnforcementNote,
     DateTime CreatedAt,
     DateTime? UpdatedAt)
 {
@@ -62,6 +63,7 @@ public sealed record ExerciseResponse(
             exercise.IsActive,
             exercise.PlatformEnforcementStatus,
             exercise.PlatformEnforcementReason,
+            exercise.PlatformEnforcementNote,
             exercise.CreatedAt,
             exercise.UpdatedAt
         );

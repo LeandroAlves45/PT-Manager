@@ -41,6 +41,16 @@ public static class ClientPortalErrors
         ErrorCategory.NotFound,
         "The nutrition plan is not available.");
 
+    public static readonly Error PlanSupplementNotFound = Error.Create(
+        "portal_plan_supplement_not_found",
+        ErrorCategory.NotFound,
+        "The supplement is not part of the meal plan the client follows.");
+
+    public static readonly Error PlanSupplementUnavailable = Error.Create(
+        "portal_plan_supplement_unavailable",
+        ErrorCategory.Conflict,
+        "The supplement is no longer available and its intake cannot be recorded.");
+
     public static readonly Error ProfileNotAvailable = Error.Create(
         "portal_profile_not_available",
         ErrorCategory.NotFound,

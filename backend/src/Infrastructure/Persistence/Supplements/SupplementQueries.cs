@@ -85,6 +85,9 @@ internal sealed class SupplementQueries : ISupplementQueries
             item.Timing,
             item.TrainerNotes,
             item.IsActive,
+            item.PlatformEnforcementStatus.Value,
+            item.PlatformEnforcementReason == null ? null : item.PlatformEnforcementReason.Value,
+            item.PlatformEnforcementNote,
             item.CreatedAt,
             item.UpdatedAt);
 }

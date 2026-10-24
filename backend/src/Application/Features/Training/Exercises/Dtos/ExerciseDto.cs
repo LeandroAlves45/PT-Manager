@@ -22,6 +22,7 @@ public sealed record ExerciseDto(
     bool IsActive,
     string PlatformEnforcementStatus,
     string? PlatformEnforcementReason,
+    string? PlatformEnforcementNote,
     DateTime CreatedAt,
     DateTime UpdatedAt
 );

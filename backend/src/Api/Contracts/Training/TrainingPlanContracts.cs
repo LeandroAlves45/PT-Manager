@@ -1,3 +1,4 @@
+using Api.Contracts.Common;
 using Application.Features.Training.TrainingPlans;
 using Application.Features.Training.TrainingPlans.Dtos;
 
@@ -147,7 +148,8 @@ public sealed record DayExerciseResponse(
     Guid? ExerciseGroupId,
     int? GroupPosition,
     string? Notes,
-    IReadOnlyList<ExerciseSetResponse> Sets)
+    IReadOnlyList<ExerciseSetResponse> Sets,
+    PlatformEnforcementResponse? PlatformEnforcement)
 {
     /// <summary>Projeta a prescrição da Application.</summary>
     public static DayExerciseResponse From(TrainingPlanDetailsDto.DayExerciseDto exercise)
@@ -162,7 +164,8 @@ public sealed record DayExerciseResponse(
             exercise.ExerciseGroupId,
             exercise.GroupPosition,
             exercise.Notes,
-            exercise.Sets.Select(ExerciseSetResponse.From).ToArray());
+            exercise.Sets.Select(ExerciseSetResponse.From).ToArray(),
+            PlatformEnforcementResponse.From(exercise.PlatformEnforcement));
     }
 }
 

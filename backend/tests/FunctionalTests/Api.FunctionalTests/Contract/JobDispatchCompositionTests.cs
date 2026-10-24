@@ -125,7 +125,7 @@ public sealed class JobDispatchCompositionTests
             .ToArray();
 
         Assert.Equal(
-            ["billing_notification", "client-avatar.delete", "trainer-logo.delete"],
+            ["account_access_notification", "billing_notification", "client-avatar.delete", "trainer-logo.delete"],
             messageTypes);
     }
 

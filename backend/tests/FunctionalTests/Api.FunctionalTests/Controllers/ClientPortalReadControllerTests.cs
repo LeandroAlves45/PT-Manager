@@ -70,7 +70,8 @@ public sealed class ClientPortalReadControllerTests : ApiReadEndpointsTestContex
         Assert.True(root.TryGetProperty("local_date", out _));
         Assert.False(root.GetProperty("workout").ValueKind == JsonValueKind.Null);
         Assert.True(root.GetProperty("nutrition").GetProperty("target_kcal").GetDecimal() > 0);
-        Assert.Equal(1, root.GetProperty("supplements").GetProperty("total_count").GetInt32());
+        // Uma atribuição direta e o suplemento da refeição do plano escolhido.
+        Assert.Equal(2, root.GetProperty("supplements").GetProperty("total_count").GetInt32());
         Assert.Equal(0, root.GetProperty("supplements").GetProperty("taken_count").GetInt32());
         Assert.True(root.GetProperty("next_check_in").GetProperty("is_today").GetBoolean());
     }

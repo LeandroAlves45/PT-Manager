@@ -1,4 +1,5 @@
 using Application.Features.Administration.Trainers.Dtos;
+using Domain.ValueObjects;
 
 namespace Application.Features.Administration.Trainers.Abstractions;
 
@@ -12,6 +13,25 @@ public interface ITrainerAdministrationStore
         Guid actorUserId,
         Guid trainerId,
         bool isExempt,
+        DateTime now,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Bloqueia a conta, termina as sessões abertas do personal trainer, anula os convites de
+    /// cliente por aceitar e grava os emails no outbox. Já bloqueado devolve Unchanged.
+    /// </summary>
+    Task<TrainerAdministrationStoreStatus> BlockAccessAsync(
+        Guid actorUserId,
+        Guid trainerId,
+        PlatformEnforcementReason reason,
+        string? note,
+        DateTime now,
+        CancellationToken cancellationToken);
+
+    /// <summary>Levanta o bloqueio e grava os emails de acesso reposto. Sem bloqueio devolve Unchanged.</summary>
+    Task<TrainerAdministrationStoreStatus> UnblockAccessAsync(
+        Guid actorUserId,
+        Guid trainerId,
         DateTime now,
         CancellationToken cancellationToken);
 

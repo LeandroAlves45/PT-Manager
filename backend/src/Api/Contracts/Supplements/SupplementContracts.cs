@@ -31,6 +31,9 @@ public sealed record SupplementResponse(
     string? Timing,
     string? TrainerNotes,
     bool IsActive,
+    string PlatformEnforcementStatus,
+    string? PlatformEnforcementReason,
+    string? PlatformEnforcementNote,
     DateTime CreatedAt,
     DateTime UpdatedAt)
 {
@@ -49,6 +52,9 @@ public sealed record SupplementResponse(
             supplement.Timing,
             supplement.TrainerNotes,
             supplement.IsActive,
+            supplement.PlatformEnforcementStatus,
+            supplement.PlatformEnforcementReason,
+            supplement.PlatformEnforcementNote,
             supplement.CreatedAt,
             supplement.UpdatedAt);
     }

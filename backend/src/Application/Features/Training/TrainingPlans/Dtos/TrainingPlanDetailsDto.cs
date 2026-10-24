@@ -1,3 +1,4 @@
+using Application.Common;
 namespace Application.Features.Training.TrainingPlans.Dtos;
 
 /// <summary>Representa metadados e árvore completa de um plano de treino.</summary>
@@ -36,7 +37,8 @@ public sealed record TrainingPlanDetailsDto(
         Guid? ExerciseGroupId,
         int? GroupPosition,
         string? Notes,
-        IReadOnlyList<ExerciseSetDto> Sets
+        IReadOnlyList<ExerciseSetDto> Sets,
+        PlatformEnforcementDto? PlatformEnforcement
     );
 
     /// <summary>Série e valores planeados.</summary>

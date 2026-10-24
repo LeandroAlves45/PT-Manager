@@ -52,7 +52,8 @@ public sealed class SendNotificationJobHandler : IDurableJobHandler
         if (preparation.Status == NotificationDeliveryPreparationStatus.LeaseLost)
             return DispatchItemOutcome.LeaseLost();
 
-        if (preparation.Status == NotificationDeliveryPreparationStatus.AlreadyDelivered)
+        if (preparation.Status is NotificationDeliveryPreparationStatus.AlreadyDelivered or
+            NotificationDeliveryPreparationStatus.Skipped)
             return DispatchItemOutcome.Succeeded();
 
         if (preparation.Status == NotificationDeliveryPreparationStatus.NotFound)

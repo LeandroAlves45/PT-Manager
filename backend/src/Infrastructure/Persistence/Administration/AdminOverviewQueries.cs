@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Infrastructure.Persistence.Administration;
 
 /// <summary>
-/// Contagens da visão geral do superuser: cinco agregações, uma por catálogo. Ignora os
+/// Contagens da visão geral do superuser: uma agregação por catálogo e uma por treinadores. Ignora os
 /// Global Query Filters por ser uma leitura administrativa e devolve apenas números.
 /// </summary>
 internal sealed class AdminOverviewQueries : IAdminOverviewQueries
@@ -76,6 +76,17 @@ internal sealed class AdminOverviewQueries : IAdminOverviewQueries
                     exercise.PlatformEnforcementStatus == PlatformEnforcementStatus.Blocked)))
             .FirstOrDefaultAsync(cancellationToken);
 
+        var privateSupplements = await _dbContext.Supplements
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(supplement => supplement.OwnerTrainerId != null)
+            .GroupBy(_ => 1)
+            .Select(group => new AdminOverviewDto.ModerationCountsDto(
+                group.Count(),
+                group.Count(supplement =>
+                    supplement.PlatformEnforcementStatus == PlatformEnforcementStatus.Blocked)))
+            .FirstOrDefaultAsync(cancellationToken);
+
         // Só contam treinadores com conta utilizável; o isento é um número à parte e nunca
         // entra na subscrição ativa paga nem na suspensa (RN-018).
         var subscriptions = _dbContext.TrainerSubscriptions
@@ -94,7 +105,9 @@ internal sealed class AdminOverviewQueries : IAdminOverviewQueries
                     subscription.Status == SubscriptionStatus.Active),
                 Suspended = group.Count(subscription => !subscription.IsExemptFromBilling &&
                     subscription.Status == SubscriptionStatus.Suspended),
-                Exempt = group.Count(subscription => subscription.IsExemptFromBilling)
+                Exempt = group.Count(subscription => subscription.IsExemptFromBilling),
+                Blocked = group.Count(subscription => _dbContext.TrainerAccessBlocks
+                    .Any(block => block.TrainerId == subscription.TrainerId))
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -112,10 +125,12 @@ internal sealed class AdminOverviewQueries : IAdminOverviewQueries
             globalSupplements ?? EmptyCatalog,
             privateFoods ?? EmptyModeration,
             privateExercises ?? EmptyModeration,
+            privateSupplements ?? EmptyModeration,
             new AdminOverviewDto.TrainerCountsDto(
                 trainerCounts?.Active ?? 0,
                 trainerCounts?.Suspended ?? 0,
                 trainerCounts?.Exempt ?? 0,
+                trainerCounts?.Blocked ?? 0,
                 revenueCents));
     }
 

@@ -1,6 +1,7 @@
 using Application.Features.Training.TrainingPlans.Abstractions;
 using Domain.Entities.Training;
 using Infrastructure.Data;
+using Infrastructure.Persistence.Assessments;
 using Infrastructure.Persistence.Common;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -31,6 +32,9 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
         {
             if (!await ActiveClientExistsAsync(model.ClientId, cancellationToken))
                 return TrainingPlanStoreResult.ForClientNotFound();
+            if (!await InitialAssessmentRequirement.IsMetAsync(
+                    _dbContext, trainerId, model.ClientId, cancellationToken))
+                return TrainingPlanStoreResult.ForInitialAssessmentRequired();
 
             var referenceStatus = await ValidateExerciseReferencesAsync(
                 trainerId,
@@ -248,7 +252,9 @@ internal sealed class TrainingPlanStore : ITrainingPlanStore
         return await _dbContext.TrainingPlans
             .Where(plan => plan.Id == lockedId && plan.OwnerTrainerId == trainerId)
             .Include(plan => plan.Days)
-                .ThenInclude(day => day.Exercises)
+                // O retirado fica fora do agregado: com séries registadas o plano já não muda de
+                // estrutura, e o retirado nunca volta a ser editado nem apagado.
+                .ThenInclude(day => day.Exercises.Where(exercise => exercise.RetiredAt == null))
                     .ThenInclude(exercise => exercise.Sets)
             .AsSplitQuery()
             .SingleOrDefaultAsync(cancellationToken);

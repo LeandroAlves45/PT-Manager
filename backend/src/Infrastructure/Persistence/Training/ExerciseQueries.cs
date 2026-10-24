@@ -98,6 +98,7 @@ internal sealed class ExerciseQueries : IExerciseQueries
             exercise.IsActive,
             exercise.PlatformEnforcementStatus.Value,
             exercise.PlatformEnforcementReason == null ? null : exercise.PlatformEnforcementReason.Value,
+            exercise.PlatformEnforcementNote,
             exercise.CreatedAt,
             exercise.UpdatedAt);
 }

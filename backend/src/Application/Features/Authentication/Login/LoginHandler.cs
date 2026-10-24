@@ -15,14 +15,17 @@ public sealed class LoginHandler
     private readonly AuthenticationPolicy _policy;
     private readonly IAuthenticationSessionStore _store;
     private readonly IAccessTokenIssuer _accessTokenIssuer;
+    private readonly IAccountAccessQueries _accessQueries;
 
     public LoginHandler(
         IValidator<LoginCommand> validator,
         IClock clock,
         AuthenticationPolicy policy,
         IAuthenticationSessionStore store,
-        IAccessTokenIssuer accessTokenIssuer)
+        IAccessTokenIssuer accessTokenIssuer,
+        IAccountAccessQueries accessQueries)
     {
+        _accessQueries = accessQueries ?? throw new ArgumentNullException(nameof(accessQueries));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _policy = policy ?? throw new ArgumentNullException(nameof(policy));
@@ -71,6 +74,12 @@ public sealed class LoginHandler
         if (outcome.Principal is null || outcome.RefreshSession is null)
             throw new InvalidOperationException(
                 "The authentication session store returned Authenticated without a principal or refresh session.");
+
+        // Bloqueio e fim do prazo só se revelam depois da palavra-passe certa.
+        var blocked = await AccountAccessGate.CheckAsync(
+            _accessQueries, _store, outcome.Principal, now, cancellationToken);
+        if (blocked is not null)
+            return Result<AuthenticationSessionDto>.Failure(blocked);
 
         var accessToken = _accessTokenIssuer.Issue(outcome.Principal);
         return Result<AuthenticationSessionDto>.Success(

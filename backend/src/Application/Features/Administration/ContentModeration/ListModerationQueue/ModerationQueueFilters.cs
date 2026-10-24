@@ -4,7 +4,8 @@ namespace Application.Features.Administration.ContentModeration.ListModerationQu
 public enum ModerationContentKind
 {
     Food,
-    Exercise
+    Exercise,
+    Supplement
 }
 
 /// <summary>

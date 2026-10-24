@@ -15,6 +15,7 @@ public sealed record FoodDto(
     bool IsActive,
     string PlatformEnforcementStatus,
     string? PlatformEnforcementReason,
+    string? PlatformEnforcementNote,
     DateTime CreatedAt,
     DateTime UpdatedAt
 );

@@ -1,3 +1,4 @@
+using Application.Common.Abstractions;
 using Application.Features.Authentication;
 using Application.Features.Authentication.Abstractions;
 using Application.Features.Authentication.Login;
@@ -23,7 +24,8 @@ public sealed class SessionHandlerTests
             new TestClock(Now),
             new AuthenticationPolicy(),
             store,
-            new AccessTokenIssuerStub());
+            new AccessTokenIssuerStub(),
+            new AccessQueriesStub());
 
         var result = await handler.HandleAsync(
             new LoginCommand("trainer@example.test", "wrong"),
@@ -32,6 +34,70 @@ public sealed class SessionHandlerTests
         Assert.True(result.IsFailure);
         Assert.Equal(AuthenticationErrors.InvalidCredentials.Code, result.Error!.Code);
     }
+
+    [Fact]
+    public async Task Login_BlockedTrainer_ReturnsReasonAndNoteAndRevokesSessions()
+    {
+        var store = AuthenticatedStore("trainer");
+        var access = new AccessQueriesStub
+        {
+            State = new AccountAccessState(
+                AccountAccessStatus.TrainerBlocked, "malicious_content", "Conteúdo copiado.")
+        };
+
+        var result = await CreateLogin(store, access).HandleAsync(
+            new LoginCommand("trainer@example.test", "right"),
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("trainer_account_blocked", result.Error!.Code);
+        Assert.Equal("malicious_content", result.Error.Metadata["block_reason"]);
+        Assert.Equal("Conteúdo copiado.", result.Error.Metadata["block_note"]);
+        Assert.Equal(1, store.RevokeAllCalls);
+    }
+
+    [Fact]
+    public async Task Login_ClientAfterAccessPeriod_ReturnsPeriodEnded()
+    {
+        var store = AuthenticatedStore("client");
+        var access = new AccessQueriesStub { State = AccountAccessState.ClientAccessPeriodEnded };
+
+        var result = await CreateLogin(store, access).HandleAsync(
+            new LoginCommand("client@example.test", "right"),
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("client_access_period_ended", result.Error!.Code);
+        Assert.Equal(1, store.RevokeAllCalls);
+    }
+
+    [Fact]
+    public async Task Login_AllowedAccount_IssuesSessionWithoutRevoking()
+    {
+        var store = AuthenticatedStore("client");
+
+        var result = await CreateLogin(store, new AccessQueriesStub()).HandleAsync(
+            new LoginCommand("client@example.test", "right"),
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(0, store.RevokeAllCalls);
+    }
+
+    private static SessionStoreStub AuthenticatedStore(string role) => new()
+    {
+        AuthenticateResult = AuthenticateStoreResult.Authenticated(
+            new AuthenticatedPrincipal(Guid.NewGuid(), Guid.NewGuid(), role, "stamp"),
+            new IssuedRefreshSession("refresh", "csrf", Now.AddDays(30)))
+    };
+
+    private static LoginHandler CreateLogin(SessionStoreStub store, AccessQueriesStub access) => new(
+        new ValidValidator<LoginCommand>(),
+        new TestClock(Now),
+        new AuthenticationPolicy(),
+        store,
+        new AccessTokenIssuerStub(),
+        access);
 
     [Fact]
     public async Task Refresh_ReusedToken_ReturnsGenericInvalidSession()

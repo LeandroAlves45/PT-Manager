@@ -14,6 +14,8 @@ public sealed record InitialAssessmentDto(
     string? Profession,
     AssessmentValueDto.BodyMeasurements BodyMeasurements,
     AssessmentValueDto.NutritionIntake NutritionIntake,
+    bool SubmittedByClient,
+    DateTime? ReviewedAt,
     DateTime CreatedAt,
     DateTime UpdatedAt
 );

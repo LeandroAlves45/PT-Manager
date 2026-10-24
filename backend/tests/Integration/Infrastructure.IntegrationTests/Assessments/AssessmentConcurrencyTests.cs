@@ -42,7 +42,7 @@ public sealed class AssessmentConcurrencyTests
     public async Task CheckIn_CreateConcurrentForSameDate_ReturnsTypedConflict()
     {
         var token = TestContext.Current.CancellationToken;
-        var seed = await SeedAsync("checkin-create", token);
+        var seed = await SeedAsync("checkin-create", token, withInitialAssessment: true);
         var checkInDate = DateOnly.FromDateTime(Now).AddDays(1);
         await using var firstContext = _fixture.CreateContext(seed.TrainerId);
         await using var secondContext = _fixture.CreateContext(seed.TrainerId);
@@ -212,11 +212,13 @@ public sealed class AssessmentConcurrencyTests
 
     private async Task<AssessmentSeed> SeedAsync(
         string prefix,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool withInitialAssessment = false)
     {
         var seed = await _fixture.SeedTenantWithClientAsync(
             $"assessment-{prefix}-{Guid.NewGuid():N}",
-            cancellationToken);
+            cancellationToken,
+            withInitialAssessment);
         return new AssessmentSeed(seed.TrainerId, seed.ClientId, seed.ClientUserId);
     }
 

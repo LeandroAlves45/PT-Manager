@@ -98,6 +98,13 @@ internal sealed class InitialAssessmentsConfiguration : IEntityTypeConfiguration
             ni.Property(n => n.OtherNotes).HasJsonPropertyName("other_notes");
         });
 
+        builder.Property(ia => ia.SubmittedByClient)
+            .HasColumnName("submitted_by_client")
+            .HasDefaultValue(false);
+
+        builder.Property(ia => ia.ReviewedAt)
+            .HasColumnName("reviewed_at");
+
         builder.Property(ia => ia.IsDeleted)
             .HasColumnName("is_deleted")
             .HasDefaultValue(false);
@@ -118,6 +125,9 @@ internal sealed class InitialAssessmentsConfiguration : IEntityTypeConfiguration
                 "ck_initial_assessments_activity_level",
                 "activity_level IN ('sedentary', 'lightly_active', " +
                 "'moderately_active', 'very_active', 'extremely_active')");
+            t.HasCheckConstraint(
+                "ck_initial_assessments_review_requires_client_submission",
+                "reviewed_at IS NULL OR submitted_by_client");
             t.HasCheckConstraint(
                 "ck_initial_assessments_weight_positive",
                 "weight_kg > 0");

@@ -98,7 +98,7 @@ public sealed class SetBillingExemptionHandlerTests : ReadHandlerTestContext
 
         public Task<AdminTrainerDto?> GetTrainerAsync(Guid trainerId, CancellationToken cancellationToken) =>
             Task.FromResult<AdminTrainerDto?>(new AdminTrainerDto(
-                trainerId, "Ana", "ana@x.pt", "ACTIVE", "PRO", true, DateTime.UtcNow, false, 0, DateTime.UtcNow));
+                trainerId, "Ana", "ana@x.pt", "ACTIVE", "PRO", true, DateTime.UtcNow, false, 0, DateTime.UtcNow, null));
 
         public Task<PageResult<AdminTrainerDto>> ListExemptAsync(PageRequest page, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
@@ -125,6 +125,15 @@ public sealed class SetBillingExemptionHandlerTests : ReadHandlerTestContext
 
         public Task<TrainerAdministrationStoreStatus> RevokeInvitationAsync(
             Guid actorUserId, Guid invitationId, DateTime now, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<TrainerAdministrationStoreStatus> BlockAccessAsync(
+            Guid actorUserId, Guid trainerId, Domain.ValueObjects.PlatformEnforcementReason reason,
+            string? note, DateTime now, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<TrainerAdministrationStoreStatus> UnblockAccessAsync(
+            Guid actorUserId, Guid trainerId, DateTime now, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
     }
 

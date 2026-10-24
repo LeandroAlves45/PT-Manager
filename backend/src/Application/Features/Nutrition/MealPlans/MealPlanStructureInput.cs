@@ -1,8 +1,12 @@
 namespace Application.Features.Nutrition.MealPlans;
 
-/// <summary>Representa todas as refeições desejadas depois da escrita.</summary>
+/// <summary>
+/// Representa todas as refeições e os suplementos fora das refeições desejados depois da
+/// escrita. Uma lista vazia de suplementos do plano retira os que existiam.
+/// </summary>
 public sealed record MealPlanStructureInput(
-    IReadOnlyList<MealPlanStructureInput.MealInput> Meals
+    IReadOnlyList<MealPlanStructureInput.MealInput> Meals,
+    IReadOnlyList<MealPlanStructureInput.SupplementInput> PlanSupplements
 )
 {
     /// <summary>Refeição existente quando o Id tem valor; nova quando é null.</summary>

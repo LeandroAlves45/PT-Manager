@@ -1,3 +1,4 @@
+using Application.Validation;
 using Domain.ValueObjects;
 using FluentValidation;
 
@@ -15,5 +16,10 @@ public sealed class BlockFoodCommandValidator : AbstractValidator<BlockFoodComma
         RuleFor(command => command.ReasonCode)
             .Must(PlatformEnforcementReason.IsSupported)
             .WithErrorCode("platform_enforcement_reason_invalid");
+
+        RuleFor(command => command.Note)
+            .MaximumLength(PlatformEnforcementNotes.MaxLength)
+            .WithErrorCode("platform_enforcement_note_too_long")
+            .WithoutNullCharacter();
     }
 }

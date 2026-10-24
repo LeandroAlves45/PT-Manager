@@ -348,5 +348,7 @@ public sealed class GoogleAuthenticationHandlerTests
             new AccessTokenIssuerStub(),
             sender,
             new TestClock(Now),
-            new AuthenticationPolicy());
+            new AuthenticationPolicy(),
+            new AccessQueriesStub(),
+            new SessionStoreStub());
 }

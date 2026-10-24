@@ -31,6 +31,8 @@ internal static class ApiResultMapper
             Instance = controller.Request.Path
         };
         problem.Extensions["correlation_id"] = controller.HttpContext.TraceIdentifier;
+        foreach (var (key, value) in error.Metadata)
+            problem.Extensions[key] = value;
 
         if (error.Category == ErrorCategory.Validation)
         {

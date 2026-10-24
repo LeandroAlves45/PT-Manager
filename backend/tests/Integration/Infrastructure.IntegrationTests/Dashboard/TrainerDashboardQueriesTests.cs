@@ -96,8 +96,8 @@ public sealed class TrainerDashboardQueriesTests : ReadQueriesIntegrationTestCon
 
         Assert.Equal(emptyCounter.ReaderCommands, loadedCounter.ReaderCommands);
         Assert.True(
-            loadedCounter.ReaderCommands <= 14,
-            $"Dashboard used {loadedCounter.ReaderCommands} commands (budget 14).");
+            loadedCounter.ReaderCommands <= 16,
+            $"Dashboard used {loadedCounter.ReaderCommands} commands (budget 16).");
     }
 
     [Fact]

@@ -16,7 +16,8 @@ public sealed class AdminModerationQueueControllerTests : ApiReadEndpointsTestCo
         var (trainerId, _) = await PortalTestData.SeedActiveClientAsync(_fixture.Factory, token);
 
         var client = _fixture.Factory.CreateOriginClient()
-            .WithBearer(TestJwtFactory.IssueSuperuser(Guid.NewGuid()));
+            .WithBearer(TestJwtFactory.IssueSuperuser(
+                await TrainingTestData.SeedSuperuserAsync(_fixture.Factory, token)));
 
         // Todos os alimentos "Portal rice" da suite partilham o mesmo UpdatedAt (SeedInstant),
         // por isso a ordem entre eles não é estável: percorrer todas as páginas em vez de

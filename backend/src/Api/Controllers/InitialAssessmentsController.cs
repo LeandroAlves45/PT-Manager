@@ -1,8 +1,12 @@
 using Api.Authorization;
 using Api.Configuration;
 using Api.Contracts.Assessments;
+using Api.Contracts.Common;
+using Api.Contracts.Dashboard;
 using Application.Features.Assessments.InitialAssessments.CreateInitialAssessment;
 using Application.Features.Assessments.InitialAssessments.GetInitialAssessment;
+using Application.Features.Assessments.InitialAssessments.ListInitialAssessmentsPendingReview;
+using Application.Features.Assessments.InitialAssessments.MarkInitialAssessmentReviewed;
 using Application.Features.Assessments.InitialAssessments.UpdateInitialAssessment;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -56,6 +60,44 @@ public sealed class InitialAssessmentsController : ApiControllerBase
                 new GetInitialAssessmentQuery(
                     clientId),
                     cancellationToken),
+            InitialAssessmentResponse.From);
+
+    /// <summary>
+    /// Lista as avaliações iniciais que os clientes ativos gravaram no portal e ainda não
+    /// foram revistas, da mais antiga para a mais recente.
+    /// </summary>
+    [HttpGet("initial-assessments/pending-review")]
+    [ProducesResponseType<PagedResponse<PendingReviewInitialAssessmentResponse>>(StatusCodes.Status200OK)]
+    public Task<IActionResult> ListPendingReviewAsync(
+        [FromQuery] PageParameters pageParameters,
+        [FromServices] ListInitialAssessmentsPendingReviewHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var page = pageParameters.GetEffectivePageNumber();
+        var size = pageParameters.GetEffectivePageSize();
+
+        return RespondAsync(
+            handler.HandleAsync(
+                new ListInitialAssessmentsPendingReviewQuery(page, size),
+                cancellationToken),
+            result => PagedResponse<PendingReviewInitialAssessmentResponse>.From(
+                result, page, size, PendingReviewInitialAssessmentResponse.From));
+    }
+
+    /// <summary>
+    /// Marca como revista a avaliação inicial gravada pelo cliente. Idempotente. 409
+    /// <c>initial_assessment_not_reviewable</c> para a criada pelo personal trainer.
+    /// </summary>
+    [HttpPost("initial-assessments/{assessmentId:guid}/review")]
+    [ProducesResponseType<InitialAssessmentResponse>(StatusCodes.Status200OK)]
+    public Task<IActionResult> MarkReviewedAsync(
+        Guid assessmentId,
+        [FromServices] MarkInitialAssessmentReviewedHandler handler,
+        CancellationToken cancellationToken) =>
+        RespondAsync(
+            handler.HandleAsync(
+                new MarkInitialAssessmentReviewedCommand(assessmentId),
+                cancellationToken),
             InitialAssessmentResponse.From);
 
     /// <summary>Substitui os campos editáveis de uma avaliação inicial.</summary>

@@ -28,6 +28,7 @@ public sealed record TrainerCountsResponse(
     int ActiveSubscriptionCount,
     int SuspendedSubscriptionCount,
     int ExemptCount,
+    int BlockedAccountCount,
     long RevenueThisMonthCents)
 {
     public static TrainerCountsResponse From(AdminOverviewDto.TrainerCountsDto dto)
@@ -37,6 +38,7 @@ public sealed record TrainerCountsResponse(
             dto.ActiveSubscriptionCount,
             dto.SuspendedSubscriptionCount,
             dto.ExemptCount,
+            dto.BlockedAccountCount,
             dto.RevenueThisMonthCents);
     }
 }
@@ -48,6 +50,7 @@ public sealed record AdminOverviewResponse(
     CatalogCountsResponse GlobalSupplements,
     ModerationCountsResponse PrivateFoods,
     ModerationCountsResponse PrivateExercises,
+    ModerationCountsResponse PrivateSupplements,
     TrainerCountsResponse Trainers)
 {
     public static AdminOverviewResponse From(AdminOverviewDto dto)
@@ -59,6 +62,7 @@ public sealed record AdminOverviewResponse(
             CatalogCountsResponse.From(dto.GlobalSupplements),
             ModerationCountsResponse.From(dto.PrivateFoods),
             ModerationCountsResponse.From(dto.PrivateExercises),
+            ModerationCountsResponse.From(dto.PrivateSupplements),
             TrainerCountsResponse.From(dto.Trainers));
     }
 }

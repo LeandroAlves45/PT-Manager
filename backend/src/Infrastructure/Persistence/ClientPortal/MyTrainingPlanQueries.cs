@@ -60,6 +60,11 @@ internal sealed class MyTrainingPlanQueries : IMyTrainingPlanQueries
                                 item => item.ExerciseId,
                                 catalog => catalog.Id,
                                 (item, catalog) => new { item, catalog })
+                            // O exercício bloqueado e o retirado do plano (com séries já
+                            // registadas) saem do plano do cliente.
+                            .Where(row =>
+                                row.catalog.PlatformEnforcementStatus != PlatformEnforcementStatus.Blocked &&
+                                row.item.RetiredAt == null)
                             .OrderBy(row => row.item.OrderNumber)
                             .ThenBy(row => row.item.GroupPosition)
                             .ThenBy(row => row.item.Id)
@@ -67,18 +72,11 @@ internal sealed class MyTrainingPlanQueries : IMyTrainingPlanQueries
                                 row.item.Id,
                                 row.catalog.Id,
                                 row.item.OrderNumber,
-                                row.catalog.PlatformEnforcementStatus ==
-                                    PlatformEnforcementStatus.Blocked
-                                    ? PortalContentMasking.UnavailableExerciseName
-                                    : row.catalog.Name,
-                                row.catalog.PlatformEnforcementStatus ==
-                                    PlatformEnforcementStatus.Blocked,
+                                row.catalog.Name,
                                 // Mesma regra do pedido de vídeo do cliente
                                 // (ExerciseVideoQueries.ForClient e o handler de playback):
-                                // vídeo Ready global ou do próprio trainer, e exercício não
-                                // bloqueado. Assim has_ready_video nunca promete um 404.
-                                row.catalog.PlatformEnforcementStatus !=
-                                    PlatformEnforcementStatus.Blocked &&
+                                // vídeo Ready global ou do próprio trainer; o bloqueado já saiu
+                                // acima. Assim has_ready_video nunca promete um 404.
                                 _dbContext.ExerciseVideos.Any(video =>
                                     video.ExerciseId == row.catalog.Id &&
                                     video.Status == ExerciseVideoStatus.Ready &&

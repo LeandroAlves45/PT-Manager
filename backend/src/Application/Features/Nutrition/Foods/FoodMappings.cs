@@ -27,6 +27,7 @@ public static class FoodMappings
             food.IsActive,
             food.PlatformEnforcementStatus.Value,
             food.PlatformEnforcementReason?.Value,
+            food.PlatformEnforcementNote,
             food.CreatedAt,
             food.UpdatedAt
         );

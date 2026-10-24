@@ -52,10 +52,11 @@ public sealed class AuthAccountControllerTests : IAsyncLifetime
     [Fact]
     public async Task Get_ClientAccount_ReportsTheClientRole()
     {
-        var email = $"account-client-{Guid.NewGuid():N}@client.test";
-        var userId = await AuthTestData.SeedAccountAsync(_factory, email, role: "client");
+        // O cliente só usa a app com a ficha ativa no personal trainer do token.
+        var (trainerId, userId, _) = await PortalTestData.SeedNewClientAsync(
+            _factory, TestContext.Current.CancellationToken);
 
-        var response = await GetAsync(TestJwtFactory.IssueClient(userId, Guid.NewGuid()));
+        var response = await GetAsync(TestJwtFactory.IssueClient(userId, trainerId));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using var body = await ReadAsync(response);

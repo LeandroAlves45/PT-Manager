@@ -54,7 +54,12 @@ internal sealed class MyExerciseSetLogStore : IMyExerciseSetLogStore
                     on day.TrainingPlanId equals plan.Id
                 where exercise.Id == trainingPlanDayExerciseId &&
                     plan.OwnerTrainerId == trainerId &&
-                    plan.ClientId == clientId.Value
+                    plan.ClientId == clientId.Value &&
+                    // Retirado do plano ou bloqueado pela moderação: o cliente já não o vê.
+                    exercise.RetiredAt == null &&
+                    !_dbContext.Exercises.IgnoreQueryFilters().Any(catalog =>
+                        catalog.Id == exercise.ExerciseId &&
+                        catalog.PlatformEnforcementStatus == Domain.ValueObjects.PlatformEnforcementStatus.Blocked)
                 select (Guid?)plan.Id
             ).SingleOrDefaultAsync(cancellationToken);
             if (!planId.HasValue)

@@ -20,6 +20,12 @@ public sealed class ClientSessionPack
     public DateOnly PurchaseDate { get; private set; }
     public DateOnly? ExpectedEndDate { get; private set; }
     public DateTime? CompletedAt { get; private set; }
+
+    /// <summary>
+    /// Instante em que o arquivo do cliente consumiu o saldo que restava. Um pack assim fica
+    /// fechado: repor uma sessão não lhe devolve saldo.
+    /// </summary>
+    public DateTime? ForfeitedAt { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -93,10 +99,31 @@ public sealed class ClientSessionPack
         UpdatedAt = now;
     }
 
-    /// <summary>Repõe uma unidade após RestoreSession validado.</summary>
+    /// <summary>
+    /// Consome o saldo que ainda resta, quando o cliente é arquivado. Reativar o cliente não o
+    /// devolve. Repetir não altera o instante original.
+    /// </summary>
+    public void ForfeitRemaining(DateTime now)
+    {
+        EnsureNotDeleted();
+        if (ForfeitedAt.HasValue || SessionsRemaining == 0)
+            return;
+
+        SessionsRemaining = 0;
+        CompletedAt = now;
+        ForfeitedAt = now;
+        UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// Repõe uma unidade após RestoreSession validado. Num pack fechado pelo arquivo do
+    /// cliente não devolve saldo.
+    /// </summary>
     public void RestoreSession(DateTime now)
     {
         EnsureNotDeleted();
+        if (ForfeitedAt.HasValue)
+            return;
         if (SessionsRemaining >= SessionsTotal)
             throw new DomainException("Pack already contains its full session balance.");
 

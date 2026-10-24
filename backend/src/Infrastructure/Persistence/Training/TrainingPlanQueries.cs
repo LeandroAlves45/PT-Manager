@@ -62,6 +62,8 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
                 item => item.ExerciseId,
                 catalog => catalog.Id,
                 (item, catalog) => new { item, catalog })
+            // O retirado (desbloqueado com séries registadas) já não faz parte do plano.
+            .Where(row => row.item.RetiredAt == null)
             .OrderBy(row => row.item.OrderNumber)
             .ThenBy(row => row.item.GroupPosition)
             .ThenBy(row => row.item.Id)
@@ -75,8 +77,10 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
                 row.item.ExerciseGroupId,
                 row.item.GroupPosition,
                 row.item.Notes,
-                IsPlatformBlocked = row.catalog.PlatformEnforcementStatus ==
-                    Domain.ValueObjects.PlatformEnforcementStatus.Blocked
+                PlatformEnforcement = PlatformEnforcementProjection.From(
+                    row.catalog.PlatformEnforcementStatus,
+                    row.catalog.PlatformEnforcementReason,
+                    row.catalog.PlatformEnforcementNote)
             })
             .ToListAsync(cancellationToken);
         var dayExerciseIds = exercises.Select(item => item.Id).ToArray();
@@ -126,7 +130,8 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
                             set.RestSecondsMax,
                             set.PlannedRpe,
                             set.PlannedRepsMax))
-                        .ToArray()))
+                        .ToArray(),
+                    item.PlatformEnforcement))
                 .ToArray()))
             .ToArray();
 
@@ -141,7 +146,7 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
             plan.EndDate,
             plan.IsActive,
             plan.IsArchived,
-            exercises.Any(item => item.IsPlatformBlocked),
+            exercises.Any(item => item.PlatformEnforcement is not null),
             plan.HasHistory,
             daysDtos,
             plan.CreatedAt,
@@ -168,6 +173,12 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
             TrainingPlanActivityFilter.All => query,
             _ => throw new ArgumentOutOfRangeException(nameof(activity))
         };
+
+        // A vista ativa geral não mostra planos de clientes arquivados. Na ficha do cliente
+        // (com cliente indicado) continuam visíveis, só para ler.
+        if (activity == TrainingPlanActivityFilter.Active && !clientId.HasValue)
+            query = query.Where(plan => _dbContext.Clients.Any(
+                client => client.Id == plan.ClientId && client.IsActive));
 
         if (endsFrom.HasValue)
             query = query.Where(plan => plan.EndDate.HasValue && plan.EndDate.Value >= endsFrom.Value);
@@ -209,6 +220,7 @@ internal sealed class TrainingPlanQueries : ITrainingPlanQueries
                 plan.IsActive,
                 plan.IsArchived,
                 _dbContext.TrainingPlanDayExercises.Any(item =>
+                    item.RetiredAt == null &&
                     _dbContext.TrainingPlanDays.Any(day =>
                         day.Id == item.TrainingPlanDayId && day.TrainingPlanId == plan.Id) &&
                     _dbContext.Exercises.Any(exercise =>

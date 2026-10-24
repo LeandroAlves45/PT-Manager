@@ -29,6 +29,18 @@ public static class AssessmentErrors
         "The client already has an initial assessment."
     );
 
+    public static readonly Error InitialAssessmentNotReviewable = Error.Create(
+        "initial_assessment_not_reviewable",
+        ErrorCategory.Conflict,
+        "Only an initial assessment submitted by the client can be reviewed."
+    );
+
+    public static readonly Error InitialAssessmentRequired = Error.Create(
+        "initial_assessment_required",
+        ErrorCategory.Conflict,
+        "The client must have an initial assessment before this can be created."
+    );
+
     public static readonly Error ClientInactive = Error.Create(
         "assessment_client_inactive",
         ErrorCategory.Conflict,

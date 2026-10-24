@@ -7,6 +7,8 @@ using Domain.Entities.Billing;
 using Domain.Entities.Identity;
 using Domain.ValueObjects;
 using Infrastructure.Data;
+using Infrastructure.Email;
+using Infrastructure.Notifications;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
@@ -76,6 +78,135 @@ internal sealed class TrainerAdministrationStore : ITrainerAdministrationStore
         {
             return TrainerAdministrationStoreStatus.ConcurrencyConflict;
         }
+    }
+
+    public Task<TrainerAdministrationStoreStatus> BlockAccessAsync(
+        Guid actorUserId,
+        Guid trainerId,
+        PlatformEnforcementReason reason,
+        string? note,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(reason);
+
+        var attempt = new MutationAttempt();
+        return ExecuteAsync(async token =>
+        {
+            if (!await IsActiveSuperuserAsync(actorUserId, token))
+                return TrainerAdministrationStoreStatus.ActorInvalid;
+            if (!await LockTrainerAsync(trainerId, token))
+                return TrainerAdministrationStoreStatus.NotFound;
+
+            // Bloquear outra vez mantém o primeiro bloqueio: os 7 dias contam desde ele.
+            if (await _dbContext.TrainerAccessBlocks.AnyAsync(block => block.TrainerId == trainerId, token))
+                return TrainerAdministrationStoreStatus.Unchanged;
+
+            var block = new TrainerAccessBlock(trainerId, reason, note, actorUserId, now);
+            _dbContext.TrainerAccessBlocks.Add(block);
+
+            // A sessão aberta do personal trainer acaba já; as dos clientes ficam nos 7 dias.
+            await _dbContext.RefreshTokens
+                .Where(item => item.UserId == trainerId && item.RevokedAt == null)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(item => item.RevokedAt, now), token);
+
+            // O convite por aceitar deixa de servir e não volta quando o bloqueio acaba.
+            await _dbContext.InviteTokens
+                .Where(item => item.TrainerId == trainerId && item.UsedAt == null)
+                .ExecuteDeleteAsync(token);
+
+            attempt.AuditEntry = AddAudit(
+                actorUserId,
+                "trainer_access_blocked",
+                "trainer",
+                trainerId,
+                null,
+                Snapshot(block),
+                now);
+            await EnqueueAccessEmailsAsync(trainerId, blocked: true, attempt.AuditEntry.Id, now, token);
+
+            await _dbContext.SaveChangesAsync(token);
+            return TrainerAdministrationStoreStatus.Changed;
+        }, attempt, cancellationToken);
+    }
+
+    public Task<TrainerAdministrationStoreStatus> UnblockAccessAsync(
+        Guid actorUserId,
+        Guid trainerId,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var attempt = new MutationAttempt();
+        return ExecuteAsync(async token =>
+        {
+            if (!await IsActiveSuperuserAsync(actorUserId, token))
+                return TrainerAdministrationStoreStatus.ActorInvalid;
+            if (!await LockTrainerAsync(trainerId, token))
+                return TrainerAdministrationStoreStatus.NotFound;
+
+            var block = await _dbContext.TrainerAccessBlocks
+                .SingleOrDefaultAsync(item => item.TrainerId == trainerId, token);
+            if (block is null)
+                return TrainerAdministrationStoreStatus.Unchanged;
+
+            var before = Snapshot(block);
+            _dbContext.TrainerAccessBlocks.Remove(block);
+            attempt.AuditEntry = AddAudit(
+                actorUserId,
+                "trainer_access_unblocked",
+                "trainer",
+                trainerId,
+                before,
+                JsonSerializer.Serialize(new { trainer_id = trainerId, blocked = false }),
+                now);
+            await EnqueueAccessEmailsAsync(trainerId, blocked: false, attempt.AuditEntry.Id, now, token);
+
+            await _dbContext.SaveChangesAsync(token);
+            return TrainerAdministrationStoreStatus.Changed;
+        }, attempt, cancellationToken);
+    }
+
+    // Serializa bloquear e levantar sobre o mesmo personal trainer.
+    private Task<bool> LockTrainerAsync(Guid trainerId, CancellationToken cancellationToken) =>
+        _dbContext.Users
+            .FromSqlInterpolated($"SELECT * FROM users WHERE id = {trainerId} FOR UPDATE")
+            .IgnoreQueryFilters()
+            .AnyAsync(user => user.Role == "trainer" && !user.IsDeleted, cancellationToken);
+
+    /// <summary>
+    /// Um email para o personal trainer e um por cliente ativo com conta ativa. Arquivados e
+    /// quem nunca aceitou o convite não recebem (RN-013). O envio revalida tudo.
+    /// </summary>
+    private async Task EnqueueAccessEmailsAsync(
+        Guid trainerId,
+        bool blocked,
+        Guid eventId,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        _dbContext.OutboxMessages.Add(AccountAccessNotifications.Create(
+            trainerId,
+            blocked ? AccountAccessTemplateRenderer.TrainerBlockedKind : AccountAccessTemplateRenderer.TrainerRestoredKind,
+            trainerId,
+            eventId,
+            now));
+
+        var clientUserIds = await (
+                from client in _dbContext.Clients.IgnoreQueryFilters().AsNoTracking()
+                join user in _dbContext.Users.IgnoreQueryFilters().AsNoTracking()
+                    on client.UserId equals (Guid?)user.Id
+                where client.OwnerTrainerId == trainerId && client.IsActive && !client.IsDeleted &&
+                    user.Role == "client" && user.IsActive && !user.IsDeleted
+                select user.Id)
+            .ToListAsync(cancellationToken);
+
+        foreach (var userId in clientUserIds)
+            _dbContext.OutboxMessages.Add(AccountAccessNotifications.Create(
+                trainerId,
+                blocked ? AccountAccessTemplateRenderer.ClientBlockedKind : AccountAccessTemplateRenderer.ClientRestoredKind,
+                userId,
+                eventId,
+                now));
     }
 
     public async Task<IssueTrainerInvitationStoreResult> IssueInvitationAsync(
@@ -220,6 +351,14 @@ internal sealed class TrainerAdministrationStore : ITrainerAdministrationStore
         tier = subscription.Tier.Value,
         is_exempt_from_billing = subscription.IsExemptFromBilling,
         billing_exempt_since = subscription.BillingExemptSince
+    });
+
+    private static string Snapshot(TrainerAccessBlock block) => JsonSerializer.Serialize(new
+    {
+        trainer_id = block.TrainerId,
+        reason = block.Reason.Value,
+        note = block.Note,
+        blocked_at = block.BlockedAt
     });
 
     // O hash do token nunca entra na auditoria.

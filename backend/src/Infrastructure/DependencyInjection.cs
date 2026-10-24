@@ -191,6 +191,11 @@ public static class DependencyInjection
 
         // Timezone provider
         services.AddScoped<ITrainerTimeZoneProvider, TrainerTimeZoneProvider>();
+        services.AddScoped<IAccountAccessQueries, Infrastructure.Identity.AccountAccessQueries>();
+        services.AddScoped<Application.Features.ClientPortal.PlanSupplementIntakes.IMyPlanSupplementIntakeQueries,
+            Infrastructure.Persistence.ClientPortal.MyPlanSupplementIntakeQueries>();
+        services.AddScoped<Application.Features.ClientPortal.PlanSupplementIntakes.IMyPlanSupplementIntakeStore,
+            Infrastructure.Persistence.ClientPortal.MyPlanSupplementIntakeStore>();
 
         // Jobs
         services.AddScoped<IDurableJobStore, DurableJobRepository>();

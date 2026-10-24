@@ -1,3 +1,4 @@
+using Domain.ValueObjects;
 using Domain.Entities.Identity;
 using Domain.Entities.Supplements;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +19,35 @@ internal sealed class SupplementConfiguration : IEntityTypeConfiguration<Supplem
             table.HasCheckConstraint("ck_supplements_unit", "btrim(unit_of_measure) <> ''");
             table.HasCheckConstraint("ck_supplements_serving_size", "btrim(serving_size) <> ''");
             table.HasCheckConstraint("ck_supplements_timing", "timing IS NULL OR btrim(timing) <> ''");
+            table.HasCheckConstraint(
+                "ck_supplements_platform_enforcement",
+                "(platform_enforcement_status = 'allowed' AND platform_enforcement_reason IS NULL " +
+                "AND platform_enforced_at IS NULL AND platform_enforcement_note IS NULL) OR " +
+                "(platform_enforcement_status = 'blocked' AND owner_trainer_id IS NOT NULL " +
+                "AND platform_enforcement_reason IN ('malicious_content', 'dangerous_information', " +
+                "'deliberately_false_information', 'prohibited_content') AND platform_enforced_at IS NOT NULL)");
         });
+
+        builder.Property(s => s.PlatformEnforcementStatus)
+            .HasColumnName("platform_enforcement_status")
+            .HasMaxLength(20)
+            .HasConversion(status => status.Value, value => PlatformEnforcementStatus.FromString(value))
+            .HasDefaultValue(PlatformEnforcementStatus.Allowed)
+            .IsRequired();
+
+        builder.Property(s => s.PlatformEnforcementReason)
+            .HasColumnName("platform_enforcement_reason")
+            .HasMaxLength(50)
+            .HasConversion(reason => reason == null ? null : reason.Value,
+                value => value == null ? null : PlatformEnforcementReason.FromString(value));
+
+        builder.Property(s => s.PlatformEnforcedAt)
+            .HasColumnName("platform_enforced_at");
+
+        builder.Property(s => s.PlatformEnforcementNote)
+            .HasColumnName("platform_enforcement_note")
+            .HasMaxLength(500);
+
 
         builder.HasKey(s => s.Id);
 

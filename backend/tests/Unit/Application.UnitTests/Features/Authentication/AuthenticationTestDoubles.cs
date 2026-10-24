@@ -230,10 +230,32 @@ internal sealed class SessionStoreStub : IAuthenticationSessionStore
         return Task.FromResult(RevokeResult);
     }
 
+    public int RevokeAllCalls { get; private set; }
+
     public Task RevokeAllAsync(
         Guid userId,
         DateTime now,
-        CancellationToken cancellationToken) => Task.CompletedTask;
+        CancellationToken cancellationToken)
+    {
+        RevokeAllCalls++;
+        return Task.CompletedTask;
+    }
+}
+
+/// <summary>Estado de acesso devolvido a cada entrada; por omissão a conta pode continuar.</summary>
+internal sealed class AccessQueriesStub : IAccountAccessQueries
+{
+    public AccountAccessState State { get; set; } = AccountAccessState.Allowed;
+
+    public Task<AccountAccessState> GetAsync(
+        Guid userId,
+        string role,
+        Guid? trainerId,
+        DateTime now,
+        CancellationToken cancellationToken) => Task.FromResult(State);
+
+    public Task<DateTime?> GetTrainerBlockedAtAsync(Guid trainerId, CancellationToken cancellationToken) =>
+        Task.FromResult<DateTime?>(null);
 }
 
 internal sealed class PasswordStoreStub(PasswordManagementStoreResult result) :

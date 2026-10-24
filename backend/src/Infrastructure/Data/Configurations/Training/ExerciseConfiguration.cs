@@ -76,6 +76,10 @@ internal sealed class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
         builder.Property(e => e.PlatformEnforcedAt)
             .HasColumnName("platform_enforced_at");
 
+        builder.Property(e => e.PlatformEnforcementNote)
+            .HasColumnName("platform_enforcement_note")
+            .HasMaxLength(500);
+
         builder.Property(e => e.CreatedAt)
             .HasColumnName("created_at")
             .HasDefaultValueSql("now()")

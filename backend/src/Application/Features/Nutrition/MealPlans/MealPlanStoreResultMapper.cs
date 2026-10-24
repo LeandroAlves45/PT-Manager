@@ -1,3 +1,4 @@
+using Application.Features.Assessments;
 using Application.Features.Nutrition.MealPlans.Abstractions;
 using Application.Features.Nutrition.MealPlans.Dtos;
 using Application.Results;
@@ -25,6 +26,8 @@ internal static class MealPlanStoreResultMapper
                 Result<MealPlanDetailsDto>.Failure(NutritionErrors.MealPlanNotFound),
             MealPlanStoreResult.Status.ClientNotFound =>
                 Result<MealPlanDetailsDto>.Failure(NutritionErrors.ClientNotFound),
+            MealPlanStoreResult.Status.InitialAssessmentRequired =>
+                Result<MealPlanDetailsDto>.Failure(AssessmentErrors.InitialAssessmentRequired),
             MealPlanStoreResult.Status.StructureReferenceNotFound =>
                 Result<MealPlanDetailsDto>.Failure(
                     NutritionErrors.MealPlanStructureReferenceNotFound),

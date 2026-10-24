@@ -71,6 +71,10 @@ public sealed class PtManagerDbContext : DbContext
     public DbSet<Supplement> Supplements => Set<Supplement>();
     public DbSet<ClientSupplementAssignment> ClientSupplementAssignments => Set<ClientSupplementAssignment>();
     public DbSet<ClientSupplementIntake> ClientSupplementIntakes => Set<ClientSupplementIntake>();
+    public DbSet<MealPlanSupplement> MealPlanSupplements => Set<MealPlanSupplement>();
+    public DbSet<TrainerAccessBlock> TrainerAccessBlocks => Set<TrainerAccessBlock>();
+    public DbSet<ClientMealPlanSupplementIntake> ClientMealPlanSupplementIntakes =>
+        Set<ClientMealPlanSupplementIntake>();
     public DbSet<TrainerSettings> TrainerSettings => Set<TrainerSettings>();
     public DbSet<ClientExerciseSetLog> ClientExerciseSetLogs => Set<ClientExerciseSetLog>();
     public DbSet<ExerciseSet> ExerciseSets => Set<ExerciseSet>();
@@ -172,6 +176,10 @@ public sealed class PtManagerDbContext : DbContext
             assignment.OwnerTrainerId == CurrentTrainerId);
 
         modelBuilder.Entity<ClientSupplementIntake>().HasQueryFilter(intake =>
+            CurrentTrainerId.HasValue &&
+            intake.OwnerTrainerId == CurrentTrainerId);
+
+        modelBuilder.Entity<ClientMealPlanSupplementIntake>().HasQueryFilter(intake =>
             CurrentTrainerId.HasValue &&
             intake.OwnerTrainerId == CurrentTrainerId);
 

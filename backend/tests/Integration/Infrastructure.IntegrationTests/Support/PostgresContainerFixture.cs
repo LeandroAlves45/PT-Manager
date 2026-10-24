@@ -1,3 +1,4 @@
+using Domain.Entities.Assessments;
 using Domain.Entities.Clients;
 using TrainerSettingsEntity = Domain.Entities.TrainerSettings.TrainerSettings;
 using Domain.Entities.Identity;
@@ -70,9 +71,15 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
     public PtManagerDbContext CreateAdministrativeContext(Guid actorUserId) =>
         CreateContext(TestTenantContext.Administrator(actorUserId));
 
+    /// <summary>
+    /// Semeia um personal trainer com um cliente ativo e com conta. Com
+    /// <paramref name="withInitialAssessment"/>, o cliente traz já a avaliação inicial, sem a
+    /// qual não se criam planos, atribuições de suplementos nem avaliações periódicas.
+    /// </summary>
     public async Task<TestTenantSeed> SeedTenantWithClientAsync(
         string discriminator,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool withInitialAssessment = false)
     {
         var now = new DateTime(2026, 7, 31, 12, 0, 0, DateTimeKind.Utc);
         var trainer = CreateUser($"trainer-{discriminator}@example.test", "trainer", now);
@@ -95,6 +102,21 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
         context.Users.AddRange(trainer, clientUser);
         context.Clients.Add(client);
         context.TrainerSettings.Add(new TrainerSettingsEntity(trainer.Id, now));
+        if (withInitialAssessment)
+            context.InitialAssessments.Add(new InitialAssessment(
+                trainer.Id,
+                client.Id,
+                80m,
+                180,
+                null,
+                null,
+                "intermediate",
+                ActivityLevel.ModeratelyActive,
+                "Ganhar força",
+                null,
+                BodyMeasurements.Empty,
+                NutritionIntake.Empty,
+                now));
         await context.SaveChangesAsync(cancellationToken);
 
         return new TestTenantSeed(trainer.Id, client.Id, clientUser.Id);

@@ -33,7 +33,9 @@ internal sealed class SupplementIntakeQueries : ISupplementIntakeQueries
                 on assignment.SupplementId equals supplement.Id
             where assignment.OwnerTrainerId == trainerId &&
                 assignment.ClientId == clientId.Value &&
-                assignment.IsActive
+                assignment.IsActive &&
+                // O suplemento bloqueado pela moderação sai do portal.
+                supplement.PlatformEnforcementStatus != Domain.ValueObjects.PlatformEnforcementStatus.Blocked
             orderby supplement.Name, assignment.Id
             select new
             {

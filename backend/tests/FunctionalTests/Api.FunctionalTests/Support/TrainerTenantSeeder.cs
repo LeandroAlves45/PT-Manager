@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Domain.Entities.Assessments;
 using Domain.Entities.Billing;
 using Domain.Entities.Clients;
 using Domain.Entities.Identity;
@@ -71,6 +72,9 @@ internal static class TrainerTenantSeeder
 
     /// <summary>Cria uma ficha de cliente pertencente ao tenant indicado.</summary>
     /// <remarks>
+    /// Por omissão a ficha já traz a avaliação inicial feita pelo personal trainer: sem ela
+    /// não se criam planos, atribuições de suplementos nem avaliações periódicas. Os testes
+    /// dessa regra pedem <paramref name="withInitialAssessment"/> a falso.
     /// A subscrição é incrementada na mesma transação, tal como
     /// <c>CreateClientHandler</c> faz em produção, para que o estado semeado seja
     /// indistinguível do estado produzido pelo caso de uso real.
@@ -81,7 +85,8 @@ internal static class TrainerTenantSeeder
         string name,
         CancellationToken cancellationToken,
         bool isActive = true,
-        string? contactEmail = null)
+        string? contactEmail = null,
+        bool withInitialAssessment = true)
     {
         ArgumentNullException.ThrowIfNull(factory);
 
@@ -107,6 +112,21 @@ internal static class TrainerTenantSeeder
             client.Deactivate(SeedInstant);
 
         context.Clients.Add(client);
+        if (withInitialAssessment)
+            context.InitialAssessments.Add(new InitialAssessment(
+                trainerId,
+                client.Id,
+                80m,
+                180,
+                null,
+                null,
+                "intermediate",
+                ActivityLevel.ModeratelyActive,
+                "Ganhar força",
+                null,
+                BodyMeasurements.Empty,
+                NutritionIntake.Empty,
+                SeedInstant));
 
         var subscription = await context.TrainerSubscriptions
             .SingleAsync(item => item.TrainerId == trainerId, cancellationToken);

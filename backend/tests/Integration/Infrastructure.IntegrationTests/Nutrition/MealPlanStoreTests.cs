@@ -48,14 +48,39 @@ public sealed class MealPlanStoreTests
     }
 
     [Fact]
+    public async Task CreateAsync_ClientWithoutInitialAssessment_IsRefusedWithoutWriting()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var owner = await NutritionPlanTestData.SeedCatalogAsync(_fixture, token);
+        await using (var cleanup = _fixture.CreateContext(owner.TrainerId))
+        {
+            await cleanup.InitialAssessments
+                .Where(assessment => assessment.ClientId == owner.ClientId)
+                .ExecuteDeleteAsync(token);
+        }
+        await using var context = _fixture.CreateContext(owner.TrainerId);
+        var store = new MealPlanStore(context);
+
+        var result = await store.CreateAsync(
+            owner.TrainerId,
+            NutritionPlanTestData.CreateModel(owner.ClientId, owner.FoodId, owner.SupplementId),
+            Now,
+            token);
+
+        Assert.Equal(MealPlanStoreResult.Status.InitialAssessmentRequired, result.Kind);
+        Assert.False(await context.MealPlans.AsNoTracking()
+            .AnyAsync(plan => plan.ClientId == owner.ClientId, token));
+    }
+
+    [Fact]
     public async Task CreateAsync_ClientFromAnotherTenant_RollsBackWholeWrite()
     {
         var token = TestContext.Current.CancellationToken;
         var owner = await NutritionPlanTestData.SeedCatalogAsync(_fixture, token);
         var foreign = await _fixture.SeedTenantWithClientAsync(
             $"meal-plan-foreign-{Guid.NewGuid():N}",
-            token
-        );
+            token,
+            withInitialAssessment: true);
         await using var context = _fixture.CreateContext(owner.TrainerId);
         var store = new MealPlanStore(context);
 
@@ -131,7 +156,7 @@ public sealed class MealPlanStoreTests
             seed.TrainerId,
             NutritionPlanTestData.UpdateModel(
                 seed.MealPlanId,
-                new MealPlanStructureInput([keptMeal with { OrderNumber = 1 }])
+                new MealPlanStructureInput([keptMeal with { OrderNumber = 1 }], [])
             ),
             Now.AddMinutes(1),
             token
@@ -174,7 +199,7 @@ public sealed class MealPlanStoreTests
         var second = structure.Meals.Single(meal => meal.OrderNumber == 2);
         var swapped = new MealPlanStructureInput(
             [first with { OrderNumber = 2 }, second with { OrderNumber = 1 }]
-        );
+        , []);
 
         var result = await new MealPlanStore(context).UpdateAsync(
             seed.TrainerId,
@@ -206,7 +231,7 @@ public sealed class MealPlanStoreTests
         );
         var invalid = new MealPlanStructureInput(
             structure.Meals.Select(meal => meal with { OrderNumber = 1 }).ToArray()
-        );
+        , []);
 
         await Assert.ThrowsAsync<DomainException>(() =>
             new MealPlanStore(context).UpdateAsync(
@@ -242,7 +267,7 @@ public sealed class MealPlanStoreTests
                 .OrderByDescending(meal => meal.OrderNumber)
                 .Select((meal, index) => meal with { OrderNumber = index + 1 })
                 .ToArray()
-        );
+        , []);
         await using var firstContext = _fixture.CreateContext(seed.TrainerId);
         await using var secondContext = _fixture.CreateContext(seed.TrainerId);
 
@@ -280,7 +305,7 @@ public sealed class MealPlanStoreTests
         );
         var meal = Assert.Single(structure.Meals);
         var invalidItem = Assert.Single(meal.Items) with { Id = Guid.NewGuid() };
-        var invalid = new MealPlanStructureInput([meal with { Items = [invalidItem] }]);
+        var invalid = new MealPlanStructureInput([meal with { Items = [invalidItem] }], []);
 
         var result = await new MealPlanStore(context).UpdateAsync(
             seed.TrainerId,
@@ -398,8 +423,8 @@ internal static class NutritionPlanTestData
     {
         var tenant = await fixture.SeedTenantWithClientAsync(
             $"nutrition-plan-{Guid.NewGuid():N}",
-            cancellationToken
-        );
+            cancellationToken,
+            withInitialAssessment: true);
         await using var context = fixture.CreateContext(tenant.TrainerId);
         var food = IntegrationTestData.Food(tenant.TrainerId, Now);
         var supplement = IntegrationTestData.Supplement(tenant.TrainerId, Now);
@@ -460,7 +485,7 @@ internal static class NutritionPlanTestData
             new DateOnly(2026, 8, 10),
             null,
             Snapshot(),
-            new MealPlanStructureInput(meals)
+            new MealPlanStructureInput(meals, [])
         );
     }
 
@@ -519,7 +544,7 @@ internal static class NutritionPlanTestData
                         .ToArray()
                 ))
                 .ToArray()
-        );
+        , []);
     }
 
     private static NutritionCalculationSnapshot Snapshot()

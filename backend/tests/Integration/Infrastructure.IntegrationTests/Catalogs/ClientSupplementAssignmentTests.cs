@@ -22,7 +22,7 @@ public sealed class ClientSupplementAssignmentTests
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(
-            Guid.NewGuid().ToString("N"), cancellationToken);
+            Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var supplement = IntegrationTestData.Supplement(
             tenant.TrainerId, Now, tenant.TrainerId);
         await using var context = _fixture.CreateContext(tenant.TrainerId);
@@ -42,11 +42,36 @@ public sealed class ClientSupplementAssignmentTests
     }
 
     [Fact]
-    public async Task UpdateInstructions_ValidChange_PersistsAfterContextIsDiscarded()
+    public async Task Assign_ClientWithoutInitialAssessment_IsRefusedWithoutWriting()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(
             Guid.NewGuid().ToString("N"), cancellationToken);
+        var supplement = IntegrationTestData.Supplement(
+            tenant.TrainerId, Now, tenant.TrainerId);
+        await using var context = _fixture.CreateContext(tenant.TrainerId);
+        context.Supplements.Add(supplement);
+        await context.SaveChangesAsync(cancellationToken);
+        var store = new ClientSupplementAssignmentStore(
+            context, new PostgresConstraintTranslator());
+
+        var outcome = await store.AssignAsync(
+            tenant.TrainerId, tenant.ClientId, supplement.Id,
+            null, null, null, Now.AddMinutes(1), cancellationToken);
+
+        Assert.Equal(
+            ClientSupplementAssignmentStoreResult.Status.InitialAssessmentRequired,
+            outcome.Kind);
+        Assert.False(await context.ClientSupplementAssignments.AsNoTracking()
+            .AnyAsync(item => item.ClientId == tenant.ClientId, cancellationToken));
+    }
+
+    [Fact]
+    public async Task UpdateInstructions_ValidChange_PersistsAfterContextIsDiscarded()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var tenant = await _fixture.SeedTenantWithClientAsync(
+            Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var supplement = IntegrationTestData.Supplement(
             tenant.TrainerId, Now, tenant.TrainerId);
         Guid assignmentId;
@@ -84,7 +109,7 @@ public sealed class ClientSupplementAssignmentTests
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(
-            Guid.NewGuid().ToString("N"), cancellationToken);
+            Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var supplement = IntegrationTestData.Supplement(
             tenant.TrainerId, Now, tenant.TrainerId);
         await using var context = _fixture.CreateContext(tenant.TrainerId);
@@ -113,7 +138,7 @@ public sealed class ClientSupplementAssignmentTests
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(
-            Guid.NewGuid().ToString("N"), cancellationToken);
+            Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var supplement = IntegrationTestData.Supplement(
             tenant.TrainerId, Now, tenant.TrainerId);
         await using var context = _fixture.CreateContext(tenant.TrainerId);
@@ -149,7 +174,7 @@ public sealed class ClientSupplementAssignmentTests
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(
-            Guid.NewGuid().ToString("N"), cancellationToken);
+            Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var supplement = IntegrationTestData.Supplement(
             tenant.TrainerId, Now, tenant.TrainerId);
         await using var context = _fixture.CreateContext(tenant.TrainerId);
@@ -175,9 +200,9 @@ public sealed class ClientSupplementAssignmentTests
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var owner = await _fixture.SeedTenantWithClientAsync(
-            $"owner-{Guid.NewGuid():N}", cancellationToken);
+            $"owner-{Guid.NewGuid():N}", cancellationToken, withInitialAssessment: true);
         var requester = await _fixture.SeedTenantWithClientAsync(
-            $"requester-{Guid.NewGuid():N}", cancellationToken);
+            $"requester-{Guid.NewGuid():N}", cancellationToken, withInitialAssessment: true);
         var supplement = IntegrationTestData.Supplement(
             owner.TrainerId, Now, owner.TrainerId);
         await using (var ownerContext = _fixture.CreateContext(owner.TrainerId))
@@ -203,7 +228,7 @@ public sealed class ClientSupplementAssignmentTests
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(
-            Guid.NewGuid().ToString("N"), cancellationToken);
+            Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var supplement = IntegrationTestData.Supplement(
             tenant.TrainerId, Now, tenant.TrainerId);
         await using (var seed = _fixture.CreateContext(tenant.TrainerId))
@@ -237,7 +262,7 @@ public sealed class ClientSupplementAssignmentTests
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var tenant = await _fixture.SeedTenantWithClientAsync(
-            Guid.NewGuid().ToString("N"), cancellationToken);
+            Guid.NewGuid().ToString("N"), cancellationToken, withInitialAssessment: true);
         var supplement = IntegrationTestData.Supplement(
             tenant.TrainerId, Now, tenant.TrainerId);
         await using var context = _fixture.CreateContext(tenant.TrainerId);

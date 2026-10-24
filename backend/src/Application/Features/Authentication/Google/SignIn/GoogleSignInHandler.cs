@@ -20,6 +20,8 @@ public sealed class GoogleSignInHandler
     private readonly IAuthenticationEmailSender _emails;
     private readonly IClock _clock;
     private readonly AuthenticationPolicy _policy;
+    private readonly IAccountAccessQueries _accessQueries;
+    private readonly IAuthenticationSessionStore _sessions;
 
     public GoogleSignInHandler(
         IValidator<GoogleSignInCommand> validator,
@@ -28,8 +30,12 @@ public sealed class GoogleSignInHandler
         IAccessTokenIssuer accessTokens,
         IAuthenticationEmailSender emails,
         IClock clock,
-        AuthenticationPolicy policy)
+        AuthenticationPolicy policy,
+        IAccountAccessQueries accessQueries,
+        IAuthenticationSessionStore sessions)
     {
+        _accessQueries = accessQueries ?? throw new ArgumentNullException(nameof(accessQueries));
+        _sessions = sessions ?? throw new ArgumentNullException(nameof(sessions));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _verifier = verifier ?? throw new ArgumentNullException(nameof(verifier));
         _store = store ?? throw new ArgumentNullException(nameof(store));
@@ -72,6 +78,11 @@ public sealed class GoogleSignInHandler
         {
             if (stored.Principal is null || stored.RefreshSession is null)
                 throw new InvalidOperationException("Authenticated Google result is incomplete.");
+
+            var blocked = await AccountAccessGate.CheckAsync(
+                _accessQueries, _sessions, stored.Principal, now, cancellationToken);
+            if (blocked is not null)
+                return Result<GoogleSignInOutcomeDto>.Failure(blocked);
 
             var access = _accessTokens.Issue(stored.Principal);
             return Result<GoogleSignInOutcomeDto>.Success(

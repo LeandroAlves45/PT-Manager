@@ -46,6 +46,7 @@ public sealed class BlockFoodHandler
             actor.Value.UserId,
             command.FoodId,
             PlatformEnforcementReason.FromString(command.ReasonCode),
+            command.Note,
             _clock.UtcNow,
             cancellationToken);
 

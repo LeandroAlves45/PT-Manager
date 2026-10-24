@@ -131,7 +131,6 @@ public sealed class MyWorkoutTodayReader
                     exercise.ExerciseId,
                     exercise.OrderNumber,
                     exercise.ExerciseName,
-                    exercise.IsUnavailable,
                     exercise.HasReadyVideo,
                     exercise.ExerciseGroupId,
                     exercise.GroupPosition,

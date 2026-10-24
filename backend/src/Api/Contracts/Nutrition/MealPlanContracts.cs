@@ -1,3 +1,4 @@
+using Api.Contracts.Common;
 using Application.Features.Nutrition.MealPlans;
 using Application.Features.Nutrition.MealPlans.Dtos;
 
@@ -26,8 +27,13 @@ public sealed record MealSupplementRequest(
     decimal Quantity,
     int OrderNumber);
 
-/// <summary>Estrutura completa desejada depois da escrita.</summary>
-public sealed record MealPlanStructureRequest(IReadOnlyList<MealRequest> Meals)
+/// <summary>
+/// Estrutura completa desejada depois da escrita: as refeições e os suplementos do plano fora
+/// das refeições (obrigatório; lista vazia retira os que existiam).
+/// </summary>
+public sealed record MealPlanStructureRequest(
+    IReadOnlyList<MealRequest> Meals,
+    IReadOnlyList<MealSupplementRequest> PlanSupplements)
 {
     /// <summary>Converte a estrutura do contrato na entrada da Application.</summary>
     public MealPlanStructureInput ToInput()
@@ -54,7 +60,16 @@ public sealed record MealPlanStructureRequest(IReadOnlyList<MealRequest> Meals)
                         supplement.Quantity,
                         supplement.OrderNumber))
                     .ToArray()))
-                .ToArray());
+                .ToArray(),
+            // Null chega ao validador, que responde 400 meal_plan_plan_supplements_required.
+            PlanSupplements?
+                .Select(supplement => new MealPlanStructureInput.SupplementInput(
+                    supplement.Id,
+                    supplement.SupplementId,
+                    supplement.Notes,
+                    supplement.Quantity,
+                    supplement.OrderNumber))
+                .ToArray()!);
     }
 }
 
@@ -112,7 +127,8 @@ public sealed record MealItemResponse(
     decimal FatsPer100G,
     decimal KcalPer100G,
     decimal? FiberPer100G,
-    NutritionTotalsResponse Contribution)
+    NutritionTotalsResponse Contribution,
+    PlatformEnforcementResponse? PlatformEnforcement)
 {
     /// <summary>Projeta o item da Application.</summary>
     public static MealItemResponse From(MealPlanDetailsDto.MealItemDto item)
@@ -130,7 +146,8 @@ public sealed record MealItemResponse(
             item.FatsPer100G,
             item.KcalPer100G,
             item.FiberPer100G,
-            NutritionTotalsResponse.From(item.Contribution)
+            NutritionTotalsResponse.From(item.Contribution),
+            PlatformEnforcementResponse.From(item.PlatformEnforcement)
         );
     }
 }
@@ -143,7 +160,8 @@ public sealed record MealSupplementResponse(
     string UnitOfMeasure,
     string? Notes,
     decimal Quantity,
-    int OrderNumber)
+    int OrderNumber,
+    PlatformEnforcementResponse? PlatformEnforcement)
 {
     /// <summary>Projeta a associação da Application.</summary>
     public static MealSupplementResponse From(MealPlanDetailsDto.MealSupplementDto supplement)
@@ -157,7 +175,8 @@ public sealed record MealSupplementResponse(
             supplement.UnitOfMeasure,
             supplement.Notes,
             supplement.Quantity,
-            supplement.OrderNumber
+            supplement.OrderNumber,
+            PlatformEnforcementResponse.From(supplement.PlatformEnforcement)
         );
     }
 }
@@ -201,6 +220,7 @@ public sealed record MealPlanDetailsResponse(
     bool IsArchived,
     bool NeedsReview,
     IReadOnlyList<MealResponse> Meals,
+    IReadOnlyList<MealSupplementResponse> PlanSupplements,
     DateTime CreatedAt,
     DateTime UpdatedAt)
 {
@@ -222,6 +242,7 @@ public sealed record MealPlanDetailsResponse(
             plan.IsArchived,
             plan.NeedsReview,
             plan.Meals.Select(MealResponse.From).ToArray(),
+            plan.PlanSupplements.Select(MealSupplementResponse.From).ToArray(),
             plan.CreatedAt,
             plan.UpdatedAt
         );

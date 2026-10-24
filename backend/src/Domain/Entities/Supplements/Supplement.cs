@@ -16,6 +16,16 @@ public sealed class Supplement
     public string? Timing { get; private set; }
     public string? TrainerNotes { get; private set; }
     public bool IsActive { get; private set; }
+
+    /// <summary>Bloqueio da plataforma, separado da disponibilidade escolhida pelo dono.</summary>
+    public PlatformEnforcementStatus PlatformEnforcementStatus { get; private set; } =
+        PlatformEnforcementStatus.Allowed;
+    public PlatformEnforcementReason? PlatformEnforcementReason { get; private set; }
+    public DateTime? PlatformEnforcedAt { get; private set; }
+
+    /// <summary>Nota livre do superuser que acompanha o motivo; o personal trainer vê-a no item.</summary>
+    public string? PlatformEnforcementNote { get; private set; }
+
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -79,6 +89,45 @@ public sealed class Supplement
     {
         IsActive = true;
         UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// Bloqueia conteúdo privado com um motivo e uma nota livre opcional. O mesmo motivo e a
+    /// mesma nota não criam uma nova transição.
+    /// </summary>
+    public bool Block(PlatformEnforcementReason reason, DateTime now, string? note = null)
+    {
+        ArgumentNullException.ThrowIfNull(reason);
+
+        if (!OwnerTrainerId.HasValue)
+            throw new DomainException("Only private catalog supplement can be blocked by platform enforcement.");
+
+        var normalizedNote = PlatformEnforcementNotes.Normalize(note);
+        if (PlatformEnforcementStatus == PlatformEnforcementStatus.Blocked &&
+            PlatformEnforcementReason == reason &&
+            PlatformEnforcementNote == normalizedNote)
+            return false;
+
+        PlatformEnforcementStatus = PlatformEnforcementStatus.Blocked;
+        PlatformEnforcementReason = reason;
+        PlatformEnforcementNote = normalizedNote;
+        PlatformEnforcedAt = now;
+        UpdatedAt = now;
+        return true;
+    }
+
+    /// <summary>Remove o bloqueio sem reativar o suplemento arquivado pelo personal trainer.</summary>
+    public bool Unblock(DateTime now)
+    {
+        if (PlatformEnforcementStatus == PlatformEnforcementStatus.Allowed)
+            return false;
+
+        PlatformEnforcementStatus = PlatformEnforcementStatus.Allowed;
+        PlatformEnforcementReason = null;
+        PlatformEnforcementNote = null;
+        PlatformEnforcedAt = null;
+        UpdatedAt = now;
+        return true;
     }
 
     /// <summary>Valida os parâmetros do suplemento.</summary>

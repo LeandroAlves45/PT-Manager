@@ -38,6 +38,9 @@ internal sealed class TrainingPlanDayExerciseConfiguration : IEntityTypeConfigur
         builder.Property(tpde => tpde.Notes)
             .HasColumnName("notes");
 
+        builder.Property(tpde => tpde.RetiredAt)
+            .HasColumnName("retired_at");
+
         builder.Property(tpde => tpde.CreatedAt)
             .HasColumnName("created_at")
             .HasDefaultValueSql("now()")

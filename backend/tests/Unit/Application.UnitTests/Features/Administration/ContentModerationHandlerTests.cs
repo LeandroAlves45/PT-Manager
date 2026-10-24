@@ -221,9 +221,11 @@ public sealed class ContentModerationHandlerTests
         public DateTime LastNow { get; private set; }
         public CancellationToken LastToken { get; private set; }
         public int Calls { get; private set; }
+        public string? LastNote { get; private set; }
 
-        public Task<PrivateCatalogModerationStoreResult> BlockFoodAsync(Guid actorUserId, Guid foodId, PlatformEnforcementReason reason, DateTime now, CancellationToken cancellationToken)
+        public Task<PrivateCatalogModerationStoreResult> BlockFoodAsync(Guid actorUserId, Guid foodId, PlatformEnforcementReason reason, string? note, DateTime now, CancellationToken cancellationToken)
         {
+            LastNote = note;
             Record(actorUserId, foodId, now, cancellationToken);
             LastReason = reason;
             return Task.FromResult(_blockOutcome);
@@ -235,8 +237,9 @@ public sealed class ContentModerationHandlerTests
             return Task.FromResult(PrivateCatalogModerationStoreResult.AlreadyInRequestedState);
         }
 
-        public Task<PrivateCatalogModerationStoreResult> BlockExerciseAsync(Guid actorUserId, Guid exerciseId, PlatformEnforcementReason reason, DateTime now, CancellationToken cancellationToken)
+        public Task<PrivateCatalogModerationStoreResult> BlockExerciseAsync(Guid actorUserId, Guid exerciseId, PlatformEnforcementReason reason, string? note, DateTime now, CancellationToken cancellationToken)
         {
+            LastNote = note;
             Record(actorUserId, exerciseId, now, cancellationToken);
             LastReason = reason;
             return Task.FromResult(_blockOutcome);
@@ -245,6 +248,20 @@ public sealed class ContentModerationHandlerTests
         public Task<PrivateCatalogModerationStoreResult> UnblockExerciseAsync(Guid actorUserId, Guid exerciseId, DateTime now, CancellationToken cancellationToken)
         {
             Record(actorUserId, exerciseId, now, cancellationToken);
+            return Task.FromResult(PrivateCatalogModerationStoreResult.AlreadyInRequestedState);
+        }
+
+        public Task<PrivateCatalogModerationStoreResult> BlockSupplementAsync(Guid actorUserId, Guid supplementId, PlatformEnforcementReason reason, string? note, DateTime now, CancellationToken cancellationToken)
+        {
+            LastNote = note;
+            Record(actorUserId, supplementId, now, cancellationToken);
+            LastReason = reason;
+            return Task.FromResult(_blockOutcome);
+        }
+
+        public Task<PrivateCatalogModerationStoreResult> UnblockSupplementAsync(Guid actorUserId, Guid supplementId, DateTime now, CancellationToken cancellationToken)
+        {
+            Record(actorUserId, supplementId, now, cancellationToken);
             return Task.FromResult(PrivateCatalogModerationStoreResult.AlreadyInRequestedState);
         }
 

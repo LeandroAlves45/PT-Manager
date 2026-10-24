@@ -13,6 +13,7 @@ public sealed class TrainingPlanStoreResult
         NotFound,
         Inactive,
         ClientNotFound,
+        InitialAssessmentRequired,
         ExerciseReferenceNotFound,
         ExerciseReferenceInactive,
         StructureReferenceNotFound,
@@ -39,6 +40,8 @@ public sealed class TrainingPlanStoreResult
     public static TrainingPlanStoreResult ForInactive() => new(Status.Inactive, null);
     public static TrainingPlanStoreResult ForClientNotFound() =>
         new(Status.ClientNotFound, null);
+    public static TrainingPlanStoreResult ForInitialAssessmentRequired() =>
+        new(Status.InitialAssessmentRequired, null);
     public static TrainingPlanStoreResult ForExerciseReferenceNotFound() =>
         new(Status.ExerciseReferenceNotFound, null);
     public static TrainingPlanStoreResult ForExerciseReferenceInactive() =>

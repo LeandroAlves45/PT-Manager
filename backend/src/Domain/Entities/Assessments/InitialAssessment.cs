@@ -21,6 +21,13 @@ public sealed class InitialAssessment
     public string? Profession { get; private set; }
     public BodyMeasurements BodyMeasurements { get; private set; } = BodyMeasurements.Empty;
     public NutritionIntake NutritionIntake { get; private set; } = NutritionIntake.Empty;
+
+    /// <summary>Verdadeiro quando foi o próprio cliente a gravar a avaliação no portal.</summary>
+    public bool SubmittedByClient { get; private set; }
+
+    /// <summary>Instante em que o personal trainer a marcou como revista; só existe nas do cliente.</summary>
+    public DateTime? ReviewedAt { get; private set; }
+
     public bool IsDeleted { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -41,7 +48,8 @@ public sealed class InitialAssessment
         string? profession,
         BodyMeasurements? bodyMeasurements,
         NutritionIntake? nutritionIntake,
-        DateTime now
+        DateTime now,
+        bool submittedByClient = false
     )
     {
         if (ownerTrainerId == Guid.Empty || clientId == Guid.Empty)
@@ -53,6 +61,8 @@ public sealed class InitialAssessment
         ApplyValues(
             weightKg, heightCm, bodyFatPercentage, medicalConditions, fitnessLevel,
             activityLevel, goals, profession, bodyMeasurements, nutritionIntake);
+        SubmittedByClient = submittedByClient;
+        ReviewedAt = null;
         IsDeleted = false;
         CreatedAt = now;
         UpdatedAt = now;
@@ -103,6 +113,24 @@ public sealed class InitialAssessment
             normalizedProfession, normalizedMeasurements, normalizedNutrition
         );
         UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// Marca como revista uma avaliação gravada pelo cliente. Repetir não altera o instante
+    /// original. A avaliação criada pelo personal trainer não passa por revisão.
+    /// </summary>
+    public bool MarkReviewed(DateTime now)
+    {
+        EnsureNotDeleted();
+        if (!SubmittedByClient)
+            throw new DomainException("Only an initial assessment submitted by the client can be reviewed.");
+
+        if (ReviewedAt.HasValue)
+            return false;
+
+        ReviewedAt = now;
+        UpdatedAt = now;
+        return true;
     }
 
     /// <summary>Marca a avaliação como excluída.</summary>

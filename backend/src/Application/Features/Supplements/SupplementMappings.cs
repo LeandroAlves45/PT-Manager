@@ -20,6 +20,9 @@ public static class SupplementMappings
             supplement.Timing,
             supplement.TrainerNotes,
             supplement.IsActive,
+            supplement.PlatformEnforcementStatus.Value,
+            supplement.PlatformEnforcementReason?.Value,
+            supplement.PlatformEnforcementNote,
             supplement.CreatedAt,
             supplement.UpdatedAt
         );

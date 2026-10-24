@@ -27,9 +27,12 @@ public sealed class ApiContractArchitectureTests
     // 6GB-SU: +3 controllers (treinadores, convites de treinador, convite anónimo) e +9 ações.
     // Trainer: +1 controller (conclusões de treino) e +2 ações (essa lista e o convite da ficha).
     // Portal do cliente: +4 ações (dias passados, dia passado, lista e escolha do plano alimentar).
+    // Avaliação inicial pelo cliente: +4 ações (estado e gravação no portal, revista, por rever).
     private const int ExpectedConcreteControllers = 36;
-    private const int ExpectedDeclaredActions = 183;
-    private const int ExpectedEffectiveOperations = 188;
+    // Tomas dos suplementos do plano: +3 ações. Moderação: +5 (bloqueio de suplemento e de
+    // personal trainer, fila de suplementos).
+    private const int ExpectedDeclaredActions = 195;
+    private const int ExpectedEffectiveOperations = 200;
 
     private static readonly IReadOnlyList<Operation> Operations = DiscoverOperations();
 
