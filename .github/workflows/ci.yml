@@ -171,7 +171,7 @@ jobs:
         run: dotnet build backend/src/Api/Api.csproj --configuration Release
 
       - name: Install EF Core CLI
-        run: dotnet tool install --global dotnet-ef --version 10.0.12
+        run: dotnet tool install --global dotnet-ef --version 10.0.14
 
       - name: Apply migrations explicitly
         run: >-

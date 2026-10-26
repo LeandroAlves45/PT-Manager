@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Application.Common.Observability;
 using OpenTelemetry;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -13,8 +14,8 @@ namespace Api.Configuration;
 /// <remarks>
 /// O destino e a autenticação do exporter vêm das variáveis standard
 /// <c>OTEL_EXPORTER_OTLP_ENDPOINT</c> e <c>OTEL_EXPORTER_OTLP_HEADERS</c>, que o tile
-/// OpenTelemetry do Grafana Cloud dá já prontas. O header leva o token: fica fora do
-/// <c>appsettings</c> e nunca passa por esta classe.
+/// OpenTelemetry do Grafana Cloud dá já prontas. O protocolo (http/protobuf) fica fixo no
+/// código. O header leva o token: fica fora do <c>appsettings</c> e nunca passa por esta classe.
 /// </remarks>
 public sealed class ObservabilityOptions
 {
@@ -137,11 +138,19 @@ public static class ApiObservability
                     // Os health checks não são tráfego de negócio e gastariam quota.
                     instrumentation.Filter = context =>
                         !context.Request.Path.StartsWithSegments("/health"))
-                .AddOtlpExporter())
+                .AddOtlpExporter(UseHttpProtobuf))
             .WithMetrics(metrics => metrics
                 .AddMeter(Meters)
-                .AddOtlpExporter());
+                .AddOtlpExporter(UseHttpProtobuf));
     }
+
+    /// <summary>
+    /// O exporter usa gRPC por omissão, e o Grafana Cloud só aceita OTLP http/protobuf: sem
+    /// isto nada sai e nenhum erro aparece. O endpoint continua a vir da variável, e o
+    /// exporter acrescenta-lhe <c>/v1/traces</c> e <c>/v1/metrics</c>.
+    /// </summary>
+    private static void UseHttpProtobuf(OtlpExporterOptions options) =>
+        options.Protocol = OtlpExportProtocol.HttpProtobuf;
 
     private static void AddSentry(WebApplicationBuilder builder)
     {
