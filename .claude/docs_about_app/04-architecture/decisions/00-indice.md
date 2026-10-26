@@ -1,10 +1,11 @@
 # Decisões
 
-Estado em 2026-10-25: um ADR.
+Estado em 2026-10-26: dois ADR.
 
 | ADR | Tema | Estado |
 |---|---|---|
 | `ADR-001-destino-telemetria.md` | Para onde vão os erros, os traces, as métricas e os logs | Aceite (Sprint 7A) |
+| `ADR-002-cache-e-rate-limiting-distribuidos.md` | Gate 7B: sem Redis, cache nem rate limiting distribuído; dashboard sem consolidar | Aceite (Sprint 7B); reavaliar no 10B |
 
 As decisões de arquitectura do MVP estão em `.claude/project/00_ARCHITECTURE.md`, secções 2 a 17. As de esquema estão em `.claude/project/01_DATABASE_SCHEMA.md`. As de produto estão nas `RN-`, nas `RNF-` e no plano `docs/blueprints/frontend-files/sprint_6/sprint_6G/00_plano_sprint_6G.md`.
 

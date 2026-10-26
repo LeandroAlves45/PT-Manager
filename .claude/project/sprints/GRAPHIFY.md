@@ -49,9 +49,34 @@ após sprints grandes.
 **Regra:** se `graph.json` for mais antigo que o fecho do Sprint anterior, **ignorar**
 e usar documentação canónica em `.claude/project/` + `ACTIVE.md`.
 
+## Atenção: o `extract` com cache perde ficheiros (2026-10-26)
+
+Com a cache em `graphify-out/cache/` (que está no git), o `graphify extract . --code-only` só
+escreve no grafo os ficheiros que **não** estavam em cache:
+- a geração de 2026-10-24 ficou com 383 ficheiros (4313 nós);
+- a primeira tentativa de 2026-10-26 ficou com 162 (3740 nós).
+
+**Regra:**
+- regenerar com `graphify update .` a partir de um `graph.json` completo;
+- confirmar o número de ficheiros (`source_file` distintos) contra `git ls-files`;
+- se o grafo encolher sem uma remoção de código, repor o último completo de
+  `graphify-out/AAAA-MM-DD/graph.json` e repetir.
+
 ## Última geração
 
-**2026-10-22** (fecho do Sprint 6): **15 535 nós**, 1146 comunidades e 31 686 arestas, com backend e frontend.
+**2026-10-26** (fecho do Sprint 7): **20 736 nós**, 48 053 arestas e 1317 comunidades, com
+2210 ficheiros (`backend/src` 1311, `frontend/src` 424, `backend/tests` 401, `site/src` 40).
+- **Como foi feita:** a partir do grafo completo de 2026-10-22, com `graphify update .`, construído
+  sobre o commit `1898e70`.
+- **Controlo:** `OtlpExportProtocolTests`, `ProductionLoggingConfigurationTests`,
+  `AccountAccessMiddleware` e `TrainerDashboardQueries` estão presentes. Os protótipos do 7B
+  (`TrainerDashboardSqlQueries`, `CachedTrainerDashboardQueries`) não estão, porque nunca entraram
+  no projeto.
+- O `graph.html` não é gerado (mais de 5000 nós).
+- **Comparação com 2026-10-22:** o `backend/src` passa de 656 para 1311 ficheiros. O `git ls-files`
+  dá 1301 `.cs`, por isso a geração de 2026-10-22 já estava incompleta.
+
+Geração anterior: **2026-10-22** (fecho do Sprint 6): **15 535 nós**, 1146 comunidades e 31 686 arestas, com backend e frontend.
 - Inclui o Sprint 6 completo: layout, portal do cliente, 6GA Auth UX e as três fases da 6GB.
 - Símbolos de controlo da última fase: `MyMealPlanSelectionStore`, `PortalCard`.
 - Ficaram sem nós 4 ficheiros de configuração: `hooks.json`, `global.json` e os dois `appsettings*.json`.

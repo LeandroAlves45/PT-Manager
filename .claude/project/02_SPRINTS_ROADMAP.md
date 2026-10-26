@@ -960,6 +960,14 @@ Gate 7B:
   comportamento com Redis indisponível.
 - O Sprint 9 configura e valida Redis apenas quando a decisão for `Implementar`.
 
+**Resultado (2026-10-26): `Não implementar ainda`** (ADR-002,
+`docs/blueprints/sprint_7/sprint_7B/01_decisao_gate_7B.md`).
+- Uma instância; queries 18/9/9 acima do orçamento, latência dentro mesmo com +5 ms.
+- Cache medida e rejeitada: ~30 escritas a invalidar, ~1,5 s por miss com o Redis em baixo.
+- O Sprint 9 não configura Redis; reavaliação no 10B.
+- Na mesma fase (`1898e70`): .NET 10.0.14, OTLP http/protobuf no código e logs de SQL a
+  Warning em produção.
+
 ### Deliverables
 - ✓ Logs estruturados em JSON, sem file sink
 - ✓ Correlation IDs propagados
@@ -1215,7 +1223,7 @@ arquitectura enquanto não existir uma decisão canónica que os substitua.
 | Auth UX | 6GA | Gate 6GA | Fluxos de auth finais; `QG5-FRONTEND-001` fechado |
 | Revisão visual | 6GB | Gate 6GB | Defeitos visuais P1/P2 de todos os papéis corrigidos |
 | Observabilidade | 7A | Após o bloco de produto | Logs, Sentry, OpenTelemetry e métricas operacionais |
-| Decisão Redis | 7B | Gate 7B | Implementar com consumidor medido ou diferir explicitamente para 10B |
+| Decisão Redis | 7B | Gate 7B | **Fechado a 2026-10-26: diferido para o 10B** (`Não implementar ainda`, ADR-002) |
 | Testes | 8 | Após Gate 7B | Suite crítica, architecture tests e CI verde |
 | Go-live | 9 | Após Sprint 8 | Deploy em produção no Render free tier e Vercel |
 | Backlog pós-MVP | 10 | Após go-live | Reavaliações condicionais com decisão registada |

@@ -460,3 +460,23 @@ Lições capturadas depois de correções do utilizador.
   não estavam commitadas. Hash antes e depois.
 - **Texto com aspas e `\n` em scripts de mutação vai em literais simples dentro de um `.js` escrito
   com Write.** A versão injetada por `node -e` partiu o script (SyntaxError).
+
+## 2026-10-26 — Sprint 7B (Gate 7B) e fecho do Sprint 7
+
+- **Repetir uma medição antes de decidir com ela.** O 235 ms do 7A, base do «sinal 2», era
+  sobretudo interpolação do histograma. O p95 exato do k6 deu 106 ms. **Regra:** um número que
+  decide uma arquitetura mede-se duas vezes, com o percentil exato.
+- **Uma medição «verde» pode estar a medir nada.** Sem o protocolo http/protobuf, a API não
+  exportou nenhuma métrica, e os passos do 7A não o diziam. Só se viu porque o 7B foi ler o
+  Prometheus. **Regra:** depois de ligar um exporter, confirmar que chegam séries da própria app.
+- **Comparar opções com a mesma régua e com um controlo.** Cada variante arrancou limpa, foi
+  aquecida e correu o mesmo k6. Uma rota não tocada (`clients`) denunciou o ruído da máquina (um
+  instalador em segundo plano), e as corridas sujas repetiram-se.
+- **Mapear as escritas antes de propor uma cache.** O inventário (~30 caminhos, 6 fora do
+  `SaveChanges`, 1 cross-tenant) decidiu mais do que a latência.
+- **Simular a falha da dependência, não só o caminho feliz.** O Redis recusado e o pendurado
+  mostraram ~1,5 s por miss e erros no Sentry, que nenhum teste de configuração mostraria.
+- **Velocidade sem necessidade não paga uma exceção de segurança.** O SQL único tirava a segunda
+  barreira de tenant para ganhar ~35 ms num orçamento já cumprido.
+- **Segurança do runtime não aparece no `--vulnerable`.** Confirmar sempre a última release de
+  serviço do .NET (shared framework e imagem).

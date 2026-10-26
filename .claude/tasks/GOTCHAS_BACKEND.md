@@ -280,3 +280,24 @@ o PostgreSQL antes de corrigir:
   `ApiWebApplicationFactory` desliga as duas integrações só em `Development`; em `Testing` o
   `ByDefault_NoExporterAndNoSentryAreRegistered` continua a provar o `appsettings.json`
   (mutações MOFF1/MOFF2).
+
+## 2026-10-26 — Sprint 7B (medição do Gate 7B)
+
+- **O OTLP do .NET usa gRPC por omissão.** Com só `OTEL_EXPORTER_OTLP_ENDPOINT=http://…:4318`, a
+  API não exporta nada e não dá erro. O Grafana Cloud e o porto 4318 são http/protobuf.
+  **Regra:** `OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf` (ou fixar `OtlpExportProtocol.HttpProtobuf`
+  no código, decisão D4 do 7B) e confirmar no Prometheus que há métricas `ptm_*`, não só
+  `otelcol_*`.
+- **O p95 de `histogram_quantile` tem a resolução dos buckets.** Os buckets por omissão do
+  ASP.NET Core saltam de 100 para 250 ms. O 235 ms do dashboard no 7A era sobretudo interpolação.
+  **Regra:** para decidir, usar o p95 exato do k6 (`--out json` + script por tag `name`).
+- **`--vulnerable` não vê o shared framework.** Os CVEs do ASP.NET Core 10.0.12 vêm na imagem
+  `aspnet` e no runtime, não nos pacotes. **Regra:** confirmar a última versão de serviço em
+  `builds.dotnet.microsoft.com/dotnet/release-metadata/10.0/releases.json`.
+- **Subir os pacotes `Microsoft.AspNetCore.*` pode puxar dependências fixadas.** O
+  `AspNetCore.OpenApi` 10.0.14 exige `Microsoft.OpenApi` ≥ 2.12.2; com o CPM a 2.12.0, o NU1605
+  parte o restore.
+- **HybridCache com o Redis em baixo:** não lança. Espera o `asyncTimeout` na leitura e na escrita
+  (2 × 500 ms por miss) e escreve dois `LogLevel=Error`, que com o Sentry ligado viram eventos.
+- **Logs de SQL em produção:** o `appsettings.json` tem `Default: Information`, por isso o EF
+  escreve cada comando na consola (~2,2 mil linhas/min na carga k6).

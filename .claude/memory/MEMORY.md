@@ -6,6 +6,16 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-26: Sprint 7B FINALIZADO e Sprint 7 FECHADO. Gate 7B = `Não implementar ainda`.**
+- **Decisão:** sem Redis, cache nem rate limiting distribuído; reavaliar no 10B (ADR-002). A
+  consolidação do dashboard (18 queries) não se fez: tirava a segunda barreira de tenant.
+- **`1898e70` na `main`:** .NET 10.0.14, OTLP http/protobuf no código (sem ele nada era exportado)
+  e logs de SQL a Warning em produção. 3423 + 1 skip, 4/4 mutações.
+- **Medições:** o p95 de 235 ms do 7A era interpolação do histograma (o exato é 106 ms). O
+  Leandro pondera o Render pago ($7) e o Neon Launch.
+- Ver `Sessions/2026-10-26-sprint7b-gate-e-fecho-sprint7.md` e
+  `docs/blueprints/sprint_7/sprint_7B/`.
+
 **2026-10-26: Sprint 7A FINALIZADO no backend (`320ee12` na `main`, CI #56 verde).**
 - Aplicação do Leandro (`14d4d05`, CI #55 vermelho) revista: histograma renomeado à mão
   reposto para `ptm.http.db_commands`; factory de testes desliga OTLP/Sentry só em Development.

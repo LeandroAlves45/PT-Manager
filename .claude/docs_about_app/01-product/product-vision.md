@@ -65,8 +65,8 @@ O âmbito deste documento é o MVP até ao go-live (Sprints 0 a 9). O Sprint 10 
 | Correcção visual dos ecrãs já construídos, incluindo o nome «Avaliações», os planos em página, o perfil do cliente, a lista de planos alimentares, a nota de conclusão do treino para o treinador e o filtro de dia para ler treinos anteriores | Planeado | Sprint 6GB |
 | Email da sessão na véspera, bloqueio de suplementos e treinadores, arquivo completo do cliente e avaliação inicial preenchida pelo cliente | Planeado | Logo a seguir à 6GB e antes do Sprint 7. Ordem: avaliação inicial pelo cliente, email da sessão, arquivo do cliente, e no fim o bloqueio (com a contagem de contas bloqueadas no painel). O Sprint 9 só liga o horário do email |
 | Painel do superuser (sem a contagem de bloqueados), isenção de pagamento e convite isento | Implementado na 6GB-SU (2026-10-19) | Decisões U39–U52 em `sprint_6GB/00_plano_6GB_superuser.md` |
-| Logs, erros e métricas de operação | Blueprints validados, por aplicar (2026-10-25) | Sprint 7A: Sentry e Grafana Cloud, região UE, seis alertas por email |
-| Cache e limites partilhados entre instâncias | Planeado como decisão | Sprint 7B: só se implementa se a medição o justificar. A medição do 7A mostrou uma só instância e três leituras com muitas queries |
+| Logs, erros e métricas de operação | Implementado (Sprint 7A, fechado em 2026-10-26) | Sentry e Grafana Cloud, região UE, seis alertas por email. Faltam os gates manuais com contas reais |
+| Cache e limites partilhados entre instâncias | Decidido: não implementar ainda (Gate 7B, 2026-10-26) | ADR-002. Há uma só instância e as leituras ficam dentro de 300 ms. Reavaliar no Sprint 10B com tráfego real |
 | Suite crítica e entrega contínua | Planeado | Sprint 8 |
 | Serviço no ar para utilizadores reais | Planeado | Sprint 9: Render, Vercel, Neon, QStash |
 
@@ -88,14 +88,20 @@ Fica para o Sprint 10, ou está excluído. A lista completa de entradas está no
 ## 7. Limitações já aceites
 
 - Lembretes podem atrasar cerca de vinte minutos, mais o arranque a frio, no plano gratuito. Está aceite para o MVP.
-- A cache partilhada não é obrigatória no go-live. O Sprint 7B pode adiá-la.
+- Não há cache partilhada no go-live: o Gate 7B adiou-a para o 10B (ADR-002).
+- Com o Render grátis, a API demora cerca de 1 minuto a acordar depois de 15 minutos parada. O Leandro pondera os planos pagos (Render $7/mês; Neon Launch, ver `R-007`).
 - Sem aviso automático quando a API está em baixo: uma sonda manteria o Render e o Neon acordados no plano gratuito. Fica para quando houver plano pago (Sprint 9/10).
 - A moderação automática de vídeo e a revisão humana em fila larga não entram no MVP.
 - O go-live estimado no índice do projecto era Outubro de 2026. Em 2026-10-14 os Sprints 6G, 7, 8 e 9 continuam por concluir. Essa data não é um compromisso fechado neste documento.
 
 ## 8. Próximo passo do produto
 
-Estado em 2026-10-25: o bloco pré-Sprint 7 está na `main`. Os blueprints do Sprint 7A (observabilidade) estão validados e por aplicar. O próximo passo é o Leandro aplicá-los e criar as contas Sentry e Grafana na região UE. Depois vêm os alertas e, por fim, o Gate 7B, que decide a cache com a medição do 7A (`docs/blueprints/sprint_7/sprint_7A/08_carga_k6_e_medicao.md`). A seguir vêm o Sprint 8 (testes e CI) e o Sprint 9 (publicação, com o horário do email da véspera). Os gates manuais com login da 6D, 6E e 6F continuam abertos como risco (`R-001`).
+Estado em 2026-10-26: o Sprint 7 está fechado.
+- **7A:** observabilidade aplicada.
+- **7B:** sem cache nem Redis (ADR-002). Na mesma fase entraram o .NET 10.0.14 de segurança, a exportação OTLP corrigida e menos logs de SQL em produção.
+- **Contas reais:** faltam criar o Grafana eu-west e configurar os alertas.
+
+A seguir vêm o Sprint 8 (testes e CI) e o Sprint 9 (publicação, com o horário do email da véspera e a escolha entre planos grátis e pagos). Os gates manuais com login da 6D, 6E e 6F continuam abertos como risco (`R-001`).
 
 ## 9. O que falta preencher noutros ficheiros
 

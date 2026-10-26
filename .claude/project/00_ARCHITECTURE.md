@@ -475,6 +475,13 @@ Migrations futuras devem seguir expand-contract quando uma alteração precisar 
 
 ### 8.1 HybridCache e Upstash Redis
 
+**Decisão do Gate 7B (2026-10-26): `Não implementar ainda`.**
+- Há uma só instância e a latência fica dentro do orçamento.
+- O dashboard tem ~30 escritas a invalidar.
+- Com o Redis em baixo, cada miss custa ~1,5 s.
+- O MVP corre sem Redis. O que se segue é a regra para quando o 10B reavaliar.
+- Detalhe: `docs/blueprints/sprint_7/sprint_7B/01_decisao_gate_7B.md`.
+
 O Sprint 7B contém um gate obrigatório para decidir se o MVP necessita de cache ou
 rate limiting distribuídos. Só quando as métricas do Sprint 7A e um consumidor
 concreto justificarem essa decisão é que a Application define uma porta estreita
@@ -718,7 +725,7 @@ OpenTelemetry instrumenta:
 4. Runtime .NET.
 5. Jobs e integrações externas através de Activities próprias.
 
-O destino foi decidido no Sprint 7A (2026-10-25), e não no Sprint 0 como estava previsto. Os traces e as métricas vão por OTLP (http/protobuf) para o Grafana Cloud Free, com 14 dias de retenção. Os erros vão para o Sentry Developer, com 30 dias de retenção. Ambos ficam na região UE. Os logs ficam só na consola do Render. O contexto de trace que chega nos pedidos é ignorado. As spans não levam o path com ids, a query, o IP nem o user-agent. O detalhe está em `docs/blueprints/sprint_7/00_plano_sprint_7.md`.
+O destino foi decidido no Sprint 7A (2026-10-25), e não no Sprint 0 como estava previsto. Os traces e as métricas vão por OTLP (http/protobuf, fixo no código desde o 7B: o .NET usa gRPC por omissão) para o Grafana Cloud Free, com 14 dias de retenção. Os erros vão para o Sentry Developer, com 30 dias de retenção. Ambos ficam na região UE. Os logs ficam só na consola do Render. O contexto de trace que chega nos pedidos é ignorado. As spans não levam o path com ids, a query, o IP nem o user-agent. O detalhe está em `docs/blueprints/sprint_7/00_plano_sprint_7.md`.
 
 Métricas mínimas:
 
@@ -759,7 +766,7 @@ Render Free Web Service
         .Api
         |
         |---- Neon PostgreSQL
-        |---- Upstash Redis (condicional ao Gate 7B)
+        |---- (sem Redis: Gate 7B, reavaliar no 10B)
         |---- Stripe
         |---- Resend
         `---- Cloudinary

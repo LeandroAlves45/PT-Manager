@@ -11,6 +11,8 @@ Os riscos de engenharia do roadmap ficam em `.claude/project/02_SPRINTS_ROADMAP.
 | R-003 | Questão | A regra do pack pendente, do comprovativo e da faturação está na visão e em `RN-011`. Entra depois do go-live. Até lá, atribuir o pack activa-o. | Não altera as fases já definidas. | Fechado quanto ao momento | Depois dos sprints já definidos |
 | R-004 | Dívida | A frase do problema não tem evidência de utilizadores reais. | As fases seguintes podem optimizar um problema que não confirmaste no terreno. | Aberto | **por preencher** |
 | R-005 | Risco | Passar a quota grátis do Grafana Cloud (10k séries) ou do Sentry (5k erros/mês) | Perde-se telemetria até ao mês seguinte. O negócio não pára | Mitigado no 7A: tags de baixa cardinalidade, Sentry só com erros, contexto de trace de fora ignorado | **por preencher** |
-| R-006 | **por preencher** | **por preencher** | **por preencher** | **por preencher** | **por preencher** |
+| R-006 | Risco | A latência real Render → Neon é desconhecida. O dashboard faz 18 queries (o orçamento é 5), e o 7B usou +5 ms por query como hipótese. Com mais latência por query, ou com o Neon a acordar, o dashboard aproxima-se dos 300 ms. | Pode ser preciso consolidar o dashboard (variante A ou B, `sprint_7B/01` §5 e §14) depois do go-live. | Aberto. Reavaliar no 10B, com o `SELECT 1` medido no Sprint 9 (ADR-002) | **por preencher** |
+| R-007 | Custo | Tirar o cold start custa dinheiro: Render pago $7/mês; Neon Launch ~$5–10/mês com scale to zero, ~$20 sempre ligado (preços de 2026-10-26, `sprint_7B/01` §15). | Sem planos pagos, a API demora ~1 min a acordar depois de 15 min parada. | Em ponderação pelo Leandro (2026-10-26) | **por preencher** |
+| R-008 | **por preencher** | **por preencher** | **por preencher** | **por preencher** | **por preencher** |
 
 Bugs já anotados num sítio próprio: deixa aqui só o identificador e a ligação, não o relato completo.

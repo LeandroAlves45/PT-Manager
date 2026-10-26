@@ -1,12 +1,29 @@
-# Estado ativo: Sprint 7A FINALIZADO (2026-10-26); 7B por planear
+# Estado ativo: Sprint 7 FECHADO (2026-10-26); próximo é o Sprint 8
 
 Atualizado: 2026-10-26
 
 ## Sprint 7: Observabilidade (7A) e decisão de cache (7B)
 
 **Ler primeiro** `docs/blueprints/sprint_7/00_plano_sprint_7.md` (decisões S7-01..S7-14, Gate 7A e
-Gate 7B com o critério Implementar / Não implementar ainda). Para aplicar o 7A, ler
-`sprint_7A/01_indice_decisoes_e_ordem.md`.
+Gate 7B com o critério Implementar / Não implementar ainda; §10 com o estado do 7B). Para aplicar
+o 7A, ler `sprint_7A/01_indice_decisoes_e_ordem.md`.
+
+- **7B FINALIZADO (2026-10-26): Gate 7B = `Não implementar ainda`** (ADR-002).
+  - Documentos: `sprint_7B/01_decisao_gate_7B.md` (medições, sinais, A/B/C, §14 segurança da opção
+    B, §15 custos do Render e do Neon) e `02_spec_ajustes_7B.md`.
+  - Sem Redis, cache nem rate limiting distribuído; o Sprint 9 não configura Redis; reavaliar no 10B.
+  - D3 (consolidar o dashboard, 18 queries) **não feita**: tirava a segunda barreira de tenant
+    para ganhar ~35 ms. Alternativa A (LINQ, 11 queries) se o 10B o pedir.
+  - **Na `main`, `1898e70`:**
+    - .NET 10.0.14 (pacotes, SDK 10.0.403, `aspnet:10.0.14`, `dotnet-ef`, `Microsoft.OpenApi`
+      2.12.2);
+    - OTLP fixo em http/protobuf (o .NET usava gRPC e nada chegava ao Grafana);
+    - `Database.Command` a Warning em produção.
+    - 3423 + 1 skip, 4/4 mutações. **CI #58 verde nos 4 jobs.**
+  - Medição numa worktree `C:\ptm-tmp-7b`, já apagada.
+  - O Leandro pondera o Render pago ($7) e o Neon Launch (R-007).
+  - Ver `Sessions/2026-10-26-sprint7b-gate-e-fecho-sprint7.md`.
+- **Próximo:** Sprint 8 (testes e CI). Os gates manuais do 7A continuam abertos.
 
 - **7A FINALIZADO no backend (2026-10-26).** Relatório `sprint_7A/11_relatorio_fecho_fase_7A.md`.
   - Aplicação do Leandro em `14d4d05` (CI #55 vermelho); fecho em `320ee12`, **CI #56 verde**
@@ -34,10 +51,7 @@ Gate 7B com o critério Implementar / Não implementar ainda). Para aplicar o 7A
   - Worktree `C:\ptm-tmp-7a` (apagada): 3419 + 1 skip, 25/25 mutações, carga k6 com otel-lgtm.
   - Defeitos D1–D4: breadcrumb com token, `traceparent` reextraído, `increase()` cego a cold
     starts, backlog que falhava a ativação.
-- **7B: próximo passo.** Planear a partir do `00_plano` §5 e §9 (medições) e do `sprint_7A/08`.
-  - `dashboard` (18 queries), `portal/home` e `clients/{id}/summary` (9) passam o orçamento de 5.
-  - A latência fica dentro de 300 ms. Uma instância.
-  - Comparar a consolidação de queries com uma cache.
+- **7B (histórico, entrada):** planeado a partir do `00_plano` §5/§9; ver o bloco 7B FINALIZADO acima.
 - Ver `Sessions/2026-10-25-sprint7-plano-7a-blueprints.md`.
 
 ## Bloco pré-Sprint 7 (RN-020, RN-016, RN-005, RN-014, RN-013 + RN-018)
