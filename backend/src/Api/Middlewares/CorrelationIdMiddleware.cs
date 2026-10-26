@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace Api.Middlewares;
 
 /// <summary>Valida ou gera um correlation ID seguro e propaga-o na resposta.</summary>
@@ -25,6 +27,10 @@ public sealed class CorrelationIdMiddleware
             : Guid.NewGuid().ToString("N");
 
         httpContext.TraceIdentifier = correlationId;
+
+        // O correlation_id é o que o utilizador vê nos ProblemDetails; como tag da span do
+        // pedido, leva do erro reportado ao trace no Grafana.
+        Activity.Current?.SetTag("ptm.correlation_id", correlationId);
         httpContext.Response.OnStarting(() =>
         {
             httpContext.Response.Headers[HeaderName] = correlationId;

@@ -1,3 +1,4 @@
+using System.Data.Common;
 using Api;
 using Api.Configuration;
 using Api.Middlewares;
@@ -19,8 +20,11 @@ builder.Logging.AddJsonConsole(options =>
 {
     options.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
     options.UseUtcTimestamp = true;
+    // CorrelationId, TraceId e SpanId (e JobId no dispatcher) em cada linha.
+    options.IncludeScopes = true;
 });
 builder.Logging.AddDebug();
+builder.AddApiObservability();
 
 builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
 
@@ -43,6 +47,7 @@ var app = builder.Build();
 app.UseForwardedHeaders();
 
 app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<DbCommandMetricsMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.

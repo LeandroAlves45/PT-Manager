@@ -6,6 +6,15 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-25: Sprint 7 planeado; blueprints do 7A (observabilidade) validados, por aplicar.**
+- Plano: `docs/blueprints/sprint_7/00_plano_sprint_7.md`. Pack: `sprint_7A/01–10` (45 caminhos,
+  round-trip 45/45).
+- Destino: Sentry (erros) + Grafana Cloud (OTLP), região UE. Logs na consola. Seis alertas por
+  email. Sem sonda de uptime.
+- Worktree: 3419 + 1 skip, 25/25 mutações. A medição k6 mostrou `dashboard` com 18 queries para
+  o 7B.
+- Ver `Sessions/2026-10-25-sprint7-plano-7a-blueprints.md`.
+
 **2026-10-24: bloco pré-Sprint 7 FINALIZADO (na `main`, merge `56a9e1f`, CI #53 verde).**
 - **RN-020:** avaliação inicial pelo cliente, com guarda 409 `initial_assessment_required` por cliente.
 - **RN-016:** véspera idempotente, com endpoint dev.

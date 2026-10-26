@@ -1,6 +1,7 @@
 using Application.Common.Abstractions;
 using Application.Common.Authorization;
 using Application.Common.Media;
+using Application.Common.Observability;
 using Application.Features.TrainerSettings.Abstractions;
 using Application.Features.TrainerSettings.Dtos;
 using Application.Results;
@@ -70,7 +71,7 @@ public sealed class ReplaceLogoHandler
                 MediaPreparationErrorMapper.ToError(prepared, "Logo", ErrorCodePrefix));
 
         var uploaded = prepared.Media!;
-        var correlationId = Guid.NewGuid();
+        var correlationId = OperationCorrelation.NewId();
 
         try
         {

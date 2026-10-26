@@ -718,7 +718,7 @@ OpenTelemetry instrumenta:
 4. Runtime .NET.
 5. Jobs e integrações externas através de Activities próprias.
 
-O exporter e a retenção são confirmados no Sprint 0 de acordo com os limites gratuitos disponíveis.
+O destino foi decidido no Sprint 7A (2026-10-25), e não no Sprint 0 como estava previsto. Os traces e as métricas vão por OTLP (http/protobuf) para o Grafana Cloud Free, com 14 dias de retenção. Os erros vão para o Sentry Developer, com 30 dias de retenção. Ambos ficam na região UE. Os logs ficam só na consola do Render. O contexto de trace que chega nos pedidos é ignorado. As spans não levam o path com ids, a query, o IP nem o user-agent. O detalhe está em `docs/blueprints/sprint_7/00_plano_sprint_7.md`.
 
 Métricas mínimas:
 

@@ -24,6 +24,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Um só helper de captura de métricas para as três suites de teste. -->
+    <Compile Include="..\..\Shared\Observability\MetricCapture.cs" Link="Shared\MetricCapture.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 

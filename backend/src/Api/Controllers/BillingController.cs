@@ -2,6 +2,7 @@ using Api.Authorization;
 using Api.Configuration;
 using Api.Contracts.Billing;
 using Api.Http;
+using Application.Common.Observability;
 using Application.Errors;
 using Application.Features.Billing.CreateCheckout;
 using Application.Features.Billing.CreateCustomerPortal;
@@ -81,11 +82,11 @@ public sealed class BillingController : ApiControllerBase
     {
         var signatures = Request.Headers["Stripe-Signature"];
         if (signatures.Count != 1 || string.IsNullOrWhiteSpace(signatures[0]))
-            return BadRequest();
+            return RejectedWebhook(BadRequest());
 
         var maximumBodySize = stripeOptions.Value.MaximumWebhookBodySize;
         if (Request.ContentLength > maximumBodySize)
-            return StatusCode(StatusCodes.Status413PayloadTooLarge);
+            return RejectedWebhook(StatusCode(StatusCodes.Status413PayloadTooLarge));
 
         await using var body = new MemoryStream(capacity: Math.Min(maximumBodySize, 16_384));
         var buffer = new byte[8192];
@@ -97,7 +98,7 @@ public sealed class BillingController : ApiControllerBase
                 break;
 
             if (body.Length + read > maximumBodySize)
-                return StatusCode(StatusCodes.Status413PayloadTooLarge);
+                return RejectedWebhook(StatusCode(StatusCodes.Status413PayloadTooLarge));
 
             await body.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
         }
@@ -105,16 +106,29 @@ public sealed class BillingController : ApiControllerBase
         var outcome = authenticator.Authenticate(body.ToArray(), signatures[0]!);
         return outcome.Status switch
         {
-            PaymentWebhookAuthenticationStatus.AuthenticatedIgnored => NoContent(),
+            PaymentWebhookAuthenticationStatus.AuthenticatedIgnored =>
+                WebhookOutcome(NoContent(), "ignored"),
+            // O handler conta os desfechos dos eventos autenticados (processed, duplicate, failed).
             PaymentWebhookAuthenticationStatus.Authenticated =>
                 await RespondAsync(
                     handler.HandleAsync(
                         outcome.PaymentEvent!,
                         cancellationToken)),
             PaymentWebhookAuthenticationStatus.Disabled =>
-                StatusCode(StatusCodes.Status503ServiceUnavailable),
-            _ => BadRequest()
+                WebhookOutcome(StatusCode(StatusCodes.Status503ServiceUnavailable), "disabled"),
+            _ => RejectedWebhook(BadRequest())
         };
+    }
+
+    private static IActionResult RejectedWebhook(IActionResult result) =>
+        WebhookOutcome(result, "rejected");
+
+    private static IActionResult WebhookOutcome(IActionResult result, string outcome)
+    {
+        PtManagerTelemetry.StripeWebhooks.Add(
+            1,
+            new KeyValuePair<string, object?>("ptm.outcome", outcome));
+        return result;
     }
 
     private Guid? ReadIdempotencyKey()

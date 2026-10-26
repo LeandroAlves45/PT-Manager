@@ -1,5 +1,6 @@
 using Application.Common.Abstractions;
 using Application.Common.Authorization;
+using Application.Common.Observability;
 using Application.Features.ClientPortal.Abstractions;
 using Application.Features.ClientPortal.Dtos;
 using Application.Results;
@@ -35,7 +36,7 @@ public sealed class RemoveMyAvatarHandler
         var outcome = await _store.RemoveAsync(
             actor.Value.TrainerId,
             actor.Value.UserId,
-            Guid.NewGuid(),
+            OperationCorrelation.NewId(),
             _clock.UtcNow,
             cancellationToken);
 

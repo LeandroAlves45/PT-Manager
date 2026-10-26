@@ -426,3 +426,20 @@ Lições capturadas depois de correções do utilizador.
   cliente sem máximo e placeholder no nome que partia o email da véspera.
 - **Mutações com cópia e hash dos ficheiros-alvo antes de correr**: o trabalho não estava commitado,
   por isso `git checkout` não servia para repor.
+
+## 2026-10-25 — Sprint 7A (observabilidade)
+
+- **Reincidência: crases dentro de `node -e "…"` no Bash.** Apagaram texto em quatro ficheiros de
+  `docs_about_app`, apesar da lição de 2026-10-24. **Regra:** qualquer texto com crases vai num
+  script escrito com Write (`.mjs` no scratchpad) e corrido com `node <ficheiro>`. Nunca inline.
+- **Teste de sentinelas sobre o que sai mesmo pela rede.** A prova do Sentry serializa o envelope
+  num transport de teste; a das spans usa o exporter em memória no mesmo pipeline. Só assim
+  apareceu o token no breadcrumb (D1), que nenhum teste de configuração apanharia.
+- **Mutações a dizer o que é redundante.** Quatro linhas do scrubber e uma verificação de pai remoto
+  sobreviveram: o SDK já o fazia. Saíram, em vez de ficarem como «defesa» sem prova.
+- **Verificar no host real o que o TestServer mostra.** Sob o TestServer, a span levava
+  `url.path` e user-agent; sob o Kestrel, não. A lista do processor ficou com o que foi observado.
+- **Validar as regras de alerta com dados.** `increase()` não vê um contador que nasce com valor,
+  e no Render cada cold start cria uma série nova.
+- **Revisores a frio não leem a worktree durante mutações.** Dois falsos positivos vieram de
+  ficheiros mutados. Rever sobre um commit (`git show <sha>:caminho`) ou depois das mutações.

@@ -1,5 +1,6 @@
 using Application.Common.Abstractions;
 using Application.Common.Authorization;
+using Application.Common.Observability;
 using Application.Features.TrainerSettings.Abstractions;
 using Application.Features.TrainerSettings.Dtos;
 using Application.Results;
@@ -37,7 +38,7 @@ public sealed class RemoveLogoHandler
 
         var outcome = await _store.RemoveLogoAsync(
             actor.Value.TrainerId,
-            Guid.NewGuid(),
+            OperationCorrelation.NewId(),
             _clock.UtcNow,
             cancellationToken);
 

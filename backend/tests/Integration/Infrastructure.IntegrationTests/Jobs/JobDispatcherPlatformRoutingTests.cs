@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using Application.Common.Abstractions;
+using Application.Common.Observability;
 using Application.Features.Jobs.Abstractions;
 using Application.Features.Jobs.Dispatching;
 using Domain.Entities.Jobs;
@@ -8,6 +10,7 @@ using Infrastructure.Jobs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using TestSupport.Observability;
 
 namespace Infrastructure.IntegrationTests.Jobs;
 
@@ -47,6 +50,69 @@ public sealed class JobDispatcherPlatformRoutingTests
         Assert.Equal(0, recorder.TenantCalls);
         Assert.Equal(("job_tenant_unavailable", (DateTime?)null), (store.FailureCode, store.NextAttemptAt));
         Assert.Equal(0, store.Completed);
+    }
+
+    [Fact]
+    public async Task CompletedJob_IsTracedWithItsCorrelationAndCountedWithTheBacklog()
+    {
+        var job = Claimed("platform.test");
+        var store = new ScriptedJobStore(job);
+        var spans = new List<Activity>();
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == PtManagerTelemetry.Name,
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded,
+            ActivityStopped = activity =>
+            {
+                lock (spans)
+                    spans.Add(activity);
+            },
+        };
+        ActivitySource.AddActivityListener(listener);
+        using var capture = new MetricCapture(PtManagerTelemetry.Name, "ptm.jobs.outcome", "ptm.jobs.pending");
+
+        await CreateDispatcher(store, new ContextRecorder()).DispatchAsync(Token);
+
+        Activity span;
+        lock (spans)
+            span = Assert.Single(spans, candidate =>
+                Equals(candidate.GetTagItem("ptm.correlation_id"), job.CorrelationId.ToString("N")));
+        Assert.Equal("durable_job process", span.DisplayName);
+        Assert.Equal("platform.test", span.GetTagItem("ptm.item.type"));
+
+        var outcome = Assert.Single(capture.Measurements, m => m.Instrument == "ptm.jobs.outcome");
+        Assert.Equal("job", outcome.Tags["ptm.queue"]);
+        Assert.Equal("platform.test", outcome.Tags["ptm.item.type"]);
+        Assert.Equal("succeeded", outcome.Tags["ptm.outcome"]);
+
+        var pending = Assert.Single(capture.Measurements, m => m.Instrument == "ptm.jobs.pending");
+        Assert.Equal(0, pending.Value);
+        Assert.Equal("job", Assert.Single(pending.Tags).Value);
+    }
+
+    [Fact]
+    public async Task RejectedJob_IsCountedAsDeadLetterAndMarksTheSpanAsError()
+    {
+        var store = new ScriptedJobStore(Claimed("tenant.test"));
+        using var capture = new MetricCapture(PtManagerTelemetry.Name, "ptm.jobs.outcome");
+
+        await CreateDispatcher(store, new ContextRecorder()).DispatchAsync(Token);
+
+        var outcome = Assert.Single(capture.Measurements);
+        Assert.Equal("dead_letter", outcome.Tags["ptm.outcome"]);
+    }
+
+    [Fact]
+    public async Task BacklogCountFailure_DoesNotFailTheActivation()
+    {
+        // A contagem só serve a métrica: o job já foi concluído quando ela falha.
+        var store = new ScriptedJobStore(Claimed("platform.test")) { FailCount = true };
+        using var capture = new MetricCapture(PtManagerTelemetry.Name, "ptm.jobs.pending");
+
+        await CreateDispatcher(store, new ContextRecorder()).DispatchAsync(Token);
+
+        Assert.Equal(1, store.Completed);
+        Assert.Empty(capture.Measurements);
     }
 
     private static DurableJob Claimed(string jobType)
@@ -146,5 +212,12 @@ public sealed class JobDispatcherPlatformRoutingTests
             NextAttemptAt = nextAttemptAt;
             return Task.FromResult(true);
         }
+
+        public bool FailCount { get; init; }
+
+        public Task<int> CountDueAsync(CancellationToken cancellationToken) =>
+            FailCount
+                ? throw new InvalidOperationException("count failed")
+                : Task.FromResult(_claimed ? 0 : 1);
     }
 }

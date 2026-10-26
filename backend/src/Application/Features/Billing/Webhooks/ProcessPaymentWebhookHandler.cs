@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Observability;
 using Application.Features.Billing.Abstractions;
 using Application.Errors;
 using Application.Results;
@@ -32,10 +33,10 @@ public sealed class ProcessPaymentWebhookHandler
         ArgumentNullException.ThrowIfNull(paymentEvent);
 
         if (paymentEvent.Kind == PaymentEventKind.Unknown)
-            return Result.Success();
+            return Recorded(Result.Success(), "ignored");
 
         if (await _store.IsProcessedAsync(paymentEvent.EventId, cancellationToken))
-            return Result.Success();
+            return Recorded(Result.Success(), "duplicate");
 
         ProviderSubscriptionSnapshot? snapshot = null;
         if (paymentEvent.ProviderCustomerId is not null ||
@@ -48,12 +49,12 @@ public sealed class ProcessPaymentWebhookHandler
             );
 
             if (reconciliation.Status != SubscriptionReconciliationStatus.Success)
-                return Result.Failure(MapReconciliationError(reconciliation.Status));
+                return Recorded(Result.Failure(MapReconciliationError(reconciliation.Status)), "failed");
 
             snapshot = reconciliation.Snapshot;
         }
 
-        // RN-018: o painel soma o líquido das faturas pagas; sem esse valor o evento não fecha,
+        // O painel soma o líquido das faturas pagas; sem esse valor o evento não fecha,
         // para o Stripe voltar a entregá-lo em vez de o dinheiro ficar por contar.
         InvoicePaymentSnapshot? invoicePayment = null;
         if (paymentEvent.Kind == PaymentEventKind.InvoicePaid &&
@@ -65,7 +66,7 @@ public sealed class ProcessPaymentWebhookHandler
             );
 
             if (paid.Status != SubscriptionReconciliationStatus.Success)
-                return Result.Failure(MapReconciliationError(paid.Status));
+                return Recorded(Result.Failure(MapReconciliationError(paid.Status)), "failed");
 
             invoicePayment = paid.Payment;
         }
@@ -80,18 +81,29 @@ public sealed class ProcessPaymentWebhookHandler
 
         return committed.Kind switch
         {
-            CommitPaymentEventStoreStatus.Processed or
-            CommitPaymentEventStoreStatus.AlreadyProcessed => Result.Success(),
+            CommitPaymentEventStoreStatus.Processed => Recorded(Result.Success(), "processed"),
+            // Outra entrega do mesmo evento ganhou a corrida entre o IsProcessed e o commit.
+            CommitPaymentEventStoreStatus.AlreadyProcessed => Recorded(Result.Success(), "duplicate"),
             CommitPaymentEventStoreStatus.SubscriptionNotFound =>
-                Result.Failure(BillingErrors.SubscriptionNotFound),
+                Recorded(Result.Failure(BillingErrors.SubscriptionNotFound), "failed"),
             CommitPaymentEventStoreStatus.ExternalIdentityConflict =>
-                Result.Failure(BillingErrors.ExternalIdentityConflict),
+                Recorded(Result.Failure(BillingErrors.ExternalIdentityConflict), "failed"),
             CommitPaymentEventStoreStatus.ReconciliationRequired =>
-                Result.Failure(BillingErrors.ReconciliationRequired),
+                Recorded(Result.Failure(BillingErrors.ReconciliationRequired), "failed"),
             CommitPaymentEventStoreStatus.ConcurrencyConflict =>
-                Result.Failure(BillingErrors.ConcurrencyConflict),
+                Recorded(Result.Failure(BillingErrors.ConcurrencyConflict), "failed"),
             _ => throw new ArgumentOutOfRangeException(nameof(committed.Kind))
         };
+    }
+
+    // Conta o desfecho sem o tipo nem o id do evento: o alerta só precisa de saber que
+    // um webhook falhou, e o id ficaria uma série nova por evento.
+    private static Result Recorded(Result result, string outcome)
+    {
+        PtManagerTelemetry.StripeWebhooks.Add(
+            1,
+            new KeyValuePair<string, object?>("ptm.outcome", outcome));
+        return result;
     }
 
     private static Error MapReconciliationError(SubscriptionReconciliationStatus status) =>

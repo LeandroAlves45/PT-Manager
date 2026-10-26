@@ -170,4 +170,14 @@ public sealed class DurableJobRepository : IDurableJobStore
 
         return affected == 1;
     }
+
+    public Task<int> CountDueAsync(CancellationToken cancellationToken)
+    {
+        var now = _clock.UtcNow;
+
+        // A mesma condição de vencimento do claim (COALESCE(next_attempt_at, scheduled_at)).
+        return _db.DurableJobs.CountAsync(
+            j => j.Status == JobStatus.Pending && (j.NextAttemptAt ?? j.ScheduledAt) <= now,
+            cancellationToken);
+    }
 }

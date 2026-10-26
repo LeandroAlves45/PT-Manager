@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using Application.Common.Abstractions;
+using Application.Common.Observability;
 using Application.Features.Jobs.Abstractions;
 using Application.Features.Jobs.Dispatching;
 using Domain.Entities.Jobs;
@@ -14,6 +16,7 @@ internal sealed class JobDispatcher
     private const string UnexpectedFailureCode = "job_handler_unexpected_failure";
     private const string TenantUnavailableCode = "job_tenant_unavailable";
     private const string HandlerMissingCode = "job_handler_not_registered";
+    private const string Queue = "job";
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly JobDispatchOptions _options;
@@ -36,6 +39,14 @@ internal sealed class JobDispatcher
 
     /// <summary>Reclama e processa no máximo o batch configurado.</summary>
     public async Task DispatchAsync(CancellationToken cancellationToken)
+    {
+        await DispatchBatchesAsync(cancellationToken);
+
+        if (!cancellationToken.IsCancellationRequested)
+            await RecordBacklogAsync(cancellationToken);
+    }
+
+    private async Task DispatchBatchesAsync(CancellationToken cancellationToken)
     {
         var remaining = _options.JobBatchSize;
 
@@ -92,6 +103,16 @@ internal sealed class JobDispatcher
             ["CorrelationId"] = envelope.CorrelationId,
             ["TrainerId"] = envelope.TrainerId,
         });
+
+        // Uma span por item, filha do pedido QStash que acordou a API. O correlation id do
+        // job é o trace id do pedido que o criou: liga as duas pontas no Grafana.
+        using var activity = PtManagerTelemetry.ActivitySource.StartActivity(
+            "durable_job process",
+            ActivityKind.Consumer);
+        activity?.SetTag("ptm.queue", Queue);
+        activity?.SetTag("ptm.item.type", envelope.JobType);
+        activity?.SetTag("ptm.item.attempt", envelope.Attempts);
+        activity?.SetTag("ptm.correlation_id", envelope.CorrelationId.ToString("N"));
 
         DispatchItemOutcome outcome;
         try
@@ -226,6 +247,7 @@ internal sealed class JobDispatcher
             _logger.LogWarning(
                 JobDispatchLogEvents.LeaseLost,
                 "Durable job processing stopped because its lease was lost.");
+            RecordOutcome(job.JobType, "lease_lost");
             return;
         }
 
@@ -240,9 +262,12 @@ internal sealed class JobDispatcher
                 job.LeaseOwnerId,
                 cancellationToken);
             if (updated)
+            {
                 _logger.LogInformation(
                     JobDispatchLogEvents.ItemSucceeded,
                     "Durable job completed successfully.");
+                RecordOutcome(job.JobType, "succeeded");
+            }
         }
         else
         {
@@ -267,6 +292,7 @@ internal sealed class JobDispatcher
                     JobDispatchLogEvents.ItemRetryScheduled,
                     "Durable job scheduled for retry with failure code {FailureCode}.",
                     outcome.FailureCode);
+                RecordOutcome(job.JobType, "retry");
             }
             else if (updated)
             {
@@ -274,12 +300,54 @@ internal sealed class JobDispatcher
                     JobDispatchLogEvents.ItemDeadLettered,
                     "Durable job moved to dead letter with failure code {FailureCode}.",
                     outcome.FailureCode);
+                RecordOutcome(job.JobType, "dead_letter");
             }
         }
 
         if (!updated)
+        {
             _logger.LogWarning(
                 JobDispatchLogEvents.LeaseLost,
                 "Durable job final transition was rejected because its lease was lost.");
+            RecordOutcome(job.JobType, "lease_lost");
+        }
+    }
+
+    // O tipo de job é uma constante do código: cardinalidade fechada, sem dados pessoais.
+    private static void RecordOutcome(string itemType, string outcome)
+    {
+        PtManagerTelemetry.DispatchOutcomes.Add(
+            1,
+            new KeyValuePair<string, object?>("ptm.queue", Queue),
+            new KeyValuePair<string, object?>("ptm.item.type", itemType),
+            new KeyValuePair<string, object?>("ptm.outcome", outcome));
+
+        if (outcome is "retry" or "dead_letter")
+            Activity.Current?.SetStatus(ActivityStatusCode.Error, outcome);
+    }
+
+    private async Task RecordBacklogAsync(CancellationToken cancellationToken)
+    {
+        // Sem listener (telemetry desligada) não se gasta uma query por ativação.
+        if (!PtManagerTelemetry.DispatchBacklog.Enabled)
+            return;
+
+        // A contagem só serve a métrica: o trabalho da ativação já está feito e uma falha aqui
+        // não pode transformá-la num erro (nem num evento do Sentry).
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var store = scope.ServiceProvider.GetRequiredService<IDurableJobStore>();
+            var due = await store.CountDueAsync(cancellationToken);
+            PtManagerTelemetry.DispatchBacklog.Record(
+                due, new KeyValuePair<string, object?>("ptm.queue", Queue));
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _logger.LogWarning(
+                JobDispatchLogEvents.ActivationFailure,
+                "Durable job backlog metric was skipped with failure type {FailureType}.",
+                exception.GetType().Name);
+        }
     }
 }

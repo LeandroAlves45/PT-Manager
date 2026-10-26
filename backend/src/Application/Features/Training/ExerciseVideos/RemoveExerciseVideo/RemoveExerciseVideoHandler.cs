@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Observability;
 using Application.Features.Training.ExerciseVideos.Abstractions;
 using Application.Results;
 
@@ -42,7 +43,7 @@ public sealed class RemoveExerciseVideoHandler
             command.ExerciseId,
             actor.Value.OwnerTrainerId,
             actor.Value.UserId,
-            Guid.NewGuid(),
+            OperationCorrelation.NewId(),
             _clock.UtcNow,
             cancellationToken);
 

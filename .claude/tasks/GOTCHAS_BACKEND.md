@@ -241,3 +241,22 @@ o PostgreSQL antes de corrigir:
   validador partilhado, que vinha só do personal trainer. `Goals` e `MedicalConditions` não tinham
   máximo; ficaram com 2000, como os textos da nutrição (`goals_too_long`,
   `medical_conditions_too_long`).
+
+## 2026-10-25 — Sprint 7A (observabilidade)
+
+- **O Sentry ignora os filtros de categoria do appsettings.** O `SentryLoggerProvider` tem uma
+  regra de filtro própria, específica do provider, que ganha a `Microsoft.AspNetCore: Warning`.
+  Logs de framework com URL viram breadcrumbs. **Regra:** `SetBeforeBreadcrumb` corta a query.
+- **Ignorar o `traceparent` exige dois propagators.** O hosting usa o `DistributedContextPropagator`
+  do DI. A instrumentação de ASP.NET Core do OpenTelemetry volta a extrair com
+  `Propagators.DefaultTextMapPropagator` e recria a span com o pai remoto. **Regra:** registar os
+  dois (`InboundTraceContextIgnoringPropagator` e `…TextMapPropagator`).
+- **Pai remoto sem listener.** O hosting usa `new Activity` + `SetParentId(string)`, e o
+  `HasRemoteParent` não chega. O sinal fiável é o `ParentId` da raiz local.
+- **API em background no Windows.** O `TaskStop` da shell não mata o `dotnet Api.dll` filho:
+  continua na porta e bloqueia a DLL do build seguinte. **Regra:** confirmar com
+  `Get-NetTCPConnection` e terminar pelo PID depois de verificar que o módulo é o da worktree.
+- **Variáveis com ponto no Bash.** `export Logging__LogLevel__Microsoft.EntityFrameworkCore=…`
+  falha. Usar `env "NOME=valor" dotnet …`.
+- **O CORS só aceita origens HTTPS** (`Cors:AllowedOrigins`). Testes de carga com `Origin:
+  https://localhost:5173`.

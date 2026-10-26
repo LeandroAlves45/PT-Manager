@@ -1,79 +1,56 @@
-# TODO: Bloco pré-Sprint 7 (fecho da 6GB) — **Finalizado** (2026-10-24)
+# TODO: Sprint 7 — plano geral + blueprints 7A (Observabilidade)
 
-Plano aprovado a 2026-10-22 em `~/.claude/plans/luminous-beaming-wirth.md`. Decisões U84–U99.
-Branch `feat/pre-sprint7-block`, base `31f9a69` (main). Instruções em `.claude/SPEC.md`. Resumo em
-`docs/blueprints/frontend-files/sprint_6/sprint_6G/sprint_6GB/06_plano_bloco_pre_sprint7.md`; fecho em
-`07_relatorio_fecho_bloco_pre_sprint7.md`.
+Plano aprovado a 2026-10-25 em `~/.claude/plans/pasted-content-id-f2ba-goal-planear-ticklish-dahl.md`.
+Decisões S7-01..S7-12. Plano geral: `docs/blueprints/sprint_7/00_plano_sprint_7.md`.
+Pack: `docs/blueprints/sprint_7/sprint_7A/`. Worktree descartável `C:\ptm-tmp-7a` (base `11de0fb`).
 
 ## F0. Arranque
-- [x] `docs_about_app`, gotchas, lições e plano da 6GB-CL lidos; código mapeado (3 agentes Sonnet)
-- [x] Decisões U84–U99 com o Leandro
-- [x] Branch, `todo.md`, `SPEC.md`, `06_plano_bloco_pre_sprint7.md`
-- [x] Baseline: backend 3298 + 1 skip; frontend 952/952 em 88 ficheiros
+- [x] Docs lidos (roadmap §7, arquitetura §12, ACTIVE, NEST, gates, gotchas, lições, docs_about_app)
+- [x] Versões pesquisadas (Sentry 6.12.1, OTel 1.20.1, Npgsql.OpenTelemetry 10.0.3)
+- [x] Destino decidido: Sentry (erros) + Grafana Cloud (traces e métricas), região UE
+- [x] `00_plano_sprint_7.md`
+- [x] Correções no roadmap §7, arquitetura §12.2 e ACTIVE
 
-## F1. RN-020 avaliação inicial pelo cliente
-- [x] Domain: `SubmittedByClient`, `ReviewedAt`, `MarkReviewed`; migration
-- [x] Portal: `GET/POST /portal/my-initial-assessment`; `initial_assessment_pending` no Início
-- [x] Guarda `initial_assessment_required` em planos de treino, alimentares, atribuições e check-ins
-- [x] Trainer: rever, painel «Avaliações iniciais por rever», `has_initial_assessment`, correção de arquivado recusada
-- [x] Testes backend (helper que semeia a avaliação nos testes existentes)
-- [x] Frontend: esquema partilhado, cartão + página em 3 passos, avisos nas 4 páginas, painel e botão rever
-- [x] Testes frontend, commit
+## F1. Worktree
+- [x] `git worktree add C:\ptm-tmp-7a -b tmp/blueprints-7a 11de0fb`; baseline do build e dos testes
+- [x] Pacotes + locks + `--vulnerable`
+- [x] Opções `Observability` e `Sentry` com validação
+- [x] Logs: scopes + trace id
+- [x] Traces: ASP.NET Core, HttpClient, Npgsql, jobs; correlação do job = trace id
+- [x] Métricas `PTManager` + db_commands por pedido
+- [x] Sentry com scrubbing
 
-## F2. RN-016 email da véspera
-- [x] Scanner na ativação do dispatcher; chave idempotente por sessão, dia e destinatário
-- [x] Template do personal trainer; gateway com as duas chaves; revalidação e estado `skipped`
-- [x] Lembretes sem exigir subscrição ativa; endpoint só em Development
-- [x] Testes backend (11 da véspera); commit no fecho
-
-## F3. RN-005 resto do arquivo
-- [x] Arquivar: sessões futuras canceladas, saldo consumido (`ForfeitedAt`), convites anulados, refresh revogados
-- [x] Listas ativas sem arquivados; ficha só de leitura
-- [x] Middleware de acesso por pedido; `authentication_session_ended`
-- [x] Frontend: diálogo, corte de sessão; testes, commit
-
-## F4. RN-014 suplementos do plano e tomas
-- [x] `MealPlanSupplement`, `ClientMealPlanSupplementIntake`, migration
-- [x] Editor do personal trainer; portal com duas secções, tomas por plano, «Registar tomas» na refeição
-- [x] Testes, commit
-
-## F5. RN-013 + RN-018 bloqueio e moderação
-- [x] Nota livre; bloqueio de suplementos; bloqueio de treinadores com 7 dias
-- [x] Login e corte por pedido com motivo e nota; prazo terminado
-- [x] Item bloqueado sai do portal e dos totais; desbloquear tira-o do plano
-- [x] Backend: emails (outbox), painel, ficha, aviso no Início; migration aplicada à dev
-- [x] Frontend: emails (4), painel «Contas bloqueadas», ficha do superuser, aviso no Início
-- [x] Testes, commit
-
-## F6. Verificação e fecho
-- [x] Suites completas, lint, typecheck, build, contrato (`api:types:check` verde)
+## F2. Testes
+- [x] Sem segredos (logs, spans, eventos Sentry)
+- [x] Métricas emitidas
+- [x] Exporter em baixo não parte o negócio
 - [x] Mutações
-- [x] Browser (arnês MSW e app real)
-- [x] `code-review-leandro`, `security-reviewer`, `design-is`
-- [x] Relatório 08, `docs_about_app` (anunciado antes), roadmap, gates, gotchas, lições
-- [x] Graphify, memória, `SPEC.md` apagado, checklist «Finalizado»
+- [x] Build Release `--no-incremental` 0 avisos + suite completa
 
-## Estado a 2026-10-24
-- Backend F1–F5 completo: 3380 testes verdes + 1 skip, `dotnet format` limpo, 5 migrations aplicadas à dev, snapshot da API regenerado (+12 rotas), `schema.d.ts` regenerado.
-- Defeito apanhado pelos testes de ponta a ponta: desbloquear no contexto administrativo não tirava o item dos planos (filtros globais sem tenant). Corrigido, registado em GOTCHAS_BACKEND.
-- Commits por fase não separáveis (as fases tocam os mesmos ficheiros): um commit no fecho, com a lista por fase na mensagem.
-- Frontend: fatia do portal e da autenticação feita e verde (1010/1010 em 91 ficheiros, lint e typecheck limpos). Falta a fatia do personal trainer e do admin.
-- Estado e o que falta: `docs/blueprints/.../sprint_6GB/07_estado_bloco_pre_sprint7.md`; prompt para a conversa nova em `07b_prompt_continuacao_bloco_pre_sprint7.md`. O relatório de fecho passa a ser o 08.
+## F3. Medição
+- [x] otel-lgtm + k6 com dados gerados; p95 e queries por rota
+- [x] Queries PromQL dos alertas validadas
 
-## Fecho a 2026-10-24
-- [x] Frontend do personal trainer e do admin (agentes A, B, C), diálogo de arquivar
-- [x] Revisões (code-review 3 P2 + P3, security 3 LOW) corrigidas; mutações backend 8/8, frontend 5/5
-- [x] Suites: backend 3388 + 1 skip, format limpo; frontend 1078/1078 em 96 ficheiros, lint, typecheck, build
-- [x] Arnês MSW (ficheiros temporários apagados); `docs_about_app` atualizado (aprovado); relatório 08 escrito
-- [x] Decisões: commits backend + frontend; exercício bloqueado com histórico fica para plano novo (ponto em aberto)
-- [x] Compilar e testar a correção D10 (`AccountAccessTemplateRenderer` + 3 testes) e a D11 (`InitialAssessmentWizard`) — parar a API antes
-- [x] App real: passos 1–5 de «Falta fazer» no relatório 08 §6 (cliente «Teste Bloco» já criado e convidado)
-- [x] `design-is` nos ecrãs novos; roadmap, `QualityGates.md` (`QGPRE7-*`), `01_API_ENDPOINTS.md`
-- [x] Gotcha D11 em GOTCHAS_FRONTEND; memória (`obsidian-ptmanager`, nota em `Sessions/`); graphify
-- [x] Commits (backend, frontend e docs, com o formato aprovado pelo Leandro); `.claude/SPEC.md` apagado
-- [x] Push e merge para a `main` com aprovação do Leandro (merge `56a9e1f`); **CI #53 verde** (Frontend, Backend, Site, Contrato OpenAPI)
+## F4. Blueprints
+- [x] Revisão security + code-review
+- [x] Extração por script + manifest + round-trip
+- [x] Docs 01–11
+
+## F5. Fecho
+- [x] Worktree e branch apagadas; `git status` real só com docs/.claude/backlogs
+- [x] docs_about_app (S7-08), QualityGates `QG7A-*`
+- [x] Memória (NEST, ACTIVE, Sessions, MEMORY), lições
 
 ## Review
-- Bloco **Finalizado**: backend 3388 + 1 skip, frontend 1078 em 96 ficheiros, mutações 8/8 + 5/5, revisões sem P1/HIGH, `design-is` 22/30 REFINE, app real no Chrome.
-- Defeitos D1–D11 no relatório 08 §3 e §6; pontos em aberto no §8.
-- Commits: backend, frontend e `docs(claude)` na branch `feat/pre-sprint7-block`; merge só com aprovação do Leandro.
+
+**Finalizado (2026-10-25).**
+- Plano geral `docs/blueprints/sprint_7/00_plano_sprint_7.md` e pack `sprint_7A/01–10` +
+  `manifest.json`: 45 caminhos, round-trip 45/45.
+- Worktree `C:\ptm-tmp-7a` (base `11de0fb`, testado `7f0629e`), apagada:
+  - 3388 → 3419 + 1 skip, 0 avisos, format e `--vulnerable` limpos;
+  - mutações finais 25/25;
+  - carga k6 com otel-lgtm.
+- Defeitos D1–D4 corrigidos. Revisões de segurança e de código com os achados válidos aplicados.
+- Docs atualizados: roadmap §7, arquitetura §12.2, checklist e `docs_about_app` (S7-08, com o
+  ADR-001). Gates `QG7A-*` em `backlogs/QualityGates.md`. Memória atualizada.
+- **Falta (Leandro):** aplicar o pack, CI, contas EU, gates manuais e alertas. Depois, planear o 7B.

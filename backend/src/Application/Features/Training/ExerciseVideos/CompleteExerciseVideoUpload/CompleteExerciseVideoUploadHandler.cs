@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Observability;
 using Application.Features.Training.ExerciseVideos.Abstractions;
 using Application.Features.Training.ExerciseVideos.Dtos;
 using Application.Results;
@@ -89,7 +90,7 @@ public sealed class CompleteExerciseVideoUploadHandler
             command.VideoId,
             actor.Value.OwnerTrainerId,
             actor.Value.UserId,
-            Guid.NewGuid(),
+            OperationCorrelation.NewId(),
             _clock.UtcNow);
 
         var mismatch = FindMismatch(video.DeclaredSizeBytes, video.ContentType, info.Info);

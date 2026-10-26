@@ -875,9 +875,11 @@ consumidores, TTLs e invalidação sem evidência.
 
 ### Tarefas
 
-1. **Packages**:
-   - `Sentry.AspNetCore`
-   - OpenTelemetry (`OpenTelemetry.Instrumentation.AspNetCore`, `.Http`, `.EntityFrameworkCore`)
+1. **Packages** (versões verificadas a 2026-10-25, plano em `docs/blueprints/sprint_7/00_plano_sprint_7.md`):
+   - `Sentry.AspNetCore` 6.12.1
+   - `OpenTelemetry.Extensions.Hosting`, `.Exporter.OpenTelemetryProtocol` e `.Instrumentation.AspNetCore` 1.20.1
+   - SQL e HttpClient pelas fontes nativas (`Npgsql`, `System.Net.Http`): o pacote
+     `OpenTelemetry.Instrumentation.EntityFrameworkCore` só existe em beta e o `.Http` é dispensável no .NET 10
    - **Sem** Serilog file sink — filesystem do container é efémero (`00_ARCHITECTURE.md §12.1`)
 
 2. **Logging**
@@ -890,7 +892,8 @@ consumidores, TTLs e invalidação sem evidência.
      nos ProblemDetails). O 7A só confirma a propagação para traces e jobs.
 
 4. **Sentry + OpenTelemetry**
-   - DSN e exporter confirmados no Sprint 0 dentro dos limites free tier
+   - Destino decidido a 2026-10-25 (o Sprint 0 não o tinha registado): Sentry para erros e
+     Grafana Cloud para traces e métricas (OTLP), ambos no plano gratuito e na região UE
    - Instrumentação: ASP.NET Core, HttpClient, EF Core/Npgsql, jobs e integrações externas via Activities próprias
 
 5. **Health Checks** (antecipados para a Fase 6C; o 7A acrescenta métricas e alertas)
@@ -903,6 +906,12 @@ consumidores, TTLs e invalidação sem evidência.
    - Latência/erros HTTP, duração e volume de queries, pool de ligações, saturação do
      rate limiting local, jobs pendentes/tentativas/dead-letter, webhooks Stripe
      duplicados/falhados, falhas de email e custos/latência das integrações de media
+   - Comandos SQL por pedido e por rota (`ptm.http.db_commands`): orçamento de leitura
+     p95 ≤ 300 ms e ≤ 5 queries (S7-05), usado pelo sinal 2 do Gate 7B
+
+7. **Alertas** (email, decisão S7-06): erro novo no Sentry; 5xx > 5% em 5 min; job em
+   DeadLetter; webhook Stripe rejeitado ou falhado; p95 acima do orçamento durante 10 min;
+   pool do PostgreSQL com pedidos à espera. Sem sonda de uptime no plano gratuito (S7-09).
 
 Gate 7A:
 
@@ -1222,7 +1231,7 @@ arquitectura enquanto não existir uma decisão canónica que os substitua.
 | Cold start / atraso do QStash | Alta (aceite no MVP) | Baixo | Documentado como limitação do plano gratuito, não bloqueia go-live |
 | Job preso em `Processing` | Baixa | Médio | Lease com expiração, recuperação automática (Sprint 5) |
 | Falha do Neon/migration | Muito Baixa | Crítico | Migration testada em branch antes de produção, rollback documentado |
-| Quota Sentry/Upstash excedida | Baixa | Médio | Sampling e limites confirmados no Sprint 0/7 |
+| Quota Sentry/Grafana/Upstash excedida | Baixa | Médio | Sprint 7A: Sentry só erros (`TracesSampleRate = 0`), tags de baixa cardinalidade, `SamplingRatio` configurável, `traceparent` de fora ignorado (S7-01, S7-11) |
 | Refresh concorrente entre separadores invalida a sessão | Média | Alto | Sprint 6C: refresh serializado (Web Locks) e teste com dois separadores |
 | Cookies cross-site bloqueados (Vercel ≠ Render) | Média | Alto | Sprint 9: subdomínios do mesmo site ou BFF (`00_ARCHITECTURE.md` §5) |
 

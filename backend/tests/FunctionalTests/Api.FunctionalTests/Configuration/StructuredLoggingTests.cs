@@ -21,7 +21,7 @@ public sealed class StructuredLoggingTests : IDisposable
     private readonly ApiWebApplicationFactory _factory = new(UnusedConnectionString);
 
     [Fact]
-    public void ConsoleLogger_UsesJsonFormatterWithUtcTimestamps()
+    public void ConsoleLogger_UsesJsonFormatterWithUtcTimestampsScopesAndTraceIds()
     {
         var console = _factory.Services
             .GetRequiredService<IOptionsMonitor<ConsoleLoggerOptions>>()
@@ -33,6 +33,11 @@ public sealed class StructuredLoggingTests : IDisposable
         Assert.Equal(ConsoleFormatterNames.Json, console.FormatterName);
         Assert.True(json.UseUtcTimestamp);
         Assert.Equal("yyyy-MM-ddTHH:mm:ss.fffZ", json.TimestampFormat);
+        // Sem scopes, o CorrelationId e o JobId do dispatcher não saíam no JSON.
+        Assert.True(json.IncludeScopes);
+        Assert.Equal(
+            ActivityTrackingOptions.TraceId | ActivityTrackingOptions.SpanId,
+            _factory.Services.GetRequiredService<IOptions<LoggerFactoryOptions>>().Value.ActivityTrackingOptions);
         Assert.Contains(
             _factory.Services.GetServices<ILoggerProvider>(),
             provider => provider is ConsoleLoggerProvider);

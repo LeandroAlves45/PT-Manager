@@ -1,7 +1,9 @@
+using Application.Common.Observability;
 using Application.Features.Billing;
 using Application.Features.Billing.Abstractions;
 using Application.Features.Billing.Webhooks;
 using Domain.ValueObjects;
+using TestSupport.Observability;
 
 namespace Application.UnitTests.Features.Billing;
 
@@ -219,6 +221,47 @@ public sealed class ProcessPaymentWebhookHandlerTests
 
         Assert.Equal(0, invoices.Calls);
         Assert.Null(store.InvoicePayment);
+    }
+
+    [Theory]
+    [InlineData("unknown", "ignored")]
+    [InlineData("already_processed", "duplicate")]
+    [InlineData("commit_processed", "processed")]
+    [InlineData("commit_already_processed", "duplicate")]
+    [InlineData("commit_rejected", "failed")]
+    [InlineData("reconciliation_failed", "failed")]
+    public async Task EachDelivery_IsCountedOnceByOutcome(string scenario, string expectedOutcome)
+    {
+        using var capture = new MetricCapture(PtManagerTelemetry.Name, "ptm.stripe.webhook");
+        var gateway = new ReconciliationGatewayStub
+        {
+            Snapshot = Snapshot(),
+            Status = scenario == "reconciliation_failed"
+                ? SubscriptionReconciliationStatus.TransientFailure
+                : SubscriptionReconciliationStatus.Success
+        };
+        var store = new PaymentEventStoreStub
+        {
+            IsProcessed = scenario == "already_processed",
+            Result = new(scenario switch
+            {
+                "commit_already_processed" => CommitPaymentEventStoreStatus.AlreadyProcessed,
+                "commit_rejected" => CommitPaymentEventStoreStatus.ConcurrencyConflict,
+                _ => CommitPaymentEventStoreStatus.Processed
+            })
+        };
+        var kind = scenario == "unknown" ? PaymentEventKind.Unknown : PaymentEventKind.SubscriptionUpdated;
+
+        await CreateHandler(gateway, store).HandleAsync(
+            Event(kind, "cus_1", "sub_1"),
+            TestContext.Current.CancellationToken);
+
+        var measurement = Assert.Single(capture.Measurements);
+        Assert.Equal(1, measurement.Value);
+        // Só o desfecho: nem o tipo nem o id do evento viram tag.
+        var tag = Assert.Single(measurement.Tags);
+        Assert.Equal("ptm.outcome", tag.Key);
+        Assert.Equal(expectedOutcome, tag.Value);
     }
 
     private static ProcessPaymentWebhookHandler CreateHandler(

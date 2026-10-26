@@ -1,4 +1,5 @@
 using Application.Common.Abstractions;
+using Application.Common.Observability;
 using Application.Features.Training.ExerciseVideos.Abstractions;
 using Application.Features.Training.ExerciseVideos.Dtos;
 using Application.Results;
@@ -77,7 +78,7 @@ public sealed class RequestExerciseVideoUploadHandler
                 actor.Value.UserId,
                 expiresAt.Add(_settings.AbandonmentGrace),
                 _settings.MaxVideosPerTrainer,
-                Guid.NewGuid(),
+                OperationCorrelation.NewId(),
                 now),
             cancellationToken);
 

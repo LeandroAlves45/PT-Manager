@@ -1,6 +1,33 @@
-# Estado ativo: bloco pré-Sprint 7 FINALIZADO (2026-10-24); falta o merge e depois o Sprint 7
+# Estado ativo: Sprint 7 planeado; blueprints do 7A validados (2026-10-25), por aplicar
 
-Atualizado: 2026-10-24
+Atualizado: 2026-10-25
+
+## Sprint 7: Observabilidade (7A) e decisão de cache (7B)
+
+**Ler primeiro** `docs/blueprints/sprint_7/00_plano_sprint_7.md` (decisões S7-01..S7-14, Gate 7A e
+Gate 7B com o critério Implementar / Não implementar ainda). Para aplicar o 7A, ler
+`sprint_7A/01_indice_decisoes_e_ordem.md`.
+
+- **7A: blueprints validados (2026-10-25).**
+  - Pack `sprint_7A/01–10` + `manifest.json`: 45 caminhos (36 integrais, 6 patches, 3 locks), com
+    round-trip 45/45.
+  - Destino:
+    - Sentry só para erros;
+    - Grafana Cloud para traces e métricas (OTLP);
+    - logs só na consola;
+    - região UE;
+    - seis alertas por email;
+    - sem sonda de uptime.
+  - Worktree `C:\ptm-tmp-7a` (apagada): 3419 + 1 skip, 25/25 mutações, carga k6 com otel-lgtm.
+  - Defeitos D1–D4: breadcrumb com token, `traceparent` reextraído, `increase()` cego a cold
+    starts, backlog que falhava a ativação.
+  - **Próximo passo:** o Leandro aplica o pack (doc 01 §5), cria as contas EU e faz os gates
+    `QG7A-APPLY/CI/ACCOUNTS/E2E/ALERT-*`.
+- **7B:** por planear, a partir do `sprint_7A/08`.
+  - `dashboard` (18 queries), `portal/home` e `clients/{id}/summary` (9) passam o orçamento de 5.
+  - A latência fica dentro de 300 ms. Uma instância.
+  - Comparar a consolidação de queries com uma cache.
+- Ver `Sessions/2026-10-25-sprint7-plano-7a-blueprints.md`.
 
 ## Bloco pré-Sprint 7 (RN-020, RN-016, RN-005, RN-014, RN-013 + RN-018)
 

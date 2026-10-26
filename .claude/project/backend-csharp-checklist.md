@@ -447,7 +447,7 @@ Ver `01_DATABASE_SCHEMA.md` para o schema aprovado. Este checklist cobre apenas 
 - [ ] Modelo EF Core sem alterações pendentes (`dotnet ef migrations has-pending-model-changes`)
 - [ ] Migrations aplicadas contra staging DB
 - [ ] `/health/live` e `/health/ready` respondem correctamente
-- [ ] Sentry DSN configurado; OpenTelemetry exporter confirmado
+- [ ] Sentry DSN configurado (região EU); exporter OTLP para o Grafana Cloud (`OTEL_EXPORTER_OTLP_ENDPOINT`/`HEADERS`) decidido no Sprint 7A
 - [ ] Rate limiting activo; CORS configurado correctamente
 - [ ] JWT/refresh token secrets fortes; cookie de refresh com flags correctas
 - [ ] QStash endpoint interno valida assinatura correctamente

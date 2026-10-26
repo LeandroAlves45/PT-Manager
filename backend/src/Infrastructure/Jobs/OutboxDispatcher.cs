@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using Application.Common.Abstractions;
+using Application.Common.Observability;
 using Application.Features.Jobs.Abstractions;
 using Application.Features.Jobs.Dispatching;
 using Domain.Entities.Jobs;
@@ -14,6 +16,7 @@ internal sealed class OutboxDispatcher
     private const string UnexpectedFailureCode = "outbox_handler_unexpected_failure";
     private const string TenantUnavailableCode = "outbox_tenant_unavailable";
     private const string HandlerMissingCode = "outbox_handler_not_registered";
+    private const string Queue = "outbox";
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly JobDispatchOptions _options;
@@ -36,6 +39,14 @@ internal sealed class OutboxDispatcher
 
     /// <summary>Reclama e processa no máximo o batch configurado.</summary>
     public async Task DispatchAsync(CancellationToken cancellationToken)
+    {
+        await DispatchBatchesAsync(cancellationToken);
+
+        if (!cancellationToken.IsCancellationRequested)
+            await RecordBacklogAsync(cancellationToken);
+    }
+
+    private async Task DispatchBatchesAsync(CancellationToken cancellationToken)
     {
         var allowedTypes = ResolveRegisteredMessageTypes();
         if (allowedTypes.Count == 0)
@@ -106,6 +117,14 @@ internal sealed class OutboxDispatcher
             ["CorrelationId"] = envelope.CorrelationId,
             ["TrainerId"] = envelope.TrainerId
         });
+
+        using var activity = PtManagerTelemetry.ActivitySource.StartActivity(
+            "outbox_message process",
+            ActivityKind.Consumer);
+        activity?.SetTag("ptm.queue", Queue);
+        activity?.SetTag("ptm.item.type", envelope.MessageType);
+        activity?.SetTag("ptm.item.attempt", envelope.Attempts);
+        activity?.SetTag("ptm.correlation_id", envelope.CorrelationId.ToString("N"));
 
         DispatchItemOutcome outcome;
         try
@@ -210,6 +229,7 @@ internal sealed class OutboxDispatcher
             _logger.LogWarning(
                 JobDispatchLogEvents.LeaseLost,
                 "Outbox processing stopped because its lease was lost.");
+            RecordOutcome(message.MessageType, "lease_lost");
             return;
         }
 
@@ -224,9 +244,12 @@ internal sealed class OutboxDispatcher
                 message.LeaseOwnerId,
                 cancellationToken);
             if (updated)
+            {
                 _logger.LogInformation(
                     JobDispatchLogEvents.ItemSucceeded,
                     "Outbox message completed successfully.");
+                RecordOutcome(message.MessageType, "succeeded");
+            }
         }
         else
         {
@@ -251,6 +274,7 @@ internal sealed class OutboxDispatcher
                     JobDispatchLogEvents.ItemRetryScheduled,
                     "Outbox message scheduled for retry with failure code {FailureCode}.",
                     outcome.FailureCode);
+                RecordOutcome(message.MessageType, "retry");
             }
             else if (updated)
             {
@@ -258,12 +282,53 @@ internal sealed class OutboxDispatcher
                     JobDispatchLogEvents.ItemDeadLettered,
                     "Outbox message moved to dead letter with failure code {FailureCode}.",
                     outcome.FailureCode);
+                RecordOutcome(message.MessageType, "dead_letter");
             }
         }
 
         if (!updated)
+        {
             _logger.LogWarning(
                 JobDispatchLogEvents.LeaseLost,
                 "Outbox final transition was rejected because its lease was lost.");
+            RecordOutcome(message.MessageType, "lease_lost");
+        }
+    }
+
+    private static void RecordOutcome(string itemType, string outcome)
+    {
+        PtManagerTelemetry.DispatchOutcomes.Add(
+            1,
+            new KeyValuePair<string, object?>("ptm.queue", Queue),
+            new KeyValuePair<string, object?>("ptm.item.type", itemType),
+            new KeyValuePair<string, object?>("ptm.outcome", outcome));
+
+        if (outcome is "retry" or "dead_letter")
+            Activity.Current?.SetStatus(ActivityStatusCode.Error, outcome);
+    }
+
+    private async Task RecordBacklogAsync(CancellationToken cancellationToken)
+    {
+        // Sem listener (telemetry desligada) não se gasta uma query por ativação.
+        if (!PtManagerTelemetry.DispatchBacklog.Enabled)
+            return;
+
+        // A contagem só serve a métrica: o trabalho da ativação já está feito e uma falha aqui
+        // não pode transformá-la num erro (nem num evento do Sentry).
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var store = scope.ServiceProvider.GetRequiredService<IOutboxStore>();
+            var due = await store.CountDueAsync(cancellationToken);
+            PtManagerTelemetry.DispatchBacklog.Record(
+                due, new KeyValuePair<string, object?>("ptm.queue", Queue));
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _logger.LogWarning(
+                JobDispatchLogEvents.ActivationFailure,
+                "Outbox backlog metric was skipped with failure type {FailureType}.",
+                exception.GetType().Name);
+        }
     }
 }

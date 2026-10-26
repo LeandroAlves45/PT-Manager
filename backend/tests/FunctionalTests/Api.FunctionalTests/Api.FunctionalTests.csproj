@@ -11,6 +11,7 @@
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="SSH.NET" />
+    <PackageReference Include="OpenTelemetry.Exporter.InMemory" />
 
     <PackageReference Include="xunit.runner.visualstudio">
       <PrivateAssets>all</PrivateAssets>
@@ -21,6 +22,11 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Um só helper de captura de métricas para as três suites de teste. -->
+    <Compile Include="..\..\Shared\Observability\MetricCapture.cs" Link="Shared\MetricCapture.cs" />
   </ItemGroup>
 
   <ItemGroup>

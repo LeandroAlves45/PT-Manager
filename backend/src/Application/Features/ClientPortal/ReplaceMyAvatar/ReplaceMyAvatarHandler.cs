@@ -1,6 +1,7 @@
 using Application.Common.Abstractions;
 using Application.Common.Authorization;
 using Application.Common.Media;
+using Application.Common.Observability;
 using Application.Features.ClientPortal.Abstractions;
 using Application.Features.ClientPortal.Dtos;
 using Application.Results;
@@ -63,7 +64,7 @@ public sealed class ReplaceMyAvatarHandler
                 MediaPreparationErrorMapper.ToError(prepared, "Avatar", ErrorCodePrefix));
 
         var uploaded = prepared.Media!;
-        var correlationId = Guid.NewGuid();
+        var correlationId = OperationCorrelation.NewId();
 
         try
         {

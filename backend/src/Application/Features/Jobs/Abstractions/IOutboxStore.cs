@@ -45,4 +45,10 @@ public interface IOutboxStore
         string sanitizedError,
         DateTime? nextAttemptAt,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Conta as mensagens pendentes e já vencidos. Alimenta a métrica <c>ptm.jobs.pending</c> uma vez
+    /// por ativação do dispatcher; não é usado para decidir o que processar.
+    /// </summary>
+    Task<int> CountDueAsync(CancellationToken cancellationToken);
 }

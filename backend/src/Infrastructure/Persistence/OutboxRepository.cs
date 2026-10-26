@@ -205,4 +205,14 @@ public sealed class OutboxRepository : IOutboxStore
 
         return affected == 1;
     }
+
+    public Task<int> CountDueAsync(CancellationToken cancellationToken)
+    {
+        var now = _clock.UtcNow;
+
+        // A mesma condição de vencimento do claim (COALESCE(next_attempt_at, created_at)).
+        return _db.OutboxMessages.CountAsync(
+            m => m.Status == JobStatus.Pending && (m.NextAttemptAt ?? m.CreatedAt) <= now,
+            cancellationToken);
+    }
 }

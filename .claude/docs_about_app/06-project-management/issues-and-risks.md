@@ -10,6 +10,7 @@ Os riscos de engenharia do roadmap ficam em `.claude/project/02_SPRINTS_ROADMAP.
 | R-002 | Risco | A data de go-live escrita no índice do projecto era Outubro de 2026. Em 2026-10-14 faltam 6G, 7, 8 e 9. | A visão não trata essa data como compromisso. | Aberto | **por preencher** |
 | R-003 | Questão | A regra do pack pendente, do comprovativo e da faturação está na visão e em `RN-011`. Entra depois do go-live. Até lá, atribuir o pack activa-o. | Não altera as fases já definidas. | Fechado quanto ao momento | Depois dos sprints já definidos |
 | R-004 | Dívida | A frase do problema não tem evidência de utilizadores reais. | As fases seguintes podem optimizar um problema que não confirmaste no terreno. | Aberto | **por preencher** |
-| R-005 | **por preencher** | **por preencher** | **por preencher** | **por preencher** | **por preencher** |
+| R-005 | Risco | Passar a quota grátis do Grafana Cloud (10k séries) ou do Sentry (5k erros/mês) | Perde-se telemetria até ao mês seguinte. O negócio não pára | Mitigado no 7A: tags de baixa cardinalidade, Sentry só com erros, contexto de trace de fora ignorado | **por preencher** |
+| R-006 | **por preencher** | **por preencher** | **por preencher** | **por preencher** | **por preencher** |
 
 Bugs já anotados num sítio próprio: deixa aqui só o identificador e a ligação, não o relato completo.

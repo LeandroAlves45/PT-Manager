@@ -19,7 +19,9 @@ Consentimentos formais do cliente estão fora do MVP (`DEF-COMP-001`, Sprint 10C
 
 ## Serviços externos que recebem dados
 
-Stripe (subscrição), Cloudinary (imagens), fornecedor de vídeo privado (R2, Sprint 5D), email transacional (Resend), e no Sprint 7A Sentry. Não listar chaves nem contas.
+Stripe (subscrição), Cloudinary (imagens), fornecedor de vídeo privado (R2, Sprint 5D), email transacional (Resend) e, a partir do Sprint 7A, Sentry (erros) e Grafana Cloud (traces e métricas). Não listar chaves nem contas.
+
+O Sentry e o Grafana ficam na região UE. Não recebem emails, nomes, ids de pessoas na rota, query, cookies, headers, corpo dos pedidos, payload Stripe nem scores de moderação. Isto está provado por testes no Sprint 7A (`QG7A-REDACT-001`, `QG7A-PII-001`). Os logs com ids ficam só na consola do Render.
 
 Há mais algum? **A tua resposta:** por preencher
 

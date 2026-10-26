@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using Application.Features.Authentication.Abstractions;
 using Infrastructure.Data;
 using Infrastructure.Data.Interceptors;
+using Infrastructure.Observability;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -140,7 +141,8 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
 
                 options.AddInterceptors(
                     provider.GetRequiredService<TenantWriteValidationInterceptor>(),
-                    provider.GetRequiredService<CommandCountingInterceptor>());
+                    provider.GetRequiredService<CommandCountingInterceptor>(),
+                    provider.GetRequiredService<DbCommandMetricsInterceptor>());
             });
 
             // Sem este filtro, RemoteIpAddress e null no TestServer e o limitador

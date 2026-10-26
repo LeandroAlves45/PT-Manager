@@ -23,6 +23,7 @@ using Infrastructure.Data.Interceptors;
 using Infrastructure.Identity;
 using Infrastructure.Media;
 using Infrastructure.Media.Video;
+using Infrastructure.Observability;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Administration;
 using Infrastructure.Persistence.Assessments;
@@ -69,7 +70,9 @@ public static class DependencyInjection
                 npgsql.EnableRetryOnFailure(maxRetryCount: 3);
             });
 
-            options.AddInterceptors(provider.GetRequiredService<TenantWriteValidationInterceptor>());
+            options.AddInterceptors(
+                provider.GetRequiredService<TenantWriteValidationInterceptor>(),
+                provider.GetRequiredService<DbCommandMetricsInterceptor>());
         });
 
         // Scoped: o tenant é do pedido. Registado pelas duas interfaces para que o
@@ -172,6 +175,7 @@ public static class DependencyInjection
 
         // Interceptors
         services.AddScoped<TenantWriteValidationInterceptor>();
+        services.AddSingleton<DbCommandMetricsInterceptor>();
 
         // Errors and Clock
         services.AddSingleton<IClock, SystemClock>();
