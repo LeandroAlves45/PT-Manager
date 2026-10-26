@@ -6,6 +6,13 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-26: Sprint 7A FINALIZADO no backend (`320ee12` na `main`, CI #56 verde).**
+- Aplicação do Leandro (`14d4d05`, CI #55 vermelho) revista: histograma renomeado à mão
+  reposto para `ptm.http.db_commands`; factory de testes desliga OTLP/Sentry só em Development.
+- 3419 + 1 skip, 0 avisos, 16/16 mutações no checkout real, hashes 33/45 (resto formatação).
+- Faltam os gates manuais com contas reais (Grafana eu-west, E2E, alertas). Sentry EU confirmado.
+- Ver `Sessions/2026-10-26-sprint7a-fecho.md` e `sprint_7A/11_relatorio_fecho_fase_7A.md`.
+
 **2026-10-25: Sprint 7 planeado; blueprints do 7A (observabilidade) validados, por aplicar.**
 - Plano: `docs/blueprints/sprint_7/00_plano_sprint_7.md`. Pack: `sprint_7A/01–10` (45 caminhos,
   round-trip 45/45).

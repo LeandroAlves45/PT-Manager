@@ -443,3 +443,20 @@ Lições capturadas depois de correções do utilizador.
   e no Render cada cold start cria uma série nova.
 - **Revisores a frio não leem a worktree durante mutações.** Dois falsos positivos vieram de
   ficheiros mutados. Rever sobre um commit (`git show <sha>:caminho`) ou depois das mutações.
+
+## 2026-10-26 — Fecho do Sprint 7A
+
+- **O commit testado é a melhor régua de uma aplicação.** O `7f0629e` ainda existia no git:
+  `git diff -w --ignore-blank-lines 7f0629e HEAD` separou em minutos o único desvio de
+  comportamento (nome do histograma) de dezenas de mudanças de formatação. Guardar sempre o sha
+  testado no manifest.
+- **Aplicar um pack sem correr a suite parte o CI.** O CI #55 caiu num teste que a suite local
+  teria apanhado. **Regra para o Leandro:** suite completa antes do push, como diz o doc 01 §5.
+- **Neutralizar a configuração do programador nos testes sem esvaziar a prova.** Desligar a
+  telemetria na factory para todos os ambientes faria o teste de «desligado por omissão» passar
+  sempre. Só em `Development`, e uma mutação no `appsettings.json` (MOFF1/MOFF2) prova que o teste
+  continua a morder.
+- **Script de mutações repõe por conteúdo, não por `git checkout`.** As correções da sessão ainda
+  não estavam commitadas. Hash antes e depois.
+- **Texto com aspas e `\n` em scripts de mutação vai em literais simples dentro de um `.js` escrito
+  com Write.** A versão injetada por `node -e` partiu o script (SyntaxError).

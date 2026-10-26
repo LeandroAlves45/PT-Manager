@@ -260,3 +260,23 @@ o PostgreSQL antes de corrigir:
   falha. Usar `env "NOME=valor" dotnet …`.
 - **O CORS só aceita origens HTTPS** (`Cors:AllowedOrigins`). Testes de carga com `Origin:
   https://localhost:5173`.
+
+## 2026-10-26 — Fecho do Sprint 7A (aplicação na `main`)
+
+- **Nome de instrumento mudado à mão parte o teste em silêncio.** Na aplicação, o histograma
+  passou de `ptm.http.db_commands` para `ptm.http.db.commands`. O `MetricCapture` filtra pelo
+  nome exato e o teste da rota deixou de ver medições. No Prometheus os dois nomes dão
+  `ptm_http_db_commands`, por isso nem o painel avisaria. **Regra:** nomes de métricas e de
+  fontes são contrato (docs 04 e 07, alertas, testes); mudar só com o teste e os docs no mesmo
+  commit. Reposto o nome do blueprint.
+- **Reescrever comentários de blueprints introduz erros de domínio.** «DNS» em vez de «DSN» no
+  Sentry, «escritório» em vez de «critério», `using`s sem uso. O build não os apanha (o IDE0005
+  não falha o build). **Regra:** depois de aplicar um pack, conferir os 45 hashes e ler o
+  `git diff -w <commit testado>` antes do commit.
+- **User Secrets ligam a telemetria nos testes Development.** Com `Observability:Enabled` e
+  `Sentry:Enabled` nos secrets (preparação das contas reais) e sem `OTEL_EXPORTER_OTLP_ENDPOINT`,
+  23 testes funcionais com host `Development` (OpenAPI, seed, email dev) falharam no arranque.
+  Mesmo padrão do seed (`gotcha_user_secrets_in_test_hosts`). **Regra:** a
+  `ApiWebApplicationFactory` desliga as duas integrações só em `Development`; em `Testing` o
+  `ByDefault_NoExporterAndNoSentryAreRegistered` continua a provar o `appsettings.json`
+  (mutações MOFF1/MOFF2).

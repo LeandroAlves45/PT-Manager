@@ -1,6 +1,6 @@
-# Estado ativo: Sprint 7 planeado; blueprints do 7A validados (2026-10-25), por aplicar
+# Estado ativo: Sprint 7A FINALIZADO (2026-10-26); 7B por planear
 
-Atualizado: 2026-10-25
+Atualizado: 2026-10-26
 
 ## Sprint 7: Observabilidade (7A) e decisão de cache (7B)
 
@@ -8,7 +8,20 @@ Atualizado: 2026-10-25
 Gate 7B com o critério Implementar / Não implementar ainda). Para aplicar o 7A, ler
 `sprint_7A/01_indice_decisoes_e_ordem.md`.
 
-- **7A: blueprints validados (2026-10-25).**
+- **7A FINALIZADO no backend (2026-10-26).** Relatório `sprint_7A/11_relatorio_fecho_fase_7A.md`.
+  - Aplicação do Leandro em `14d4d05` (CI #55 vermelho); fecho em `320ee12`, **CI #56 verde**
+    nos 4 jobs.
+  - F1: histograma renomeado à mão para `ptm.http.db.commands`, reposto `ptm.http.db_commands`.
+    F2: `ApiWebApplicationFactory` desliga OTLP e Sentry só em `Development` (User Secrets).
+    F3: comentários com erros e `using`s mortos.
+  - Checkout real: 3419 + 1 skip, 0 avisos, format e `--vulnerable` limpos, 16/16 mutações
+    (M01–M05, M12, M13, M19–M25, MOFF1, MOFF2). Hashes 33/45 (o resto só formatação).
+  - Sentry MCP: organização `pt-manager` em `de.sentry.io` (UE), projeto `pt-manager-backend`,
+    0 issues.
+  - **Falta ao Leandro:** `QG7A-ACCOUNTS-001` (Grafana eu-west), `QG7A-E2E-001`,
+    `QG7A-ALERT-001`, `QG7A-ALERT-002` (passos no doc 11 §7).
+  - Ver `Sessions/2026-10-26-sprint7a-fecho.md`.
+- **7A: blueprints validados (2026-10-25, histórico).**
   - Pack `sprint_7A/01–10` + `manifest.json`: 45 caminhos (36 integrais, 6 patches, 3 locks), com
     round-trip 45/45.
   - Destino:
@@ -21,9 +34,7 @@ Gate 7B com o critério Implementar / Não implementar ainda). Para aplicar o 7A
   - Worktree `C:\ptm-tmp-7a` (apagada): 3419 + 1 skip, 25/25 mutações, carga k6 com otel-lgtm.
   - Defeitos D1–D4: breadcrumb com token, `traceparent` reextraído, `increase()` cego a cold
     starts, backlog que falhava a ativação.
-  - **Próximo passo:** o Leandro aplica o pack (doc 01 §5), cria as contas EU e faz os gates
-    `QG7A-APPLY/CI/ACCOUNTS/E2E/ALERT-*`.
-- **7B:** por planear, a partir do `sprint_7A/08`.
+- **7B: próximo passo.** Planear a partir do `00_plano` §5 e §9 (medições) e do `sprint_7A/08`.
   - `dashboard` (18 queries), `portal/home` e `clients/{id}/summary` (9) passam o orçamento de 5.
   - A latência fica dentro de 300 ms. Uma instância.
   - Comparar a consolidação de queries com uma cache.
