@@ -1,4 +1,3 @@
-using System.Data.Common;
 using Api;
 using Api.Configuration;
 using Api.Middlewares;

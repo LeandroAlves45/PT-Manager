@@ -112,6 +112,15 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
         // em AdditionalSettings.
         builder.UseSetting("DevelopmentSeed:Enabled", "false");
 
+        // O mesmo para a telemetria: com as contas reais nos User Secrets, um host
+        // Development ligava o Sentry e o OTLP. Só em Development, para os hosts Testing
+        // continuarem a provar que o appsettings a deixa desligada por omissão.
+        if (_environmentName == Microsoft.Extensions.Hosting.Environments.Development)
+        {
+            builder.UseSetting("Observability:Enabled", "false");
+            builder.UseSetting("Sentry:Enabled", "false");
+        }
+
         // Aplicadas no fim para poderem sobrepor-se às predefinições acima.
         if (AdditionalSettings is not null)
         {

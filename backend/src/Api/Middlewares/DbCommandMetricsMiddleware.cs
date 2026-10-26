@@ -10,7 +10,6 @@ namespace Api.Middlewares;
 /// da rota (<c>api/v1/clients/{id}</c>), nunca o path com ids. Pedidos sem endpoint (404)
 /// não entram, para não abrir uma série por URL inventado.
 /// </remarks>
-///
 public sealed class DbCommandMetricsMiddleware
 {
     private readonly RequestDelegate _next;

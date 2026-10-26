@@ -58,7 +58,7 @@ public static class PtManagerTelemetry
     public static readonly Counter<long> StripeWebhooks = Meter.CreateCounter<long>(
         "ptm.stripe.webhook",
         unit: "{event}",
-        description: "Stripe webhooks deliveries by outcome.");
+        description: "Stripe webhook deliveries by outcome.");
 
     /// <summary>Comandos SQL executados por pedido HTTP, por rota.</summary>
     /// <remarks>
@@ -67,7 +67,7 @@ public static class PtManagerTelemetry
     /// <c>http.request.method</c>.
     /// </remarks>
     public static readonly Histogram<int> RequestDbCommands = Meter.CreateHistogram<int>(
-        "ptm.http.db.commands",
+        "ptm.http.db_commands",
         unit: "{command}",
         description: "Database commands executed while serving one HTTP request.",
         advice: new InstrumentAdvice<int>

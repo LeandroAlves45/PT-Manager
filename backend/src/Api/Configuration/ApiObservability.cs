@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using Application.Common.Observability;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
@@ -21,10 +20,10 @@ public sealed class ObservabilityOptions
 {
     public const string SectionName = "Observability";
 
-    /// <summary>Desligado por omissão: o CI, testes e o dev arrancam sem exporter.</summary>
+    /// <summary>Desligado por omissão: o CI, os testes e o dev arrancam sem exporter.</summary>
     public bool Enabled { get; init; }
 
-    /// <summary>Fração dos traces raiz guardados (0 a 1). Com tráfego do MVP.</summary>
+    /// <summary>Fração dos traces raiz guardados (0 a 1). Com o tráfego do MVP, 1.</summary>
     public double SamplingRatio { get; init; } = 1.0;
 }
 
@@ -36,7 +35,7 @@ public sealed class SentryReportingOptions
     /// <summary>Desligado por omissão, como as outras integrações externas.</summary>
     public bool Enabled { get; init; }
 
-    /// <summary>DNS do projeto Sentry (organização na região EU).</summary>
+    /// <summary>DSN do projeto Sentry (organização na região EU).</summary>
     public string? Dsn { get; init; }
 }
 
@@ -46,7 +45,7 @@ public static class ApiObservability
     /// <summary>Nome do serviço no Grafana e no Sentry.</summary>
     public const string ServiceName = "pt-manager-api";
 
-    /// <summary>Endpoint OTLP, lido pelo exporter a partir das configurações.</summary>
+    /// <summary>Endpoint OTLP, lido pelo exporter a partir da configuração.</summary>
     public const string OtlpEndpointKey = "OTEL_EXPORTER_OTLP_ENDPOINT";
 
     /// <summary>
@@ -135,7 +134,7 @@ public static class ApiObservability
                 .AddSource(ActivitySources)
                 .AddProcessor(new SensitiveSpanAttributesProcessor())
                 .AddAspNetCoreInstrumentation(instrumentation =>
-                    // Os health checks não são tráfego de negócio e gastaria quota.
+                    // Os health checks não são tráfego de negócio e gastariam quota.
                     instrumentation.Filter = context =>
                         !context.Request.Path.StartsWithSegments("/health"))
                 .AddOtlpExporter())

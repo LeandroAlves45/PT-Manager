@@ -48,7 +48,7 @@ export const options = {
     },
   },
   thresholds: {
-    // Confirmação do lado do cliente; o escritório do gate é o servidor.
+    // Confirmação do lado do cliente; o critério do gate é o do servidor.
     'http_req_duration{kind:read}': ['p(95)<300'],
     'checks{kind:read}': ['rate>0.99'],
   },

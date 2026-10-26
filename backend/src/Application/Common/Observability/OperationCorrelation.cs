@@ -27,7 +27,7 @@ public static class OperationCorrelation
         if (activity is null || activity.TraceId == default)
             return Guid.NewGuid();
 
-        // O pai remoto marca a raiz local do trace; um span filha herda o mesmo trace id.
+        // O pai remoto marca a raiz local do trace; uma span filha herda o mesmo trace id.
         var root = activity;
         while (root.Parent is not null)
             root = root.Parent;

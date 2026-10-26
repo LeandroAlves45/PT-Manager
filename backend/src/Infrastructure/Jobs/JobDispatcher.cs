@@ -328,12 +328,12 @@ internal sealed class JobDispatcher
 
     private async Task RecordBacklogAsync(CancellationToken cancellationToken)
     {
-        // Sem listener (telemetry desligada) não se gasta uma query por ativação.
+        // Sem listener (telemetria desligada) não se gasta uma query por ativação.
         if (!PtManagerTelemetry.DispatchBacklog.Enabled)
             return;
 
         // A contagem só serve a métrica: o trabalho da ativação já está feito e uma falha aqui
-        // não pode transformá-la num erro (nem num evento do Sentry).
+        // não pode transformá-la num erro (nem num evento Sentry).
         try
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
