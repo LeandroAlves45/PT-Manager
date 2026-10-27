@@ -875,7 +875,7 @@ consumidores, TTLs e invalidação sem evidência.
 
 ### Tarefas
 
-1. **Packages** (versões verificadas a 2026-10-25, plano em `docs/blueprints/sprint_7/00_plano_sprint_7.md`):
+1. **Packages** (versões verificadas a 2026-10-25, plano em `docs/blueprints/backend-files/sprint_7/00_plano_sprint_7.md`):
    - `Sentry.AspNetCore` 6.12.1
    - `OpenTelemetry.Extensions.Hosting`, `.Exporter.OpenTelemetryProtocol` e `.Instrumentation.AspNetCore` 1.20.1
    - SQL e HttpClient pelas fontes nativas (`Npgsql`, `System.Net.Http`): o pacote
@@ -961,7 +961,7 @@ Gate 7B:
 - O Sprint 9 configura e valida Redis apenas quando a decisão for `Implementar`.
 
 **Resultado (2026-10-26): `Não implementar ainda`** (ADR-002,
-`docs/blueprints/sprint_7/sprint_7B/01_decisao_gate_7B.md`).
+`docs/blueprints/backend-files/sprint_7/sprint_7B/01_decisao_gate_7B.md`).
 - Uma instância; queries 18/9/9 acima do orçamento, latência dentro mesmo com +5 ms.
 - Cache medida e rejeitada: ~30 escritas a invalidar, ~1,5 s por miss com o Redis em baixo.
 - O Sprint 9 não configura Redis; reavaliação no 10B.

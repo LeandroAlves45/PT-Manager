@@ -1,4 +1,21 @@
-# TODO: Auditoria de segurança pré-produção (2026-10-27)
+# TODO: Sprint 8+9 (testes, CI/CD, secrets, produção, lojas), planeado 2026-10-27
+
+Plano completo: `docs/blueprints/sprint_8/00_plano_sprint_8.md`. Código direto na main; `.md` só para guias.
+
+- [ ] Leandro aprova as mudanças em `docs_about_app/` e no NEST (caminho do Sprint 7)
+- [ ] 8A: cobertura real + lacunas; regras de arquitetura em falta
+- [ ] 8A: CORS `Idempotency-Key`; bootstrap 1.º superuser; Sentry SPA; `frontend/vercel.json` (CSP Report-Only); apple-touch-icon; sem MSW worker no build; Dockerfile
+- [ ] 8A: Playwright (signup, convite+1.º login, treino, check-in, checkout sem Stripe)
+- [ ] 8A: `ci.yml` (cache, cobertura, E2E) e `cd.yml` (migrations manual, EF bundle)
+- [ ] G8A: CI verde
+- [ ] 8B: guias por serviço + emails + tabela mestre
+- [ ] 8C: runbook, `04_PRODUCTION_CHECKLIST.md`, rollback, Render CIDR
+- [ ] 8D: guia das lojas
+- [ ] Fecho: nota de sessão, ACTIVE, NEST, GOTCHAS, lessons
+
+---
+
+# TODO (concluído): Auditoria de segurança pré-produção (2026-10-27)
 
 Auditoria estática de `backend/` e `frontend/` antes de produção. Relatório local em
 `backlogs/Sprint_7_audit_security/00_relatorio_auditoria_seguranca.md` (a pasta `backlogs/`

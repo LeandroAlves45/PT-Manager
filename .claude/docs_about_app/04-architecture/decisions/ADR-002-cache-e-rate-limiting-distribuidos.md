@@ -8,7 +8,7 @@
   - A medição do 7A mostrou três leituras acima do orçamento de 5 queries: `dashboard` com 18,
     `portal/home` e `clients/{id}/summary` com 9. A latência ficou dentro dos 300 ms.
   - O 7B repetiu a carga k6 e mediu quatro versões do dashboard, com e sem +5 ms de rede
-    (toxiproxy). Detalhe em `docs/blueprints/sprint_7/sprint_7B/01_decisao_gate_7B.md`.
+    (toxiproxy). Detalhe em `docs/blueprints/backend-files/sprint_7/sprint_7B/01_decisao_gate_7B.md`.
 - Decisão:
   - **Não implementar ainda** o HybridCache, o Upstash Redis nem o rate limiting distribuído.
     O Redis fica fora da equação: o Sprint 9 não o configura.

@@ -15,7 +15,7 @@ Ver `Sessions/2026-10-27-auditoria-seguranca-pre-producao.md`.
 
 ## Sprint 7: Observabilidade (7A) e decisão de cache (7B)
 
-**Ler primeiro** `docs/blueprints/sprint_7/00_plano_sprint_7.md` (decisões S7-01..S7-14, Gate 7A e
+**Ler primeiro** `docs/blueprints/backend-files/sprint_7/00_plano_sprint_7.md` (decisões S7-01..S7-14, Gate 7A e
 Gate 7B com o critério Implementar / Não implementar ainda; §10 com o estado do 7B). Para aplicar
 o 7A, ler `sprint_7A/01_indice_decisoes_e_ordem.md`.
 

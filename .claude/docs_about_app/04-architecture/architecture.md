@@ -11,7 +11,7 @@ Estado: mapa de leitura em 2026-10-15. A fonte continua a ser `.claude/project/0
 | 5 | ASP.NET Core Identity, JWT curto em memória, refresh opaco em cookie `HttpOnly` |
 | 6 | Tenant pelo utilizador autenticado, filtros globais, jobs e webhooks com trainer explícito |
 | 7 | PostgreSQL, migrations EF Core novas, sem migração automática no arranque |
-| 8 | Sem Redis, cache nem rate limiting distribuído no MVP: o Gate 7B decidiu `Não implementar ainda` (ADR-002, `docs/blueprints/sprint_7/sprint_7B/01_decisao_gate_7B.md`). Reavaliar no 10B com tráfego real |
+| 8 | Sem Redis, cache nem rate limiting distribuído no MVP: o Gate 7B decidiu `Não implementar ainda` (ADR-002, `docs/blueprints/backend-files/sprint_7/sprint_7B/01_decisao_gate_7B.md`). Reavaliar no 10B com tráfego real |
 | 9 | Jobs e outbox em PostgreSQL; QStash só dispara o dispatcher |
 | 10 | Stripe só para a subscrição do treinador. Webhook: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `customer.subscription.trial_will_end`, `invoice.paid`, `invoice.payment_failed` |
 | 11 | Resend, Stripe, Cloudinary, QStash. RabbitMQ e MassTransit fora do MVP |

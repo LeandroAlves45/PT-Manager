@@ -31,4 +31,4 @@
   - Os nomes das métricas no Grafana confirmam-se no gate manual `QG7A-ALERT-002`.
   - O contexto de trace que chega nos pedidos é ignorado (S7-13). Quando o frontend quiser enviar
     `traceparent`, esta decisão revê-se.
-  - Detalhe completo: `docs/blueprints/sprint_7/00_plano_sprint_7.md` e o pack `sprint_7A/`.
+  - Detalhe completo: `docs/blueprints/backend-files/sprint_7/00_plano_sprint_7.md` e o pack `sprint_7A/`.
