@@ -1,4 +1,4 @@
-# Estado ativo: Sprint 8A FECHADO (2026-10-27); próximo é o 8B (guias de secrets)
+# Estado ativo: Sprint 8A FECHADO e 8B escrito (2026-10-27); próximo é o 8C (runbook de deploy)
 
 Atualizado: 2026-10-27
 
@@ -11,7 +11,8 @@ Código direto na `main`; os `.md` são só guias (8B secrets e emails, 8C deplo
   Backend 3437 + 1 skip; Playwright 5/5. Detalhe em `Sessions/2026-10-27-sprint8a-fecho.md`.
 - Corrigido: CORS sem `Idempotency-Key`; criado o bootstrap do 1.º superuser; CSP Report-Only, Sentry
   na SPA, Dockerfile, regras de arquitetura, `cd.yml` de migrations.
-- **Próximo:** 8B (um guia por serviço, domínio e DNS primeiro), depois 8C e 8D.
+- **8B ESCRITO (2026-10-27):** 13 guias + `00_tabela_mestre.md` em `docs/blueprints/sprint_8/8B/` (ordem e variáveis lá). Avisos: Vercel Hobby é não comercial; webhook Stripe só aceita api_version `2026-08-26.dahlia`; R2 UE exige `R2__ServiceUrl`; CIDR do Render por medir. O Leandro executa os guias (contas, secrets).
+- **Próximo:** 8C (runbook, `04_PRODUCTION_CHECKLIST.md`, rollback), depois 8D (lojas).
 
 ## Auditoria de segurança pré-produção (2026-10-27)
 

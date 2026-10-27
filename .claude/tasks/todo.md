@@ -10,7 +10,7 @@ Plano completo: `docs/blueprints/sprint_8/00_plano_sprint_8.md`. Código direto 
 - [x] 8A: Playwright (signup, convite+1.º login, treino, check-in, checkout sem Stripe)
 - [x] 8A: `ci.yml` (cache, cobertura, E2E) e `cd.yml` (migrations manual, EF bundle)
 - [x] G8A: CI verde
-- [ ] 8B: guias por serviço + emails + tabela mestre
+- [x] 8B: guias por serviço + emails + tabela mestre (13 guias + 00_tabela_mestre.md em docs/blueprints/sprint_8/8B/; execução pelo Leandro por fazer)
 - [ ] 8C: runbook, `04_PRODUCTION_CHECKLIST.md`, rollback, Render CIDR
 - [ ] 8D: guia das lojas
 - [ ] Fecho: nota de sessão, ACTIVE, NEST, GOTCHAS, lessons
