@@ -69,6 +69,9 @@ export default defineConfig({
       provider: 'v8',
       reportsDirectory: './coverage',
       exclude: ['src/shared/api/schema.d.ts', 'src/test/**', '**/*.config.*'],
+      // Medido no CI #61: linhas 90.7, instruções 89.2, funções 88.1, ramos 82.0. Os limiares
+      // ficam 2 pontos abaixo para apanhar regressões reais sem falhar por ruído.
+      thresholds: { lines: 88, statements: 87, functions: 86, branches: 80 },
     },
   },
 });

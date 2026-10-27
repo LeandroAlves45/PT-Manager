@@ -54,15 +54,18 @@ jobs:
           dotnet test backend/PTManager.sln --configuration Release --no-build
           --collect:"XPlat Code Coverage" --results-directory coverage
 
-      # Mede a cobertura de linhas (Coverlet) e mostra-a no resumo do job. Ainda sem gate:
-      # o limiar fixa-se depois de medir a suite completa (plano do Sprint 8, G8A).
-      - name: Cobertura (resumo)
+      # Cobertura medida no CI #61: linhas 96.2%, ramos 64.8%. Os limiares ficam 2 pontos abaixo,
+      # para apanhar uma regressão real sem falhar por ruído (plano do Sprint 8, G8A).
+      - name: Cobertura (resumo e limiar)
         if: always()
         run: |
           dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.5.9
           reportgenerator -reports:"coverage/**/coverage.cobertura.xml" -targetdir:coverage/report -reporttypes:"MarkdownSummaryGithub;TextSummary" -assemblyfilters:"+Domain;+Application;+Infrastructure;+Api"
           cat coverage/report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
-          grep -E 'Line coverage' coverage/report/Summary.txt
+          line=$(grep -E '^ *Line coverage:' coverage/report/Summary.txt | grep -oE '[0-9]+(\.[0-9]+)?' | head -1)
+          branch=$(grep -E '^ *Branch coverage:' coverage/report/Summary.txt | grep -oE '[0-9]+(\.[0-9]+)?' | head -1)
+          echo "Linhas: $line% (mínimo 94) | Ramos: $branch% (mínimo 62)"
+          awk -v l="$line" -v b="$branch" 'BEGIN { exit !(l >= 94 && b >= 62) }'
 
   frontend:
     name: Frontend
