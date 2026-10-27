@@ -10,8 +10,11 @@ import { router } from '@/app/router';
 import { Toaster } from '@/shared/components/ui/sonner';
 import { Tooltip as TooltipPrimitive } from 'radix-ui';
 import { invariant } from '@/shared/lib/invariant';
+import { initSentry } from '@/shared/observability/sentry';
 
 import '@/shared/styles/globals.css';
+
+initSentry();
 
 const container = document.getElementById('root');
 invariant(container, 'Elemento #root não encontrado no index.html.');

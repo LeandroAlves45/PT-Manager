@@ -58,6 +58,23 @@ public sealed class ApiPipelineTests
         Assert.Equal("true", response.Headers.GetValues("Access-Control-Allow-Credentials").Single());
     }
 
+    [Theory]
+    [InlineData("Idempotency-Key")]
+    [InlineData("X-CSRF-Token")]
+    [InlineData("Authorization")]
+    public async Task Preflight_AllowsTheHeadersTheFrontendSends(string header)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Options, "/does-not-exist");
+        request.Headers.Add("Origin", "https://frontend.test");
+        request.Headers.Add("Access-Control-Request-Method", "POST");
+        request.Headers.Add("Access-Control-Request-Headers", header);
+
+        var response = await CreateClient().SendAsync(request, TestContext.Current.CancellationToken);
+
+        var allowed = response.Headers.GetValues("Access-Control-Allow-Headers").Single();
+        Assert.Contains(header, allowed.Split(',', StringSplitOptions.TrimEntries), StringComparer.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public async Task Preflight_RejectsAnUnknownOrigin()
     {

@@ -15,6 +15,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "e2e": "playwright test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "api:types": "node --use-system-ca ./node_modules/openapi-typescript/bin/cli.js https://localhost:7186/openapi/v1.json --output src/shared/api/schema.d.ts",
@@ -22,6 +23,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "5.9.1",
+    "@sentry/react": "11.7.0",
     "@tanstack/react-query": "5.103.1",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
@@ -44,6 +46,7 @@
     "@fontsource-variable/geist": "5.3.0",
     "@fontsource-variable/geist-mono": "5.3.0",
     "@fontsource/saira-condensed": "5.3.0",
+    "@playwright/test": "1.64.0",
     "@tailwindcss/vite": "4.3.3",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",

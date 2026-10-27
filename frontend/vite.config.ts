@@ -1,4 +1,5 @@
 /// <reference types="vitest/config" />
+import { rmSync } from 'node:fs';
 import { fileURLToPath, URL } from 'node:url';
 
 import basicSsl from '@vitejs/plugin-basic-ssl';
@@ -16,8 +17,20 @@ import { defineConfig } from 'vite';
  * A porta 5173 é fixa (`strictPort`) porque a origem tem de coincidir exactamente com
  * `Cors:AllowedOrigins` dos User Secrets de Development do backend.
  */
+/**
+ * O `public/mockServiceWorker.js` é gerado pelo MSW para o arnês visual e para o
+ * desenvolvimento. Não faz parte do produto: sai do `dist` para não ser servido em produção.
+ */
+const dropMockServiceWorker = () => ({
+  name: 'drop-mock-service-worker',
+  apply: 'build' as const,
+  closeBundle() {
+    rmSync(fileURLToPath(new URL('./dist/mockServiceWorker.js', import.meta.url)), { force: true });
+  },
+});
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(), basicSsl()],
+  plugins: [react(), tailwindcss(), basicSsl(), dropMockServiceWorker()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -38,7 +51,11 @@ export default defineConfig({
     // da máquina de quem corre a suite.
     // O fuso também é fixo: o CI corre em UTC, onde "offset local" e "Z" coincidem e um
     // instante enviado sem o offset do browser passaria nos testes. Lisboa tem +01:00 no verão.
-    env: { VITE_API_BASE_URL: 'https://localhost:7186', TZ: 'Europe/Lisbon', VITE_GOOGLE_CLIENT_ID: '' },
+    env: {
+      VITE_API_BASE_URL: 'https://localhost:7186',
+      TZ: 'Europe/Lisbon',
+      VITE_GOOGLE_CLIENT_ID: '',
+    },
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     // Igual ao gate 6E-4 (`--maxWorkers=4 --testTimeout=15000`). O setup espera até

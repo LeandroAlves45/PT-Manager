@@ -40,7 +40,9 @@ public static class ApiCorsPolicy
                         "Authorization",
                         "Content-Type",
                         "X-CSRF-Token",
-                        "X-Correlation-ID"
+                        "X-Correlation-ID",
+                        // Obrigatório no checkout e no portal de faturação (BillingController).
+                        "Idempotency-Key"
                     )
                     .WithExposedHeaders(
                         "X-Correlation-ID",

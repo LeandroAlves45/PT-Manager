@@ -1,11 +1,103 @@
-name: CD placeholder
+name: CD - Migrations
+
+# A API nunca aplica migrations no arranque (arquitetura §7.3) e o Render free não tem
+# pre-deploy command. Este workflow é o passo de release controlado: manual, com aprovação.
+#
+# Ordem recomendada (runbook do Sprint 8C):
+#   1. Correr com target `neon-test` contra um branch descartável do Neon e validar.
+#   2. Correr com target `production` (o environment `production` exige um revisor).
+#   3. Só depois fazer deploy da API.
+#
+# Os segredos vivem em GitHub Environments (nunca no repositório):
+#   - environment `neon-test`   -> secret DATABASE_URL (connection string Npgsql do branch de teste)
+#   - environment `production`  -> secret DATABASE_URL (connection string Npgsql de produção),
+#                                  com "Required reviewers" ligado.
 
 on:
   workflow_dispatch:
+    inputs:
+      target:
+        description: 'Base de dados a migrar'
+        type: choice
+        required: true
+        options:
+          - neon-test
+          - production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migrations-${{ inputs.target }}
+  cancel-in-progress: false
 
 jobs:
-  placeholder:
+  migrate:
+    name: Migrar ${{ inputs.target }}
     runs-on: ubuntu-latest
+    environment: ${{ inputs.target }}
+
+    # Valores sem significado: o `dotnet ef` constrói o host da API para descobrir o modelo e
+    # a configuração é validada nessa altura. A ligação real só entra na execução do bundle.
+    env:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Host=localhost;Database=design_time;Username=design;Password=design
+      Cors__AllowedOrigins__0: https://design-time.invalid
+      Jwt__Issuer: https://design-time.invalid
+      Jwt__Audience: design-time
+      Jwt__SigningKey: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      Jwt__ClockSkew: 00:00:30
+      AuthCookies__SameSite: Lax
+      Google__ClientId: design-time.apps.googleusercontent.com
+      Resend__ApiKey: design-time
+      Resend__FromAddress: no-reply@design-time.invalid
+      Resend__FrontendBaseUrl: https://design-time.invalid
+      ForwardedHeaders__KnownNetworks__0: 10.0.0.0/8
+
     steps:
-      - name: Explain placeholder
-        run: echo "The real CD pipeline is implemented in the nexts sprints."
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore backend/src/Api/Api.csproj --locked-mode
+
+      - name: Install EF Core CLI
+        run: dotnet tool install --global dotnet-ef --version 10.0.14
+
+      - name: Build migration bundle
+        run: >-
+          dotnet ef migrations bundle
+          --project backend/src/Infrastructure/Infrastructure.csproj
+          --startup-project backend/src/Api/Api.csproj
+          --configuration Release
+          --self-contained
+          --target-runtime linux-x64
+          --output efbundle
+          --force
+
+      - name: Script SQL idempotente (para revisão)
+        run: >-
+          dotnet ef migrations script --idempotent
+          --project backend/src/Infrastructure/Infrastructure.csproj
+          --startup-project backend/src/Api/Api.csproj
+          --configuration Release
+          --output migrations.sql
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: migrations-sql-${{ inputs.target }}
+          path: migrations.sql
+
+      - name: Apply migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "O secret DATABASE_URL não está definido no environment ${{ inputs.target }}."
+            exit 1
+          fi
+          chmod +x ./efbundle
+          ./efbundle --connection "$DATABASE_URL"

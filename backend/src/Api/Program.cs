@@ -39,6 +39,7 @@ builder.Services.AddApi(builder.Configuration, builder.Environment);
 builder.Services.AddGoogleAuthenticationApi();
 builder.Services.AddInternalJobDispatchApi(builder.Configuration);
 builder.Services.AddDevelopmentSeeding(builder.Configuration, builder.Environment);
+builder.Services.AddSuperuserBootstrap(builder.Configuration);
 builder.Services.AddApiHealthChecks();
 
 var app = builder.Build();
