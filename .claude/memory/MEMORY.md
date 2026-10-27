@@ -6,6 +6,13 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-27: auditoria de segurança pré-produção.**
+- Estática, `backend/` + `frontend/`. CRITICAL 0, HIGH 0. Dois LOW corrigidos: Zod `4.6.7`
+  (`npm audit --omit=dev` a 0) e `.gitignore` (chaves, secrets, appsettings de produção).
+- INFO em aberto: CSP da SPA, no painel da Vercel. Sem DAST. As suites de teste não correram.
+- Relatório local: `backlogs/Sprint_7_audit_security/00_relatorio_auditoria_seguranca.md`.
+- Ver `Sessions/2026-10-27-auditoria-seguranca-pre-producao.md`. O próximo passo continua a ser o Sprint 8.
+
 **2026-10-26: Sprint 7B FINALIZADO e Sprint 7 FECHADO. Gate 7B = `Não implementar ainda`.**
 - **Decisão:** sem Redis, cache nem rate limiting distribuído; reavaliar no 10B (ADR-002). A
   consolidação do dashboard (18 queries) não se fez: tirava a segunda barreira de tenant.

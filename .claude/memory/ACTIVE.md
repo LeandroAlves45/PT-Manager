@@ -1,6 +1,17 @@
 # Estado ativo: Sprint 7 FECHADO (2026-10-26); próximo é o Sprint 8
 
-Atualizado: 2026-10-26
+Atualizado: 2026-10-27
+
+## Auditoria de segurança pré-produção (2026-10-27)
+
+Auditoria estática de `backend/` e `frontend/`. CRITICAL 0, HIGH 0, MEDIUM 0. Dois LOW
+corrigidos nesta sessão: Zod `4.6.5` → `4.6.7` (`npm audit --omit=dev`: 0 vulnerabilidades)
+e `.gitignore` alargado a chaves, `secrets/`, `credentials/`, `keys/` e `appsettings` de
+produção e local. INFO em aberto: CSP da SPA, no painel da Vercel. Relatório local em
+`backlogs/Sprint_7_audit_security/00_relatorio_auditoria_seguranca.md` (a pasta não entra no Git).
+Ver `Sessions/2026-10-27-auditoria-seguranca-pre-producao.md`.
+
+**Próximo:** Sprint 8 (testes e CI). Os gates manuais do 7A continuam abertos.
 
 ## Sprint 7: Observabilidade (7A) e decisão de cache (7B)
 

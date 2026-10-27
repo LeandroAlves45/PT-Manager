@@ -32,6 +32,17 @@ frontend/DESIGN-IS-2026-10-11
 .env.production
 .env.development
 .env*.local
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials/
+keys/
+appsettings.Production.json
+appsettings.Local.json
 
 # Build / packaging
 *.egg-info/
