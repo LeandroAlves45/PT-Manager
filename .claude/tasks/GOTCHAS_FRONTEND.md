@@ -441,3 +441,16 @@ com um corpo real.
   nunca corre (o avaliação inicial ficava em «já foi entregue» em vez de voltar ao Início). No jsdom
   o teste passava nas duas versões. **Regra:** chamar o callback do pai no mesmo sítio onde se muda o
   estado local (os dois updates juntam-se no mesmo render); provar no browser real.
+## Sprint 8A (2026-10-27)
+
+- **`@sentry/react` 11: `sendDefaultPii` já não existe nas opções.** Usar `dataCollection` com
+  `userInfo`, `cookies`, `httpHeaders`, `httpBodies: []` e `urlQueryParams` desligados, mais
+  `beforeSend` e `beforeBreadcrumb` com um scrubber testado com valores sentinela.
+- **Playwright e a SPA:** selectores só por papel e etiqueta em português. `getByLabel('Palavra-passe')`
+  apanha também o botão "Mostrar palavra-passe": usar `{ exact: true }`. Os diálogos de confirmação
+  são `alertdialog`. Um título que aparece em dois sítios ("Hoje") exige `exact: true`.
+- **Limites de taxa no E2E:** a API limita registo (3/h por IP), login (10/min) e CSRF (10/min), e
+  todos os testes partilham o IP. Poucos testes longos, um só worker, base limpa por execução.
+- **O treino semeado só existe à terça e à quinta;** o teste faz `skip` nos outros dias.
+- **`public/mockServiceWorker.js` é copiado para o `dist`.** Um plugin de build apaga-o.
+- **Vitest com cobertura nesta máquina:** 916 s e timeouts em 2 testes; medir a cobertura no CI.

@@ -1,13 +1,15 @@
 # TODO: Sprint 8+9 (testes, CI/CD, secrets, produção, lojas), planeado 2026-10-27
 
+**8A FECHADO (2026-10-27):** CI #62 verde, backend 3437, Playwright 5/5. Review: ver `Sessions/2026-10-27-sprint8a-fecho.md`.
+
 Plano completo: `docs/blueprints/sprint_8/00_plano_sprint_8.md`. Código direto na main; `.md` só para guias.
 
-- [ ] Leandro aprova as mudanças em `docs_about_app/` e no NEST (caminho do Sprint 7)
-- [ ] 8A: cobertura real + lacunas; regras de arquitetura em falta
-- [ ] 8A: CORS `Idempotency-Key`; bootstrap 1.º superuser; Sentry SPA; `frontend/vercel.json` (CSP Report-Only); apple-touch-icon; sem MSW worker no build; Dockerfile
-- [ ] 8A: Playwright (signup, convite+1.º login, treino, check-in, checkout sem Stripe)
-- [ ] 8A: `ci.yml` (cache, cobertura, E2E) e `cd.yml` (migrations manual, EF bundle)
-- [ ] G8A: CI verde
+- [x] Leandro aprova as mudanças em `docs_about_app/` e no NEST (caminho do Sprint 7)
+- [x] 8A: cobertura real + lacunas; regras de arquitetura em falta
+- [x] 8A: CORS `Idempotency-Key`; bootstrap 1.º superuser; Sentry SPA; `frontend/vercel.json` (CSP Report-Only); apple-touch-icon; sem MSW worker no build; Dockerfile
+- [x] 8A: Playwright (signup, convite+1.º login, treino, check-in, checkout sem Stripe)
+- [x] 8A: `ci.yml` (cache, cobertura, E2E) e `cd.yml` (migrations manual, EF bundle)
+- [x] G8A: CI verde
 - [ ] 8B: guias por serviço + emails + tabela mestre
 - [ ] 8C: runbook, `04_PRODUCTION_CHECKLIST.md`, rollback, Render CIDR
 - [ ] 8D: guia das lojas

@@ -480,3 +480,17 @@ Lições capturadas depois de correções do utilizador.
   barreira de tenant para ganhar ~35 ms num orçamento já cumprido.
 - **Segurança do runtime não aparece no `--vulnerable`.** Confirmar sempre a última release de
   serviço do .NET (shared framework e imagem).
+
+## Sprint 8A: testes, CI e correções de produção (2026-10-27)
+
+- **Procurar o que o teste não pode ver.** O TestServer não faz preflight CORS, por isso o cabeçalho em
+  falta passou todas as suites e só um olhar ao código do frontend o apanhou. Cruzar o que o cliente
+  envia com a lista de permissões do servidor.
+- **Medir antes de fixar um limiar.** O CI mediu 96,2 / 64,8 (backend) e 90,7 / 89,2 / 88,1 / 82,0
+  (frontend); os limiares ficaram 2 pontos abaixo. Um número inventado ou falha sempre ou nunca morde.
+- **Selectores escritos por leitura falham na primeira corrida.** Contar com 1 a 2 rondas e ler o
+  `error-context.md` do Playwright (mostra o DOM exato).
+- **Uma ferramenta de shell que mexe em barras invertidas estraga código.** Heredocs do Git Bash
+  perderam `\` em regex e literais de `char`. Escrever código com a ferramenta de ficheiros.
+- **Não matar processos por nome.** Identificar o PID pela linha de comandos antes de parar.
+- **O E2E precisa de uma base limpa por execução;** o treino e o registo deixam estado que o repetem.

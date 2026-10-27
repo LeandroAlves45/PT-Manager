@@ -301,3 +301,19 @@ o PostgreSQL antes de corrigir:
   (2 × 500 ms por miss) e escreve dois `LogLevel=Error`, que com o Sentry ligado viram eventos.
 - **Logs de SQL em produção:** o `appsettings.json` tem `Default: Information`, por isso o EF
   escreve cada comando na consola (~2,2 mil linhas/min na carga k6).
+
+## Sprint 8A (2026-10-27)
+
+- **CORS e cabeçalhos próprios do frontend.** O `WithHeaders` é uma lista fechada. O `billing.ts` enviava
+  `Idempotency-Key` e a API nunca o permitiu: o preflight do checkout falhava em qualquer origem cruzada
+  e nenhum teste o via (o TestServer não faz preflight real). **Regra:** todo o cabeçalho próprio que o
+  frontend envia tem de estar em `ApiCorsPolicy` e num teste de preflight.
+- **O 1.º superuser não vem do seed.** O `DevelopmentDataSeeder` só existe em Development. Em produção
+  usa-se `SuperuserBootstrap` (env), que exige as migrations já aplicadas porque a API não migra no
+  arranque. Depois de criar, desligar `Enabled` e retirar a password das variáveis.
+- **Logs de Development são JSON na consola.** Quem lê links de email do log (E2E) tem de apanhar o
+  valor até `"` ou `\`, não até ao espaço.
+- **`dotnet ef` precisa da configuração completa da API,** mesmo só para gerar SQL ou um bundle: o host
+  é construído. Em `Production` falta `ForwardedHeaders:KnownNetworks`, senão não arranca.
+- **Regras de arquitetura por varrimento de código-fonte** (`IgnoreQueryFilters` só na Infrastructure)
+  ignoram `bin` e `obj`; provar sempre com uma mutação que a regra morde.

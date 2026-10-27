@@ -1,6 +1,17 @@
-# Estado ativo: Sprint 7 FECHADO (2026-10-26); próximo é o Sprint 8
+# Estado ativo: Sprint 8A FECHADO (2026-10-27); próximo é o 8B (guias de secrets)
 
 Atualizado: 2026-10-27
+
+## Sprint 8+9: testes, CI/CD, secrets, produção e lojas
+
+**Ler primeiro** `docs/blueprints/sprint_8/00_plano_sprint_8.md` (decisões S8-01..S8-13, gates).
+Código direto na `main`; os `.md` são só guias (8B secrets e emails, 8C deploy, 8D lojas).
+
+- **8A FINALIZADO.** `e496c5a` e `b4c87b0`, **CI #62 verde nos 5 jobs** (com E2E e gates de cobertura).
+  Backend 3437 + 1 skip; Playwright 5/5. Detalhe em `Sessions/2026-10-27-sprint8a-fecho.md`.
+- Corrigido: CORS sem `Idempotency-Key`; criado o bootstrap do 1.º superuser; CSP Report-Only, Sentry
+  na SPA, Dockerfile, regras de arquitetura, `cd.yml` de migrations.
+- **Próximo:** 8B (um guia por serviço, domínio e DNS primeiro), depois 8C e 8D.
 
 ## Auditoria de segurança pré-produção (2026-10-27)
 

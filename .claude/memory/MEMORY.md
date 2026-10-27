@@ -6,6 +6,12 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-27: Sprint 8A FECHADO (testes, CI e correções de produção).**
+- `e496c5a` + `b4c87b0`, CI #62 verde (5 jobs, com E2E Playwright e gates de cobertura 94/62 e 88/87/86/80).
+- Defeito real: CORS sem `Idempotency-Key` partia o checkout. Criado o bootstrap do 1.º superuser (env).
+- Código direto na main; blueprints só para guias. Ver `Sessions/2026-10-27-sprint8a-fecho.md` e
+  `docs/blueprints/sprint_8/00_plano_sprint_8.md`. Próximo: 8B.
+
 **2026-10-27: auditoria de segurança pré-produção.**
 - Estática, `backend/` + `frontend/`. CRITICAL 0, HIGH 0. Dois LOW corrigidos: Zod `4.6.7`
   (`npm audit --omit=dev` a 0) e `.gitignore` (chaves, secrets, appsettings de produção).
