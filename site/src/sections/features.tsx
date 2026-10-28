@@ -71,7 +71,7 @@ export function Features({ features, swatches }: FeaturesProps) {
   return (
     <section id="funcionalidades" aria-labelledby="t-func" className="pt-[clamp(4.5rem,10vw,8rem)]">
       <Container>
-        <SectionHeading id="t-func" eyebrow="01 — Funcionalidades">
+        <SectionHeading id="t-func" eyebrow="01 / Funcionalidades">
           Tudo o que usas com os teus clientes, sem folhas de cálculo.
         </SectionHeading>
 

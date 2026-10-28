@@ -8,13 +8,13 @@ export interface AppLinks {
 /**
  * Destinos dos CTAs na aplicação.
  *
- * Ainda não existe registo público na app: "Criar conta" leva também ao login. Quando o
- * signup existir, muda só a linha de `signup`.
+ * Os caminhos são os de `frontend/src/shared/config/auth-routes.ts` (`/entrar` e
+ * `/criar-conta`). O antigo `/auth/login` ainda redireciona, mas custava um salto a mais.
  */
 export function buildAppLinks(config: SiteConfig): AppLinks {
   return {
-    login: `${config.appUrl}/auth/login`,
-    signup: `${config.appUrl}/auth/login`,
+    login: `${config.appUrl}/entrar`,
+    signup: `${config.appUrl}/criar-conta`,
   };
 }
 

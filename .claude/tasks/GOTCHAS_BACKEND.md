@@ -317,3 +317,22 @@ o PostgreSQL antes de corrigir:
   é construído. Em `Production` falta `ForwardedHeaders:KnownNetworks`, senão não arranca.
 - **Regras de arquitetura por varrimento de código-fonte** (`IgnoreQueryFilters` só na Infrastructure)
   ignoram `bin` e `obj`; provar sempre com uma mutação que a regra morde.
+
+## Sprint 8D (2026-10-28)
+
+- **Sessão da app nativa = rotas próprias, não um modo por cabeçalho.** `api/v1/native/auth/*` fica fora
+  do path do cookie (`/api/v1/auth`), nunca lê nem escreve cookies e não leva `[RequireOrigin]`. O CSRF
+  continua exigido no corpo. Nunca juntar `https://localhost` (origem de qualquer app Capacitor Android)
+  a `Cors:AllowedOrigins`: entraria também no `RequireOriginFilter`.
+- **`AdministrativeAuditEntry` é só do superuser:** o `TenantWriteValidationInterceptor` recusa-a noutro
+  contexto. Ações sensíveis do cliente deixam rasto num `SecurityLogEvents` (sem dados pessoais).
+- **A outbox não tem limpeza:** um payload com email fica para sempre. Não pôr dados pessoais em
+  mensagens que sobrevivem a uma eliminação.
+- **Escritas cross-tenant legítimas** (fichas antigas de um cliente transferido) só por `ExecuteUpdate`
+  filtrado pelo `UserId` autenticado: o interceptor só vê o `SaveChanges`.
+- **Guardas a atualizar quando se acrescenta um endpoint:** `ApiContractArchitectureTests` (contagens),
+  `ApplicationRegistrationTests` (handlers e validadores), `ApiControllerBaseTests` (isenções) e o
+  snapshot de `ApiSurfaceSnapshotTests` (regenerar tirando o `Skip` e repondo-o).
+- **Testes funcionais:** a ficha de `TrainerTenantSeeder.SeedClientAsync` já tem avaliação inicial
+  (atualizar, não inserir). Clientes HTTP com bearer: `CreateOriginClient()`; o `CreateClient()` sem
+  base HTTPS dá 401.

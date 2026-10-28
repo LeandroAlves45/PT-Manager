@@ -305,30 +305,12 @@ public sealed class AuthController : ControllerBase
     }
 
     /// <summary>Regista sucesso ou recusa de uma operação de segurança.</summary>
-    private void LogResult(EventId eventId, string operation, Result result)
-    {
-        if (result.IsSuccess)
-        {
-            _logger.LogInformation(eventId,
-                "Security operation {SecurityOperation} completed with outcome {SecurityOutcome}.",
-                operation, "succeeded");
-            return;
-        }
-
-        _logger.LogWarning(eventId,
-            "Security operation {SecurityOperation} completed with outcome {SecurityOutcome} and error {ErrorCode}.",
-            operation, "rejected", result.Error!.Code);
-    }
+    private void LogResult(EventId eventId, string operation, Result result) =>
+        AuthenticationSecurityLog.Result(_logger, eventId, operation, result);
 
     /// <summary>Regista recusas explícitas por token CSRF inválido.</summary>
-    private void LogCsrfRejection(string operation, Result result)
-    {
-        if (result.Error?.Code != AuthenticationErrors.CsrfTokenInvalid.Code)
-            return;
-
-        _logger.LogWarning(SecurityLogEvents.CsrfRejection,
-            "Security operation {SecurityOperation} was rejected by CSRF validation.", operation);
-    }
+    private void LogCsrfRejection(string operation, Result result) =>
+        AuthenticationSecurityLog.CsrfRejection(_logger, operation, result);
 
     /// <summary>Devolve 204 quando a operação não produz corpo de resposta.</summary>
     private IActionResult Respond(Result result) =>

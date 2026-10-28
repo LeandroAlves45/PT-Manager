@@ -82,6 +82,45 @@ public sealed record SessionResponse(
     }
 }
 
+/// <summary>
+/// Sessão devolvida à app nativa. Ao contrário de <see cref="SessionResponse"/>, traz o
+/// refresh token no corpo: a app guarda-o no armazenamento seguro do sistema (Keychain ou
+/// Keystore), porque numa WebView o cookie da API seria de outro site.
+/// </summary>
+public sealed record NativeSessionResponse(
+    Guid UserId,
+    Guid? TrainerId,
+    string Role,
+    string AccessToken,
+    DateTime AccessTokenExpiresAt,
+    string RefreshToken,
+    DateTime RefreshTokenExpiresAt,
+    string CsrfToken)
+{
+    /// <summary>Projeta a sessão da Application incluindo o refresh token.</summary>
+    public static NativeSessionResponse From(AuthenticationSessionDto session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+
+        return new(
+            session.UserId,
+            session.TrainerId,
+            session.Role,
+            session.AccessToken,
+            session.AccessTokenExpiresAt,
+            session.RawRefreshToken,
+            session.RefreshTokenExpiresAt,
+            session.RawCsrfToken
+        );
+    }
+}
+
+/// <summary>
+/// Refresh token e segredo anti-CSRF da última sessão nativa, usados para rodar ou terminar
+/// a sessão. Os dois vêm no corpo; nenhum cookie é lido.
+/// </summary>
+public sealed record NativeSessionTokensRequest(string RefreshToken, string CsrfToken);
+
 /// <summary>Segredo anti-CSRF devolvido pelo bootstrap.</summary>
 public sealed record CsrfResponse(string CsrfToken)
 {

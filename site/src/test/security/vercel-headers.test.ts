@@ -61,4 +61,18 @@ describe('headers de segurança (vercel.json)', () => {
   it('assets com hash ficam em cache imutável', () => {
     expect(headersFor('/assets/(.*)')['cache-control']).toContain('immutable');
   });
+
+  it('ficheiros da raiz (sem hash) têm cache curta, nunca imutável', () => {
+    const value =
+      headersFor('/(logo.svg|favicon.svg|apple-touch-icon.png|og-image.png)')['cache-control'] ??
+      '';
+    expect(value).toMatch(/max-age=\d+/);
+    expect(value).not.toContain('immutable');
+  });
+
+  it('servidas sem extensão e sem barra final (as páginas de texto são .html)', () => {
+    const raw = config as unknown as { cleanUrls?: boolean; trailingSlash?: boolean };
+    expect(raw.cleanUrls).toBe(true);
+    expect(raw.trailingSlash).toBe(false);
+  });
 });

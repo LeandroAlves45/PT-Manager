@@ -494,3 +494,14 @@ Lições capturadas depois de correções do utilizador.
   perderam `\` em regex e literais de `char`. Escrever código com a ferramenta de ficheiros.
 - **Não matar processos por nome.** Identificar o PID pela linha de comandos antes de parar.
 - **O E2E precisa de uma base limpa por execução;** o treino e o registo deixam estado que o repetem.
+
+## Sprint 8D sem dependências (2026-10-28)
+
+- **Desafiar o desenho aprovado ao ler o código.** O plano pedia coluna, migration e CSRF opcional; rotas
+  próprias deram a mesma separação sem mexer na web nem na base. Dizer o desvio e porquê.
+- **Uma revisão de segurança independente encontra o que os testes não pedem:** `Goals` com texto livre e
+  o retry depois de um commit perdido. Lançá-la em paralelo enquanto se espera por infraestrutura.
+- **Eliminar dados obriga a seguir cada cópia:** outbox, notificações, convites, fichas noutros tenants.
+- **Código dentro de `node -e` em bash perde `${...}`:** usar Edit/Write para ficheiros com template literals.
+- **Sinais de texto de IA:** travessões e frases-feitas. Proteger com um teste o que é mecânico
+  (travessões); o resto é decisão de marca do Leandro.

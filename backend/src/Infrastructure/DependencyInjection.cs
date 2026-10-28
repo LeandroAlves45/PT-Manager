@@ -103,6 +103,7 @@ public static class DependencyInjection
         services.AddScoped<IMyProfileQueries, MyProfileQueries>();
         services.AddScoped<IMyProfileStore, MyProfileStore>();
         services.AddScoped<IMyAvatarStore, MyAvatarStore>();
+        services.AddScoped<IMyAccountDeletionStore, MyAccountDeletionStore>();
 
         // Administrative content moderation
         services.AddScoped<IPrivateCatalogModerationStore, PrivateCatalogModerationStore>();

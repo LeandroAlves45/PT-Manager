@@ -1,5 +1,6 @@
 import { useAccountQuery } from '@/features/account/api/account';
 import { ChangePasswordForm } from '@/features/account/components/ChangePasswordForm';
+import { DeleteAccountCard } from '@/features/account/components/DeleteAccountCard';
 import { GoogleLinkCard } from '@/features/account/components/GoogleLinkCard';
 import { ErrorState } from '@/shared/components/ErrorState';
 import { PageHeader } from '@/shared/components/PageHeader';
@@ -14,6 +15,9 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
  * - só Google (`has_password: false`): explica como se entra e não oferece formulário, porque
  *   não há palavra-passe para mudar;
  * - Google já ligado: um aviso simples (desligar fica fora do âmbito).
+ *
+ * Só o cliente vê "Eliminar conta": é o que as lojas de apps exigem a quem cria conta na app.
+ * O personal trainer pede a eliminação por email (tem subscrição e dados de clientes).
  */
 export function AccountSecurityPage() {
   const query = useAccountQuery();
@@ -58,6 +62,8 @@ export function AccountSecurityPage() {
       ) : (
         account.has_password && <GoogleLinkCard />
       )}
+
+      {account.role === 'client' && <DeleteAccountCard hasPassword={account.has_password} />}
     </section>
   );
 }

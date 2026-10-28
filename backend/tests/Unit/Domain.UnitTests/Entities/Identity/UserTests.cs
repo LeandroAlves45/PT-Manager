@@ -76,4 +76,38 @@ public sealed class UserTests
         Assert.Throws<DomainException>(() =>
             user.SetEmail(new EmailAddress("new@example.com"), now.AddMinutes(1)));
     }
+
+    [Fact]
+    public void DeleteAndAnonymize_RemovesCredentialsAndIdentity_AndFreesTheEmail()
+    {
+        var now = new DateTime(2026, 10, 28, 12, 0, 0, DateTimeKind.Utc);
+        var user = new User(new EmailAddress("cliente@example.com"), "client", "Ana Silva", now);
+        user.SetPasswordHash("hash", now);
+        user.ConfirmEmail(now);
+        user.RegisterFailedAccess(now);
+        var stamp = user.SecurityStamp;
+
+        user.DeleteAndAnonymize(now.AddMinutes(1));
+
+        Assert.Equal($"deleted-{user.Id:N}@deleted.invalid", user.Email);
+        Assert.Equal(user.Email.ToUpperInvariant(), user.NormalizedEmail);
+        Assert.DoesNotContain("CLIENTE@EXAMPLE.COM", user.NormalizedEmail);
+        Assert.Null(user.PasswordHash);
+        Assert.Null(user.FullName);
+        Assert.False(user.EmailConfirmed);
+        Assert.Equal(0, user.AccessFailedCount);
+        Assert.NotEqual(stamp, user.SecurityStamp);
+        Assert.True(user.IsDeleted);
+        Assert.False(user.IsActive);
+    }
+
+    [Fact]
+    public void DeleteAndAnonymize_Twice_Throws()
+    {
+        var now = new DateTime(2026, 10, 28, 12, 0, 0, DateTimeKind.Utc);
+        var user = new User(new EmailAddress("cliente2@example.com"), "client", null, now);
+        user.DeleteAndAnonymize(now);
+
+        Assert.Throws<DomainException>(() => user.DeleteAndAnonymize(now));
+    }
 }

@@ -286,6 +286,12 @@ public sealed record UpdateMyProfileRequest(
     string? EmergencyContactName,
     string? EmergencyContactPhone);
 
+/// <summary>
+/// Pedido do cliente para eliminar a conta: a password atual (se a conta tiver uma) e a
+/// palavra <c>ELIMINAR</c> escrita à mão.
+/// </summary>
+public sealed record DeleteMyAccountRequest(string? Password, string Confirmation);
+
 /// <summary>Perfil do cliente autenticado.</summary>
 public sealed record MyProfileResponse(
     string Name,

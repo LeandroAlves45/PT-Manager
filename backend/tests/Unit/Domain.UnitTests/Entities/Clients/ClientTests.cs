@@ -358,4 +358,54 @@ public sealed class ClientTests
 
     private static Client CreateValidClient() => CreateClient(BirthDate.Create(
         new DateOnly(1995, 8, 1), DateOnly.FromDateTime(Now)), BiologicalSex.Male);
+
+    [Fact]
+    public void Anonymize_RemovesIdentifyingDataAndArchives_ReturnsPreviousAvatar()
+    {
+        var client = CreateClient(
+            BirthDate.Create(new DateOnly(1990, 6, 15), DateOnly.FromDateTime(Now)), BiologicalSex.Female);
+        client.UpdateProfile("Ana Silva", "ana@example.com", "+351911111111", client.BirthDate,
+            BiologicalSex.Female, "Perder peso", "Notas privadas", "Rui", "+351922222222", Now);
+        client.ReplaceAvatar("https://cdn.test/a.png", "pt-manager/avatar-1", Now);
+        var later = Now.AddDays(1);
+
+        var previousAvatar = client.Anonymize(later);
+
+        Assert.Equal("pt-manager/avatar-1", previousAvatar);
+        Assert.Equal(Client.AnonymizedName, client.Name);
+        Assert.Null(client.ContactEmail);
+        Assert.Null(client.NormalizedContactEmail);
+        Assert.Equal(Client.AnonymizedPhoneFor(client.Id), client.Phone);
+        Assert.Equal(new DateOnly(1990, 1, 1), client.BirthDate.Value);
+        Assert.Null(client.Objective);
+        Assert.Null(client.Notes);
+        Assert.Null(client.EmergencyContactName);
+        Assert.Null(client.EmergencyContactPhone);
+        Assert.Null(client.AvatarUrl);
+        Assert.Null(client.AvatarPublicId);
+        Assert.False(client.IsActive);
+        Assert.False(client.IsDeleted);
+        Assert.Equal(BiologicalSex.Female, client.Sex);
+        Assert.Equal(later, client.UpdatedAt);
+    }
+
+    [Fact]
+    public void AnonymizedPhoneFor_IsUniquePerClientAndFitsThePhoneColumn()
+    {
+        var first = Client.AnonymizedPhoneFor(Guid.NewGuid());
+        var second = Client.AnonymizedPhoneFor(Guid.NewGuid());
+
+        Assert.Equal(32, first.Length);
+        Assert.StartsWith("removido-", first);
+        Assert.NotEqual(first, second);
+    }
+
+    [Fact]
+    public void Anonymize_DeletedClient_Throws()
+    {
+        var client = CreateValidClient();
+        client.SoftDelete(Now);
+
+        Assert.Throws<DomainException>(() => client.Anonymize(Now));
+    }
 }

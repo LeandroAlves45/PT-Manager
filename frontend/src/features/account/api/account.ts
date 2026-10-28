@@ -43,3 +43,16 @@ export function useLinkGoogleMutation() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: accountKeys.all }),
   });
 }
+
+/**
+ * Elimina a conta do cliente autenticado. `204`; o servidor revoga todas as sessões e apaga
+ * os dados que identificam o cliente, por isso quem chama termina a sessão local
+ * (`endLocalSession`) em vez de invalidar queries.
+ */
+export function useDeleteMyAccountMutation() {
+  return useMutation({
+    mutationFn: async (body: Schemas['DeleteMyAccountRequest']): Promise<void> => {
+      unwrap(await apiClient.POST('/api/v1/portal/my-account/deletion', { body }));
+    },
+  });
+}

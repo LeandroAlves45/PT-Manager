@@ -6,6 +6,12 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-28: 8D sem dependências FEITO (site legal, sessão nativa, eliminar conta).**
+- Site: 4 páginas legais em rascunho (noindex), CTAs /entrar e /criar-conta, sem travessões (teste).
+- `api/v1/native/auth` (token no corpo, CSRF mantido) e `POST /portal/my-account/deletion` (anonimizar e manter).
+- Desvios: sem coluna Channel/migration, sem email de confirmação, sem auditoria administrativa.
+- Ver `Sessions/2026-10-28-sprint8d-sem-dependencias.md` e `docs/blueprints/sprint_8/8D/01_o_que_falta.md`.
+
 **2026-10-27: Sprint 8A FECHADO (testes, CI e correções de produção).**
 - `e496c5a` + `b4c87b0`, CI #62 verde (5 jobs, com E2E Playwright e gates de cobertura 94/62 e 88/87/86/80).
 - Defeito real: CORS sem `Idempotency-Key` partia o checkout. Criado o bootstrap do 1.º superuser (env).

@@ -113,6 +113,9 @@ public sealed class ApiControllerBaseTests
                 !type.IsAbstract &&
                 typeof(ControllerBase).IsAssignableFrom(type) &&
                 type != typeof(AuthController) &&
+                // A sessão da app nativa segue o AuthController: devolve a sessão (tokens) e
+                // não um Result<T> de negócio.
+                type != typeof(NativeAuthController) &&
                 type != typeof(AdminContentModerationController) &&
                 // O receptor interno de jobs não é um controller de negócio: não
                 // devolve Result<T>, responde 204 ou Problem Details fechados e é

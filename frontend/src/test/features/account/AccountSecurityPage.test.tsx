@@ -298,4 +298,103 @@ describe('AccountSecurityPage', () => {
       expect(getSession()).not.toBeNull();
     });
   });
+
+  describe('delete account', () => {
+    const DELETION = `${API}/portal/my-account/deletion`;
+
+    function openClientAccount(overrides: Parameters<typeof accountResponse>[0] = {}) {
+      answerAccount({ role: 'client', ...overrides });
+      return openAccount('client');
+    }
+
+    async function confirmDeletion(password: string | null = CURRENT, word = 'ELIMINAR') {
+      const user = userEvent.setup();
+      const card = within(
+        (await screen.findByRole('heading', { name: 'Eliminar conta', level: 2 })).closest(
+          'section'
+        )!
+      );
+      if (password !== null) await user.type(card.getByLabelText('Palavra-passe atual'), password);
+      await user.type(card.getByLabelText('Escreve ELIMINAR para confirmar'), word);
+      return { user, card };
+    }
+
+    it('is offered only to clients', async () => {
+      openAccount('trainer');
+      await screen.findByRole('heading', { name: 'Mudar palavra-passe' });
+      expect(screen.queryByRole('heading', { name: 'Eliminar conta' })).not.toBeInTheDocument();
+    });
+
+    it('keeps the button disabled until ELIMINAR is typed', async () => {
+      openClientAccount();
+      const { card } = await confirmDeletion(CURRENT, 'ELIMINA');
+
+      expect(card.getByRole('button', { name: 'Eliminar conta' })).toBeDisabled();
+    });
+
+    it('sends the password and the word, ends the local session and goes to login with a notice', async () => {
+      const bodies: unknown[] = [];
+      server.use(
+        http.post(DELETION, async ({ request }) => {
+          bodies.push(await request.json());
+          return new HttpResponse(null, { status: 204 });
+        })
+      );
+      const { router } = openClientAccount();
+      const { user, card } = await confirmDeletion();
+
+      await user.click(card.getByRole('button', { name: 'Eliminar conta' }));
+
+      await waitFor(() => expect(router.state.location.pathname).toBe('/entrar'));
+      expect(bodies).toEqual([{ password: CURRENT, confirmation: 'ELIMINAR' }]);
+      expect(getSession()).toBeNull();
+      expect(await screen.findByRole('status')).toHaveTextContent('A tua conta foi eliminada.');
+    });
+
+    it('a Google-only account confirms with the word alone', async () => {
+      const bodies: unknown[] = [];
+      server.use(
+        http.post(DELETION, async ({ request }) => {
+          bodies.push(await request.json());
+          return new HttpResponse(null, { status: 204 });
+        })
+      );
+      const { router } = openClientAccount({ has_password: false, google_linked: true });
+      const { user, card } = await confirmDeletion(null);
+
+      expect(card.queryByLabelText('Palavra-passe atual')).not.toBeInTheDocument();
+      await user.click(card.getByRole('button', { name: 'Eliminar conta' }));
+
+      await waitFor(() => expect(router.state.location.pathname).toBe('/entrar'));
+      expect(bodies).toEqual([{ password: null, confirmation: 'ELIMINAR' }]);
+    });
+
+    it('keeps a wrong password on its field and keeps the session', async () => {
+      server.use(
+        http.post(DELETION, () =>
+          HttpResponse.json(
+            problem('validation_failed', {
+              errors: [
+                {
+                  field: 'password',
+                  code: 'portal_account_deletion_password_invalid',
+                  message: 'The password is incorrect.',
+                },
+              ],
+            }),
+            { status: 400 }
+          )
+        )
+      );
+      const { router } = openClientAccount();
+      const { user, card } = await confirmDeletion('Errada!Password1');
+
+      await user.click(card.getByRole('button', { name: 'Eliminar conta' }));
+
+      expect(await card.findByText('A palavra-passe não está correta.')).toBeInTheDocument();
+      expect(card.getByLabelText('Palavra-passe atual')).toHaveAttribute('aria-invalid', 'true');
+      expect(router.state.location.pathname).toBe('/portal/account');
+      expect(getSession()).not.toBeNull();
+    });
+  });
 });

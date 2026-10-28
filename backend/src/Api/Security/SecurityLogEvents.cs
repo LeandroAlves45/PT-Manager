@@ -23,4 +23,5 @@ public static class SecurityLogEvents
     public static readonly EventId Moderation = new(2018, nameof(Moderation));
     public static readonly EventId GoogleSignIn = new(2019, nameof(GoogleSignIn));
     public static readonly EventId GoogleLink = new(2020, nameof(GoogleLink));
+    public static readonly EventId AccountDeletion = new(2021, nameof(AccountDeletion));
 }

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { plans } from '@/content/plans';
 import { escapeHtml, renderHead } from '@/seo/head';
 import { buildJsonLd, serializeJsonLd } from '@/seo/jsonLd';
-import { buildHomeMetadata } from '@/seo/metadata';
+import { buildDocumentMetadata, buildHomeMetadata } from '@/seo/metadata';
 
 const config = { siteUrl: 'https://ptmanager.pt', appUrl: 'https://app.ptmanager.pt' };
 
@@ -48,6 +48,32 @@ describe('renderHead', () => {
     ]) {
       expect(head).toContain(needle);
     }
+  });
+
+  it('sem JSON-LD não gera script; não indexável gera noindex', () => {
+    const meta = { ...buildHomeMetadata(config), indexable: false };
+    const head = renderHead(meta);
+    expect(head).not.toContain('<script');
+    expect(head).toContain('<meta name="robots" content="noindex, follow">');
+  });
+
+  it('metadados de documento: título com a marca e canonical sem barra final', () => {
+    const meta = buildDocumentMetadata(
+      config,
+      {
+        path: '/termos',
+        linkLabel: 'Termos',
+        title: 'Termos de utilização',
+        description: 'x'.repeat(100),
+        updatedOn: '2026-10-28',
+        intro: [],
+        sections: [],
+      },
+      true
+    );
+    expect(meta.title).toBe('Termos de utilização | PT Manager');
+    expect(meta.canonical).toBe('https://ptmanager.pt/termos');
+    expect(meta.indexable).toBe(true);
   });
 
   it('escapa valores com aspas e tags', () => {

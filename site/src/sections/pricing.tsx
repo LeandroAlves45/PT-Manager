@@ -46,7 +46,7 @@ function PricingCard({ plan, signupUrl }: { plan: Plan; signupUrl: string }) {
         variant={plan.highlighted ? 'primary' : 'outline'}
         size="block"
         className="mt-auto"
-        aria-label={`Criar conta grátis — plano ${plan.code}`}
+        aria-label={`Criar conta grátis no plano ${plan.code}`}
       >
         Criar conta grátis
       </ButtonLink>
@@ -63,7 +63,7 @@ export function Pricing({ plans, signupUrl }: PricingProps) {
   return (
     <section id="planos" aria-labelledby="t-planos" className="pt-[clamp(4.5rem,10vw,8rem)]">
       <Container>
-        <SectionHeading id="t-planos" eyebrow="02 — Planos" className="[&_h2]:max-w-none">
+        <SectionHeading id="t-planos" eyebrow="02 / Planos" className="[&_h2]:max-w-none">
           Começa grátis. Cresce quando precisares.
         </SectionHeading>
         <div className="mt-12 grid items-stretch gap-3 md:grid-cols-3">

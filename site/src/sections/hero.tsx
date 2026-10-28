@@ -31,7 +31,7 @@ export function Hero({ signupUrl, freePlanNote }: HeroProps) {
 
         <p className="text-muted-foreground mt-6 max-w-[56ch] text-[clamp(1.0625rem,1.6vw,1.1875rem)] text-pretty">
           O PT Manager junta os planos de treino, nutrição e suplementação, os check-ins e as
-          sessões dos teus clientes numa única plataforma — com a tua marca no portal do cliente.
+          sessões dos teus clientes numa única plataforma, com a tua marca no portal do cliente.
         </p>
 
         <div className="mt-8 flex flex-wrap gap-3">

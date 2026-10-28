@@ -163,6 +163,32 @@ public sealed class User
         UpdatedAt = now;
     }
 
+    /// <summary>
+    /// Elimina a conta a pedido do próprio utilizador: apaga o que o identifica e as
+    /// credenciais, e faz soft delete. O registo fica por integridade referencial (sessões,
+    /// histórico do cliente), mas já não identifica a pessoa nem permite entrar.
+    /// </summary>
+    /// <remarks>
+    /// O email passa a um endereço reservado e único por conta (<c>.invalid</c> nunca existe,
+    /// RFC 2606), o que liberta o email real para uma conta futura sem violar a unicidade.
+    /// </remarks>
+    public void DeleteAndAnonymize(DateTime now)
+    {
+        EnsureNotDeleted();
+
+        var anonymizedEmail = $"deleted-{Id:N}@deleted.invalid";
+        Email = anonymizedEmail;
+        NormalizedEmail = anonymizedEmail.ToUpperInvariant();
+        EmailConfirmed = false;
+        PasswordHash = null;
+        FullName = null;
+        SecurityStamp = Guid.NewGuid().ToString();
+        ConcurrencyStamp = Guid.NewGuid().ToString();
+        LockoutEnd = null;
+        AccessFailedCount = 0;
+        SoftDelete(now);
+    }
+
     /// <summary>Soft delete -> mantém o registo por integridade referencial e auditoria.</summary>
     public void SoftDelete(DateTime now)
     {

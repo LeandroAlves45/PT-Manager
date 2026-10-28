@@ -1,16 +1,19 @@
+import type { TextLink } from '@/domain/types';
 import { Container } from '@/ui/container';
 import { Logo } from '@/ui/logo';
 
 interface FooterProps {
   contactEmail: string;
   year: number;
+  /** Páginas de texto (Privacidade, Termos, Suporte, Eliminar conta). */
+  links: readonly TextLink[];
 }
 
-/**
- * Rodapé. Os links de Privacidade e Termos voltam quando existirem páginas reais: um link
- * para uma página inexistente é pior do que nenhum.
- */
-export function Footer({ contactEmail, year }: FooterProps) {
+const footerLinkClass =
+  'text-muted-foreground hover:text-foreground inline-flex min-h-11 items-center text-sm';
+
+/** Rodapé com contacto e as ligações para as páginas de texto. */
+export function Footer({ contactEmail, year, links }: FooterProps) {
   return (
     <footer id="contacto" className="border-t">
       <Container className="flex flex-wrap justify-between gap-8 pt-12 pb-8">
@@ -23,12 +26,16 @@ export function Footer({ contactEmail, year }: FooterProps) {
         </div>
         <nav aria-label="Rodapé">
           <ul className="flex flex-wrap gap-x-5 gap-y-1">
+            {links.map((link) => (
+              <li key={link.href}>
+                <a href={link.href} className={footerLinkClass}>
+                  {link.label}
+                </a>
+              </li>
+            ))}
             <li>
-              <a
-                href={`mailto:${contactEmail}`}
-                className="text-muted-foreground hover:text-foreground inline-flex min-h-11 items-center text-sm"
-              >
-                Contacto — {contactEmail}
+              <a href={`mailto:${contactEmail}`} className={footerLinkClass}>
+                Contacto: {contactEmail}
               </a>
             </li>
           </ul>

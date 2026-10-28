@@ -61,6 +61,18 @@ public static class ClientPortalErrors
         ErrorCategory.Conflict,
         "A client with this phone already exists.");
 
+    /// <summary>
+    /// Password em falta, errada, ou conta bloqueada por tentativas falhadas: a mesma resposta
+    /// para os três, sem revelar qual. Sai como erro do campo <c>password</c> (400), e não como
+    /// 401, para o cliente da API não o confundir com uma sessão expirada.
+    /// </summary>
+    public static readonly Error AccountDeletionPasswordInvalid = Error.Validation([
+        new ValidationError(
+            "Password",
+            "portal_account_deletion_password_invalid",
+            "The password is incorrect.")
+    ]);
+
     public static readonly Error AvatarCompensationFailed = Error.Create(
         "portal_avatar_compensation_failed",
         ErrorCategory.Internal,

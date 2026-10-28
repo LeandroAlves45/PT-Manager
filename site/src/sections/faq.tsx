@@ -19,7 +19,7 @@ export function Faq({ items }: FaqProps) {
     <section id="faq" aria-labelledby="t-faq" className="py-[clamp(4.5rem,10vw,8rem)]">
       <Container className="grid items-start gap-[clamp(1.5rem,5vw,4rem)] lg:grid-cols-2">
         <div>
-          <SectionHeading id="t-faq" eyebrow="03 — FAQ">
+          <SectionHeading id="t-faq" eyebrow="03 / FAQ">
             Perguntas frequentes
           </SectionHeading>
           <p className="text-muted-foreground mt-4 max-w-[36ch]">

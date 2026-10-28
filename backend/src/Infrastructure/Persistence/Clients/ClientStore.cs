@@ -238,27 +238,16 @@ internal sealed class ClientStore : IClientStore
                 return outcome;
             }
 
-            var affectedSubscription = await _dbContext.TrainerSubscriptions
-                .Where(subscription => subscription.TrainerId == trainerId)
-                .ExecuteUpdateAsync(
-                    setters => setters
-                        .SetProperty(
-                            subscription => subscription.CurrentClientCount,
-                            subscription => subscription.CurrentClientCount > 0
-                                ? subscription.CurrentClientCount - 1
-                                : 0)
-                        .SetProperty(
-                            subscription => subscription.UpdatedAt,
-                            now),
-                    cancellationToken);
+            var slotReleased = await ClientArchiveEffects.ReleaseSubscriptionSlotAsync(
+                _dbContext, trainerId, now, cancellationToken);
 
-            if (affectedSubscription == 0)
+            if (!slotReleased)
             {
                 await transaction.RollbackAsync(CancellationToken.None);
                 return ArchiveClientStoreOutcome.SubscriptionMissing;
             }
 
-            await ApplyArchiveEffectsAsync(clientId, trainerId, now, cancellationToken);
+            await ClientArchiveEffects.ApplyAsync(_dbContext, clientId, trainerId, now, cancellationToken);
 
             await transaction.CommitAsync(cancellationToken);
             return ArchiveClientStoreOutcome.Archived;
@@ -268,68 +257,6 @@ internal sealed class ClientStore : IClientStore
             await transaction.RollbackAsync(CancellationToken.None);
             throw;
         }
-    }
-
-    /// <summary>
-    /// O que o arquivo faz além de tirar o cliente das listas e do limite: cancela as sessões
-    /// futuras (sem gastar saldo), consome o saldo que resta nos packs, anula o convite por
-    /// aceitar e termina as sessões de login abertas do cliente. Nada disto volta ao reativar.
-    /// O histórico (sessões feitas, planos, avaliações) fica.
-    /// </summary>
-    private async Task ApplyArchiveEffectsAsync(
-        Guid clientId,
-        Guid trainerId,
-        DateTime now,
-        CancellationToken cancellationToken)
-    {
-        var nowOffset = new DateTimeOffset(DateTime.SpecifyKind(now, DateTimeKind.Utc));
-
-        await _dbContext.Sessions
-            .Where(session =>
-                session.OwnerTrainerId == trainerId &&
-                session.ClientId == clientId &&
-                !session.IsDeleted &&
-                session.Status == SessionStatus.Scheduled &&
-                session.StartsAt > nowOffset)
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(session => session.Status, SessionStatus.CancelledByTrainer)
-                    .SetProperty(session => session.StatusChangedAt, now)
-                    .SetProperty(session => session.UpdatedAt, now),
-                cancellationToken);
-
-        await _dbContext.ClientSessionPacks
-            .Where(pack =>
-                pack.OwnerTrainerId == trainerId &&
-                pack.ClientId == clientId &&
-                !pack.IsDeleted &&
-                pack.SessionsRemaining > 0)
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(pack => pack.SessionsRemaining, 0)
-                    .SetProperty(pack => pack.CompletedAt, now)
-                    .SetProperty(pack => pack.ForfeitedAt, now)
-                    .SetProperty(pack => pack.UpdatedAt, now),
-                cancellationToken);
-
-        await _dbContext.InviteTokens
-            .Where(token =>
-                token.TrainerId == trainerId &&
-                token.ClientId == clientId &&
-                token.UsedAt == null)
-            .ExecuteDeleteAsync(cancellationToken);
-
-        var userId = await _dbContext.Clients
-            .AsNoTracking()
-            .Where(client => client.Id == clientId && client.OwnerTrainerId == trainerId)
-            .Select(client => client.UserId)
-            .SingleAsync(cancellationToken);
-        if (userId.HasValue)
-            await _dbContext.RefreshTokens
-                .Where(token => token.UserId == userId.Value && token.RevokedAt == null)
-                .ExecuteUpdateAsync(
-                    setters => setters.SetProperty(token => token.RevokedAt, now),
-                    cancellationToken);
     }
 
     private async Task<ReactivateClientStoreOutcome> ReactivateOnceAsync(

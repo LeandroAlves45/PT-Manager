@@ -12,19 +12,21 @@ export function escapeHtml(value: string): string {
 }
 
 /**
- * Gera o markup do `<head>` (SEO, Open Graph, Twitter e JSON-LD).
+ * Gera o markup do `<head>` (SEO, Open Graph, Twitter e, se houver, JSON-LD).
  *
  * Função pura sobre dados já validados: o pré-render injeta o resultado no `index.html`,
  * por isso o crawler recebe os metadados sem executar JavaScript. Todos os valores passam
- * por `escapeHtml`; o JSON-LD passa por `serializeJsonLd`.
+ * por `escapeHtml`; o JSON-LD passa por `serializeJsonLd`. `jsonLd` `undefined` = sem script.
  */
-export function renderHead(meta: PageMetadata, jsonLd: unknown): string {
+export function renderHead(meta: PageMetadata, jsonLd?: unknown): string {
   const e = escapeHtml;
   const tags = [
     `<title>${e(meta.title)}</title>`,
     `<meta name="description" content="${e(meta.description)}">`,
     `<link rel="canonical" href="${e(meta.canonical)}">`,
-    `<meta name="robots" content="index, follow">`,
+    meta.indexable
+      ? `<meta name="robots" content="index, follow, max-image-preview:large">`
+      : `<meta name="robots" content="noindex, follow">`,
     `<meta name="theme-color" content="${e(meta.themeColor)}">`,
     `<meta property="og:type" content="website">`,
     `<meta property="og:locale" content="${e(meta.locale)}">`,
@@ -40,7 +42,9 @@ export function renderHead(meta: PageMetadata, jsonLd: unknown): string {
     `<meta name="twitter:title" content="${e(meta.title)}">`,
     `<meta name="twitter:description" content="${e(meta.description)}">`,
     `<meta name="twitter:image" content="${e(meta.image.url)}">`,
-    `<script type="application/ld+json">${serializeJsonLd(jsonLd)}</script>`,
   ];
+  if (jsonLd !== undefined) {
+    tags.push(`<script type="application/ld+json">${serializeJsonLd(jsonLd)}</script>`);
+  }
   return tags.join('\n    ');
 }

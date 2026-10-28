@@ -50,6 +50,45 @@ export interface FaqItem {
   answer: string;
 }
 
+/** Rotas publicadas do site (cada uma é um HTML pré-renderizado). */
+export type PagePath = '/' | '/privacidade' | '/termos' | '/suporte' | '/eliminar-conta';
+
+/** Rotas das páginas de texto (tudo menos a inicial). */
+export type DocumentPath = Exclude<PagePath, '/'>;
+
+export interface TextLink {
+  label: string;
+  href: string;
+}
+
+/** Bloco de conteúdo de uma página de texto: parágrafo, lista ou lista de ligações. */
+export type DocumentBlock =
+  | { kind: 'paragraph'; text: string }
+  | { kind: 'list'; items: readonly string[] }
+  | { kind: 'links'; items: readonly TextLink[] };
+
+export interface DocumentSection {
+  /** Id da âncora do `<h2>` (único dentro do documento). */
+  id: string;
+  heading: string;
+  blocks: readonly DocumentBlock[];
+}
+
+/** Página de texto (Privacidade, Termos, Suporte, Eliminar conta). */
+export interface SiteDocument {
+  path: DocumentPath;
+  /** Texto curto da ligação no rodapé. */
+  linkLabel: string;
+  /** Título do `<h1>` e base do `<title>`. */
+  title: string;
+  /** Meta description (70 a 160 caracteres). */
+  description: string;
+  /** Data da última revisão do texto, `AAAA-MM-DD`. */
+  updatedOn: string;
+  intro: readonly string[];
+  sections: readonly DocumentSection[];
+}
+
 export interface BrandSwatch {
   id: 'blue' | 'orange' | 'green' | 'pink' | 'violet';
   label: string;

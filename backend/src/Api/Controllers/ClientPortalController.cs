@@ -4,6 +4,7 @@ using Api.Contracts.Assessments;
 using Api.Contracts.Common;
 using Api.Contracts.Portal;
 using Api.Http;
+using Api.Security;
 using Application.Features.Assessments.CheckIns.GetMyDueCheckIn;
 using Application.Features.Assessments.CheckIns.GetMyNextCheckIn;
 using Application.Features.ClientPortal.GetMyInitialAssessment;
@@ -17,6 +18,7 @@ using Application.Features.ClientPortal.ListMyWorkoutDays;
 using Application.Features.ClientPortal.PlanSupplementIntakes;
 using Application.Features.Assessments.CheckIns.SubmitCheckInResponse;
 using Application.Features.ClientPortal.GetMyNutritionPlan;
+using Application.Features.ClientPortal.DeleteMyAccount;
 using Application.Features.ClientPortal.GetMyProfile;
 using Application.Features.ClientPortal.GetMyTrainingPlan;
 using Application.Features.ClientPortal.RemoveMyAvatar;
@@ -256,6 +258,35 @@ public sealed class ClientPortalController : ApiControllerBase
         RespondAsync(
             handler.HandleAsync(cancellationToken),
             MyProfileResponse.From);
+
+    /// <summary>
+    /// Elimina a conta do cliente autenticado: acesso e dados que o identificam são apagados,
+    /// as sessões terminam em todos os dispositivos e o histórico fica no tenant do personal
+    /// trainer sem identificação. Irreversível.
+    /// </summary>
+    /// <remarks>
+    /// Partilha o limite da alteração de password (5 em 15 minutos por conta e IP): os dois
+    /// confirmam a password atual e o limite trava a adivinhação.
+    /// </remarks>
+    [HttpPost("my-account/deletion")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [EnableRateLimiting(ApiRateLimitPolicyNames.ChangePassword)]
+    public async Task<IActionResult> DeleteMyAccountAsync(
+        [FromBody] DeleteMyAccountRequest request,
+        [FromServices] DeleteMyAccountHandler handler,
+        [FromServices] ILogger<ClientPortalController> logger,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var result = await handler.HandleAsync(
+            new DeleteMyAccountCommand(request.Password, request.Confirmation ?? string.Empty),
+            cancellationToken);
+
+        // Sem auditoria administrativa (essa é só do superuser): o rasto é este evento,
+        // sem dados pessoais. O utilizador fica identificado pelo id no contexto do pedido.
+        AuthenticationSecurityLog.Result(logger, SecurityLogEvents.AccountDeletion, "delete_my_account", result);
+        return result.IsSuccess ? NoContent() : ApiResultMapper.ToProblem(this, result.Error!);
+    }
 
     /// <summary>Devolve o próximo check-in agendado do cliente, se existir.</summary>
     [HttpGet("my-check-ins/next")]

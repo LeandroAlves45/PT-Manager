@@ -454,3 +454,14 @@ com um corpo real.
 - **O treino semeado só existe à terça e à quinta;** o teste faz `skip` nos outros dias.
 - **`public/mockServiceWorker.js` é copiado para o `dist`.** Um plugin de build apaga-o.
 - **Vitest com cobertura nesta máquina:** 916 s e timeouts em 2 testes; medir a cobertura no CI.
+
+## Sprint 8D (2026-10-28)
+
+- **Site sem travessões.** O texto publicado não usa `—` nem `–` (vírgula, dois pontos ou barra; `|` nos
+  títulos). O teste do prerender falha se aparecerem.
+- **A CSP do site (`connect-src 'none'`) bloqueia `fetch` até no próprio browser:** para analisar as
+  páginas, ler o `dist/*.html` com Node.
+- **Páginas legais em rascunho:** `legalReviewed=false` dá `noindex`, fora do sitemap e aviso visível;
+  um teste impede marcar como revisto com `legalOperator` por preencher.
+- **Eliminar conta:** erro de password vem como 400 no campo (`fieldErrors`), nunca 401, para o cliente
+  HTTP não tentar refresh.

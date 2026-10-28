@@ -185,6 +185,9 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.ClientPortal.UpdateMyProfile.UpdateMyProfileHandler>();
         services.AddScoped<Application.Features.ClientPortal.ReplaceMyAvatar.ReplaceMyAvatarHandler>();
         services.AddScoped<Application.Features.ClientPortal.RemoveMyAvatar.RemoveMyAvatarHandler>();
+        services.AddScoped<Application.Features.ClientPortal.DeleteMyAccount.DeleteMyAccountHandler>();
+        services.AddScoped<IValidator<Application.Features.ClientPortal.DeleteMyAccount.DeleteMyAccountCommand>,
+            Application.Features.ClientPortal.DeleteMyAccount.DeleteMyAccountCommandValidator>();
         services.AddScoped<Application.Features.ClientPortal.GetMyWorkoutToday.MyWorkoutTodayReader>();
         services.AddScoped<Application.Features.ClientPortal
             .GetMyWorkoutToday.GetMyWorkoutTodayHandler>();

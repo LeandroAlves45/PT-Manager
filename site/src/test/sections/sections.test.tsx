@@ -11,11 +11,13 @@ import { BrandShowcase } from '@/sections/brand-showcase';
 import { Faq } from '@/sections/faq';
 import { Features } from '@/sections/features';
 import { Footer } from '@/sections/footer';
+import { DocumentArticle } from '@/sections/document';
 import { Header } from '@/sections/header';
+import type { SiteDocument } from '@/domain/types';
 import { Pricing } from '@/sections/pricing';
 
-const LOGIN = 'https://app.example.pt/auth/login';
-const SIGNUP = 'https://app.example.pt/auth/signup';
+const LOGIN = 'https://app.example.pt/entrar';
+const SIGNUP = 'https://app.example.pt/criar-conta';
 
 describe('Header', () => {
   it('liga "Entrar" e "Criar conta" à app e a navegação às âncoras', () => {
@@ -121,13 +123,78 @@ describe('Faq', () => {
 });
 
 describe('Footer', () => {
-  it('tem contacto por email e nenhum link morto', () => {
-    const { container } = render(<Footer contactEmail="contacto@ptmanager.pt" year={2026} />);
-    expect(screen.getByRole('link', { name: /contacto@ptmanager.pt/ })).toHaveAttribute(
+  const links = [
+    { label: 'Privacidade', href: '/privacidade' },
+    { label: 'Termos', href: '/termos' },
+  ];
+
+  it('tem contacto por email e as ligações para as páginas de texto', () => {
+    render(<Footer contactEmail="contacto@ptmanager.pt" year={2026} links={links} />);
+    const footer = screen.getByRole('navigation', { name: 'Rodapé' });
+    expect(within(footer).getByRole('link', { name: /contacto@ptmanager.pt/ })).toHaveAttribute(
       'href',
       'mailto:contacto@ptmanager.pt'
     );
-    expect(container.querySelector('a[href="#privacidade"], a[href="#termos"]')).toBeNull();
+    expect(within(footer).getByRole('link', { name: 'Privacidade' })).toHaveAttribute(
+      'href',
+      '/privacidade'
+    );
+    expect(within(footer).getByRole('link', { name: 'Termos' })).toHaveAttribute('href', '/termos');
     expect(screen.getByText(/© 2026 PT Manager/)).toBeInTheDocument();
+  });
+});
+
+describe('Header fora da página inicial', () => {
+  it('as âncoras e o logótipo voltam à página inicial', () => {
+    render(<Header nav={primaryNav} loginUrl={LOGIN} signupUrl={SIGNUP} onHomePage={false} />);
+    const nav = screen.getByRole('navigation', { name: 'Principal' });
+    expect(within(nav).getByRole('link', { name: 'Planos' })).toHaveAttribute('href', '/#planos');
+    expect(within(nav).getByRole('link', { name: 'PT Manager, página inicial' })).toHaveAttribute(
+      'href',
+      '/'
+    );
+  });
+});
+
+describe('DocumentArticle', () => {
+  const document: SiteDocument = {
+    path: '/termos',
+    linkLabel: 'Termos',
+    title: 'Termos de utilização',
+    description: 'Descrição',
+    updatedOn: '2026-10-28',
+    intro: ['Introdução.'],
+    sections: [
+      { id: 'a', heading: 'Primeira', blocks: [{ kind: 'paragraph', text: 'Texto A.' }] },
+      {
+        id: 'b',
+        heading: 'Segunda',
+        blocks: [
+          { kind: 'list', items: ['Item 1', 'Item 2'] },
+          { kind: 'links', items: [{ label: 'Suporte', href: '/suporte' }] },
+        ],
+      },
+    ],
+  };
+
+  it('tem um h1, um h2 por secção, índice com âncoras e a data por extenso', () => {
+    render(<DocumentArticle document={document} />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Termos de utilização' })).toBeVisible();
+    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
+      'Primeira',
+      'Segunda',
+    ]);
+    const toc = screen.getByRole('navigation', { name: 'Nesta página' });
+    expect(within(toc).getByRole('link', { name: 'Segunda' })).toHaveAttribute('href', '#b');
+    expect(screen.getByText(/28 de outubro de 2026/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Suporte' })).toHaveAttribute('href', '/suporte');
+    expect(screen.getByText('Item 2')).toBeInTheDocument();
+  });
+
+  it('mostra o aviso de rascunho só quando existe', () => {
+    const { rerender } = render(<DocumentArticle document={document} />);
+    expect(screen.queryByRole('note')).toBeNull();
+    rerender(<DocumentArticle document={document} draftNotice="Versão provisória." />);
+    expect(screen.getByRole('note')).toHaveTextContent('Versão provisória.');
   });
 });

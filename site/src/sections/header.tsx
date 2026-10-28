@@ -10,6 +10,8 @@ interface HeaderProps {
   nav: readonly NavLink[];
   loginUrl: string;
   signupUrl: string;
+  /** Fora da página inicial as âncoras apontam para `/#secção`. Por omissão, `true`. */
+  onHomePage?: boolean;
 }
 
 /**
@@ -18,7 +20,7 @@ interface HeaderProps {
  * O desktop e o mobile trocam por media query (CSS), não por `window.innerWidth`: o HTML
  * pré-renderizado já sai certo em qualquer largura e não há salto na hidratação.
  */
-export function Header({ nav, loginUrl, signupUrl }: HeaderProps) {
+export function Header({ nav, loginUrl, signupUrl, onHomePage = true }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const menuId = useId();
 
@@ -32,12 +34,17 @@ export function Header({ nav, loginUrl, signupUrl }: HeaderProps) {
   }, [open]);
 
   const close = () => setOpen(false);
+  const anchor = (section: string) => (onHomePage ? `#${section}` : `/#${section}`);
 
   return (
     <header className="bg-background/70 sticky top-0 z-50 border-b backdrop-blur-md backdrop-saturate-150">
       <Container>
         <nav aria-label="Principal" className="flex h-16 items-center gap-6">
-          <a href="#topo" aria-label="PT Manager — início" className="flex min-h-11 items-center">
+          <a
+            href={onHomePage ? '#topo' : '/'}
+            aria-label="PT Manager, página inicial"
+            className="flex min-h-11 items-center"
+          >
             <Logo />
           </a>
 
@@ -45,7 +52,7 @@ export function Header({ nav, loginUrl, signupUrl }: HeaderProps) {
             {nav.map((link) => (
               <li key={link.section}>
                 <a
-                  href={`#${link.section}`}
+                  href={anchor(link.section)}
                   className="text-muted-foreground hover:bg-foreground/5 hover:text-foreground inline-flex min-h-11 items-center rounded-lg px-3 text-sm transition-colors"
                 >
                   {link.label}
@@ -83,7 +90,7 @@ export function Header({ nav, loginUrl, signupUrl }: HeaderProps) {
             {nav.map((link) => (
               <li key={link.section} className="border-b last:border-b-0">
                 <a
-                  href={`#${link.section}`}
+                  href={anchor(link.section)}
                   onClick={close}
                   className="flex min-h-11 items-center py-3"
                 >

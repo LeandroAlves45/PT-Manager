@@ -26,12 +26,14 @@ public sealed class ApplicationRegistrationTests
         // + 4 da avaliação inicial (estado e gravação no portal, revista, lista por rever).
         // + 3 das tomas dos suplementos do plano (ler, marcar, desmarcar).
         // + 4 da moderação (bloquear e desbloquear suplemento, bloquear e levantar personal trainer).
-        Assert.Equal(181, handlerCount);
+        // + 1 do portal do cliente (eliminar a conta).
+        Assert.Equal(182, handlerCount);
         // 82 anteriores + 5 validators 6GB-SU (procura, isentos, convidar, estado e registo).
         // + 1 do trainer (conclusões de treino).
         // + 2 da avaliação inicial (gravação no portal, lista por rever).
         // + 2 da moderação (bloquear suplemento, bloquear personal trainer).
-        Assert.Equal(92, validatorCount);
+        // + 1 do portal do cliente (eliminar a conta).
+        Assert.Equal(93, validatorCount);
     }
 
     [Fact]

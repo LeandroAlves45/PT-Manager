@@ -40,8 +40,8 @@ describe('readSiteConfig / buildAppLinks', () => {
     const config = readSiteConfig({});
     expect(config).toEqual({ siteUrl: 'https://ptmanager.pt', appUrl: 'https://app.ptmanager.pt' });
     expect(buildAppLinks(config)).toEqual({
-      login: 'https://app.ptmanager.pt/auth/login',
-      signup: 'https://app.ptmanager.pt/auth/login',
+      login: 'https://app.ptmanager.pt/entrar',
+      signup: 'https://app.ptmanager.pt/criar-conta',
     });
   });
 
@@ -50,6 +50,6 @@ describe('readSiteConfig / buildAppLinks', () => {
       VITE_SITE_URL: 'https://staging.ptmanager.pt',
       VITE_APP_URL: 'https://app.staging.ptmanager.pt',
     });
-    expect(buildAppLinks(config).login).toBe('https://app.staging.ptmanager.pt/auth/login');
+    expect(buildAppLinks(config).login).toBe('https://app.staging.ptmanager.pt/entrar');
   });
 });
