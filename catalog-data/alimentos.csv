@@ -1,157 +1,182 @@
-﻿nome;descricao;proteina;hidratos;gordura;fibra;porcao_g
-Peito de frango cru;Sem pele. Fonte: USDA FDC 171077.;22,5;0,0;2,6;0,0;150
-Peito de frango assado;Sem pele. Fonte: USDA FDC 171477.;31,0;0,0;3,6;0,0;150
-Coxa de frango crua;Sem pele. Fonte: USDA FDC 173627.;19,7;0,0;4,1;0,0;150
-Peito de peru cru;Sem pele. Fonte: USDA FDC 171098.;23,7;0,1;1,5;0,0;150
-Carne de vaca picada 5% gordura crua;Fonte: USDA FDC 171790.;21,4;0,0;5,0;0,0;150
-Carne de vaca picada 10% gordura crua;Fonte: USDA FDC 174030.;20,0;0,0;10,0;0,0;150
-Carne de vaca picada 20% gordura crua;Fonte: USDA FDC 174036.;17,2;0,0;20,0;0,0;150
-Lombo de porco cru;Parte magra. Fonte: USDA FDC 168249.;21,0;0,0;2,2;0,0;150
-Fígado de vaca cru;Fonte: USDA FDC 169451.;20,4;3,9;3,6;0,0;120
-Coelho cru;Fonte: USDA FDC 172521.;20,1;0,0;5,6;0,0;150
-Fiambre de porco;Fonte: USDA FDC 173864.;16,6;2,3;8,8;1,3;30
-Fiambre de peru;Fonte: USDA FDC 174572.;21,8;3,0;0,8;0,5;30
-Bacon cru;Fonte: USDA FDC 168277.;13,7;0,0;37,1;0,0;30
-Salmão cru;Aquacultura. Fonte: USDA FDC 175167.;20,4;0,0;13,4;0,0;150
-Salmão grelhado;Aquacultura. Fonte: USDA FDC 175168.;22,1;0,0;12,4;0,0;150
-Bacalhau cru;"Valores de bacalhau fresco; o bacalhau demolhado é semelhante. Fonte: USDA FDC 171955.";17,8;0,0;0,7;0,0;150
-Bacalhau cozinhado;Valores de bacalhau fresco. Fonte: USDA FDC 171956.;22,8;0,0;0,9;0,0;150
-Atum em lata ao natural;Escorrido. Fonte: USDA FDC 173709.;19,4;0,0;1,0;0,0;80
-Atum em lata em óleo;Escorrido. Fonte: USDA FDC 173708.;29,1;0,0;8,2;0,0;80
-Sardinhas em lata em óleo;Escorridas, com espinha. Fonte: USDA FDC 175139.;24,6;0,0;11,5;0,0;80
-Cavala crua;Fonte: USDA FDC 175119.;18,6;0,0;13,9;0,0;150
-Robalo cru;Fonte: USDA FDC 175142.;18,4;0,0;2,0;0,0;150
-Tilápia crua;Fonte: USDA FDC 175176.;20,1;0,0;1,7;0,0;150
-Truta crua;Aquacultura. Fonte: USDA FDC 173717.;19,9;0,0;6,2;0,0;150
-Polvo cru;Fonte: USDA FDC 174218.;14,9;2,2;1,0;0,0;150
-Lulas cruas;Fonte: USDA FDC 174223.;15,6;3,1;1,4;0,0;150
-Camarão cru;Fonte: USDA FDC 175179.;20,1;0,0;0,5;;100
-Mexilhão cru;Fonte: USDA FDC 174216.;11,9;3,7;2,2;0,0;100
-Ovo inteiro cru;Um ovo médio tem cerca de 50 g. Fonte: USDA FDC 171287.;12,6;0,7;9,5;0,0;50
-Ovo cozido;Fonte: USDA FDC 173424.;12,6;1,1;10,6;0,0;50
-Clara de ovo crua;Fonte: USDA FDC 172183.;10,9;0,7;0,2;0,0;33
-Gema de ovo crua;Fonte: USDA FDC 172184.;15,9;3,6;26,5;0,0;17
-Leite magro;Fonte: USDA FDC 171269.;3,4;5,0;0,1;0,0;250
-Leite meio-gordo;Valores de leite com 2% de gordura. Fonte: USDA FDC 171267.;3,3;4,8;2,0;0,0;250
-Leite gordo;Fonte: USDA FDC 171265.;3,2;4,8;3,3;0,0;250
-Iogurte natural;Fonte: USDA FDC 171284.;3,5;4,7;3,3;0,0;125
-Iogurte natural magro;Fonte: USDA FDC 170887.;5,7;7,7;0,2;0,0;125
-Iogurte grego natural;Fonte: USDA FDC 171304.;9,0;4,0;5,0;0,0;150
-Iogurte grego magro;Fonte: USDA FDC 170894.;10,2;3,6;0,4;0,0;150
-Queijo cottage;Fonte: USDA FDC 172182.;10,5;4,8;2,3;0,0;100
-Requeijão;Valores de ricota de leite gordo. Fonte: USDA FDC 170851.;7,5;7,3;10,2;0,0;50
-Queijo flamengo;Valores de queijo gouda. Fonte: USDA FDC 171241.;24,9;2,2;27,4;0,0;30
-Queijo mozzarella;Fonte: USDA FDC 170847.;24,3;2,8;15,9;0,0;30
-Queijo parmesão;Fonte: USDA FDC 170848.;35,8;3,2;25,0;0,0;15
-Queijo cheddar;Fonte: USDA FDC 173414.;22,9;3,4;33,3;0,0;30
-Queijo feta;Fonte: USDA FDC 173420.;14,2;3,9;21,5;0,0;30
-Manteiga;Com sal. Fonte: USDA FDC 173410.;0,9;0,1;81,1;0,0;10
-Natas;Natas para bater. Fonte: USDA FDC 170859.;2,8;2,8;36,1;0,0;30
-Bebida de soja;Sem açúcar adicionado. Fonte: USDA FDC 172446.;3,3;5,7;1,8;0,6;250
-Bebida de amêndoa;Sem açúcar. Fonte: USDA FDC 174832.;0,4;1,1;1,0;0,2;250
-Arroz agulha cru;Fonte: USDA FDC 168877.;7,1;78,7;0,7;1,3;75
-Arroz agulha cozido;Fonte: USDA FDC 168878.;2,7;27,8;0,3;0,4;150
-Arroz integral cru;Fonte: USDA FDC 169703.;7,5;72,7;3,2;3,6;75
-Arroz integral cozido;Fonte: USDA FDC 169704.;2,7;24,0;1,0;1,6;150
-Massa crua;Fonte: USDA FDC 169736.;13,0;71,5;1,5;3,2;80
-Massa cozida;Fonte: USDA FDC 169737.;5,8;29,1;0,9;1,8;180
-Massa integral crua;Fonte: USDA FDC 169738.;13,9;64,2;2,9;9,2;80
-Massa integral cozida;Fonte: USDA FDC 168910.;6,0;26,2;1,7;3,9;180
-Flocos de aveia;Fonte: USDA FDC 173904.;13,2;57,6;6,5;10,1;40
-Granola;Fonte: USDA FDC 171646.;13,7;45,0;24,3;8,9;50
-Pão branco;Fonte: USDA FDC 174924.;8,9;46,7;3,3;2,7;30
-Pão integral;Fonte: USDA FDC 172688.;12,5;36,7;3,5;6,0;30
-Pão de centeio;Fonte: USDA FDC 172684.;8,5;42,5;3,3;5,8;30
-Pão pita;Fonte: USDA FDC 174915.;9,1;53,5;1,2;2,2;60
-Tortilha de trigo;Fonte: USDA FDC 175037.;8,2;45,9;8,0;3,5;45
-Bolachas de arroz;Arroz integral. Fonte: USDA FDC 170250.;8,2;77,3;2,8;4,2;10
-Farinha de trigo;Fonte: USDA FDC 168894.;10,3;73,6;1,0;2,7;30
-Quinoa crua;Fonte: USDA FDC 168874.;14,1;57,2;6,1;7,0;60
-Quinoa cozida;Fonte: USDA FDC 168917.;4,4;18,5;1,9;2,8;150
-Cuscuz cozido;Fonte: USDA FDC 169700.;3,8;21,8;0,2;1,4;150
-Batata crua;Com pele. Fonte: USDA FDC 170026.;2,1;15,4;0,1;2,1;200
-Batata cozida;Sem pele. Fonte: USDA FDC 170440.;1,7;18,2;0,1;1,8;200
-Batata-doce crua;Fonte: USDA FDC 168482.;1,6;17,1;0,1;3,0;200
-Batata-doce assada;Com pele. Fonte: USDA FDC 168483.;2,0;17,4;0,2;3,3;200
-Milho doce em lata;Escorrido. Fonte: USDA FDC 169214.;2,3;12,3;1,2;2,0;80
-Pipocas;Feitas a ar quente, sem gordura. Fonte: USDA FDC 167959.;12,9;63,3;4,5;14,5;20
-Feijão-frade cozido;Fonte: USDA FDC 173759.;7,7;14,3;0,5;6,5;150
-Feijão preto cozido;Fonte: USDA FDC 173735.;8,9;15,0;0,5;8,7;150
-Feijão vermelho cozido;Fonte: USDA FDC 175194.;8,7;15,4;0,5;7,4;150
-Feijão branco cozido;Fonte: USDA FDC 175203.;9,7;18,8;0,4;6,3;150
-Grão-de-bico cozido;Fonte: USDA FDC 173757.;8,9;19,8;2,6;7,6;150
-Lentilhas cozidas;Fonte: USDA FDC 172421.;9,0;12,2;0,4;7,9;150
-Ervilhas cozidas;Congeladas e cozidas. Fonte: USDA FDC 170017.;5,2;9,8;0,3;4,5;100
-Favas cozidas;Fonte: USDA FDC 173753.;7,6;14,3;0,4;5,4;150
-Tremoços cozidos;Fonte: USDA FDC 172424.;15,6;7,1;2,9;2,8;50
-Tofu firme;Fonte: USDA FDC 172475.;17,3;0,5;8,7;2,3;100
-Edamame;Fonte: USDA FDC 168411.;11,9;3,7;5,2;5,2;100
-Húmus;Fonte: USDA FDC 174289.;7,8;9,5;17,8;5,5;30
-Brócolos crus;Fonte: USDA FDC 170379.;2,8;4,0;0,4;2,6;100
-Couve-flor crua;Fonte: USDA FDC 169986.;1,9;3,0;0,3;2,0;100
-Espinafres crus;Fonte: USDA FDC 168462.;2,9;1,4;0,4;2,2;50
-Alface crua;Fonte: USDA FDC 169249.;1,4;1,6;0,2;1,3;50
-Rúcula crua;Fonte: USDA FDC 169387.;2,6;2,1;0,7;1,6;30
-Tomate;Fonte: USDA FDC 170457.;0,9;2,7;0,2;1,2;100
-Cenoura crua;Fonte: USDA FDC 170393.;0,9;6,8;0,2;2,8;80
-Cebola crua;Fonte: USDA FDC 170000.;1,1;7,6;0,1;1,7;50
-Alho cru;Fonte: USDA FDC 169230.;6,4;31,0;0,5;2,1;5
-Pepino;Com casca. Fonte: USDA FDC 168409.;0,7;3,1;0,1;0,5;100
-Pimento vermelho;Fonte: USDA FDC 170108.;1,0;3,9;0,3;2,1;100
-Pimento verde;Fonte: USDA FDC 170427.;0,9;2,9;0,2;1,7;100
-Curgete crua;Com casca. Fonte: USDA FDC 169291.;1,2;2,1;0,3;1,0;100
-Beringela crua;Fonte: USDA FDC 169228.;1,0;2,9;0,2;3,0;100
-Abóbora crua;Fonte: USDA FDC 168448.;1,0;6,0;0,1;0,5;100
-Feijão-verde cru;Fonte: USDA FDC 169961.;1,8;4,3;0,2;2,7;100
-Cogumelos crus;Cogumelo branco (champignon). Fonte: USDA FDC 169251.;3,1;2,3;0,3;1,0;80
-Couve-galega crua;Fonte: USDA FDC 170406.;3,0;1,4;0,6;4,0;80
-Couve lombarda crua;Fonte: USDA FDC 170388.;2,0;3,0;0,1;3,1;80
-Repolho cru;Fonte: USDA FDC 169975.;1,3;3,3;0,1;2,5;80
-Espargos crus;Fonte: USDA FDC 168389.;2,2;1,8;0,1;2,1;80
-Beterraba crua;Fonte: USDA FDC 169145.;1,6;6,8;0,2;2,8;80
-Alho-francês cru;Fonte: USDA FDC 169246.;1,5;12,4;0,3;1,8;80
-Nabo cru;Fonte: USDA FDC 170465.;0,9;4,6;0,1;1,8;80
-Grelos crus;Fonte: USDA FDC 170381.;3,2;0,2;0,5;2,7;80
-Banana;Fonte: USDA FDC 173944.;1,1;20,2;0,3;2,6;120
-Maçã;Com casca. Fonte: USDA FDC 171688.;0,3;11,4;0,2;2,4;150
-Pera;Fonte: USDA FDC 169118.;0,4;12,1;0,1;3,1;150
-Laranja;Fonte: USDA FDC 169097.;0,9;9,4;0,1;2,4;150
-Tangerina;Fonte: USDA FDC 169105.;0,8;11,5;0,3;1,8;80
-Morangos;Fonte: USDA FDC 167762.;0,7;5,7;0,3;2,0;150
-Uvas;Fonte: USDA FDC 174683.;0,7;17,2;0,2;0,9;100
-Kiwi;Fonte: USDA FDC 168153.;1,1;11,7;0,5;3,0;75
-Ananás;Fonte: USDA FDC 169124.;0,5;11,7;0,1;1,4;150
-Melancia;Fonte: USDA FDC 167765.;0,6;7,2;0,2;0,4;200
-Melão;Fonte: USDA FDC 169911.;0,5;8,3;0,1;0,8;200
-Pêssego;Fonte: USDA FDC 169928.;0,9;8,0;0,3;1,5;150
-Manga;Fonte: USDA FDC 169910.;0,8;13,4;0,4;1,6;150
-Mirtilos;Fonte: USDA FDC 171711.;0,7;12,1;0,3;2,4;80
-Framboesas;Fonte: USDA FDC 167755.;1,2;5,4;0,7;6,5;80
-Abacate;Fonte: USDA FDC 171705.;2,0;1,8;14,7;6,7;70
-Limão;Sem casca. Fonte: USDA FDC 167746.;1,1;6,5;0,3;2,8;60
-Cerejas;Fonte: USDA FDC 171719.;1,1;13,9;0,2;2,1;100
-Figos frescos;Fonte: USDA FDC 173021.;0,8;16,3;0,3;2,9;50
-Ameixa;Fonte: USDA FDC 169949.;0,7;10,0;0,3;1,4;70
-Alperce;Fonte: USDA FDC 171697.;1,4;9,1;0,4;2,0;40
-Tâmaras;Variedade medjool. Fonte: USDA FDC 168191.;1,8;68,3;0,2;6,7;25
-Passas;Fonte: USDA FDC 168165.;3,3;74,8;0,3;4,5;30
-Amêndoas;Fonte: USDA FDC 170567.;21,2;9,1;49,9;12,5;30
-Nozes;Fonte: USDA FDC 170187.;15,2;7,0;65,2;6,7;30
-Cajus;Fonte: USDA FDC 170162.;18,2;26,9;43,9;3,3;30
-Avelãs;Fonte: USDA FDC 170581.;15,0;7,0;60,8;9,7;30
-Amendoins;Fonte: USDA FDC 172430.;25,8;7,6;49,2;8,5;30
-Manteiga de amendoim;Sem sal. Fonte: USDA FDC 172470.;22,2;17,3;51,4;5,0;15
-Pistácios;Fonte: USDA FDC 170184.;20,2;16,6;45,3;10,6;30
-Sementes de chia;Fonte: USDA FDC 170554.;16,5;7,7;30,7;34,4;15
-Sementes de linhaça;Fonte: USDA FDC 169414.;18,3;1,6;42,2;27,3;15
-Sementes de abóbora;Fonte: USDA FDC 170556.;30,2;4,7;49,1;6,0;15
-Sementes de girassol;Fonte: USDA FDC 170562.;20,8;11,4;51,5;8,6;15
-Azeite;Fonte: USDA FDC 171413.;0,0;0,0;100,0;0,0;10
-Óleo de girassol;Fonte: USDA FDC 171025.;0,0;0,0;100,0;0,0;10
-Óleo de coco;Fonte: USDA FDC 171412.;0,0;0,0;99,1;0,0;10
-Azeitonas;Fonte: USDA FDC 169094.;0,8;4,4;10,9;1,6;30
-Mel;Fonte: USDA FDC 169640.;0,3;82,2;0,0;0,2;15
-Açúcar;Açúcar branco. Fonte: USDA FDC 169655.;0,0;100,0;0,0;0,0;5
-Compota;Fonte: USDA FDC 169641.;0,4;67,8;0,1;1,1;20
-Chocolate negro 70-85%;Fonte: USDA FDC 170273.;7,8;35,0;42,6;10,9;20
-Cacau em pó;Sem açúcar. Fonte: USDA FDC 169593.;19,6;20,9;13,7;37,0;10
+﻿nome;proteina;hidratos;gordura;fibra;porcao_g
+Peito de frango cru;22,5;0,0;2,6;0,0;150
+Peito de frango assado;31,0;0,0;3,6;0,0;150
+Peito de frango grelhado;30,5;0,0;3,2;0,0;150
+Coxa de frango crua;19,7;0,0;4,1;0,0;150
+Coxa de frango assada;24,8;0,0;8,2;0,0;150
+Peito de peru cru;23,7;0,1;1,5;0,0;150
+Peito de peru assado;30,1;0,0;2,1;0,0;150
+Peru picado cozinhado;27,4;0,0;10,4;0,0;150
+Carne de vaca picada 5% gordura crua;21,4;0,0;5,0;0,0;150
+Carne de vaca picada 10% gordura crua;20,0;0,0;10,0;0,0;150
+Carne de vaca picada 20% gordura crua;17,2;0,0;20,0;0,0;150
+Hambúrguer de vaca 5% gordura grelhado;26,3;0,0;6,8;0,0;150
+Hambúrguer de vaca 10% gordura grelhado;26,1;0,0;11,8;0,0;150
+Bife de vaca (alcatra) cru;22,1;0,0;4,1;0,0;150
+Bife de vaca (alcatra) grelhado;30,6;0,0;5,8;0,0;150
+Bife do lombo de vaca grelhado;29,0;0,0;8,4;0,0;150
+Lombo de porco cru;21,0;0,0;2,2;0,0;150
+Lombo de porco assado;26,2;0,0;3,5;0,0;150
+Febras de porco cruas;22,0;0,0;3,7;0,0;150
+Febras de porco grelhadas;26,8;0,0;7,3;0,0;150
+Perna de borrego assada;27,7;0,0;7,0;0,0;150
+Fígado de vaca cru;20,4;3,9;3,6;0,0;120
+Coelho cru;20,1;0,0;5,6;0,0;150
+Coelho assado;29,1;0,0;8,1;0,0;150
+Fiambre de porco;16,6;2,3;8,8;1,3;30
+Fiambre de peru;21,8;3,0;0,8;0,5;30
+Bacon cru;13,7;0,0;37,1;0,0;30
+Salmão cru;20,4;0,0;13,4;0,0;150
+Salmão grelhado;22,1;0,0;12,4;0,0;150
+Bacalhau cru;17,8;0,0;0,7;0,0;150
+Bacalhau cozinhado;22,8;0,0;0,9;0,0;150
+Atum em lata ao natural;19,4;0,0;1,0;0,0;80
+Atum em lata em óleo;29,1;0,0;8,2;0,0;80
+Atum fresco grelhado;29,2;0,0;0,6;0,0;150
+Sardinhas em lata em óleo;24,6;0,0;11,5;0,0;80
+Cavala crua;18,6;0,0;13,9;0,0;150
+Cavala grelhada;23,9;0,0;17,8;0,0;150
+Robalo cru;18,4;0,0;2,0;0,0;150
+Robalo grelhado;23,6;0,0;2,6;0,0;150
+Tilápia crua;20,1;0,0;1,7;0,0;150
+Tilápia grelhada;26,2;0,0;2,7;0,0;150
+Truta crua;19,9;0,0;6,2;0,0;150
+Truta grelhada;23,8;0,0;7,4;0,0;150
+Espadarte cru;19,7;0,0;6,7;0,0;150
+Espadarte grelhado;23,5;0,0;7,9;0,0;150
+Polvo cru;14,9;2,2;1,0;0,0;150
+Polvo cozido;29,8;4,4;2,1;0,0;150
+Lulas cruas;15,6;3,1;1,4;0,0;150
+Camarão cru;20,1;0,0;0,5;;100
+Camarão cozido;24,0;0,2;0,3;;100
+Mexilhão cru;11,9;3,7;2,2;0,0;100
+Ovo inteiro cru;12,6;0,7;9,5;0,0;50
+Ovo cozido;12,6;1,1;10,6;0,0;50
+Ovos mexidos;10,0;1,6;11,0;0,0;100
+Ovo estrelado;13,6;0,8;14,8;0,0;50
+Clara de ovo crua;10,9;0,7;0,2;0,0;33
+Gema de ovo crua;15,9;3,6;26,5;0,0;17
+Leite magro;3,4;5,0;0,1;0,0;250
+Leite meio-gordo;3,3;4,8;2,0;0,0;250
+Leite gordo;3,2;4,8;3,3;0,0;250
+Iogurte natural;3,5;4,7;3,3;0,0;125
+Iogurte natural magro;5,7;7,7;0,2;0,0;125
+Iogurte grego natural;9,0;4,0;5,0;0,0;150
+Iogurte grego magro;10,2;3,6;0,4;0,0;150
+Queijo cottage;10,5;4,8;2,3;0,0;100
+Requeijão;7,5;7,3;10,2;0,0;50
+Queijo flamengo;24,9;2,2;27,4;0,0;30
+Queijo mozzarella;24,3;2,8;15,9;0,0;30
+Queijo parmesão;35,8;3,2;25,0;0,0;15
+Queijo cheddar;22,9;3,4;33,3;0,0;30
+Queijo feta;14,2;3,9;21,5;0,0;30
+Manteiga;0,9;0,1;81,1;0,0;10
+Natas;2,8;2,8;36,1;0,0;30
+Bebida de soja;3,3;5,7;1,8;0,6;250
+Bebida de amêndoa;0,4;1,1;1,0;0,2;250
+Arroz agulha cru;7,1;78,7;0,7;1,3;75
+Arroz agulha cozido;2,7;27,8;0,3;0,4;150
+Arroz integral cru;7,5;72,7;3,2;3,6;75
+Arroz integral cozido;2,7;24,0;1,0;1,6;150
+Massa crua;13,0;71,5;1,5;3,2;80
+Massa cozida;5,8;29,1;0,9;1,8;180
+Massa integral crua;13,9;64,2;2,9;9,2;80
+Massa integral cozida;6,0;26,2;1,7;3,9;180
+Flocos de aveia;13,2;57,6;6,5;10,1;40
+Granola;13,7;45,0;24,3;8,9;50
+Pão branco;8,9;46,7;3,3;2,7;30
+Pão integral;12,5;36,7;3,5;6,0;30
+Pão de centeio;8,5;42,5;3,3;5,8;30
+Pão pita;9,1;53,5;1,2;2,2;60
+Tortilha de trigo;8,2;45,9;8,0;3,5;45
+Bolachas de arroz;8,2;77,3;2,8;4,2;10
+Farinha de trigo;10,3;73,6;1,0;2,7;30
+Quinoa crua;14,1;57,2;6,1;7,0;60
+Quinoa cozida;4,4;18,5;1,9;2,8;150
+Cuscuz cozido;3,8;21,8;0,2;1,4;150
+Batata crua;2,1;15,4;0,1;2,1;200
+Batata cozida;1,7;18,2;0,1;1,8;200
+Batata-doce crua;1,6;17,1;0,1;3,0;200
+Batata-doce assada;2,0;17,4;0,2;3,3;200
+Milho doce em lata;2,3;12,3;1,2;2,0;80
+Pipocas;12,9;63,3;4,5;14,5;20
+Feijão-frade cozido;7,7;14,3;0,5;6,5;150
+Feijão preto cozido;8,9;15,0;0,5;8,7;150
+Feijão vermelho cozido;8,7;15,4;0,5;7,4;150
+Feijão branco cozido;9,7;18,8;0,4;6,3;150
+Grão-de-bico cozido;8,9;19,8;2,6;7,6;150
+Lentilhas cozidas;9,0;12,2;0,4;7,9;150
+Ervilhas cozidas;5,2;9,8;0,3;4,5;100
+Favas cozidas;7,6;14,3;0,4;5,4;150
+Tremoços cozidos;15,6;7,1;2,9;2,8;50
+Tofu firme;17,3;0,5;8,7;2,3;100
+Edamame;11,9;3,7;5,2;5,2;100
+Húmus;7,8;9,5;17,8;5,5;30
+Brócolos crus;2,8;4,0;0,4;2,6;100
+Couve-flor crua;1,9;3,0;0,3;2,0;100
+Espinafres crus;2,9;1,4;0,4;2,2;50
+Alface crua;1,4;1,6;0,2;1,3;50
+Rúcula crua;2,6;2,1;0,7;1,6;30
+Tomate;0,9;2,7;0,2;1,2;100
+Cenoura crua;0,9;6,8;0,2;2,8;80
+Cebola crua;1,1;7,6;0,1;1,7;50
+Alho cru;6,4;31,0;0,5;2,1;5
+Pepino;0,7;3,1;0,1;0,5;100
+Pimento vermelho;1,0;3,9;0,3;2,1;100
+Pimento verde;0,9;2,9;0,2;1,7;100
+Curgete crua;1,2;2,1;0,3;1,0;100
+Beringela crua;1,0;2,9;0,2;3,0;100
+Abóbora crua;1,0;6,0;0,1;0,5;100
+Feijão-verde cru;1,8;4,3;0,2;2,7;100
+Cogumelos crus;3,1;2,3;0,3;1,0;80
+Couve-galega crua;3,0;1,4;0,6;4,0;80
+Couve lombarda crua;2,0;3,0;0,1;3,1;80
+Repolho cru;1,3;3,3;0,1;2,5;80
+Espargos crus;2,2;1,8;0,1;2,1;80
+Beterraba crua;1,6;6,8;0,2;2,8;80
+Alho-francês cru;1,5;12,4;0,3;1,8;80
+Nabo cru;0,9;4,6;0,1;1,8;80
+Grelos crus;3,2;0,2;0,5;2,7;80
+Banana;1,1;20,2;0,3;2,6;120
+Maçã;0,3;11,4;0,2;2,4;150
+Pera;0,4;12,1;0,1;3,1;150
+Laranja;0,9;9,4;0,1;2,4;150
+Tangerina;0,8;11,5;0,3;1,8;80
+Morangos;0,7;5,7;0,3;2,0;150
+Uvas;0,7;17,2;0,2;0,9;100
+Kiwi;1,1;11,7;0,5;3,0;75
+Ananás;0,5;11,7;0,1;1,4;150
+Melancia;0,6;7,2;0,2;0,4;200
+Melão;0,5;8,3;0,1;0,8;200
+Pêssego;0,9;8,0;0,3;1,5;150
+Manga;0,8;13,4;0,4;1,6;150
+Mirtilos;0,7;12,1;0,3;2,4;80
+Framboesas;1,2;5,4;0,7;6,5;80
+Abacate;2,0;1,8;14,7;6,7;70
+Limão;1,1;6,5;0,3;2,8;60
+Cerejas;1,1;13,9;0,2;2,1;100
+Figos frescos;0,8;16,3;0,3;2,9;50
+Ameixa;0,7;10,0;0,3;1,4;70
+Alperce;1,4;9,1;0,4;2,0;40
+Tâmaras;1,8;68,3;0,2;6,7;25
+Passas;3,3;74,8;0,3;4,5;30
+Amêndoas;21,2;9,1;49,9;12,5;30
+Nozes;15,2;7,0;65,2;6,7;30
+Cajus;18,2;26,9;43,9;3,3;30
+Avelãs;15,0;7,0;60,8;9,7;30
+Amendoins;25,8;7,6;49,2;8,5;30
+Manteiga de amendoim;22,2;17,3;51,4;5,0;15
+Pistácios;20,2;16,6;45,3;10,6;30
+Sementes de chia;16,5;7,7;30,7;34,4;15
+Sementes de linhaça;18,3;1,6;42,2;27,3;15
+Sementes de abóbora;30,2;4,7;49,1;6,0;15
+Sementes de girassol;20,8;11,4;51,5;8,6;15
+Azeite;0,0;0,0;100,0;0,0;10
+Óleo de girassol;0,0;0,0;100,0;0,0;10
+Óleo de coco;0,0;0,0;99,1;0,0;10
+Azeitonas;0,8;4,4;10,9;1,6;30
+Mel;0,3;82,2;0,0;0,2;15
+Açúcar;0,0;100,0;0,0;0,0;5
+Compota;0,4;67,8;0,1;1,1;20
+Chocolate negro 70-85%;7,8;35,0;42,6;10,9;20
+Cacau em pó;19,6;20,9;13,7;37,0;10
