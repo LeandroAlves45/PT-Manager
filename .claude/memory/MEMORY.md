@@ -6,7 +6,10 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
-**2026-10-29: importação CSV do catálogo global (sem commit).** `POST /global-foods|global-exercises/import`
+**2026-10-29: 8C código pré-deploy + runbook.** Aviso do IP do proxy (antes do UseForwardedHeaders),
+motivo do 400 do webhook Stripe, 16 pontos dos emails com guarda; `docs/blueprints/sprint_8/8C/`.
+
+**2026-10-29: importação CSV do catálogo global (na main, 0628695/7111d30).** `POST /global-foods|global-exercises/import`
 (tudo ou nada, `dry_run`, duplicados saltados), listas em `catalog-data/` (free-exercise-db + USDA CC0).
 Ver `Sessions/2026-10-29-importacao-csv-catalogo.md`.
 

@@ -11,7 +11,8 @@ Plano completo: `docs/blueprints/sprint_8/00_plano_sprint_8.md`. Código direto 
 - [x] 8A: `ci.yml` (cache, cobertura, E2E) e `cd.yml` (migrations manual, EF bundle)
 - [x] G8A: CI verde
 - [x] 8B: guias por serviço + emails + tabela mestre (13 guias + 00_tabela_mestre.md em docs/blueprints/sprint_8/8B/; execução pelo Leandro por fazer)
-- [ ] 8C: runbook, `04_PRODUCTION_CHECKLIST.md`, rollback, Render CIDR
+- [x] 8C: código pré-deploy (proxy, webhook, emails) + runbook, checklist e rollback (2026-10-29)
+- [ ] 8C: Leandro executa o runbook; Claude valida (CIDR da Render medido no passo 4)
 - [x] 8D: plano (`docs/blueprints/sprint_8/8D/00_plano_8D.md`)
 - [x] 8D-1: site (CTAs, prerender multi-rota, Privacidade, Termos, Suporte, Eliminar conta)
 - [x] 8D-2: sessão por token para a app nativa (rotas `api/v1/native/auth`, sem migration)

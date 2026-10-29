@@ -39,6 +39,7 @@ Se um caminho aqui deixar de existir, corrige-o aqui em vez de procurar de novo.
 | `.claude/project/backend/01_API_ENDPOINTS.md` | Catálogo de endpoints por módulo |
 | `.claude/project/backend/02_CONTRATO_HTTP_FRONTEND.md` | Contrato HTTP tal como o frontend o consome |
 | `docs/api/api-surface.v1.txt` | **Snapshot verificado por teste** da superfície v1 (170 operações) |
+| `docs/blueprints/sprint_8/8C/00_runbook_deploy.md` | Runbook do deploy em produção (ptmanager.pt), checklist e rollback ao lado |
 | `catalog-data/README.md` | Listas iniciais do catálogo global (CSV), licenças, formato e como importar |
 
 Verdade última é sempre o código: `backend/src/Api/DependencyInjection.cs` (snake_case),

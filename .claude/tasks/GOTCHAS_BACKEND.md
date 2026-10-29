@@ -342,3 +342,10 @@ o PostgreSQL antes de corrigir:
   Editar com `\r\n` e confirmar o diff; uma substituição com `\n` falha em silêncio.
 - **Mutações:** um mutante que não compila (ex. `if (false)` dá CS0162 com warnings como erro) não conta
   como morto. Com duas proteções independentes, retirar as duas juntas.
+- **Diagnóstico de proxy corre ANTES do `UseForwardedHeaders`:** depois dele, um salto aceite já trocou o
+  `RemoteIpAddress` pelo do cliente, e `X-Original-For` pode vir forjado pelo cliente.
+- **Templates de email:** substituir placeholders numa só passagem (regex com dicionário); `.Replace`
+  encadeado volta a ler `{{x}}` vindos de nomes ou notas. Cores novas: calcular o contraste, não estimar.
+- **Mutações com cópia de segurança:** repor o ficheiro com `shutil.move` mantém a data antiga e o
+  MSBuild não volta a embutir recursos (templates). Depois das mutações, `touch` nos ficheiros antes
+  da suite final.
