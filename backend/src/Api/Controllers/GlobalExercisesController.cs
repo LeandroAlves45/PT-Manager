@@ -1,16 +1,19 @@
 using Api.Authorization;
 using Api.Configuration;
+using Api.Contracts.Administration;
 using Api.Contracts.Common;
 using Api.Contracts.Training;
 using Application.Features.Training.Exercises.ArchiveGlobalExercise;
 using Application.Features.Training.Exercises.CreateGlobalExercise;
 using Application.Features.Training.Exercises.DeleteGlobalExercise;
 using Application.Features.Training.Exercises.GetGlobalExercise;
+using Application.Features.Training.Exercises.ImportGlobalExercises;
 using Application.Features.Training.Exercises.ListGlobalExercises;
 using Application.Features.Training.Exercises.ReactivateGlobalExercise;
 using Application.Features.Training.Exercises.UpdateGlobalExercise;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Api.Controllers;
 
@@ -43,6 +46,31 @@ public sealed class GlobalExercisesController : ApiControllerBase
                 cancellationToken),
             GlobalExerciseResponse.From,
             exercise => $"/api/v1/global-exercises/{exercise.Id}");
+    }
+
+    /// <summary>
+    /// Importa exercícios globais de um CSV (parte multipart "file"). Com "dry_run" igual a
+    /// true só valida e conta. Tudo ou nada: com um erro numa linha, nada é gravado.
+    /// </summary>
+    [HttpPost("import")]
+    [ProducesResponseType<CatalogImportReportResponse>(StatusCodes.Status200OK)]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(CatalogImportUpload.MaxRequestBytes)]
+    [RequestFormLimits(
+        MultipartBodyLengthLimit = CatalogImportUpload.MaxRequestBytes,
+        MultipartHeadersLengthLimit = CatalogImportUpload.MaxPartHeadersBytes,
+        ValueCountLimit = CatalogImportUpload.MaxFormValues)]
+    [EnableRateLimiting(ApiRateLimitPolicyNames.Moderation)]
+    public async Task<IActionResult> ImportAsync(
+        [FromForm(Name = "file")] IFormFile? file,
+        [FromForm(Name = "dry_run")] bool dryRun,
+        [FromServices] ImportGlobalExercisesHandler handler,
+        CancellationToken cancellationToken)
+    {
+        await using var content = file?.OpenReadStream() ?? Stream.Null;
+        return await RespondAsync(
+            handler.HandleAsync(new ImportGlobalExercisesCommand(content, dryRun), cancellationToken),
+            CatalogImportReportResponse.From);
     }
 
     /// <summary>Lista uma página do catálogo global.</summary>

@@ -1,3 +1,5 @@
+using Application.Features.Administration.CatalogImport;
+
 namespace Application.Features.Training.Exercises.Abstractions;
 
 /// <summary>Persiste mutações globais de exercícios e a respetiva auditoria na mesma transação.</summary>
@@ -11,6 +13,18 @@ public interface IGlobalExerciseStore
         string? equipment,
         string? difficultyLevel,
         string? videoUrl,
+        DateTime now,
+        CancellationToken cancellationToken
+    );
+
+    /// <summary>
+    /// Cria os exercícios numa só transação, com uma auditoria por item, e salta os nomes
+    /// que já existem no catálogo global. Com <paramref name="dryRun"/> não grava nada.
+    /// </summary>
+    Task<CatalogImportStoreOutcome> ImportAsync(
+        Guid actorUserId,
+        IReadOnlyList<GlobalExerciseImportItem> items,
+        bool dryRun,
         DateTime now,
         CancellationToken cancellationToken
     );

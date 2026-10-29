@@ -283,6 +283,7 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.Nutrition.Foods.ArchiveGlobalFood.ArchiveGlobalFoodHandler>();
         services.AddScoped<Application.Features.Nutrition.Foods.CreateFood.CreateFoodHandler>();
         services.AddScoped<Application.Features.Nutrition.Foods.CreateGlobalFood.CreateGlobalFoodHandler>();
+        services.AddScoped<Application.Features.Nutrition.Foods.ImportGlobalFoods.ImportGlobalFoodsHandler>();
         services.AddScoped<Application.Features.Nutrition.Foods.DeleteGlobalFood.DeleteGlobalFoodHandler>();
         services.AddScoped<Application.Features.Nutrition.Foods.GetFood.GetFoodHandler>();
         services.AddScoped<Application.Features.Nutrition.Foods.GetGlobalFood.GetGlobalFoodHandler>();
@@ -493,6 +494,7 @@ public static class DependencyInjection
         services.AddScoped<Application.Features.Training.Exercises.ArchiveGlobalExercise.ArchiveGlobalExerciseHandler>();
         services.AddScoped<Application.Features.Training.Exercises.CreateExercise.CreateExerciseHandler>();
         services.AddScoped<Application.Features.Training.Exercises.CreateGlobalExercise.CreateGlobalExerciseHandler>();
+        services.AddScoped<Application.Features.Training.Exercises.ImportGlobalExercises.ImportGlobalExercisesHandler>();
         services.AddScoped<Application.Features.Training.Exercises.DeleteGlobalExercise.DeleteGlobalExerciseHandler>();
         services.AddScoped<Application.Features.Training.Exercises.GetExercise.GetExerciseHandler>();
         services.AddScoped<Application.Features.Training.Exercises.GetGlobalExercise.GetGlobalExerciseHandler>();

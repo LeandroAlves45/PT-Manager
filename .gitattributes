@@ -2,3 +2,5 @@
 *.csproj text eol=lf
 *.props text eol=lf
 *.targets text eol=lf
+# CSV do catálogo: guardados tal como o Excel os grava (BOM UTF-8 e CRLF), sem conversão.
+catalog-data/*.csv -text

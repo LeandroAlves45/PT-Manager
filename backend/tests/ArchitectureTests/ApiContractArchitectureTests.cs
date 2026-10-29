@@ -31,9 +31,9 @@ public sealed class ApiContractArchitectureTests
     // Sessão da app nativa: +1 controller e +5 ações. Eliminar a conta do cliente: +1 ação.
     private const int ExpectedConcreteControllers = 37;
     // Tomas dos suplementos do plano: +3 ações. Moderação: +5 (bloqueio de suplemento e de
-    // personal trainer, fila de suplementos).
-    private const int ExpectedDeclaredActions = 201;
-    private const int ExpectedEffectiveOperations = 206;
+    // personal trainer, fila de suplementos). Importação CSV do catálogo global: +2 ações.
+    private const int ExpectedDeclaredActions = 203;
+    private const int ExpectedEffectiveOperations = 208;
 
     private static readonly IReadOnlyList<Operation> Operations = DiscoverOperations();
 

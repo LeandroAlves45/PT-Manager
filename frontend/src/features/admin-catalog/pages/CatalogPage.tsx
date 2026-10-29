@@ -10,6 +10,7 @@ import {
   type CatalogItem,
   type CatalogKind,
 } from '@/features/admin-catalog/api/catalog';
+import { CatalogImportDialog } from '@/features/admin-catalog/components/CatalogImportDialog';
 import { describeExerciseVideo } from '@/features/exercise-video';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
@@ -92,12 +93,15 @@ export function CatalogPage({ kind }: { kind: CatalogKind }) {
         title={`Catálogo global de ${title.toLowerCase()}`}
         description={`${formatNumber(total)} ${title.toLowerCase()}`}
         action={
-          <Button asChild className="min-h-11 md:min-h-8">
-            <Link to={`/admin/catalog/${kind}/new`}>
-              <Plus aria-hidden /> Novo{' '}
-              {kind === 'foods' ? 'alimento' : kind === 'exercises' ? 'exercício' : 'suplemento'}
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {kind !== 'supplements' && <CatalogImportDialog kind={kind} />}
+            <Button asChild className="min-h-11 md:min-h-8">
+              <Link to={`/admin/catalog/${kind}/new`}>
+                <Plus aria-hidden /> Novo{' '}
+                {kind === 'foods' ? 'alimento' : kind === 'exercises' ? 'exercício' : 'suplemento'}
+              </Link>
+            </Button>
+          </div>
         }
       />
       <div className="flex flex-wrap items-center gap-3">

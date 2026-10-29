@@ -1,16 +1,19 @@
 using Api.Authorization;
 using Api.Configuration;
+using Api.Contracts.Administration;
 using Api.Contracts.Common;
 using Api.Contracts.Nutrition;
 using Application.Features.Nutrition.Foods.ArchiveGlobalFood;
 using Application.Features.Nutrition.Foods.CreateGlobalFood;
 using Application.Features.Nutrition.Foods.DeleteGlobalFood;
 using Application.Features.Nutrition.Foods.GetGlobalFood;
+using Application.Features.Nutrition.Foods.ImportGlobalFoods;
 using Application.Features.Nutrition.Foods.ListGlobalFoods;
 using Application.Features.Nutrition.Foods.ReactivateGlobalFood;
 using Application.Features.Nutrition.Foods.UpdateGlobalFood;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Api.Controllers;
 
@@ -44,6 +47,31 @@ public sealed class GlobalFoodsController : ApiControllerBase
                 cancellationToken),
             GlobalFoodResponse.From,
             food => $"/api/v1/global-foods/{food.Id}");
+    }
+
+    /// <summary>
+    /// Importa alimentos globais de um CSV (parte multipart "file"). Com "dry_run" igual a
+    /// true só valida e conta. Tudo ou nada: com um erro numa linha, nada é gravado.
+    /// </summary>
+    [HttpPost("import")]
+    [ProducesResponseType<CatalogImportReportResponse>(StatusCodes.Status200OK)]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(CatalogImportUpload.MaxRequestBytes)]
+    [RequestFormLimits(
+        MultipartBodyLengthLimit = CatalogImportUpload.MaxRequestBytes,
+        MultipartHeadersLengthLimit = CatalogImportUpload.MaxPartHeadersBytes,
+        ValueCountLimit = CatalogImportUpload.MaxFormValues)]
+    [EnableRateLimiting(ApiRateLimitPolicyNames.Moderation)]
+    public async Task<IActionResult> ImportAsync(
+        [FromForm(Name = "file")] IFormFile? file,
+        [FromForm(Name = "dry_run")] bool dryRun,
+        [FromServices] ImportGlobalFoodsHandler handler,
+        CancellationToken cancellationToken)
+    {
+        await using var content = file?.OpenReadStream() ?? Stream.Null;
+        return await RespondAsync(
+            handler.HandleAsync(new ImportGlobalFoodsCommand(content, dryRun), cancellationToken),
+            CatalogImportReportResponse.From);
     }
 
     /// <summary>Lista uma página de alimentos globais.</summary>

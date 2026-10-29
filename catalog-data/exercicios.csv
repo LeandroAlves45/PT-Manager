@@ -1,0 +1,139 @@
+﻿nome;descricao;grupos_musculares;equipamento;dificuldade
+Supino plano com barra;Deitado no banco, descer a barra ao meio do peito e empurrar até estender os braços.;chest,shoulders,triceps;Barra;Iniciante
+Supino inclinado com barra;Banco a 30-45°, descer a barra à parte alta do peito e empurrar.;chest,shoulders,triceps;Barra;Iniciante
+Supino declinado com barra;Banco declinado, descer a barra à parte baixa do peito e empurrar.;chest,shoulders,triceps;Barra;Iniciante
+Supino pega fechada;Mãos à largura dos ombros, cotovelos junto ao corpo, foco nos tríceps.;chest,shoulders,triceps;Barra;Iniciante
+Supino plano com halteres;Deitado no banco, descer os halteres ao lado do peito e empurrar.;chest,shoulders,triceps;Halteres;Iniciante
+Supino inclinado com halteres;Banco a 30-45°, descer os halteres à parte alta do peito e empurrar.;chest,shoulders,triceps;Halteres;Iniciante
+Supino declinado com halteres;Banco declinado, descer os halteres ao peito e empurrar.;chest,shoulders,triceps;Halteres;Iniciante
+Supino plano na máquina Smith;Supino plano com a barra guiada da máquina Smith.;chest,shoulders,triceps;Máquina;Iniciante
+Supino inclinado na máquina Smith;Supino inclinado com a barra guiada da máquina Smith.;chest,shoulders,triceps;Máquina;Iniciante
+Press de peito na máquina;Sentado, empurrar as pegas à frente até estender os braços.;chest,shoulders,triceps;Máquina;Iniciante
+Press inclinado na máquina;Sentado, empurrar as pegas para cima e para a frente.;chest,shoulders,triceps;Máquina;Iniciante
+Aberturas com halteres;Deitado, braços quase estendidos, abrir até sentir o peito alongar e fechar.;chest;Halteres;Iniciante
+Aberturas inclinadas com halteres;Banco inclinado, abrir os braços em arco e fechar acima do peito.;chest,shoulders;Halteres;Iniciante
+Peck deck;Sentado na máquina, juntar os braços à frente do peito.;chest;Máquina;Iniciante
+Cruzamento de cabos;De pé entre polias altas, puxar os cabos em arco até à frente do corpo.;chest,shoulders;Polia;Iniciante
+Aberturas com cabos no banco;Deitado entre polias baixas, abrir e fechar os braços em arco.;chest;Polia;Intermédio
+Flexões;Corpo alinhado, descer o peito ao chão e empurrar.;chest,shoulders,triceps;Peso corporal;Iniciante
+Flexões inclinadas;"Mãos num banco ou apoio elevado; versão mais fácil das flexões.";chest,shoulders,triceps;Peso corporal;Iniciante
+Flexões com pés elevados;"Pés num banco; versão mais difícil, com mais peito superior.";chest,shoulders,triceps;Peso corporal;Iniciante
+Flexões diamante;Mãos juntas debaixo do peito, foco nos tríceps.;chest,shoulders,triceps;Peso corporal;Intermédio
+Fundos nas paralelas (peito);Tronco inclinado à frente, descer até os ombros ficarem ao nível dos cotovelos.;chest,shoulders,triceps;Paralelas;Intermédio
+Fundos nas paralelas (tríceps);Tronco direito, descer controlado e estender os braços.;chest,shoulders,triceps;Peso corporal;Iniciante
+Fundos no banco;Mãos no banco atrás do corpo, fletir e estender os cotovelos.;chest,shoulders,triceps;Peso corporal;Iniciante
+Pullover com halter;Deitado, levar o halter para trás da cabeça com braços quase estendidos e voltar.;chest,lats,shoulders,triceps;Halteres;Intermédio
+Elevações;Pega pronada, puxar até o queixo passar a barra.;back,lats,biceps;Peso corporal;Iniciante
+Elevações pega supinada;Palmas viradas para ti, puxar até o queixo passar a barra.;back,lats,biceps,forearms;Peso corporal;Iniciante
+Elevações assistidas com elástico;Elástico preso à barra para ajudar na subida.;back,lats,forearms,core;Elásticos;Iniciante
+Puxada à frente pega larga;Sentado, puxar a barra até à parte alta do peito.;back,lats,shoulders,biceps;Polia;Iniciante
+Puxada à frente pega fechada;Pega fechada, puxar a barra ao peito com cotovelos junto ao corpo.;back,lats,shoulders,biceps;Polia;Iniciante
+Puxada com triângulo;Puxar o triângulo ao peito, cotovelos para baixo e para trás.;back,lats,shoulders,biceps;Polia;Intermédio
+Pullover na polia;Braços estendidos, levar a barra da polia alta até às coxas.;lats;Polia;Iniciante
+Remada curvada com barra;Tronco inclinado, costas neutras, puxar a barra ao abdómen.;back,lats,shoulders,biceps;Barra;Iniciante
+Remada curvada pega supinada;Como a remada curvada, com as palmas viradas para cima.;back,lats,shoulders,biceps;Barra;Intermédio
+Remada unilateral com halter;Apoio no banco, puxar o halter até à anca.;back,lats,shoulders,biceps;Halteres;Iniciante
+Remada curvada com halteres;Tronco inclinado, puxar os dois halteres até às costelas.;back,lats,shoulders,biceps;Halteres;Iniciante
+Remada sentada na polia;Sentado, costas direitas, puxar a pega ao abdómen.;back,lats,shoulders,biceps;Polia;Iniciante
+Remada T;Puxar a barra em T ao peito, tronco inclinado.;back,lats,biceps;Barra;Iniciante
+Remada invertida;Debaixo de uma barra, corpo alinhado, puxar o peito à barra.;back,lats;Peso corporal;Iniciante
+Remada alta na máquina;Sentado, puxar as pegas para trás e para baixo.;back,lats;Máquina;Iniciante
+Face pull;Corda na polia alta, puxar à altura da cara abrindo os cotovelos.;back,shoulders;Polia;Intermédio
+Extensões lombares;No banco romano, descer o tronco e subir até ficar alinhado.;lower_back,glutes,hamstrings;Banco romano;Iniciante
+Peso morto;Barra junto às pernas, costas neutras, empurrar o chão e estender a anca.;back,lats,traps,lower_back,forearms,glutes,quadriceps,hamstrings,calves;Barra;Intermédio
+Peso morto romeno;Joelhos ligeiramente fletidos, levar a anca atrás e descer a barra pelas pernas.;lower_back,glutes,hamstrings,calves;Barra;Intermédio
+Peso morto pernas rígidas com halteres;Pernas quase estendidas, descer os halteres levando a anca atrás.;lower_back,glutes,hamstrings;Halteres;Iniciante
+Peso morto sumo;Pés afastados e pontas para fora, mãos por dentro dos joelhos.;back,traps,lower_back,forearms,glutes,quadriceps,hamstrings;Barra;Intermédio
+Peso morto com barra hexagonal;Dentro da barra hexagonal, levantar com costas neutras.;glutes,quadriceps,hamstrings;Barra hexagonal;Iniciante
+Peso morto parcial (rack pull);Peso morto a partir dos suportes, à altura dos joelhos.;traps,lower_back,forearms,glutes,hamstrings;Barra;Intermédio
+Good morning;Barra nas costas, levar a anca atrás com costas neutras e voltar.;lower_back,core,glutes,hamstrings;Barra;Intermédio
+Press militar com barra;Sentado ou de pé, empurrar a barra dos ombros até cima.;chest,shoulders,triceps;Barra;Intermédio
+Press militar de pé;De pé, empurrar a barra dos ombros até cima, abdómen contraído.;shoulders,triceps;Barra;Iniciante
+Press de ombros com halteres;Empurrar os halteres dos ombros até cima.;shoulders,triceps;Halteres;Intermédio
+Press Arnold;Começar com palmas viradas para ti e rodar enquanto empurras.;shoulders,triceps;Halteres;Intermédio
+Press de ombros na máquina;Sentado, empurrar as pegas para cima.;shoulders,triceps;Máquina;Iniciante
+Push press;Pequena flexão das pernas para ajudar a empurrar a barra acima da cabeça.;shoulders,triceps,quadriceps;Barra;Avançado
+Elevações laterais;Elevar os halteres de lado até à altura dos ombros.;shoulders;Halteres;Iniciante
+Elevações laterais na polia;Elevar o cabo de lado até à altura do ombro.;shoulders;Polia;Iniciante
+Elevações frontais;Elevar os halteres à frente até à altura dos ombros.;shoulders;Halteres;Iniciante
+Elevação frontal com disco;Segurar um disco com as duas mãos e elevar à frente.;shoulders;Disco;Intermédio
+Aberturas invertidas;Tronco inclinado, abrir os braços para trás, foco no deltoide posterior.;shoulders;Halteres;Iniciante
+Peck deck invertido;Na máquina, abrir os braços para trás.;shoulders;Máquina;Iniciante
+Remada alta com barra;Puxar a barra junto ao corpo até ao peito, cotovelos altos.;traps,shoulders;Barra;Iniciante
+Encolhimentos com barra;Elevar os ombros em direção às orelhas e descer controlado.;traps;Barra;Iniciante
+Encolhimentos com halteres;Halteres ao lado do corpo, elevar os ombros e descer.;traps;Halteres;Iniciante
+Curl com barra;Cotovelos fixos, fletir os braços até à altura dos ombros.;biceps,forearms;Barra;Iniciante
+Curl com barra EZ;Curl com a barra EZ, mais confortável para os pulsos.;biceps;Barra EZ;Iniciante
+Curl com halteres;Fletir os dois braços em simultâneo, cotovelos junto ao corpo.;biceps,forearms;Halteres;Iniciante
+Curl alternado com halteres;Fletir um braço de cada vez, rodando a palma para cima.;biceps,forearms;Halteres;Iniciante
+Curl martelo;Palmas viradas uma para a outra durante todo o movimento.;biceps;Halteres;Iniciante
+Curl inclinado com halteres;Sentado num banco inclinado, braços atrás do corpo, fletir.;biceps;Halteres;Iniciante
+Curl concentrado;Sentado, cotovelo apoiado na coxa, fletir o braço.;biceps,forearms;Halteres;Iniciante
+Curl no banco Scott;Braços apoiados no banco Scott, fletir a barra.;biceps;Barra;Iniciante
+Curl na polia;De pé, fletir a barra da polia baixa.;biceps;Polia;Iniciante
+Curl martelo na polia com corda;Corda na polia baixa, fletir com palmas viradas uma para a outra.;biceps;Polia;Iniciante
+Curl invertido com barra;"Pega pronada, fletir os braços; trabalha antebraços.";biceps,forearms;Barra;Iniciante
+Curl Zottman;Subir com palmas para cima e descer com palmas para baixo.;biceps,forearms;Halteres;Intermédio
+Extensão de tríceps na polia;Cotovelos junto ao corpo, estender a barra até baixo.;triceps;Polia;Iniciante
+Extensão de tríceps na polia com corda;Estender a corda até baixo e afastar as pontas no fim.;triceps;Polia;Iniciante
+Extensão de tríceps acima da cabeça na polia;De costas para a polia, estender a corda acima da cabeça.;triceps;Polia;Iniciante
+Extensão de tríceps deitado (skull crusher);Deitado, descer a barra à testa e estender os braços.;triceps;Barra EZ;Intermédio
+Extensão de tríceps com halter acima da cabeça;Halter seguro com as duas mãos, descer atrás da cabeça e estender.;triceps;Halteres;Iniciante
+Kickback de tríceps;Tronco inclinado, estender o braço para trás.;triceps;Halteres;Iniciante
+Extensão de tríceps na máquina;Sentado, estender os braços contra a resistência.;triceps;Máquina;Iniciante
+Flexão de pulsos com barra;Antebraços no banco, fletir os pulsos para cima.;forearms;Barra;Iniciante
+Passeio do agricultor;Caminhar com cargas pesadas nas mãos, tronco direito.;traps,lower_back,forearms,core,glutes,quadriceps,hamstrings;Halteres;Intermédio
+Agachamento com barra;Barra nas costas, descer até as coxas ficarem paralelas ao chão e subir.;lower_back,glutes,quadriceps,hamstrings,calves;Barra;Iniciante
+Agachamento frontal;Barra à frente nos ombros, tronco mais direito.;glutes,quadriceps,hamstrings,calves;Barra;Avançado
+Agachamento goblet;Halter ou kettlebell junto ao peito, agachar.;shoulders,glutes,quadriceps,hamstrings,calves;Kettlebell;Iniciante
+Agachamento com peso corporal;Agachar sem carga, braços à frente para equilíbrio.;glutes,quadriceps,hamstrings;Peso corporal;Iniciante
+Agachamento com halteres;Halteres ao lado do corpo, agachar.;lower_back,glutes,quadriceps,hamstrings,calves;Halteres;Iniciante
+Agachamento na máquina Smith;Agachamento com a barra guiada.;lower_back,glutes,quadriceps,hamstrings,calves;Máquina;Iniciante
+Hack squat;Na máquina hack, descer até 90° e empurrar.;glutes,quadriceps,hamstrings,calves;Máquina;Iniciante
+Leg press;Empurrar a plataforma com os pés à largura da anca.;glutes,quadriceps,hamstrings,calves;Máquina;Iniciante
+Agachamento à caixa;Agachar até tocar numa caixa ou banco e subir.;lower_back,glutes,quadriceps,hamstrings,calves;Barra;Intermédio
+Agachamento búlgaro;Pé de trás num banco, descer o joelho de trás em direção ao chão.;glutes,quadriceps,hamstrings;Halteres;Iniciante
+Afundos com halteres;Passo à frente, descer o joelho de trás e voltar.;glutes,quadriceps,hamstrings,calves;Halteres;Iniciante
+Afundos a andar com barra;Afundos alternados a avançar, barra nas costas.;glutes,quadriceps,hamstrings,calves;Barra;Iniciante
+Afundos a andar;Afundos alternados a avançar, sem carga.;glutes,quadriceps,hamstrings,calves;Peso corporal;Iniciante
+Afundos atrás com halteres;Passo atrás e descer o joelho em direção ao chão.;glutes,quadriceps,hamstrings,calves;Halteres;Intermédio
+Subidas ao banco com halteres;Subir a um banco com uma perna e descer controlado.;glutes,quadriceps,hamstrings,calves;Halteres;Intermédio
+Extensão de pernas;Sentado na máquina, estender os joelhos.;quadriceps;Máquina;Iniciante
+Flexão de pernas deitado;Deitado na máquina, fletir os joelhos.;hamstrings;Máquina;Iniciante
+Flexão de pernas sentado;Sentado na máquina, fletir os joelhos.;hamstrings;Máquina;Iniciante
+Glute ham raise;No banco GHD, descer o tronco e subir com isquiotibiais e glúteos.;glutes,hamstrings,calves;Máquina;Intermédio
+Hip thrust com barra;Costas apoiadas no banco, barra na anca, estender a anca.;glutes,hamstrings,calves;Barra;Intermédio
+Ponte de glúteos com barra;Deitado no chão, barra na anca, elevar a anca.;glutes,hamstrings,calves;Barra;Intermédio
+Ponte de glúteos;Deitado, pés no chão, elevar a anca contraindo os glúteos.;glutes,hamstrings;Peso corporal;Iniciante
+Ponte de glúteos unilateral;Ponte com uma perna estendida no ar.;glutes,hamstrings;Peso corporal;Iniciante
+Coice de glúteo;Em quatro apoios, estender uma perna para trás e para cima.;glutes,hamstrings;Peso corporal;Iniciante
+Coice de glúteo na polia;Cabo no tornozelo, estender a perna para trás.;glutes,hamstrings;Polia;Intermédio
+Abdução na máquina;Sentado, afastar as pernas contra a resistência.;glutes;Máquina;Iniciante
+Adução na máquina;Sentado, juntar as pernas contra a resistência.;glutes;Máquina;Iniciante
+Elevação de gémeos de pé;Subir na ponta dos pés e descer até alongar.;calves;Máquina;Iniciante
+Elevação de gémeos sentado;Sentado, joelhos fletidos, subir na ponta dos pés.;calves;Máquina;Iniciante
+Gémeos no leg press;Empurrar a plataforma só com a ponta dos pés.;calves;Máquina;Iniciante
+Prancha;Antebraços e pontas dos pés no chão, corpo alinhado e abdómen contraído.;core;Peso corporal;Iniciante
+Prancha lateral;Apoio num antebraço, corpo alinhado de lado.;core;Peso corporal;Iniciante
+Abdominais (crunch);Deitado, joelhos fletidos, elevar os ombros do chão.;core;Peso corporal;Iniciante
+Abdominais invertidos;Deitado, levar os joelhos ao peito elevando a anca.;core;Peso corporal;Iniciante
+Elevação de pernas suspenso;Suspenso na barra, elevar as pernas até à anca.;core;Peso corporal;Avançado
+Elevação de pernas no banco;Deitado no banco, elevar as pernas estendidas.;core;Peso corporal;Iniciante
+Abdominais na polia;Ajoelhado, puxar a corda fletindo o tronco.;core;Polia;Iniciante
+Rotação russa;Sentado, tronco inclinado para trás, rodar de um lado para o outro.;lower_back,core;Peso corporal;Intermédio
+Roda abdominal;De joelhos, rolar a roda à frente e voltar.;shoulders,core;Roda abdominal;Intermédio
+Pallof press;De lado para a polia, empurrar o cabo à frente sem deixar o tronco rodar.;core;Polia;Iniciante
+Escaladores;Em prancha alta, levar os joelhos ao peito alternadamente.;shoulders,core,quadriceps;Peso corporal;Iniciante
+Abdominais completos (sit-up);Deitado, subir o tronco até sentado.;core;Peso corporal;Iniciante
+Abdominais oblíquos;Rodar o tronco levando o cotovelo ao joelho oposto.;core;Peso corporal;Iniciante
+Swing com kettlebell;Impulso da anca para balançar a kettlebell até à altura do peito.;lower_back,shoulders,glutes,hamstrings,calves;Kettlebell;Intermédio
+Thruster com kettlebell;Agachamento seguido de press acima da cabeça.;shoulders,triceps,quadriceps;Kettlebell;Intermédio
+Clean and press;Levantar a barra do chão aos ombros e empurrar acima da cabeça.;back,traps,lower_back,shoulders,triceps,core,glutes,quadriceps,hamstrings,calves;Barra;Intermédio
+Saltos à caixa;Saltar para cima de uma caixa e descer controlado.;glutes,quadriceps,hamstrings,calves;Caixa;Iniciante
+Agachamento com salto;Agachar e saltar o mais alto possível.;glutes,quadriceps,hamstrings,calves;Peso corporal;Intermédio
+Saltar à corda;Saltos contínuos à corda.;quadriceps,hamstrings,calves;Corda;Intermédio
+Remo ergómetro;Remar na máquina, empurrar com as pernas e puxar com os braços.;back,lower_back,biceps,glutes,quadriceps,hamstrings,calves;Máquina;Intermédio
+Bicicleta estática;Pedalar na bicicleta estática.;glutes,quadriceps,hamstrings,calves;Máquina;Iniciante
+Elíptica;Movimento contínuo na elíptica.;glutes,quadriceps,hamstrings,calves;Máquina;Intermédio
+Corrida na passadeira;Correr na passadeira.;glutes,quadriceps,hamstrings,calves;Máquina;Iniciante
+Caminhada na passadeira;Caminhar na passadeira, com ou sem inclinação.;glutes,quadriceps,hamstrings,calves;Máquina;Iniciante

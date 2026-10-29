@@ -1,5 +1,6 @@
 using System.Data;
 using System.Text.Json;
+using Application.Features.Administration.CatalogImport;
 using Application.Features.Nutrition.Foods.Abstractions;
 using Domain.Entities.Administration;
 using Domain.Entities.Nutrition;
@@ -42,6 +43,73 @@ internal sealed class GlobalFoodStore : IGlobalFoodStore
         var attempt = new MutationAttempt();
         return ExecuteAsync(
             token => CreateOnceAsync(actorUserId, food, now, attempt, token),
+            attempt,
+            cancellationToken);
+    }
+
+    public Task<CatalogImportStoreOutcome> ImportAsync(
+        Guid actorUserId,
+        IReadOnlyList<GlobalFoodImportItem> items,
+        bool dryRun,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+
+        // Como no CreateAsync, as identidades são fixadas antes do retry.
+        var foods = items
+            .Select(item => (Item: item, Food: new Food(
+                null,
+                item.Name,
+                item.Description,
+                item.Protein,
+                item.Carbs,
+                item.Fats,
+                item.Fiber,
+                now,
+                item.DefaultServingGrams)))
+            .ToList();
+        var attempt = new MutationAttempt();
+
+        return ExecuteAsync(
+            async token =>
+            {
+                // Duas importações em paralelo podiam ambas não ver o nome e criá-lo duas vezes.
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "SELECT pg_advisory_xact_lock(hashtextextended('global-food-import', 0))", token);
+
+                var existingNames = await _dbContext.Foods
+                    .IgnoreQueryFilters()
+                    .Where(food => food.OwnerTrainerId == null)
+                    .Select(food => food.Name)
+                    .ToListAsync(token);
+                var existing = existingNames.Select(CatalogImportName.Key).ToHashSet(StringComparer.Ordinal);
+
+                var skipped = new List<CatalogImportSkippedRowDto>();
+                var created = 0;
+
+                foreach (var (item, food) in foods)
+                {
+                    if (existing.Contains(CatalogImportName.Key(item.Name)))
+                    {
+                        skipped.Add(new CatalogImportSkippedRowDto(
+                            item.Line, item.Name, CatalogImportSkipReasons.AlreadyExists));
+                        continue;
+                    }
+
+                    created++;
+                    if (dryRun)
+                        continue;
+
+                    _dbContext.Foods.Add(food);
+                    attempt.AuditEntry = AddAudit(actorUserId, "import", food, null, Snapshot(food), now);
+                }
+
+                if (!dryRun && created > 0)
+                    await _dbContext.SaveChangesAsync(token);
+
+                return new CatalogImportStoreOutcome(created, skipped);
+            },
             attempt,
             cancellationToken);
     }
@@ -246,8 +314,8 @@ internal sealed class GlobalFoodStore : IGlobalFoodStore
         updated_at = food.UpdatedAt
     });
 
-    private Task<GlobalFoodStoreResult> ExecuteAsync(
-        Func<CancellationToken, Task<GlobalFoodStoreResult>> operation,
+    private Task<TResult> ExecuteAsync<TResult>(
+        Func<CancellationToken, Task<TResult>> operation,
         MutationAttempt attempt,
         CancellationToken cancellationToken)
     {

@@ -1,5 +1,6 @@
 using System.Data;
 using System.Text.Json;
+using Application.Features.Administration.CatalogImport;
 using Application.Features.Training.Exercises.Abstractions;
 using Domain.Entities.Administration;
 using Domain.Entities.Training;
@@ -43,6 +44,73 @@ internal sealed class GlobalExerciseStore : IGlobalExerciseStore
         var attempt = new MutationAttempt();
         return ExecuteAsync(
             token => CreateOnceAsync(actorUserId, exercise, now, attempt, token),
+            attempt,
+            cancellationToken);
+    }
+
+    public Task<CatalogImportStoreOutcome> ImportAsync(
+        Guid actorUserId,
+        IReadOnlyList<GlobalExerciseImportItem> items,
+        bool dryRun,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+
+        // Como no CreateAsync, as identidades são fixadas antes do retry.
+        var exercises = items
+            .Select(item => (Item: item, Exercise: new Exercise(
+                null,
+                item.Name,
+                item.Description,
+                item.MuscleGroups,
+                item.Equipment,
+                item.DifficultyLevel,
+                null,
+                now)))
+            .ToList();
+        var attempt = new MutationAttempt();
+
+        return ExecuteAsync(
+            async token =>
+            {
+                // Duas importações em paralelo podiam ambas não ver o nome e criá-lo duas vezes.
+                await _dbContext.Database.ExecuteSqlRawAsync(
+                    "SELECT pg_advisory_xact_lock(hashtextextended('global-exercise-import', 0))", token);
+
+                var existingNames = await _dbContext.Exercises
+                    .IgnoreQueryFilters()
+                    .Where(exercise => exercise.OwnerTrainerId == null)
+                    .Select(exercise => exercise.Name)
+                    .ToListAsync(token);
+                var existing = existingNames.Select(CatalogImportName.Key).ToHashSet(StringComparer.Ordinal);
+
+                var skipped = new List<CatalogImportSkippedRowDto>();
+                var created = 0;
+
+                foreach (var (item, exercise) in exercises)
+                {
+                    if (existing.Contains(CatalogImportName.Key(item.Name)))
+                    {
+                        skipped.Add(new CatalogImportSkippedRowDto(
+                            item.Line, item.Name, CatalogImportSkipReasons.AlreadyExists));
+                        continue;
+                    }
+
+                    created++;
+                    if (dryRun)
+                        continue;
+
+                    _dbContext.Exercises.Add(exercise);
+                    attempt.AuditEntry = AddAudit(
+                        actorUserId, "import", exercise, null, Snapshot(exercise), now);
+                }
+
+                if (!dryRun && created > 0)
+                    await _dbContext.SaveChangesAsync(token);
+
+                return new CatalogImportStoreOutcome(created, skipped);
+            },
             attempt,
             cancellationToken);
     }
@@ -292,8 +360,8 @@ internal sealed class GlobalExerciseStore : IGlobalExerciseStore
         updated_at = exercise.UpdatedAt
     });
 
-    private Task<GlobalExerciseStoreResult> ExecuteAsync(
-        Func<CancellationToken, Task<GlobalExerciseStoreResult>> operation,
+    private Task<TResult> ExecuteAsync<TResult>(
+        Func<CancellationToken, Task<TResult>> operation,
         MutationAttempt attempt,
         CancellationToken cancellationToken)
     {

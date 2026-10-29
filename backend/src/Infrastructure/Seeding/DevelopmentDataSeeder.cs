@@ -439,7 +439,7 @@ public sealed class DevelopmentDataSeeder
             description: "Agachamento livre, barra nas costas.",
             muscleGroups: "quadriceps,glutes",
             equipment: "Barra",
-            difficultyLevel: "intermediate",
+            difficultyLevel: "Intermédio",
             videoUrl: null,
             now);
 
@@ -449,7 +449,7 @@ public sealed class DevelopmentDataSeeder
             description: "Supino com barra em banco plano.",
             muscleGroups: "chest,triceps",
             equipment: "Barra",
-            difficultyLevel: "intermediate",
+            difficultyLevel: "Intermédio",
             videoUrl: null,
             now);
 
@@ -606,7 +606,7 @@ public sealed class DevelopmentDataSeeder
             "Variante do personal trainer.",
             "back,biceps",
             "Barra",
-            "intermediate",
+            "Intermédio",
             null,
             now);
         var privateFood = new Food(

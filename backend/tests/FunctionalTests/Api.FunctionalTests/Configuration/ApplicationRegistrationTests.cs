@@ -27,7 +27,8 @@ public sealed class ApplicationRegistrationTests
         // + 3 das tomas dos suplementos do plano (ler, marcar, desmarcar).
         // + 4 da moderação (bloquear e desbloquear suplemento, bloquear e levantar personal trainer).
         // + 1 do portal do cliente (eliminar a conta).
-        Assert.Equal(182, handlerCount);
+        // + 2 da importação CSV do catálogo global (alimentos e exercícios).
+        Assert.Equal(184, handlerCount);
         // 82 anteriores + 5 validators 6GB-SU (procura, isentos, convidar, estado e registo).
         // + 1 do trainer (conclusões de treino).
         // + 2 da avaliação inicial (gravação no portal, lista por rever).
