@@ -505,3 +505,6 @@ Lições capturadas depois de correções do utilizador.
 - **Código dentro de `node -e` em bash perde `${...}`:** usar Edit/Write para ficheiros com template literals.
 - **Sinais de texto de IA:** travessões e frases-feitas. Proteger com um teste o que é mecânico
   (travessões); o resto é decisão de marca do Leandro.
+- **Dados para importar têm de ser rastreáveis:** cada alimento leva o FDC ID; exercícios com correções
+  manuais listadas no README. Validar os ficheiros reais contra a API (`dry_run`) antes de os entregar.
+- **Python no Windows reescreve em CRLF:** abrir com `newline=''` ou normalizar com `sed` antes do diff.

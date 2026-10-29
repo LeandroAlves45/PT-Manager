@@ -336,3 +336,9 @@ o PostgreSQL antes de corrigir:
 - **Testes funcionais:** a ficha de `TrainerTenantSeeder.SeedClientAsync` já tem avaliação inicial
   (atualizar, não inserir). Clientes HTTP com bearer: `CreateOriginClient()`; o `CreateClient()` sem
   base HTTPS dá 401.
+- **Upload multipart nos testes funcionais:** acima de `RequestFormLimits` o TestServer devolve 400 (no
+  model binding), não 413. Testar "rejeitado antes do handler", como no logo.
+- **`docs/api/api-surface.v1.txt` é CRLF e ordenado de forma ordinal** (`/import` antes de `/{id}`).
+  Editar com `\r\n` e confirmar o diff; uma substituição com `\n` falha em silêncio.
+- **Mutações:** um mutante que não compila (ex. `if (false)` dá CS0162 com warnings como erro) não conta
+  como morto. Com duas proteções independentes, retirar as duas juntas.

@@ -15,6 +15,9 @@ Código direto na `main`; os `.md` são só guias (8B secrets e emails, 8C deplo
 - **8D sem dependências FEITO (2026-10-28, sem commit):** site com páginas legais (rascunho, noindex),
   sessão nativa `api/v1/native/auth`, eliminação de conta de cliente. Ver
   `Sessions/2026-10-28-sprint8d-sem-dependencias.md` e `docs/blueprints/sprint_8/8D/01_o_que_falta.md`.
+- **Importação CSV do catálogo global FEITA (2026-10-29, sem commit):** endpoints `.../import`, diálogo no
+  admin, `catalog-data/` com 138 exercícios e 156 alimentos para o Leandro rever e importar (dev e depois
+  produção). Ver `Sessions/2026-10-29-importacao-csv-catalogo.md`.
 - **Próximo:** o Leandro fecha 8B e faz o 8C; depois 8D-4 (Capacitor), 8D-5 (guias), 8D-6 (lojas).
 
 ## Auditoria de segurança pré-produção (2026-10-27)

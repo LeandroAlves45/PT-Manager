@@ -19,6 +19,8 @@ Plano completo: `docs/blueprints/sprint_8/00_plano_sprint_8.md`. Código direto 
 - [x] 8D: documentar o que falta (8D-4 Capacitor, 8D-5 guias das lojas, 8D-6 submissão)
 - [x] 8D: validação (suites, mutações, revisão de segurança, site no browser)
 - [x] Fecho 8D sem dependências: nota de sessão, ACTIVE, NEST, GOTCHAS, lessons (2026-10-28)
+- [x] Importação CSV do catálogo global + `catalog-data/` (2026-10-29; validado, sem commit)
+- [ ] Leandro: rever `catalog-data/*.csv`, importar em dev e, depois do 8C, em produção
 
 ---
 

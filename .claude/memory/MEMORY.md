@@ -6,6 +6,10 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-10-29: importação CSV do catálogo global (sem commit).** `POST /global-foods|global-exercises/import`
+(tudo ou nada, `dry_run`, duplicados saltados), listas em `catalog-data/` (free-exercise-db + USDA CC0).
+Ver `Sessions/2026-10-29-importacao-csv-catalogo.md`.
+
 **2026-10-28: 8D sem dependências FEITO (site legal, sessão nativa, eliminar conta).**
 - Site: 4 páginas legais em rascunho (noindex), CTAs /entrar e /criar-conta, sem travessões (teste).
 - `api/v1/native/auth` (token no corpo, CSRF mantido) e `POST /portal/my-account/deletion` (anonimizar e manter).

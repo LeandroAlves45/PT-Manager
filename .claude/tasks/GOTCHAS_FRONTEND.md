@@ -465,3 +465,6 @@ com um corpo real.
   um teste impede marcar como revisto com `legalOperator` por preencher.
 - **Eliminar conta:** erro de password vem como 400 no campo (`fieldErrors`), nunca 401, para o cliente
   HTTP não tentar refresh.
+- **Upload com `FormData` nos testes:** o `File` do jsdom parte o `fetch` do Vitest (`_buffer`). Usar um
+  `File` do Node e `vi.stubGlobal('FormData', ...)` (ver `nodeCsv`/`nodeFile`) e ler o corpo no MSW com
+  `request.text()`. Os toasts não aparecem no DOM dos testes: fazer mock do `sonner`.
