@@ -23,7 +23,7 @@ public sealed class AccountAccessTemplateRendererTests
             "Europe/Lisbon"));
 
         Assert.Contains(
-            "A conta do seu personal trainer, Rita Sousa, está suspensa na plataforma.",
+            "A conta do teu personal trainer, Rita Sousa, está suspensa na plataforma.",
             rendered.Text,
             StringComparison.Ordinal);
         Assert.Contains("31/10/2026 às 14:56 (Europe/Lisbon)", rendered.Text, StringComparison.Ordinal);
@@ -38,7 +38,7 @@ public sealed class AccountAccessTemplateRendererTests
             AccountAccessTemplateRenderer.ClientRestoredKind, null, null, null, null, null, null));
 
         Assert.Contains(
-            "O acesso ao portal do seu personal trainer voltou ao normal.",
+            "O acesso ao portal do teu personal trainer voltou ao normal.",
             rendered.Text,
             StringComparison.Ordinal);
         Assert.StartsWith("Olá,", rendered.Text, StringComparison.Ordinal);
@@ -61,4 +61,46 @@ public sealed class AccountAccessTemplateRendererTests
         Assert.DoesNotContain("<script>", rendered.Html, StringComparison.Ordinal);
         Assert.Contains("{{content}}", rendered.Html, StringComparison.Ordinal);
     }
+
+    [Theory]
+    [InlineData(AccountAccessTemplateRenderer.TrainerRestoredKind)]
+    [InlineData(AccountAccessTemplateRenderer.ClientRestoredKind)]
+    [InlineData(AccountAccessTemplateRenderer.ClientBlockedKind)]
+    public void WhoCanStillEnter_GetsTheSignInButtonAndLink(string kind)
+    {
+        var rendered = AccountAccessTemplateRenderer.Render(
+            new AccountAccessEmail(kind, "Ana", "Rita", null, null, EndsAtLocal, "Europe/Lisbon"),
+            LoginUrl);
+
+        Assert.Contains("<v:roundrect", rendered.Html, StringComparison.Ordinal);
+        Assert.Contains("href=\"https://app.ptmanager.test/entrar\"", rendered.Html, StringComparison.Ordinal);
+        Assert.Contains("Entrar: https://app.ptmanager.test/entrar", rendered.Text, StringComparison.Ordinal);
+        Assert.DoesNotContain("{{", rendered.Html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BlockedTrainer_GetsNoSignInButton()
+    {
+        var rendered = AccountAccessTemplateRenderer.Render(
+            new AccountAccessEmail(
+                AccountAccessTemplateRenderer.TrainerBlockedKind, "Rita", null, "dangerous_information", null, null, null),
+            LoginUrl);
+
+        Assert.DoesNotContain("/entrar", rendered.Html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Entrar:", rendered.Text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void NoteWithAPlaceholder_StaysAsText()
+    {
+        var rendered = AccountAccessTemplateRenderer.Render(
+            new AccountAccessEmail(
+                AccountAccessTemplateRenderer.TrainerBlockedKind, "Rita", null, "dangerous_information", "{{action}} {{preheader}}", null, null),
+            LoginUrl);
+
+        Assert.Contains("Nota: {{action}} {{preheader}}", rendered.Html, StringComparison.Ordinal);
+        Assert.DoesNotContain("<v:roundrect", rendered.Html, StringComparison.Ordinal);
+    }
+
+    private static readonly Uri LoginUrl = new("https://app.ptmanager.test/entrar");
 }

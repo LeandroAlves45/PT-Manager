@@ -78,15 +78,16 @@ public sealed class BillingController : ApiControllerBase
         [FromServices] IPaymentWebhookAuthenticator authenticator,
         [FromServices] ProcessPaymentWebhookHandler handler,
         [FromServices] IOptions<StripeOptions> stripeOptions,
+        [FromServices] ILogger<BillingController> logger,
         CancellationToken cancellationToken)
     {
         var signatures = Request.Headers["Stripe-Signature"];
         if (signatures.Count != 1 || string.IsNullOrWhiteSpace(signatures[0]))
-            return RejectedWebhook(BadRequest());
+            return RejectedWebhook(BadRequest(), logger, "missing_signature");
 
         var maximumBodySize = stripeOptions.Value.MaximumWebhookBodySize;
         if (Request.ContentLength > maximumBodySize)
-            return RejectedWebhook(StatusCode(StatusCodes.Status413PayloadTooLarge));
+            return RejectedWebhook(StatusCode(StatusCodes.Status413PayloadTooLarge), logger, "payload_too_large");
 
         await using var body = new MemoryStream(capacity: Math.Min(maximumBodySize, 16_384));
         var buffer = new byte[8192];
@@ -98,7 +99,7 @@ public sealed class BillingController : ApiControllerBase
                 break;
 
             if (body.Length + read > maximumBodySize)
-                return RejectedWebhook(StatusCode(StatusCodes.Status413PayloadTooLarge));
+                return RejectedWebhook(StatusCode(StatusCodes.Status413PayloadTooLarge), logger, "payload_too_large");
 
             await body.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
         }
@@ -116,12 +117,31 @@ public sealed class BillingController : ApiControllerBase
                         cancellationToken)),
             PaymentWebhookAuthenticationStatus.Disabled =>
                 WebhookOutcome(StatusCode(StatusCodes.Status503ServiceUnavailable), "disabled"),
-            _ => RejectedWebhook(BadRequest())
+            PaymentWebhookAuthenticationStatus.IncompatibleApiVersion =>
+                RejectedWebhook(BadRequest(), logger, "incompatible_api_version", outcome.ReceivedApiVersion),
+            PaymentWebhookAuthenticationStatus.InvalidPayload =>
+                RejectedWebhook(BadRequest(), logger, "invalid_payload"),
+            _ => RejectedWebhook(BadRequest(), logger, "invalid_signature")
         };
     }
 
-    private static IActionResult RejectedWebhook(IActionResult result) =>
-        WebhookOutcome(result, "rejected");
+    /// <summary>
+    /// Recusa o webhook e regista o motivo. Nunca entra nos logs a assinatura, o segredo nem o
+    /// corpo: só o motivo e, quando a versão não bate certo, a versão recebida e a esperada.
+    /// </summary>
+    private static IActionResult RejectedWebhook(
+        IActionResult result,
+        ILogger logger,
+        string reason,
+        string? receivedApiVersion = null)
+    {
+        logger.LogWarning(
+            "Stripe webhook rejected: {Reason}. Received API version {ReceivedApiVersion}, expected {ExpectedApiVersion}.",
+            reason,
+            receivedApiVersion ?? "n/a",
+            StripeOptions.ApiVersion);
+        return WebhookOutcome(result, "rejected");
+    }
 
     private static IActionResult WebhookOutcome(IActionResult result, string outcome)
     {

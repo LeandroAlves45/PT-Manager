@@ -95,7 +95,7 @@ public sealed class SessionReminderTemplateRendererTests
     {
         var rendered = SessionReminderTemplateRenderer.Render(CreateData());
 
-        Assert.Equal("Lembrete da sua sessão", rendered.Subject);
+        Assert.Equal("Lembrete da tua sessão", rendered.Subject);
         Assert.False(string.IsNullOrWhiteSpace(rendered.Html));
         Assert.False(string.IsNullOrWhiteSpace(rendered.Text));
     }
@@ -187,7 +187,7 @@ public sealed class SessionReminderTemplateRendererTests
         Assert.Equal("Sessão marcada para amanhã", rendered.Subject);
         Assert.Contains("Olá <strong>Rui</strong>", rendered.Html, StringComparison.Ordinal);
         Assert.Contains("Ana &lt;b&gt;", rendered.Html, StringComparison.Ordinal);
-        Assert.Contains("Amanhã tem uma sessão marcada com Ana <b> no dia 15/07/2026 às 16:30", rendered.Text, StringComparison.Ordinal);
+        Assert.Contains("Amanhã tens uma sessão marcada com Ana <b> no dia 15/07/2026 às 16:30", rendered.Text, StringComparison.Ordinal);
     }
 
     [Fact]

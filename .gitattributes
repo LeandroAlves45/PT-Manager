@@ -4,3 +4,5 @@
 *.targets text eol=lf
 # CSV do catálogo: guardados tal como o Excel os grava (BOM UTF-8 e CRLF), sem conversão.
 catalog-data/*.csv -text
+# Templates de email: um só fim de linha (a auditoria do 8B encontrou LF e CRLF misturados).
+backend/src/Infrastructure/Email/Templates/**/*.html text eol=lf

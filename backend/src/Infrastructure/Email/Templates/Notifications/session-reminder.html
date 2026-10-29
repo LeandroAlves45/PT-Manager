@@ -1,30 +1,55 @@
 <!doctype html>
-<html lang="pt-PT">
+<html lang="pt-PT" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lembrete da sua sessão</title>
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Lembrete da tua sessão</title>
+  <!--[if mso]>
+  <style>table,td{border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt}</style>
+  <![endif]-->
+  <style>
+    @media (max-width:480px) {
+      .ptm-body { padding:28px 20px !important; }
+      .ptm-header, .ptm-footer { padding:24px 20px !important; }
+      .ptm-title { font-size:21px !important; }
+    }
+    @media (prefers-color-scheme: dark) {
+      .ptm-page { background-color:#121212 !important; }
+      .ptm-card, .ptm-body { background-color:#1e1e1e !important; }
+      .ptm-body p, .ptm-body td, .ptm-body span, .ptm-body strong { color:#e6e6e6 !important; }
+      .ptm-title { color:#ffffff !important; }
+      .ptm-callout, .ptm-callout td { background-color:#2a2a2a !important; }
+      .ptm-body .ptm-link { color:#7cc4f5 !important; }
+    }
+  </style>
 </head>
-<body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:#f4f4f4">
+<body class="ptm-page" style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:#f4f4f4">
+  <div style="display:none;max-height:0;max-width:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f4f4f4;opacity:0">{{preheader}}</div>
 
   <table
     role="presentation"
     width="100%"
     cellpadding="0"
     cellspacing="0"
-    style="background-color:#f4f4f4;padding:30px 0">
+    bgcolor="#f4f4f4"
+    class="ptm-page"
+    style="background-color:#f4f4f4">
     <tr>
-      <td align="center">
+      <td align="center" style="padding:30px 12px">
 
         <table
           role="presentation"
           width="600"
           cellpadding="0"
           cellspacing="0"
+          bgcolor="#ffffff"
+          class="ptm-card"
           style="background-color:#ffffff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);overflow:hidden;max-width:600px;width:100%">
 
           <tr>
-            <td style="background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:30px 40px;text-align:center">
+            <td class="ptm-header" bgcolor="#1a1a1a" style="background-color:#1a1a1a;background-image:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:30px 40px;text-align:center">
               <p style="color:#ffffff;font-size:20px;font-weight:600;margin:0;letter-spacing:0.5px;">
                 PT Manager
               </p>
@@ -32,10 +57,10 @@
           </tr>
 
           <tr>
-            <td style="padding:40px">
+            <td class="ptm-body" style="padding:40px">
 
-              <h1 style="color:#2d2d2d;font-size:24px;margin:0 0 20px 0;font-weight:600">
-                Lembrete da sua sessão
+              <h1 class="ptm-title" style="color:#2d2d2d;font-size:24px;margin:0 0 20px 0;font-weight:600">
+                Lembrete da tua sessão
               </h1>
 
               <p style="color:#444444;font-size:16px;line-height:1.6;margin:0 0 15px 0">
@@ -43,8 +68,8 @@
               </p>
 
               <p style="color:#666666;font-size:16px;line-height:1.6;margin:0 0 30px 0">
-                Lembramos que tem uma sessão marcada com <strong>{{trainer_name}}</strong>.
-                Prepare-se para mais um passo em direção aos seus objetivos.
+                Lembramos que tens uma sessão marcada com <strong>{{trainer_name}}</strong>.
+                Prepara-te para mais um passo em direção aos teus objetivos.
               </p>
 
               <table
@@ -52,7 +77,7 @@
                 width="100%"
                 cellpadding="0"
                 cellspacing="0"
-                style="background-color:#f0f9ff;border-left:4px solid #00a8e8;border-radius:5px;margin:0 0 30px 0">
+                class="ptm-callout" style="background-color:#f0f9ff;border-left:4px solid #0369a1;border-radius:5px;margin:0 0 30px 0">
                 <tr>
                   <td style="padding:25px">
                     <p style="color:#0c4a6e;font-size:14px;margin:0 0 16px 0;font-weight:600">
@@ -62,21 +87,21 @@
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                       <tr>
                         <td style="padding:0 0 14px 0;font-size:15px;line-height:1.5">
-                          <span style="margin-right:8px;font-size:18px">&#128197;</span>
+                          <span aria-hidden="true" style="margin-right:8px;font-size:18px">&#128197;</span>
                           <strong style="color:#2d2d2d">Data:</strong>
                           <span style="color:#555555;margin-left:6px">{{session_local_date}}</span>
                         </td>
                       </tr>
                       <tr>
                         <td style="padding:0 0 14px 0;font-size:15px;line-height:1.5">
-                          <span style="margin-right:8px;font-size:18px">&#9200;</span>
+                          <span aria-hidden="true" style="margin-right:8px;font-size:18px">&#9200;</span>
                           <strong style="color:#2d2d2d">Hora:</strong>
                           <span style="color:#555555;margin-left:6px">{{session_local_time}}</span>
                         </td>
                       </tr>
                       <tr>
                         <td style="padding:0;font-size:15px;line-height:1.5">
-                          <span style="margin-right:8px;font-size:18px">&#127760;</span>
+                          <span aria-hidden="true" style="margin-right:8px;font-size:18px">&#127760;</span>
                           <strong style="color:#2d2d2d">Fuso horário:</strong>
                           <span style="color:#555555;margin-left:6px">{{trainer_timezone}}</span>
                         </td>
@@ -91,33 +116,33 @@
                 width="100%"
                 cellpadding="0"
                 cellspacing="0"
-                style="background-color:#fff8e1;border-left:4px solid #ffc107;border-radius:5px;margin:0 0 30px 0">
+                class="ptm-callout" style="background-color:#fff8e1;border-left:4px solid #ffc107;border-radius:5px;margin:0 0 30px 0">
                 <tr>
                   <td style="padding:20px 25px">
                     <p style="color:#7a5c00;font-size:14px;margin:0;line-height:1.8">
                       <strong>Dicas para a sessão</strong><br>
-                      Hidrate-se bem antes do treino<br>
-                      Leve roupa confortável e toalha<br>
-                      Se possível, faça uma refeição leve cerca de 1 hora antes
+                      Hidrata-te bem antes do treino<br>
+                      Leva roupa confortável e toalha<br>
+                      Se possível, faz uma refeição leve cerca de 1 hora antes
                     </p>
                   </td>
                 </tr>
               </table>
 
-              <p style="color:#777777;font-size:15px;line-height:1.7;margin:0;font-style:italic;text-align:center;border-top:1px solid #eeeeee;padding-top:25px">
-                Até breve! Cada sessão conta na sua jornada de saúde e bem-estar.
+              <p style="color:#666666;font-size:15px;line-height:1.7;margin:0;font-style:italic;text-align:center;border-top:1px solid #eeeeee;padding-top:25px">
+                Até breve! Cada sessão conta na tua jornada de saúde e bem-estar.
               </p>
 
             </td>
           </tr>
 
           <tr>
-            <td style="background-color:#2d2d2d;padding:25px 40px;text-align:center">
+            <td class="ptm-footer" bgcolor="#2d2d2d" style="background-color:#2d2d2d;padding:25px 40px;text-align:center">
               <p style="color:#ffffff;font-size:14px;margin:0 0 8px 0">
-                {{trainer_name}} &mdash; PT Manager
+                {{trainer_name}} · PT Manager
               </p>
-              <p style="color:#aaaaaa;font-size:12px;margin:0">
-                Este é um email automático. Por favor não responda a este email.
+              <p style="color:#bdbdbd;font-size:12px;margin:0">
+                Este é um email automático. Por favor, não respondas a este email.
               </p>
             </td>
           </tr>

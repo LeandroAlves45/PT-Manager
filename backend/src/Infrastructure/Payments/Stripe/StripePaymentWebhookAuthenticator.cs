@@ -41,7 +41,9 @@ internal sealed class StripePaymentWebhookAuthenticator : IPaymentWebhookAuthent
             return new(PaymentWebhookAuthenticationStatus.InvalidSignature);
 
         if (stripeEvent.ApiVersion != StripeOptions.ApiVersion)
-            return new(PaymentWebhookAuthenticationStatus.IncompatibleApiVersion);
+            return new(
+                PaymentWebhookAuthenticationStatus.IncompatibleApiVersion,
+                ReceivedApiVersion: stripeEvent.ApiVersion);
 
         var kind = stripeEvent.Type switch
         {

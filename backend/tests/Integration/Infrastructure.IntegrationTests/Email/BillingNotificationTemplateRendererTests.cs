@@ -25,7 +25,7 @@ public sealed class BillingNotificationTemplateRendererTests
 
         Assert.False(string.IsNullOrWhiteSpace(rendered.Subject));
         Assert.Contains("linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%)", rendered.Html, StringComparison.Ordinal);
-        Assert.Contains("#00a8e8", rendered.Html, StringComparison.Ordinal);
+        Assert.Contains("#0369a1", rendered.Html, StringComparison.Ordinal);
         Assert.Contains("PT Manager", rendered.Html, StringComparison.Ordinal);
         Assert.StartsWith("<!doctype html>", rendered.Html, StringComparison.OrdinalIgnoreCase);
         Assert.Contains(ManagementUrl.AbsoluteUri, rendered.Html, StringComparison.Ordinal);

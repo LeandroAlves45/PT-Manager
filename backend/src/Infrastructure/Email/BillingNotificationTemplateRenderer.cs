@@ -15,7 +15,9 @@ internal static partial class BillingNotificationTemplateRenderer
     private const string ResourcePrefix = "Infrastructure.Email.Templates.Notifications.";
     private const string ManagementUrlPlaceholder = "{{billing_management_url}}";
 
-    private static readonly string[] RequiredPlaceholders = [ManagementUrlPlaceholder];
+    private const string PreheaderPlaceholder = "{{preheader}}";
+
+    private static readonly string[] RequiredPlaceholders = [ManagementUrlPlaceholder, PreheaderPlaceholder];
 
     private static readonly IReadOnlyDictionary<string, BillingTemplateDefinition> Definitions =
         new Dictionary<string, BillingTemplateDefinition>(StringComparer.Ordinal)
@@ -32,8 +34,8 @@ internal static partial class BillingNotificationTemplateRenderer
                 "Gerir faturação"),
             [SubscriptionActivatedKind] = new(
                 "subscription-activated.html",
-                "Subscrição PT Manager activa",
-                "A tua subscrição PT Manager está activa. Já podes usar a plataforma com todas as funcionalidades do teu plano.",
+                "Subscrição PT Manager ativa",
+                "A tua subscrição PT Manager está ativa. Já podes usar a plataforma com todas as funcionalidades do teu plano.",
                 "Ver faturação"),
             [PaymentSucceededKind] = new(
                 "payment-succeeded.html",
@@ -63,7 +65,8 @@ internal static partial class BillingNotificationTemplateRenderer
 
         var encodedUrl = WebUtility.HtmlEncode(managementUrl.AbsoluteUri);
         var html = LoadTemplate(definition.ResourceName)
-            .Replace(ManagementUrlPlaceholder, encodedUrl, StringComparison.Ordinal);
+            .Replace(ManagementUrlPlaceholder, encodedUrl, StringComparison.Ordinal)
+            .Replace(PreheaderPlaceholder, WebUtility.HtmlEncode(definition.TextLead), StringComparison.Ordinal);
 
         if (UnresolvedPlaceholders().IsMatch(html))
             throw new InvalidOperationException("Billing template contains an unresolved placeholder.");

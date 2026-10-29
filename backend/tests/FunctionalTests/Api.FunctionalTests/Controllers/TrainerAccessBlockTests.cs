@@ -243,7 +243,7 @@ public sealed class TrainerAccessBlockTests : IDisposable
         var trainerText = AuthTestData.Text(toTrainer);
         Assert.Contains("Informação deliberadamente falsa", trainerText);
         Assert.Contains("Rever as receitas.", trainerText);
-        Assert.Contains("Os seus clientes continuam a entrar no portal até", trainerText);
+        Assert.Contains("Os teus clientes continuam a entrar no portal até", trainerText);
         var clientText = AuthTestData.Text(toClient);
         Assert.Contains("Europe/Lisbon", clientText);
         Assert.DoesNotContain("falsa", clientText);
@@ -255,7 +255,7 @@ public sealed class TrainerAccessBlockTests : IDisposable
 
         Assert.Equal(2, SentTo(trainerEmail).Count);
         Assert.Equal(2, SentTo(clientEmail).Count);
-        Assert.Contains("já pode entrar", AuthTestData.Text(SentTo(clientEmail).Last()), StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("já podes entrar", AuthTestData.Text(SentTo(clientEmail).Last()), StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

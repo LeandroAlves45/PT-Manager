@@ -18,6 +18,7 @@ internal static partial class AuthenticationEmailTemplateRenderer
     private static readonly string[] RequiredPlaceholders =
     [
         "{{brand_header}}",
+        "{{preheader}}",
         "{{recipient_greeting}}",
         "{{intro}}",
         "{{action_url}}",
@@ -67,27 +68,34 @@ internal static partial class AuthenticationEmailTemplateRenderer
             ? appName
             : options.FooterAttribution.Trim();
 
-        var html = template
-            .Replace("{{brand_header}}", brandHeader, StringComparison.Ordinal)
-            .Replace("{{recipient_greeting}}", recipientGreeting, StringComparison.Ordinal)
-            .Replace("{{intro}}", WebUtility.HtmlEncode(intro), StringComparison.Ordinal)
-            .Replace("{{action_url}}", WebUtility.HtmlEncode(actionUrl), StringComparison.Ordinal)
-            .Replace("{{action_label}}", WebUtility.HtmlEncode(actionLabel), StringComparison.Ordinal)
-            .Replace("{{footer_attribution}}", WebUtility.HtmlEncode(footerAttribution), StringComparison.Ordinal);
+        var values = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["{{brand_header}}"] = brandHeader,
+            ["{{preheader}}"] = WebUtility.HtmlEncode(intro),
+            ["{{recipient_greeting}}"] = recipientGreeting,
+            ["{{intro}}"] = WebUtility.HtmlEncode(intro),
+            ["{{action_url}}"] = WebUtility.HtmlEncode(actionUrl),
+            ["{{action_label}}"] = WebUtility.HtmlEncode(actionLabel),
+            ["{{footer_attribution}}"] = WebUtility.HtmlEncode(footerAttribution)
+        };
 
         if (expiresAtUtc is not null)
-            html = html.Replace(ExpiryPlaceholder, WebUtility.HtmlEncode(expiresAtUtc), StringComparison.Ordinal);
+            values[ExpiryPlaceholder] = WebUtility.HtmlEncode(expiresAtUtc);
 
         if (secondaryAction is { } secondary)
         {
-            html = html
-                .Replace(SecondaryUrlPlaceholder, WebUtility.HtmlEncode(secondary.Url), StringComparison.Ordinal)
-                .Replace(SecondaryLabelPlaceholder, WebUtility.HtmlEncode(secondary.Label), StringComparison.Ordinal);
+            values[SecondaryUrlPlaceholder] = WebUtility.HtmlEncode(secondary.Url);
+            values[SecondaryLabelPlaceholder] = WebUtility.HtmlEncode(secondary.Label);
         }
 
-        if (UnresolvedPlaceholder().IsMatch(html))
-            throw new InvalidOperationException(
-                $"Authentication email template '{templateName}' contains an unresolved placeholder.");
+        // Uma só passagem: um nome escrito como «{{action_url}}» fica como texto e não volta a
+        // ser lido como placeholder. Um placeholder sem valor continua a ser erro.
+        var html = UnresolvedPlaceholder().Replace(
+            template,
+            match => values.TryGetValue(match.Value, out var value)
+                ? value
+                : throw new InvalidOperationException(
+                    $"Authentication email template '{templateName}' contains an unresolved placeholder."));
 
         var greetingLine = string.IsNullOrWhiteSpace(options.RecipientName)
             ? string.Empty
@@ -107,7 +115,7 @@ internal static partial class AuthenticationEmailTemplateRenderer
             secondaryLine +
             $"Se o link não abrir, copia e cola o URL acima no browser.{Environment.NewLine}{Environment.NewLine}" +
             expiryLine +
-            $"{footerAttribution} - email automatico. Por favor não responda a este email.";
+            $"{footerAttribution} - email automático. Por favor, não respondas a este email.";
 
         return new(html, text);
     }

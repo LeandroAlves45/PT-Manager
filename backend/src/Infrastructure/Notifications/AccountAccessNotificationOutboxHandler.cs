@@ -6,7 +6,9 @@ using Domain.Entities.Administration;
 using Domain.Entities.Jobs;
 using Infrastructure.Data;
 using Infrastructure.Email;
+using Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Notifications;
 
@@ -57,13 +59,19 @@ internal sealed class AccountAccessNotificationOutboxHandler : IOutboxMessageHan
     private readonly ITrainerTimeZoneProvider _timeZones;
     private readonly IClock _clock;
     private readonly IRenderedEmailSender _sender;
+    private readonly Uri _loginUrl;
 
     public AccountAccessNotificationOutboxHandler(
         PtManagerDbContext dbContext,
         ITrainerTimeZoneProvider timeZones,
         IClock clock,
-        IRenderedEmailSender sender)
+        IRenderedEmailSender sender,
+        IOptions<ResendOptions> resendOptions)
     {
+        ArgumentNullException.ThrowIfNull(resendOptions);
+        // O FrontendBaseUrl é validado no arranque (ResendOptions); aqui só se compõe o link.
+        _loginUrl = new Uri(AuthenticationLinkBuilder.Build(
+            resendOptions.Value.FrontendBaseUrl!, AuthenticationLinkBuilder.SignInPath));
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _timeZones = timeZones ?? throw new ArgumentNullException(nameof(timeZones));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
@@ -168,7 +176,7 @@ internal sealed class AccountAccessNotificationOutboxHandler : IOutboxMessageHan
             forTrainer ? block?.Reason : null,
             forTrainer ? block?.Note : null,
             endsAtLocal,
-            timezoneId));
+            timezoneId), _loginUrl);
 
         var outcome = await _sender.SendAsync(recipientEmail, rendered, message.IdempotencyKey, cancellationToken);
         return outcome.Kind switch

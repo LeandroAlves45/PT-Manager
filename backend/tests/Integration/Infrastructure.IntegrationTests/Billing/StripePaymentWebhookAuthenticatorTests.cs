@@ -50,6 +50,8 @@ public sealed class StripePaymentWebhookAuthenticatorTests
             Signature(body, CurrentSecret));
 
         Assert.Equal(PaymentWebhookAuthenticationStatus.IncompatibleApiVersion, outcome.Status);
+        Assert.Equal("2025-01-01.legacy", outcome.ReceivedApiVersion);
+        Assert.Null(outcome.PaymentEvent);
     }
 
     [Fact]

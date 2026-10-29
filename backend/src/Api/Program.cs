@@ -44,6 +44,8 @@ builder.Services.AddApiHealthChecks();
 
 var app = builder.Build();
 
+// Antes do UseForwardedHeaders: o IP da ligação ainda é o do proxy, não o do cliente.
+app.UseMiddleware<UntrustedProxyLoggingMiddleware>();
 app.UseForwardedHeaders();
 
 app.UseMiddleware<CorrelationIdMiddleware>();

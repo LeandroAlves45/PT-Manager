@@ -1,30 +1,55 @@
 <!doctype html>
-<html lang="pt-PT">
+<html lang="pt-PT" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>Subscrição cancelada</title>
+  <!--[if mso]>
+  <style>table,td{border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt}</style>
+  <![endif]-->
+  <style>
+    @media (max-width:480px) {
+      .ptm-body { padding:28px 20px !important; }
+      .ptm-header, .ptm-footer { padding:24px 20px !important; }
+      .ptm-title { font-size:21px !important; }
+    }
+    @media (prefers-color-scheme: dark) {
+      .ptm-page { background-color:#121212 !important; }
+      .ptm-card, .ptm-body { background-color:#1e1e1e !important; }
+      .ptm-body p, .ptm-body td, .ptm-body span, .ptm-body strong { color:#e6e6e6 !important; }
+      .ptm-title { color:#ffffff !important; }
+      .ptm-callout, .ptm-callout td { background-color:#2a2a2a !important; }
+      .ptm-body .ptm-link { color:#7cc4f5 !important; }
+    }
+  </style>
 </head>
-<body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:#f4f4f4">
+<body class="ptm-page" style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:#f4f4f4">
+  <div style="display:none;max-height:0;max-width:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f4f4f4;opacity:0">{{preheader}}</div>
 
   <table
     role="presentation"
     width="100%"
     cellpadding="0"
     cellspacing="0"
-    style="background-color:#f4f4f4;padding:30px 0">
+    bgcolor="#f4f4f4"
+    class="ptm-page"
+    style="background-color:#f4f4f4">
     <tr>
-      <td align="center">
+      <td align="center" style="padding:30px 12px">
 
         <table
           role="presentation"
           width="600"
           cellpadding="0"
           cellspacing="0"
+          bgcolor="#ffffff"
+          class="ptm-card"
           style="background-color:#ffffff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);overflow:hidden;max-width:600px;width:100%">
 
           <tr>
-            <td style="background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:30px 40px;text-align:center">
+            <td class="ptm-header" bgcolor="#1a1a1a" style="background-color:#1a1a1a;background-image:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:30px 40px;text-align:center">
               <p style="color:#ffffff;font-size:20px;font-weight:600;margin:0;letter-spacing:0.5px;">
                 PT Manager
               </p>
@@ -32,9 +57,9 @@
           </tr>
 
           <tr>
-            <td style="padding:40px">
+            <td class="ptm-body" style="padding:40px">
 
-              <h1 style="color:#2d2d2d;font-size:24px;margin:0 0 20px 0;font-weight:600">
+              <h1 class="ptm-title" style="color:#2d2d2d;font-size:24px;margin:0 0 20px 0;font-weight:600">
                 Subscrição cancelada
               </h1>
 
@@ -48,11 +73,11 @@
                 width="100%"
                 cellpadding="0"
                 cellspacing="0"
-                style="background-color:#f3f4f6;border-left:4px solid #6b7280;border-radius:5px;margin:0 0 30px 0">
+                class="ptm-callout" style="background-color:#f3f4f6;border-left:4px solid #6b7280;border-radius:5px;margin:0 0 30px 0">
                 <tr>
                   <td style="padding:20px 25px">
                     <p style="color:#374151;font-size:14px;margin:0;line-height:1.8">
-                      Queres voltar? Podes reactivar a subscrição a qualquer momento no portal
+                      Queres voltar? Podes reativar a subscrição a qualquer momento no portal
                       de faturação.
                     </p>
                   </td>
@@ -65,25 +90,39 @@
                 cellspacing="0"
                 style="margin:0 auto 25px auto">
                 <tr>
-                  <td align="center" style="background-color:#00a8e8;border-radius:8px">
-                    <a
-                      href="{{billing_management_url}}"
-                      style="display:inline-block;padding:16px 40px;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px;letter-spacing:0.3px">
+                  <td align="center" bgcolor="#0369a1" style="background-color:#0369a1;border-radius:8px">
+                    <!--[if mso]>
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{billing_management_url}}" style="height:52px;v-text-anchor:middle;width:280px" arcsize="15%" stroke="f" fillcolor="#0369a1">
+                      <w:anchorlock/>
+                      <center style="color:#ffffff;font-family:'Segoe UI',Arial,sans-serif;font-size:16px;font-weight:600">Gerir faturação</center>
+                    </v:roundrect>
+                    <![endif]-->
+                    <!--[if !mso]><!-->
+                    <a href="{{billing_management_url}}"
+                      style="display:inline-block;padding:16px 40px;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:8px">
                       Gerir faturação
                     </a>
+                    <!--<![endif]-->
                   </td>
                 </tr>
               </table>
 
-              <p style="color:#999999;font-size:13px;text-align:center;margin:0;line-height:1.6">
+              <p style="color:#666666;font-size:13px;text-align:center;margin:0;line-height:1.6">
                 Se o botão não funcionar, copia e cola este link no browser:<br>
-                <span style="color:#00a8e8;word-break:break-all">{{billing_management_url}}</span>
+                <span class="ptm-link" style="color:#0369a1;word-break:break-all">{{billing_management_url}}</span>
               </p>
 
-              <p style="color:#aaaaaa;font-size:12px;text-align:center;margin:24px 0 0;line-height:1.5">
-                Email automático — não respondas a esta mensagem.
-              </p>
+            </td>
+          </tr>
 
+          <tr>
+            <td class="ptm-footer" bgcolor="#2d2d2d" style="background-color:#2d2d2d;padding:25px 40px;text-align:center">
+              <p style="color:#ffffff;font-size:14px;margin:0 0 8px 0">
+                PT Manager
+              </p>
+              <p style="color:#bdbdbd;font-size:12px;margin:0">
+                Este é um email automático. Por favor, não respondas a este email.
+              </p>
             </td>
           </tr>
 

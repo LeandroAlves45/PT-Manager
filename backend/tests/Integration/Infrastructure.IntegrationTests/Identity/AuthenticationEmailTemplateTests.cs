@@ -19,8 +19,19 @@ public sealed class AuthenticationEmailTemplateTests
             "https://app.example.test/confirmar-email?token=a&b", "Confirmar", DateTime.UtcNow);
 
         Assert.DoesNotContain("<script>", rendered.Html, StringComparison.Ordinal);
-        Assert.Contains("#00a8e8", rendered.Html, StringComparison.Ordinal);
+        Assert.Contains("#0369a1", rendered.Html, StringComparison.Ordinal);
         Assert.Contains("PT Manager", rendered.Html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Render_WithPlaceholderInRecipientName_KeepsItAsText()
+    {
+        var rendered = AuthenticationEmailTemplateRenderer.Render(
+            "confirm-email.html", "Intro", "https://app.example.test/confirmar-email?token=secret",
+            "Confirmar", DateTime.UtcNow,
+            new AuthenticationEmailTemplateOptions(RecipientName: "{{action_url}}"));
+
+        Assert.Contains("Olá <strong>{{action_url}}</strong>", rendered.Html, StringComparison.Ordinal);
     }
 
     [Fact]

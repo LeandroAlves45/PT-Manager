@@ -31,9 +31,9 @@ internal sealed class ResendAuthenticationEmailSender : IAuthenticationEmailSend
             secret,
             AuthenticationLinkBuilder.ConfirmEmailPath,
             "confirm-email.html",
-            "Confirme o seu email",
-            "Obrigado por se registar no PT Manager. Para completar o registo e ativar a conta, " +
-            "confirme o email abaixo.",
+            "Confirma o teu email",
+            "Obrigado por te registares no PT Manager. Para completares o registo e ativares a conta, " +
+            "confirma o teu email.",
             "Confirmar email",
             cancellationToken);
 
@@ -44,8 +44,8 @@ internal sealed class ResendAuthenticationEmailSender : IAuthenticationEmailSend
             secret,
             AuthenticationLinkBuilder.AcceptInvitePath,
             "client-invitation.html",
-            "Convite do seu personal trainer",
-            "Foi convidado para aceder ao PT Manager.",
+            "Convite do teu personal trainer",
+            "Foste convidado(a) para aceder ao PT Manager.",
             "Aceitar convite",
             cancellationToken);
 
@@ -57,7 +57,7 @@ internal sealed class ResendAuthenticationEmailSender : IAuthenticationEmailSend
             AuthenticationLinkBuilder.TrainerInvitePath,
             "trainer-invitation.html",
             "Convite para o PT Manager",
-            "Foi convidado(a) para usar o PT Manager como personal trainer.",
+            "Foste convidado(a) para usar o PT Manager como personal trainer.",
             "Criar conta",
             cancellationToken);
 
@@ -68,9 +68,9 @@ internal sealed class ResendAuthenticationEmailSender : IAuthenticationEmailSend
             secret,
             AuthenticationLinkBuilder.PasswordResetPath,
             "password-reset.html",
-            "Reposição de password",
-            "Recebemos um pedido para repor a password da sua conta. Se não foi você, ignore este email.",
-            "Repor password",
+            "Reposição da palavra-passe",
+            "Recebemos um pedido para repor a palavra-passe da tua conta. Se não foste tu, ignora este email.",
+            "Repor palavra-passe",
             cancellationToken);
 
     public Task<AuthenticationEmailDeliveryOutcome> SendAccountAlreadyExistsAsync(
@@ -87,10 +87,10 @@ internal sealed class ResendAuthenticationEmailSender : IAuthenticationEmailSend
             AuthenticationEmailTemplateRenderer.AccountAlreadyExistsTemplate,
             "Já existe uma conta com este email",
             "Alguém tentou criar uma conta no PT Manager com este email, mas já existe uma conta associada. " +
-            "Se foi você, entre na sua conta.",
+            "Se foste tu, entra na tua conta.",
             "Entrar",
             (AuthenticationLinkBuilder.Build(frontend, AuthenticationLinkBuilder.ForgotPasswordPath),
-                "Recuperar password"),
+                "Recuperar palavra-passe"),
             cancellationToken);
     }
 

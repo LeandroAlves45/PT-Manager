@@ -21,7 +21,8 @@ internal static partial class SessionReminderTemplateRenderer
         "{{trainer_name}}",
         "{{session_local_date}}",
         "{{session_local_time}}",
-        "{{trainer_timezone}}"
+        "{{trainer_timezone}}",
+        "{{preheader}}"
     ];
 
     private static readonly Lazy<string> ClientTemplate =
@@ -57,7 +58,10 @@ internal static partial class SessionReminderTemplateRenderer
             ["{{trainer_name}}"] = WebUtility.HtmlEncode(trainerName),
             ["{{session_local_date}}"] = WebUtility.HtmlEncode(localDate),
             ["{{session_local_time}}"] = WebUtility.HtmlEncode(localTime),
-            ["{{trainer_timezone}}"] = WebUtility.HtmlEncode(timezoneId)
+            ["{{trainer_timezone}}"] = WebUtility.HtmlEncode(timezoneId),
+            ["{{preheader}}"] = WebUtility.HtmlEncode(forTrainer
+                ? $"Sessão com {clientName} amanhã, {localDate} às {localTime}."
+                : $"Sessão com {trainerName} a {localDate} às {localTime}.")
         };
 
         // Uma só passagem sobre o template: um nome escrito como «{{x}}» entra como texto e
@@ -69,7 +73,7 @@ internal static partial class SessionReminderTemplateRenderer
                 : throw new InvalidOperationException(
                     "Session reminder contains an unresolved placeholder."));
 
-        const string footer = "PT Manager - email automático. Por favor, não responda a este email.";
+        const string footer = "PT Manager - email automático. Por favor, não respondas a este email.";
         var newLine = Environment.NewLine;
 
         return forTrainer
@@ -77,13 +81,13 @@ internal static partial class SessionReminderTemplateRenderer
                 "Sessão marcada para amanhã",
                 html,
                 $"Olá {trainerName},{newLine}{newLine}" +
-                $"Amanhã tem uma sessão marcada com {clientName} no dia {localDate} " +
+                $"Amanhã tens uma sessão marcada com {clientName} no dia {localDate} " +
                 $"às {localTime} ({timezoneId}).{newLine}{newLine}{footer}")
             : new RenderedNotificationEmail(
-                "Lembrete da sua sessão",
+                "Lembrete da tua sessão",
                 html,
                 $"Olá {clientName},{newLine}{newLine}" +
-                $"Lembramos que tem uma sessão com {trainerName} no dia {localDate} " +
+                $"Lembramos que tens uma sessão com {trainerName} no dia {localDate} " +
                 $"às {localTime} ({timezoneId}).{newLine}{newLine}{footer}");
     }
 

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Infrastructure.Email;
 
@@ -8,7 +9,7 @@ namespace Infrastructure.Email;
 /// para o personal trainer e para os clientes. O cliente nunca vê o motivo nem a nota; o dia e
 /// a hora em que o acesso acaba mostram-se no fuso do personal trainer.
 /// </summary>
-internal static class AccountAccessTemplateRenderer
+internal static partial class AccountAccessTemplateRenderer
 {
     internal const string TrainerBlockedKind = "trainer_blocked";
     internal const string ClientBlockedKind = "client_blocked";
@@ -34,36 +35,41 @@ internal static class AccountAccessTemplateRenderer
         kind is TrainerBlockedKind or ClientBlockedKind or TrainerRestoredKind or ClientRestoredKind;
 
     /// <summary>Produz o assunto, o HTML e o texto simples de um dos quatro emails.</summary>
-    public static RenderedNotificationEmail Render(AccountAccessEmail email)
+    /// <param name="email">Dados já resolvidos no envio.</param>
+    /// <param name="loginUrl">
+    /// Página de entrada. Quem ainda pode entrar recebe um botão para ela; o personal trainer
+    /// bloqueado não recebe, porque já não consegue entrar.
+    /// </param>
+    public static RenderedNotificationEmail Render(AccountAccessEmail email, Uri? loginUrl = null)
     {
         ArgumentNullException.ThrowIfNull(email);
 
         var greeting = string.IsNullOrWhiteSpace(email.RecipientName)
             ? "Olá,"
             : $"Olá {email.RecipientName.Trim()},";
-        // «do seu personal trainer, Nome,»: o nome fica entre vírgulas e a contração é «do».
+        // «do teu personal trainer, Nome,»: o nome fica entre vírgulas e a contração é «do».
         var ofTrainer = string.IsNullOrWhiteSpace(email.TrainerName)
-            ? "do seu personal trainer"
-            : $"do seu personal trainer, {email.TrainerName.Trim()},";
+            ? "do teu personal trainer"
+            : $"do teu personal trainer, {email.TrainerName.Trim()},";
 
         var (subject, paragraphs) = email.Kind switch
         {
-            TrainerBlockedKind => ("A sua conta PT Manager foi bloqueada", TrainerBlocked(email, greeting)),
+            TrainerBlockedKind => ("A tua conta PT Manager foi bloqueada", TrainerBlocked(email, greeting)),
             ClientBlockedKind => ("O acesso ao portal vai terminar", new[]
             {
                 greeting,
-                $"A conta {ofTrainer} está suspensa na plataforma. Continua a poder usar o portal " +
+                $"A conta {ofTrainer} está suspensa na plataforma. Continuas a poder usar o portal " +
                     $"até {FormatLocal(email)}. Depois disso, o acesso acaba."
             }),
-            TrainerRestoredKind => ("O acesso à sua conta voltou", new[]
+            TrainerRestoredKind => ("O acesso à tua conta voltou", new[]
             {
                 greeting,
-                "O bloqueio da sua conta PT Manager foi levantado. Já pode entrar outra vez."
+                "O bloqueio da tua conta PT Manager foi levantado. Já podes entrar outra vez."
             }),
             ClientRestoredKind => ("O acesso ao portal voltou", new[]
             {
                 greeting,
-                $"O acesso ao portal {ofTrainer} voltou ao normal. Já pode entrar outra vez."
+                $"O acesso ao portal {ofTrainer} voltou ao normal. Já podes entrar outra vez."
             }),
             _ => throw new ArgumentOutOfRangeException(nameof(email), email.Kind, "Unsupported account access email.")
         };
@@ -73,13 +79,30 @@ internal static class AccountAccessTemplateRenderer
             content.Append("              <p style=\"").Append(ParagraphStyle).Append("\">")
                 .Append(WebUtility.HtmlEncode(paragraph)).Append("</p>\n");
 
-        var html = Template.Value
-            .Replace("{{title}}", WebUtility.HtmlEncode(subject), StringComparison.Ordinal)
-            .Replace("{{content}}", content.ToString(), StringComparison.Ordinal);
+        var showLogin = loginUrl is not null && email.Kind != TrainerBlockedKind;
+        var action = showLogin ? EmailButtonMarkup.Render(loginUrl!, "Entrar") : string.Empty;
+
+        var values = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["{{title}}"] = WebUtility.HtmlEncode(subject),
+            ["{{preheader}}"] = WebUtility.HtmlEncode(paragraphs[1]),
+            ["{{content}}"] = content.ToString(),
+            ["{{action}}"] = action
+        };
+
+        // Uma só passagem: um nome ou uma nota escritos como «{{action}}» ficam como texto.
+        var html = Placeholders().Replace(
+            Template.Value,
+            match => values.TryGetValue(match.Value, out var value) ? value : match.Value);
+
+        var loginLine = showLogin
+            ? $"Entrar: {loginUrl!.AbsoluteUri}{Environment.NewLine}{Environment.NewLine}"
+            : string.Empty;
 
         var text = string.Join(Environment.NewLine + Environment.NewLine, paragraphs) +
             Environment.NewLine + Environment.NewLine +
-            "PT Manager - email automático. Por favor, não responda a este email.";
+            loginLine +
+            "PT Manager - email automático. Por favor, não respondas a este email.";
 
         return new RenderedNotificationEmail(subject, html, text);
     }
@@ -92,7 +115,7 @@ internal static class AccountAccessTemplateRenderer
         var paragraphs = new List<string>
         {
             greeting,
-            "A sua conta PT Manager foi bloqueada pela equipa da plataforma e deixou de poder entrar.",
+            "A tua conta PT Manager foi bloqueada pela equipa da plataforma e deixaste de poder entrar.",
             $"Motivo: {reason}."
         };
         if (!string.IsNullOrWhiteSpace(email.Note))
@@ -101,7 +124,7 @@ internal static class AccountAccessTemplateRenderer
         // Sem clientes que possam entrar, o email só traz o motivo e a nota.
         if (email.ClientAccessEndsAtLocal.HasValue)
             paragraphs.Add(
-                $"Os seus clientes continuam a entrar no portal até {FormatLocal(email)}. " +
+                $"Os teus clientes continuam a entrar no portal até {FormatLocal(email)}. " +
                 "Depois disso, o acesso deles também acaba.");
 
         return [.. paragraphs];
@@ -116,6 +139,9 @@ internal static class AccountAccessTemplateRenderer
         return $"{local:dd/MM/yyyy} às {local:HH:mm} ({email.TimezoneId})";
     }
 
+    [GeneratedRegex("\\{\\{[a-z_]+\\}\\}", RegexOptions.CultureInvariant)]
+    private static partial Regex Placeholders();
+
     private static string LoadTemplate()
     {
         var assembly = typeof(AccountAccessTemplateRenderer).Assembly;
@@ -125,7 +151,9 @@ internal static class AccountAccessTemplateRenderer
         var content = reader.ReadToEnd();
 
         if (!content.Contains("{{title}}", StringComparison.Ordinal) ||
-            !content.Contains("{{content}}", StringComparison.Ordinal))
+            !content.Contains("{{content}}", StringComparison.Ordinal) ||
+            !content.Contains("{{preheader}}", StringComparison.Ordinal) ||
+            !content.Contains("{{action}}", StringComparison.Ordinal))
             throw new InvalidOperationException("Account access template is missing placeholders.");
 
         return content;
