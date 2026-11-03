@@ -489,6 +489,8 @@ com um corpo real.
 - **Arnês visual com MSW** (gotcha de 2026-10-11) também serve para capturas do site: Playwright do
   projeto + `canvas.toDataURL('image/webp')` no Chromium, sem `sharp`. O browser integrado recusa o
   certificado do `basicSsl`, por isso o arnês corre em HTTP.
-- **Navegação para uma rota lazy num teste:** o primeiro import da página no CI pode passar os 5 s do
-  `asyncUtilTimeout`. Usar `{ timeout: 12_000 }` no `findBy` e um timeout do teste acima disso
-  (run `41650313345` falhou só no "Registar tomas" de `PortalHomePage`; o run anterior tinha passado).
+- **Teste de navegação que procura um título só pelo nome:** o Início do portal tem cartões com `h2`
+  «Suplementos» e «Avaliação periódica», iguais aos `h1` das páginas. Se a navegação ainda não
+  terminou, `findByRole('heading', { name })` devolve o do Início, que logo desmonta: o erro é
+  «expect(element).toBeInTheDocument()», não «Unable to find». Esperar pelo `pathname` e usar
+  `level: 1`. Subir timeouts ou pré-carregar páginas não resolve (tentado em `45e0386` e `70c84a0`).

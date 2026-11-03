@@ -521,3 +521,6 @@ Lições capturadas depois de correções do utilizador.
   houver um caso que passe a outra defesa (ex. `show_macros: false` com gramas presentes).
 - **Um crash a meio de um comando grande deixa ficheiros a zeros ou vazios:** depois de um reinício,
   procurar bytes nulos nos ficheiros modificados e repor a partir do git antes de continuar.
+- **Ler o erro exato antes de mexer em timeouts.** «element could not be found in the document» vem de
+  `toBeInTheDocument` sobre um elemento já encontrado e depois desmontado, não de um `findBy` que esgotou o
+  tempo. Duas correções por tempo falharam antes de ler o log; a causa era um título duplicado.

@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { portalKeys } from '@/features/portal';
 import type { components } from '@/shared/api/schema';
@@ -283,18 +283,6 @@ describe('PortalHomePage', () => {
     expect(document.body.textContent ?? '').not.toMatch(/check-?in/i);
   });
 
-  // As páginas de destino são lazy. No CI (cobertura, 4 workers) a primeira importação de cada uma
-  // pode demorar mais do que qualquer timeout razoável; pré-carregá-las aqui faz o teste medir só
-  // a navegação, que é o que importa.
-  beforeAll(async () => {
-    await Promise.all([
-      import('@/features/portal/pages/PortalTodayPage'),
-      import('@/features/portal/pages/PortalNutritionPage'),
-      import('@/features/portal/pages/PortalSupplementsPage'),
-      import('@/features/portal/pages/PortalCheckInsPage'),
-    ]);
-  }, 60_000);
-
   // Uma rota desconhecida volta à raiz e daí ao Início, sem erro: só seguir o link prova que
   // a ação do cartão abre um ecrã registado no router.
   it.each([
@@ -302,18 +290,16 @@ describe('PortalHomePage', () => {
     ['Ver plano', 'Nutrição', '/portal/nutrition'],
     ['Registar tomas', 'Suplementos', '/portal/supplements'],
     ['Responder', 'Avaliação periódica', '/portal/check-ins'],
-  ])(
-    'opens the portal page behind the "%s" action',
-    async (action, heading, pathname) => {
-      const { router } = await openHome();
+  ])('opens the portal page behind the "%s" action', async (action, heading, pathname) => {
+    const { router } = await openHome();
 
-      await userEvent.click(screen.getByRole('link', { name: action }));
+    await userEvent.click(screen.getByRole('link', { name: action }));
 
-      expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument();
-      expect(router.state.location.pathname).toBe(pathname);
-    },
-    20_000
-  );
+    // Nível 1: os cartões do Início também têm títulos «Suplementos» e «Avaliação periódica»
+    // (h2). Sem o nível, a pesquisa podia apanhar o do Início antes de a navegação terminar.
+    await waitFor(() => expect(router.state.location.pathname).toBe(pathname));
+    expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument();
+  });
 
   it('keeps what was on screen and warns when a refresh fails, then recovers on retry', async () => {
     server.use(...restorableSession({ role: 'client' }));
