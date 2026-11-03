@@ -290,14 +290,21 @@ describe('PortalHomePage', () => {
     ['Ver plano', 'Nutrição', '/portal/nutrition'],
     ['Registar tomas', 'Suplementos', '/portal/supplements'],
     ['Responder', 'Avaliação periódica', '/portal/check-ins'],
-  ])('opens the portal page behind the "%s" action', async (action, heading, pathname) => {
-    const { router } = await openHome();
+  ])(
+    'opens the portal page behind the "%s" action',
+    async (action, heading, pathname) => {
+      const { router } = await openHome();
 
-    await userEvent.click(screen.getByRole('link', { name: action }));
+      await userEvent.click(screen.getByRole('link', { name: action }));
 
-    expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe(pathname);
-  });
+      // A página é lazy: no CI, o primeiro import da rota pode passar os 5 s por omissão.
+      expect(
+        await screen.findByRole('heading', { name: heading }, { timeout: 12_000 })
+      ).toBeInTheDocument();
+      expect(router.state.location.pathname).toBe(pathname);
+    },
+    20_000
+  );
 
   it('keeps what was on screen and warns when a refresh fails, then recovers on retry', async () => {
     server.use(...restorableSession({ role: 'client' }));
