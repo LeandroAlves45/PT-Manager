@@ -11,7 +11,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Devolve email, role e se a conta tem password local e Google ligado. */
+        /** Devolve email, role, nome e se a conta tem password local e Google ligado. */
         get: {
             parameters: {
                 query?: never;
@@ -28072,12 +28072,16 @@ export interface components {
             token: string;
             transfer_approved: boolean;
         };
-        /** @description Email, role e métodos de entrada da conta autenticada. */
+        /**
+         * @description Email, role, métodos de entrada e nome da conta autenticada. `full_name` é nulo
+         *     quando a conta não tem nome guardado.
+         */
         AccountResponse: {
             email: string;
             role: string;
             has_password: boolean;
             google_linked: boolean;
+            full_name: null | string;
         };
         /** @description Visão geral da plataforma para o superuser. */
         AdminOverviewResponse: {

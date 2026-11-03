@@ -50,6 +50,34 @@ public sealed class AuthAccountControllerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Get_ReturnsTheStoredFullName()
+    {
+        var userId = await AuthTestData.SeedAccountAsync(
+            _factory, $"account-name-{Guid.NewGuid():N}@trainer.test", fullName: "Rita Moreira");
+
+        var response = await GetAsync(TestJwtFactory.IssueTrainer(userId));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var body = await ReadAsync(response);
+        Assert.Equal("Rita Moreira", body.RootElement.GetProperty("full_name").GetString());
+    }
+
+    [Fact]
+    public async Task Get_AccountWithoutName_ReturnsNullFullName()
+    {
+        // Uma conta pode ter sido criada sem nome: o campo vem a null, não some do JSON.
+        var userId = await AuthTestData.SeedAccountAsync(
+            _factory, $"account-noname-{Guid.NewGuid():N}@admin.test",
+            role: "superuser", fullName: null);
+
+        var response = await GetAsync(TestJwtFactory.IssueSuperuser(userId));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var body = await ReadAsync(response);
+        Assert.Equal(JsonValueKind.Null, body.RootElement.GetProperty("full_name").ValueKind);
+    }
+
+    [Fact]
     public async Task Get_ClientAccount_ReportsTheClientRole()
     {
         // O cliente só usa a app com a ficha ativa no personal trainer do token.

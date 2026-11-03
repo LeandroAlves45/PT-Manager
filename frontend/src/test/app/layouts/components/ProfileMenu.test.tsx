@@ -4,12 +4,14 @@ import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
 import { getSession } from '@/shared/api/session';
+import { accountResponse } from '@/test/msw/auth-fixtures';
 import { API, problem, restorableSession } from '@/test/msw/handlers';
 import { portalProfile } from '@/test/msw/portal-fixtures';
 import { server } from '@/test/msw/server';
 import { renderApp } from '@/test/render';
 
 const PROFILE = `${API}/portal/my-profile`;
+const ACCOUNT = `${API}/auth/account`;
 const USER_ID = '11111111-1111-1111-1111-111111111111';
 
 async function openProfileMenu(role: 'superuser' | 'trainer' | 'client', entry: string) {
@@ -99,35 +101,72 @@ describe('ProfileMenu', () => {
     expect(router.state.location.pathname).toBe('/portal/profile');
   });
 
-  it('keeps working with the technical identifier when the profile fails to load', async () => {
+  it('keeps working with a person icon, never the identifier, when the profile fails to load', async () => {
+    let accountRequests = 0;
     server.use(
       http.get(PROFILE, () =>
         HttpResponse.json(problem('portal_profile_not_available'), { status: 404 })
-      )
+      ),
+      http.get(ACCOUNT, () => {
+        accountRequests += 1;
+        return HttpResponse.json(accountResponse({ role: 'client' }));
+      })
     );
     await openProfileMenu('client', '/portal/today');
 
+    const trigger = screen.getByRole('button', { name: 'Menu de perfil', hidden: true });
+    expect(within(trigger).getByTestId('account-avatar-icon')).toBeInTheDocument();
     expect(screen.getByText('Cliente')).toBeInTheDocument();
-    expect(screen.getByText(USER_ID)).toBeInTheDocument();
+    expect(screen.queryByText(USER_ID)).not.toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'O meu perfil' })).toBeInTheDocument();
+    // O cliente tem o perfil do portal: a conta não é pedida só para o menu.
+    expect(accountRequests).toBe(0);
   });
 
   it.each([
     ['superuser', '/admin', 'Administrador'],
     ['trainer', '/trainer', 'Personal Trainer'],
-  ] as const)('never asks for a client profile as %s', async (role, entry, label) => {
-    let requests = 0;
-    server.use(
-      http.get(PROFILE, () => {
-        requests += 1;
-        return HttpResponse.json(portalProfile());
-      })
-    );
-    await openProfileMenu(role, entry);
+  ] as const)(
+    'shows the %s initials and name from the account, without a client profile',
+    async (role, entry, label) => {
+      let profileRequests = 0;
+      server.use(
+        http.get(PROFILE, () => {
+          profileRequests += 1;
+          return HttpResponse.json(portalProfile());
+        }),
+        http.get(ACCOUNT, () =>
+          HttpResponse.json(accountResponse({ role, full_name: 'Rita Moreira' }))
+        )
+      );
+      await openProfileMenu(role, entry);
 
-    expect(screen.getByText(label)).toBeInTheDocument();
-    expect(screen.getByText(USER_ID)).toBeInTheDocument();
-    expect(screen.queryByText('João Pereira')).not.toBeInTheDocument();
-    expect(requests).toBe(0);
+      const trigger = screen.getByRole('button', { name: 'Menu de perfil', hidden: true });
+      expect(await within(trigger).findByTestId('account-avatar-initials')).toHaveTextContent('RM');
+      const menu = screen.getByRole('menu');
+      expect(within(menu).getByText('Rita Moreira')).toBeInTheDocument();
+      expect(within(menu).getByText(label)).toBeInTheDocument();
+      expect(screen.queryByText(USER_ID)).not.toBeInTheDocument();
+      expect(screen.queryByText('João Pereira')).not.toBeInTheDocument();
+      expect(profileRequests).toBe(0);
+    }
+  );
+
+  it.each([
+    ['without a name', null],
+    ['with a blank name', '   '],
+  ] as const)('shows a person icon and only the role for an account %s', async (_, fullName) => {
+    server.use(
+      http.get(ACCOUNT, () =>
+        HttpResponse.json(accountResponse({ role: 'superuser', full_name: fullName }))
+      )
+    );
+    await openProfileMenu('superuser', '/admin');
+
+    const trigger = screen.getByRole('button', { name: 'Menu de perfil', hidden: true });
+    expect(await within(trigger).findByTestId('account-avatar-icon')).toBeInTheDocument();
+    expect(within(trigger).queryByTestId('account-avatar-initials')).not.toBeInTheDocument();
+    expect(screen.getByText('Administrador')).toBeInTheDocument();
+    expect(screen.queryByText(USER_ID)).not.toBeInTheDocument();
   });
 });

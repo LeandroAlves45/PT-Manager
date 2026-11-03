@@ -29,9 +29,10 @@ internal static partial class AuthTestData
         bool confirmed = true,
         bool active = true,
         bool withPassword = true,
-        bool googleLinked = false)
+        bool googleLinked = false,
+        string? fullName = "Seeded Account")
     {
-        var user = new User(new EmailAddress(email), role, "Seeded Account", SeedInstant);
+        var user = new User(new EmailAddress(email), role, fullName, SeedInstant);
         if (confirmed)
             user.ConfirmEmail(SeedInstant);
 

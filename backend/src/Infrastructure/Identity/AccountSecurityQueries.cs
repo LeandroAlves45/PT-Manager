@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Identity;
 
-/// <summary>Lê os métodos de entrada da conta: password local e Google ligado.</summary>
+/// <summary>Lê os métodos de entrada da conta (password local e Google ligado) e o nome.</summary>
 internal sealed class AccountSecurityQueries : IAccountSecurityQueries
 {
     private readonly PtManagerDbContext _dbContext;
@@ -24,6 +24,7 @@ internal sealed class AccountSecurityQueries : IAccountSecurityQueries
                 !string.IsNullOrWhiteSpace(user.PasswordHash),
                 _dbContext.Set<ExternalIdentity>().Any(identity =>
                     identity.UserId == userId &&
-                    identity.Provider == ExternalIdentity.GoogleProvider)))
+                    identity.Provider == ExternalIdentity.GoogleProvider),
+                user.FullName))
             .SingleOrDefaultAsync(cancellationToken);
 }

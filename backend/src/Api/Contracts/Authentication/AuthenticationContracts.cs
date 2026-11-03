@@ -141,17 +141,21 @@ public sealed record SignUpAcceptedResponse(string Status)
     public const string ConfirmationEmailSent = "confirmation_email_sent";
 }
 
-/// <summary>Email, role e métodos de entrada da conta autenticada.</summary>
+/// <summary>
+/// Email, role, métodos de entrada e nome da conta autenticada. <c>full_name</c> é nulo
+/// quando a conta não tem nome guardado.
+/// </summary>
 public sealed record AccountResponse(
     string Email,
     string Role,
     bool HasPassword,
-    bool GoogleLinked)
+    bool GoogleLinked,
+    string? FullName)
 {
     public static AccountResponse From(AccountSecurityDto dto)
     {
         ArgumentNullException.ThrowIfNull(dto);
 
-        return new(dto.Email, dto.Role, dto.HasPassword, dto.GoogleLinked);
+        return new(dto.Email, dto.Role, dto.HasPassword, dto.GoogleLinked, dto.FullName);
     }
 }
