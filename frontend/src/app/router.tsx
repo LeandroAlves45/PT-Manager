@@ -9,17 +9,6 @@ import { RequireRole } from '@/app/guards/RequireRole';
 import { AppShell } from '@/app/layouts/AppShell';
 import { AuthLayout } from '@/app/layouts/AuthLayout';
 import { PortalLayout } from '@/app/layouts/PortalLayout';
-import { AccountSecurityPage } from '@/features/account';
-import {
-  AcceptInvitePage,
-  AcceptTrainerInvitePage,
-  ConfirmEmailPage,
-  ForgotPasswordPage,
-  LoginPage,
-  ResendConfirmationPage,
-  ResetPasswordPage,
-  SignUpPage,
-} from '@/features/auth';
 import { RootRedirect } from '@/app/RootRedirect';
 import { RouteFallback } from '@/app/RouteFallback';
 import { LibraryKindRedirect, PackTypesRedirect, SetLogsRedirect } from '@/app/TrainerRedirects';
@@ -50,18 +39,37 @@ const applicationRoutes: RouteObject[] = [
   { path: '/', element: <RootRedirect /> },
 
   // Páginas públicas de autenticação, todas sob a mesma moldura. `/aceitar-convite` fica aqui
-  // e não atrás do `RequireAuth`: tem de funcionar com e sem sessão.
+  // e não atrás do `RequireAuth`: tem de funcionar com e sem sessão. São lazy: o zod e o
+  // react-hook-form dos formulários não pesam no carregamento de quem já tem sessão.
   {
     element: <AuthLayout />,
     children: [
-      { path: AUTH_ROUTES.login, element: <LoginPage /> },
-      { path: AUTH_ROUTES.signUp, element: <SignUpPage /> },
-      { path: AUTH_ROUTES.forgotPassword, element: <ForgotPasswordPage /> },
-      { path: AUTH_ROUTES.resetPassword, element: <ResetPasswordPage /> },
-      { path: AUTH_ROUTES.confirmEmail, element: <ConfirmEmailPage /> },
-      { path: AUTH_ROUTES.acceptInvite, element: <AcceptInvitePage /> },
-      { path: AUTH_ROUTES.trainerInvite, element: <AcceptTrainerInvitePage /> },
-      { path: AUTH_ROUTES.resendConfirmation, element: <ResendConfirmationPage /> },
+      lazyPage(AUTH_ROUTES.login, async () => ({
+        default: (await import('@/features/auth/pages/LoginPage')).LoginPage,
+      })),
+      lazyPage(AUTH_ROUTES.signUp, async () => ({
+        default: (await import('@/features/auth/pages/SignUpPage')).SignUpPage,
+      })),
+      lazyPage(AUTH_ROUTES.forgotPassword, async () => ({
+        default: (await import('@/features/auth/pages/ForgotPasswordPage')).ForgotPasswordPage,
+      })),
+      lazyPage(AUTH_ROUTES.resetPassword, async () => ({
+        default: (await import('@/features/auth/pages/ResetPasswordPage')).ResetPasswordPage,
+      })),
+      lazyPage(AUTH_ROUTES.confirmEmail, async () => ({
+        default: (await import('@/features/auth/pages/ConfirmEmailPage')).ConfirmEmailPage,
+      })),
+      lazyPage(AUTH_ROUTES.acceptInvite, async () => ({
+        default: (await import('@/features/auth/pages/AcceptInvitePage')).AcceptInvitePage,
+      })),
+      lazyPage(AUTH_ROUTES.trainerInvite, async () => ({
+        default: (await import('@/features/auth/pages/AcceptTrainerInvitePage'))
+          .AcceptTrainerInvitePage,
+      })),
+      lazyPage(AUTH_ROUTES.resendConfirmation, async () => ({
+        default: (await import('@/features/auth/pages/ResendConfirmationPage'))
+          .ResendConfirmationPage,
+      })),
     ],
   },
 
@@ -133,7 +141,10 @@ const applicationRoutes: RouteObject[] = [
                   },
                 },
               ]),
-              { path: 'account', element: <AccountSecurityPage /> },
+              lazyPage('account', async () => ({
+                default: (await import('@/features/account/pages/AccountSecurityPage'))
+                  .AccountSecurityPage,
+              })),
             ],
           },
         ],
@@ -363,7 +374,10 @@ const applicationRoutes: RouteObject[] = [
               lazyPage('billing', async () => ({
                 default: (await import('@/features/billing/pages/BillingPage')).BillingPage,
               })),
-              { path: 'account', element: <AccountSecurityPage /> },
+              lazyPage('account', async () => ({
+                default: (await import('@/features/account/pages/AccountSecurityPage'))
+                  .AccountSecurityPage,
+              })),
             ],
           },
         ],
@@ -410,7 +424,10 @@ const applicationRoutes: RouteObject[] = [
                 default: (await import('@/features/portal/pages/PortalProfilePage'))
                   .PortalProfilePage,
               })),
-              { path: 'account', element: <AccountSecurityPage /> },
+              lazyPage('account', async () => ({
+                default: (await import('@/features/account/pages/AccountSecurityPage'))
+                  .AccountSecurityPage,
+              })),
             ],
           },
         ],

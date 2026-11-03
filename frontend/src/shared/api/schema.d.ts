@@ -28665,7 +28665,10 @@ export interface components {
             body_measurements: null | components["schemas"]["BodyMeasurementsPayload"];
             nutrition_intake: null | components["schemas"]["NutritionIntakePayload"];
         };
-        /** @description Cria um plano alimentar e a respetiva árvore inicial. */
+        /**
+         * @description Cria um plano alimentar e a respetiva árvore inicial. `show_macros_to_client` omisso
+         *     cria o plano com as macros visíveis ao cliente.
+         */
         CreateMealPlanRequest: {
             /** Format: uuid */
             client_id: string;
@@ -28677,6 +28680,7 @@ export interface components {
             ends_date: null | string;
             calculation: components["schemas"]["NutritionCalculationRequest"];
             structure: components["schemas"]["MealPlanStructureRequest"];
+            show_macros_to_client?: null | boolean;
         };
         /** @description Define um tipo de pack comercializado pelo personal trainer. */
         CreatePackTypeRequest: {
@@ -29226,6 +29230,7 @@ export interface components {
             is_active: boolean;
             is_archived: boolean;
             needs_review: boolean;
+            show_macros_to_client: boolean;
             meals: components["schemas"]["MealResponse"][];
             plan_supplements: components["schemas"]["MealSupplementResponse"][];
             /** Format: date-time */
@@ -29327,7 +29332,8 @@ export interface components {
         };
         /**
          * @description Linha da fila de moderação. Do personal trainer dono expõe id e nome; o nome pode ser null
-         *     em contas legadas sem FullName e o email nunca é usado como fallback.
+         *     em contas legadas sem FullName e o email nunca é usado como fallback. `video_url` é a
+         *     ligação externa de um exercício (YouTube ou Vimeo) que os clientes abrem; null nos restantes.
          */
         ModerationQueueItemResponse: {
             /** Format: uuid */
@@ -29346,6 +29352,7 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             updated_at: string;
+            video_url: null | string;
         };
         /**
          * @description Estados de enforcement pedido. Valores de uma só palavra porque a query string liga
@@ -29391,7 +29398,8 @@ export interface components {
          * @description Exercício prescrito, com marcador de indisponibilidade. O `id` é o da prescrição e
          *     é o valor a enviar em `training_plan_day_exercise_id` ao registar uma série. O
          *     `exercise_id` é o do catálogo, usado em `my-plan/exercises/{exerciseId}/video`
-         *     quando `has_ready_video` é verdadeiro.
+         *     quando `has_ready_video` é verdadeiro. `video_url` é a ligação externa (YouTube ou
+         *     Vimeo) que o cliente abre noutro separador, ou null.
          */
         MyDayExerciseResponse: {
             /** Format: uuid */
@@ -29402,6 +29410,7 @@ export interface components {
             order_number: number;
             exercise_name: string;
             has_ready_video: boolean;
+            video_url: null | string;
             /** Format: uuid */
             exercise_group_id: null | string;
             /** Format: int32 */
@@ -29574,6 +29583,8 @@ export interface components {
         /**
          * @description Plano alimentar que o cliente escolheu seguir. `goal_type` é a palavra do objetivo
          *     (`maintenance`, `deficit`, `surplus`) ou null quando as kcal foram escritas à mão.
+         *     Com `show_macros` a false, o personal trainer escondeu as macros: as metas e os gramas de
+         *     proteína, hidratos, gordura e fibra vêm a null e só as kcal têm valor.
          */
         MyNutritionPlanResponse: {
             /** Format: uuid */
@@ -29587,12 +29598,13 @@ export interface components {
             /** Format: double */
             target_kcal: number;
             /** Format: double */
-            protein_target_grams: number;
+            protein_target_grams: null | number;
             /** Format: double */
-            carbs_target_grams: number;
+            carbs_target_grams: null | number;
             /** Format: double */
-            fats_target_grams: number;
+            fats_target_grams: null | number;
             goal_type: null | string;
+            show_macros: boolean;
             actual_totals: components["schemas"]["MyNutritionTotalsResponse"];
             meals: components["schemas"]["MyMealResponse"][];
             plan_supplements: components["schemas"]["MyMealSupplementResponse"][];
@@ -29602,15 +29614,15 @@ export interface components {
         /** @description Totais nutricionais apresentados ao cliente. */
         MyNutritionTotalsResponse: {
             /** Format: double */
-            protein_grams: number;
+            protein_grams: null | number;
             /** Format: double */
-            carbs_grams: number;
+            carbs_grams: null | number;
             /** Format: double */
-            fats_grams: number;
+            fats_grams: null | number;
             /** Format: double */
             kcal: number;
             /** Format: double */
-            fiber_grams: number;
+            fiber_grams: null | number;
         };
         /** @description Dia passado com treino do plano ativo, para o filtro de dia do portal. */
         MyPastWorkoutDayResponse: {
@@ -29790,7 +29802,8 @@ export interface components {
         };
         /**
          * @description Exercício do treino de hoje. O `exercise_id` é o do catálogo, usado para pedir o
-         *     vídeo quando `has_ready_video` é verdadeiro.
+         *     vídeo quando `has_ready_video` é verdadeiro. `video_url` é a ligação externa
+         *     (YouTube ou Vimeo) que o cliente abre noutro separador, ou null.
          */
         MyWorkoutExerciseResponse: {
             /** Format: uuid */
@@ -29801,6 +29814,7 @@ export interface components {
             order_number: number;
             exercise_name: string;
             has_ready_video: boolean;
+            video_url: null | string;
             /** Format: uuid */
             exercise_group_id: null | string;
             /** Format: int32 */
@@ -30598,7 +30612,10 @@ export interface components {
             /** Format: int64 */
             revenue_this_month_cents: number;
         };
-        /** @description Dashboard agregado do personal trainer. */
+        /**
+         * @description Dashboard agregado do personal trainer. `trainer_name` é o nome da conta, para a
+         *     saudação do painel; null em contas antigas sem nome.
+         */
         TrainerDashboardResponse: {
             /** Format: date */
             local_today: string;
@@ -30611,6 +30628,7 @@ export interface components {
             sessions_today: components["schemas"]["SessionsTodayResponse"];
             clients_without_training_plan: components["schemas"]["ClientsWithoutTrainingPlanResponse"];
             pack_sales: components["schemas"]["PackSalesResponse"];
+            trainer_name: null | string;
         };
         /** @description `status` é `valid`, `expired`, `used` ou `invalid`. */
         TrainerInvitationStatusResponse: {
@@ -30851,7 +30869,10 @@ export interface components {
             body_measurements: null | components["schemas"]["BodyMeasurementsPayload"];
             nutrition_intake: null | components["schemas"]["NutritionIntakePayload"];
         };
-        /** @description Reconcilia um plano existente. Cálculo nulo preserva o cálculo já persistido. */
+        /**
+         * @description Reconcilia um plano existente. Cálculo nulo preserva o cálculo já persistido;
+         *     `show_macros_to_client` nulo preserva a escolha atual.
+         */
         UpdateMealPlanRequest: {
             name: string;
             description: null | string;
@@ -30861,6 +30882,7 @@ export interface components {
             ends_date: null | string;
             calculation: null | components["schemas"]["NutritionCalculationRequest"];
             structure: components["schemas"]["MealPlanStructureRequest"];
+            show_macros_to_client?: null | boolean;
         };
         /** @description Nome e contactos que o cliente pode alterar. O email da ficha não se altera aqui. */
         UpdateMyProfileRequest: {

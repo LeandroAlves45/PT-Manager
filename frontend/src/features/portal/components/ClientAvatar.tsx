@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { profileInitials } from '@/features/portal/lib/profile';
+import { profileInitials } from '@/features/portal/lib/initials';
 import { cn } from '@/shared/lib/utils';
 
 /**

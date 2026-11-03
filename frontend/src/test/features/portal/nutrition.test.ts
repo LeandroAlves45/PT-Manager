@@ -4,7 +4,7 @@ import {
   formatGrams,
   formatKcal,
   goalLabel,
-  macroRows,
+  dailyTargets,
   mealCountLabel,
   planPeriodLabel,
   mealSupplementDose,
@@ -32,49 +32,44 @@ describe('formatKcal', () => {
   });
 });
 
-describe('macroRows', () => {
+describe('dailyTargets', () => {
   const plan = {
     target_kcal: 2400,
+    show_macros: true,
     protein_target_grams: 180,
-    carbs_target_grams: 270,
+    carbs_target_grams: 270.5,
     fats_target_grams: 67,
-    actual_totals: {
-      kcal: 925.6,
-      protein_grams: 79.25,
-      carbs_grams: 99.36,
-      fats_grams: 19.13,
-      fiber_grams: 9.08,
-    },
   };
 
-  it('lists energy, protein, carbs, fat and fibre with text and the share of the target', () => {
-    expect(
-      macroRows(plan).map((row) => [row.key, row.actualText, row.targetText, row.percent])
-    ).toEqual([
-      ['kcal', '926 kcal', '2400 kcal', 39],
-      ['protein', '79,3 g', '180 g', 44],
-      ['carbs', '99,4 g', '270 g', 37],
-      ['fats', '19,1 g', '67 g', 29],
-      ['fiber', '9,1 g', '—', null],
+  it('shows the kcal target and the three macro targets when the plan shows macros', () => {
+    const targets = dailyTargets(plan);
+
+    expect(targets.kcalText).toBe('2400');
+    expect(targets.macros.map((macro) => [macro.key, macro.label, macro.gramsText])).toEqual([
+      ['protein', 'Proteína', '180 g'],
+      ['carbs', 'Hidratos', '270,5 g'],
+      ['fats', 'Gordura', '67 g'],
     ]);
   });
 
-  it('caps the bar at 100 when the plan goes over the target', () => {
-    const rows = macroRows({ ...plan, actual_totals: { ...plan.actual_totals, kcal: 4800 } });
-
-    expect(rows[0]!.percent).toBe(100);
-    expect(rows[0]!.actualText).toBe('4800 kcal');
-  });
-
-  it('leaves the fibre out when the plan has none and draws no bar without a target', () => {
-    const rows = macroRows({
+  it('shows only the kcal when the personal trainer hides the macros', () => {
+    const targets = dailyTargets({
       ...plan,
-      protein_target_grams: 0,
-      actual_totals: { ...plan.actual_totals, fiber_grams: 0 },
+      show_macros: false,
+      protein_target_grams: null,
+      carbs_target_grams: null,
+      fats_target_grams: null,
     });
 
-    expect(rows.map((row) => row.key)).not.toContain('fiber');
-    expect(rows[1]!.percent).toBeNull();
+    expect(targets).toEqual({ kcalText: '2400', macros: [] });
+  });
+
+  it('follows the flag even when the grams are still there', () => {
+    expect(dailyTargets({ ...plan, show_macros: false }).macros).toEqual([]);
+  });
+
+  it('never shows a macro without a value, even if the flag says to', () => {
+    expect(dailyTargets({ ...plan, carbs_target_grams: null }).macros).toEqual([]);
   });
 });
 

@@ -236,7 +236,7 @@ describe('PortalHomePage', () => {
     server.use(...restorableSession({ role: 'trainer', trainer_id: 't-1' }));
     const { router } = renderApp({ initialEntries: ['/portal'] });
 
-    await screen.findByRole('heading', { name: 'Bom treino' });
+    await screen.findByRole('heading', { level: 1, name: /Rita/ });
     expect(router.state.location.pathname).toBe('/trainer');
     expect(requests).toBe(0);
   });

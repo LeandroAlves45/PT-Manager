@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import { profileInitials } from '@/features/portal/lib/initials';
 import {
   AVATAR_MAX_BYTES,
   avatarFailureMessage,
   avatarFileError,
   profileFailure,
-  profileInitials,
   profileSchema,
   toProfileUpdate,
   toProfileValues,

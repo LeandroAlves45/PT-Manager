@@ -102,6 +102,30 @@ describe('CatalogEditorPage', () => {
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   }, 15000);
 
+  it('creates a global exercise with a Vimeo link', async () => {
+    let body: Record<string, unknown> | null = null;
+    server.use(
+      ...session(),
+      emptyList('global-exercises'),
+      http.post(`${API}/global-exercises`, async ({ request }) => {
+        body = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(exercise, { status: 201 });
+      })
+    );
+    const user = userEvent.setup();
+    const { router } = renderApp({ initialEntries: ['/admin/catalog/exercises/new'] });
+
+    await user.type(await screen.findByLabelText('Nome'), 'Agachamento');
+    await user.type(
+      screen.getByLabelText('Ligação de vídeo (opcional)'),
+      'https://vimeo.com/76979871'
+    );
+    await user.click(screen.getByRole('button', { name: 'Criar' }));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/admin/catalog/exercises'));
+    expect(body).toMatchObject({ name: 'Agachamento', video_url: 'https://vimeo.com/76979871' });
+  }, 15000);
+
   it('creates a supplement without timing as null', async () => {
     let body: Record<string, unknown> | null = null;
     server.use(
@@ -221,7 +245,7 @@ describe('CatalogEditorPage', () => {
       const { router } = renderApp({ initialEntries: ['/admin/catalog/exercises/new'] });
 
       await user.type(await screen.findByLabelText('Nome'), 'Agachamento');
-      await user.upload(screen.getByLabelText('Vídeo (opcional)'), mp4());
+      await user.upload(screen.getByLabelText('Ficheiro de vídeo (opcional)'), mp4());
       await user.click(screen.getByRole('button', { name: 'Criar' }));
 
       expect(await screen.findByText('Vídeo pronto.')).toBeInTheDocument();
@@ -251,7 +275,7 @@ describe('CatalogEditorPage', () => {
       const { router } = renderApp({ initialEntries: ['/admin/catalog/exercises/new'] });
 
       await user.type(await screen.findByLabelText('Nome'), 'Agachamento');
-      await user.upload(screen.getByLabelText('Vídeo (opcional)'), mp4());
+      await user.upload(screen.getByLabelText('Ficheiro de vídeo (opcional)'), mp4());
       await user.click(screen.getByRole('button', { name: 'Criar' }));
 
       expect(await screen.findByRole('alert')).toHaveTextContent(
@@ -292,7 +316,7 @@ describe('CatalogEditorPage', () => {
       const { router } = renderApp({ initialEntries: ['/admin/catalog/exercises/new'] });
 
       await user.type(await screen.findByLabelText('Nome'), 'Agachamento');
-      await user.upload(screen.getByLabelText('Vídeo (opcional)'), mp4());
+      await user.upload(screen.getByLabelText('Ficheiro de vídeo (opcional)'), mp4());
       await user.click(screen.getByRole('button', { name: 'Criar' }));
       await screen.findByText('A confirmar o envio…');
 
@@ -329,7 +353,7 @@ describe('CatalogEditorPage', () => {
 
       await user.type(await screen.findByLabelText('Nome'), 'Agachamento');
       await user.upload(
-        screen.getByLabelText('Vídeo (opcional)'),
+        screen.getByLabelText('Ficheiro de vídeo (opcional)'),
         new File(['x'], 'notas.txt', { type: 'text/plain' })
       );
       await user.click(screen.getByRole('button', { name: 'Criar' }));

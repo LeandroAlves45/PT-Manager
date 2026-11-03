@@ -9,6 +9,7 @@ import {
   type ModerationKind,
   type ModerationStatus,
 } from '@/features/admin-moderation/api/moderation';
+import { ExternalVideoLink } from '@/features/exercise-video';
 import type { components } from '@/shared/api/schema';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState';
@@ -162,8 +163,10 @@ export function ModerationPage() {
                 <tbody>
                   {query.data.items.map((item) => (
                     <tr key={item.id} className="border-border border-t">
-                      <th scope="row" className="p-3 text-left font-medium">
-                        {item.name}
+                      <th scope="row" className="space-y-2 p-3 text-left font-medium">
+                        <span className="block">{item.name}</span>
+                        {/* Rever o vídeo externo antes de decidir; só os exercícios o têm. */}
+                        <ExternalVideoLink url={item.video_url} />
                       </th>
                       <td className="p-3">{item.owner_trainer_name ?? 'Nome indisponível'}</td>
                       <td className="p-3">

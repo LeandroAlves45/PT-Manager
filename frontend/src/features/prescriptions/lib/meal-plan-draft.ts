@@ -22,6 +22,8 @@ export interface MealPlanDraft {
   readonly description: string;
   readonly startsDate: string;
   readonly endsDate: string;
+  /** O cliente vê proteína, hidratos e gordura; desligado, vê só as kcal. */
+  readonly showMacrosToClient: boolean;
   readonly calculation: Calculation;
   /** `true` quando o cálculo mudou desde o último preview ou snapshot gravado. */
   readonly calculationDirty: boolean;
@@ -57,6 +59,7 @@ export interface MealPlanEditorContext {
     field: 'name' | 'description' | 'startsDate' | 'endsDate',
     value: string
   ) => void;
+  readonly setShowMacrosToClient: (value: boolean) => void;
   readonly chooseClient: (client: ClientChoice) => void;
   readonly changeCalculation: (next: Calculation) => void;
   readonly applyAssessment: () => void;

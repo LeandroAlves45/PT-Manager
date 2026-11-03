@@ -64,9 +64,9 @@ describe('Escolha do plano alimentar', () => {
     expect(await screen.findByRole('heading', { name: 'Nutrição', level: 1 })).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'Dias de descanso' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Manutenção - 2400 kcal' })).toBeInTheDocument();
-    // Nenhuma refeição nem barras: não há plano aberto.
+    // Nenhuma refeição nem metas: não há plano aberto.
     expect(screen.queryByRole('article')).not.toBeInTheDocument();
-    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Metas do dia' })).not.toBeInTheDocument();
     expect(screen.queryByText('A seguir')).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Escolher este plano' })).toHaveLength(2);
   });
@@ -98,7 +98,7 @@ describe('Escolha do plano alimentar', () => {
     expect(await screen.findByRole('article', { name: 'Almoço' })).toBeInTheDocument();
     expect(account.bodies).toEqual([{ meal_plan_id: REST_DAY_MEAL_PLAN_ID }]);
     expect(screen.getByText('Dias de descanso')).toBeInTheDocument();
-    expect(screen.getAllByRole('progressbar').length).toBeGreaterThan(0);
+    expect(screen.getByRole('region', { name: 'Metas do dia' })).toBeInTheDocument();
     // O botão escolhido desapareceu com a lista: o foco passa para o título do plano.
     await waitFor(() =>
       expect(screen.getByRole('heading', { level: 1, name: 'Nutrição' })).toHaveFocus()

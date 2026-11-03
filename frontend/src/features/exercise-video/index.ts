@@ -11,6 +11,13 @@ export {
   type ExerciseVideoReader,
 } from '@/features/exercise-video/api/exerciseVideo';
 export { ExerciseVideoPanel } from '@/features/exercise-video/components/ExerciseVideoPanel';
+export { ExternalVideoLink } from '@/features/exercise-video/components/ExternalVideoLink';
+export {
+  EXTERNAL_VIDEO_URL_ERROR,
+  EXTERNAL_VIDEO_URL_MAX_LENGTH,
+  externalVideoLink,
+  isValidExternalVideoUrl,
+} from '@/features/exercise-video/lib/externalVideo';
 export {
   describeExerciseVideo,
   isVideoInProgress,

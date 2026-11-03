@@ -19,6 +19,7 @@ const privateFood = {
   platform_enforced_at: null,
   created_at: '2026-09-23T10:00:00Z',
   updated_at: '2026-09-23T10:00:00Z',
+  video_url: null,
 };
 
 function queue(items: unknown[]) {
@@ -62,6 +63,26 @@ describe('ModerationPage filters', () => {
     const controls = screen.getByRole('tab', { name: 'Exercícios' }).getAttribute('aria-controls');
     expect(controls).not.toBeNull();
     expect(document.getElementById(controls ?? '')).not.toBeNull();
+  }, 15000);
+
+  it('shows the external video link of an exercise so it can be reviewed', async () => {
+    server.use(
+      ...restorableSession({ role: 'superuser', trainer_id: null }),
+      http.get(`${API}/admin/content-moderation/exercises`, () =>
+        queue([
+          { ...privateFood, name: 'Supino', video_url: 'https://youtu.be/dQw4w9WgXcQ' },
+          { ...privateFood, id: '33333333-3333-3333-3333-333333333333', name: 'Remada' },
+        ])
+      )
+    );
+    renderApp({ initialEntries: ['/admin/moderation?kind=exercises'] });
+
+    const link = await screen.findByRole('link', {
+      name: 'Ver no YouTube (abre noutro separador)',
+    });
+    expect(link).toHaveAttribute('href', 'https://youtu.be/dQw4w9WgXcQ');
+    expect(link.closest('th')).toHaveTextContent('Supino');
+    expect(screen.getAllByRole('link', { name: /Ver no / })).toHaveLength(1);
   }, 15000);
 
   it('switching tab requests the other kind from page 1', async () => {

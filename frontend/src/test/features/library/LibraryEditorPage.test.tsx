@@ -213,7 +213,7 @@ describe('LibraryEditorPage', () => {
       const { router } = renderApp({ initialEntries: [`${BASE}/exercises/new`] });
 
       await user.type(await screen.findByLabelText('Nome'), 'Remada curvada');
-      await user.upload(screen.getByLabelText('Vídeo (opcional)'), mp4());
+      await user.upload(screen.getByLabelText('Ficheiro de vídeo (opcional)'), mp4());
       await user.click(screen.getByRole('button', { name: 'Criar' }));
 
       expect(await screen.findByText('Vídeo pronto.')).toBeInTheDocument();
@@ -238,7 +238,7 @@ describe('LibraryEditorPage', () => {
 
       await user.type(await screen.findByLabelText('Nome'), 'Remada curvada');
       await user.upload(
-        screen.getByLabelText('Vídeo (opcional)'),
+        screen.getByLabelText('Ficheiro de vídeo (opcional)'),
         new File(['x'], 'notas.txt', { type: 'text/plain' })
       );
       await user.click(screen.getByRole('button', { name: 'Criar' }));
@@ -255,7 +255,7 @@ describe('LibraryEditorPage', () => {
       const user = userEvent.setup({ applyAccept: false });
       renderApp({ initialEntries: [`${BASE}/exercises/new`] });
 
-      await user.upload(await screen.findByLabelText('Vídeo (opcional)'), mp4());
+      await user.upload(await screen.findByLabelText('Ficheiro de vídeo (opcional)'), mp4());
       await user.click(screen.getByRole('link', { name: 'Voltar a Exercícios' }));
 
       expect(await screen.findByRole('alertdialog', { name: 'Sair sem guardar?' })).toBeVisible();

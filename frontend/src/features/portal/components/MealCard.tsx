@@ -10,10 +10,14 @@ type Meal = components['schemas']['MyMealResponse'];
  * Uma refeição do plano alimentar, só de leitura.
  *
  * Cada alimento mostra gramas e kcal; proteína, hidratos e gordura aparecem em chips só no
- * total da refeição. `meal_type` é texto livre do personal trainer e mostra-se tal como veio.
- * Os suplementos da refeição são informação do plano; as tomas registam-se na página de suplementos.
+ * total da refeição e só se o personal trainer mostrar as macros neste plano. `meal_type` é
+ * texto livre do personal trainer e mostra-se tal como veio. Os suplementos da refeição são
+ * informação do plano; as tomas registam-se na página de suplementos.
+ *
+ * @param meal Refeição do plano.
+ * @param showMacros Escolha do personal trainer no plano (`show_macros`).
  */
-export function MealCard({ meal }: { meal: Meal }) {
+export function MealCard({ meal, showMacros }: { meal: Meal; showMacros: boolean }) {
   return (
     <article aria-label={meal.meal_type} className="flex min-w-0 flex-col">
       <PortalCard tone="nutrition" className="flex-1">
@@ -26,7 +30,7 @@ export function MealCard({ meal }: { meal: Meal }) {
               {formatKcal(meal.totals.kcal)}
             </p>
           </div>
-          <MacroChips totals={meal.totals} />
+          {showMacros && <MacroChips totals={meal.totals} />}
         </header>
 
         {meal.items.length === 0 ? (

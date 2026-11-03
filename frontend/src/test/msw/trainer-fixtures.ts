@@ -19,6 +19,7 @@ export function dashboardResponse(
   return {
     local_today: '2026-09-16',
     active_client_count: 12,
+    trainer_name: 'Rita Moreira',
     check_ins_pending_review: {
       total_count: 7,
       overdue_count: 3,

@@ -66,14 +66,6 @@ export const PROFILE_SEX_LABELS: Readonly<Record<string, string>> = {
   female: 'Feminino',
 };
 
-/** Iniciais para o avatar sem fotografia: primeira letra do primeiro e do último nome. */
-export function profileInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  const first = parts[0]?.[0] ?? '';
-  const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : '';
-  return `${first}${last}`.toUpperCase();
-}
-
 const INVALID_CHARACTER = 'O texto tem caracteres inválidos.';
 
 const PROFILE_MESSAGES: Readonly<Record<string, string>> = {

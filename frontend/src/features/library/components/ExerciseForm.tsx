@@ -3,7 +3,11 @@ import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
-import { ExerciseVideoPanel } from '@/features/exercise-video';
+import {
+  EXTERNAL_VIDEO_URL_ERROR,
+  ExerciseVideoPanel,
+  isValidExternalVideoUrl,
+} from '@/features/exercise-video';
 import {
   ACCEPTED_VIDEO_TYPES,
   validateVideoFile,
@@ -29,8 +33,8 @@ type Exercise = components['schemas']['ExerciseResponse'];
 
 /**
  * Regras iguais a `CreateExerciseCommandValidator`: nome 1–255, equipamento ≤ 255, dificuldade
- * ≤ 50 (texto livre, F11), grupos musculares só da lista fechada. A descrição não tem limite no
- * backend.
+ * ≤ 50 (texto livre, F11), grupos musculares só da lista fechada, ligação de vídeo só do
+ * YouTube ou do Vimeo. A descrição não tem limite no backend.
  */
 const exerciseSchema = z.object({
   name: z
@@ -42,10 +46,18 @@ const exerciseSchema = z.object({
   muscle_groups: z.array(z.custom<MuscleGroupCode>()),
   equipment: z.string().trim().max(255, 'O equipamento não pode exceder 255 caracteres.'),
   difficulty_level: z.string().trim().max(50, 'A dificuldade não pode exceder 50 caracteres.'),
+  video_url: z.string().trim().refine(isValidExternalVideoUrl, EXTERNAL_VIDEO_URL_ERROR),
 });
 type ExerciseValues = z.input<typeof exerciseSchema>;
 
-const FIELDS = ['name', 'description', 'muscle_groups', 'equipment', 'difficulty_level'] as const;
+const FIELDS = [
+  'name',
+  'description',
+  'muscle_groups',
+  'equipment',
+  'difficulty_level',
+  'video_url',
+] as const;
 
 /** Campos e comandos no backend -> campos do formulário. */
 const SERVER_FIELDS: Record<string, (typeof FIELDS)[number]> = {
@@ -53,6 +65,7 @@ const SERVER_FIELDS: Record<string, (typeof FIELDS)[number]> = {
   MuscleGroups: 'muscle_groups',
   Equipment: 'equipment',
   DifficultyLevel: 'difficulty_level',
+  VideoUrl: 'video_url',
 };
 
 /**
@@ -64,8 +77,8 @@ const SERVER_FIELDS: Record<string, (typeof FIELDS)[number]> = {
  * Avisa ao sair com alterações por guardar, com um ficheiro escolhido ou com um envio em
  * curso (sair cancela-o, porque o painel do vídeo desmonta).
  *
- * `video_url` (ligação externa antiga) não aparece e é reenviado tal como está: o PATCH
- * substitui todos os campos e apagá-lo seria uma perda silenciosa.
+ * A ligação de vídeo (YouTube ou Vimeo) é uma alternativa ao envio do ficheiro: o cliente
+ * abre-a noutro separador e não ocupa armazenamento. Os dois podem coexistir.
  *
  * @param exercise Exercício a editar, ou `null` para criar.
  * @param onSaved Chamado depois de guardar, já sem o aviso de saída ativo.
@@ -93,6 +106,7 @@ export function ExerciseForm({
       muscle_groups: parseMuscleGroups(exercise?.muscle_groups ?? null),
       equipment: exercise?.equipment ?? '',
       difficulty_level: exercise?.difficulty_level ?? '',
+      video_url: exercise?.video_url ?? '',
     },
   });
   const errors = form.formState.errors;
@@ -122,7 +136,7 @@ export function ExerciseForm({
         muscle_groups: serializeMuscleGroups(data.muscle_groups),
         equipment: data.equipment || null,
         difficulty_level: data.difficulty_level || null,
-        video_url: exercise?.video_url ?? null,
+        video_url: data.video_url || null,
       });
       toast.success(
         exercise === null ? 'Exercício criado com sucesso.' : 'Exercício atualizado com sucesso.'
@@ -187,9 +201,25 @@ export function ExerciseForm({
             />
           )}
         </FormField>
+        <FormField
+          label="Ligação de vídeo (opcional)"
+          hint="YouTube ou Vimeo. O cliente abre a ligação noutro separador."
+          error={errors.video_url?.message}
+        >
+          {(control) => (
+            <Input
+              {...control}
+              type="url"
+              inputMode="url"
+              autoComplete="off"
+              placeholder="https://youtu.be/…"
+              {...form.register('video_url')}
+            />
+          )}
+        </FormField>
         {exercise === null && (
           <div className="flex flex-col gap-1 text-sm">
-            <label htmlFor={videoInputId}>Vídeo (opcional)</label>
+            <label htmlFor={videoInputId}>Ficheiro de vídeo (opcional)</label>
             <Input
               id={videoInputId}
               type="file"

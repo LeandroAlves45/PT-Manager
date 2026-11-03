@@ -30,7 +30,7 @@ async function openTrainerShell() {
   const user = userEvent.setup();
   renderApp({ initialEntries: ['/trainer'] });
   // [6E] ALTERADO: título do painel real do trainer.
-  await screen.findByRole('heading', { name: 'Bom treino' });
+  await screen.findByRole('heading', { level: 1, name: /Rita/ });
   return user;
 }
 
