@@ -572,26 +572,31 @@ export function MealPlanTargetsStep() {
             )}
           </FormField>
         </div>
-        <div className="flex min-h-11 items-start gap-3 rounded-lg border px-3 py-2.5">
+        {/* A linha inteira é a área de toque: o `label` envolve a caixa e o texto. */}
+        <label
+          htmlFor="meal-plan-show-macros"
+          className="hover:bg-muted/40 flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 transition-colors has-disabled:cursor-default"
+        >
           <input
             id="meal-plan-show-macros"
             type="checkbox"
-            className="accent-primary mt-0.5 size-5 shrink-0"
+            className="accent-primary mt-0.5 size-5 shrink-0 cursor-pointer disabled:cursor-default"
             checked={draft.showMacrosToClient}
             disabled={readOnly}
+            aria-labelledby="meal-plan-show-macros-label"
             aria-describedby="meal-plan-show-macros-hint"
             onChange={(event) => editor.setShowMacrosToClient(event.target.checked)}
           />
-          <div className="space-y-0.5">
-            <label htmlFor="meal-plan-show-macros" className="text-sm font-medium">
+          <span className="space-y-0.5">
+            <span id="meal-plan-show-macros-label" className="block text-sm font-medium">
               Mostrar macros ao cliente
-            </label>
-            <p id="meal-plan-show-macros-hint" className="text-muted-foreground text-xs">
+            </span>
+            <span id="meal-plan-show-macros-hint" className="text-muted-foreground block text-xs">
               Ligado, o cliente vê as metas de proteína, hidratos e gordura. Desligado, vê só as
               kcal.
-            </p>
-          </div>
-        </div>
+            </span>
+          </span>
+        </label>
       </div>
 
       {editor.clientLoading && <p role="status">A carregar dados do cliente…</p>}
