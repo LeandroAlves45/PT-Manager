@@ -89,7 +89,8 @@ public sealed class GetTrainerDashboardHandler
                 withoutPlan),
             new TrainerDashboardDto.PackSalesDto(
                 ToMonth(window.CurrentMonthStart, data.PackSales),
-                ToMonth(window.PreviousMonthStart, data.PackSales))));
+                ToMonth(window.PreviousMonthStart, data.PackSales)),
+            data.TrainerName));
     }
 
     private static TrainerDashboardDto.PackSalesMonthDto ToMonth(

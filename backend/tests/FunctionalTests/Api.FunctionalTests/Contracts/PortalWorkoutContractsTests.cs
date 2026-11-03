@@ -23,17 +23,19 @@ public sealed class PortalWorkoutContractsTests
             2,
             "Supino",
             HasReadyVideo: true,
-            null,
-            null,
-            null,
+            VideoUrl: "https://youtu.be/dQw4w9WgXcQ",
+            ExerciseGroupId: null,
+            GroupPosition: null,
+            Notes: null,
             IsCompleted: false,
-            []);
+            Sets: []);
 
         var response = MyWorkoutExerciseResponse.From(dto);
 
         Assert.Equal(prescriptionId, response.Id);
         Assert.Equal(catalogExerciseId, response.ExerciseId);
         Assert.True(response.HasReadyVideo);
+        Assert.Equal("https://youtu.be/dQw4w9WgXcQ", response.VideoUrl);
         Assert.False(response.IsCompleted);
     }
 }

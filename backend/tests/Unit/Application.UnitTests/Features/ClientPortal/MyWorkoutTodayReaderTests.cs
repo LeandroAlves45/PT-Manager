@@ -86,6 +86,7 @@ public sealed class MyWorkoutTodayReaderTests : ReadHandlerTestContext
         Assert.Equal(PrescriptionId, exercise.Id);
         Assert.Equal(CatalogExerciseId, exercise.ExerciseId);
         Assert.True(exercise.HasReadyVideo);
+        Assert.Equal(ExerciseVideoUrl, exercise.VideoUrl);
         var sets = exercise.Sets;
         Assert.NotNull(sets[0].Logged);
         Assert.Equal("Senti o ombro", sets[0].Logged!.Notes);

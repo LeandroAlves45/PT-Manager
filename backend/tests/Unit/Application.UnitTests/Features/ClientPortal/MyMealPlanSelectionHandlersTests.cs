@@ -25,6 +25,53 @@ public sealed class MyMealPlanSelectionHandlersTests : ReadHandlerTestContext
     }
 
     [Fact]
+    public async Task Nutrition_MacrosShown_KeepsTargetsAndGrams()
+    {
+        var result = await NutritionHandler(new NutritionQueriesFake { ShowMacros = true })
+            .HandleAsync(CancellationToken.None);
+
+        var plan = result.Value;
+        Assert.True(plan.ShowMacros);
+        Assert.Equal(180m, plan.ProteinTargetGrams);
+        Assert.Equal(200m, plan.CarbsTargetGrams);
+        Assert.Equal(60m, plan.FatsTargetGrams);
+        Assert.Equal(31m, plan.Meals[0].Totals.ProteinGrams);
+        Assert.Equal(2.7m, plan.Meals[0].Items[0].Contribution.ProteinGrams);
+    }
+
+    [Fact]
+    public async Task Nutrition_MacrosHidden_SendsOnlyKcal()
+    {
+        var result = await NutritionHandler(new NutritionQueriesFake { ShowMacros = false })
+            .HandleAsync(CancellationToken.None);
+
+        var plan = result.Value;
+        Assert.False(plan.ShowMacros);
+        Assert.Equal(2_200m, plan.TargetKcal);
+        Assert.Null(plan.ProteinTargetGrams);
+        Assert.Null(plan.CarbsTargetGrams);
+        Assert.Null(plan.FatsTargetGrams);
+
+        // Todos os níveis de totais: plano, refeição e alimento. Só as kcal ficam.
+        var totals = new[]
+        {
+            plan.ActualTotals,
+            plan.Meals[0].Totals,
+            plan.Meals[0].Items[0].Contribution,
+        };
+        Assert.All(totals, total =>
+        {
+            Assert.Null(total.ProteinGrams);
+            Assert.Null(total.CarbsGrams);
+            Assert.Null(total.FatsGrams);
+            Assert.Null(total.FiberGrams);
+        });
+        Assert.Equal([261m, 261m, 124m], totals.Select(total => total.Kcal));
+        Assert.Equal("Arroz", plan.Meals[0].Items[0].FoodName);
+        Assert.Equal(100m, plan.Meals[0].Items[0].QuantityInGrams);
+    }
+
+    [Fact]
     public async Task Nutrition_OnePlanWithoutSelection_AsksToChoose()
     {
         var queries = new NutritionQueriesFake { HasSelection = false, ActiveCount = 1 };

@@ -82,6 +82,9 @@ internal sealed class MealPlanStore : IMealPlanStore
                     now
                 );
 
+                if (model.ShowMacrosToClient is { } showMacrosToClient)
+                    plan.ChangeClientMacroVisibility(showMacrosToClient, now);
+
                 AddNewStructure(plan, model.Structure, now);
                 _dbContext.MealPlans.Add(plan);
                 await _dbContext.SaveChangesAsync(cancellationToken);
@@ -341,6 +344,9 @@ internal sealed class MealPlanStore : IMealPlanStore
     )
     {
         plan.UpdateDetails(model.Name, model.Description, model.StartsDate, model.EndsDate, now);
+        // Null mantém a escolha atual (pedidos de clientes anteriores a este campo).
+        if (model.ShowMacrosToClient is { } showMacrosToClient)
+            plan.ChangeClientMacroVisibility(showMacrosToClient, now);
         if (model.ReplacementCalculation is not null)
             plan.ReplaceCalculation(model.ReplacementCalculation, now);
 

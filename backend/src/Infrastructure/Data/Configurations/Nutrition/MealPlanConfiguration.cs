@@ -101,6 +101,13 @@ internal sealed class MealPlanConfiguration : IEntityTypeConfiguration<MealPlan>
             .HasColumnName("ends_date")
             .HasColumnType("date");
 
+        // Default true só para os planos que já existiam. O false gravado pelo store chega mesmo
+        // ao PostgreSQL (provado em MealPlanStoreTests com SQL direto).
+        builder.Property(mp => mp.ShowMacrosToClient)
+            .HasColumnName("show_macros_to_client")
+            .HasDefaultValue(true)
+            .IsRequired();
+
         builder.Property(mp => mp.IsActive)
             .HasColumnName("is_active")
             .HasDefaultValue(true)

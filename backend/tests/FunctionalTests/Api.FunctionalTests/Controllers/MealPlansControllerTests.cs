@@ -36,6 +36,38 @@ public sealed class MealPlansControllerTests
         var body = await ReadJsonAsync(response);
         Assert.Equal(2, body.GetProperty("meals").GetArrayLength());
         Assert.True(body.GetProperty("actual_totals").GetProperty("kcal").GetDecimal() > 0m);
+        // Sem o campo no pedido, o plano nasce a mostrar as macros (comportamento anterior).
+        Assert.True(body.GetProperty("show_macros_to_client").GetBoolean());
+    }
+
+    [Fact]
+    public async Task Create_HidingMacros_UpdateWithoutField_KeepsTheChoice()
+    {
+        var catalog = await NutritionTestData.SeedMealPlanCatalogAsync(_fixture.Factory, Token);
+        var client = TrainerClient(catalog.TrainerId);
+        var payload = JsonSerializer.SerializeToNode(NutritionHttpPayloads.CreateMealPlan(
+            catalog.ClientId, catalog.FoodId, catalog.SupplementId, mealCount: 1))!.AsObject();
+        payload["show_macros_to_client"] = false;
+
+        var created = await client.PostAsJsonAsync("/api/v1/meal-plans", payload, Token);
+
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var detail = await ReadJsonAsync(created);
+        Assert.False(detail.GetProperty("show_macros_to_client").GetBoolean());
+
+        // Um frontend anterior a este campo não o envia: a escolha tem de ficar.
+        var mealPlanId = detail.GetProperty("id").GetGuid();
+        var meal = detail.GetProperty("meals")[0];
+        var updated = await client.PutAsJsonAsync(
+            $"/api/v1/meal-plans/{mealPlanId}",
+            NutritionHttpPayloads.UpdateMealPlan(
+                catalog.FoodId,
+                catalog.SupplementId,
+                [ExistingMealPayload(meal, catalog.FoodId, catalog.SupplementId)]),
+            Token);
+
+        Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
+        Assert.False((await ReadJsonAsync(updated)).GetProperty("show_macros_to_client").GetBoolean());
     }
 
     [Fact]

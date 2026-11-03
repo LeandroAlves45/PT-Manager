@@ -38,7 +38,8 @@ public sealed class MealPlansController : ApiControllerBase
                     request.StartsDate,
                     request.EndsDate,
                     request.Calculation.ToInput(),
-                    request.Structure.ToInput()),
+                    request.Structure.ToInput(),
+                    request.ShowMacrosToClient),
                 cancellationToken),
             MealPlanDetailsResponse.From,
             plan => $"/api/v1/meal-plans/{plan.Id}");
@@ -112,7 +113,8 @@ public sealed class MealPlansController : ApiControllerBase
                     request.StartsDate,
                     request.EndsDate,
                     request.Calculation?.ToInput(),
-                    request.Structure.ToInput()),
+                    request.Structure.ToInput(),
+                    request.ShowMacrosToClient),
                 cancellationToken),
             MealPlanDetailsResponse.From);
     }

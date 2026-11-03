@@ -32,6 +32,7 @@ internal sealed class MealPlanQueries : IMealPlanQueries
                 candidate.StartsDate,
                 candidate.EndsDate,
                 candidate.CalculationSnapshot,
+                candidate.ShowMacrosToClient,
                 candidate.IsActive,
                 candidate.IsArchived,
                 candidate.CreatedAt,
@@ -195,6 +196,7 @@ internal sealed class MealPlanQueries : IMealPlanQueries
             items.Any(item => item.PlatformEnforcement is not null) ||
                 supplements.Any(item => item.PlatformEnforcement is not null) ||
                 planSupplements.Any(item => item.PlatformEnforcement is not null),
+            plan.ShowMacrosToClient,
             mealDtos,
             planSupplements,
             plan.CreatedAt,
@@ -367,6 +369,7 @@ internal sealed class MealPlanQueries : IMealPlanQueries
         DateOnly StartsDate,
         DateOnly? EndsDate,
         Domain.ValueObjects.NutritionCalculationSnapshot CalculationSnapshot,
+        bool ShowMacrosToClient,
         bool IsActive,
         bool IsArchived,
         DateTime CreatedAt,

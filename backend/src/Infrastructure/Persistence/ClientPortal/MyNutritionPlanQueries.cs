@@ -79,6 +79,7 @@ internal sealed class MyNutritionPlanQueries : IMyNutritionPlanQueries
                 candidate.Targets.CarbsGrams,
                 candidate.Targets.FatsGrams,
                 candidate.CalculationSnapshot.GoalType,
+                candidate.ShowMacrosToClient,
                 candidate.UpdatedAt,
                 _dbContext.MealPlanMeals
                     .Where(meal => meal.MealPlanId == candidate.Id)
@@ -181,7 +182,8 @@ internal sealed class MyNutritionPlanQueries : IMyNutritionPlanQueries
             CalculateTotals(plan.Meals.SelectMany(meal => meal.Items)),
             meals,
             plan.PlanSupplements,
-            plan.UpdatedAt);
+            plan.UpdatedAt,
+            plan.ShowMacrosToClient);
     }
 
     /// <summary>Contribuição de um item, proporcional aos gramas prescritos.</summary>
@@ -220,6 +222,7 @@ internal sealed class MyNutritionPlanQueries : IMyNutritionPlanQueries
         decimal CarbsTargetGrams,
         decimal FatsTargetGrams,
         string? GoalType,
+        bool ShowMacrosToClient,
         DateTime UpdatedAt,
         IReadOnlyList<MealRow> Meals,
         IReadOnlyList<MyNutritionPlanDto.SupplementDto> PlanSupplements);

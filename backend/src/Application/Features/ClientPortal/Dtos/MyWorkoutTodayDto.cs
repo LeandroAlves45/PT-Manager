@@ -33,7 +33,7 @@ public sealed record MyWorkoutTodayDto(
 
     /// <summary>
     /// Exercício prescrito; o Id é o da prescrição usada para registar séries e o ExerciseId
-    /// é o do catálogo, usado para pedir o vídeo.
+    /// é o do catálogo, usado para pedir o vídeo. VideoUrl é a ligação externa (YouTube ou Vimeo).
     /// </summary>
     public sealed record ExerciseDto(
         Guid Id,
@@ -41,6 +41,7 @@ public sealed record MyWorkoutTodayDto(
         int OrderNumber,
         string ExerciseName,
         bool HasReadyVideo,
+        string? VideoUrl,
         Guid? ExerciseGroupId,
         int? GroupPosition,
         string? Notes,

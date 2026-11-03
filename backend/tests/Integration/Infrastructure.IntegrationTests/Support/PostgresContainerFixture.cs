@@ -40,6 +40,10 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
     // [6B] NOVO: migration só de índices das leituras agregadas.
     public const string AddModerationAndCheckInReadIndexesMigration =
         "AddModerationAndCheckInReadIndexes";
+    public const string AddTrainerAccessBlocksAndModerationNotesMigration =
+        "20261024071049_AddTrainerAccessBlocksAndModerationNotes";
+    public const string AddMealPlanShowMacrosToClientMigration =
+        "20261103095820_AddMealPlanShowMacrosToClient";
     private readonly PostgreSqlContainer _container =
         new PostgreSqlBuilder("postgres:17-alpine")
         .WithDatabase("ptmanager_tests")

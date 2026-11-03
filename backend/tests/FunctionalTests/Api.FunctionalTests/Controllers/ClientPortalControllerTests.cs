@@ -63,6 +63,57 @@ public sealed class ClientPortalControllerTests
     }
 
     [Fact]
+    public async Task GetMyNutrition_MacrosShown_SendsTargetsAndGrams()
+    {
+        var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(
+            _fixture.Factory, Token);
+        var client = ClientPortalClient(trainerId, clientUserId);
+
+        var body = await ReadJsonAsync(await client.GetAsync("/api/v1/portal/my-nutrition", Token));
+
+        Assert.True(body.GetProperty("show_macros").GetBoolean());
+        Assert.Equal(150m, body.GetProperty("protein_target_grams").GetDecimal());
+        var meal = body.GetProperty("meals")[0];
+        Assert.Equal(JsonValueKind.Number, meal.GetProperty("totals").GetProperty("protein_grams").ValueKind);
+        Assert.Equal(
+            JsonValueKind.Number,
+            meal.GetProperty("items")[0].GetProperty("contribution").GetProperty("protein_grams").ValueKind);
+    }
+
+    [Fact]
+    public async Task GetMyNutrition_MacrosHidden_SendsOnlyKcal()
+    {
+        var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(
+            _fixture.Factory, Token);
+        await PortalTestData.HideMealPlanMacrosAsync(_fixture.Factory, trainerId, Token);
+        var client = ClientPortalClient(trainerId, clientUserId);
+
+        var response = await client.GetAsync("/api/v1/portal/my-nutrition", Token);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await ReadJsonAsync(response);
+        Assert.False(body.GetProperty("show_macros").GetBoolean());
+        Assert.Equal(2_000m, body.GetProperty("target_kcal").GetDecimal());
+        foreach (var target in new[] { "protein_target_grams", "carbs_target_grams", "fats_target_grams" })
+            Assert.Equal(JsonValueKind.Null, body.GetProperty(target).ValueKind);
+
+        // Os gramas não podem ir na resposta, em nenhum nível: plano, refeição e alimento.
+        var meal = body.GetProperty("meals")[0];
+        var totals = new[]
+        {
+            body.GetProperty("actual_totals"),
+            meal.GetProperty("totals"),
+            meal.GetProperty("items")[0].GetProperty("contribution"),
+        };
+        foreach (var total in totals)
+        {
+            Assert.Equal(JsonValueKind.Number, total.GetProperty("kcal").ValueKind);
+            foreach (var grams in new[] { "protein_grams", "carbs_grams", "fats_grams", "fiber_grams" })
+                Assert.Equal(JsonValueKind.Null, total.GetProperty(grams).ValueKind);
+        }
+    }
+
+    [Fact]
     public async Task GetMyProfile_WithClientToken_ReturnsProfile()
     {
         var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(

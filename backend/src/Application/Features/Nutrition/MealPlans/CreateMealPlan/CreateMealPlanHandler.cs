@@ -54,7 +54,8 @@ public sealed class CreateMealPlanHandler
             command.StartsDate,
             command.EndsDate,
             NutritionCalculationFactory.CreateSnapshot(command.Calculation, now),
-            command.Structure
+            command.Structure,
+            command.ShowMacrosToClient
         );
 
         var outcome = await _mealPlanStore.CreateAsync(

@@ -101,6 +101,24 @@ public sealed class TrainerDashboardQueriesTests : ReadQueriesIntegrationTestCon
     }
 
     [Fact]
+    public async Task Dashboard_ReturnsTheTrainerNameForTheGreeting()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var seed = await _fixture.SeedTenantWithClientAsync(NewDiscriminator(), token);
+
+        await using var context = _fixture.CreateContext(seed.TrainerId);
+        var expected = await context.Users.AsNoTracking()
+            .Where(user => user.Id == seed.TrainerId)
+            .Select(user => user.FullName)
+            .SingleAsync(token);
+        var data = await new TrainerDashboardQueries(context).GetAsync(seed.TrainerId, Window(), token);
+
+        Assert.False(string.IsNullOrWhiteSpace(expected));
+        Assert.Equal(expected, data.TrainerName);
+        Assert.Equal(1, data.ActiveClientCount);
+    }
+
+    [Fact]
     public async Task Dashboard_SummarisesPacksSessionsAndSales()
     {
         var token = TestContext.Current.CancellationToken;

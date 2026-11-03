@@ -1,3 +1,5 @@
+using Domain.ValueObjects;
+
 namespace Application.Features.ClientPortal.Dtos;
 
 /// <summary>Plano de treino ativo, na perspectiva do cliente.</summary>
@@ -12,6 +14,22 @@ public sealed record MyTrainingPlanDto(
     IReadOnlyList<MyTrainingPlanDto.DayDto> Days,
     DateTime UpdatedAt)
 {
+    /// <summary>
+    /// O que o cliente pode receber: uma ligação de vídeo que não seja do YouTube ou do Vimeo
+    /// (gravada antes da regra atual) sai a null e nunca chega ao portal.
+    /// </summary>
+    public MyTrainingPlanDto ForClient() => this with
+    {
+        Days = Days
+            .Select(day => day with
+            {
+                Exercises = day.Exercises
+                    .Select(exercise => exercise with { VideoUrl = ExternalVideoUrl.OrNull(exercise.VideoUrl) })
+                    .ToArray(),
+            })
+            .ToArray(),
+    };
+
     /// <summary>Dia de treino vísivel ao cliente.</summary>
     public sealed record DayDto(
         Guid Id,
@@ -25,6 +43,7 @@ public sealed record MyTrainingPlanDto(
     /// prescrição (TrainingPlanDayExercise), usado pelo cliente para registar séries;
     /// ExerciseId é o do catálogo, usado para pedir o vídeo. HasReadyVideo só é verdadeiro
     /// quando esse pedido devolveria um URL (vídeo Ready visível e exercício não bloqueado).
+    /// VideoUrl é a ligação externa (YouTube ou Vimeo) que o cliente abre noutro separador.
     /// </summary>
     public sealed record ExerciseDto(
         Guid Id,
@@ -32,6 +51,7 @@ public sealed record MyTrainingPlanDto(
         int OrderNumber,
         string ExerciseName,
         bool HasReadyVideo,
+        string? VideoUrl,
         Guid? ExerciseGroupId,
         int? GroupPosition,
         string? Notes,

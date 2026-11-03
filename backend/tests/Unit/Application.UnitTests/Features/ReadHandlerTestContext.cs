@@ -36,6 +36,7 @@ public abstract class ReadHandlerTestContext
     protected static readonly TimeZoneInfo Lisbon = TimeZoneInfo.FindSystemTimeZoneById("Europe/Lisbon");
     // Id do catálogo, distinto do da prescrição, para provar que não se trocam.
     protected static readonly Guid CatalogExerciseId = Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
+    protected const string ExerciseVideoUrl = "https://youtu.be/dQw4w9WgXcQ";
 
     protected static GetMyPortalHomeHandler CreateHomeHandler(
         IntakeQueriesFake intakes,
@@ -67,7 +68,7 @@ public abstract class ReadHandlerTestContext
             Task.FromResult(blockedAt);
     }
 
-    protected static MyTrainingPlanDto PlanWith(int dayOfWeek) =>
+    protected static MyTrainingPlanDto PlanWith(int dayOfWeek, string? videoUrl = ExerciseVideoUrl) =>
         new(
             Guid.NewGuid(),
             "Força 3x",
@@ -89,6 +90,7 @@ public abstract class ReadHandlerTestContext
                             1,
                             "Supino",
                             true,
+                            videoUrl,
                             null,
                             null,
                             null,
@@ -137,6 +139,8 @@ public abstract class ReadHandlerTestContext
 
         public IReadOnlyList<ClientWithoutPlanRow> WithoutPlan { get; init; } = [];
 
+        public string? TrainerName { get; init; } = "Rita Moreira";
+
         public Task<TrainerDashboardData> GetAsync(
             Guid trainerId,
             TrainerDashboardWindow window,
@@ -152,7 +156,8 @@ public abstract class ReadHandlerTestContext
                 new TrainerDashboardDto.SessionsTodayDto(5, null, []),
                 WithoutPlan.Count,
                 WithoutPlan,
-                PackSales));
+                PackSales,
+                TrainerName));
         }
     }
 
@@ -255,6 +260,9 @@ public abstract class ReadHandlerTestContext
 
         public int ActiveCount { get; init; } = 1;
 
+        /// <summary>Escolha do personal trainer no plano devolvido pela query.</summary>
+        public bool ShowMacros { get; init; } = true;
+
         public Task<IReadOnlyList<MyMealPlanSummaryDto>> ListActiveAsync(
             Guid trainerId, Guid clientUserId, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<MyMealPlanSummaryDto>>(Enumerable.Range(0, ActiveCount)
@@ -283,17 +291,24 @@ public abstract class ReadHandlerTestContext
                 200m,
                 60m,
                 "maintenance",
-                new MyNutritionPlanDto.TotalsDto(0, 0, 0, 0, 0),
+                new MyNutritionPlanDto.TotalsDto(31m, 28m, 3.6m, 261m, 1.2m),
                 [
                     new MyNutritionPlanDto.MealDto(
                         "breakfast",
                         1,
-                        new MyNutritionPlanDto.TotalsDto(0, 0, 0, 0, 0),
-                        [],
+                        new MyNutritionPlanDto.TotalsDto(31m, 28m, 3.6m, 261m, 1.2m),
+                        [
+                            new MyNutritionPlanDto.ItemDto(
+                                1,
+                                "Arroz",
+                                100m,
+                                new MyNutritionPlanDto.TotalsDto(2.7m, 28m, 0.3m, 124m, 0.4m))
+                        ],
                         [])
                 ],
                 [],
-                new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Utc)));
+                new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Utc),
+                ShowMacros));
     }
 
     protected sealed class IntakeQueriesFake : ISupplementIntakeQueries

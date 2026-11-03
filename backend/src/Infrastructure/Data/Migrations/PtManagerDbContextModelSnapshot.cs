@@ -18,7 +18,7 @@ namespace Infrastructure.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "pg_trgm");
@@ -2091,6 +2091,12 @@ namespace Infrastructure.Data.Migrations
                     b.Property<Guid>("OwnerTrainerId")
                         .HasColumnType("uuid")
                         .HasColumnName("owner_trainer_id");
+
+                    b.Property<bool>("ShowMacrosToClient")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("show_macros_to_client");
 
                     b.Property<DateOnly>("StartsDate")
                         .HasColumnType("date")

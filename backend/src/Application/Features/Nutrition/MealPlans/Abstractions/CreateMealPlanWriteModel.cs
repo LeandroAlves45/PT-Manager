@@ -10,5 +10,6 @@ public sealed record CreateMealPlanWriteModel(
     DateOnly StartsDate,
     DateOnly? EndsDate,
     NutritionCalculationSnapshot Calculation,
-    MealPlanStructureInput Structure
+    MealPlanStructureInput Structure,
+    bool? ShowMacrosToClient = null
 );

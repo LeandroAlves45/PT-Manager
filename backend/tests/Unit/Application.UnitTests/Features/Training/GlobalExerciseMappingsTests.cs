@@ -70,11 +70,11 @@ public sealed class GlobalExerciseMappingsTests
     }
 
     [Fact]
-    public async Task UpdatePrivateExerciseValidator_WhenVideoUsesHttps_IsValid()
+    public async Task UpdatePrivateExerciseValidator_WhenVideoIsAYouTubeLink_IsValid()
     {
         var validator = new UpdateExerciseCommandValidator();
         var command = new UpdateExerciseCommand(
-            Guid.NewGuid(), "Squat", null, null, null, null, "https://example.com/video");
+            Guid.NewGuid(), "Squat", null, null, null, null, "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
 
         var result = await validator.ValidateAsync(command, TestContext.Current.CancellationToken);
 

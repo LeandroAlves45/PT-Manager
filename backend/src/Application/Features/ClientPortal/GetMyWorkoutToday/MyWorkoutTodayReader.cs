@@ -2,6 +2,7 @@ using Application.Common.Time;
 using Application.Features.ClientPortal.Abstractions;
 using Application.Features.ClientPortal.Dtos;
 using Domain.Services;
+using Domain.ValueObjects;
 
 namespace Application.Features.ClientPortal.GetMyWorkoutToday;
 
@@ -132,6 +133,8 @@ public sealed class MyWorkoutTodayReader
                     exercise.OrderNumber,
                     exercise.ExerciseName,
                     exercise.HasReadyVideo,
+                    // Só YouTube ou Vimeo chegam ao cliente; um link antigo fora da regra sai a null.
+                    ExternalVideoUrl.OrNull(exercise.VideoUrl),
                     exercise.ExerciseGroupId,
                     exercise.GroupPosition,
                     exercise.Notes,
