@@ -494,3 +494,4 @@ com um corpo real.
   terminou, `findByRole('heading', { name })` devolve o do Início, que logo desmonta: o erro é
   «expect(element).toBeInTheDocument()», não «Unable to find». Esperar pelo `pathname` e usar
   `level: 1`. Subir timeouts ou pré-carregar páginas não resolve (tentado em `45e0386` e `70c84a0`).
+- **Botão do menu Radix aberto não se encontra por papel (2026-11-03, avatar com iniciais):** com o `DropdownMenu` aberto, o Radix põe `aria-hidden` no resto da página e `getByRole('button', { name })` falha com "Unable to find". Para verificar o trigger depois de abrir o menu, usar `{ hidden: true }` ou guardar a referência antes de abrir.

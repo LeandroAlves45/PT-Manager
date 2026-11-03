@@ -21,10 +21,13 @@ Guia de aceitação: `.claude/SPEC.md` (local, apagado no fim).
 - [x] Quality gates (7A doc 09 e `backlogs/QualityGates.md`)
 - [x] Memória: ACTIVE, MEMORY, NEST, sessão, GOTCHAS, lessons
 - [x] SPEC "Finalizado" e apagado
+- [x] Avatar do personal trainer e do superuser com iniciais (`full_name` em `/auth/account`)
 
 ## Review
 - Feito e verde: CI run `41652117839` em `45e0386` (5 jobs). Backend 3653 + 1 skip, frontend 1145
   (cobertura 90,75/89,18/88,36/82,06), site 121, mutações 3 backend + 7 frontend.
 - Extra pedido a meio: saudação do painel com o nome ("Boas-vindas" neutro).
+- Extra depois do CI: avatar com iniciais. Backend 3655 + 1 skip, frontend 1147 (cobertura
+  90,76/89,18/88,36/82,08), build sem avisos (chunk 482,6 kB), 3/3 mutações.
 - Pendente do Leandro: Neon (consulta e teste da migration), merge e deploy pela ordem
   migration → Render → Vercel; aprovar as mudanças propostas em `docs_about_app` (RN-014, RN-012).
