@@ -489,3 +489,6 @@ com um corpo real.
 - **Arnês visual com MSW** (gotcha de 2026-10-11) também serve para capturas do site: Playwright do
   projeto + `canvas.toDataURL('image/webp')` no Chromium, sem `sharp`. O browser integrado recusa o
   certificado do `basicSsl`, por isso o arnês corre em HTTP.
+- **Navegação para uma rota lazy num teste:** o primeiro import da página no CI pode passar os 5 s do
+  `asyncUtilTimeout`. Usar `{ timeout: 12_000 }` no `findBy` e um timeout do teste acima disso
+  (run `41650313345` falhou só no "Registar tomas" de `PortalHomePage`; o run anterior tinha passado).
