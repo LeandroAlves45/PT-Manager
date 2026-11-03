@@ -6,9 +6,10 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
-**2026-11-03: ajustes pré-8D (branch `feature/pre-8d-ajustes`, merge pelo Leandro).** Macros por plano
+**2026-11-03: ajustes pré-8D EM PRODUÇÃO (merge `43f1b07`, Render live).** Macros por plano
 (corte no servidor), vídeo por link YouTube/Vimeo (`ExternalVideoUrl` no Domain), saudação com nome,
-site com capturas reais, chunk 656 → 482 kB. Neon e ordem de deploy em
+iniciais no menu de perfil (`full_name` em `/auth/account`), site com capturas reais, chunk 656 → 482 kB.
+RN-014 e RN-012 atualizadas em `docs_about_app`. Neon e ordem de deploy em
 `docs/blueprints/sprint_8/8D/02_ajustes_pre_8D.md`. Ver `Sessions/2026-11-03-ajustes-pre-8d.md`.
 
 **2026-10-29: 8C código pré-deploy + runbook.** Aviso do IP do proxy (antes do UseForwardedHeaders),
