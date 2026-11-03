@@ -2,7 +2,10 @@ using Application.Features.Assessments.InitialAssessments.Dtos;
 
 namespace Application.Features.Dashboard.Dtos;
 
-/// <summary>Dashboard agregado ao personal trainer (só leitura, só clientes ativos).</summary>
+/// <summary>
+/// Dashboard agregado ao personal trainer (só leitura, só clientes ativos). TrainerName é o nome
+/// da conta, para a saudação; null em contas antigas sem nome.
+/// </summary>
 public sealed record TrainerDashboardDto(
     DateOnly LocalToday,
     int ActiveClientCount,
@@ -12,7 +15,8 @@ public sealed record TrainerDashboardDto(
     TrainerDashboardDto.PlansExpiringDto PlansExpiring,
     TrainerDashboardDto.SessionsTodayDto SessionsToday,
     TrainerDashboardDto.ClientsWithoutTrainingPlanDto ClientsWithoutTrainingPlan,
-    TrainerDashboardDto.PackSalesDto PackSales)
+    TrainerDashboardDto.PackSalesDto PackSales,
+    string? TrainerName = null)
 {
     /// <summary>Check-ins respondidos, não cancelados e ainda não revistos.</summary>
     public sealed record CheckInsPendingReviewDto(

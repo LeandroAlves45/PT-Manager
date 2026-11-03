@@ -71,6 +71,20 @@ public sealed class GetTrainerDashboardHandlerTests : ReadHandlerTestContext
     }
 
     [Fact]
+    public async Task Dashboard_PassesTheTrainerNameForTheGreeting()
+    {
+        var handler = new GetTrainerDashboardHandler(
+            new TenantStub(TrainerId, TrainerId, "trainer"),
+            new ClockStub(NowUtc),
+            new TimeZoneStub(Lisbon),
+            new DashboardQueriesFake { TrainerName = "Rita Moreira" });
+
+        var result = await handler.HandleAsync(new GetTrainerDashboardQuery(), CancellationToken.None);
+
+        Assert.Equal("Rita Moreira", result.Value.TrainerName);
+    }
+
+    [Fact]
     public async Task Dashboard_SplitsPackSalesByMonthAndCurrency()
     {
         var queries = new DashboardQueriesFake

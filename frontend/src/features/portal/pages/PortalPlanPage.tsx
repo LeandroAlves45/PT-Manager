@@ -2,6 +2,7 @@ import { ArrowLeft, ChevronDown } from 'lucide-react';
 import { useId, useState } from 'react';
 import { Link } from 'react-router';
 
+import { ExternalVideoLink } from '@/features/exercise-video';
 import { WithInitialAssessmentNotice } from '@/features/portal/components/InitialAssessmentMissingNotice';
 import { usePortalPlanQuery, usePortalWorkoutTodayQuery } from '@/features/portal/api/portal';
 import { PlannedSetChips } from '@/features/portal/components/PlannedSetChips';
@@ -43,7 +44,7 @@ interface TodayInPlan {
  * Semana → dia → exercício → série, a partir de `GET /portal/my-plan`. As semanas e os dias
  * recolhem: abre a semana de hoje e, dentro dela, o dia de hoje, destacado com a cor da marca.
  * Não regista nada: o registo é só no treino de hoje. O vídeo aparece onde a API diz
- * `has_ready_video`.
+ * `has_ready_video`; a ligação externa (YouTube ou Vimeo) abre noutro separador.
  */
 function PortalPlanPageContent() {
   const query = usePortalPlanQuery();
@@ -250,6 +251,7 @@ function PlanDay({ day, isToday }: { day: TrainingDay; isToday: boolean }) {
                   {exercise.has_ready_video && (
                     <PortalExerciseVideo exerciseId={exercise.exercise_id} exerciseName={name} />
                   )}
+                  <ExternalVideoLink url={exercise.video_url} />
                 </li>
               );
             })}

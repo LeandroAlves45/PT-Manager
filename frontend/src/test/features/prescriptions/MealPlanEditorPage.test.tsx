@@ -153,6 +153,8 @@ describe('Meal plan editor, step 2', () => {
     expect(saves[0]).toMatchObject({
       client_id: CLIENT_ID,
       name: 'Fase de corte',
+      // Um plano novo mostra as macros, a não ser que o personal trainer desligue.
+      show_macros_to_client: true,
       calculation: { calculation_origin: 'manual_energy', manual_target_kcal: 2000 },
       structure: {
         meals: [{ id: null, items: [{ food_id: FOOD_ID, quantity_in_grams: 1000 }] }],
@@ -241,6 +243,50 @@ describe('Meal plan editor, existing plan', () => {
         ],
       },
     });
+  });
+
+  it('lets the trainer hide the macros from the client and sends the choice in the PUT', async () => {
+    const saves: Array<Record<string, unknown>> = [];
+    server.use(
+      ...restorableSession(),
+      ...catalogHandlers(),
+      ...clientHandlers(),
+      http.get(API + '/meal-plans/:id', () => HttpResponse.json(savedPlan())),
+      http.put(API + '/meal-plans/:id', async ({ request }) => {
+        saves.push((await request.json()) as Record<string, unknown>);
+        return HttpResponse.json(savedPlan({ show_macros_to_client: false }));
+      })
+    );
+    renderApp({ initialEntries: [`/trainer/meal-plans/${PLAN_ID}/edit`] });
+
+    const toggle = await screen.findByRole('checkbox', { name: 'Mostrar macros ao cliente' });
+    expect(toggle).toBeChecked();
+    expect(toggle).toHaveAccessibleDescription(
+      'Ligado, o cliente vê as metas de proteína, hidratos e gordura. Desligado, vê só as kcal.'
+    );
+    await userEvent.click(toggle);
+    expect(toggle).not.toBeChecked();
+    await userEvent.click(screen.getByRole('button', { name: 'Seguinte' }));
+    await screen.findByTestId('nutrition-balance');
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await waitFor(() => expect(saves).toHaveLength(1));
+    expect(saves[0]).toMatchObject({ show_macros_to_client: false });
+  });
+
+  it('says on the plan page whether the client sees the macros', async () => {
+    server.use(
+      ...restorableSession(),
+      ...catalogHandlers(),
+      ...clientHandlers(),
+      http.get(API + '/meal-plans/:id', () =>
+        HttpResponse.json(savedPlan({ show_macros_to_client: false }))
+      )
+    );
+    renderApp({ initialEntries: [`/trainer/meal-plans/${PLAN_ID}`] });
+
+    expect(await screen.findByText('Cliente vê só as kcal')).toBeInTheDocument();
+    expect(screen.queryByText('Cliente vê as macros')).not.toBeInTheDocument();
   });
 
   it('shows the plan page with totals, what is missing and the edit buttons', async () => {

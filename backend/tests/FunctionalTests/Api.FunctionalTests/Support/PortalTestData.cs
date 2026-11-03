@@ -375,6 +375,23 @@ internal static class PortalTestData
                 cancellationToken);
     }
 
+    /// <summary>O personal trainer esconde as macros em todos os planos alimentares do tenant.</summary>
+    internal static async Task HideMealPlanMacrosAsync(
+        ApiWebApplicationFactory factory,
+        Guid trainerId,
+        CancellationToken cancellationToken)
+    {
+        await using var scope = CreateTrainerScope(factory, trainerId);
+        var context = scope.ServiceProvider.GetRequiredService<PtManagerDbContext>();
+        var plans = await context.MealPlans
+            .Where(plan => plan.OwnerTrainerId == trainerId)
+            .ToListAsync(cancellationToken);
+        foreach (var plan in plans)
+            plan.ChangeClientMacroVisibility(false, TrainerTenantSeeder.SeedInstant.AddMinutes(1));
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
     /// <summary>Cria outro plano alimentar ativo, sem refeições, para o cliente indicado.</summary>
     internal static async Task<Guid> SeedExtraMealPlanAsync(
         ApiWebApplicationFactory factory,

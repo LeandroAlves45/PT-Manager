@@ -10,5 +10,6 @@ public sealed record UpdateMealPlanCommand(
     DateOnly StartsDate,
     DateOnly? EndsDate,
     NutritionCalculationInput? Calculation,
-    MealPlanStructureInput Structure
+    MealPlanStructureInput Structure,
+    bool? ShowMacrosToClient = null
 );

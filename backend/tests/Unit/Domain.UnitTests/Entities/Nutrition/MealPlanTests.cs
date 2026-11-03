@@ -35,6 +35,44 @@ public sealed class MealPlanTests
     }
 
     [Fact]
+    public void Constructor_ShowsMacrosToClientByDefault()
+    {
+        Assert.True(CreatePlan().ShowMacrosToClient);
+    }
+
+    [Fact]
+    public void ChangeClientMacroVisibility_Hide_StoresChoiceAndTouchesUpdatedAt()
+    {
+        var plan = CreatePlan();
+        var later = Now.AddHours(1);
+
+        plan.ChangeClientMacroVisibility(false, later);
+
+        Assert.False(plan.ShowMacrosToClient);
+        Assert.Equal(later, plan.UpdatedAt);
+    }
+
+    [Fact]
+    public void ChangeClientMacroVisibility_SameValue_KeepsUpdatedAt()
+    {
+        var plan = CreatePlan();
+        var createdUpdatedAt = plan.UpdatedAt;
+
+        plan.ChangeClientMacroVisibility(true, Now.AddHours(1));
+
+        Assert.Equal(createdUpdatedAt, plan.UpdatedAt);
+    }
+
+    [Fact]
+    public void ChangeClientMacroVisibility_DeletedPlan_ThrowsDomainException()
+    {
+        var plan = CreatePlan();
+        plan.SoftDelete(Now);
+
+        Assert.Throws<DomainException>(() => plan.ChangeClientMacroVisibility(false, Now));
+    }
+
+    [Fact]
     public void AddMeal_DuplicateOrderNumber_ThrowsDomainException()
     {
         // Arrange

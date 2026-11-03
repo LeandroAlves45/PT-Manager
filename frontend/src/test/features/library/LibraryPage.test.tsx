@@ -195,9 +195,9 @@ describe('Trainer library', () => {
     expect(screen.queryByRole('alertdialog')).toBeNull();
   }, 15000);
 
-  it('edits a private exercise and sends back the hidden external video link', async () => {
+  it('edits a private exercise and saves its YouTube link', async () => {
     libraryHandlers({
-      exercises: libraryPage([exercise({ video_url: 'https://videos.example/remada' })]),
+      exercises: libraryPage([exercise({ video_url: 'https://youtu.be/oldVideo01' })]),
     });
     let body: Record<string, unknown> | null = null;
     server.use(
@@ -211,10 +211,16 @@ describe('Trainer library', () => {
 
     await user.click(await screen.findByRole('link', { name: 'Editar Remada curvada' }));
     expect(await screen.findByRole('button', { name: 'Remover Costas' })).toBeVisible();
-    expect(screen.queryByLabelText(/ligação|url/i)).toBeNull();
+    const link = screen.getByLabelText('Ligação de vídeo (opcional)');
+    expect(link).toHaveValue('https://youtu.be/oldVideo01');
+    expect(link).toHaveAccessibleDescription(
+      'YouTube ou Vimeo. O cliente abre a ligação noutro separador.'
+    );
     const name = screen.getByLabelText('Nome');
     await user.clear(name);
     await user.type(name, 'Remada unilateral');
+    await user.clear(link);
+    await user.type(link, 'https://www.youtube.com/watch?v=newVideo02');
     await user.click(screen.getByRole('button', { name: 'Guardar' }));
 
     await waitFor(() => expect(body).not.toBeNull());
@@ -222,9 +228,33 @@ describe('Trainer library', () => {
       name: 'Remada unilateral',
       muscle_groups: 'back,biceps',
       difficulty_level: 'intermediate',
-      video_url: 'https://videos.example/remada',
+      video_url: 'https://www.youtube.com/watch?v=newVideo02',
     });
     expect(toastMock.success).toHaveBeenCalledWith('Exercício atualizado com sucesso.');
+  }, 15000);
+
+  it('refuses a link outside YouTube and Vimeo before calling the API', async () => {
+    libraryHandlers({ exercises: libraryPage([exercise()]) });
+    let patched = false;
+    server.use(
+      http.patch(`${API}/exercises/${EXERCISE_ID}`, () => {
+        patched = true;
+        return HttpResponse.json(exercise());
+      })
+    );
+    const user = userEvent.setup();
+    renderApp({ initialEntries: [ROUTE] });
+
+    await user.click(await screen.findByRole('link', { name: 'Editar Remada curvada' }));
+    const link = await screen.findByLabelText('Ligação de vídeo (opcional)');
+    await user.type(link, 'https://youtube.com.evil.example/watch?v=x');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Usa uma ligação do YouTube ou do Vimeo que comece por https://.'
+    );
+    expect(link).toHaveAttribute('aria-invalid', 'true');
+    expect(patched).toBe(false);
   }, 15000);
 
   it('puts server validation errors on the fields, in Portuguese', async () => {

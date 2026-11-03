@@ -17,7 +17,7 @@ namespace Api.Controllers;
 [SensitiveResponse]
 public sealed class AccountController : ApiControllerBase
 {
-    /// <summary>Devolve email, role e se a conta tem password local e Google ligado.</summary>
+    /// <summary>Devolve email, role, nome e se a conta tem password local e Google ligado.</summary>
     [HttpGet]
     [ProducesResponseType<AccountResponse>(StatusCodes.Status200OK)]
     public Task<IActionResult> GetAsync(

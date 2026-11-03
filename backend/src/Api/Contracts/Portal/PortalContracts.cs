@@ -60,7 +60,8 @@ public sealed record MyExerciseSetResponse(
 /// Exercício prescrito, com marcador de indisponibilidade. O <c>id</c> é o da prescrição e
 /// é o valor a enviar em <c>training_plan_day_exercise_id</c> ao registar uma série. O
 /// <c>exercise_id</c> é o do catálogo, usado em <c>my-plan/exercises/{exerciseId}/video</c>
-/// quando <c>has_ready_video</c> é verdadeiro.
+/// quando <c>has_ready_video</c> é verdadeiro. <c>video_url</c> é a ligação externa (YouTube ou
+/// Vimeo) que o cliente abre noutro separador, ou null.
 /// </summary>
 public sealed record MyDayExerciseResponse(
     Guid Id,
@@ -68,6 +69,7 @@ public sealed record MyDayExerciseResponse(
     int OrderNumber,
     string ExerciseName,
     bool HasReadyVideo,
+    string? VideoUrl,
     Guid? ExerciseGroupId,
     int? GroupPosition,
     string? Notes,
@@ -84,6 +86,7 @@ public sealed record MyDayExerciseResponse(
             exercise.OrderNumber,
             exercise.ExerciseName,
             exercise.HasReadyVideo,
+            exercise.VideoUrl,
             exercise.ExerciseGroupId,
             exercise.GroupPosition,
             exercise.Notes,
@@ -145,11 +148,11 @@ public sealed record MyTrainingPlanResponse(
 
 /// <summary>Totais nutricionais apresentados ao cliente.</summary>
 public sealed record MyNutritionTotalsResponse(
-    decimal ProteinGrams,
-    decimal CarbsGrams,
-    decimal FatsGrams,
+    decimal? ProteinGrams,
+    decimal? CarbsGrams,
+    decimal? FatsGrams,
     decimal Kcal,
-    decimal FiberGrams)
+    decimal? FiberGrams)
 {
     /// <summary>Projeta os totais do DTO de portal.</summary>
     public static MyNutritionTotalsResponse From(MyNutritionPlanDto.TotalsDto totals)
@@ -239,6 +242,8 @@ public sealed record MyMealResponse(
 /// <summary>
 /// Plano alimentar que o cliente escolheu seguir. <c>goal_type</c> é a palavra do objetivo
 /// (<c>maintenance</c>, <c>deficit</c>, <c>surplus</c>) ou null quando as kcal foram escritas à mão.
+/// Com <c>show_macros</c> a false, o personal trainer escondeu as macros: as metas e os gramas de
+/// proteína, hidratos, gordura e fibra vêm a null e só as kcal têm valor.
 /// </summary>
 public sealed record MyNutritionPlanResponse(
     Guid Id,
@@ -247,10 +252,11 @@ public sealed record MyNutritionPlanResponse(
     DateOnly StartsDate,
     DateOnly? EndsDate,
     decimal TargetKcal,
-    decimal ProteinTargetGrams,
-    decimal CarbsTargetGrams,
-    decimal FatsTargetGrams,
+    decimal? ProteinTargetGrams,
+    decimal? CarbsTargetGrams,
+    decimal? FatsTargetGrams,
     string? GoalType,
+    bool ShowMacros,
     MyNutritionTotalsResponse ActualTotals,
     IReadOnlyList<MyMealResponse> Meals,
     IReadOnlyList<MyMealSupplementResponse> PlanSupplements,
@@ -272,6 +278,7 @@ public sealed record MyNutritionPlanResponse(
             plan.CarbsTargetGrams,
             plan.FatsTargetGrams,
             plan.GoalType,
+            plan.ShowMacros,
             MyNutritionTotalsResponse.From(plan.ActualTotals),
             plan.Meals.Select(MyMealResponse.From).ToArray(),
             plan.PlanSupplements.Select(MyMealSupplementResponse.From).ToArray(),

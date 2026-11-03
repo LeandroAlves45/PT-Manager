@@ -16,6 +16,7 @@ public sealed record MealPlanDetailsDto(
     bool IsActive,
     bool IsArchived,
     bool NeedsReview,
+    bool ShowMacrosToClient,
     IReadOnlyList<MealPlanDetailsDto.MealDto> Meals,
     IReadOnlyList<MealPlanDetailsDto.MealSupplementDto> PlanSupplements,
     DateTime CreatedAt,

@@ -30,7 +30,14 @@ internal sealed class TrainerDashboardQueries : ITrainerDashboardQueries
             .AsNoTracking()
             .Where(client => client.OwnerTrainerId == trainerId && client.IsActive);
 
-        var activeClientsCount = await activeClients.CountAsync(cancellationToken);
+        // O nome do trainer (para a saudação) vem no mesmo comando da contagem: o painel tem um
+        // orçamento fixo de comandos.
+        var header = await _dbContext.Users
+            .AsNoTracking()
+            .Where(user => user.Id == trainerId)
+            .Select(user => new { user.FullName, ActiveClients = activeClients.Count() })
+            .FirstOrDefaultAsync(cancellationToken);
+        var activeClientsCount = header?.ActiveClients ?? await activeClients.CountAsync(cancellationToken);
 
         var pendingReview = _dbContext.CheckIns
             .AsNoTracking()
@@ -269,6 +276,7 @@ internal sealed class TrainerDashboardQueries : ITrainerDashboardQueries
                 sessionItems),
             withoutPlanCount,
             withoutPlanItems,
-            packSales);
+            packSales,
+            header?.FullName);
     }
 }

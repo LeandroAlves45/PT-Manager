@@ -273,7 +273,10 @@ public sealed record PackSalesResponse(
     }
 }
 
-/// <summary>Dashboard agregado do personal trainer.</summary>
+/// <summary>
+/// Dashboard agregado do personal trainer. <c>trainer_name</c> é o nome da conta, para a
+/// saudação do painel; null em contas antigas sem nome.
+/// </summary>
 public sealed record TrainerDashboardResponse(
     DateOnly LocalToday,
     int ActiveClientCount,
@@ -283,7 +286,8 @@ public sealed record TrainerDashboardResponse(
     PlansExpiringResponse PlansExpiring,
     SessionsTodayResponse SessionsToday,
     ClientsWithoutTrainingPlanResponse ClientsWithoutTrainingPlan,
-    PackSalesResponse PackSales)
+    PackSalesResponse PackSales,
+    string? TrainerName)
 {
     public static TrainerDashboardResponse From(TrainerDashboardDto dto)
     {
@@ -298,6 +302,7 @@ public sealed record TrainerDashboardResponse(
             PlansExpiringResponse.From(dto.PlansExpiring),
             SessionsTodayResponse.From(dto.SessionsToday),
             ClientsWithoutTrainingPlanResponse.From(dto.ClientsWithoutTrainingPlan),
-            PackSalesResponse.From(dto.PackSales));
+            PackSalesResponse.From(dto.PackSales),
+            dto.TrainerName);
     }
 }

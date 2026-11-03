@@ -14,12 +14,14 @@ const CHIPS = [
  * Proteína, hidratos e gordura de uma refeição em três chips com a cor de cada macro.
  *
  * A letra e as gramas estão em texto; o nome por extenso fica só para leitores de ecrã, por isso
- * a cor é um reforço e nunca a única pista.
+ * a cor é um reforço e nunca a única pista. Sem os três valores (macros escondidas no plano)
+ * não desenha nada.
  *
  * @param totals Totais da refeição.
  */
 export function MacroChips({ totals }: { totals: Totals }) {
   const grams = [totals.protein_grams, totals.carbs_grams, totals.fats_grams];
+  if (grams.some((value) => value === null)) return null;
 
   return (
     <ul className="flex flex-wrap gap-1.5">
@@ -33,7 +35,7 @@ export function MacroChips({ totals }: { totals: Totals }) {
         >
           <span aria-hidden>{chip.letter}</span>
           <span className="sr-only">{chip.label}</span>
-          <span>{formatGrams(grams[index]!)}</span>
+          <span>{formatGrams(grams[index] ?? 0)}</span>
         </li>
       ))}
     </ul>

@@ -50,7 +50,8 @@ public sealed record MyWorkoutSetResponse(
 
 /// <summary>
 /// Exercício do treino de hoje. O <c>exercise_id</c> é o do catálogo, usado para pedir o
-/// vídeo quando <c>has_ready_video</c> é verdadeiro.
+/// vídeo quando <c>has_ready_video</c> é verdadeiro. <c>video_url</c> é a ligação externa
+/// (YouTube ou Vimeo) que o cliente abre noutro separador, ou null.
 /// </summary>
 public sealed record MyWorkoutExerciseResponse(
     Guid Id,
@@ -58,6 +59,7 @@ public sealed record MyWorkoutExerciseResponse(
     int OrderNumber,
     string ExerciseName,
     bool HasReadyVideo,
+    string? VideoUrl,
     Guid? ExerciseGroupId,
     int? GroupPosition,
     string? Notes,
@@ -73,6 +75,7 @@ public sealed record MyWorkoutExerciseResponse(
             dto.OrderNumber,
             dto.ExerciseName,
             dto.HasReadyVideo,
+            dto.VideoUrl,
             dto.ExerciseGroupId,
             dto.GroupPosition,
             dto.Notes,

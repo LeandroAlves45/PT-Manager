@@ -146,7 +146,8 @@ internal sealed class ModerationQueueQueries : IModerationQueueQueries
                 exercise.PlatformEnforcementNote,
                 exercise.PlatformEnforcedAt,
                 exercise.CreatedAt,
-                exercise.UpdatedAt))
+                exercise.UpdatedAt,
+                exercise.VideoUrl))
             .ToListAsync(cancellationToken);
 
         return new PageResult<ModerationQueueItemDto>(items, totalCount);

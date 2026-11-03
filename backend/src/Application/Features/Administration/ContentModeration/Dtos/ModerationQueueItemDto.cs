@@ -2,7 +2,8 @@ namespace Application.Features.Administration.ContentModeration.Dtos;
 
 /// <summary>
 /// Linha da fila de moderação. Expõe o id e o nome do personal trainer dono,
-/// o email nunca é devolvido, para manter a minimização de dados pessoais.
+/// o email nunca é devolvido, para manter a minimização de dados pessoais. VideoUrl só existe
+/// nos exercícios: a ligação externa que o cliente abre, para o admin a poder rever.
 /// </summary>
 public sealed record ModerationQueueItemDto(
     Guid Id,
@@ -15,4 +16,5 @@ public sealed record ModerationQueueItemDto(
     string? PlatformEnforcementNote,
     DateTime? PlatformEnforcedAt,
     DateTime CreatedAt,
-    DateTime UpdatedAt);
+    DateTime UpdatedAt,
+    string? VideoUrl = null);

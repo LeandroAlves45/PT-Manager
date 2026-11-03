@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 
 import { WithInitialAssessmentNotice } from '@/features/portal/components/InitialAssessmentMissingNotice';
 import { usePortalMealPlansQuery, usePortalNutritionQuery } from '@/features/portal/api/portal';
-import { MacroBars } from '@/features/portal/components/MacroBars';
+import { DailyTargets } from '@/features/portal/components/DailyTargets';
 import { MealCard } from '@/features/portal/components/MealCard';
 import { MealSupplementList } from '@/features/portal/components/MealSupplementList';
 import { MealPlanList } from '@/features/portal/components/MealPlanList';
@@ -133,14 +133,14 @@ function PortalNutritionPageContent() {
         <StaleDataNotice onRetry={() => void query.refetch()} retrying={query.isFetching} />
       )}
 
-      <MacroBars plan={plan} />
+      <DailyTargets plan={plan} />
 
       {plan.meals.length === 0 ? (
         <p className="text-sm">O plano ainda não tem refeições.</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {plan.meals.map((meal) => (
-            <MealCard key={meal.order_number} meal={meal} />
+            <MealCard key={meal.order_number} meal={meal} showMacros={plan.show_macros} />
           ))}
         </div>
       )}

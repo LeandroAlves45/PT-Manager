@@ -9,12 +9,20 @@ import {
   UserPlus,
   Users,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
+
+import { useAuth } from '@/app/providers/useAuth';
 
 import { useTrainerDashboardQuery } from '@/features/trainer-dashboard/api/dashboard';
 import { BentoCard } from '@/features/trainer-dashboard/components/BentoCard';
 import { PackSalesBlock } from '@/features/trainer-dashboard/components/PackSalesBlock';
 import { SessionsTodayBlock } from '@/features/trainer-dashboard/components/SessionsTodayBlock';
+import {
+  dashboardGreeting,
+  isFirstVisit,
+  markWelcomed,
+} from '@/features/trainer-dashboard/lib/greeting';
 import type { components } from '@/shared/api/schema';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { ErrorState } from '@/shared/components/ErrorState';
@@ -64,14 +72,22 @@ const SKELETON_SPANS = [
  */
 export function TrainerDashboardPage() {
   const query = useTrainerDashboardQuery();
+  const userId = useAuth().session?.userId;
+  // Lido uma vez ao abrir: as boas-vindas ficam até sair do painel, mesmo depois de gravadas.
+  const [firstVisit] = useState(() => isFirstVisit(userId));
+  useEffect(() => markWelcomed(userId), [userId]);
+  const greeting = dashboardGreeting(query.data?.trainer_name, firstVisit, query.data?.local_today);
 
   const header = (localToday?: string) => (
     <header className="flex flex-wrap items-end justify-between gap-4">
-      <div className="space-y-1">
+      <div className="min-w-0 space-y-1">
         {localToday !== undefined && (
           <p className="text-muted-foreground font-mono text-xs">{eyebrowDate(localToday)}</p>
         )}
-        <h1 className="font-display text-3xl leading-none sm:text-4xl">Bom treino</h1>
+        <h1 className="font-display pe-1 text-3xl leading-tight wrap-break-word sm:text-4xl">
+          {greeting.text}
+          {greeting.emoji !== null && <span aria-hidden> {greeting.emoji}</span>}
+        </h1>
       </div>
       <Button asChild>
         <Link to={NEW_CLIENT_ROUTE}>

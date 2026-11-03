@@ -11,10 +11,15 @@ export const accountKeys = {
   detail: () => [...accountKeys.all, 'detail'] as const,
 };
 
-/** Email, papel e métodos de entrada (palavras-passe, Google) da conta autenticada. */
-export function useAccountQuery() {
+/**
+ * Email, papel, nome e métodos de entrada (palavras-passe, Google) da conta autenticada.
+ *
+ * @param enabled Falso para não pedir: o menu de perfil do cliente usa o perfil do portal.
+ */
+export function useAccountQuery(enabled = true) {
   return useQuery({
     queryKey: accountKeys.detail(),
+    enabled,
     queryFn: async (): Promise<Schemas['AccountResponse']> =>
       unwrap(await apiClient.GET('/api/v1/auth/account')),
   });

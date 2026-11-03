@@ -72,6 +72,7 @@ export function savedPlan(overrides: Record<string, unknown> = {}) {
     is_active: true,
     is_archived: false,
     needs_review: false,
+    show_macros_to_client: true,
     meals: [
       {
         id: '66666666-6666-6666-6666-666666666666',

@@ -21,6 +21,24 @@ describe('TrainerDashboardPage', () => {
     toastMock.error.mockClear();
   });
 
+  it('welcomes the personal trainer by first name once, then shows the phrase of the day', async () => {
+    server.use(
+      ...restorableSession(),
+      http.get(`${API}/dashboard`, () => HttpResponse.json(dashboardResponse()))
+    );
+    const first = renderApp({ initialEntries: ['/trainer'] });
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Boas-vindas, Rita' })
+    ).toBeInTheDocument();
+    first.unmount();
+
+    renderApp({ initialEntries: ['/trainer'] });
+    const heading = await screen.findByRole('heading', { level: 1, name: /Rita/ });
+    expect(heading).not.toHaveTextContent('Boas-vindas');
+    // O nome completo nunca aparece: só o primeiro nome.
+    expect(heading).not.toHaveTextContent('Moreira');
+  });
+
   it('renders every block from a single aggregated request', async () => {
     let requests = 0;
     server.use(

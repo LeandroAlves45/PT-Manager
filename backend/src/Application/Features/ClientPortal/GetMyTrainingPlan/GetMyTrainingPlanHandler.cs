@@ -39,6 +39,6 @@ public sealed class GetMyTrainingPlanHandler
 
         return plan is null
             ? Result<MyTrainingPlanDto>.Failure(ClientPortalErrors.TrainingPlanNotAvailable)
-            : Result<MyTrainingPlanDto>.Success(plan);
+            : Result<MyTrainingPlanDto>.Success(plan.ForClient());
     }
 }

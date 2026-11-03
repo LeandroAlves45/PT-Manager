@@ -13,7 +13,8 @@ public sealed record TrainerDashboardData(
     TrainerDashboardDto.SessionsTodayDto SessionsToday,
     int ClientsWithoutTrainingPlanCount,
     IReadOnlyList<ClientWithoutPlanRow> ClientsWithoutTrainingPlan,
-    IReadOnlyList<PackSalesRow> PackSales);
+    IReadOnlyList<PackSalesRow> PackSales,
+    string? TrainerName = null);
 
 /// <summary>Cliente sem plano, com o instante(UTC) desde quando está sem plano.</summary>
 public sealed record ClientWithoutPlanRow(

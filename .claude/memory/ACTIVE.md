@@ -1,6 +1,17 @@
-# Estado ativo: 8B/8C com o Leandro; 8D sem dependências FEITO (2026-10-28, sem commit)
+# Estado ativo: ajustes pré-8D no branch `feature/pre-8d-ajustes` (2026-11-03, merge pelo Leandro)
 
-Atualizado: 2026-10-28
+Atualizado: 2026-11-03
+
+## Ajustes pré-8D (2026-11-03): branch `feature/pre-8d-ajustes`, à espera de revisão e merge
+
+- Macros ao cliente por plano alimentar (interruptor, sem barras, corte no servidor; migration
+  `20261103095820_AddMealPlanShowMacrosToClient`, aplicada à dev).
+- Vídeo do exercício também por link YouTube/Vimeo (regra `ExternalVideoUrl` no Domain, sem R2).
+- Saudação do painel com o nome do trainer ("Boas-vindas" na 1.ª visita, frase do dia depois).
+- Site com capturas reais da app; chunk principal do frontend 656 → 482 kB (auth lazy, 3 imports).
+- **Próximo (Leandro):** rever o CI, Neon (consulta e teste da migration) e merge pela ordem
+  migration → Render → Vercel. Guia: `docs/blueprints/sprint_8/8D/02_ajustes_pre_8D.md`.
+- Ver `Sessions/2026-11-03-ajustes-pre-8d.md`. Depois disto, o 8D continua com 8D-4 (Capacitor).
 
 ## Sprint 8+9: testes, CI/CD, secrets, produção e lojas
 

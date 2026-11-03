@@ -9,7 +9,8 @@ namespace Application.Features.ClientPortal.GetMyNutritionPlan;
 /// <summary>
 /// Devolve o plano alimentar que o cliente escolheu seguir. Sem escolha válida, distingue "há
 /// planos para escolher" de "não há nenhum plano": a app nunca escolhe por ele, mesmo que só
-/// haja um. Cliente inexistente ou arquivado cai no mesmo NotFound de "sem plano".
+/// haja um. Cliente inexistente ou arquivado cai no mesmo NotFound de "sem plano". Com as macros
+/// escondidas no plano, o cliente recebe só as kcal.
 /// </summary>
 public sealed class GetMyNutritionPlanHandler
 {
@@ -38,7 +39,7 @@ public sealed class GetMyNutritionPlanHandler
             actor.Value.UserId,
             cancellationToken);
         if (plan is not null)
-            return Result<MyNutritionPlanDto>.Success(plan);
+            return Result<MyNutritionPlanDto>.Success(plan.ForClient());
 
         var available = await _queries.ListActiveAsync(
             actor.Value.TrainerId,

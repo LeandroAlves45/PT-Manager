@@ -1,6 +1,7 @@
 import { CheckCircle2, ChevronDown } from 'lucide-react';
 import { useId, useState } from 'react';
 
+import { ExternalVideoLink } from '@/features/exercise-video';
 import { PortalExerciseVideo } from '@/features/portal/components/PortalExerciseVideo';
 import { WorkoutSetRow } from '@/features/portal/components/WorkoutSetRow';
 import { prescriptionSummary } from '@/features/portal/lib/workout';
@@ -66,6 +67,7 @@ export function WorkoutExerciseCard({
         {exercise.has_ready_video && (
           <PortalExerciseVideo exerciseId={exercise.exercise_id} exerciseName={name} />
         )}
+        <ExternalVideoLink url={exercise.video_url} />
         <div className="text-muted-foreground grid grid-cols-[2rem_1fr_1fr_2.75rem] gap-2 text-xs">
           <span>Série</span>
           <span>kg</span>

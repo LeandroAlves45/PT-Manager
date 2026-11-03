@@ -73,7 +73,10 @@ public sealed record MealPlanStructureRequest(
     }
 }
 
-/// <summary>Cria um plano alimentar e a respetiva árvore inicial.</summary>
+/// <summary>
+/// Cria um plano alimentar e a respetiva árvore inicial. <c>show_macros_to_client</c> omisso
+/// cria o plano com as macros visíveis ao cliente.
+/// </summary>
 public sealed record CreateMealPlanRequest(
     Guid ClientId,
     string Name,
@@ -81,16 +84,21 @@ public sealed record CreateMealPlanRequest(
     DateOnly StartsDate,
     DateOnly? EndsDate,
     NutritionCalculationRequest Calculation,
-    MealPlanStructureRequest Structure);
+    MealPlanStructureRequest Structure,
+    bool? ShowMacrosToClient = null);
 
-/// <summary>Reconcilia um plano existente. Cálculo nulo preserva o cálculo já persistido.</summary>
+/// <summary>
+/// Reconcilia um plano existente. Cálculo nulo preserva o cálculo já persistido;
+/// <c>show_macros_to_client</c> nulo preserva a escolha atual.
+/// </summary>
 public sealed record UpdateMealPlanRequest(
     string Name,
     string? Description,
     DateOnly StartsDate,
     DateOnly? EndsDate,
     NutritionCalculationRequest? Calculation,
-    MealPlanStructureRequest Structure);
+    MealPlanStructureRequest Structure,
+    bool? ShowMacrosToClient = null);
 
 /// <summary>Energia e nutrientes agregados.</summary>
 public sealed record NutritionTotalsResponse(
@@ -219,6 +227,7 @@ public sealed record MealPlanDetailsResponse(
     bool IsActive,
     bool IsArchived,
     bool NeedsReview,
+    bool ShowMacrosToClient,
     IReadOnlyList<MealResponse> Meals,
     IReadOnlyList<MealSupplementResponse> PlanSupplements,
     DateTime CreatedAt,
@@ -241,6 +250,7 @@ public sealed record MealPlanDetailsResponse(
             plan.IsActive,
             plan.IsArchived,
             plan.NeedsReview,
+            plan.ShowMacrosToClient,
             plan.Meals.Select(MealResponse.From).ToArray(),
             plan.PlanSupplements.Select(MealSupplementResponse.From).ToArray(),
             plan.CreatedAt,

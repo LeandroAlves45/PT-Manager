@@ -1,53 +1,33 @@
-# TODO: Sprint 8+9 (testes, CI/CD, secrets, produção, lojas), planeado 2026-10-27
+# TODO: ajustes pré-8D (2026-11-03)
 
-**8A FECHADO (2026-10-27):** CI #62 verde, backend 3437, Playwright 5/5. Review: ver `Sessions/2026-10-27-sprint8a-fecho.md`.
+Branch `feature/pre-8d-ajustes`. Plano: `C:\Users\Leandro Alves\.claude\plans\fluffy-leaping-pretzel.md`.
+Guia de aceitação: `.claude/SPEC.md` (local, apagado no fim).
 
-Plano completo: `docs/blueprints/sprint_8/00_plano_sprint_8.md`. Código direto na main; `.md` só para guias.
-
-- [x] Leandro aprova as mudanças em `docs_about_app/` e no NEST (caminho do Sprint 7)
-- [x] 8A: cobertura real + lacunas; regras de arquitetura em falta
-- [x] 8A: CORS `Idempotency-Key`; bootstrap 1.º superuser; Sentry SPA; `frontend/vercel.json` (CSP Report-Only); apple-touch-icon; sem MSW worker no build; Dockerfile
-- [x] 8A: Playwright (signup, convite+1.º login, treino, check-in, checkout sem Stripe)
-- [x] 8A: `ci.yml` (cache, cobertura, E2E) e `cd.yml` (migrations manual, EF bundle)
-- [x] G8A: CI verde
-- [x] 8B: guias por serviço + emails + tabela mestre (13 guias + 00_tabela_mestre.md em docs/blueprints/sprint_8/8B/; execução pelo Leandro por fazer)
-- [x] 8C: código pré-deploy (proxy, webhook, emails) + runbook, checklist e rollback (2026-10-29)
+## Pendente de fases anteriores (Sprint 8+9)
 - [ ] 8C: Leandro executa o runbook; Claude valida (CIDR da Render medido no passo 4)
-- [x] 8D: plano (`docs/blueprints/sprint_8/8D/00_plano_8D.md`)
-- [x] 8D-1: site (CTAs, prerender multi-rota, Privacidade, Termos, Suporte, Eliminar conta)
-- [x] 8D-2: sessão por token para a app nativa (rotas `api/v1/native/auth`, sem migration)
-- [x] 8D-3: eliminar conta de cliente (anonimizar e manter)
-- [x] 8D: documentar o que falta (8D-4 Capacitor, 8D-5 guias das lojas, 8D-6 submissão)
-- [x] 8D: validação (suites, mutações, revisão de segurança, site no browser)
-- [x] Fecho 8D sem dependências: nota de sessão, ACTIVE, NEST, GOTCHAS, lessons (2026-10-28)
-- [x] Importação CSV do catálogo global + `catalog-data/` (2026-10-29; validado, sem commit)
-- [ ] Leandro: rever `catalog-data/*.csv`, importar em dev e, depois do 8C, em produção
+- [ ] Leandro: rever `catalog-data/*.csv`, importar em dev e em produção
+- [ ] 8D-4 Capacitor, 8D-5 guias das lojas, 8D-6 submissão (`docs/blueprints/sprint_8/8D/01_o_que_falta.md`)
 
----
-
-# TODO (concluído): Auditoria de segurança pré-produção (2026-10-27)
-
-Auditoria estática de `backend/` e `frontend/` antes de produção. Relatório local em
-`backlogs/Sprint_7_audit_security/00_relatorio_auditoria_seguranca.md` (a pasta `backlogs/`
-não entra no Git).
-
-## Trabalho desta sessão
-
-- [x] Ligar a memória (`.cursor/hooks/memory-toggle.cmd on`)
-- [x] Subir `zod` de `4.6.5` para `4.6.7` e regenerar `frontend/package-lock.json`
-- [x] Alargar `.gitignore` a chaves, `secrets/`, `credentials/`, `keys/` e `appsettings` de produção/local
-- [x] Validar: `npm audit --omit=dev` → `found 0 vulnerabilities` (exit 0)
-- [x] Escrever o relatório com os achados e o que foi aplicado
-- [x] Actualizar a memória (`ACTIVE.md`, `MEMORY.md`, nota de sessão)
-
-## Fora desta sessão
-
-- CSP da SPA no painel da Vercel (INFO, sem XSS confirmado).
-- Confirmação de deploy: ambiente `Production`, CORS HTTPS, proxies, `SameSite`, segredos Stripe/QStash/JWT.
-- Suites de testes do frontend e do backend: não correram nesta sessão.
+## Este trabalho
+- [x] Branch, SPEC.md, todo.md
+- [x] Macros por plano: domínio, configuração, migration `AddMealPlanShowMacrosToClient`, contratos, portal com macros `null`
+- [x] Vídeo por link: validador partilhado com allowlist, `video_url` no portal
+- [x] Frontend: Nutrição sem barras, chips por flag, interruptor no editor, campo de link, botão "Ver no YouTube"
+- [x] Avisos de build/dev + responsividade
+- [x] Site: capturas reais no lugar do painel ilustrativo
+- [x] Suites completas, mutações, code-review-leandro
+- [x] `ci.yml` com `feature/**`, push do branch, CI verde
+- [x] `docs/blueprints/sprint_8/8D/02_ajustes_pre_8D.md` (com passos do Neon)
+- [x] Quality gates (7A doc 09 e `backlogs/QualityGates.md`)
+- [x] Memória: ACTIVE, MEMORY, NEST, sessão, GOTCHAS, lessons
+- [x] SPEC "Finalizado" e apagado
+- [x] Avatar do personal trainer e do superuser com iniciais (`full_name` em `/auth/account`)
 
 ## Review
-
-- **Achados:** CRITICAL 0, HIGH 0, MEDIUM 0, LOW 2 (corrigidos), INFO 1 (CSP, em aberto).
-- **Zod:** o advisory GHSA-mrhx-c7xc-m3w5 saiu do audit de runtime. O `npm audit` com devDependencies ainda lista vite, vitest, source-map-js e undici; ficam fora do relatório de produção.
-- **`.gitignore`:** `!.env.example` ficou depois de `.env.*`, para os exemplos do frontend e do site continuarem versionáveis.
+- Feito e verde: CI run `41652117839` em `45e0386` (5 jobs). Backend 3653 + 1 skip, frontend 1145
+  (cobertura 90,75/89,18/88,36/82,06), site 121, mutações 3 backend + 7 frontend.
+- Extra pedido a meio: saudação do painel com o nome ("Boas-vindas" neutro).
+- Extra depois do CI: avatar com iniciais. Backend 3655 + 1 skip, frontend 1147 (cobertura
+  90,76/89,18/88,36/82,08), build sem avisos (chunk 482,6 kB), 3/3 mutações.
+- Pendente do Leandro: Neon (consulta e teste da migration), merge e deploy pela ordem
+  migration → Render → Vercel; aprovar as mudanças propostas em `docs_about_app` (RN-014, RN-012).

@@ -25,6 +25,11 @@ public sealed class MealPlan
     /// <summary>Alvo diário de macros (protein, carbs, fats) em gramas.</summary>
     public MacroSummary Targets { get; private set; } = null!;
     public NutritionCalculationSnapshot CalculationSnapshot { get; private set; } = null!;
+    /// <summary>
+    /// Se o cliente vê as metas de macros (proteína, hidratos, gordura) no portal. Desligado, o
+    /// cliente vê só as kcal. Decisão do personal trainer por plano.
+    /// </summary>
+    public bool ShowMacrosToClient { get; private set; }
     public bool IsActive { get; private set; }
     public bool IsArchived { get; private set; }
     public bool IsDeleted { get; private set; }
@@ -67,6 +72,7 @@ public sealed class MealPlan
         StartsDate = startsDate;
         EndsDate = endsDate;
         ApplyCalculation(calculationSnapshot);
+        ShowMacrosToClient = true;
         IsActive = true;
         IsArchived = false;
         IsDeleted = false;
@@ -91,6 +97,17 @@ public sealed class MealPlan
         Description = NormalizeOptional(description);
         StartsDate = startsDate;
         EndsDate = endsDate;
+        UpdatedAt = now;
+    }
+
+    /// <summary>Decide se o cliente vê as metas de macros ou só as kcal.</summary>
+    public void ChangeClientMacroVisibility(bool showMacrosToClient, DateTime now)
+    {
+        EnsureNotDeleted();
+        if (ShowMacrosToClient == showMacrosToClient)
+            return;
+
+        ShowMacrosToClient = showMacrosToClient;
         UpdatedAt = now;
     }
 

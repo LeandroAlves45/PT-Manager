@@ -508,3 +508,19 @@ Lições capturadas depois de correções do utilizador.
 - **Dados para importar têm de ser rastreáveis:** cada alimento leva o FDC ID; exercícios com correções
   manuais listadas no README. Validar os ficheiros reais contra a API (`dry_run`) antes de os entregar.
 - **Python no Windows reescreve em CRLF:** abrir com `newline=''` ou normalizar com `sed` antes do diff.
+
+## Ajustes pré-8D (2026-11-03)
+
+- **Provar a suposição antes de a codificar.** Achei que o EF precisava de `HasSentinel` num `bool` com
+  default `true`; a mutação mostrou que não. O teste ficou (lê em SQL), o código desnecessário saiu.
+- **Uma regra de segurança aplica-se à escrita e à leitura.** Validar o link ao gravar não chega quando a
+  base de dados já tem valores da regra anterior: filtrar também na resposta ao cliente.
+- **Medir o bundle antes de o dividir.** O aviso de 500 kB vinha de três imports estáticos, não da falta
+  de `manualChunks`; corrigir a causa baixou 26 % do gzip sem configuração nova.
+- **Duas defesas, dois testes.** Com o filtro no backend e a guarda no frontend, cada mutação só morre se
+  houver um caso que passe a outra defesa (ex. `show_macros: false` com gramas presentes).
+- **Um crash a meio de um comando grande deixa ficheiros a zeros ou vazios:** depois de um reinício,
+  procurar bytes nulos nos ficheiros modificados e repor a partir do git antes de continuar.
+- **Ler o erro exato antes de mexer em timeouts.** «element could not be found in the document» vem de
+  `toBeInTheDocument` sobre um elemento já encontrado e depois desmontado, não de um `findBy` que esgotou o
+  tempo. Duas correções por tempo falharam antes de ler o log; a causa era um título duplicado.

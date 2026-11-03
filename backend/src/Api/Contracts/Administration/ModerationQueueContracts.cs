@@ -3,7 +3,8 @@ namespace Api.Contracts.Administration;
 
 /// <summary>
 /// Linha da fila de moderação. Do personal trainer dono expõe id e nome; o nome pode ser null
-/// em contas legadas sem FullName e o email nunca é usado como fallback.
+/// em contas legadas sem FullName e o email nunca é usado como fallback. <c>video_url</c> é a
+/// ligação externa de um exercício (YouTube ou Vimeo) que os clientes abrem; null nos restantes.
 /// </summary>
 public sealed record ModerationQueueItemResponse(
     Guid Id,
@@ -16,7 +17,8 @@ public sealed record ModerationQueueItemResponse(
     string? PlatformEnforcementNote,
     DateTime? PlatformEnforcedAt,
     DateTime CreatedAt,
-    DateTime UpdatedAt)
+    DateTime UpdatedAt,
+    string? VideoUrl)
 {
     public static ModerationQueueItemResponse From(ModerationQueueItemDto dto)
     {
@@ -32,6 +34,7 @@ public sealed record ModerationQueueItemResponse(
             dto.PlatformEnforcementNote,
             dto.PlatformEnforcedAt,
             dto.CreatedAt,
-            dto.UpdatedAt);
+            dto.UpdatedAt,
+            dto.VideoUrl);
     }
 }

@@ -44,6 +44,38 @@ describe('PortalPlanPage', () => {
     expect(screen.queryByRole('button', { name: /Registar/ })).not.toBeInTheDocument();
   });
 
+  it('opens the external video link in a new tab, and ignores a link outside the allowed sites', async () => {
+    const plan = trainingPlan();
+    const [tuesday, thursday] = plan.days;
+    server.use(
+      http.get(`${API}/portal/my-plan`, () =>
+        HttpResponse.json({
+          ...plan,
+          days: [
+            {
+              ...tuesday!,
+              exercises: [{ ...tuesday!.exercises[0]!, video_url: 'https://youtu.be/dQw4w9WgXcQ' }],
+            },
+            {
+              ...thursday!,
+              exercises: [
+                { ...thursday!.exercises[0]!, video_url: 'https://evil.example/youtube.com' },
+              ],
+            },
+          ],
+        })
+      )
+    );
+    await openPlan();
+
+    // O dia pode estar recolhido (sem nome acessível): procura-se pelo texto do botão.
+    const link = screen.getByText('Ver no YouTube').closest('a');
+    expect(link).toHaveAttribute('href', 'https://youtu.be/dQw4w9WgXcQ');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(screen.getAllByText(/^Ver no /)).toHaveLength(1);
+  });
+
   it('offers the video only where the API says it is ready', async () => {
     const plan = trainingPlan();
     const [tuesday, thursday] = plan.days;

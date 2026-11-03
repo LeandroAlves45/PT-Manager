@@ -12,8 +12,8 @@ describe('RequireRole', () => {
 
     renderApp({ initialEntries: ['/trainer'] });
 
-    // '/trainer' é agora o painel real (título "Bom treino"), não o placeholder.
-    expect(await screen.findByRole('heading', { name: 'Bom treino' })).toBeInTheDocument();
+    // '/trainer' é o painel real (a saudação traz o nome do personal trainer), não o placeholder.
+    expect(await screen.findByRole('heading', { level: 1, name: /Rita/ })).toBeInTheDocument();
   });
 
   it.each([

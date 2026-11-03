@@ -63,7 +63,8 @@ public sealed class UpdateMealPlanHandler
             command.StartsDate,
             command.EndsDate,
             replacement,
-            command.Structure
+            command.Structure,
+            command.ShowMacrosToClient
         );
 
         var outcome = await _mealPlanStore.UpdateAsync(

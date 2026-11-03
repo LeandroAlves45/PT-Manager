@@ -6,7 +6,11 @@ import { z } from 'zod';
 
 import { catalogKeys } from '@/features/admin-catalog/api/catalog';
 import { setPendingExerciseVideo } from '@/shared/lib/pending-video';
-import { ExerciseVideoPanel } from '@/features/exercise-video';
+import {
+  EXTERNAL_VIDEO_URL_ERROR,
+  ExerciseVideoPanel,
+  isValidExternalVideoUrl,
+} from '@/features/exercise-video';
 import {
   ACCEPTED_VIDEO_TYPES,
   validateVideoFile,
@@ -14,6 +18,7 @@ import {
 import { apiClient, unwrap } from '@/shared/api/client';
 import { isApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
+import { FormField } from '@/shared/components/FormField';
 import { MuscleGroupPicker } from '@/shared/components/MuscleGroupPicker';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { Button } from '@/shared/components/ui/button';
@@ -31,12 +36,14 @@ const exerciseSchema = z.object({
   muscle_groups: z.array(z.custom<MuscleGroupCode>()),
   equipment: z.string().max(255),
   difficulty_level: z.string().max(50),
+  video_url: z.string().trim().refine(isValidExternalVideoUrl, EXTERNAL_VIDEO_URL_ERROR),
 });
 type ExerciseValues = z.infer<typeof exerciseSchema>;
 type Exercise = components['schemas']['GlobalExerciseResponse'];
 
 /**
- * O formulário não altera a ligação externa; o vídeo gerido tem painel próprio.
+ * A ligação de vídeo (YouTube ou Vimeo) é editada aqui; o vídeo gerido (ficheiro) tem painel
+ * próprio. Os dois podem coexistir.
  *
  * Ao criar, o vídeo é opcional: o ficheiro fica à espera do id do exercício (`onSaved` recebe
  * `withVideo`) e o envio começa na página de edição.
@@ -62,6 +69,7 @@ export function ExerciseForm({
       muscle_groups: parseMuscleGroups(item?.muscle_groups ?? null),
       equipment: item?.equipment ?? '',
       difficulty_level: item?.difficulty_level ?? '',
+      video_url: item?.video_url ?? '',
     },
   });
 
@@ -73,7 +81,7 @@ export function ExerciseForm({
         muscle_groups: serializeMuscleGroups(values.muscle_groups),
         equipment: values.equipment || null,
         difficulty_level: values.difficulty_level || null,
-        video_url: item?.video_url ?? null,
+        video_url: values.video_url || null,
       };
       return item === null
         ? unwrap(await apiClient.POST('/api/v1/global-exercises', { body }))
@@ -131,6 +139,7 @@ export function ExerciseForm({
           MuscleGroups: 'muscle_groups',
           Equipment: 'equipment',
           DifficultyLevel: 'difficulty_level',
+          VideoUrl: 'video_url',
         };
         for (const fieldError of error.fieldErrors) {
           const field = fields[fieldError.field];
@@ -188,9 +197,25 @@ export function ExerciseForm({
           </span>
         )}
       </div>
+      <FormField
+        label="Ligação de vídeo (opcional)"
+        hint="YouTube ou Vimeo. O cliente abre a ligação noutro separador."
+        error={form.formState.errors.video_url?.message}
+      >
+        {(control) => (
+          <Input
+            {...control}
+            type="url"
+            inputMode="url"
+            autoComplete="off"
+            placeholder="https://youtu.be/…"
+            {...form.register('video_url')}
+          />
+        )}
+      </FormField>
       {item === null && (
         <div className="space-y-1 text-sm">
-          <label htmlFor={videoInputId}>Vídeo (opcional)</label>
+          <label htmlFor={videoInputId}>Ficheiro de vídeo (opcional)</label>
           <Input
             id={videoInputId}
             type="file"

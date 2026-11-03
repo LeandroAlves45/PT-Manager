@@ -12,7 +12,7 @@ public sealed class GetAccountHandlerTests
     {
         var userId = Guid.NewGuid();
         var queries = new AccountSecurityQueriesStub(
-            new AccountSecurityDto("trainer@example.test", "trainer", true, false));
+            new AccountSecurityDto("trainer@example.test", "trainer", true, false, "Rita Moreira"));
         var handler = new GetAccountHandler(
             new TestTenantContext { UserId = userId, TrainerId = userId, Role = "trainer" },
             queries);
@@ -24,6 +24,7 @@ public sealed class GetAccountHandlerTests
         Assert.Equal("trainer@example.test", result.Value.Email);
         Assert.True(result.Value.HasPassword);
         Assert.False(result.Value.GoogleLinked);
+        Assert.Equal("Rita Moreira", result.Value.FullName);
     }
 
     [Fact]

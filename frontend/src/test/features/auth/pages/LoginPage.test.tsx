@@ -87,9 +87,9 @@ describe('LoginPage', () => {
   it('shows the notice left by a previous screen', async () => {
     openLogin({ notice: 'Palavra-passe alterada. Entra com a nova.' });
 
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      'Palavra-passe alterada. Entra com a nova.'
-    );
+    // A página é lazy: o primeiro `status` é o indicador da rota, por isso espera-se pelo aviso.
+    const notice = await screen.findByText('Palavra-passe alterada. Entra com a nova.');
+    expect(notice.closest('[role="status"]')).not.toBeNull();
   });
 
   it('toggles the password visibility without losing what was typed', async () => {

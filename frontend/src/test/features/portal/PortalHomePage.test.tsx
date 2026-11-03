@@ -236,7 +236,7 @@ describe('PortalHomePage', () => {
     server.use(...restorableSession({ role: 'trainer', trainer_id: 't-1' }));
     const { router } = renderApp({ initialEntries: ['/portal'] });
 
-    await screen.findByRole('heading', { name: 'Bom treino' });
+    await screen.findByRole('heading', { level: 1, name: /Rita/ });
     expect(router.state.location.pathname).toBe('/trainer');
     expect(requests).toBe(0);
   });
@@ -295,8 +295,10 @@ describe('PortalHomePage', () => {
 
     await userEvent.click(screen.getByRole('link', { name: action }));
 
-    expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe(pathname);
+    // Nível 1: os cartões do Início também têm títulos «Suplementos» e «Avaliação periódica»
+    // (h2). Sem o nível, a pesquisa podia apanhar o do Início antes de a navegação terminar.
+    await waitFor(() => expect(router.state.location.pathname).toBe(pathname));
+    expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument();
   });
 
   it('keeps what was on screen and warns when a refresh fails, then recovers on retry', async () => {

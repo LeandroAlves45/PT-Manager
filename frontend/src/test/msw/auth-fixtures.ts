@@ -15,6 +15,7 @@ export function accountResponse(
     role: 'trainer',
     has_password: true,
     google_linked: false,
+    full_name: 'Ana Martins',
     ...overrides,
   };
 }

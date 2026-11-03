@@ -78,6 +78,7 @@ function initialDraft(detail: PlanDetails | null, fixedClientId: string | null):
       description: '',
       startsDate: '',
       endsDate: '',
+      showMacrosToClient: true,
       calculation: EMPTY_CALCULATION,
       calculationDirty: false,
       preview: null,
@@ -90,6 +91,7 @@ function initialDraft(detail: PlanDetails | null, fixedClientId: string | null):
     description: detail.description ?? '',
     startsDate: detail.starts_date,
     endsDate: detail.ends_date ?? '',
+    showMacrosToClient: detail.show_macros_to_client,
     calculation: calculationFromResult(detail.calculation),
     calculationDirty: false,
     preview: detail.calculation,
@@ -310,6 +312,7 @@ function EditorBody({
         description: draft.description.trim() || null,
         starts_date: draft.startsDate,
         ends_date: draft.endsDate || null,
+        show_macros_to_client: draft.showMacrosToClient,
         structure: draft.structure,
       };
       if (planId === null) {
@@ -373,6 +376,8 @@ function EditorBody({
     },
     canUseAssessment: client.isSuccess && assessment.isSuccess,
     setField: (field, value) => touch((current) => ({ ...current, [field]: value })),
+    setShowMacrosToClient: (value) =>
+      touch((current) => ({ ...current, showMacrosToClient: value })),
     chooseClient: (choice: ClientChoice) => {
       revision.current++;
       setPreviewError('');
@@ -567,6 +572,31 @@ export function MealPlanTargetsStep() {
             )}
           </FormField>
         </div>
+        {/* A linha inteira é a área de toque: o `label` envolve a caixa e o texto. */}
+        <label
+          htmlFor="meal-plan-show-macros"
+          className="hover:bg-muted/40 flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 transition-colors has-disabled:cursor-default"
+        >
+          <input
+            id="meal-plan-show-macros"
+            type="checkbox"
+            className="accent-primary mt-0.5 size-5 shrink-0 cursor-pointer disabled:cursor-default"
+            checked={draft.showMacrosToClient}
+            disabled={readOnly}
+            aria-labelledby="meal-plan-show-macros-label"
+            aria-describedby="meal-plan-show-macros-hint"
+            onChange={(event) => editor.setShowMacrosToClient(event.target.checked)}
+          />
+          <span className="space-y-0.5">
+            <span id="meal-plan-show-macros-label" className="block text-sm font-medium">
+              Mostrar macros ao cliente
+            </span>
+            <span id="meal-plan-show-macros-hint" className="text-muted-foreground block text-xs">
+              Ligado, o cliente vê as metas de proteína, hidratos e gordura. Desligado, vê só as
+              kcal.
+            </span>
+          </span>
+        </label>
       </div>
 
       {editor.clientLoading && <p role="status">A carregar dados do cliente…</p>}

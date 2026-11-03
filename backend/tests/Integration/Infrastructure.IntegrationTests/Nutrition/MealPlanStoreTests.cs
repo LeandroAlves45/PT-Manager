@@ -48,6 +48,62 @@ public sealed class MealPlanStoreTests
     }
 
     [Fact]
+    public async Task CreateAsync_MacrosHidden_PersistsFalseInsteadOfColumnDefault()
+    {
+        // O default da coluna é true; o false tem de chegar mesmo ao PostgreSQL.
+        var token = TestContext.Current.CancellationToken;
+        var seed = await NutritionPlanTestData.SeedCatalogAsync(_fixture, token);
+        await using var context = _fixture.CreateContext(seed.TrainerId);
+
+        var model = NutritionPlanTestData.CreateModel(seed.ClientId, seed.FoodId, seed.SupplementId);
+
+        var result = await new MealPlanStore(context).CreateAsync(
+            seed.TrainerId,
+            model with { ShowMacrosToClient = false },
+            Now,
+            token
+        );
+
+        // Lido em SQL, sem passar pelo mapeamento do EF.
+        await using var reader = _fixture.CreateContext(seed.TrainerId);
+        var stored = await reader.Database
+            .SqlQuery<bool>($"SELECT show_macros_to_client AS \"Value\" FROM meal_plans WHERE id = {result.MealPlanId}")
+            .SingleAsync(token);
+        Assert.False(stored);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_MacroVisibility_NullKeepsChoiceAndValueChangesIt()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var seed = await NutritionPlanTestData.SeedPlanAsync(_fixture, token, mealCount: 1);
+
+        async Task<bool> UpdateAndReadAsync(bool? showMacrosToClient, int minutes)
+        {
+            await using var context = _fixture.CreateContext(seed.TrainerId);
+            var structure = await NutritionPlanTestData.ReadStructureAsync(context, seed.MealPlanId, token);
+            var model = NutritionPlanTestData.UpdateModel(seed.MealPlanId, structure);
+            var result = await new MealPlanStore(context).UpdateAsync(
+                seed.TrainerId,
+                model with { ShowMacrosToClient = showMacrosToClient },
+                Now.AddMinutes(minutes),
+                token
+            );
+            Assert.Equal(MealPlanStoreResult.Status.Updated, result.Kind);
+
+            await using var reader = _fixture.CreateContext(seed.TrainerId);
+            return await reader.MealPlans.AsNoTracking()
+                .Where(plan => plan.Id == seed.MealPlanId)
+                .Select(plan => plan.ShowMacrosToClient)
+                .SingleAsync(token);
+        }
+
+        Assert.False(await UpdateAndReadAsync(false, 1));
+        Assert.False(await UpdateAndReadAsync(null, 2));
+        Assert.True(await UpdateAndReadAsync(true, 3));
+    }
+
+    [Fact]
     public async Task CreateAsync_ClientWithoutInitialAssessment_IsRefusedWithoutWriting()
     {
         var token = TestContext.Current.CancellationToken;

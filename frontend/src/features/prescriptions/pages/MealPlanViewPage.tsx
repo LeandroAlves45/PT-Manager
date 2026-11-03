@@ -139,6 +139,9 @@ export function MealPlanViewPage() {
       <p className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
         {data.description !== null && <span>{period}</span>}
         {data.is_archived && <Badge variant="secondary">Arquivado</Badge>}
+        <Badge variant="outline">
+          {data.show_macros_to_client ? 'Cliente vê as macros' : 'Cliente vê só as kcal'}
+        </Badge>
       </p>
 
       <div className="grid gap-4 lg:grid-cols-2">

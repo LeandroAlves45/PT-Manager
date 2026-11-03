@@ -82,6 +82,9 @@ internal sealed class MyTrainingPlanQueries : IMyTrainingPlanQueries
                                     video.Status == ExerciseVideoStatus.Ready &&
                                     (video.OwnerTrainerId == null ||
                                         video.OwnerTrainerId == trainerId)),
+                                // Ligação externa validada (YouTube ou Vimeo); o exercício
+                                // bloqueado já saiu acima, por isso o link também não chega.
+                                row.catalog.VideoUrl,
                                 row.item.ExerciseGroupId,
                                 row.item.GroupPosition,
                                 row.item.Notes,

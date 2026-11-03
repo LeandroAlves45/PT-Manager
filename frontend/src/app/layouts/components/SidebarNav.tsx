@@ -1,6 +1,8 @@
 import { NavLink } from 'react-router';
 
-import { usePendingInitialAssessmentsQuery } from '@/features/initial-assessment';
+// Direto do ficheiro da query: o barrel da feature reexporta o schema do formulário e puxava o
+// zod para o carregamento inicial de todos os papéis.
+import { usePendingInitialAssessmentsQuery } from '@/features/initial-assessment/api/pendingReview';
 import type { NavigationGroup, NavigationItem } from '@/shared/config/navigation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip';
 import { cn } from '@/shared/lib/utils';

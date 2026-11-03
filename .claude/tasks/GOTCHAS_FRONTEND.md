@@ -468,3 +468,30 @@ com um corpo real.
 - **Upload com `FormData` nos testes:** o `File` do jsdom parte o `fetch` do Vitest (`_buffer`). Usar um
   `File` do Node e `vi.stubGlobal('FormData', ...)` (ver `nodeCsv`/`nodeFile`) e ler o corpo no MSW com
   `request.text()`. Os toasts não aparecem no DOM dos testes: fazer mock do `sonner`.
+
+## 2026-11-03: ajustes pré-8D (bundle, saudação, link de vídeo)
+
+- **Um barrel com schema zod no topo puxa o zod para o arranque.** `SidebarNav` (sempre carregado)
+  importava um hook pelo barrel de `initial-assessment`; o `ClientAvatar` importava uma função pura de
+  `portal/lib/profile.ts`. Medir com `vite build --sourcemap` e somar `sourcesContent` por pacote; importar
+  o ficheiro do hook diretamente e mover funções puras para ficheiros sem dependências.
+- **Páginas de autenticação lazy** (`lazyPage` no router): o chunk principal passou de 656 kB a 482 kB.
+  Não subir `chunkSizeWarningLimit` para calar o aviso.
+- **`localStorage` é proibido por lint** (sessão só em memória). Exceção só para preferências que não são
+  sessão, com `eslint-disable-next-line no-restricted-globals -- motivo`, como o tema e a marca de
+  boas-vindas.
+- **StrictMode corre o inicializador do `useState` duas vezes:** ler no inicializador, gravar num efeito
+  (`isFirstVisit` / `markWelcomed`). Ler e gravar no mesmo sítio perde a primeira visita em dev.
+- **`<span className="sr-only"> (texto)</span>`:** o espaço inicial perde-se no nome acessível
+  ("Vimeo(abre…)"). Pôr o espaço fora (`{' '}`) e testar o nome com `getByRole`.
+- **Elemento escondido (dia recolhido) não tem nome acessível:** nesses testes procurar pelo texto e
+  testar o nome acessível num teste do próprio componente.
+- **Arnês visual com MSW** (gotcha de 2026-10-11) também serve para capturas do site: Playwright do
+  projeto + `canvas.toDataURL('image/webp')` no Chromium, sem `sharp`. O browser integrado recusa o
+  certificado do `basicSsl`, por isso o arnês corre em HTTP.
+- **Teste de navegação que procura um título só pelo nome:** o Início do portal tem cartões com `h2`
+  «Suplementos» e «Avaliação periódica», iguais aos `h1` das páginas. Se a navegação ainda não
+  terminou, `findByRole('heading', { name })` devolve o do Início, que logo desmonta: o erro é
+  «expect(element).toBeInTheDocument()», não «Unable to find». Esperar pelo `pathname` e usar
+  `level: 1`. Subir timeouts ou pré-carregar páginas não resolve (tentado em `45e0386` e `70c84a0`).
+- **Botão do menu Radix aberto não se encontra por papel (2026-11-03, avatar com iniciais):** com o `DropdownMenu` aberto, o Radix põe `aria-hidden` no resto da página e `getByRole('button', { name })` falha com "Unable to find". Para verificar o trigger depois de abrir o menu, usar `{ hidden: true }` ou guardar a referência antes de abrir.

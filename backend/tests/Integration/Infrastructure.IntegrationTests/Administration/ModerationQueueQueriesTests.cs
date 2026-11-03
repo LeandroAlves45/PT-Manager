@@ -1,6 +1,7 @@
 using Application.Features.Administration.ContentModeration.ListModerationQueue;
 using Application.Pagination;
 using Domain.Entities.Nutrition;
+using Domain.Entities.Training;
 using Domain.ValueObjects;
 using Infrastructure.IntegrationTests.Support;
 using Infrastructure.Persistence.Administration;
@@ -71,4 +72,28 @@ public sealed class ModerationQueueQueriesTests : ReadQueriesIntegrationTestCont
         Assert.NotNull(item.PlatformEnforcedAt);
     }
 
+    [Fact]
+    public async Task ModerationQueue_Exercises_ShowTheExternalVideoLinkForReview()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var seed = await _fixture.SeedTenantWithClientAsync(NewDiscriminator(), token);
+        var marker = NewDiscriminator();
+        await using (var context = _fixture.CreateContext(seed.TrainerId))
+        {
+            context.Exercises.Add(new Exercise(
+                seed.TrainerId, $"link-{marker}", null, null, null, null,
+                "https://youtu.be/dQw4w9WgXcQ", Now));
+            await context.SaveChangesAsync(token);
+        }
+
+        await using var adminContext = _fixture.CreateAdministrativeContext();
+        var page = await new ModerationQueueQueries(adminContext).ListAsync(
+            ModerationContentKind.Exercise,
+            ModerationStatusFilter.All,
+            marker,
+            new PageRequest(1, 50),
+            token);
+
+        Assert.Equal("https://youtu.be/dQw4w9WgXcQ", Assert.Single(page.Items).VideoUrl);
+    }
 }

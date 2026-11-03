@@ -382,7 +382,7 @@ describe('PortalSupplementsPage', () => {
 
     const { router } = renderApp({ initialEntries: ['/portal/supplements'] });
 
-    await screen.findByRole('heading', { name: 'Bom treino' });
+    await screen.findByRole('heading', { level: 1, name: /Rita/ });
     expect(router.state.location.pathname).toBe('/trainer');
     expect(requests).toBe(0);
   });

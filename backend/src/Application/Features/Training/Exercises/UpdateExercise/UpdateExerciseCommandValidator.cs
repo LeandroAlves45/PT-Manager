@@ -33,15 +33,6 @@ public sealed class UpdateExerciseCommandValidator : AbstractValidator<UpdateExe
             .WithErrorCode("exercise_difficulty_too_long");
 
         RuleFor(command => command.VideoUrl)
-            .Cascade(CascadeMode.Stop)
-            .MaximumLength(500)
-            .WithErrorCode("exercise_video_url_too_long")
-            .Must(BeAnAbsoluteHttpsUrl)
-            .When(command => !string.IsNullOrWhiteSpace(command.VideoUrl))
-            .WithErrorCode("exercise_video_url_must_be_https");
+            .MustBeExternalVideoUrl();
     }
-
-    private static bool BeAnAbsoluteHttpsUrl(string? videoUrl) =>
-        Uri.TryCreate(videoUrl, UriKind.Absolute, out var uri) &&
-        uri.Scheme == Uri.UriSchemeHttps;
 }

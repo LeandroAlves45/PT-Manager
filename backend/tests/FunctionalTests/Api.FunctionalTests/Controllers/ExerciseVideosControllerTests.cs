@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Api.Contracts.Training;
 using Api.FunctionalTests.Support;
 using Application.Common.Abstractions;
 using Application.Features.Jobs.Dispatching;
@@ -196,6 +197,39 @@ public sealed class ExerciseVideosControllerTests : IDisposable
         Assert.Equal((planExerciseId, false), before);
         Assert.Equal((planExerciseId, true), after);
         Assert.Equal(HttpStatusCode.OK, playback.StatusCode);
+    }
+
+    [Fact]
+    public async Task ClientPlan_ExposesOnlyAllowedExternalLinkSavedByTheTrainer()
+    {
+        var (trainerId, clientUserId) = await PortalTestData.SeedActiveClientAsync(_factory, Token);
+        var exerciseId = await FindPlanExerciseAsync(trainerId, clientUserId);
+        var trainer = TrainerClient(trainerId);
+        var client = _factory.CreateOriginClient().WithBearer(TestJwtFactory.IssueClient(clientUserId, trainerId));
+
+        var phishing = await ApiJsonPayload.PatchAsync(
+            trainer,
+            $"/api/v1/exercises/{exerciseId}",
+            new UpdateExerciseRequest(
+                "Supino", null, null, null, null, "https://youtube.com.evil.example/watch?v=x"),
+            Token);
+        var saved = await ApiJsonPayload.PatchAsync(
+            trainer,
+            $"/api/v1/exercises/{exerciseId}",
+            new UpdateExerciseRequest("Supino", null, null, null, null, "https://youtu.be/dQw4w9WgXcQ"),
+            Token);
+
+        Assert.Equal(HttpStatusCode.BadRequest, phishing.StatusCode);
+        Assert.Contains(
+            "exercise_video_url_host_not_allowed",
+            await phishing.Content.ReadAsStringAsync(Token),
+            StringComparison.Ordinal);
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+
+        using var plan = JsonDocument.Parse(await client.GetStringAsync("/api/v1/portal/my-plan", Token));
+        var exercise = plan.RootElement.GetProperty("days")[0].GetProperty("exercises")[0];
+        Assert.Equal(exerciseId, exercise.GetProperty("exercise_id").GetGuid());
+        Assert.Equal("https://youtu.be/dQw4w9WgXcQ", exercise.GetProperty("video_url").GetString());
     }
 
     private async Task<(Guid ExerciseId, bool HasReadyVideo)> ReadFirstPlanExerciseAsync(HttpClient client)
