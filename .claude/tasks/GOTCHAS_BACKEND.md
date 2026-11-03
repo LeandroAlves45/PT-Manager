@@ -349,3 +349,21 @@ o PostgreSQL antes de corrigir:
 - **Mutações com cópia de segurança:** repor o ficheiro com `shutil.move` mantém a data antiga e o
   MSBuild não volta a embutir recursos (templates). Depois das mutações, `touch` nos ficheiros antes
   da suite final.
+
+## 2026-11-03: ajustes pré-8D (macros por plano, link de vídeo, nome no painel)
+
+- **Esconder dados ao cliente é no servidor, não no ecrã.** `MyNutritionPlanDto.ForClient()` põe os
+  gramas de macros a `null` em todos os níveis (metas, totais, refeições, alimentos); o handler devolve
+  sempre `ForClient()`. Testar no JSON (funcional), não só no componente.
+- **Campo novo num pedido existente = `bool?` opcional**, com `null` a manter o valor (editar) ou o
+  default antigo (criar). Um frontend antigo continua a funcionar durante o deploy.
+- **EF 10: `bool` com `HasDefaultValue(true)` grava o `false`** sem `HasSentinel` (provado com SQL
+  direto e mutação). Não juntar `HasSentinel` "por precaução"; provar com um teste que lê em SQL.
+- **Regras de URL vivem no Domain** (`ExternalVideoUrl`): o validador usa-as ao gravar e o portal ao ler
+  (`OrNull`), porque valores antigos gravados com a regra anterior continuam na base de dados. Os
+  contratos da Api não importam o Domain: filtrar na Application.
+- **Orçamento de comandos do painel:** um dado novo (ex. nome do trainer) entra numa query que já existe
+  (subquery na mesma projeção), não num comando novo. O teste de orçamento compara vazio e cheio.
+- **Migrations geradas no Windows saem com BOM e CRLF:** `dotnet format --include <migration>.cs` antes
+  do commit (o `.Designer.cs` fica com BOM, como os anteriores).
+- **A API em execução bloqueia os DLLs:** parar o `preview_start api` antes de `dotnet build` da solução.

@@ -6,6 +6,11 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-11-03: ajustes pré-8D (branch `feature/pre-8d-ajustes`, merge pelo Leandro).** Macros por plano
+(corte no servidor), vídeo por link YouTube/Vimeo (`ExternalVideoUrl` no Domain), saudação com nome,
+site com capturas reais, chunk 656 → 482 kB. Neon e ordem de deploy em
+`docs/blueprints/sprint_8/8D/02_ajustes_pre_8D.md`. Ver `Sessions/2026-11-03-ajustes-pre-8d.md`.
+
 **2026-10-29: 8C código pré-deploy + runbook.** Aviso do IP do proxy (antes do UseForwardedHeaders),
 motivo do 400 do webhook Stripe, 16 pontos dos emails com guarda; `docs/blueprints/sprint_8/8C/`.
 

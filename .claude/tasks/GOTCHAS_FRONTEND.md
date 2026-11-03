@@ -468,3 +468,24 @@ com um corpo real.
 - **Upload com `FormData` nos testes:** o `File` do jsdom parte o `fetch` do Vitest (`_buffer`). Usar um
   `File` do Node e `vi.stubGlobal('FormData', ...)` (ver `nodeCsv`/`nodeFile`) e ler o corpo no MSW com
   `request.text()`. Os toasts não aparecem no DOM dos testes: fazer mock do `sonner`.
+
+## 2026-11-03: ajustes pré-8D (bundle, saudação, link de vídeo)
+
+- **Um barrel com schema zod no topo puxa o zod para o arranque.** `SidebarNav` (sempre carregado)
+  importava um hook pelo barrel de `initial-assessment`; o `ClientAvatar` importava uma função pura de
+  `portal/lib/profile.ts`. Medir com `vite build --sourcemap` e somar `sourcesContent` por pacote; importar
+  o ficheiro do hook diretamente e mover funções puras para ficheiros sem dependências.
+- **Páginas de autenticação lazy** (`lazyPage` no router): o chunk principal passou de 656 kB a 482 kB.
+  Não subir `chunkSizeWarningLimit` para calar o aviso.
+- **`localStorage` é proibido por lint** (sessão só em memória). Exceção só para preferências que não são
+  sessão, com `eslint-disable-next-line no-restricted-globals -- motivo`, como o tema e a marca de
+  boas-vindas.
+- **StrictMode corre o inicializador do `useState` duas vezes:** ler no inicializador, gravar num efeito
+  (`isFirstVisit` / `markWelcomed`). Ler e gravar no mesmo sítio perde a primeira visita em dev.
+- **`<span className="sr-only"> (texto)</span>`:** o espaço inicial perde-se no nome acessível
+  ("Vimeo(abre…)"). Pôr o espaço fora (`{' '}`) e testar o nome com `getByRole`.
+- **Elemento escondido (dia recolhido) não tem nome acessível:** nesses testes procurar pelo texto e
+  testar o nome acessível num teste do próprio componente.
+- **Arnês visual com MSW** (gotcha de 2026-10-11) também serve para capturas do site: Playwright do
+  projeto + `canvas.toDataURL('image/webp')` no Chromium, sem `sharp`. O browser integrado recusa o
+  certificado do `basicSsl`, por isso o arnês corre em HTTP.
