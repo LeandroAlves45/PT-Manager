@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 import { portalKeys } from '@/features/portal';
 import type { components } from '@/shared/api/schema';
@@ -283,6 +283,18 @@ describe('PortalHomePage', () => {
     expect(document.body.textContent ?? '').not.toMatch(/check-?in/i);
   });
 
+  // As páginas de destino são lazy. No CI (cobertura, 4 workers) a primeira importação de cada uma
+  // pode demorar mais do que qualquer timeout razoável; pré-carregá-las aqui faz o teste medir só
+  // a navegação, que é o que importa.
+  beforeAll(async () => {
+    await Promise.all([
+      import('@/features/portal/pages/PortalTodayPage'),
+      import('@/features/portal/pages/PortalNutritionPage'),
+      import('@/features/portal/pages/PortalSupplementsPage'),
+      import('@/features/portal/pages/PortalCheckInsPage'),
+    ]);
+  }, 60_000);
+
   // Uma rota desconhecida volta à raiz e daí ao Início, sem erro: só seguir o link prova que
   // a ação do cartão abre um ecrã registado no router.
   it.each([
@@ -297,10 +309,7 @@ describe('PortalHomePage', () => {
 
       await userEvent.click(screen.getByRole('link', { name: action }));
 
-      // A página é lazy: no CI, o primeiro import da rota pode passar os 5 s por omissão.
-      expect(
-        await screen.findByRole('heading', { name: heading }, { timeout: 12_000 })
-      ).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument();
       expect(router.state.location.pathname).toBe(pathname);
     },
     20_000
