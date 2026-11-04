@@ -13,7 +13,10 @@ public enum MyAccountDeletionStatus
     PasswordRequired,
 
     /// <summary>Password errada ou conta bloqueada por tentativas falhadas.</summary>
-    PasswordInvalid
+    PasswordInvalid,
+
+    /// <summary>Conta sem password (só Google) e o login não é recente.</summary>
+    ReauthenticationRequired
 }
 
 /// <summary>Elimina a conta do cliente autenticado e anonimiza os seus dados.</summary>
@@ -28,6 +31,7 @@ public interface IMyAccountDeletionStore
         Guid trainerId,
         Guid clientUserId,
         string? password,
+        bool recentSignIn,
         Guid correlationId,
         DateTime now,
         CancellationToken cancellationToken);

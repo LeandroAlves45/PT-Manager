@@ -8,7 +8,10 @@ public sealed class ApiCorsOptions
     /// <summary>Origens exatas autorizadas, sem paths nem wildcards.</summary>
     public string[] AllowedOrigins { get; init; } = [];
 
-    /// <summary>Valida que todas as origens são HTTPS, absolutas e únicas.</summary>
+    /// <summary>
+    /// Valida que todas as origens são HTTPS, absolutas e únicas, e que nenhuma é a origem da
+    /// app nativa (essa tem a política própria, sem credenciais).
+    /// </summary>
     public bool HasValidOrigins()
     {
         if (AllowedOrigins.Length == 0)
@@ -25,6 +28,7 @@ public sealed class ApiCorsOptions
                 || !string.IsNullOrEmpty(uri.Fragment)
                 || !string.IsNullOrEmpty(uri.UserInfo)
                 || uri.Host.Contains("*", StringComparison.Ordinal)
+                || ApiCorsPolicy.IsNativeAppOrigin(uri.GetLeftPart(UriPartial.Authority))
                 || !uniqueOrigins.Add(uri.GetLeftPart(UriPartial.Authority)))
                 return false;
         }

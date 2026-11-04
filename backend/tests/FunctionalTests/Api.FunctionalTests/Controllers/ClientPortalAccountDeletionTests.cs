@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Api.Authorization;
 using Api.FunctionalTests.Support;
 using Application.Common.Abstractions;
 using Domain.Entities.Assessments;
@@ -164,6 +165,81 @@ public sealed class ClientPortalAccountDeletionTests : IAsyncLifetime
             client, DeletionRoute, new { password = "x", confirmation = "ELIMINAR" }, Token);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_GoogleOnlyAccount_WithRecentSignIn_Deletes()
+    {
+        var account = await RegisterClientWithHistoryAsync("delete-google-recent");
+        await RemovePasswordAsync(account.UserId);
+
+        // O token do registo foi emitido agora: o login é recente.
+        var response = await DeleteAsync(account.AccessToken, new { confirmation = "ELIMINAR" });
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.True(await IsDeletedAsync(account.UserId));
+    }
+
+    [Fact]
+    public async Task Delete_GoogleOnlyAccount_WithOldSignIn_Is400AndChangesNothing()
+    {
+        var account = await RegisterClientWithHistoryAsync("delete-google-old");
+        await RemovePasswordAsync(account.UserId);
+        var oldToken = TestJwtFactory.Issue(
+            account.UserId, ApiRoleNames.Client, account.TrainerId,
+            authenticatedAt: DateTime.UtcNow.AddMinutes(-11));
+
+        var response = await DeleteAsync(oldToken, new { confirmation = "ELIMINAR" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("portal_account_deletion_reauthentication_required", await FirstErrorCodeAsync(response));
+        Assert.False(await IsDeletedAsync(account.UserId));
+    }
+
+    [Fact]
+    public async Task Delete_GoogleOnlyAccount_WithoutSignInTime_Is400()
+    {
+        var account = await RegisterClientWithHistoryAsync("delete-google-no-auth-time");
+        await RemovePasswordAsync(account.UserId);
+        var tokenWithoutAuthTime = TestJwtFactory.IssueClient(account.UserId, account.TrainerId);
+
+        var response = await DeleteAsync(tokenWithoutAuthTime, new { confirmation = "ELIMINAR" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("portal_account_deletion_reauthentication_required", await FirstErrorCodeAsync(response));
+        Assert.False(await IsDeletedAsync(account.UserId));
+    }
+
+    [Fact]
+    public async Task Delete_WithPassword_AndOldSignIn_StillDeletes()
+    {
+        var account = await RegisterClientWithHistoryAsync("delete-password-old");
+        var oldToken = TestJwtFactory.Issue(
+            account.UserId, ApiRoleNames.Client, account.TrainerId,
+            authenticatedAt: DateTime.UtcNow.AddHours(-2));
+
+        var response = await DeleteAsync(oldToken, new { password = AuthTestData.Password, confirmation = "ELIMINAR" });
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    private async Task RemovePasswordAsync(Guid userId)
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<PtManagerDbContext>();
+        await context.Users.IgnoreQueryFilters()
+            .Where(candidate => candidate.Id == userId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(candidate => candidate.PasswordHash, (string?)null), Token);
+    }
+
+    private async Task<bool> IsDeletedAsync(Guid userId)
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<PtManagerDbContext>();
+        return await context.Users.IgnoreQueryFilters().AsNoTracking()
+            .Where(candidate => candidate.Id == userId)
+            .Select(candidate => candidate.IsDeleted)
+            .SingleAsync(Token);
     }
 
     private async Task<RegisteredClient> RegisterClientWithHistoryAsync(string prefix)

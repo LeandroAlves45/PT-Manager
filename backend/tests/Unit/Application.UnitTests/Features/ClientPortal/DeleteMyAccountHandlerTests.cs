@@ -94,6 +94,48 @@ public sealed class DeleteMyAccountHandlerTests
         Assert.Equal(ClientPortalErrors.ProfileNotAvailable.Code, result.Error!.Code);
     }
 
+    [Theory]
+    [InlineData(0, true)]
+    [InlineData(9, true)]
+    [InlineData(10, true)]
+    [InlineData(11, false)]
+    [InlineData(-5, false)]
+    public async Task RecentSignIn_IsTenMinutesFromTheSignInTime(int minutesAgo, bool expected)
+    {
+        var store = new FakeStore();
+
+        await CreateHandler(store).HandleAsync(
+            new DeleteMyAccountCommand(null, "ELIMINAR", Now.AddMinutes(-minutesAgo)),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(expected, store.RecentSignIn);
+    }
+
+    [Fact]
+    public async Task WithoutSignInTime_IsNotRecent()
+    {
+        var store = new FakeStore();
+
+        await CreateHandler(store).HandleAsync(
+            new DeleteMyAccountCommand(null, "ELIMINAR"), TestContext.Current.CancellationToken);
+
+        Assert.False(store.RecentSignIn);
+    }
+
+    [Fact]
+    public async Task ReauthenticationRequired_IsAFieldErrorOnTheConfirmation()
+    {
+        var store = new FakeStore { Status = MyAccountDeletionStatus.ReauthenticationRequired };
+
+        var result = await CreateHandler(store).HandleAsync(
+            new DeleteMyAccountCommand(null, "ELIMINAR"), TestContext.Current.CancellationToken);
+
+        var error = Assert.Single(result.Error!.ValidationErrors);
+        Assert.Equal(
+            ("Confirmation", "portal_account_deletion_reauthentication_required"),
+            (error.Field, error.Code));
+    }
+
     private static DeleteMyAccountHandler CreateHandler(FakeStore store, string role = "client") =>
         new(new DeleteMyAccountCommandValidator(), new StubTenantContext(role), new StubClock(), store);
 
@@ -105,17 +147,19 @@ public sealed class DeleteMyAccountHandlerTests
         public Guid ClientUserId { get; private set; }
         public string? Password { get; private set; }
         public DateTime Now { get; private set; }
+        public bool RecentSignIn { get; private set; }
 
         public Task<MyAccountDeletionStatus> DeleteAsync(
             Guid trainerId,
             Guid clientUserId,
             string? password,
+            bool recentSignIn,
             Guid correlationId,
             DateTime now,
             CancellationToken cancellationToken)
         {
             WasCalled = true;
-            (TrainerId, ClientUserId, Password, Now) = (trainerId, clientUserId, password, now);
+            (TrainerId, ClientUserId, Password, Now, RecentSignIn) = (trainerId, clientUserId, password, now, recentSignIn);
             return Task.FromResult(Status);
         }
     }

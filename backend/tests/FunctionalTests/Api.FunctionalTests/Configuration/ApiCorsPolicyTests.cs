@@ -25,6 +25,22 @@ public sealed class ApiCorsPolicyTests
     }
 
     [Fact]
+    public void AddApiCors_BuildsTheNativeAppPolicyWithoutCredentials()
+    {
+        var provider = BuildProvider("https://app.example.test");
+
+        var policy = provider.GetRequiredService<IOptions<CorsOptions>>()
+            .Value.GetPolicy(ApiCorsPolicy.NativeAppPolicyName);
+
+        Assert.NotNull(policy);
+        Assert.Equal(["capacitor://localhost", "https://localhost"], policy.Origins);
+        Assert.False(policy.SupportsCredentials);
+        Assert.DoesNotContain("X-CSRF-Token", policy.Headers);
+        Assert.False(policy.AllowAnyOrigin);
+        Assert.False(policy.AllowAnyHeader);
+    }
+
+    [Fact]
     public void AddApiCors_FailsClosedWhenAllowlistIsEmpty()
     {
         var provider = BuildProvider();

@@ -24,11 +24,12 @@ internal static class TestJwtFactory
         Guid userId,
         string role,
         Guid? trainerId,
-        DateTime? expiresAt = null)
+        DateTime? expiresAt = null,
+        DateTime? authenticatedAt = null)
     {
         var issuedAt = DateTime.UtcNow;
 
-        var claims = new List<Claim>(4)
+        var claims = new List<Claim>(5)
         {
             new(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new(ApiClaimNames.Role, role),
@@ -37,6 +38,13 @@ internal static class TestJwtFactory
 
         if (trainerId.HasValue)
             claims.Add(new Claim(ApiClaimNames.TrainerId, trainerId.Value.ToString()));
+
+        // Sem authenticatedAt o token não leva auth_time, como os emitidos antes do 8D-4.
+        if (authenticatedAt.HasValue)
+            claims.Add(new Claim(
+                ApiClaimNames.AuthTime,
+                new DateTimeOffset(authenticatedAt.Value).ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ClaimValueTypes.Integer64));
 
         var descriptor = new SecurityTokenDescriptor
         {

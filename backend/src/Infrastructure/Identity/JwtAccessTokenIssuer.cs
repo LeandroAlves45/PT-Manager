@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using Application.Common.Abstractions;
 using Application.Features.Authentication.Abstractions;
@@ -34,11 +35,16 @@ internal sealed class JwtAccessTokenIssuer : IAccessTokenIssuer
         var issuedAt = _clock.UtcNow;
         var expiresAt = issuedAt.Add(_options.Lifetime);
 
+        var authenticatedAt = principal.AuthenticatedAt ?? issuedAt;
         var claims = new List<Claim>(6)
         {
             new(JwtRegisteredClaimNames.Sub, principal.UserId.ToString()),
             new(ClaimNames.Role, principal.Role),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N"))
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
+            // Ações sensíveis (eliminar conta sem password) exigem um login recente.
+            new(ClaimNames.AuthTime,
+                new DateTimeOffset(DateTime.SpecifyKind(authenticatedAt, DateTimeKind.Utc)).ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture),
+                ClaimValueTypes.Integer64)
         };
 
         // O superuser não pertence a nenhum tenant; a claim é omitida em vez de
@@ -66,5 +72,6 @@ internal sealed class JwtAccessTokenIssuer : IAccessTokenIssuer
     {
         internal const string Role = "role";
         internal const string TrainerId = "trainer_id";
+        internal const string AuthTime = "auth_time";
     }
 }
