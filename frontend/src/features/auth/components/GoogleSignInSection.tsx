@@ -4,6 +4,7 @@ import { useGoogleSignInMutation } from '@/features/auth/api/auth';
 import { useGoogleIdentity } from '@/features/auth/hooks/useGoogleIdentity';
 import { authErrorMessage } from '@/features/auth/lib/auth-errors';
 import { setSession, type Session } from '@/shared/api/session';
+import { isNativeApp } from '@/shared/native/platform';
 
 /**
  * Botão "Continuar com Google" e o pedido ao backend.
@@ -21,17 +22,26 @@ import { setSession, type Session } from '@/shared/api/session';
  * @param onSignedIn Chamada com a sessão já guardada em memória.
  * @param onPending Chamada quando o Google confirmou a identidade mas falta confirmar o email.
  */
-export function GoogleSignInSection({
-  createAccount = false,
-  invitationToken = null,
-  onSignedIn,
-  onPending,
-}: {
+export function GoogleSignInSection(props: GoogleSignInSectionProps) {
+  // O Google Identity Services não funciona numa WebView e a app v1 é só email e
+  // palavra-passe (sem login social não é preciso "Sign in with Apple").
+  if (isNativeApp()) return null;
+  return <GoogleSignInSectionWeb {...props} />;
+}
+
+interface GoogleSignInSectionProps {
   createAccount?: boolean;
   invitationToken?: string | null;
   onSignedIn: (session: Session) => void;
   onPending?: () => void;
-}) {
+}
+
+function GoogleSignInSectionWeb({
+  createAccount = false,
+  invitationToken = null,
+  onSignedIn,
+  onPending,
+}: GoogleSignInSectionProps) {
   const mutation = useGoogleSignInMutation();
   const [failure, setFailure] = useState<string | null>(null);
 

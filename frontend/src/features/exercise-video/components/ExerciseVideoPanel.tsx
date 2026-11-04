@@ -241,6 +241,7 @@ export function ExerciseVideoPanel({
             <video
               controls
               preload="metadata"
+              playsInline
               src={playback.data.playback_url}
               aria-label={`Vídeo de ${exercise.name}`}
               className="w-full rounded-md"

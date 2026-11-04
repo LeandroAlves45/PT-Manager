@@ -12,8 +12,8 @@ import { ThemeToggle } from '@/app/components/ThemeToggle';
  */
 export function AuthLayout() {
   return (
-    <div className="bg-background flex min-h-dvh flex-col items-center justify-center px-4 py-10">
-      <div className="absolute top-3 right-3">
+    <div className="bg-background flex min-h-dvh flex-col items-center justify-center px-4 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-10">
+      <div className="absolute top-[calc(env(safe-area-inset-top)+0.75rem)] right-3">
         <ThemeToggle />
       </div>
 

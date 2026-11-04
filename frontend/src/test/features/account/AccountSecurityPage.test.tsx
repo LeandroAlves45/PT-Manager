@@ -369,6 +369,49 @@ describe('AccountSecurityPage', () => {
       expect(bodies).toEqual([{ password: null, confirmation: 'ELIMINAR' }]);
     });
 
+    it('asks a Google-only account with an old sign-in to sign in again, and signs out on request', async () => {
+      const logouts = vi.fn();
+      server.use(
+        http.post(DELETION, () =>
+          HttpResponse.json(
+            problem('validation_failed', {
+              errors: [
+                {
+                  field: 'confirmation',
+                  code: 'portal_account_deletion_reauthentication_required',
+                  message: 'Sign in again before deleting the account.',
+                },
+              ],
+            }),
+            { status: 400 }
+          )
+        ),
+        http.post(`${API}/auth/logout`, () => {
+          logouts();
+          return new HttpResponse(null, { status: 204 });
+        })
+      );
+      const { router } = openClientAccount({ has_password: false, google_linked: true });
+      const { user, card } = await confirmDeletion(null);
+
+      await user.click(card.getByRole('button', { name: 'Eliminar conta' }));
+
+      expect(
+        await card.findByText(
+          'Por segurança, termina a sessão e volta a entrar antes de eliminar a conta.'
+        )
+      ).toBeInTheDocument();
+      expect(getSession()).not.toBeNull();
+
+      await user.click(card.getByRole('button', { name: 'Terminar sessão' }));
+
+      await waitFor(() => expect(router.state.location.pathname).toBe('/entrar'));
+      expect(logouts).toHaveBeenCalledOnce();
+      expect(await screen.findByRole('status')).toHaveTextContent(
+        'Entra outra vez para poderes eliminar a conta.'
+      );
+    });
+
     it('keeps a wrong password on its field and keeps the session', async () => {
       server.use(
         http.post(DELETION, () =>

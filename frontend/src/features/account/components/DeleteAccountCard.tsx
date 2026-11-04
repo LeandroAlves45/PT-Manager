@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 
+import { useAuth } from '@/app/providers/useAuth';
 import { useDeleteMyAccountMutation } from '@/features/account/api/account';
 import {
   PasswordField,
@@ -18,6 +19,7 @@ export const DELETE_CONFIRMATION_WORD = 'ELIMINAR';
 
 const PASSWORD_INVALID = 'portal_account_deletion_password_invalid';
 const CONFIRMATION_REQUIRED = 'portal_account_deletion_confirmation_required';
+const REAUTHENTICATION_REQUIRED = 'portal_account_deletion_reauthentication_required';
 
 interface DeleteAccountCardProps {
   /** Contas só com Google não têm palavra-passe: a confirmação é só a palavra escrita. */
@@ -34,7 +36,9 @@ interface DeleteAccountCardProps {
  */
 export function DeleteAccountCard({ hasPassword }: DeleteAccountCardProps) {
   const queryClient = useQueryClient();
+  const { signOut } = useAuth();
   const deletion = useDeleteMyAccountMutation();
+  const [needsSignIn, setNeedsSignIn] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
   const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
@@ -49,6 +53,7 @@ export function DeleteAccountCard({ hasPassword }: DeleteAccountCardProps) {
     setPasswordError(undefined);
     setConfirmationError(undefined);
     setFormError(null);
+    setNeedsSignIn(false);
     if (!canSubmit) return;
 
     try {
@@ -62,6 +67,12 @@ export function DeleteAccountCard({ hasPassword }: DeleteAccountCardProps) {
       const codes = isApiProblem(failure) ? failure.fieldErrors.map((error) => error.code) : [];
       if (codes.includes(PASSWORD_INVALID)) {
         setPasswordError('A palavra-passe não está correta.');
+        return;
+      }
+      if (codes.includes(REAUTHENTICATION_REQUIRED)) {
+        // Conta só com Google e o login já tem mais de 10 minutos: o servidor pede que o
+        // cliente prove outra vez que é ele antes de apagar tudo.
+        setNeedsSignIn(true);
         return;
       }
       if (codes.includes(CONFIRMATION_REQUIRED)) {
@@ -114,6 +125,25 @@ export function DeleteAccountCard({ hasPassword }: DeleteAccountCardProps) {
             />
           )}
         </FormField>
+
+        {needsSignIn && (
+          <div role="alert" className="space-y-2">
+            <p className="text-destructive text-sm">
+              Por segurança, termina a sessão e volta a entrar antes de eliminar a conta.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11"
+              onClick={() => {
+                setPendingAuthNotice('Entra outra vez para poderes eliminar a conta.');
+                void signOut();
+              }}
+            >
+              Terminar sessão
+            </Button>
+          </div>
+        )}
 
         {formError !== null && (
           <p role="alert" aria-live="assertive" className="text-destructive text-sm">

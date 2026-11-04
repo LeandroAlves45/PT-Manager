@@ -4,6 +4,8 @@ import { useAuth } from '@/app/providers/useAuth';
 import { homeRouteFor, type AppRole } from '@/shared/api/session';
 import { FullPageSpinner } from '@/shared/components/FullPageSpinner';
 import { AUTH_ROUTES } from '@/shared/config/auth-routes';
+import { NativeClientOnlyNotice } from '@/shared/native/NativeClientOnlyNotice';
+import { isNativeApp } from '@/shared/native/platform';
 
 /**
  * Exige um papel concreto.
@@ -20,6 +22,10 @@ export function RequireRole({ role }: { role: AppRole }) {
   if (session === null) return <Navigate to={AUTH_ROUTES.login} replace />;
 
   if (session.role !== role) return <Navigate to={homeRouteFor(session.role)} replace />;
+
+  // A app v1 é só para clientes: personal trainers e superuser usam a web (sem subscrição
+  // nem pagamentos dentro da app, por causa das regras das lojas).
+  if (isNativeApp() && role !== 'client') return <NativeClientOnlyNotice />;
 
   return <Outlet />;
 }

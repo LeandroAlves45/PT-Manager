@@ -22,6 +22,13 @@
     "api:types:check": "node scripts/check-api-types.mjs"
   },
   "dependencies": {
+    "@aparajita/capacitor-secure-storage": "8.0.1",
+    "@capacitor/android": "8.6.0",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/browser": "8.0.5",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/ios": "8.6.0",
+    "@capacitor/splash-screen": "8.0.2",
     "@hookform/resolvers": "5.9.1",
     "@sentry/react": "11.7.0",
     "@tanstack/react-query": "5.103.1",
@@ -42,6 +49,7 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.6.0",
     "@eslint/js": "10.0.1",
     "@fontsource-variable/geist": "5.3.0",
     "@fontsource-variable/geist-mono": "5.3.0",

@@ -20,6 +20,7 @@ import { FormField } from '@/shared/components/FormField';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { AUTH_ROUTES } from '@/shared/config/auth-routes';
+import { isNativeApp } from '@/shared/native/platform';
 
 /** Campos do formulário por nome de campo do servidor (ver `applyProblemToForm`). */
 const LOGIN_FIELDS = { email: 'email', password: 'password' } as const;
@@ -140,19 +141,27 @@ export function LoginPage() {
         >
           Esqueceste a palavra-passe?
         </Link>
-        <Link
-          to={AUTH_ROUTES.resendConfirmation}
-          state={{ email: typedEmail }}
-          className="text-muted-foreground block underline underline-offset-4"
-        >
-          Não recebeste o email de confirmação?
-        </Link>
-        <p className="text-muted-foreground">
-          Ainda não tens conta?{' '}
-          <Link to={AUTH_ROUTES.signUp} className="text-foreground underline underline-offset-4">
-            Criar conta
-          </Link>
-        </p>
+        {/* Na app (só clientes, que entram por convite) não há registo nem confirmação de email. */}
+        {!isNativeApp() && (
+          <>
+            <Link
+              to={AUTH_ROUTES.resendConfirmation}
+              state={{ email: typedEmail }}
+              className="text-muted-foreground block underline underline-offset-4"
+            >
+              Não recebeste o email de confirmação?
+            </Link>
+            <p className="text-muted-foreground">
+              Ainda não tens conta?{' '}
+              <Link
+                to={AUTH_ROUTES.signUp}
+                className="text-foreground underline underline-offset-4"
+              >
+                Criar conta
+              </Link>
+            </p>
+          </>
+        )}
       </nav>
     </div>
   );
