@@ -19,10 +19,10 @@ Spec: `.claude/SPEC.md`. Branch `feature/8d-app-nativa`.
 - [x] Gates `QG8D4-*` em `backlogs/QualityGates.md`
 - [x] Push, CI verde, merge
 - [x] Documentação (ACTIVE, MEMORY, NEST, sessão, GOTCHAS, lessons), apagar SPEC.md
-- [ ] `docs_about_app` (só com aprovação do Leandro)
+- [x] `docs_about_app`: RN-021, RN-017, ADR-003 (aprovado pelo Leandro)
 
 ## Review
 - Commits `346dd1d`, `2fbe031`, `589d747`, `2c788d2`; CI #80 verde nos 5 jobs, Mobile #2 verde.
 - Mutações 9/9 backend, 15/15 frontend; revisões de segurança sem C/H/M.
 - Pendentes do Leandro: QG8D4-IOS-CI-001, -DOCS-001, -DEVICE-001, -LINKS-001.
-- **Finalizado** (código); `docs_about_app` à espera de aprovação.
+- **Finalizado.** Merge `49bb973`, Render live (dep-dblitplbedkc73ad0vc0), CORS nativo verificado em produção.

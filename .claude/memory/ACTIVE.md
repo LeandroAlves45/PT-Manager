@@ -11,8 +11,8 @@ Atualizado: 2026-11-04
 - Site: `legalReviewed = true`, IVA escondido até decidir quem fatura. Guias das lojas em
   `docs/blueprints/sprint_8/8D/03..07`. `mobile.yml` gera o APK de debug em cada push.
 - Mutações 9/9 backend e 15/15 frontend; revisões de segurança sem C/H/M.
-- **Falta (Leandro):** contas Apple/Google, `.well-known`, testar o APK contra produção, decidir faturação/IVA,
-  aprovar `docs_about_app`. Ver `Sessions/2026-11-04-sprint8d4-app-nativa.md`.
+- Na `main` (`49bb973`) e em produção (Render live 2026-11-04 13:13 UTC). `docs_about_app`: RN-021, RN-017, ADR-003.
+- **Falta (Leandro):** contas Apple/Google, `.well-known`, testar o APK contra produção, decidir faturação/IVA. Ver `Sessions/2026-11-04-sprint8d4-app-nativa.md`.
 
 ## Ajustes pré-8D (2026-11-03): na `main` (`43f1b07`) e em produção
 
