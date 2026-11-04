@@ -102,6 +102,18 @@ describe('Pricing', () => {
     }
     expect(screen.getByText('Mais popular')).toBeInTheDocument();
   });
+
+  it('sem aviso de IVA não mostra texto de IVA', () => {
+    render(<Pricing plans={plans} signupUrl={SIGNUP} vatNotice={null} />);
+    expect(screen.queryByText(/IVA/)).not.toBeInTheDocument();
+  });
+
+  it('mostra o aviso de IVA escolhido por baixo dos planos', () => {
+    render(
+      <Pricing plans={plans} signupUrl={SIGNUP} vatNotice="Isento de IVA (art. 53.º do CIVA)" />
+    );
+    expect(screen.getByText('Isento de IVA (art. 53.º do CIVA)')).toBeInTheDocument();
+  });
 });
 
 describe('Faq', () => {

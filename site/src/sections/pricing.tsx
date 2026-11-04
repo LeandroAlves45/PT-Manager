@@ -57,9 +57,11 @@ function PricingCard({ plan, signupUrl }: { plan: Plan; signupUrl: string }) {
 interface PricingProps {
   plans: readonly Plan[];
   signupUrl: string;
+  /** Aviso de IVA por baixo dos cartões; `null` não mostra nada. */
+  vatNotice?: string | null;
 }
 
-export function Pricing({ plans, signupUrl }: PricingProps) {
+export function Pricing({ plans, signupUrl, vatNotice = null }: PricingProps) {
   return (
     <section id="planos" aria-labelledby="t-planos" className="pt-[clamp(4.5rem,10vw,8rem)]">
       <Container>
@@ -71,6 +73,7 @@ export function Pricing({ plans, signupUrl }: PricingProps) {
             <PricingCard key={plan.code} plan={plan} signupUrl={signupUrl} />
           ))}
         </div>
+        {vatNotice && <p className="text-muted-foreground mt-4 text-sm">{vatNotice}</p>}
       </Container>
     </section>
   );

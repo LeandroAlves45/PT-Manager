@@ -8,6 +8,15 @@ import type { Plan } from '@/domain/types';
  * Os preços (20 €/40 €) vivem no dashboard Stripe, fora do repo: confirmados pelo utilizador
  * em 2026-09-25. Mudar lá obriga a mudar aqui.
  */
+/** Avisos de IVA possíveis por baixo dos preços. */
+export type VatNotice = 'IVA incluído' | 'Isento de IVA (art. 53.º do CIVA)';
+
+/**
+ * Aviso de IVA mostrado na secção de planos. `null` esconde-o: fica assim até estar decidido
+ * quem fatura e em que regime (decisão de 2026-11-04). Escolher um dos dois textos acima.
+ */
+export const vatNotice: VatNotice | null = null;
+
 export const plans: readonly Plan[] = [
   {
     code: 'FREE',

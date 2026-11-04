@@ -9,8 +9,8 @@ import type { DocumentPath, SiteDocument } from '@/domain/types';
  * que é o que as lojas de apps e o Google exigem) e não entram no sitemap.
  */
 
-/** Passa a `true` depois da revisão jurídica e de preencher `legalOperator`. */
-export const legalReviewed = false;
+/** `true`: textos assumidos pelo responsável (2026-11-04); exige `legalOperator` preenchido. */
+export const legalReviewed = true;
 
 /** Marca de um campo por preencher. Um teste impede publicar como revisto com ela. */
 export const PENDING_FIELD = 'A preencher antes da publicação';
@@ -18,13 +18,13 @@ export const PENDING_FIELD = 'A preencher antes da publicação';
 /** Quem é responsável pelo serviço (pessoa singular, sem empresa). */
 export const legalOperator = {
   /** Nome completo do responsável, como vai aparecer nas lojas de apps. */
-  name: PENDING_FIELD,
+  name: 'Leandro Alves',
   /** Morada ou localidade de contacto (as lojas podem exigir morada pública na UE). */
-  address: PENDING_FIELD,
+  address: 'Rua Central de Vila Verde, Nº 366, Gondim-Maia, Portugal',
 } as const;
 
 /** Data da última revisão de todos os textos. */
-const UPDATED_ON = '2026-10-28';
+const UPDATED_ON = '2026-11-04';
 
 export interface LegalLinks {
   /** Origem da aplicação (`https://app.<dominio>`). */
@@ -136,6 +136,10 @@ function privacy({ appUrl, contactEmail }: LegalLinks): SiteDocument {
           {
             kind: 'paragraph',
             text: 'A aplicação usa apenas o cookie estritamente necessário para manter a sessão iniciada (até 30 dias, renovado enquanto usas a aplicação) e guarda no navegador a preferência de tema claro ou escuro. Não há cookies de publicidade nem de análise.',
+          },
+          {
+            kind: 'paragraph',
+            text: 'Na app PT Manager para Android e iOS não há cookies: a sessão fica guardada no armazenamento seguro do telemóvel (Keystore no Android, Keychain no iOS) e apaga-se quando terminas a sessão ou eliminas a conta.',
           },
         ],
       },
@@ -373,6 +377,7 @@ function accountDeletion({ appUrl, contactEmail }: LegalLinks): SiteDocument {
               'Entra na aplicação ou na app PT Manager.',
               'Abre "Conta e segurança" no menu do teu perfil.',
               'Escolhe "Eliminar conta", confirma com a tua palavra-passe e escreve ELIMINAR.',
+              'Se entras só com o Google, a app pede que tenhas entrado há menos de 10 minutos. Se não, termina a sessão e volta a entrar antes de eliminar.',
             ],
           },
           {

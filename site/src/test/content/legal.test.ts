@@ -72,7 +72,8 @@ describe('documentos legais', () => {
   });
 
   it('não pode ser marcado como revisto com campos por preencher', () => {
-    const pending = Object.values(legalOperator).some((value) => value === PENDING_FIELD);
+    const values: readonly string[] = Object.values(legalOperator);
+    const pending = values.some((value) => value === PENDING_FIELD);
     expect(legalReviewed && pending).toBe(false);
   });
 });
