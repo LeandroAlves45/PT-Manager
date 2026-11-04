@@ -495,3 +495,23 @@ com um corpo real.
   «expect(element).toBeInTheDocument()», não «Unable to find». Esperar pelo `pathname` e usar
   `level: 1`. Subir timeouts ou pré-carregar páginas não resolve (tentado em `45e0386` e `70c84a0`).
 - **Botão do menu Radix aberto não se encontra por papel (2026-11-03, avatar com iniciais):** com o `DropdownMenu` aberto, o Radix põe `aria-hidden` no resto da página e `getByRole('button', { name })` falha com "Unable to find". Para verificar o trigger depois de abrir o menu, usar `{ hidden: true }` ou guardar a referência antes de abrir.
+
+## 2026-11-04: 8D-4 app nativa (Capacitor)
+
+- **CapacitorHttp ignora o corpo quando o `fetch` recebe um `Request`** (o que o `openapi-fetch` faz) e o
+  multipart é frágil: a app usa o `fetch` da WebView com uma política CORS própria no backend.
+- **No nativo, `credentials: 'include'` parte tudo:** com a política CORS sem credenciais o browser rejeita a
+  resposta. E o middleware punha `X-CSRF-Token` em todas as rotas `/api/v1/auth/*` (ex. `/auth/account`), o que
+  fazia falhar o preflight na app. As duas coisas decidem-se com `isNativeApp()`.
+- **`isNativeApp()` é o único ponto que chama o Capacitor** (`shared/native/platform.ts`): os testes simulam só
+  esse módulo com `vi.mock` + `vi.hoisted`. Uma fábrica de `vi.mock` não pode usar imports do topo: importar
+  dentro dela (`async () => (await import('@/test/native-fakes')).secureStorageModule(fake)`).
+- **Esconder um componente com hooks na app:** um `return null` antes dos hooks parte `rules-of-hooks`; usar um
+  wrapper (`GoogleSignInSection` → `GoogleSignInSectionWeb`).
+- **Safe-area no Capacitor 8:** o `SystemBars` (no core) trata as margens (`insetsHandling: 'css'`), por isso o
+  plugin `@capacitor/status-bar` não é preciso. Usar `env(safe-area-inset-top)`; em WebViews antigas o
+  Capacitor mete padding e o env vale 0.
+- **`npx cap add ios` funciona no Windows** (Swift Package Manager, sem CocoaPods); compilar continua a exigir
+  macOS (job manual do `mobile.yml`).
+- **`node -e` com template strings e backticks no bash** come partes do código (o bash executa os backticks):
+  escrever scripts em ficheiro no scratchpad.

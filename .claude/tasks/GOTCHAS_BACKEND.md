@@ -367,3 +367,31 @@ o PostgreSQL antes de corrigir:
 - **Migrations geradas no Windows saem com BOM e CRLF:** `dotnet format --include <migration>.cs` antes
   do commit (o `.Designer.cs` fica com BOM, como os anteriores).
 - **A API em execução bloqueia os DLLs:** parar o `preview_start api` antes de `dotnet build` da solução.
+
+## 2026-11-04: 8D-4 app nativa (CORS da app, rotas nativas, auth_time)
+
+- **`[RequireOrigin]` no `AuthController` está na classe:** todas as rotas `/api/v1/auth/*` (incluindo
+  `change-password` e `password-reset/*`) dão 403 a quem não manda um Origin da allowlist, ou seja, à app.
+  A sessão nativa do 8D-2 só cobriu login/refresh/logout/convite: as rotas de password que a app usa foram
+  acrescentadas ao `NativeAuthController` (mesmos handlers e limites). Antes de dizer que um cliente novo
+  "funciona", listar todas as rotas que os ecrãs dele chamam e os filtros de cada controller.
+- **CORS por origem, não por rota:** um `ICorsPolicyProvider` (`ApiCorsPolicyProvider`) troca para a política
+  `NativeApp` (sem credenciais, sem `X-CSRF-Token`) quando o Origin é `capacitor://localhost` ou
+  `https://localhost`. `Cors:AllowedOrigins` recusa `https://localhost` para nunca chegar ao `RequireOriginFilter`.
+- **O ASP.NET devolve `Access-Control-Allow-Headers` com a lista da política mesmo quando o cabeçalho pedido
+  não está nela:** quem recusa é o browser. Testar que o cabeçalho não está na lista, não que a lista falta.
+- **`auth_time` no refresh:** usar o `MIN(CreatedAt)` da família do refresh token; o `issuedAt` do access token
+  renovava o "login recente" a cada 15 min (mutação M2 provou-o). Tokens antigos sem a claim contam como
+  login antigo.
+- **Reposição de password com token inválido responde 401 com código** (`authentication_password_reset_invalid`),
+  não 400.
+- **Script de mutações no Windows:** a escrita de reposição pode falhar (`UNKNOWN: open`) com o ficheiro preso;
+  repetir a escrita e confirmar no fim com `git status` que só ficaram as alterações do índice (a M2 ficou
+  aplicada numa primeira corrida e foi reposta com `git checkout --`).
+- **Se um dia houver limpeza de refresh tokens antigos, apagar por família inteira** (ou guardar `SignedInAt`
+  na família): o `auth_time` do refresh é o `MIN(CreatedAt)` da família e uma limpeza por linha renovaria
+  sozinha a janela de 10 min da eliminação de conta (achado LOW da revisão de segurança, 2026-11-04).
+- **Endpoint novo = dois testes de superfície a atualizar:** `ApiContractArchitectureTests` (contagem de ações e
+  operações) e `docs/api/api-surface.v1.txt` (regenerar com o teste `RegenerateSnapshot`, tirando o `Skip` só
+  para essa corrida). Correr a suite completa depois de acrescentar rotas, não só os testes da feature (CI #79
+  vermelho por isto).
