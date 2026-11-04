@@ -73,11 +73,13 @@ jobs:
           path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 14
 
+      # O AAB assinado (o que vai para a Play Store) só sai da main; as branches só fazem o APK.
       - name: Chave de upload disponível?
         id: signing
         env:
           KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-        run: echo "available=$([ -n "$KEYSTORE" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' }}
+        run: echo "available=$([ -n "$KEYSTORE" ] && [ "$IS_MAIN" = true ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
 
       - name: AAB de release assinado
         if: steps.signing.outputs.available == 'true'
@@ -88,6 +90,8 @@ jobs:
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
+          # A chave sai do disco mesmo que o Gradle falhe.
+          trap 'rm -f "$RUNNER_TEMP/upload.jks"' EXIT
           echo "$KEYSTORE" | base64 --decode > "$RUNNER_TEMP/upload.jks"
           ./gradlew bundleRelease --no-daemon \
             -PversionCode=${{ github.run_number }} \
@@ -95,7 +99,6 @@ jobs:
             -Pandroid.injected.signing.store.password="$STORE_PASSWORD" \
             -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
             -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
-          rm -f "$RUNNER_TEMP/upload.jks"
 
       - uses: actions/upload-artifact@v4
         if: steps.signing.outputs.available == 'true'
