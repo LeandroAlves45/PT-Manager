@@ -12,6 +12,8 @@ import {
 import { AuthContext, type AuthStatus } from '@/app/providers/auth-context';
 import { apiClient, refreshSession } from '@/shared/api/client';
 import { clearSession, getSession, subscribe } from '@/shared/api/session';
+import { isNativeApp } from '@/shared/native/platform';
+import { clearNativeTokens, readNativeTokens } from '@/shared/native/token-store';
 import {
   publishSessionInvalidated,
   subscribeSessionInvalidated,
@@ -89,7 +91,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // O logout pode falhar (rede, sessão já revogada). A sessão local é limpa na mesma:
     // manter o utilizador "dentro" da aplicação depois de ele pedir para sair é pior.
     try {
-      await apiClient.POST('/api/v1/auth/logout');
+      if (isNativeApp()) await signOutNative();
+      else await apiClient.POST('/api/v1/auth/logout');
     } catch {
       // Falha de rede: o cookie de refresh pode continuar válido no servidor até expirar,
       // mas a sessão local é limpa na mesma e a falha não chega a quem chamou `signOut`.
@@ -103,4 +106,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo(() => ({ status, session, signOut }), [status, session, signOut]);
 
   return <AuthContext value={value}>{children}</AuthContext>;
+}
+
+/**
+ * Termina a sessão da app: revoga no servidor com o par guardado e apaga-o do armazenamento
+ * seguro mesmo que o pedido falhe (sem rede, sessão já revogada).
+ */
+async function signOutNative(): Promise<void> {
+  const tokens = await readNativeTokens();
+  try {
+    if (tokens !== null) {
+      await apiClient.POST('/api/v1/native/auth/logout', {
+        body: { refresh_token: tokens.refreshToken, csrf_token: tokens.csrfToken },
+      });
+    }
+  } finally {
+    await clearNativeTokens();
+  }
 }

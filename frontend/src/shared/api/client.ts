@@ -15,6 +15,8 @@ import { publishSessionInvalidated } from '@/shared/api/session-events';
 import { env } from '@/shared/config/env';
 import { accessCutMessage } from '@/shared/lib/accessNotices';
 import { setPendingAuthNotice } from '@/shared/lib/auth-notice';
+import { isNativeApp } from '@/shared/native/platform';
+import { clearNativeTokens, readNativeTokens, saveNativeTokens } from '@/shared/native/token-store';
 
 /**
  * Cliente HTTP único da aplicação.
@@ -27,9 +29,14 @@ import { setPendingAuthNotice } from '@/shared/lib/auth-notice';
  * 1. `Authorization: Bearer` com o token em memória;
  * 2. `X-CSRF-Token` nas rotas de autenticação, que usam o cookie de refresh;
  * 3. refresh único e serializado quando a API devolve 401, com uma só repetição.
+ *
+ * Na app nativa (Capacitor) não há cookie: o refresh token vem do armazenamento seguro e vai
+ * no corpo de `/api/v1/native/auth/refresh`, sem credenciais nem `X-CSRF-Token` (a política
+ * CORS da app não os aceita).
  */
 
 const AUTH_PREFIX = `${env.apiPrefix}/auth`;
+const NATIVE_AUTH_PREFIX = `${env.apiPrefix}/native/auth`;
 
 /** Rotas que nunca devem despoletar refresh: são elas próprias o mecanismo de sessão. */
 const SESSION_ENDPOINTS = new Set([
@@ -37,6 +44,9 @@ const SESSION_ENDPOINTS = new Set([
   `${AUTH_PREFIX}/csrf`,
   `${AUTH_PREFIX}/login`,
   `${AUTH_PREFIX}/logout`,
+  `${NATIVE_AUTH_PREFIX}/refresh`,
+  `${NATIVE_AUTH_PREFIX}/login`,
+  `${NATIVE_AUTH_PREFIX}/logout`,
 ]);
 
 /** Nome do lock partilhado entre separadores.*/
@@ -63,6 +73,8 @@ export function refreshSession(): Promise<boolean> {
     // caso prevalece o estado mais recente, sem o apagar nem o substituir.
     const startedAt = getSessionVersion();
     const isStale = () => getSessionVersion() !== startedAt;
+
+    if (isNativeApp()) return refreshNativeSession(isStale);
 
     // O CSRF é obtido já dentro do lock. Assim, outro separador não o consegue substituir
     // entre o bootstrap e a rotação do refresh cookie partilhado.
@@ -106,6 +118,45 @@ export function refreshSession(): Promise<boolean> {
   });
 
   return inFlightRefresh;
+}
+
+/**
+ * Refresh da app nativa: o par refresh token + CSRF sai do armazenamento seguro e o par
+ * rodado volta para lá. Corre dentro do mesmo `inFlightRefresh`, por isso nunca há dois
+ * refreshes do mesmo token ao mesmo tempo (o backend revogaria a família inteira).
+ */
+async function refreshNativeSession(isStale: () => boolean): Promise<boolean> {
+  const tokens = await readNativeTokens();
+  if (isStale()) return getSession() !== null;
+
+  if (tokens === null) {
+    clearSession();
+    return false;
+  }
+
+  const response = await fetch(`${env.apiBaseUrl}${NATIVE_AUTH_PREFIX}/refresh`, {
+    method: 'POST',
+    credentials: 'omit',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: tokens.refreshToken, csrf_token: tokens.csrfToken }),
+  });
+
+  if (isStale()) return getSession() !== null;
+
+  if (response.status === 401 || response.status === 403) {
+    await clearNativeTokens();
+    clearSession();
+    publishSessionInvalidated();
+    return false;
+  }
+
+  if (!response.ok) throw toApiProblem(response.status, await readResponseBody(response));
+
+  const body = (await response.json()) as components['schemas']['NativeSessionResponse'];
+  // O token antigo já foi rodado no servidor: guardar o novo antes de expor a sessão.
+  await saveNativeTokens({ refreshToken: body.refresh_token, csrfToken: body.csrf_token });
+  setSession(toSession(body));
+  return true;
 }
 
 async function readResponseBody(response: Response): Promise<unknown> {
@@ -203,8 +254,9 @@ const authMiddleware: Middleware = {
       request.headers.set('Authorization', `Bearer ${accessToken}`);
     }
 
-    // O CSRF só protege o que usa o cookie de refresh, e é aí que o backend o exige.
-    if (request.url.includes(AUTH_PREFIX)) {
+    // O CSRF só protege o que usa o cookie de refresh, e é aí que o backend o exige. A app
+    // nativa não usa o cookie e a política CORS dela não aceita o cabeçalho.
+    if (!isNativeApp() && request.url.includes(AUTH_PREFIX)) {
       const csrfToken = getCsrfToken();
       if (csrfToken !== null) request.headers.set('X-CSRF-Token', csrfToken);
     }
@@ -254,7 +306,8 @@ const authMiddleware: Middleware = {
 
 export const apiClient = createClient<paths>({
   baseUrl: env.apiBaseUrl,
-  credentials: 'include',
+  // Na app não há cookie a enviar, e a política CORS da app não permite credenciais.
+  credentials: isNativeApp() ? 'omit' : 'include',
   fetch: (request) => globalThis.fetch(request),
 });
 

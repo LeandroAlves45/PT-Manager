@@ -32,8 +32,9 @@ public sealed class ApiContractArchitectureTests
     private const int ExpectedConcreteControllers = 37;
     // Tomas dos suplementos do plano: +3 ações. Moderação: +5 (bloqueio de suplemento e de
     // personal trainer, fila de suplementos). Importação CSV do catálogo global: +2 ações.
-    private const int ExpectedDeclaredActions = 203;
-    private const int ExpectedEffectiveOperations = 208;
+    // App nativa: mudar e repor a palavra-passe sem Origin (+3 ações).
+    private const int ExpectedDeclaredActions = 206;
+    private const int ExpectedEffectiveOperations = 211;
 
     private static readonly IReadOnlyList<Operation> Operations = DiscoverOperations();
 

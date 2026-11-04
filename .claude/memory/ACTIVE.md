@@ -1,6 +1,18 @@
-# Estado ativo: ajustes pré-8D em produção (2026-11-03, merge `43f1b07`); próximo 8D-4 (Capacitor)
+# Estado ativo: 8D-4 app nativa + 8D-5 guias (2026-11-04, branch `feature/8d-app-nativa`)
 
-Atualizado: 2026-11-03
+Atualizado: 2026-11-04
+
+## 8D-4 app nativa (Capacitor) e 8D-5 guias (2026-11-04)
+
+- Branch `feature/8d-app-nativa`: `346dd1d` site, `2fbe031` backend, `589d747` app, `2c788d2` CI.
+- App v1 só clientes, `pt.ptmanager.app`, Capacitor 8.6.0 (`frontend/android`, `frontend/ios`), HTTP pelo
+  fetch da WebView com política CORS `NativeApp` (sem credenciais). Rotas nativas de password, `auth_time` e
+  reautenticação na eliminação de contas só Google.
+- Site: `legalReviewed = true`, IVA escondido até decidir quem fatura. Guias das lojas em
+  `docs/blueprints/sprint_8/8D/03..07`. `mobile.yml` gera o APK de debug em cada push.
+- Mutações 9/9 backend e 15/15 frontend; revisões de segurança sem C/H/M.
+- **Falta (Leandro):** contas Apple/Google, `.well-known`, testar o APK contra produção, decidir faturação/IVA,
+  aprovar `docs_about_app`. Ver `Sessions/2026-11-04-sprint8d4-app-nativa.md`.
 
 ## Ajustes pré-8D (2026-11-03): na `main` (`43f1b07`) e em produção
 

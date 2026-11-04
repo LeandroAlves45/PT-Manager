@@ -250,6 +250,22 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
         return outcome;
     }
 
+    /// <summary>
+    /// O refresh não é um login: o access token novo guarda o momento em que a família de
+    /// tokens nasceu (o login), para que "login recente" não se renove sozinho.
+    /// </summary>
+    private async Task<AuthenticatedPrincipal> WithFamilySignInAsync(
+        AuthenticatedPrincipal principal,
+        Guid familyId,
+        CancellationToken cancellationToken)
+    {
+        var signedInAt = await _dbContext.RefreshTokens
+            .AsNoTracking()
+            .Where(token => token.FamilyId == familyId)
+            .MinAsync(token => (DateTime?)token.CreatedAt, cancellationToken);
+        return principal with { AuthenticatedAt = signedInAt };
+    }
+
     private async Task<RotateRefreshStoreResult?> RebuildCommittedRotationAsync(
         GeneratedOpaqueToken generated,
         GeneratedOpaqueToken csrf,
@@ -270,6 +286,7 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
         var principal = await ResolvePrincipalAsync(user, cancellationToken);
         if (principal is null)
             return RotateRefreshStoreResult.Failure(RotateRefreshStoreStatus.PrincipalInvalid);
+        principal = await WithFamilySignInAsync(principal, committed.FamilyId, cancellationToken);
 
         return RotateRefreshStoreResult.Rotated(
             principal,
@@ -321,6 +338,7 @@ internal sealed class AuthenticationSessionStore : IAuthenticationSessionStore
         var principal = await ResolvePrincipalAsync(user, cancellationToken);
         if (principal is null)
             return RotateRefreshStoreResult.Failure(RotateRefreshStoreStatus.PrincipalInvalid);
+        principal = await WithFamilySignInAsync(principal, current.FamilyId, cancellationToken);
         establish(principal);
 
         current.Revoke(now);

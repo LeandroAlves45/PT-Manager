@@ -6,6 +6,12 @@ notas de `.claude/memory/Sessions/`.
 
 ## Entrada rápida
 
+**2026-11-04: 8D-4 app nativa + 8D-5 guias (branch `feature/8d-app-nativa`).** Capacitor 8.6.0, v1 só
+clientes, `pt.ptmanager.app`; fetch da WebView + CORS `NativeApp` sem credenciais (não CapacitorHttp);
+rotas nativas de password (o `[RequireOrigin]` da classe `AuthController` dava 403 à app); `auth_time`
+(família do refresh) para eliminar contas só Google; guias das lojas em `8D/03..07`. Ver
+`Sessions/2026-11-04-sprint8d4-app-nativa.md`.
+
 **2026-11-03: ajustes pré-8D EM PRODUÇÃO (merge `43f1b07`, Render live).** Macros por plano
 (corte no servidor), vídeo por link YouTube/Vimeo (`ExternalVideoUrl` no Domain), saudação com nome,
 iniciais no menu de perfil (`full_name` em `/auth/account`), site com capturas reais, chunk 656 → 482 kB.

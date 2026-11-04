@@ -6,11 +6,14 @@ using Api.Http;
 using Api.Security;
 using Application.Errors;
 using Application.Features.Authentication.AcceptClientInvite;
+using Application.Features.Authentication.ChangePassword;
 using Application.Features.Authentication.Dtos;
 using Application.Features.Authentication.Login;
 using Application.Features.Authentication.Logout;
 using Application.Features.Authentication.RefreshSession;
 using Application.Features.Authentication.RegisterInvitedClient;
+using Application.Features.Authentication.RequestPasswordReset;
+using Application.Features.Authentication.ResetPassword;
 using Application.Results;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -148,6 +151,54 @@ public sealed class NativeAuthController : ControllerBase
         AuthenticationSecurityLog.Result(
             _logger, SecurityLogEvents.SignUp, "native_register_invited_client", result);
         return CompleteSession(result);
+    }
+
+    /// <summary>Muda a password do utilizador autenticado (Bearer).</summary>
+    /// <remarks>Mesmo handler, lockout e limite da rota web, sem exigir Origin.</remarks>
+    [HttpPost("change-password")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [Authorize(ApiPolicyNames.Authenticated)]
+    [EnableRateLimiting(ApiRateLimitPolicyNames.ChangePassword)]
+    public async Task<IActionResult> ChangePasswordAsync(
+        [FromBody] ChangePasswordRequest request,
+        [FromServices] ChangePasswordHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(
+            new ChangePasswordCommand(request.CurrentPassword, request.NewPassword, request.ConfirmNewPassword),
+            cancellationToken);
+        AuthenticationSecurityLog.Result(_logger, SecurityLogEvents.PasswordChange, "native_change_password", result);
+        return result.IsSuccess ? NoContent() : Problem(result.Error!);
+    }
+
+    /// <summary>Pede o email de reposição da password. 204 sempre, exista ou não a conta.</summary>
+    [HttpPost("password-reset/request")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [EnableRateLimiting(ApiRateLimitPolicyNames.PasswordResetRequest)]
+    public async Task<IActionResult> RequestPasswordResetAsync(
+        [FromBody] PasswordResetRequest request,
+        [FromServices] RequestPasswordResetHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(new RequestPasswordResetCommand(request.Email), cancellationToken);
+        AuthenticationSecurityLog.Result(_logger, SecurityLogEvents.PasswordReset, "native_request_password_reset", result);
+        return result.IsSuccess ? NoContent() : Problem(result.Error!);
+    }
+
+    /// <summary>Define a nova password com o token do email. O servidor revoga todas as sessões.</summary>
+    [HttpPost("password-reset/complete")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [EnableRateLimiting(ApiRateLimitPolicyNames.PasswordResetComplete)]
+    public async Task<IActionResult> CompletePasswordResetAsync(
+        [FromBody] PasswordResetCompletionRequest request,
+        [FromServices] ResetPasswordHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(
+            new ResetPasswordCommand(request.Token, request.NewPassword, request.ConfirmNewPassword),
+            cancellationToken);
+        AuthenticationSecurityLog.Result(_logger, SecurityLogEvents.PasswordReset, "native_complete_password_reset", result);
+        return result.IsSuccess ? NoContent() : Problem(result.Error!);
     }
 
     /// <summary>Devolve a sessão com o refresh token no corpo, sem escrever cookies.</summary>

@@ -170,6 +170,9 @@ describe('Escolha do plano alimentar', () => {
     );
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/portal/nutrition'));
+    // A lista também mostra 'Dias de descanso': esperar pela página nova antes de procurar o texto,
+    // senão o elemento encontrado pode ser o da lista, que desmonta logo a seguir.
+    await screen.findByRole('heading', { name: 'Nutrição', level: 1 });
     expect(await screen.findByText('Dias de descanso')).toBeInTheDocument();
     expect(account.bodies).toEqual([{ meal_plan_id: REST_DAY_MEAL_PLAN_ID }]);
   });

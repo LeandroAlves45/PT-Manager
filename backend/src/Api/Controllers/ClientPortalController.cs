@@ -279,7 +279,7 @@ public sealed class ClientPortalController : ApiControllerBase
     {
         ArgumentNullException.ThrowIfNull(request);
         var result = await handler.HandleAsync(
-            new DeleteMyAccountCommand(request.Password, request.Confirmation ?? string.Empty),
+            new DeleteMyAccountCommand(request.Password, request.Confirmation ?? string.Empty, ReadAuthenticatedAt()),
             cancellationToken);
 
         // Sem auditoria administrativa (essa é só do superuser): o rasto é este evento,
@@ -501,4 +501,15 @@ public sealed class ClientPortalController : ApiControllerBase
         CancellationToken cancellationToken) =>
         RespondAsync(
             handler.HandleAsync(new UnmarkMySupplementIntakeCommand(assignmentId), cancellationToken));
+
+    /// <summary>Momento do login (claim <c>auth_time</c>); <c>null</c> se o token não o trouxer.</summary>
+    private DateTime? ReadAuthenticatedAt() =>
+        long.TryParse(
+            User.FindFirst(ApiClaimNames.AuthTime)?.Value,
+            System.Globalization.NumberStyles.None,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out var seconds)
+            && seconds <= DateTimeOffset.MaxValue.ToUnixTimeSeconds()
+            ? DateTimeOffset.FromUnixTimeSeconds(seconds).UtcDateTime
+            : null;
 }

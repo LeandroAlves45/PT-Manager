@@ -66,6 +66,13 @@ public static class ClientPortalErrors
     /// para os três, sem revelar qual. Sai como erro do campo <c>password</c> (400), e não como
     /// 401, para o cliente da API não o confundir com uma sessão expirada.
     /// </summary>
+    public static readonly Error AccountDeletionReauthenticationRequired = Error.Validation([
+        new ValidationError(
+            "Confirmation",
+            "portal_account_deletion_reauthentication_required",
+            "Sign in again before deleting the account.")
+    ]);
+
     public static readonly Error AccountDeletionPasswordInvalid = Error.Validation([
         new ValidationError(
             "Password",

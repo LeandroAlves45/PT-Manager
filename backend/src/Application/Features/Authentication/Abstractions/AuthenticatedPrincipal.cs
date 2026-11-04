@@ -8,6 +8,12 @@ public sealed record AuthenticatedPrincipal
     public string Role { get; }
     public string SecurityStamp { get; }
 
+    /// <summary>
+    /// Momento do login que abriu a sessão. <c>null</c> quando a autenticação acontece agora
+    /// (login, registo, convite); o refresh preenche-o com o início da família de tokens.
+    /// </summary>
+    public DateTime? AuthenticatedAt { get; init; }
+
     /// <summary>Valida o contrato devolvido pela Infrastructure.</summary>
     public AuthenticatedPrincipal(
         Guid userId,

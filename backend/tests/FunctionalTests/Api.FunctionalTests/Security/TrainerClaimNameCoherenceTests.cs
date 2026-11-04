@@ -52,6 +52,22 @@ public sealed class TrainerClaimNameCoherenceTests : IDisposable
     }
 
     [Fact]
+    public void IssuerAndHttpBoundary_DeclareTheSameAuthTimeClaimName()
+    {
+        // A eliminação de conta lê auth_time na fronteira; um nome diferente no emissor
+        // faria todas as contas sem password parecer ter um login antigo.
+        var issuerClaimNames = typeof(Infrastructure.Data.PtManagerDbContext)
+            .Assembly
+            .GetType("Infrastructure.Identity.JwtAccessTokenIssuer+ClaimNames", throwOnError: true)!;
+
+        var issuedName = (string)issuerClaimNames
+            .GetField("AuthTime", BindingFlags.NonPublic | BindingFlags.Static)!
+            .GetRawConstantValue()!;
+
+        Assert.Equal(ApiClaimNames.AuthTime, issuedName);
+    }
+
+    [Fact]
     public async Task TokenCarryingThePreviousClaimName_IsRejectedByThePipeline()
     {
         var trainerId = Guid.NewGuid();

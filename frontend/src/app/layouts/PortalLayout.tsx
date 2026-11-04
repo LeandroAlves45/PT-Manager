@@ -53,7 +53,7 @@ export function PortalLayout() {
       <header
         data-testid="portal-header"
         className={cn(
-          'border-border sticky top-0 z-10 flex h-14 items-center justify-between gap-2 border-b px-4',
+          'border-border sticky top-0 z-10 box-content flex h-14 items-center justify-between gap-2 border-b px-4 pt-[env(safe-area-inset-top)]',
           header === null && 'bg-background/72 backdrop-blur-[14px]'
         )}
         style={

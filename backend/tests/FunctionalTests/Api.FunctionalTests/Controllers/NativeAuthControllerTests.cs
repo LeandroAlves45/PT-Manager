@@ -1,7 +1,11 @@
 using System.Net;
 using System.Text.Json;
 using Api.FunctionalTests.Support;
+using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace Api.FunctionalTests.Controllers;
 
@@ -17,6 +21,9 @@ public sealed class NativeAuthControllerTests : IAsyncLifetime
     private const string RefreshRoute = "/api/v1/native/auth/refresh";
     private const string LogoutRoute = "/api/v1/native/auth/logout";
     private const string WebLoginRoute = "/api/v1/auth/login";
+    private const string ChangePasswordRoute = "/api/v1/native/auth/change-password";
+    private const string PasswordResetRequestRoute = "/api/v1/native/auth/password-reset/request";
+    private const string PasswordResetCompleteRoute = "/api/v1/native/auth/password-reset/complete";
 
     private readonly PostgresApiFixture _database;
     private ApiWebApplicationFactory _factory = null!;
@@ -95,6 +102,37 @@ public sealed class NativeAuthControllerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Login_AccessTokenCarriesTheSignInTime()
+    {
+        var session = await RegisterNativeSessionAsync("native-auth-time");
+
+        var authTime = AuthTimeOf(session.AccessToken);
+
+        Assert.InRange(authTime, DateTimeOffset.UtcNow.AddMinutes(-1), DateTimeOffset.UtcNow.AddMinutes(1));
+    }
+
+    [Fact]
+    public async Task Refresh_KeepsTheSignInTimeOfTheFamily_NotTheRefreshTime()
+    {
+        var first = await RegisterNativeSessionAsync("native-auth-time-refresh");
+        var userId = new JsonWebToken(first.AccessToken).Subject;
+        var signedInAt = DateTime.UtcNow.AddHours(-1);
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<PtManagerDbContext>();
+            await context.RefreshTokens
+                .Where(token => token.UserId == Guid.Parse(userId))
+                .ExecuteUpdateAsync(setters => setters.SetProperty(token => token.CreatedAt, signedInAt), Token);
+        }
+
+        var rotated = await RefreshAsync(CreateNativeClient(), first.RefreshToken, first.CsrfToken);
+
+        Assert.Equal(HttpStatusCode.OK, rotated.StatusCode);
+        var authTime = AuthTimeOf((await ReadSessionAsync(rotated)).AccessToken);
+        Assert.InRange(authTime, new DateTimeOffset(signedInAt).AddSeconds(-2), new DateTimeOffset(signedInAt).AddSeconds(2));
+    }
+
+    [Fact]
     public async Task Refresh_WrongCsrf_Is403AndKeepsTheSession()
     {
         var session = await RegisterNativeSessionAsync("native-csrf");
@@ -154,6 +192,62 @@ public sealed class NativeAuthControllerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ChangePassword_FromTheApp_IsAcceptedWithoutOrigin_AndTheNewPasswordLogsIn()
+    {
+        var invitation = await AuthTestData.SeedInvitationAsync(_factory, "native-change-password");
+        var session = await ReadSessionAsync(await RegisterAsync(CreateNativeClient(), invitation.RawToken));
+        const string newPassword = "Native-Password-2!";
+
+        var response = await ApiJsonPayload.PostAsync(
+            CreateNativeClient().WithBearer(session.AccessToken),
+            ChangePasswordRoute,
+            new { currentPassword = AuthTestData.Password, newPassword, confirmNewPassword = newPassword },
+            Token);
+        var login = await ApiJsonPayload.PostAsync(
+            CreateNativeClient(), LoginRoute, new { email = invitation.Email, password = newPassword }, Token);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.False(response.Headers.Contains("Set-Cookie"));
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+    }
+
+    [Fact]
+    public async Task ChangePassword_WithoutBearer_Is401()
+    {
+        var response = await ApiJsonPayload.PostAsync(
+            CreateNativeClient(),
+            ChangePasswordRoute,
+            new { currentPassword = AuthTestData.Password, newPassword = "Native-Password-2!", confirmNewPassword = "Native-Password-2!" },
+            Token);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PasswordResetRequest_FromTheApp_Is204WithoutOrigin()
+    {
+        // 204 sempre, exista ou não a conta: igual à rota web.
+        var response = await ApiJsonPayload.PostAsync(
+            CreateNativeClient(), PasswordResetRequestRoute, new { email = "nobody@example.test" }, Token);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PasswordResetComplete_FromTheApp_ReachesTheHandlerWithoutOrigin()
+    {
+        var response = await ApiJsonPayload.PostAsync(
+            CreateNativeClient(),
+            PasswordResetCompleteRoute,
+            new { token = new string('a', 43), newPassword = "Native-Password-2!", confirmNewPassword = "Native-Password-2!" },
+            Token);
+
+        // Token inválido: responde o handler (401 com código), não o filtro de Origin (403).
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("authentication_password_reset_invalid", await TitleOf(response));
+    }
+
+    [Fact]
     public async Task WebLogin_WithoutOrigin_StillIs403()
     {
         // A rota nativa não abre exceções no caminho web: sem Origin continua a ser recusado.
@@ -207,6 +301,9 @@ public sealed class NativeAuthControllerTests : IAsyncLifetime
             root.GetProperty("refresh_token_expires_at").GetDateTime(),
             root.GetProperty("csrf_token").GetString()!);
     }
+
+    private static DateTimeOffset AuthTimeOf(string accessToken) =>
+        DateTimeOffset.FromUnixTimeSeconds(new JsonWebToken(accessToken).GetPayloadValue<long>("auth_time"));
 
     private static async Task<string?> TitleOf(HttpResponseMessage response)
     {

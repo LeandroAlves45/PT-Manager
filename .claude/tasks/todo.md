@@ -1,33 +1,28 @@
-# TODO: ajustes pré-8D (2026-11-03)
+# TODO: 8D-4 app nativa + 8D-5 guias (2026-11-04)
 
-Branch `feature/pre-8d-ajustes`. Plano: `C:\Users\Leandro Alves\.claude\plans\fluffy-leaping-pretzel.md`.
-Guia de aceitação: `.claude/SPEC.md` (local, apagado no fim).
+Spec: `.claude/SPEC.md`. Branch `feature/8d-app-nativa`.
 
 ## Pendente de fases anteriores (Sprint 8+9)
-- [ ] 8C: Leandro executa o runbook; Claude valida (CIDR da Render medido no passo 4)
-- [ ] Leandro: rever `catalog-data/*.csv`, importar em dev e em produção
-- [ ] 8D-4 Capacitor, 8D-5 guias das lojas, 8D-6 submissão (`docs/blueprints/sprint_8/8D/01_o_que_falta.md`)
+- [ ] 8C runbook (Leandro), revisão e importação de `catalog-data/*.csv`.
+- [ ] `QG8DP-PROD-001` verificação manual em produção (Leandro).
 
 ## Este trabalho
-- [x] Branch, SPEC.md, todo.md
-- [x] Macros por plano: domínio, configuração, migration `AddMealPlanShowMacrosToClient`, contratos, portal com macros `null`
-- [x] Vídeo por link: validador partilhado com allowlist, `video_url` no portal
-- [x] Frontend: Nutrição sem barras, chips por flag, interruptor no editor, campo de link, botão "Ver no YouTube"
-- [x] Avisos de build/dev + responsividade
-- [x] Site: capturas reais no lugar do painel ilustrativo
-- [x] Suites completas, mutações, code-review-leandro
-- [x] `ci.yml` com `feature/**`, push do branch, CI verde
-- [x] `docs/blueprints/sprint_8/8D/02_ajustes_pre_8D.md` (com passos do Neon)
-- [x] Quality gates (7A doc 09 e `backlogs/QualityGates.md`)
-- [x] Memória: ACTIVE, MEMORY, NEST, sessão, GOTCHAS, lessons
-- [x] SPEC "Finalizado" e apagado
-- [x] Avatar do personal trainer e do superuser com iniciais (`full_name` em `/auth/account`)
+- [x] Branch, SPEC.md, todo.md, ler `docs_about_app`
+- [x] Site: `legalReviewed = true`, `vatNotice`, itálico da Saira (proposta)
+- [x] Backend: `auth_time` + reautenticação na eliminação (TDD)
+- [x] Backend: política CORS `NativeApp` (TDD)
+- [x] Frontend: módulo `shared/native` + integração + testes
+- [x] Capacitor: pacotes, config, `android/`, `ios/`, ícones, `vercel.json`
+- [x] CI: `mobile.yml`
+- [x] Guias 8D-5 (03–07)
+- [x] Mutações, revisão de segurança e code review
+- [x] Gates `QG8D4-*` em `backlogs/QualityGates.md`
+- [x] Push, CI verde, merge
+- [x] Documentação (ACTIVE, MEMORY, NEST, sessão, GOTCHAS, lessons), apagar SPEC.md
+- [ ] `docs_about_app` (só com aprovação do Leandro)
 
 ## Review
-- Feito e verde: CI run `41652117839` em `45e0386` (5 jobs). Backend 3653 + 1 skip, frontend 1145
-  (cobertura 90,75/89,18/88,36/82,06), site 121, mutações 3 backend + 7 frontend.
-- Extra pedido a meio: saudação do painel com o nome ("Boas-vindas" neutro).
-- Extra depois do CI: avatar com iniciais. Backend 3655 + 1 skip, frontend 1147 (cobertura
-  90,76/89,18/88,36/82,08), build sem avisos (chunk 482,6 kB), 3/3 mutações.
-- Pendente do Leandro: Neon (consulta e teste da migration), merge e deploy pela ordem
-  migration → Render → Vercel; aprovar as mudanças propostas em `docs_about_app` (RN-014, RN-012).
+- Commits `346dd1d`, `2fbe031`, `589d747`, `2c788d2`; CI #80 verde nos 5 jobs, Mobile #2 verde.
+- Mutações 9/9 backend, 15/15 frontend; revisões de segurança sem C/H/M.
+- Pendentes do Leandro: QG8D4-IOS-CI-001, -DOCS-001, -DEVICE-001, -LINKS-001.
+- **Finalizado** (código); `docs_about_app` à espera de aprovação.

@@ -29,6 +29,18 @@ public sealed class ApiCorsOptionsTests
         Assert.False(options.HasValidOrigins());
     }
 
+    [Theory]
+    [InlineData("https://localhost")]
+    [InlineData("https://LOCALHOST")]
+    public void HasValidOrigins_RejectsTheNativeAppOrigin(string origin)
+    {
+        // https://localhost é a origem de qualquer app Capacitor Android: com credenciais e
+        // no RequireOriginFilter abriria a sessão por cookie a apps de terceiros.
+        var options = new ApiCorsOptions { AllowedOrigins = ["https://app.example.test", origin] };
+
+        Assert.False(options.HasValidOrigins());
+    }
+
     [Fact]
     public void HasValidOrigins_RejectsDuplicateOriginsIgnoringCase()
     {

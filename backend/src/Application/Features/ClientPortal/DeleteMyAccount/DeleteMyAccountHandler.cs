@@ -14,6 +14,9 @@ namespace Application.Features.ClientPortal.DeleteMyAccount;
 /// </summary>
 public sealed class DeleteMyAccountHandler
 {
+    /// <summary>Janela de "login recente" para eliminar uma conta sem password (só Google).</summary>
+    public static readonly TimeSpan RecentSignInWindow = TimeSpan.FromMinutes(10);
+
     private readonly IValidator<DeleteMyAccountCommand> _validator;
     private readonly ITenantContext _tenantContext;
     private readonly IClock _clock;
@@ -45,12 +48,14 @@ public sealed class DeleteMyAccountHandler
         if (!validation.IsValid)
             return Result.Failure(validation.ToApplicationError());
 
+        var now = _clock.UtcNow;
         var status = await _store.DeleteAsync(
             actor.Value.TrainerId,
             actor.Value.UserId,
             string.IsNullOrEmpty(command.Password) ? null : command.Password,
+            IsRecentSignIn(command.AuthenticatedAt, now),
             OperationCorrelation.NewId(),
-            _clock.UtcNow,
+            now,
             cancellationToken);
 
         return status switch
@@ -59,7 +64,17 @@ public sealed class DeleteMyAccountHandler
             MyAccountDeletionStatus.NotFound => Result.Failure(ClientPortalErrors.ProfileNotAvailable),
             MyAccountDeletionStatus.PasswordRequired or MyAccountDeletionStatus.PasswordInvalid =>
                 Result.Failure(ClientPortalErrors.AccountDeletionPasswordInvalid),
+            MyAccountDeletionStatus.ReauthenticationRequired =>
+                Result.Failure(ClientPortalErrors.AccountDeletionReauthenticationRequired),
             _ => throw new ArgumentOutOfRangeException(nameof(status))
         };
     }
+
+    /// <summary>
+    /// Sem password, quem tem um access token roubado (até 15 min) eliminaria a conta só com a
+    /// palavra. Exigir um login recente obriga a passar outra vez pelo Google. Um momento no
+    /// futuro não conta como recente.
+    /// </summary>
+    private static bool IsRecentSignIn(DateTime? authenticatedAt, DateTime now) =>
+        authenticatedAt is { } signedInAt && signedInAt <= now && now - signedInAt <= RecentSignInWindow;
 }

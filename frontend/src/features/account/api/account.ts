@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient, unwrap } from '@/shared/api/client';
 import type { components } from '@/shared/api/schema';
+import { isNativeApp } from '@/shared/native/platform';
 
 type Schemas = components['schemas'];
 
@@ -32,7 +33,11 @@ export function useAccountQuery(enabled = true) {
 export function useChangePasswordMutation() {
   return useMutation({
     mutationFn: async (body: Schemas['ChangePasswordRequest']): Promise<void> => {
-      unwrap(await apiClient.POST('/api/v1/auth/change-password', { body }));
+      unwrap(
+        isNativeApp()
+          ? await apiClient.POST('/api/v1/native/auth/change-password', { body })
+          : await apiClient.POST('/api/v1/auth/change-password', { body })
+      );
     },
   });
 }

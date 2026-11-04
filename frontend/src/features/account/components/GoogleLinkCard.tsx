@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { useLinkGoogleMutation } from '@/features/account/api/account';
 import { PasswordField, authErrorMessage, useGoogleIdentity } from '@/features/auth';
+import { isNativeApp } from '@/shared/native/platform';
 
 /**
  * Cartão "Ligar conta Google" de uma conta com palavra-passe.
@@ -14,6 +15,12 @@ import { PasswordField, authErrorMessage, useGoogleIdentity } from '@/features/a
  * do que não a oferecer.
  */
 export function GoogleLinkCard() {
+  // Sem Google na app nativa (o GIS não funciona numa WebView).
+  if (isNativeApp()) return null;
+  return <GoogleLinkCardWeb />;
+}
+
+function GoogleLinkCardWeb() {
   const link = useLinkGoogleMutation();
   const [currentPassword, setCurrentPassword] = useState('');
   const [failure, setFailure] = useState<string | null>(null);

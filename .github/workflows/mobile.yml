@@ -1,0 +1,149 @@
+name: Mobile
+
+# App Capacitor (portal do cliente) para Android e iOS.
+# - Android: em cada push que mexa no frontend, gera o APK de debug (artefacto para instalar
+#   num telemóvel) e, se os secrets da chave de upload existirem, o AAB de release assinado.
+# - iOS: só manual (runner macOS), compila para o simulador sem assinatura. A assinatura e o
+#   envio para o TestFlight estão no guia docs/blueprints/sprint_8/8D/06_ios_app_store.md.
+
+on:
+  push:
+    branches: [main, 'feature/**']
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/mobile.yml'
+  workflow_dispatch:
+    inputs:
+      ios:
+        description: 'Compilar também o iOS (runner macOS)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # A app chama sempre a API de produção (não há API de staging).
+  VITE_API_BASE_URL: https://api.ptmanager.pt
+
+jobs:
+  android:
+    name: Android
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Install
+        run: npm ci
+
+      - name: Build web
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      # versionCode tem de subir a cada envio para a Play Store: usa o número do run.
+      - name: APK de debug
+        working-directory: frontend/android
+        run: ./gradlew assembleDebug -PversionCode=${{ github.run_number }} --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pt-manager-debug-apk
+          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
+
+      # O AAB assinado (o que vai para a Play Store) só sai da main; as branches só fazem o APK.
+      - name: Chave de upload disponível?
+        id: signing
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' }}
+        run: echo "available=$([ -n "$KEYSTORE" ] && [ "$IS_MAIN" = true ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: AAB de release assinado
+        if: steps.signing.outputs.available == 'true'
+        working-directory: frontend/android
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          # A chave sai do disco mesmo que o Gradle falhe.
+          trap 'rm -f "$RUNNER_TEMP/upload.jks"' EXIT
+          echo "$KEYSTORE" | base64 --decode > "$RUNNER_TEMP/upload.jks"
+          ./gradlew bundleRelease --no-daemon \
+            -PversionCode=${{ github.run_number }} \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/upload.jks" \
+            -Pandroid.injected.signing.store.password="$STORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+
+      - uses: actions/upload-artifact@v4
+        if: steps.signing.outputs.available == 'true'
+        with:
+          name: pt-manager-release-aab
+          path: frontend/android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+  ios:
+    name: iOS (simulador)
+    if: github.event_name == 'workflow_dispatch' && inputs.ios
+    runs-on: macos-26
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # A App Store só aceita builds feitas com o Xcode 26 ou mais recente.
+      - name: Xcode
+        run: |
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -n 1)"
+          xcodebuild -version
+
+      - name: Install
+        run: npm ci
+
+      - name: Build web
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: |
+          if [ ! -d ios ]; then npx cap add ios; fi
+          npx cap sync ios
+
+      - name: Compilar (simulador, sem assinatura)
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App \
+            -sdk iphonesimulator -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO build

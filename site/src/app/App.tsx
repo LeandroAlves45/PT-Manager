@@ -5,7 +5,7 @@ import { faq } from '@/content/faq';
 import { features } from '@/content/features';
 import { findSiteDocument } from '@/content/legal';
 import { contactEmail, primaryNav } from '@/content/navigation';
-import { plans } from '@/content/plans';
+import { plans, vatNotice } from '@/content/plans';
 import type { PagePath } from '@/domain/types';
 import { freePlanNote } from '@/domain/plan';
 import { DocumentArticle } from '@/sections/document';
@@ -49,7 +49,7 @@ export function App({ path = '/' }: AppProps) {
           <>
             <Hero signupUrl={appLinks.signup} freePlanNote={freePlanNote(plans)} />
             <Features features={features} swatches={brandSwatches} />
-            <Pricing plans={plans} signupUrl={appLinks.signup} />
+            <Pricing plans={plans} signupUrl={appLinks.signup} vatNotice={vatNotice} />
             <Faq items={faq} />
           </>
         )}

@@ -524,3 +524,13 @@ Lições capturadas depois de correções do utilizador.
 - **Ler o erro exato antes de mexer em timeouts.** «element could not be found in the document» vem de
   `toBeInTheDocument` sobre um elemento já encontrado e depois desmontado, não de um `findBy` que esgotou o
   tempo. Duas correções por tempo falharam antes de ler o log; a causa era um título duplicado.
+
+## 8D-4 app nativa (2026-11-04)
+
+- **Um cliente novo da API (a app) obriga a mapear todas as rotas que os ecrãs dele chamam e os filtros de
+  cada controller.** O 8D-2 fez a sessão nativa e deu-a por feita; a mudança e a reposição da palavra-passe
+  continuavam atrás do `[RequireOrigin]` da classe e teriam dado 403 na app.
+- **Ler o código do plugin antes de o escolher.** O plano dizia CapacitorHttp; um bug conhecido com `Request`
+  e o multipart da fotografia mudaram a decisão para fetch + CORS, que se testa no backend.
+- **"Login recente" mede-se desde o login, não desde o último token.** Sem a mutação M2 o refresh renovaria a
+  janela sozinho e o teste da janela continuaria verde.

@@ -46,6 +46,7 @@ internal sealed class MyAccountDeletionStore : IMyAccountDeletionStore
         Guid trainerId,
         Guid clientUserId,
         string? password,
+        bool recentSignIn,
         Guid correlationId,
         DateTime now,
         CancellationToken cancellationToken)
@@ -69,7 +70,7 @@ internal sealed class MyAccountDeletionStore : IMyAccountDeletionStore
             try
             {
                 var status = await DeleteOnceAsync(
-                    trainerId, clientUserId, password, correlationId, now, cancellationToken);
+                    trainerId, clientUserId, password, recentSignIn, correlationId, now, cancellationToken);
 
                 // A falha de password incrementa o contador de lockout: também é gravada.
                 if (status is MyAccountDeletionStatus.Deleted or MyAccountDeletionStatus.PasswordInvalid)
@@ -91,6 +92,7 @@ internal sealed class MyAccountDeletionStore : IMyAccountDeletionStore
         Guid trainerId,
         Guid clientUserId,
         string? password,
+        bool recentSignIn,
         Guid correlationId,
         DateTime now,
         CancellationToken cancellationToken)
@@ -105,7 +107,7 @@ internal sealed class MyAccountDeletionStore : IMyAccountDeletionStore
         if (user is null || user.IsDeleted || user.Role != "client")
             return MyAccountDeletionStatus.NotFound;
 
-        var passwordStatus = await VerifyPasswordAsync(user, password);
+        var passwordStatus = await VerifyPasswordAsync(user, password, recentSignIn);
         if (passwordStatus is not null)
             return passwordStatus.Value;
 
@@ -173,12 +175,12 @@ internal sealed class MyAccountDeletionStore : IMyAccountDeletionStore
     /// <summary>
     /// Mesma regra do login: conta bloqueada responde como password errada (sem revelar o
     /// estado) e cada falha conta para o bloqueio. Uma conta sem password (só Google) não
-    /// tem nada a confirmar além da palavra de confirmação.
+    /// tem password a confirmar: exige um login recente.
     /// </summary>
-    private async Task<MyAccountDeletionStatus?> VerifyPasswordAsync(User user, string? password)
+    private async Task<MyAccountDeletionStatus?> VerifyPasswordAsync(User user, string? password, bool recentSignIn)
     {
         if (user.PasswordHash is null)
-            return null;
+            return recentSignIn ? null : MyAccountDeletionStatus.ReauthenticationRequired;
         if (password is null)
             return MyAccountDeletionStatus.PasswordRequired;
         if (await _userManager.IsLockedOutAsync(user))

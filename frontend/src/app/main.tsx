@@ -11,10 +11,16 @@ import { Toaster } from '@/shared/components/ui/sonner';
 import { Tooltip as TooltipPrimitive } from 'radix-ui';
 import { invariant } from '@/shared/lib/invariant';
 import { initSentry } from '@/shared/observability/sentry';
+import { OfflineNotice } from '@/shared/native/OfflineNotice';
+import { isNativeApp } from '@/shared/native/platform';
+import { initNativeShell } from '@/shared/native/shell';
 
 import '@/shared/styles/globals.css';
 
 initSentry();
+
+const nativeApp = isNativeApp();
+if (nativeApp) void initNativeShell(router);
 
 const container = document.getElementById('root');
 invariant(container, 'Elemento #root não encontrado no index.html.');
@@ -34,6 +40,7 @@ createRoot(container).render(
       <QueryProvider>
         <AuthProvider>
           <TooltipPrimitive.Provider delayDuration={200}>
+            {nativeApp && <OfflineNotice />}
             <RouterProvider router={router} />
             <ThemeContext.Consumer>
               {(theme) => {

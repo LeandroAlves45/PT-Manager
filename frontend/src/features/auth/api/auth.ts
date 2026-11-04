@@ -4,6 +4,8 @@ import { apiClient, unwrap } from '@/shared/api/client';
 import { toApiProblem } from '@/shared/api/problem';
 import type { components } from '@/shared/api/schema';
 import { toSession, type Session } from '@/shared/api/session';
+import { isNativeApp } from '@/shared/native/platform';
+import { startNativeSession } from '@/shared/native/session';
 
 /**
  * Pedidos de autenticação como mutações do TanStack Query.
@@ -11,6 +13,10 @@ import { toSession, type Session } from '@/shared/api/session';
  * Tudo passa por `apiClient`; uma falha lança `ApiProblem` (via `unwrap`), por isso cada
  * ecrã decide a mensagem com `authErrorMessage`. Nenhuma mutação repete automaticamente:
  * repetir um login ou um pedido de email multiplicaria o efeito.
+ *
+ * Na app nativa as rotas que abrem sessão ou mexem na palavra-passe são as de
+ * `/api/v1/native/auth`: devolvem o refresh token no corpo (guardado no armazenamento seguro)
+ * e não exigem o cabeçalho Origin da web.
  */
 
 type Schemas = components['schemas'];
@@ -21,7 +27,9 @@ export type GoogleSignInOutcome = { kind: 'session'; session: Session } | { kind
 export function useLoginMutation() {
   return useMutation({
     mutationFn: async (body: Schemas['LoginRequest']): Promise<Session> =>
-      toSession(unwrap(await apiClient.POST('/api/v1/auth/login', { body }))),
+      isNativeApp()
+        ? startNativeSession(unwrap(await apiClient.POST('/api/v1/native/auth/login', { body })))
+        : toSession(unwrap(await apiClient.POST('/api/v1/auth/login', { body }))),
   });
 }
 
@@ -47,7 +55,11 @@ export function useRequestEmailConfirmationMutation() {
 export function useRequestPasswordResetMutation() {
   return useMutation({
     mutationFn: async (body: Schemas['PasswordResetRequest']): Promise<void> => {
-      unwrap(await apiClient.POST('/api/v1/auth/password-reset/request', { body }));
+      unwrap(
+        isNativeApp()
+          ? await apiClient.POST('/api/v1/native/auth/password-reset/request', { body })
+          : await apiClient.POST('/api/v1/auth/password-reset/request', { body })
+      );
     },
   });
 }
@@ -56,7 +68,11 @@ export function useRequestPasswordResetMutation() {
 export function useCompletePasswordResetMutation() {
   return useMutation({
     mutationFn: async (body: Schemas['PasswordResetCompletionRequest']): Promise<void> => {
-      unwrap(await apiClient.POST('/api/v1/auth/password-reset/complete', { body }));
+      unwrap(
+        isNativeApp()
+          ? await apiClient.POST('/api/v1/native/auth/password-reset/complete', { body })
+          : await apiClient.POST('/api/v1/auth/password-reset/complete', { body })
+      );
     },
   });
 }
@@ -70,7 +86,11 @@ export async function confirmEmail(token: string): Promise<void> {
 export function useAcceptInviteMutation() {
   return useMutation({
     mutationFn: async (body: Schemas['AcceptInvitationRequest']): Promise<Session> =>
-      toSession(unwrap(await apiClient.POST('/api/v1/auth/accept-invite', { body }))),
+      isNativeApp()
+        ? startNativeSession(
+            unwrap(await apiClient.POST('/api/v1/native/auth/accept-invite', { body }))
+          )
+        : toSession(unwrap(await apiClient.POST('/api/v1/auth/accept-invite', { body }))),
   });
 }
 
@@ -78,7 +98,11 @@ export function useAcceptInviteMutation() {
 export function useRegisterInvitedMutation() {
   return useMutation({
     mutationFn: async (body: Schemas['InvitedClientRegistrationRequest']): Promise<Session> =>
-      toSession(unwrap(await apiClient.POST('/api/v1/auth/accept-invite/register', { body }))),
+      isNativeApp()
+        ? startNativeSession(
+            unwrap(await apiClient.POST('/api/v1/native/auth/accept-invite/register', { body }))
+          )
+        : toSession(unwrap(await apiClient.POST('/api/v1/auth/accept-invite/register', { body }))),
   });
 }
 
